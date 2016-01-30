@@ -1,0 +1,73 @@
+<objdefs>
+   <obj.normal id="push" uuid="5c32d1cfd11ef48b2dd0e2c390bc8a61f6d506e1" sha="3bee73866309449938c386a7b42ebad6972ec0a">
+      <sDescription>Ableton Push controller</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>push.axh</helpPatch>
+      <includes>
+      <include>./push/axo_push.h</include>
+      </includes>
+      <inlets>
+      </inlets>
+      <outlets>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <combo name="output">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+
+      <code.declaration><![CDATA[ Push _push; ]]></code.declaration>
+      <code.init><![CDATA[ PushInit(_push); 
+        PushDevice(_push,(midi_device_t) attr_device);
+        PushNoteOutput(_push,(midi_device_t) attr_output);
+]]></code.init>
+      <code.krate><![CDATA[ PushControlRateHandler(_push); ]]></code.krate> 
+	  <code.midihandler><![CDATA[ PushMidiInMsgHandler(_push,dev,port,status,data1,data2); ]]></code.midihandler>
+
+   </obj.normal>
+</objdefs>
