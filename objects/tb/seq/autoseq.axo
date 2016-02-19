@@ -1,0 +1,192 @@
+<objdefs appVersion="1.0.7">
+   <obj.normal id="tb/seq/automate 32b sdram" uuid="505711411b6868912e5595aa534c223b69569405">
+      <sDescription>automate events SDRAM memory</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>autoseq.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="gate" description="gate"/>
+         <bool32.rising name="reset" description="reset"/>
+         <frac32 name="v" description="value"/>
+         <bool32 name="mode" description="play/record"/>
+      </inlets>
+      <outlets>
+         <frac32 name="v" description="value"/>
+         <frac32 name="clk" description="clock"/>
+         <frac32 name="evt" description="event"/>
+         <bool32 name="end" description="end"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[
+
+static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
+static const uint32_t BITS = 32;
+int32_t* _time;
+int32_t* _data;
+int32_t _t;
+bool _record;
+int32_t _idx;
+int32_t _endidx;
+int32_t _value;
+int _gate;
+int _reset;
+int _running;
+
+]]></code.declaration>
+      <code.init><![CDATA[
+{ 
+    static int32_t _timeArray[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+    _time = &_timeArray[parent->polyIndex][0];
+
+    static int32_t _dataArray[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+    _data = &_dataArray[parent->polyIndex][0];
+
+    int i;
+    for(i=0;i<LENGTH;i++)  {
+        _time[i]=0;
+        _data[i]=0;
+    }
+    _t = 0;
+    _idx = 0;
+    _endidx = 0;
+    _running = 0;
+    _value = 0;
+    _reset = 0;
+    _record = 0;
+}
+    ]]></code.init>
+      <code.krate><![CDATA[ 
+{
+    // handle reset
+    if(inlet_reset > 0 & !_reset) {
+        _reset = inlet_reset;
+        _idx = 0;
+        _t = 0;
+        _value = 0;
+        _running = _gate;
+    } else {
+        _reset = 0;
+    }
+
+    if(inlet_gate != _gate && inlet_gate>0) {
+        LogTextMessage("start");
+        _idx = 0;
+        _t = 0;
+        _value = 0;
+        _running = 1;
+    }
+    
+    // here we may want some extra logic, if user switches more whilst gate is high
+    if(inlet_mode != _record && inlet_mode>0) {
+        LogTextMessage("record mode");
+        _record = 1;
+    }
+    if(inlet_mode != _record && !inlet_mode) {
+        LogTextMessage("play mode");
+        _record = 0;
+    }
+
+    if(_running) _t++;
+
+    if (_record) {
+        // record mode
+        if(inlet_gate != _gate && inlet_gate>0) {
+             _endidx = LENGTH;
+        }
+
+        if(_running && inlet_v != _value) {
+            _value = inlet_v;
+            LogTextMessage("record value %i %x %x",_idx,_t,_value);
+            _time[_idx] = _t;
+            _data[_idx] = _value;
+            if(_idx<LENGTH) _idx++;
+        }
+
+        if(inlet_gate != _gate && !inlet_gate) {
+            _endidx = _idx;
+            _time[_endidx] = 0;
+        }
+    } else {
+        // play mode
+
+        //if(inlet_gate != _gate && inlet_gate>0) { }
+
+        if(_running && _t >= _time[_idx] && _time[_idx]) {
+            _value = _data[_idx];
+            LogTextMessage("restore value %i %x",_idx,_value);
+            if(_idx<LENGTH) _idx++;
+            _running = _idx < _endidx && _idx<LENGTH;
+        }
+
+        //if(inlet_gate != _gate && !inlet_gate) { }
+    }
+        
+    if(inlet_gate != _gate && !inlet_gate) {
+        LogTextMessage("stop");
+        _running = 0;
+    }
+
+    _gate = inlet_gate;
+    
+    outlet_end = ( _running == 0 );
+    outlet_evt = _idx;
+    outlet_clk = _t;
+    outlet_v = _value;
+}
+
+    ]]></code.krate>
+   </obj.normal>
+</objdefs>
