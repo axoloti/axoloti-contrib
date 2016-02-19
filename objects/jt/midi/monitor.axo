@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.7">
+   <obj.normal id="monitor" uuid="73837a71-48e7-4772-9831-1962ace02a0e">
+      <sDescription>description</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.midihandler><![CDATA[switch (status & 0xf0) {
+	case MIDI_NOTE_ON: 
+		LogTextMessage("NoteOn  ch%2D n%3D v%3D", status & 0x0F, data1, data2);
+		break;
+	case MIDI_NOTE_OFF: 
+		LogTextMessage("NoteOff ch%2D n%3D v%3D", status & 0x0F, data1, data2);
+		break;
+	case MIDI_POLY_PRESSURE: 
+		LogTextMessage("PolyPrs ch%2D n%3D v%3D", status & 0x0F, data1, data2);
+		break;
+	case MIDI_CONTROL_CHANGE: 
+		LogTextMessage("Control ch%2D cc%3D v%3D", status & 0x0F, data1, data2);
+		break;
+	case MIDI_PROGRAM_CHANGE: 
+		LogTextMessage("PgmChg  ch%2D pgm%3D", status & 0x0F, data1, data2);
+		break;
+	case MIDI_PITCH_BEND: 
+		LogTextMessage("PitchBnd ch%2D v%3D v%3D", status & 0x0F, data1, data2);
+		break;
+	default:
+	;
+}
+]]></code.midihandler>
+   </obj.normal>
+</objdefs>
