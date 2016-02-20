@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="print f" uuid="8b0acaf6-2b3d-4a27-9749-25b042607032">
+      <sDescription>print object - prints frac on change, max 1/sec</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>print.axh</helpPatch>
+      <inlets>
+         <frac32 name="v"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="text"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t last_;
+int32_t updt_;
+char buf[10];]]></code.declaration>
+      <code.init><![CDATA[last_ =0;
+updt_ =3001;]]></code.init>
+      <code.krate><![CDATA[if (updt_ >= 3000) {
+	if(last_ != inlet_v || updt_ > 3000) {
+          double v = ((double) inlet_v) / (double) (1 << 21);
+          int wi = v;
+          float f = fabs(v - wi);
+          int fi = f * 10000;
+
+		LogTextMessage("attr_text %5d.%04d",wi,fi);
+		last_ = inlet_v;
+		updt_ = 0;
+	}
+} else {
+	updt_++;
+}
+]]></code.krate>
+   </obj.normal>
+</objdefs>
