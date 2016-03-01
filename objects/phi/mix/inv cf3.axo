@@ -1,0 +1,34 @@
+<objdefs>
+   <obj.normal id="inv cf3" uuid="f536e36a05a0083eea7de9adb7c3e9444i3jgc8rc87b7c3e9444i3jgc8rc87">
+   <sDescription>dual crossfade between inv/noniverted </sDescription>
+   <author>Philoop</author>
+   <license>BSD</license>
+   <inlets>
+      <frac32 name="i1" description="input"/>
+      <frac32 name="i2" description="input"/>
+	  <frac32 name="i3" description="input"/>
+   </inlets>
+   <outlets>
+      <frac32.bipolar name="o"/>
+   </outlets>
+   <displays/>
+   <params>
+      <frac32.u.map name="inv" noLabel="false"/>
+      <frac32.u.map name="inv1" noLabel="false"/>
+	  <frac32.u.map name="inv2" noLabel="false"/>
+   </params>
+   <attribs/>
+   <includes/>
+   <code.krate><![CDATA[   {
+      int64_t a = (int64_t)inlet_i1 * param_inv;
+      a -= (int64_t)inlet_i1 * ((128<<20)-param_inv);
+	  int64_t b = (int64_t)inlet_i2 * param_inv1;
+      b -= (int64_t)inlet_i1 * ((128<<20)-param_inv1); 
+	   int64_t c = (int64_t)inlet_i3 * param_inv2;
+      c -= (int64_t)inlet_i2 * ((128<<20)-param_inv2);
+      a>>27;b>>27;c>>27;
+	  outlet_o= (a>>27)+(b>>27)+(c>>27);
+   }
+]]></code.krate>
+   </obj.normal>
+</objdefs>
