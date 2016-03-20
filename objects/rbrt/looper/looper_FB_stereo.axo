@@ -1,0 +1,109 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="looper_FB_stereo" uuid="ffcacc7a-b99f-416e-b320-d39cd7d21531">
+      <sDescription>a looper with overdub and loop feedback adjustment
+</sDescription>
+      <author>Robert Schirmer</author>
+      <license>who cares</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="waveL" description="audio in L"/>
+         <frac32buffer name="waveR" description="audio in R"/>
+         <bool32.risingfalling name="rec" description="record"/>
+         <bool32.risingfalling name="play" description="play"/>
+         <bool32.risingfalling name="dub" description="overdub"/>
+         <frac32.positive name="feedback" description="loop feedback"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="waveL" description="audio out L"/>
+         <frac32buffer name="waveR" description="audio out R"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="tableL"/>
+         <objref name="tableR"/>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+bool play;
+int playpos;
+int recpos;
+int length;
+
+  uint32_t inputL;
+  uint32_t dataL;
+  uint32_t inputR;
+  uint32_t dataR;
+
+]]></code.declaration>
+      <code.init><![CDATA[playpos = 0;
+recpos =0;
+rec = 0;
+play = 0;
+length= 0;
+]]></code.init>
+      <code.krate><![CDATA[   // I guess this  ((inlet_rec>0) && !rec)
+   //resets pos to 0 everytime rec goes from 0 to 1
+   
+   //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      recpos = 0;
+      length = 0;
+      playpos = 0;
+  } else if (!(inlet_rec)) {
+      rec = 0;
+      length = recpos;
+  }
+    
+    //play  
+    play = (!rec);
+
+
+     
+
+
+
+   
+    
+
+
+  
+]]></code.krate>
+      <code.srate><![CDATA[ //record
+   if (rec)  {
+       if (recpos< attr_tableL.LENGTH)
+              attr_tableL.array[recpos++] = inputL ;
+              attr_tableR.array[recpos] = inputR ;
+   }
+   
+//play
+if (inlet_play){
+	    if (!(playpos == length ))
+              playpos == playpos ++ ;
+              else playpos = 0;
+            } 
+             else playpos= 0;
+
+               
+ 	inputL = (__SSAT((inlet_waveL),28 )>>attr_tableL.GAIN);
+ 	inputR = (__SSAT((inlet_waveR),28 )>>attr_tableL.GAIN);
+     dataL = ___SMMUL((attr_tableL.array[playpos]<<attr_tableL.GAIN)<<3,inlet_feedback<<2);
+     dataR = ___SMMUL((attr_tableR.array[playpos]<<attr_tableL.GAIN)<<3,inlet_feedback<<2);
+    
+     attr_tableL.array[playpos] = dataL;
+     attr_tableR.array[playpos] = dataR;
+     
+	outlet_waveL = ( dataL * play);
+	outlet_waveR = ( dataR * play);
+	
+
+	//overdub
+   if (inlet_dub && play)  {
+       attr_tableL.array[playpos] = (dataL + inputL);
+       attr_tableR.array[playpos] = (dataR + inputR);
+   }
+
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>
