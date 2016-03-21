@@ -50,9 +50,9 @@ int32_t updatestate() {
 // Update Pattern Array //
 //////////////////////////
 
-void newpattern(int32_t a, int32_t b, int len) {
+void newpattern(int32_t a, int32_t b) {
 	rstate = a * 64 + b;
-	for(int i = 0; i < len; i++) {
+	for(int i = 0; i < 128; i++) {
 		pattern[i] = updatestate();
 	}
 }
@@ -66,7 +66,7 @@ void newpattern(int32_t a, int32_t b, int len) {
 ///////////////////////////////
 
 if (init) {
-	newpattern(param_bank, param_pattern, attr_length);
+	newpattern(param_bank, param_pattern);
 	init = 0;
 }
 
@@ -78,7 +78,7 @@ if ((inlet_trig>0) && !ntrig) {
     // Check for changes to parameters
     // and regenerate array if params changed
 	if ((param_bank != bindex) || (param_pattern != pindex)) {
-		newpattern(param_bank, param_pattern, attr_length);
+		newpattern(param_bank, param_pattern);
 		bindex = param_bank;
 		pindex = param_pattern;
 	}
