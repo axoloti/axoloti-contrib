@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="clocker" uuid="5561eca2-f928-43a8-86dd-ff36636ab0a5">
+      <sDescription>while &apos;toggle&apos; is true, &apos;clocker&apos; is counting and 
+spits out the current clock.
+if &apos;toggle&apos; is false , &apos;clocker&apos; puts out 0.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>timeri.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="toggle" description="clock is running or not"/>
+      </inlets>
+      <outlets>
+         <int32 name="t" description="current time in k-rate ticks (0.333 ms)"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t trigstart;
+int32_t trigstop;
+int tc;
+
+]]></code.declaration>
+      <code.init><![CDATA[trigstart = 0;
+trigstop = 0;
+tc = 0;
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_toggle) && !trigstart) {
+  tc = 0;
+  trigstart = 1;
+} else if (!(inlet_toggle)) {
+    trigstart = 0;
+    tc = 0;
+    
+}
+
+if (trigstart ){
+	tc == tc ++;
+}
+outlet_t = tc;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
