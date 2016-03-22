@@ -16,9 +16,12 @@
         <params>
             <frac32.u.map name="bank" description="Bank" />
             <frac32.u.map name="pattern" description="Pattern" />
+            <int32 name="length" description="Pattern Length">
+                <MinValue i="2"/>
+                <MaxValue i="128"/>
+            </int32>
         </params>
         <attribs>
-            <spinner name="length" description="Pattern Length" MinValue="0" MaxValue="128" DefaultValue="16" />
         </attribs>
         <code.declaration><![CDATA[
 
@@ -84,7 +87,7 @@ if ((inlet_trig>0) && !ntrig) {
 		pindex = param_pattern;
 	}
     // Update/reset counter
-    counter = (counter>attr_length)? 0 : counter + 1;
+    counter = (counter>param_length)? 0 : counter + 1;
     // Set output value until next trigger
     outval = pattern[counter];
     ntrig=1;
