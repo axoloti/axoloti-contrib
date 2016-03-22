@@ -11,15 +11,15 @@
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="pwm" x="182" y="84">
       <params>
-         <frac32.u.map name="value" onParent="true" value="0.0"/>
+         <frac32.u.map name="value" onParent="true" value="24.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="./4polelp" uuid="4f41c55e-83bc-4047-ae14-a5ad893b9a1b" name="4polelp_1" x="252" y="84">
+   <obj type="wp/filter/4polelpf" uuid="c734ed62-d0d6-4386-aa1f-4f575e85c42d" name="4polelp_1" x="252" y="84">
       <params>
-         <frac32.u.map name="vcf freq" onParent="true" value="0.0"/>
-         <frac32.s.map name="hp freq" onParent="true" value="0.0"/>
-         <frac32.u.map name="vcf res" onParent="true" value="0.0"/>
+         <frac32.u.map name="vcf freq" value="37.0"/>
+         <frac32.s.map name="hp freq" value="10.0"/>
+         <frac32.u.map name="vcf res" value="18.0"/>
       </params>
       <attribs/>
    </obj>
@@ -54,10 +54,6 @@
          <dest obj="4polelp_1" inlet="filter in"/>
       </net>
       <net>
-         <source obj="4polelp_1" outlet="outlet_1"/>
-         <dest obj="echo_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="echo_1" outlet="out"/>
          <dest obj="audio out" inlet="outlet"/>
       </net>
@@ -72,6 +68,10 @@
       <net>
          <source obj="pwm" outlet="out"/>
          <dest obj="pitch" inlet="pw"/>
+      </net>
+      <net>
+         <source obj="4polelp_1" outlet="outlet_1"/>
+         <dest obj="echo_1" inlet="in"/>
       </net>
    </nets>
    <settings>
