@@ -1,14 +1,14 @@
-<patch-1.0>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="ChL" x="70" y="0">
+<patch-1.0 appVersion="1.0.8">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="CL" x="70" y="0">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="ChR" x="224" y="0">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="CR" x="224" y="0">
       <params/>
       <attribs/>
    </obj>
    <comment type="patch/comment" x="28" y="42" text="Ch1"/>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="1L In" x="70" y="56">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="1L" x="70" y="56">
       <params/>
       <attribs/>
    </obj>
@@ -18,7 +18,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="1R In" x="224" y="56">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="1R" x="224" y="56">
       <params/>
       <attribs/>
    </obj>
@@ -41,11 +41,11 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="28" y="196" text="Ch2"/>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="2L In" x="70" y="210">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="2L" x="70" y="210">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="2R In" x="224" y="210">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="2R" x="224" y="210">
       <params/>
       <attribs/>
    </obj>
@@ -64,7 +64,7 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="28" y="364" text="Ch3"/>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="3L In" x="70" y="378">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="3L" x="70" y="378">
       <params/>
       <attribs/>
    </obj>
@@ -74,7 +74,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="3R In" x="224" y="378">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="3R" x="224" y="378">
       <params/>
       <attribs/>
    </obj>
@@ -96,7 +96,7 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="28" y="532" text="Ch4"/>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="4L In" x="70" y="546">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="4L" x="70" y="546">
       <params/>
       <attribs/>
    </obj>
@@ -106,7 +106,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="4R In" x="224" y="546">
+   <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="4R" x="224" y="546">
       <params/>
       <attribs/>
    </obj>
@@ -161,19 +161,19 @@
          <dest obj="R" inlet="in2"/>
       </net>
       <net>
-         <source obj="3R In" outlet="inlet"/>
+         <source obj="3R" outlet="inlet"/>
          <dest obj="R Mix__" inlet="i2"/>
       </net>
       <net>
-         <source obj="3L In" outlet="inlet"/>
+         <source obj="3L" outlet="inlet"/>
          <dest obj="L Mix__" inlet="i2"/>
       </net>
       <net>
-         <source obj="2L In" outlet="inlet"/>
+         <source obj="2L" outlet="inlet"/>
          <dest obj="L Mix_" inlet="i2"/>
       </net>
       <net>
-         <source obj="2R In" outlet="inlet"/>
+         <source obj="2R" outlet="inlet"/>
          <dest obj="R Mix_" inlet="i2"/>
       </net>
       <net>
@@ -198,19 +198,19 @@
          <dest obj="L Mix___" inlet="c"/>
       </net>
       <net>
-         <source obj="4R In" outlet="inlet"/>
+         <source obj="4R" outlet="inlet"/>
          <dest obj="R Mix___" inlet="i2"/>
       </net>
       <net>
-         <source obj="4L In" outlet="inlet"/>
+         <source obj="4L" outlet="inlet"/>
          <dest obj="L Mix___" inlet="i2"/>
       </net>
       <net>
-         <source obj="1R In" outlet="inlet"/>
+         <source obj="1R" outlet="inlet"/>
          <dest obj="R Mix" inlet="i2"/>
       </net>
       <net>
-         <source obj="1L In" outlet="inlet"/>
+         <source obj="1L" outlet="inlet"/>
          <dest obj="L Mix" inlet="i2"/>
       </net>
       <net>
@@ -222,11 +222,11 @@
          <dest obj="R" inlet="in4"/>
       </net>
       <net>
-         <source obj="ChL" outlet="inlet"/>
+         <source obj="CL" outlet="inlet"/>
          <dest obj="L" inlet="bus_in"/>
       </net>
       <net>
-         <source obj="ChR" outlet="inlet"/>
+         <source obj="CR" outlet="inlet"/>
          <dest obj="R" inlet="bus_in"/>
       </net>
       <net>
@@ -257,8 +257,8 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>0</x>
-      <y>22</y>
+      <y>23</y>
       <width>1114</width>
-      <height>774</height>
+      <height>773</height>
    </windowPos>
 </patch-1.0>
