@@ -1,7 +1,7 @@
 <objdefs appVersion="1.0.8">
     <obj.normal id="nmpgen3" uuid="f4aa3eb936415b6fc796e576dde754a273a022ac" sha="dd90350d5d9fb8512e8bc1ce69ec962871607f0c">
         <upgradeSha>6a81606bcc6a29c922883f893193c4ff3d14c5a</upgradeSha>
-        <sDescription>32-step Pseudo-random (repeatable) pattern generator, with Pattern and Trigger outlets</sDescription>
+        <sDescription>32-step pseudo-random (repeatable) pattern generator, with Pattern and Trigger outlets</sDescription>
         <author>toneburst</author>
         <license>BSD</license>
         <helpPatch>nmpgen3.axh</helpPatch>
@@ -22,7 +22,6 @@
             <frac32.u.map name="trigthresh" description="Trigger Threshold" />
         </params>
         <attribs>
-            <!--<spinner name="length" description="Pattern Length" MinValue="0" MaxValue="128" DefaultValue="16" />-->
         </attribs>
         <code.declaration><![CDATA[
 
@@ -36,6 +35,7 @@ int rtrig = 0;
 int32_t bindex;
 int32_t pindex;
 int32_t outval;
+bool outtrig;
 int init = 1;
 
 ///////////////////////
@@ -131,27 +131,37 @@ if ((inlet_trig > 0) && !ntrig) {
 		bindex = param_bank;
 		pindex = param_index;
 	}
-    // Update/reset counter
+    // Calculate length and offset
     length = calculatelength(param_length);
     offset = calculateoffset(param_offset, length);
+
     // Set output value until next trigger
     outval = pattern[(counter + offset) % length];
+
+    // Set output trigger for step
+    if((outval + 255) < (param_trigthresh >> 18))
+        outtrig = true;
+
+    // Update counter
     counter++;
     ntrig = 1;
-} else if (!(inlet_trig > 0)) {
+
+} else if (inlet_trig == 0) {
     ntrig = 0;
+    outtrig = false;
 }
 
-// Pattern Output
+////////////////////
+// Pattern Output //
+////////////////////
+
 outlet_pattern = outval << 19;
 
-// Trigger Output
-if (inlet_trig > 0) {
-    if((outval + 255) < (param_trigthresh >> 18))
-        outlet_trigger = true;
-} else {
-    outlet_trigger = false;
-}
+////////////////////
+// Trigger Output //
+////////////////////
+
+outlet_trigger = outtrig;
 
     ]]>
     </code.krate>
