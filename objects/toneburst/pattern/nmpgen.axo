@@ -1,29 +1,27 @@
 <objdefs appVersion="1.0.8">
-    <obj.normal id="nmpgen" uuid="f4aa3eb163415b6fc796e576dde754a273a022ac" sha="dd57310d5d9fb8512e8bc1ce69ec962871607f0c">
-        <upgradeSha>6a81606bcc6a29c922883f499193c4ff3d14c5a</upgradeSha>
-        <sDescription>Pseudo-random (repeatable) pattern generator. Based on Nord modular PatternGen module.</sDescription>
-        <author>toneburst</author>
-        <license>BSD</license>
-        <helpPatch>nmpgen.axh</helpPatch>
-        <inlets>
-            <bool32.rising name="trig" description="Trigger Pulse" />
-            <bool32.rising name="r" description="Reset Pulse" />
-        </inlets>
-        <outlets>
-            <frac32.bipolar name="out" description="Pattern Out (Bipolar)" />
-        </outlets>
-        <displays />
-        <params>
-            <frac32.u.map name="bank" description="Bank" />
-            <frac32.u.map name="pattern" description="Pattern" />
-            <int32 name="length" description="Pattern Length">
-                <MinValue i="2"/>
-                <MaxValue i="128"/>
-            </int32>
-        </params>
-        <attribs>
-        </attribs>
-        <code.declaration><![CDATA[
+   <obj.normal id="nmpgen" uuid="f4aa3eb163415b6fc796e576dde754a273a022ac">
+      <sDescription>Pseudo-random (repeatable) pattern generator. Based on Nord modular PatternGen module.</sDescription>
+      <author>toneburst</author>
+      <license>BSD</license>
+      <helpPatch>nmpgen.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="Trigger Pulse"/>
+         <bool32.rising name="r" description="Reset Pulse"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out" description="Pattern Out (Bipolar)"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="bank" description="Bank"/>
+         <frac32.u.map name="pattern" description="Pattern"/>
+         <int32 name="length" description="Pattern Length">
+            <MinValue i="2"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
 
 int32_t pattern[128] = {};
 int32_t counter = 0;
@@ -61,9 +59,9 @@ void newpattern(int32_t a, int32_t b) {
 	}
 }
 
-        ]]>
-        </code.declaration>
-        <code.krate><![CDATA[
+
+        ]]></code.declaration>
+      <code.krate><![CDATA[
 
 ///////////////////////////////
 // Loop Running For 1st Time //
@@ -86,11 +84,9 @@ if ((inlet_trig>0) && !ntrig) {
 		bindex = param_bank;
 		pindex = param_pattern;
 	}
-    // Update/reset counter
-    //counter = (counter>param_length)? 0 : counter + 1;
-    counter = param_length % (counter + 1);
     // Set output value until next trigger
-    outval = pattern[counter];
+    outval = pattern[counter % param_length];
+    counter++;
     ntrig=1;
 } else if (!(inlet_trig>0)) {
     ntrig=0;
@@ -109,7 +105,7 @@ if ((inlet_r>0) && !rtrig) {
 
 outlet_out = outval<<19;
 
-    ]]>
-    </code.krate>
-    </obj.normal>
+
+    ]]></code.krate>
+   </obj.normal>
 </objdefs>
