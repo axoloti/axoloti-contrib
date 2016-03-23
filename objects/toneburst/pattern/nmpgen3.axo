@@ -36,7 +36,7 @@ int rtrig = 0;
 int32_t bindex;
 int32_t pindex;
 int32_t outval;
-int init = 0;
+int init = 1;
 
 ///////////////////////
 // Utility Functions //
@@ -56,24 +56,12 @@ int32_t min(int32_t maxval, int32_t val) {
 int32_t calculatelength(int32_t len) {
     // Max 32 steps
     return max(minlength, len >> 22);
-    // Max 64 steps
-    //return max(minlength, len >> 21);
-    // Max 128 steps
-    //return max(minlength, len >> 20);
-    // Max 256 steps
-    //return max(minlength, len >> 19);
 }
 
 // Calculate step-offset value based on param_offset
 int32_t calculateoffset(int32_t offs, int32_t maxoffs) {
     // Max 32 steps
     return min(offs >> 22, maxoffs);
-    // Max 64 steps
-    //return min(offs >> 21, maxoffs);
-    // Max 128 steps
-    //return min(offs >> 20, maxoffs);
-    // Max 256 steps
-    //return min(offs >> 19, maxoffs);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -111,13 +99,13 @@ void newpattern(int32_t a, int32_t b) {
 // Loop Running For 1st Time //
 ///////////////////////////////
 
-if (!init) {
+if (init == 1) {
     newpattern(param_bank, param_index);
     bindex = param_bank;
     pindex = param_index;
     length = calculatelength(param_length);
     offset = calculateoffset(param_offset, length);
-	init = 1;
+	init = 0;
 }
 
 /////////////////////////////
