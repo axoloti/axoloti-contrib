@@ -16,7 +16,7 @@
         <displays />
         <params>
             <frac32.u.map name="bank" description="Pattern Bank" />
-            <frac32.u.map name="pattern" description="Pattern" />
+            <frac32.u.map name="index" description="Index" />
             <frac32.u.map name="length" description="Pattern Length 2-32 steps" />
             <frac32.u.map name="offset" description="Pattern Offset" />
             <frac32.u.map name="trigthresh" description="Trigger Threshold" />
@@ -55,13 +55,25 @@ int32_t min(int32_t maxval, int32_t val) {
 // Calculate pattern length based on param_length
 int32_t calculatelength(int32_t len) {
     // Max 32 steps
-    return max(minlength, len >> 20);
+    return max(minlength, len >> 22);
+    // Max 64 steps
+    //return max(minlength, len >> 21);
+    // Max 128 steps
+    //return max(minlength, len >> 20);
+    // Max 256 steps
+    //return max(minlength, len >> 19);
 }
 
 // Calculate step-offset value based on param_offset
 int32_t calculateoffset(int32_t offs, int32_t maxoffs) {
     // Max 32 steps
-    return min(offs >> 20, maxoffs);
+    return min(offs >> 22, maxoffs);
+    // Max 64 steps
+    //return min(offs >> 21, maxoffs);
+    // Max 128 steps
+    //return min(offs >> 20, maxoffs);
+    // Max 256 steps
+    //return min(offs >> 19, maxoffs);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -86,7 +98,7 @@ int32_t updatestate() {
 
 void newpattern(int32_t a, int32_t b) {
 	rstate = a * 64 + b;
-	for(int i = 0; i < 64; i++) {
+	for(int i = 0; i < 32; i++) {
 		pattern[i] = updatestate();
 	}
 }
@@ -100,7 +112,9 @@ void newpattern(int32_t a, int32_t b) {
 ///////////////////////////////
 
 if (!init) {
-	newpattern(param_bank, param_pattern);
+    newpattern(param_bank, param_index);
+    bindex = param_bank;
+    pindex = param_index;
     length = calculatelength(param_length);
     offset = calculateoffset(param_offset, length);
 	init = 1;
@@ -124,10 +138,10 @@ if ((inlet_r > 0) && !rtrig) {
 if ((inlet_trig > 0) && !ntrig) {
     // Check for changes to parameters
     // and regenerate array if params changed
-	if ((param_bank != bindex) || (param_pattern != pindex)) {
-		newpattern(param_bank, param_pattern);
+	if ((param_bank != bindex) || (param_index != pindex)) {
+		newpattern(param_bank, param_index);
 		bindex = param_bank;
-		pindex = param_pattern;
+		pindex = param_index;
 	}
     // Update/reset counter
     length = calculatelength(param_length);

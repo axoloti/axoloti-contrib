@@ -8,8 +8,8 @@
    </obj>
    <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="840" y="154">
       <params>
-         <frac32.u.map name="gain1" value="30.0"/>
-         <frac32.u.map name="gain2" value="64.0"/>
+         <frac32.u.map name="gain1" value="33.5"/>
+         <frac32.u.map name="gain2" value="35.0"/>
       </params>
       <attribs/>
    </obj>
@@ -36,7 +36,7 @@
    <obj type="toneburst/pattern/nmpgen3" uuid="f4aa3eb936415b6fc796e576dde754a273a022ac" name="nmpgen3_1" x="140" y="182">
       <params>
          <frac32.u.map name="bank" value="0.0"/>
-         <frac32.u.map name="pattern" value="0.0"/>
+         <frac32.u.map name="index" value="0.0"/>
          <frac32.u.map name="length" value="32.0"/>
          <frac32.u.map name="offset" value="0.0"/>
          <frac32.u.map name="trigthresh" value="32.0"/>
@@ -116,8 +116,9 @@
          <dest obj="mix_1" inlet="in2"/>
       </net>
       <net>
-         <source obj="Reset" outlet="o"/>
-         <dest obj="nmpgen3_1" inlet="r"/>
+         <source obj="nmpgen3_1" outlet="trigger"/>
+         <dest obj="Trigger" inlet="in"/>
+         <dest obj="obj_1" inlet="trig"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
@@ -138,13 +139,12 @@
       </net>
       <net>
          <source obj="nmpgen3_1" outlet="pattern"/>
-         <dest obj="Pattern" inlet="in"/>
          <dest obj="*_2" inlet="in"/>
+         <dest obj="Pattern" inlet="in"/>
       </net>
       <net>
-         <source obj="nmpgen3_1" outlet="trigger"/>
-         <dest obj="Trigger" inlet="in"/>
-         <dest obj="obj_1" inlet="trig"/>
+         <source obj="Reset" outlet="o"/>
+         <dest obj="nmpgen3_1" inlet="r"/>
       </net>
    </nets>
    <settings>
