@@ -34,18 +34,18 @@ int rtrig = 0;
 int32_t bindex;
 int32_t pindex;
 int32_t outval;
-int init = 0;
+bool init = false;
 
 ///////////////////////
 // Utility Functions //
 ///////////////////////
 
-// Return max of 2 values
+// Return Max of 2 values
 int32_t max(int32_t minval, int32_t val) {
     return(val >= minval) ? val : minval;
 }
 
-// Return min of 2 values
+// Return Min of 2 values
 int32_t min(int32_t maxval, int32_t val) {
     return(val <= maxval) ? val : maxval;
 }
@@ -113,14 +113,25 @@ if (!init) {
 	newpattern(param_bank, param_pattern);
     length = calculatelength(param_length);
     offset = calculateoffset(param_offset, length);
-	init = 1;
+	init = true;
+}
+
+/////////////////////////////
+// Reset Input Rising Edge //
+/////////////////////////////
+
+if ((inlet_r > 0) && !rtrig) {
+    rtrig = 1;
+    counter = 0;
+} else if (!(inlet_r > 0)) {
+    rtrig = 0;
 }
 
 ///////////////////////////////
 // Trigger Input Rising Edge //
 ///////////////////////////////
 
-if ((inlet_trig>0) && !ntrig) {
+if ((inlet_trig > 0) && !ntrig) {
     // Check for changes to parameters
     // and regenerate array if params changed
 	if ((param_bank != bindex) || (param_pattern != pindex)) {
@@ -134,23 +145,12 @@ if ((inlet_trig>0) && !ntrig) {
     // Set output value until next trigger
     outval = pattern[(counter + offset) % length];
     counter++;
-    ntrig=1;
-} else if (!(inlet_trig>0)) {
-    ntrig=0;
+    ntrig = 1;
+} else if (!(inlet_trig > 0)) {
+    ntrig = 0;
 }
 
-/////////////////////////////
-// Reset Input Rising Edge //
-/////////////////////////////
-
-if ((inlet_r>0) && !rtrig) {
-    rtrig = 1;
-    counter = 0;
-} else if (!(inlet_r>0)) {
-    rtrig=0;
-}
-
-outlet_out = outval<<19;
+outlet_out = outval << 19;
 
     ]]>
     </code.krate>
