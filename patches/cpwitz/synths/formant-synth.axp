@@ -348,6 +348,25 @@
          </obj>
          <comment type="patch/comment" x="616" y="742" text="using german formants as in"/>
          <hyperlink type="patch/hyperlink" name="https://de.wikipedia.org/wiki/Formant" x="588" y="756"/>
+         <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_1" x="28" y="672">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_2" x="28" y="714">
+            <params/>
+            <attribs>
+               <spinner attributeName="value" value="1"/>
+            </attribs>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_3" x="28" y="770">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/div 64" uuid="da82c8ea54e956811f1d7264d921628e3301971e" name="div_2" x="28" y="812">
+            <params/>
+            <attribs/>
+         </obj>
+         <comment type="patch/comment" x="28" y="854" text="randomize humanizer for each voice"/>
          <nets>
             <net>
                <source obj="vca_1" outlet="o"/>
@@ -589,6 +608,22 @@
             <net>
                <source obj="*_3" outlet="result"/>
                <dest obj="+_7" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="i_2" outlet="out"/>
+               <dest obj="change_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="change_1" outlet="trig"/>
+               <dest obj="uniform_3" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="uniform_3" outlet="rand"/>
+               <dest obj="div_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="div_2" outlet="out"/>
+               <dest obj="humanizer" inlet="pitch"/>
             </net>
          </nets>
          <settings>
