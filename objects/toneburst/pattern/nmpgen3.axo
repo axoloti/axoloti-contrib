@@ -17,9 +17,9 @@
         <params>
             <frac32.u.map name="bank" description="Pattern Bank" />
             <frac32.u.map name="index" description="Index" />
+            <frac32.u.map name="trigdense" description="Trigger Density" />
             <frac32.u.map name="length" description="Pattern Length 2-32 steps" />
             <frac32.u.map name="offset" description="Pattern Offset" />
-            <frac32.u.map name="trigthresh" description="Trigger Threshold" />
         </params>
         <attribs>
         </attribs>
@@ -35,6 +35,7 @@ int rtrig = 0;
 int32_t bindex;
 int32_t pindex;
 int32_t outval;
+int ppos = 0;
 bool outtrig;
 int init = 1;
 
@@ -135,11 +136,14 @@ if ((inlet_trig > 0) && !ntrig) {
     length = calculatelength(param_length);
     offset = calculateoffset(param_offset, length);
 
-    // Set output value until next trigger
-    outval = pattern[(counter + offset) % length];
+    // Lookup position in pattern table
+    ppos = (counter + offset) % length;
 
-    // Set output trigger for step
-    if((outval + 255) < (param_trigthresh >> 18))
+    // Set output value until next trigger
+    outval = pattern[ppos];
+
+    // Set output trigger for step (read from pattern table backwards)
+    if((pattern[length - ppos] + 255) < (param_trigdense >> 18))
         outtrig = true;
 
     // Update counter
