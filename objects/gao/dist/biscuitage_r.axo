@@ -1,0 +1,28 @@
+<objdefs>
+   <obj.normal id="biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b" sha="97217b266469c4be4177e7723d7cff9f8d511401">
+      <upgradeSha></upgradeSha>
+      <sDescription>For 8 bits signal, reverse selected bits</sDescription>
+      <author>GaoTamanrasset</author>
+      <license>BSD</license>
+      <helpPatch>biscuitage_r.axh.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="Signal in"/>
+	 <frac32 name="reversebits" description="Reversed bits"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="b" description="Signal out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[
+int32_t reversebits = inlet_reversebits & 0xFF;
+int32_t tmp;
+
+tmp = (inlet_a >> 1) + 0x4100000;                        // Bipolar to unipolar signal
+tmp = tmp ^ (reversebits << 20);                         // Bitwise operation
+tmp = (tmp - 0x4000000) << 1; 	                         // Unipolar to bipolar  
+outlet_b = tmp + reversebits;                            // Supress DC offset but must add highpass filter around 5Hz to finish the work
+]]></code.srate>
+      </obj.normal>
+</objdefs>

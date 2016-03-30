@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="biscuitage_m" uuid="f2bbf71412d51b5f616852a84905519c111ea9fe">
+      <sDescription>For 8 bits signal, mute selected bits</sDescription>
+      <author>GaoTamanrasset</author>
+      <license>BSD</license>
+      <helpPatch>biscuitage_m</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="Signal in"/>
+         <frac32 name="mutebits" description="Muted bits"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="b" description="Signal out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[
+int32_t mutebits = inlet_mutebits & 0xFF;
+int32_t tmp;
+
+tmp = (inlet_a >> 1) + 0x4100000;                        // Bipolar to unipolar signal
+tmp = tmp & ~(mutebits << 20);                           // Bitwise operation
+tmp = (tmp - 0x4000000) << 1; 	                         // Unipolar to bipolar  
+outlet_b = tmp + mutebits;                               // Supress DC offset but must add highpass filter around 5Hz to finish the work
+]]></code.srate>
+   </obj.normal>
+</objdefs>
