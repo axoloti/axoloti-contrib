@@ -1,0 +1,90 @@
+<objdefs>
+   <obj.normal id="sine harmonics" uuid="cpwitz-osc-sine harmonics">
+      <sDescription>sine wave oscillator with 7 additional harmonics: sub octave, 2nd, 3rd, 4th, 5th, 6th and major 7th (2 octaves up). The intervals are pure intervals and not equally tempered.</sDescription>
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="sub" description="mod level sub"/>
+         <frac32 name="fund" description="mod level fundamental"/>
+         <frac32 name="2nd" description="mod level 2nd"/>
+         <frac32 name="3rd" description="mod level 3rd"/>
+         <frac32 name="4th" description="mod level 4th"/>
+         <frac32 name="5th" description="mod level 5th"/>
+         <frac32 name="6th" description="mod level 6th"/>
+         <frac32 name="7th" description="mod level 7th"/>
+      </inlets>
+      <outlets>
+	     <frac32buffer.bipolar name="out" description="harmonics"/>
+      </outlets>
+      <displays/>
+      <params>
+      	<frac32.u.map name="sub"><DefaultValue v="16.0"/></frac32.u.map>
+      	<frac32.u.map name="fundamental"><DefaultValue v="32.0"/></frac32.u.map>
+   		<frac32.u.map name="2nd"><DefaultValue v="8.0"/></frac32.u.map>
+        <frac32.u.map name="3rd"><DefaultValue v="4.0"/></frac32.u.map>
+        <frac32.u.map name="4th"><DefaultValue v="2.0"/></frac32.u.map>
+        <frac32.u.map name="5th"><DefaultValue v="0.0"/></frac32.u.map>
+        <frac32.u.map name="6th"><DefaultValue v="0.0"/></frac32.u.map>
+        <frac32.u.map name="7th"><DefaultValue v="0.0"/></frac32.u.map>
+      </params>
+      <attribs />
+      <code.declaration><![CDATA[
+uint32_t phasesub, phasefund, phase1, phase2, phase3, phase4, phase5, phase6; 
+uint32_t incsub, incfund, inc1, inc2, inc3, inc4, inc5, inc6;
+uint32_t levelsub, levelfund, level1, level2, level3, level4, level5, level6;
+]]></code.declaration>
+      <code.init><![CDATA[
+phasesub=0; phasefund=0; phase1=0; phase2=0; phase3=0; phase4=0; phase5=0; phase6=0;
+]]></code.init>
+      <code.krate><![CDATA[
+uint32_t freq;
+MTOF(inlet_pitch,freq);
+incsub = freq>>1;
+incfund = freq;
+inc1 = freq<<1;
+inc2 = inc1+freq;
+inc3 = freq<<2;
+inc4 = inc3+freq;
+inc5 = inc4+freq;
+inc6 = inc5+freq+incsub;
+levelsub = __SSAT((param_sub + inlet_sub)>>4,28);
+levelfund = __SSAT((param_fundamental + inlet_fund)>>4,28);
+level1 = __SSAT((param_2nd + inlet_2nd)>>4,28);
+level2 = __SSAT((param_3rd + inlet_3rd)>>4,28);
+level3 = __SSAT((param_4th + inlet_4th)>>4,28);
+level4 = __SSAT((param_5th + inlet_5th)>>4,28);
+level5 = __SSAT((param_6th + inlet_6th)>>4,28);
+level6 = __SSAT((param_7th + inlet_7th)>>4,28);
+
+]]></code.krate>
+	<code.srate><![CDATA[
+phasefund += incfund;
+phasesub += incsub;
+phase1 += inc1;
+phase2 += inc2;
+phase3 += inc3;
+phase4 += inc4;
+phase5 += inc5;
+phase6 += inc6;
+int32_t r;
+SINE2TINTERP(phasefund,r);
+int32_t accum = ___SMMUL(r,levelfund);
+SINE2TINTERP(phasesub,r);
+accum = ___SMMLA(r,levelsub,accum);
+SINE2TINTERP(phase1,r);
+accum = ___SMMLA(r,level1,accum);
+SINE2TINTERP(phase2,r);
+accum = ___SMMLA(r,level2,accum);
+SINE2TINTERP(phase3,r);
+accum = ___SMMLA(r,level3,accum);
+SINE2TINTERP(phase4,r);
+accum = ___SMMLA(r,level4,accum);
+SINE2TINTERP(phase5,r);
+accum = ___SMMLA(r,level5,accum);
+SINE2TINTERP(phase6,r);
+accum = ___SMMLA(r,level6,accum);
+outlet_out=  __SSAT((accum<<3),28);
+]]></code.srate>
+   </obj.normal>
+</objdefs>
