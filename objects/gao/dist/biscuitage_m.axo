@@ -3,10 +3,11 @@
       <sDescription>For 8 bits signal, mute selected bits</sDescription>
       <author>GaoTamanrasset</author>
       <license>BSD</license>
-      <helpPatch>biscuitage_m</helpPatch>
+      <helpPatch>biscuitage_m.axh</helpPatch>
       <inlets>
          <frac32buffer name="a" description="Signal in"/>
          <frac32 name="mutebits" description="Muted bits"/>
+         <frac32 name="noisegate"/>
       </inlets>
       <outlets>
          <frac32buffer name="b" description="Signal out"/>
@@ -14,14 +15,30 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.srate><![CDATA[
-int32_t mutebits = inlet_mutebits & 0xFF;
+      <code.declaration><![CDATA[int32_t mutebits;
 int32_t tmp;
+int32_t hp_freq;
+int32_t val;
+int32_t noisegate;]]></code.declaration>
+      <code.init><![CDATA[mutebits = 0;
+tmp = 0;
+hp_freq = 0x000B29A4; // MTOF(8,176Hz)
+val = 0;]]></code.init>
+      <code.krate><![CDATA[noisegate = inlet_noisegate;]]></code.krate>
+      <code.srate><![CDATA[mutebits = inlet_mutebits & 0xFF;
 
-tmp = (inlet_a >> 1) + 0x4100000;                        // Bipolar to unipolar signal
-tmp = tmp & ~(mutebits << 20);                           // Bitwise operation
-tmp = (tmp - 0x4000000) << 1; 	                         // Unipolar to bipolar  
-outlet_b = tmp + mutebits;                               // Supress DC offset but must add highpass filter around 5Hz to finish the work
+tmp = inlet_a & 0xFFF00000;		  // Convert to 8 signal bits
+tmp = (inlet_a >> 1) + 0x04000000;   // Bipolar to unipolar signal
+//tmp = tmp + 0x00100000;			  // Noise gate
+tmp = tmp + (noisegate >> 7);			  // Noise gate
+tmp = tmp & ~(mutebits << 20);       // Bitwise operation
+tmp = tmp + ((mutebits/2) << 20);    // Suppress DC offset partially
+tmp = (tmp - 0x04000000) << 1; 	  // Unipolar to bipolar  
+
+// outlet_b = tmp;
+// HP filter to suppress entirely  DC offset
+val = ___SMMLA((tmp-val)<<1, hp_freq, val); 
+outlet_b = tmp-val;
 ]]></code.srate>
    </obj.normal>
 </objdefs>
