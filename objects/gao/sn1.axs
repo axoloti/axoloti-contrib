@@ -194,8 +194,8 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>49</x>
-      <y>24</y>
+      <y>52</y>
       <width>1115</width>
-      <height>744</height>
+      <height>716</height>
    </windowPos>
 </patch-1.0>
