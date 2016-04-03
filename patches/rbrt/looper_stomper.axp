@@ -1,0 +1,264 @@
+<patch-1.0 appVersion="1.0.8">
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t1" x="728" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="1048576"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1190" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1302" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="REC" x="266" y="98">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="112" text="hit REC to start recording a new loop"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="FEEDBACK" x="448" y="126">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="728" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="126" y="168" text="after recording,the loop plays automatically."/>
+   <obj type="rbrt/looper/looper_FB_mono" uuid="de42afeb-d1c7-4de1-9225-a216e22501c5" name="looper_FB_mono_1" x="966" y="168">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="112" y="196" text="hit PLAY shortly to start/stop the loop,"/>
+   <comment type="patch/comment" x="112" y="210" text="hit PLAY long to toggle overdubbing into the loop."/>
+   <comment type="patch/comment" x="448" y="224" text="FEEDBACK:"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="PLAY/OVERDUB" x="266" y="238">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="448" y="238" text="if set to less then &apos;64&apos;,the loop will gradually decay."/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="SAVE" x="70" y="294">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="140" y="322" text="hit SAVE to write the loop to sd-card"/>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="686" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="LOAD" x="70" y="364">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="140" y="364" text="hit load to load the loop from sd-card"/>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="REC state" x="1050" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/timer" uuid="d4a352fc-5acf-466d-b462-079a1b5a2b41" name="timer_1" x="406" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="d9f44795bfd6115f91bc84d9b38087afd0709f6e" name="&gt;_1" x="560" y="378">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="a459588d6498caeb4daf3a07f9d5e9b4a657262f">
+         <sDescription>greater than</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>math.axh</helpPatch>
+         <inlets>
+            <int32 name="in" description="in1"/>
+            <int32 name="low"/>
+            <int32 name="high"/>
+         </inlets>
+         <outlets>
+            <bool32 name="out" description="out"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.krate><![CDATA[outlet_out= ((inlet_in>inlet_low) && (inlet_in <inlet_high));]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_1" x="238" y="392">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_4" x="686" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="420" y="434">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="100"/>
+      </attribs>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="PLAY state" x="1050" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_1" x="14" y="448">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="myloop.wav"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_2" x="840" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_1" x="238" y="490">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_2" x="420" y="504">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1500"/>
+      </attribs>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="OD state" x="1050" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/&gt;" uuid="a459588d6498caeb4daf3a07f9d5e9b4a657262f" name="&gt;_2" x="574" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_2" x="658" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/clocker" uuid="5561eca2-f928-43a8-86dd-ff36636ab0a5" name="clocker_2" x="392" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="42" y="588" text="HOW does the patch remeber the length of the loop you recorded?"/>
+   <comment type="patch/comment" x="42" y="602" text="ha-ha!!"/>
+   <comment type="patch/comment" x="42" y="630" text="the loop-length is stored as the last sample of the table you&apos;re recording into."/>
+   <comment type="patch/comment" x="42" y="658" text="so,when you transfer the loop to some of these fancy &apos;DAW&apos;-programs "/>
+   <comment type="patch/comment" x="42" y="672" text="on your shiny new SUPERMAC,you will hear a nasty CLICK at the end of the loop."/>
+   <comment type="patch/comment" x="42" y="686" text="this is just the loop-length."/>
+   <nets>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="REC state" inlet="in"/>
+         <dest obj="looper_FB_mono_1" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="&gt;_1" outlet="out"/>
+         <dest obj="flipflop_4" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="&gt;_1" inlet="low"/>
+      </net>
+      <net>
+         <source obj="flipflop_4" outlet="o"/>
+         <dest obj="PLAY state" inlet="in"/>
+         <dest obj="and_2" inlet="i1"/>
+         <dest obj="looper_FB_mono_1" inlet="play"/>
+      </net>
+      <net>
+         <source obj="timer_1" outlet="t"/>
+         <dest obj="&gt;_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="clocker_2" outlet="t"/>
+         <dest obj="&gt;_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="&gt;_1" inlet="high"/>
+         <dest obj="&gt;_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="&gt;_2" outlet="out"/>
+         <dest obj="flipflop_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="flipflop_2" outlet="o"/>
+         <dest obj="and_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="and_2" outlet="o"/>
+         <dest obj="OD state" inlet="in"/>
+         <dest obj="looper_FB_mono_1" inlet="dub"/>
+      </net>
+      <net>
+         <source obj="c_1" outlet="out"/>
+         <dest obj="save_1" inlet="filename"/>
+         <dest obj="load_1" inlet="filename"/>
+      </net>
+      <net>
+         <source obj="PLAY/OVERDUB" outlet="o"/>
+         <dest obj="timer_1" inlet="toggle"/>
+         <dest obj="clocker_2" inlet="toggle"/>
+      </net>
+      <net>
+         <source obj="REC" outlet="o"/>
+         <dest obj="flipflop_1" inlet="trig"/>
+         <dest obj="flipflop_4" inlet="set"/>
+      </net>
+      <net>
+         <source obj="LOAD" outlet="o"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="SAVE" outlet="o"/>
+         <dest obj="save_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="FEEDBACK" outlet="out"/>
+         <dest obj="looper_FB_mono_1" inlet="feedback"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="+_2" inlet="in1"/>
+         <dest obj="looper_FB_mono_1" inlet="wave"/>
+      </net>
+      <net>
+         <source obj="looper_FB_mono_1" outlet="wave"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>11</x>
+      <y>8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>
