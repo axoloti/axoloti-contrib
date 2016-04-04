@@ -1,0 +1,103 @@
+<objdefs>
+   <obj.normal 
+   id="matrixscaler" uuid="363d17ef-2be8-4231-b497-fc9c86163b50">
+   <sDescription>matrix scaler </sDescription>  
+   <inlets>
+      <int32.positive name="s" description="select"/>
+	  <int32.bipolar name="seq"/>
+      <int32.bipolar name="octave"/>
+      <int32.bipolar name="keyafter"/>
+      <int32.bipolar name="transafter"/>
+   </inlets>
+   <outlets>
+      <int32.bipolar name="o"/>
+   </outlets>
+   <displays/>
+   <params><int32 name="transpose" noLabel="false">
+            <MinValue i="-60"/>
+            <MaxValue i="+60"/>
+         </int32>
+      <bool32.tgl name="on"/>
+      <int32.hradio name="C">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="Cis">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="D">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="Dis">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="E">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="F">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="Fis">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="G">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="Gis">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="A">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="Ais">
+         <MaxValue i="12"/>
+      </int32.hradio>
+      <int32.hradio name="B">
+         <MaxValue i="12"/>
+      </int32.hradio>
+   </params>
+   <attribs/>
+   <includes/>
+   <code.declaration><![CDATA[int32_t val;
+int rem;
+int oct;
+int scl;]]></code.declaration>
+   <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
+      rem = 1;
+      oct = 0;
+      scl = 0;]]></code.init>
+   <code.dispose><![CDATA[]]></code.dispose>
+   <code.krate><![CDATA[int r;
+      if (inlet_s >=0)
+      r = ((unsigned int)inlet_s)/12;
+else  r = -(((unsigned int)(12-inlet_s))/12);
+rem = (inlet_s+((inlet_seq +64)*0.094)+inlet_octave)-(r*12);;
+oct = ((r*12)-4);
+
+      switch(rem>0?rem:0){
+      case 0: scl = (param_C)+oct;break;
+      case 1: scl = (param_Cis)+oct;break;
+      case 2: scl = (param_D)+oct;break;
+      case 3: scl = (param_Dis)+oct;break;
+      case 4: scl = (param_E)+oct;break;
+      case 5: scl = (param_F)+oct;break;
+      case 6: scl = (param_Fis)+oct;break;
+      case 7: scl = (param_G)+oct;break;
+      case 8: scl = (param_Gis)+oct;break;
+      case 9: scl = (param_A)+oct;break;
+      case 10: scl = (param_Ais)+oct;break;
+      case 11: scl = (param_B)+oct;break;          
+      default: scl = (param_C)+oct;break;	  
+}
+outlet_o= (param_on)?scl+param_transpose+inlet_keyafter+inlet_transafter+inlet_octave
+:inlet_s+param_transpose+inlet_keyafter+inlet_transafter+((inlet_seq+64)*0.094)+inlet_octave;
+
+
+]]></code.krate>
+</obj.normal>
+</objdefs>
+
+
+   
+  
+
+  
