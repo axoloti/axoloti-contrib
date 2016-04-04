@@ -1,0 +1,31 @@
+<objdefs>
+   <obj.normal id="notch" uuid="1f9c4090-02c0-44f2-a02a-a852f74d9022" sha="861557fd-c84f-4986-a7af-f090bce756f6">
+      <sDescription>Notch filter (biquad)</sDescription>
+      <author>Johannes Taelman / Jan Hofmann</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+     <includes>
+       <include>./jho_filter.h</include>
+     </includes>     
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);
+]]></code.init>
+      <code.krate><![CDATA[      int32_t freq;
+      MTOF(param_pitch,freq);
+      jho_biquad_notch_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+]]></code.krate>
+   </obj.normal>
+</objdefs>
