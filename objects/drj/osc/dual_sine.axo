@@ -1,0 +1,43 @@
+<objdefs>
+  <obj.normal id="dual_sine" uuid="75f7330c26a18222985dc553ba3b9008545c1daa9" >
+    <sDescription>Dual phase sine oscillator, 0 and 90 degrees, lin-ip, pitch input, fm input</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>lfo.axh</helpPatch>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32buffer.bipolar name="fm" description="Frequency modulation input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="0" description="0 deg sine wave"/>
+      <frac32buffer.bipolar name="90" description="90 deg sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.pitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t Phase;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      Phase = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+      int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+    ]]></code.krate>
+    <code.srate><![CDATA[
+      Phase += freq + inlet_fm;
+
+      int32_t sine;
+
+      SINE2TINTERP(Phase,sine)
+      outlet_0 = (sine>>4);
+
+      SINE2TINTERP(Phase+0x40000000,sine)
+      outlet_90 = (sine>>4);
+
+    ]]></code.srate>
+  </obj.normal>
+</objdefs>
