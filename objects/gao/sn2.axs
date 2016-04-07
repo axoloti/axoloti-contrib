@@ -54,21 +54,13 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="noise decay" x="14" y="168">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="noise decay m" x="0" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="noise decay" x="196" y="168">
       <params>
          <frac32.s.map name="value" onParent="true" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="98" y="168">
-      <params>
-         <frac32.s.map name="pitch" onParent="true" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="196" y="168">
-      <params>
-         <frac32.u.map name="amp" onParent="true" value="10.0"/>
       </params>
       <attribs/>
    </obj>
@@ -95,7 +87,7 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="d_2" x="378" y="294">
       <params>
-         <frac32.s.map name="d" value="-26.489999771118164"/>
+         <frac32.s.map name="d" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -112,7 +104,7 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="d_3" x="686" y="294">
       <params>
-         <frac32.s.map name="d" value="5.399999618530273"/>
+         <frac32.s.map name="d" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -120,7 +112,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_2" x="938" y="294">
+   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="b/n1/n2" x="938" y="294">
       <params>
          <frac32.u.map name="gain1" onParent="true" value="36.5"/>
          <frac32.u.map name="gain2" onParent="true" value="20.5"/>
@@ -181,11 +173,11 @@
       </net>
       <net>
          <source obj="vca_3" outlet="o"/>
-         <dest obj="mix_2" inlet="in2"/>
+         <dest obj="b/n1/n2" inlet="in2"/>
       </net>
       <net>
          <source obj="vca_4" outlet="o"/>
-         <dest obj="mix_2" inlet="in3"/>
+         <dest obj="b/n1/n2" inlet="in3"/>
       </net>
       <net>
          <source obj="sine_1" outlet="wave"/>
@@ -214,17 +206,9 @@
          <dest obj="vca_2" inlet="v"/>
       </net>
       <net>
-         <source obj="noise decay" outlet="out"/>
-         <dest obj="+_1" inlet="in2"/>
-      </net>
-      <net>
          <source obj="body decay" outlet="out"/>
          <dest obj="ad_1" inlet="d"/>
          <dest obj="*c_2" inlet="in"/>
-      </net>
-      <net>
-         <source obj="sine_3" outlet="wave"/>
-         <dest obj="*c_1" inlet="in"/>
       </net>
       <net>
          <source obj="*c_2" outlet="out"/>
@@ -232,11 +216,7 @@
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
-         <dest obj="mix_2" inlet="in1"/>
-      </net>
-      <net>
-         <source obj="*c_1" outlet="out"/>
-         <dest obj="+_1" inlet="in1"/>
+         <dest obj="b/n1/n2" inlet="in1"/>
       </net>
       <net>
          <source obj="+_1" outlet="out"/>
@@ -248,7 +228,7 @@
          <dest obj="d_3" inlet="d"/>
       </net>
       <net>
-         <source obj="mix_2" outlet="out"/>
+         <source obj="b/n1/n2" outlet="out"/>
          <dest obj="gain_1" inlet="in"/>
       </net>
       <net>
@@ -266,6 +246,14 @@
       <net>
          <source obj="*_2" outlet="result"/>
          <dest obj="vca_3" inlet="v"/>
+      </net>
+      <net>
+         <source obj="noise decay" outlet="out"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="noise decay m" outlet="inlet"/>
+         <dest obj="+_1" inlet="in1"/>
       </net>
    </nets>
    <settings>
