@@ -1,0 +1,114 @@
+<objdefs>
+  <obj.normal  id="tri_b" uuid="ef2a162898b533c6e46ce43c0decba17b1862d85">
+    <sDescription>Triangle wave LFO, bipolar, pitch input</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <bool32.rising name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="tri" description="Triangle wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <includes/>
+    <code.declaration><![CDATA[
+      uint32_t Phase;
+      uint32_t r;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[Phase = 0;
+      r = 1;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && r )
+        {
+          Phase = 0;
+          r = 0;
+        }
+      else
+        {
+          if( !inlet_reset )
+            r = 1;
+          int32_t freq;
+          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+          Phase += freq>>2;
+        }
+
+      int32_t saw = (Phase>>4) - (1<<27);
+      outlet_tri  = (1<<27) - ___ABS(saw<<1);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal  id="tri_p" uuid="ef2a164985b533c6e46ce43c0decba17b1862d85">
+    <sDescription>Triangle wave LFO, unipolar, pitch input</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch Input"/>
+      <bool32.rising name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.positive name="tri" description="Triangle wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <includes/>
+    <code.declaration><![CDATA[
+      uint32_t Phase;
+      uint32_t r;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[Phase = 0;
+      r = 1;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && r )
+        {
+          Phase = 0;
+          r = 0;
+        }
+      else
+        {
+          if( !inlet_reset )
+            r = 1;
+          int32_t freq;
+          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+          Phase += freq>>2;
+        }
+
+      int32_t saw = (Phase>>4) - (1<<27);
+      outlet_tri  = (1<<27) - ___ABS( saw );
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>

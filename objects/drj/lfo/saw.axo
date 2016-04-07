@@ -1,0 +1,174 @@
+<objdefs>
+   <obj.normal id="saw_up_b" uuid="ef21a162898b5aac6e46ce43c5decba17b1862d85" >
+     <sDescription>Saw wave LFO, rising, bipolar, pitch input, phase reset</sDescription>
+     <author>Are Leistad</author>
+     <license>BSD</license>
+     <inlets>
+       <frac32.bipolar name="pitch" description="Pitch input"/>
+       <bool32.rising name="reset" description="Reset phase"/>
+     </inlets>
+     <outlets>
+       <frac32.bipolar name="saw" description="Saw wave"/>
+     </outlets>
+     <displays/>
+     <params>
+       <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+     </params>
+     <attribs/>
+     <includes/>
+     <code.declaration><![CDATA[
+       uint32_t Phase;
+       uint32_t r;
+     ]]></code.declaration>
+     <code.init><![CDATA[Phase = 0;
+       r = 1;
+     ]]></code.init>
+     <code.krate><![CDATA[
+
+       if( inlet_reset && r )
+         {
+           Phase = 0;
+           r = 0;
+         }
+       else
+         {
+           if( !inlet_reset )
+             r = 1;
+           int32_t freq;
+           MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+           Phase += freq>>2;
+         }
+       outlet_saw = (Phase>>4) - (1<<27);
+
+     ]]></code.krate>
+   </obj.normal>
+   <obj.normal id="saw_up_p" uuid="ef21a162388b5aac6e411e43c5decba17b1862d85" >
+     <sDescription>Saw wave LFO, rising, unipolar, pitch input, phase reset</sDescription>
+     <author>Are Leistad</author>
+     <license>BSD</license>
+     <inlets>
+       <frac32.bipolar name="pitch" description="Pitch input"/>
+       <bool32.rising name="reset" description="Reset phase"/>
+     </inlets>
+     <outlets>
+       <frac32.positive name="saw" description="Saw wave"/>
+     </outlets>
+     <displays/>
+     <params>
+       <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+     </params>
+     <attribs/>
+     <includes/>
+     <code.declaration><![CDATA[
+       uint32_t Phase;
+       uint32_t r;
+     ]]></code.declaration>
+     <code.init><![CDATA[Phase = 0;
+       r = 1;
+     ]]></code.init>
+     <code.krate><![CDATA[
+
+       if( inlet_reset && r )
+         {
+           Phase = 0;
+           r = 0;
+         }
+       else
+         {
+           if( !inlet_reset )
+             r = 1;
+           int32_t freq;
+           MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+           Phase += freq>>2;
+         }
+       outlet_saw = (Phase>>5);
+
+     ]]></code.krate>
+   </obj.normal>
+   <obj.normal id="saw_down_b" uuid="ef21a162338b5aac6e46ce4385decba17b1442d85" >
+     <sDescription>Saw wave LFO, falling, bipolar, pitch input, phase reset</sDescription>
+     <author>Are Leistad</author>
+     <license>BSD</license>
+     <inlets>
+       <frac32.bipolar name="pitch" description="Pitch input"/>
+       <bool32.rising name="reset" description="Reset phase"/>
+     </inlets>
+     <outlets>
+       <frac32.bipolar name="saw" description="Saw wave"/>
+     </outlets>
+     <displays/>
+     <params>
+       <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+     </params>
+     <attribs/>
+     <includes/>
+     <code.declaration><![CDATA[
+       uint32_t Phase;
+       uint32_t r;
+     ]]></code.declaration>
+     <code.init><![CDATA[Phase = 0;
+       r = 1;
+     ]]></code.init>
+     <code.krate><![CDATA[
+
+       if( inlet_reset && r )
+         {
+           Phase = 0;
+           r = 0;
+         }
+       else
+         {
+           if( !inlet_reset )
+             r = 1;
+           int32_t freq;
+           MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+           Phase += freq>>2;
+         }
+       outlet_saw = (1<<27) - (Phase>>4);
+
+     ]]></code.krate>
+   </obj.normal>
+   <obj.normal id="saw_down_p" uuid="ef21a16233865aac6e411e43c5decb517b1862d85" >
+     <sDescription>Saw wave LFO, falling, unipolar, pitch input, phase reset</sDescription>
+     <author>Are Leistad</author>
+     <license>BSD</license>
+     <inlets>
+       <frac32.bipolar name="pitch" description="Pitch input"/>
+       <bool32.rising name="reset" description="Reset phase"/>
+     </inlets>
+     <outlets>
+       <frac32.positive name="saw" description="Saw wave"/>
+     </outlets>
+     <displays/>
+     <params>
+       <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+     </params>
+     <attribs/>
+     <includes/>
+     <code.declaration><![CDATA[
+       uint32_t Phase;
+       uint32_t r;
+     ]]></code.declaration>
+     <code.init><![CDATA[Phase = 0;
+       r = 1;
+     ]]></code.init>
+     <code.krate><![CDATA[
+
+       if( inlet_reset && r )
+         {
+           Phase = 0;
+           r = 0;
+         }
+       else
+         {
+           if( !inlet_reset )
+             r = 1;
+           int32_t freq;
+           MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+           Phase += freq>>2;
+         }
+       outlet_saw = (1<<27) -(Phase>>5);
+
+     ]]></code.krate>
+   </obj.normal>
+</objdefs>

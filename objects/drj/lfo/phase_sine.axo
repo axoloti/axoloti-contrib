@@ -1,0 +1,98 @@
+<objdefs>
+  <obj.normal id="sin_ph_b" uuid="75f7330c26a11233215dcdd3ba3b9008545c1daa9" >
+    <sDescription>Sine LFO, bipolar, lin-ip, pitch input, phase input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>lfo.axh</helpPatch>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32.bipolar name="phase" description="Phase input"/>
+      <bool32.rising name="reset" description="Teset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="sine" description="Sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t Phase;
+      uint32_t r;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      Phase = 0;
+      r = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && r )
+        {
+          Phase = 0;
+          r = 0;
+        }
+      else
+        {
+          if( !inlet_reset )
+            r = 1;
+          int32_t freq;
+          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+          Phase += freq>>2;
+        }
+
+      int32_t sine;
+      SINE2TINTERP(Phase + inlet_phase << 4,sine)
+      outlet_sine = (sine>>4);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="sin_ph_p" uuid="7892330c26238233215daad4483b9008545c1daa9" >
+    <sDescription>Sine LFO, unipolar, lin-ip, pitch input, phase input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>lfo.axh</helpPatch>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32.bipolar name="phase" description="Phase input"/>
+      <bool32.rising name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.positive name="sine" description="Sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t Phase;
+      uint32_t r;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      Phase = 0;
+      r = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && r )
+        {
+          Phase = 0;
+          r = 0;
+        }
+      else
+        {
+          if( !inlet_reset )
+            r = 1;
+          int32_t freq;
+          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+          Phase += freq>>2;
+        }
+
+      int32_t sine;
+      SINE2TINTERP(Phase + inlet_phase << 4,sine)
+      outlet_sine = (sine>>5) + (1<<26);
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>
