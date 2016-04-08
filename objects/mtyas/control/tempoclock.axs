@@ -64,7 +64,7 @@
    </obj>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="364" y="602">
       <params>
-         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.s.map name="pitch" value="-12.0"/>
       </params>
       <attribs/>
    </obj>
