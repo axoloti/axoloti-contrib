@@ -3,9 +3,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="126" y="14">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="body pitch" x="126" y="14">
       <params>
-         <frac32.s.map name="value" value="1.0999999046325684"/>
+         <frac32.s.map name="value" onParent="true" value="1.0999999046325684"/>
       </params>
       <attribs/>
    </obj>
@@ -111,7 +111,7 @@
    </obj>
    <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="hp_1" x="630" y="294">
       <params>
-         <frac32.s.map name="pitch" value="21.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="21.0"/>
          <frac32.u.map name="reso" value="46.0"/>
       </params>
       <attribs/>
@@ -266,7 +266,7 @@
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
-         <source obj="dial_1" outlet="out"/>
+         <source obj="body pitch" outlet="out"/>
          <dest obj="sine_1" inlet="pitch"/>
          <dest obj="sine_2" inlet="pitch"/>
       </net>
