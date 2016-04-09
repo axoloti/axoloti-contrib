@@ -1,0 +1,32 @@
+<objdefs>
+   <obj.normal id="vcf x2" uuid="5a0fc991007542a0bd642f742a070b8c" sha="4c53d2d7a6854fde95c1a20439959e74">
+      <sDescription>Oversampled 2-pole resonant low-pass filter (biquad), filter updated at k-rate</sDescription>
+      <author>Johannes Taelman, Jan Hofmann</author>
+      <license>BSD</license>
+      <helpPatch>vcf x2.axh</helpPatch>
+      <inlets>
+        <frac32buffer name="in_1st" description="filter input, 1st part"/>
+        <frac32buffer name="in_2nd" description="filter input, 2nd part"/>
+        <frac32 name="frequency" description="cutoff frequency"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+        <frac32buffer name="out_1st" description="filter output, 1st part"/>
+        <frac32buffer name="out_2nd" description="filter output, 2nd part"/>
+      </outlets>
+      <displays/>
+      <attribs/>
+      <code.declaration><![CDATA[data_filter_biquad_A fd;
+]]></code.declaration>
+      <code.init><![CDATA[  init_filter_biquad_A(&fd);
+]]></code.init>
+      <code.krate>
+            <![CDATA[      int32_t freq = inlet_frequency;
+      freq -= 12<<21;
+      MTOF(freq,freq);
+      uint32_t q_inv = INT_MAX - (__USAT(inlet_reso,27)<<4);
+      f_filter_biquad_A(&fd,inlet_in__1st,outlet_out__1st,freq,q_inv);
+      f_filter_biquad_A(&fd,inlet_in__2nd,outlet_out__2nd,freq,q_inv);
+]]></code.krate>
+   </obj.normal>
+</objdefs>
