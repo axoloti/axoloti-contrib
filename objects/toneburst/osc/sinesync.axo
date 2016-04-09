@@ -21,12 +21,13 @@
       <code.declaration><![CDATA[
 
       uint32_t Phase;
-      //uint32_t
+      int32_t old_phase;
 
       ]]></code.declaration>
       <code.init><![CDATA[
 
       Phase = 0;
+      old_phase = 0;
 
       ]]></code.init>
       <code.krate><![CDATA[
@@ -37,7 +38,12 @@
       ]]></code.krate>
       <code.srate><![CDATA[
 
-      Phase += freq + inlet_freq;
+      if( inlet_sync > 0 && old_sync <= 0 )
+        Phase = 0;
+      else
+        Phase += freq + inlet_freq;
+      old_sync = inlet_sync;
+
       int32_t r;
       int32_t p2 = Phase + (inlet_phase<<4);
       SINE2TINTERP(p2,r)
