@@ -1,19 +1,21 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.9">
    <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="14" y="14">
       <params/>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="210" y="14" text="Using &apos;upsample cheap&apos; there is a 2dB rollof starting at 14 kHz"/>
+   <comment type="patch/comment" x="210" y="42" text="With object &apos;upsample&apos; (linear interpolation) the rollof is even 4dB!"/>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="gain" x="560" y="42">
       <params>
-         <frac32.u.map name="value" value="49.0"/>
+         <frac32.u.map name="value" value="16.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="jho/filter/upsample cheap" uuid="6f80963e9264457aad2d50f75247a749" name="upsample_1" x="14" y="70">
+   <obj type="jho/filter/upsample cheap" uuid="6f80963e9264457aad2d50f75247a749" name="upsample_cheap" x="14" y="70">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="interpolate" x="168" y="70">
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="lin. interpol." x="168" y="70">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
@@ -74,11 +76,11 @@
       <net>
          <source obj="uniform_1" outlet="wave"/>
          <dest obj="mux_1" inlet="i1"/>
-         <dest obj="upsample_1" inlet="in"/>
+         <dest obj="upsample_cheap" inlet="in"/>
          <dest obj="upsample_2" inlet="in"/>
       </net>
       <net>
-         <source obj="interpolate" outlet="o"/>
+         <source obj="lin. interpol." outlet="o"/>
          <dest obj="mux_2" inlet="s"/>
          <dest obj="mux_3" inlet="s"/>
       </net>
@@ -91,11 +93,11 @@
          <dest obj="downsample_1" inlet="in_1st"/>
       </net>
       <net>
-         <source obj="upsample_1" outlet="out_1st"/>
+         <source obj="upsample_cheap" outlet="out_1st"/>
          <dest obj="mux_2" inlet="i1"/>
       </net>
       <net>
-         <source obj="upsample_1" outlet="out_2nd"/>
+         <source obj="upsample_cheap" outlet="out_2nd"/>
          <dest obj="mux_3" inlet="i1"/>
       </net>
       <net>
@@ -116,9 +118,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>252</x>
-      <y>647</y>
+      <x>254</x>
+      <y>416</y>
       <width>965</width>
-      <height>681</height>
+      <height>649</height>
    </windowPos>
 </patch-1.0>
