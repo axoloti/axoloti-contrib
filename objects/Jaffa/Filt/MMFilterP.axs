@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.9">
    <obj type="filter/lp m" sha="c2224dc682842eae1af4496f3f94a6afc1525ee4" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp_2" x="1036" y="0">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
@@ -234,11 +234,17 @@
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>0</NPresets>
+      <NPresetEntries>0</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+      <Author>Jaffasplaffa</Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>223</x>
-      <y>100</y>
+      <x>167</x>
+      <y>23</y>
       <width>1113</width>
       <height>773</height>
    </windowPos>
