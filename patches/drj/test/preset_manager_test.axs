@@ -6,7 +6,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="drj/patch/preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189" name="preset_manager_1" x="224" y="56">
+   <obj type="drj/test/preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189" name="subPM" x="224" y="56">
       <params>
          <bool32.mom name="load" value="0"/>
          <int32 name="preset" value="0"/>
@@ -53,13 +53,13 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="224" y="350">
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="subsine" x="224" y="350">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="sine_1" x="336" y="350">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="submul" x="336" y="350">
       <params>
          <frac32.u.map name="amp" value="10.0"/>
       </params>
@@ -72,43 +72,43 @@
    <nets>
       <net>
          <source obj="preset_in" outlet="inlet"/>
-         <dest obj="preset_manager_1" inlet="preset"/>
+         <dest obj="subPM" inlet="preset"/>
       </net>
       <net>
          <source obj="c_1" outlet="out"/>
-         <dest obj="preset_manager_1" inlet="prefix"/>
+         <dest obj="subPM" inlet="prefix"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="preset"/>
+         <source obj="subPM" outlet="preset"/>
          <dest obj="preset_out" inlet="outlet"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="load"/>
+         <source obj="subPM" outlet="load"/>
          <dest obj="load_out" inlet="outlet"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="save"/>
+         <source obj="subPM" outlet="save"/>
          <dest obj="save_out" inlet="outlet"/>
       </net>
       <net>
          <source obj="load_in" outlet="inlet"/>
-         <dest obj="preset_manager_1" inlet="load"/>
+         <dest obj="subPM" inlet="load"/>
       </net>
       <net>
-         <source obj="sine_2" outlet="wave"/>
-         <dest obj="sine_1" inlet="in"/>
+         <source obj="subsine" outlet="wave"/>
+         <dest obj="submul" inlet="in"/>
       </net>
       <net>
-         <source obj="sine_1" outlet="out"/>
+         <source obj="submul" outlet="out"/>
          <dest obj="out" inlet="outlet"/>
       </net>
       <net>
          <source obj="save_in" outlet="inlet"/>
-         <dest obj="preset_manager_1" inlet="save"/>
+         <dest obj="subPM" inlet="save"/>
       </net>
       <net>
          <source obj="pitch" outlet="inlet"/>
-         <dest obj="sine_2" inlet="pitch"/>
+         <dest obj="subsine" inlet="pitch"/>
       </net>
    </nets>
    <settings>

@@ -8,7 +8,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="drj/patch/preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189" name="preset_manager_1" x="224" y="56">
+   <obj type="drj/test/preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189" name="mainPM" x="224" y="56">
       <params>
          <bool32.mom name="load" value="0"/>
          <int32 name="preset" value="0"/>
@@ -55,31 +55,31 @@
       </attribs>
    </obj>
    <comment type="patch/comment" x="252" y="364" text="A simple patch so that we have something to test"/>
-   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="saw_1" x="98" y="392">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="manlfo" x="98" y="392">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="sine_3" x="210" y="392">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="mainmul" x="210" y="392">
       <params>
          <frac32.u.map name="amp" value="35.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="322" y="392">
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="mainsine" x="322" y="392">
       <params>
          <frac32.s.map name="pitch" value="1.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="sine_1" x="434" y="392">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="mainmul2" x="434" y="392">
       <params>
          <frac32.u.map name="amp" value="3.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="546" y="392">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="maindial" x="546" y="392">
       <params>
          <frac32.s.map name="value" value="5.0"/>
       </params>
@@ -88,46 +88,46 @@
    <nets>
       <net>
          <source obj="load" outlet="o"/>
-         <dest obj="preset_manager_1" inlet="load"/>
+         <dest obj="mainPM" inlet="load"/>
       </net>
       <net>
          <source obj="save" outlet="o"/>
-         <dest obj="preset_manager_1" inlet="save"/>
+         <dest obj="mainPM" inlet="save"/>
       </net>
       <net>
          <source obj="c_1" outlet="out"/>
-         <dest obj="preset_manager_1" inlet="prefix"/>
+         <dest obj="mainPM" inlet="prefix"/>
       </net>
       <net>
          <source obj="preset" outlet="out"/>
-         <dest obj="preset_manager_1" inlet="preset"/>
+         <dest obj="mainPM" inlet="preset"/>
       </net>
       <net>
-         <source obj="sine_2" outlet="wave"/>
-         <dest obj="sine_1" inlet="in"/>
+         <source obj="mainsine" outlet="wave"/>
+         <dest obj="mainmul2" inlet="in"/>
       </net>
       <net>
-         <source obj="sine_1" outlet="out"/>
+         <source obj="mainmul2" outlet="out"/>
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
-         <source obj="sine_3" outlet="out"/>
-         <dest obj="sine_2" inlet="pitch"/>
+         <source obj="mainmul" outlet="out"/>
+         <dest obj="mainsine" inlet="pitch"/>
       </net>
       <net>
-         <source obj="saw_1" outlet="wave"/>
-         <dest obj="sine_3" inlet="in"/>
+         <source obj="manlfo" outlet="wave"/>
+         <dest obj="mainmul" inlet="in"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="preset"/>
+         <source obj="mainPM" outlet="preset"/>
          <dest obj="preset_manager_test_1" inlet="preset_in"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="load"/>
+         <source obj="mainPM" outlet="load"/>
          <dest obj="preset_manager_test_1" inlet="load_in"/>
       </net>
       <net>
-         <source obj="preset_manager_1" outlet="save"/>
+         <source obj="mainPM" outlet="save"/>
          <dest obj="preset_manager_test_1" inlet="save_in"/>
       </net>
       <net>
@@ -135,7 +135,7 @@
          <dest obj="preset_out" inlet="in"/>
       </net>
       <net>
-         <source obj="dial_2" outlet="out"/>
+         <source obj="maindial" outlet="out"/>
          <dest obj="preset_manager_test_1" inlet="pitch"/>
       </net>
       <net>
