@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.8">
-  <obj.normal id="preset_manager_test" uuid="awca12227f535a1212055669799101d3ee7f0189">
+  <obj.normal id="preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189">
     <sDescription>Preset save/load manager
     </sDescription>
     <author>Are Leistad</author>
@@ -330,26 +330,28 @@
           DEBUGF("preset_manager::krate(): start_sequence = %d", start_sequence );
           if( start_sequence == 0 )
             {
-              extern struct KeyValuePair *ObjectKvps;
+              extern struct KeyValuePair *ObjectKvpRoot;
+              extern struct KeyValuePair *ObjectKvps[];
+
 
               LogTextMessage( "preset_manager::krate(): ObjectKvpRoot = %08x, ObjectKvps = %08x, n = %d", ObjectKvpRoot, ObjectKvps, ObjectKvpRoot->apvp.length );
 
               for( int i = 0; i < ObjectKvpRoot->apvp.length; i++ )
                 {
-                  switch( ObjectKvps[i].kvptype )
+                  switch( ObjectKvps[i]->kvptype )
                     {
                       case KVP_TYPE_IPVP :
-                        LogTextMessage( "KVP_TYPE_IPVP: .keyName = %s, .value = %08x",
-                          ObjectKvps[i].keyname != NULL ? ObjectKvps[i].keyname : "NULL",
-                          ObjectKvps[i].ipvp.PEx->value );
+                        LogTextMessage( "KVP_TYPE_IPVP: .keyName = '%s', .value = %08x",
+                          ObjectKvps[i]->keyname != NULL ? ObjectKvps[i]->keyname : "NULL",
+                          ObjectKvps[i]->ipvp.PEx->value );
                         break;
                       case KVP_TYPE_IVP :
-                        LogTextMessage( "KVP_TYPE_IPVP: .keyName = %s, .value = %08x",
-                          ObjectKvps[i].keyname != NULL ? ObjectKvps[i].keyname : "NULL",
-                          ObjectKvps[i].ivp.value );
+                        LogTextMessage( "KVP_TYPE_IPVP: .keyName = '%s', .value = %08x",
+                          ObjectKvps[i]->keyname != NULL ? ObjectKvps[i]->keyname : "NULL",
+                          ObjectKvps[i]->ivp.value );
                         break;
                       default :
-                        LogTextMessage( "KVP_TYPE_ = %d", ObjectKvps[i].kvptype );
+                        LogTextMessage( "KVP_TYPE_ = %d", ObjectKvps[i]->kvptype );
                         break;
                     }
                 }
