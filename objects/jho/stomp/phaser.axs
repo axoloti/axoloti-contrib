@@ -25,24 +25,16 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="602" y="56">
-      <params/>
-      <attribs>
-         <spinner attributeName="value" value="32"/>
-      </attribs>
-   </obj>
-   <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="700" y="56">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="depth" x="784" y="56">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="depth" x="602" y="56">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="63.0"/>
+         <frac32.u.map name="amp" onParent="true" value="46.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="896" y="56">
-      <params/>
+   <obj type="math/-c" uuid="bc70bed87e5405985ade03f4806b9450609a9093" name="offset" x="728" y="56">
+      <params>
+         <frac32.u.map name="c" onParent="true" value="16.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="patch/inlet a" sha="2944bdbaeb2a8a42d5a97163275d052f75668a86" name="in" x="126" y="168">
@@ -139,27 +131,6 @@
          <dest obj="xfade_1" inlet="c"/>
       </net>
       <net>
-         <source obj="-_1" outlet="out"/>
-         <dest obj="depth" inlet="in"/>
-      </net>
-      <net>
-         <source obj="+_1" outlet="out"/>
-         <dest obj="interp_1" inlet="i"/>
-      </net>
-      <net>
-         <source obj="xfade_1" outlet="o"/>
-         <dest obj="-_1" inlet="in1"/>
-      </net>
-      <net>
-         <source obj="depth" outlet="out"/>
-         <dest obj="+_1" inlet="in1"/>
-      </net>
-      <net>
-         <source obj="i_1" outlet="out"/>
-         <dest obj="-_1" inlet="in2"/>
-         <dest obj="+_1" inlet="in2"/>
-      </net>
-      <net>
          <source obj="in" outlet="inlet"/>
          <dest obj="mux_1" inlet="i1"/>
          <dest obj="xfade_2" inlet="i1"/>
@@ -184,6 +155,18 @@
       <net>
          <source obj="xfade_2" outlet="o"/>
          <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="depth" outlet="out"/>
+         <dest obj="offset" inlet="in"/>
+      </net>
+      <net>
+         <source obj="xfade_1" outlet="o"/>
+         <dest obj="depth" inlet="in"/>
+      </net>
+      <net>
+         <source obj="offset" outlet="out"/>
+         <dest obj="interp_1" inlet="i"/>
       </net>
    </nets>
    <settings>
