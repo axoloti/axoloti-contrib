@@ -1,0 +1,36 @@
+<objdefs>
+   <obj.normal id="triggered buffer" uuid="cpwitz-delay-triggered buffer">
+      <sDescription>A circular sample buffer referencing a 32b table. Each time trigger input rises above zero a new sample is taken from in and the oldest sample from the buffer is on out. Good for building pitch shifting tape delays.</sDescription>
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <helpPatch/>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32buffer name="trigger" description="triggered on rising above 0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="oldest sample output"/>
+      </outlets>
+      <displays/>
+      <params />
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[
+        uint32_t pos;
+        int32_t last_input;        
+      ]]></code.declaration>
+      <code.init><![CDATA[
+        last_input = 0;
+        pos = 0;
+      ]]></code.init>
+      <code.srate><![CDATA[
+      if (inlet_trigger>0 && last_input<=0) {
+        pos = (pos+1) & attr_table.LENGTHMASK;
+      }
+      last_input = inlet_trigger;
+      outlet_out = attr_table.array[(pos+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+      attr_table.array[pos]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
