@@ -6,10 +6,6 @@
          <spinner attributeName="default" value="0"/>
       </attribs>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_3" x="112" y="14">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_3" x="196" y="14">
       <params>
          <frac32.u.map name="gain1" value="14.0"/>
@@ -219,8 +215,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>392</x>
-      <y>148</y>
+      <x>406</x>
+      <y>97</y>
       <width>822</width>
       <height>629</height>
    </windowPos>
