@@ -136,4 +136,42 @@ __attribute__ ((noinline))
   coefs->cxn_2 = ___SMMUL(JHO_ONE(3) - alphaM, a0_inv_3) << 2; //i4
 }
 
+//#define JHO_OLD
+
+#ifdef JHO_OLD
+#define jho_biquad_dsp biquad_dsp
+#else
+
+static __attribute__ ((noinline)) void jho_biquad_dsp(biquad_state *state,
+                                                  biquad_coefficients *coefs,
+                                                  const int32buffer inbuffer,
+                                                  int32buffer outbuffer) {
+  int32_t filter_x_n1 = state->filter_x_n1;
+  int32_t filter_x_n2 = state->filter_x_n2;
+  int32_t filter_y_n1 = state->filter_y_n1;
+  int32_t filter_y_n2 = state->filter_y_n2;
+  int i;
+  for (i = 0; i < BUFSIZE; i++) {
+    int32_t filterinput = inbuffer[i];
+    int32_t accu = ___SMMUL(coefs->cxn_0, filterinput);
+    accu = ___SMMLA(coefs->cxn_1, filter_x_n1, accu);
+    accu = ___SMMLA(coefs->cxn_2, filter_x_n2, accu);
+    accu = ___SMMLS(coefs->cyn_1, filter_y_n1, accu);
+    accu = ___SMMLS(coefs->cyn_2, filter_y_n2, accu);
+    int32_t filteroutput;
+    filteroutput = __SSAT(accu, 28) << 4;
+    //filteroutput = accu << 4;
+    filter_x_n2 = filter_x_n1;
+    filter_x_n1 = filterinput;
+    filter_y_n2 = filter_y_n1;
+    filter_y_n1 = filteroutput;
+    outbuffer[i] = filteroutput;
+  }
+  state->filter_x_n1 = filter_x_n1;
+  state->filter_x_n2 = filter_x_n2;
+  state->filter_y_n1 = filter_y_n1;
+  state->filter_y_n2 = filter_y_n2;
+}
+#endif
+
 #endif
