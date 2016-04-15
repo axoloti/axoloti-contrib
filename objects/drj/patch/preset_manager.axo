@@ -31,10 +31,12 @@
          <MenuEntries>
             <string>Global</string>
             <string>SubPatch</string>
+            <string>SubPatchV1</string>
          </MenuEntries>
          <CEntries>
             <string>0</string>
             <string>1</string>
+            <string>2</string>
          </CEntries>
       </combo>
       <combo name="pgmchange">
@@ -159,8 +161,9 @@
 
       enum
       {
-        PRESET_MANAGER_SAVE_MODE_global   = 0,
-        PRESET_MANAGER_SAVE_MODE_subpatch = 1
+        PRESET_MANAGER_SAVE_MODE_global = 0,
+        PRESET_MANAGER_SAVE_MODE_subpatch = 1,
+        PRESET_MANAGER_SAVE_MODE_subpatch_v1 = 2
       } PresetSaveMode;
 
       #define PRESET_MANAGER_PE_SIGNAL_MASK 0xFFFD
@@ -293,6 +296,13 @@
             if( err == FR_OK )
               LogTextMessage("Sub patch params saved to '%s'", filename );
           }
+        else if( attr_savemode == PRESET_MANAGER_SAVE_MODE_subpatch_v1 )
+          {
+            err = preset_save_subpatch_v1( &FileObject );
+            if( err == FR_OK )
+              LogTextMessage("Sub patch v1 params saved to '%s'", filename );
+          }
+
 
         if( err != FR_OK )
           {
@@ -418,6 +428,39 @@
           {
             LogTextMessage("%d non registered params were skipped!", parent->NPEXCH - n_saved_params );
           }
+        return FR_OK;
+      };
+
+
+      FRESULT preset_save_subpatch_v1( FIL *FileObject )
+      {
+        FRESULT       err;
+        unsigned int  bytes_written;
+        int32_t       value;
+
+        DEBUGF("preset_manager::preset_save_subpatch_v1(): file open OK, name = '%s'", filename );
+
+        // Write header word 1: type and version identifier
+        err = f_write( FileObject, (uint8_t *) "PRS1", 4, &bytes_written );
+        if( err != FR_OK )
+          return err;
+
+        // Write header word 2: number of parameters
+        value = parent->NPEXCH;
+        err = f_write( FileObject, (uint8_t *) &value, sizeof(int32_t), &bytes_written );
+        if( err != FR_OK )
+          return err;
+
+        DEBUGF("preset_manager::preset_save_subpatch_v1(): header written OK" );
+
+        for( int i = 0; i < parent->NPEXCH; i++ )
+          {
+            value = parent->PExch[i].value;
+            DEBUGF("preset_manager::preset_save_subpatch_v1(): 0x%08x", value );
+            err = f_write( FileObject, (uint8_t *) &value, sizeof(int32_t), &bytes_written );
+            if( err != FR_OK )
+              return err;
+         }
         return FR_OK;
       };
 
@@ -747,13 +790,13 @@
           DEBUGF("preset_manager::krate(): load_triggered");
           int32_t preset_candidate;
           if( old_param_load != param_load && param_load == 0 )
-             {
-               preset_candidate = param_preset;
-             }
-           else
-             {
-               preset_candidate = inlet_preset;
-             }
+            {
+              preset_candidate = param_preset;
+            }
+          else
+            {
+              preset_candidate = inlet_preset;
+            }
 
           if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
             {
