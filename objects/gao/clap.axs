@@ -108,7 +108,17 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1134" y="532">
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="1008" y="532">
+      <params>
+         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="1120" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1190" y="532">
       <params/>
       <attribs/>
    </obj>
@@ -193,8 +203,16 @@
          <dest obj="pulselength_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="mix_2" outlet="out"/>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="soft_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
          <dest obj="outlet_1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="gain_1" inlet="in"/>
       </net>
    </nets>
    <settings>
