@@ -1,8 +1,6 @@
 <patch-1.0 appVersion="1.0.8">
-   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="trig" x="14" y="14">
-      <params>
-         <frac32.s.map name="pitch" value="-31.0"/>
-      </params>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="trig" x="14" y="14">
+      <params/>
       <attribs/>
    </obj>
    <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="d_1" x="616" y="84">
@@ -93,7 +91,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="outlet_1" x="1134" y="448">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1134" y="448">
       <params/>
       <attribs/>
    </obj>
@@ -119,7 +117,7 @@
          <dest obj="gain_2" inlet="in"/>
       </net>
       <net>
-         <source obj="trig" outlet="wave"/>
+         <source obj="trig" outlet="inlet"/>
          <dest obj="d_1" inlet="trig"/>
          <dest obj="pulselength_1" inlet="trig"/>
          <dest obj="d_2" inlet="trig"/>
@@ -158,13 +156,12 @@
          <dest obj="pwm_2" inlet="pitch"/>
       </net>
       <net>
-         <source obj="vca_3" outlet="o"/>
-         <dest obj="outlet_1" inlet="left"/>
-         <dest obj="outlet_1" inlet="right"/>
-      </net>
-      <net>
          <source obj="d_2" outlet="env"/>
          <dest obj="vca_3" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_3" outlet="o"/>
+         <dest obj="outlet_1" inlet="outlet"/>
       </net>
    </nets>
    <settings>
