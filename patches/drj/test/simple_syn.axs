@@ -8,14 +8,14 @@
    </obj>
    <obj type="osc/pwm" uuid="a6b40ff63f161d8bac8ea2eba5b0dbffcf49b472" name="pwm_1" x="168" y="98">
       <params>
-         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.s.map name="pitch" value="-25.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="294" y="98">
       <params>
-         <frac32.s.map name="pitch" value="-31.0"/>
-         <frac32.u.map name="reso" value="31.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="-40.0"/>
+         <frac32.u.map name="reso" onParent="true" value="36.0"/>
       </params>
       <attribs/>
    </obj>
@@ -49,19 +49,19 @@
    </obj>
    <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="adsr_2" x="294" y="322">
       <params>
-         <frac32.s.map name="a" value="0.0"/>
+         <frac32.s.map name="a" onParent="true" value="14.0"/>
          <frac32.s.map name="d" value="0.0"/>
          <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="0.0"/>
+         <frac32.s.map name="r" value="24.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="adsr_1" x="434" y="322">
       <params>
-         <frac32.s.map name="a" value="0.0"/>
+         <frac32.s.map name="a" onParent="true" value="0.0"/>
          <frac32.s.map name="d" value="0.0"/>
          <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="0.0"/>
+         <frac32.s.map name="r" value="24.0"/>
       </params>
       <attribs/>
    </obj>
@@ -125,9 +125,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>1105</x>
-      <y>106</y>
-      <width>729</width>
-      <height>683</height>
+      <x>589</x>
+      <y>276</y>
+      <width>734</width>
+      <height>717</height>
    </windowPos>
 </patch-1.0>

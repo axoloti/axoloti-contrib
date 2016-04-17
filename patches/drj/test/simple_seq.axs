@@ -19,8 +19,8 @@
       <params>
          <frac32.s.map name="v0" value="1.0"/>
          <frac32.s.map name="v1" value="2.0"/>
-         <frac32.s.map name="v2" value="3.0"/>
-         <frac32.s.map name="v3" value="4.0"/>
+         <frac32.s.map name="v2" value="-2.0"/>
+         <frac32.s.map name="v3" value="-5.0"/>
          <frac32.s.map name="v4" value="0.0"/>
          <frac32.s.map name="v5" value="0.0"/>
          <frac32.s.map name="v6" value="0.0"/>
@@ -133,8 +133,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>772</x>
-      <y>114</y>
+      <x>967</x>
+      <y>111</y>
       <width>964</width>
       <height>921</height>
    </windowPos>
