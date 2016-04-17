@@ -1,0 +1,48 @@
+<objdefs>
+   <obj.normal id="write 32b" uuid="83196a4d0e64440a98034484a02cbbc6">
+      <sDescription>delayline definition, read with delread~</sDescription>
+      <author>Johannes Taelman, Jan Hofmann</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int32_t array[1<<attr_size];
+uint32_t writepos;]]></code.declaration>
+      <code.init><![CDATA[   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+]]></code.init>
+      <code.srate><![CDATA[  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = inlet_in;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,5 +1,5 @@
 <objdefs>
-   <obj.normal id="allpass mod" uuid="1a8f961fda99423ab211f91849272ea0">
+   <obj.normal id="allpass m hq" uuid="c6bec25f5bf44267a6bd5537d6a2cfae">
       <sDescription>allpass reverb section with modulation input</sDescription>
       <author>Johannes Taelman / Jan Hofmann</author>
       <license>BSD</license>
@@ -13,9 +13,9 @@
       </outlets>
       <displays/>
       <attribs>
-         <spinner name="delay" MinValue="1" MaxValue="10000" DefaultValue="1000"/>
+         <spinner name="delay" MinValue="1" MaxValue="5000" DefaultValue="100"/>
       </attribs>
-      <code.declaration><![CDATA[int16_t d[attr_delay];
+      <code.declaration><![CDATA[int32_t d[attr_delay];
 int dpos;
 ]]></code.declaration>
       <code.init><![CDATA[int i;
@@ -26,10 +26,10 @@ dpos = 0;
       <code.krate><![CDATA[int32_t g2;
 ]]></code.krate>
       <code.srate><![CDATA[g2 = inlet_mod<<4;
-int32_t dout =  d[dpos]<<16;
-int32_t din = ___SMMLA(g2,dout,inlet_in>>1);
-d[dpos++]=din>>15;
-outlet_out = ___SMMLS(g2,din<<1,dout>>1)<<1;
+int32_t dout =  d[dpos];
+int32_t din = ___SMMLA(g2,dout,inlet_in>>1)<<1;
+d[dpos++]=din;
+outlet_out = ___SMMLS(g2,din,dout>>1)<<1;
 if (dpos == attr_delay) dpos = 0;
 ]]></code.srate>
    </obj.normal>

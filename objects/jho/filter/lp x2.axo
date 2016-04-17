@@ -20,7 +20,10 @@
         <frac32.u.map.filterq name="reso"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+     <includes>
+       <include>./jho_filter.h</include>
+     </includes>
+     <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
 ]]></code.declaration>
       <code.init><![CDATA[biquad_clearstate(&bs);
 ]]></code.init>
@@ -29,8 +32,8 @@
           freq -= 12<<21;
       MTOF(freq,freq);
       biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
-      biquad_dsp(&bs,&bc,inlet_in__1st,outlet_out__1st);
-      biquad_dsp(&bs,&bc,inlet_in__2nd,outlet_out__2nd);
+      jho_biquad_dsp(&bs,&bc,inlet_in__1st,outlet_out__1st);
+      jho_biquad_dsp(&bs,&bc,inlet_in__2nd,outlet_out__2nd);
 ]]></code.krate>
    </obj.normal>
 </objdefs>
