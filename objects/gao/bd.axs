@@ -33,19 +33,12 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="timer/pulselength" uuid="ca68725237d8ba8407773340801660a9fd9b0dba" name="pulselength_1" x="0" y="98">
-      <params>
-         <frac32.s.map name="delay" onParent="true" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="decay m" x="14" y="182">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/ahd lin m" uuid="f9b46834ce96425064b4ed7f53ad8b91ea1ac0ef" name="decay" x="98" y="182">
+   <obj type="env/d lin m" uuid="e9d9a5152981b17626748fd93e7e6a39c0afe3aa" name="decay" x="98" y="182">
       <params>
-         <frac32.s.map name="a" onParent="true" value="0.0"/>
          <frac32.s.map name="d" onParent="true" value="64.0"/>
       </params>
       <attribs/>
@@ -113,7 +106,7 @@
          <source obj="trig" outlet="inlet"/>
          <dest obj="noise decay" inlet="trig"/>
          <dest obj="freq 1" inlet="trig"/>
-         <dest obj="pulselength_1" inlet="trig"/>
+         <dest obj="decay" inlet="trig"/>
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
@@ -146,10 +139,6 @@
       <net>
          <source obj="decay m" outlet="inlet"/>
          <dest obj="decay" inlet="d"/>
-      </net>
-      <net>
-         <source obj="pulselength_1" outlet="pulse"/>
-         <dest obj="decay" inlet="trig"/>
       </net>
    </nets>
    <settings>
