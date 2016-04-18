@@ -79,6 +79,10 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="start" x="812" y="238">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="reset:_immediate" x="42" y="280">
       <params>
          <bool32.mom name="b" onParent="true" value="0"/>
@@ -119,6 +123,10 @@
          <source obj="seq_clk_1" outlet="gate"/>
          <dest obj="gate" inlet="outlet"/>
       </net>
+      <net>
+         <source obj="seq_clk_1" outlet="start"/>
+         <dest obj="start" inlet="outlet"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>normal</subpatchmode>
@@ -131,9 +139,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>967</x>
-      <y>111</y>
-      <width>964</width>
+      <x>608</x>
+      <y>116</y>
+      <width>1252</width>
       <height>921</height>
    </windowPos>
 </patch-1.0>
