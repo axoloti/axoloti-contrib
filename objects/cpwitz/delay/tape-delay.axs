@@ -40,8 +40,18 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="cpwitz/delay/triggered buffer" uuid="cpwitz-delay-triggered buffer" name="triggered_1" x="546" y="224">
+   <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="294" y="224">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_2" x="364" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="cpwitz/delay/triggered buffer feedback" uuid="cpwitz-delay-triggered buffer feedback" name="feedback-buffer" x="476" y="224">
+      <params>
+         <frac32.u.map name="feedback" onParent="true" value="16.0"/>
+      </params>
       <attribs>
          <objref attributeName="table" obj="table"/>
       </attribs>
@@ -64,20 +74,6 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="294" y="266">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_2" x="364" y="266">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="feedback" x="448" y="266">
-      <params>
-         <frac32.u.map name="gain1" onParent="true" value="39.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="ratemod" x="14" y="294">
       <params/>
       <attribs/>
@@ -98,12 +94,8 @@
          <dest obj="mux_2" inlet="i2"/>
       </net>
       <net>
-         <source obj="feedback" outlet="out"/>
-         <dest obj="triggered_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="phasor_1" outlet="phasor"/>
-         <dest obj="triggered_1" inlet="trigger"/>
+         <dest obj="feedback-buffer" inlet="trigger"/>
       </net>
       <net>
          <source obj="rate" outlet="out"/>
@@ -111,14 +103,12 @@
          <dest obj="+_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="triggered_1" outlet="out"/>
+         <source obj="feedback-buffer" outlet="out"/>
          <dest obj="filter" inlet="in"/>
          <dest obj="mux_1" inlet="i1"/>
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
-         <dest obj="sat_1" inlet="in"/>
-         <dest obj="mux_2" inlet="i1"/>
          <dest obj="xfade_1" inlet="i2"/>
       </net>
       <net>
@@ -130,13 +120,10 @@
          <dest obj="mux_2" inlet="s"/>
       </net>
       <net>
-         <source obj="mux_2" outlet="o"/>
-         <dest obj="feedback" inlet="in1"/>
-      </net>
-      <net>
          <source obj="in" outlet="inlet"/>
-         <dest obj="feedback" inlet="bus_in"/>
          <dest obj="xfade_1" inlet="i1"/>
+         <dest obj="mux_2" inlet="i1"/>
+         <dest obj="sat_1" inlet="in"/>
       </net>
       <net>
          <source obj="xfade_1" outlet="o"/>
@@ -153,6 +140,10 @@
       <net>
          <source obj="+_1" outlet="out"/>
          <dest obj="phasor_1" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="mux_2" outlet="o"/>
+         <dest obj="feedback-buffer" inlet="in"/>
       </net>
    </nets>
    <settings>
