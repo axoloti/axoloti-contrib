@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="midiled" uuid="952fc352-41c6-45db-aa95-55d5d3a5546e">
+      <sDescription>an object to forward midi from one device to another
+note: does not handle sysex or clock</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="input">
+            <MenuEntries>
+               <string>omni</string>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>dev == MIDI_DEVICE_DIN &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 3</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 4</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_DEVICE &amp;&amp; port == 1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[
+int 		flash_cnt=0;
+bool 	flash_state = false;
+const int FLASH_LEN = 0x100;
+]]></code.declaration>
+      <code.init><![CDATA[sysmon_disable_blinker();
+palSetPadMode(LED2_PORT,LED2_PIN,PAL_MODE_OUTPUT_PUSHPULL);
+flash_cnt = 0;
+flash_state = false;]]></code.init>
+      <code.krate><![CDATA[
+	if(flash_cnt > 0) flash_cnt--;
+	bool fs = flash_cnt > 0;
+	if(fs!=flash_state) {
+		palWritePad(LED2_PORT,LED2_PIN,fs);
+		flash_state = fs;
+	}
+   ]]></code.krate>
+      <code.midihandler><![CDATA[
+        if(attr_input) {
+	        flash_cnt = FLASH_LEN;
+        }
+    ]]></code.midihandler>
+   </obj.normal>
+</objdefs>
