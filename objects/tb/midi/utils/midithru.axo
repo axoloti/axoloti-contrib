@@ -55,23 +55,38 @@ note: does not handle sysex or clock</sDescription>
                <string>MIDI_DEVICE_USB_DEVICE, 1</string>
             </CEntries>
          </combo>
+         <combo name="led">
+            <MenuEntries>
+               <string>on</string>
+               <string>off</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>false</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[
 int 		flash_cnt=0;
 bool 	flash_state = false;
 const int FLASH_LEN = 0x100;
 ]]></code.declaration>
-      <code.init><![CDATA[sysmon_disable_blinker();
-palSetPadMode(LED2_PORT,LED2_PIN,PAL_MODE_OUTPUT_PUSHPULL);
+      <code.init><![CDATA[
+        if(attr_led) {
+        sysmon_disable_blinker();
+        palSetPadMode(LED2_PORT,LED2_PIN,PAL_MODE_OUTPUT_PUSHPULL);
+}
 flash_cnt = 0;
 flash_state = false;]]></code.init>
       <code.krate><![CDATA[
+        if(attr_led) {
 	if(flash_cnt > 0) flash_cnt--;
 	bool fs = flash_cnt > 0;
 	if(fs!=flash_state) {
 		palWritePad(LED2_PORT,LED2_PIN,fs);
 		flash_state = fs;
 	}
+    }
    ]]></code.krate>
       <code.midihandler><![CDATA[
         if(attr_input) {
