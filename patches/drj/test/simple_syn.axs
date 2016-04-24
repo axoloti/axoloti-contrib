@@ -50,18 +50,18 @@
    <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="adsr_2" x="294" y="322">
       <params>
          <frac32.s.map name="a" onParent="true" value="14.0"/>
-         <frac32.s.map name="d" value="0.0"/>
-         <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="24.0"/>
+         <frac32.s.map name="d" onParent="true" value="0.0"/>
+         <frac32.u.map name="s" onParent="true" value="33.5"/>
+         <frac32.s.map name="r" onParent="true" value="24.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="adsr_1" x="434" y="322">
       <params>
          <frac32.s.map name="a" onParent="true" value="0.0"/>
-         <frac32.s.map name="d" value="0.0"/>
-         <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="24.0"/>
+         <frac32.s.map name="d" onParent="true" value="0.0"/>
+         <frac32.u.map name="s" onParent="true" value="33.0"/>
+         <frac32.s.map name="r" onParent="true" value="24.0"/>
       </params>
       <attribs/>
    </obj>
