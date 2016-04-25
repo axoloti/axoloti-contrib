@@ -3,8 +3,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="body decay" x="448" y="14">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="body decay" x="448" y="14">
       <params>
+         <frac32.s.map name="a" onParent="true" value="0.0"/>
          <frac32.s.map name="d" onParent="true" value="-27.53999948501587"/>
       </params>
       <attribs/>
@@ -98,7 +99,6 @@
       <NPresetEntries>0</NPresetEntries>
       <NModulationSources>0</NModulationSources>
       <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
-      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
