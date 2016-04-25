@@ -18,8 +18,8 @@
     <attribs/>
     <includes/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
       __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
       {
         int32_t result;
@@ -32,35 +32,97 @@
         return(result);
       };
     ]]></code.declaration>
-    <code.init><![CDATA[Phase = 0;
-      r = 1;
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 1;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
       int32_t saw;
 
-      saw = (Phase>>4) - (1<<27);
+      saw = (phase>>4) - (1<<27);
       outlet_0 = (1<<27) - ___ABS(saw<<1);
 
-      saw = ((Phase+0x40000000)>>4) - (1<<27);
+      saw = ((phase-0x40000000)>>4) - (1<<27);
       outlet_90 = (1<<27) - ___ABS(saw<<1);
 
     ]]></code.krate>
   </obj.normal>
+
+  <obj.normal  id="tri_2_b" uuid="af2a1238952b699c6646ce00c016cba11b1862d85">
+    <sDescription>Dual phase triangle LFO, bipolar, 0 and 120 degrees, bipolar, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="0" description="0 deg triangle wave"/>
+      <frac32.bipolar name="120" description="120 deg triangle wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <includes/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 1;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t saw;
+
+      saw = (phase>>4) - (1<<27);
+      outlet_0 = (1<<27) - ___ABS(saw<<1);
+
+      saw = ((phase-0x55555555)>>4) - (1<<27);
+      outlet_120 = (1<<27) - ___ABS(saw<<1);
+
+    ]]></code.krate>
+  </obj.normal>
+
   <obj.normal  id="tri_2_p" uuid="ef2a122298b699ce6469380c0decba11b1862d85">
     <sDescription>Dual phase triangle LFO, unipolar, 0 and 90 degrees, pitch input, phase reset</sDescription>
     <author>Are Leistad</author>
@@ -80,8 +142,8 @@
     <attribs/>
     <includes/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
       __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
       {
         int32_t result;
@@ -94,32 +156,92 @@
         return(result);
       };
     ]]></code.declaration>
-    <code.init><![CDATA[Phase = 0;
-      r = 1;
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
       int32_t saw;
 
-      saw = (Phase>>4) - (1<<27);
+      saw = (phase>>4) - (1<<27);
       outlet_0 = (1<<27) - ___ABS(saw);
 
-      saw = ((Phase+0x40000000)>>4) - (1<<27);
+      saw = ((phase-0x40000000)>>4) - (1<<27);
       outlet_90 = (1<<27) - ___ABS(saw);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal  id="tri_2_p" uuid="ef20122298e699ce64a938120decba11b1862d05">
+    <sDescription>Dual phase triangle LFO, unipolar, 0 and 120 degrees, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.positive name="0" description="0 deg triangle wave"/>
+      <frac32.positive name="120" description="120 deg triangle wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <includes/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t saw;
+
+      saw = (phase>>4) - (1<<27);
+      outlet_0 = (1<<27) - ___ABS(saw);
+
+      saw = ((phase-0x55555555)>>4) - (1<<27);
+      outlet_120 = (1<<27) - ___ABS(saw);
 
     ]]></code.krate>
   </obj.normal>
