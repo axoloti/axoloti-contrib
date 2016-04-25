@@ -37,10 +37,14 @@
     ]]></code.krate>
     <code.srate><![CDATA[
 
-      if( inlet_reset > 0 && old_reset <= 0 )
-        phase = 0;
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_reset = inlet_reset;
 
       outlet_out = ((phase + (inlet_phase<<4))>>4) - (1<<27);
@@ -85,10 +89,14 @@
     ]]></code.krate>
     <code.srate><![CDATA[
 
-      if( inlet_reset > 0 && old_reset <= 0 )
-        phase = 0;
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_reset = inlet_reset;
 
       outlet_out = (phase + (inlet_phase<<4))>>5;
@@ -133,16 +141,19 @@
     ]]></code.krate>
     <code.srate><![CDATA[
 
-      if( inlet_reset > 0 && old_reset <= 0 )
-        phase = 0;
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_reset = inlet_reset;
 
-      int32_t r;
-      int32_t p2 = phase + (inlet_phase<<4);
-      SINE2TINTERP(p2,r)
-      outlet_out = (r>>4);
+      int32_t sine;
+      SINE2TINTERP( phase + (inlet_phase<<4), sine )
+      outlet_out = (sine>>4);
 
     ]]></code.srate>
   </obj.normal>
@@ -184,16 +195,19 @@
     ]]></code.krate>
     <code.srate><![CDATA[
 
-      if( inlet_reset > 0 && old_reset <= 0 )
-        phase = 0;
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_reset = inlet_reset;
 
-      int32_t r;
-      int32_t p2 = phase + (inlet_phase<<4);
-      SINE2TINTERP(p2,r)
-      outlet_out = (r>>5) + (1<<26);
+      int32_t sine;
+      SINE2TINTERP( phase + (inlet_phase<<4), sine )
+      outlet_out = (sine>>5) + (1<<26);
 
     ]]></code.srate>
   </obj.normal>

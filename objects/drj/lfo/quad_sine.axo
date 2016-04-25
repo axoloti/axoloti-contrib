@@ -20,35 +20,33 @@
     </params>
     <attribs/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
     ]]></code.declaration>
     <code.init><![CDATA[
-      Phase = 0;
-      r = 1;
+      phase = 0;
+      old_reset = 0;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
       int32_t sine;
 
-      SINE2TINTERP(Phase,sine)
+      SINE2TINTERP(phase,sine)
       outlet_0 = (sine>>4);
 
-      SINE2TINTERP(Phase-0x40000000,sine)
+      SINE2TINTERP(phase-0x40000000,sine)
       outlet_90 = (sine>>4);
 
       outlet_180 = -outlet_0;
@@ -78,35 +76,33 @@
     </params>
     <attribs/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
     ]]></code.declaration>
     <code.init><![CDATA[
-      Phase = 0;
-      r = 1;
+      phase = 0;
+      old_reset = 0;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
       int32_t sine;
 
-      SINE2TINTERP(Phase,sine)
+      SINE2TINTERP(phase,sine)
       outlet_0 = (sine>>5) + (1<<26);
 
-      SINE2TINTERP(Phase-0x40000000,sine)
+      SINE2TINTERP(phase-0x40000000,sine)
       outlet_90 = (sine>>5) + (1<<26);
 
       outlet_180 = (1<<27) - outlet_0;

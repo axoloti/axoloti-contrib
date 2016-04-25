@@ -38,9 +38,13 @@
     <code.srate><![CDATA[
 
       if( inlet_sync > 0 && old_sync <= 0 )
-        phase = 0;
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_sync = inlet_sync;
 
       outlet_out = ((phase + (inlet_phase<<4))>>4) - (1<<27);
@@ -80,15 +84,19 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      MTOFEXTENDED( param_pitch + inlet_pitch, freq );
 
     ]]></code.krate>
     <code.srate><![CDATA[
 
       if( inlet_sync > 0 && old_sync <= 0 )
-        phase = 0;
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_sync = inlet_sync;
 
       outlet_out = (phase + (inlet_phase<<4))>>5;
@@ -128,21 +136,24 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      MTOFEXTENDED( param_pitch + inlet_pitch, freq );
 
     ]]></code.krate>
     <code.srate><![CDATA[
 
       if( inlet_sync > 0 && old_sync <= 0 )
-        phase = 0;
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_sync = inlet_sync;
 
-      int32_t r;
-      int32_t p2 = phase + (inlet_phase<<4);
-      SINE2TINTERP(p2,r)
-      outlet_out = (r>>4);
+      int32_t sine;
+      SINE2TINTERP( phase + (inlet_phase<<4), sine )
+      outlet_out = (sine>>4);
 
     ]]></code.srate>
   </obj.normal>
@@ -179,22 +190,24 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      MTOFEXTENDED( param_pitch + inlet_pitch, freq );
 
     ]]></code.krate>
     <code.srate><![CDATA[
 
       if( inlet_sync > 0 && old_sync <= 0 )
-        phase = 0;
+        {
+          phase = 0;
+        }
       else
-        phase += freq;
+        {
+          phase += freq;
+        }
       old_sync = inlet_sync;
 
-      int32_t r;
-      int32_t p2 = phase + (inlet_phase<<4);
-      SINE2TINTERP(p2,r)
-      outlet_out = (r>>5) + (1<<26);
-
+      int32_t sine;
+      SINE2TINTERP( phase + (inlet_phase<<4), sine )
+      outlet_out = (sine>>5) + (1<<26);
 
     ]]></code.srate>
   </obj.normal>

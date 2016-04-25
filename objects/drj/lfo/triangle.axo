@@ -1,5 +1,5 @@
 <objdefs>
-  <obj.normal  id="tri_b" uuid="ef2a162898b533c6e46ce43c0decba17b1862d85">
+  <obj.normal id="tri_b" uuid="ef2a162898b533c6e46ce43c0decba17b1862d85">
     <sDescription>Triangle wave LFO, bipolar, pitch input</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
@@ -17,8 +17,8 @@
     <attribs/>
     <includes/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
       __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
       {
         int32_t result;
@@ -31,26 +31,25 @@
         return(result);
       };
     ]]></code.declaration>
-    <code.init><![CDATA[Phase = 0;
-      r = 1;
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
-      int32_t saw = (Phase>>4) - (1<<27);
+      int32_t saw = (phase>>4) - (1<<27);
       outlet_tri  = (1<<27) - ___ABS(saw<<1);
 
     ]]></code.krate>
@@ -73,8 +72,8 @@
     <attribs/>
     <includes/>
     <code.declaration><![CDATA[
-      uint32_t Phase;
-      uint32_t r;
+      uint32_t phase;
+      uint32_t old_reset;
       __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
       {
         int32_t result;
@@ -87,26 +86,25 @@
         return(result);
       };
     ]]></code.declaration>
-    <code.init><![CDATA[Phase = 0;
-      r = 1;
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( inlet_reset && r )
+      if( inlet_reset && !old_reset )
         {
-          Phase = 0;
-          r = 0;
+          phase = 0;
         }
       else
         {
-          if( !inlet_reset )
-            r = 1;
           int32_t freq;
-          MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-          Phase += freq>>2;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
         }
+      old_reset = inlet_reset;
 
-      int32_t saw = (Phase>>4) - (1<<27);
+      int32_t saw = (phase>>4) - (1<<27);
       outlet_tri  = (1<<27) - ___ABS( saw );
 
     ]]></code.krate>
