@@ -129,11 +129,28 @@
        *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
        *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode
        *    word 2   =>  header, number of parameters
-       *    word 3   =>  first parameter hash
+       *    word 3   =>  first parameter name hash
        *    word 4   =>  first parameter value
        *    ..
-       *    word N   =>  last parameter hash
+       *    word N   =>  last parameter name hash
        *    word N+1 =>  last parameter value
+       *
+       *  When using a patch parent table (in an SD card file if it has to be so, using the preset slave),
+       *  the parameters will be grouped by patch:
+       *
+       *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
+       *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode, 2 = patch-parent-table?
+       *    word 3   =>  header, number of patches
+       *    word 4   =>  first patch header, patch id
+       *    word 5   =>  first patch header, number of parameters for this patch
+       *    word 6   =>  first patch, first parameter name hash
+       *    word 7   =>  first patch, first parameter value
+       *    ..
+       *    word N   =>  first patch, last parameter name hash
+       *    word N+1 =>  first patch, last parameter value
+       *    word N+2 =>  second patch header, patch id
+       *    word N+3 =>  second patch header, number of parameters for this patch
+       *    ...
        */
 
       //#define DEBUGF LogTextMessage
@@ -153,7 +170,9 @@
       const char  *magic_v2;
       const char  *suffix;
       const char  *prefix_copy;
+#ifdef USE_PATCHES_FILE
       const char  *patches_filename;
+#endif
 
       typedef struct _PresetFileHeader
       {
@@ -810,8 +829,9 @@
       magic_v2        = "PRS2";         // The file header magic word, version 2
       suffix          = ".prs";         // The file extension
       prefix_copy     = "";             // Need the inlet_prefix pointer in the MIDI handler
+#ifdef USE_PATCHES_FILE
       patches_filename= "patches.ppr";  // The "Patch Preset Registry" file
-
+#endif
 
     ]]></code.init>
     <code.krate><![CDATA[

@@ -1,0 +1,183 @@
+<objdefs>
+  <obj.normal id="read_sync" uuid="9abca43569373145e559ad309eaf65a47b14cb54">
+    <sDescription>Syncable delay read, non-interpolated</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32 name="time"  description="Delay time (fraction of delayline size)"/>
+      <bool32.rising name="24ppq" description="Clock input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer name="out" description="Delay output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockdiv" noLabel="false">
+        <MinValue i="1"/>
+        <MaxValue i="48"/>
+      </int32>
+      <frac32.u.map name="time" description="Internal delay time"/>
+    </params>
+    <attribs>
+      <objref name="delayname"/>
+      <combo name="clocksource">
+        <MenuEntries>
+          <string>Internal</string>
+          <string>External</string>
+          <string>MIDI</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+        </CEntries>
+      </combo>
+      <combo name="device">
+        <MenuEntries>
+          <string>omni</string>
+          <string>din</string>
+          <string>usb host port 1</string>
+          <string>usb host port 2</string>
+          <string>usb host port 3</string>
+          <string>usb host port 4</string>
+          <string>internal port 1</string>
+          <string>internal port 2</string>
+          <string>usb device port 1</string>
+        </MenuEntries>
+        <CEntries>
+          <string>MIDI_DEVICE_OMNI, 0</string>
+          <string>MIDI_DEVICE_DIN, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 2</string>
+          <string>MIDI_DEVICE_USB_HOST, 3</string>
+          <string>MIDI_DEVICE_USB_HOST, 4</string>
+          <string>MIDI_DEVICE_INTERNAL, 1</string>
+          <string>MIDI_DEVICE_INTERNAL, 2</string>
+          <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+        </CEntries>
+      </combo>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      #define USE_CLOCK_SMOOTHING
+
+      enum
+      {
+        CLOCK_SOURCE_internal = 0,
+        CLOCK_SOURCE_external = 1,
+        CLOCK_SOURCE_midi     = 2
+      } CLOCK_SOURCE;
+
+      uint32_t  ktimer;           // 3kHz timer
+      uint32_t  old_24ppq;
+      uint32_t  midi_period;
+      uint32_t  midi_last_ktime;  // MIDI/24PPQ clock capture
+      int32_t   midi_clock_freq;
+      int32_t   midi_clock_div;
+      int32_t   midi_clock_run;
+      int32_t   midi_clock_count;
+#ifdef USE_CLOCK_SMOOTHING
+      float     midi_last_period;
+#endif
+
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int midi_device_test( midi_device_t dev, uint8_t port, int selected_dev, uint8_t selected_port )
+      {
+        if(    (selected_dev == MIDI_DEVICE_OMNI)
+            || (selected_dev == dev && selected_port == port)
+            )
+          return 1;
+        return 0;
+      }
+
+      void on_24ppq_clock( void )
+      {
+        if( midi_clock_run == 1  )
+          {
+            midi_clock_count++;
+            if( midi_clock_count >= midi_clock_div )
+              {
+                // Find noof sample periods since last time;
+                float period = (ktimer - midi_last_ktime) * 16;
+#ifdef USE_CLOCK_SMOOTHING
+                // Leaky integrator to minimize glitches on tempo changes
+                period = period + 0.1f * (midi_last_period - period);
+                midi_last_period = period;
+#endif
+                if( period < 1.0f )
+                  {
+                    period == 1.0f;
+                  }
+                midi_period      = (uint32_t) period;
+                midi_clock_count = 0;
+                midi_last_ktime  = ktimer;
+              }
+          }
+      }
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      ktimer           = 0;
+      old_24ppq        = 0;
+      midi_last_ktime  = 0;
+      midi_period      = 0;
+      midi_clock_freq  = 0;
+      midi_clock_div   = 12;
+      midi_clock_run   = 1;
+      midi_clock_count = 0;
+#ifdef USE_CLOCK_SMOOTHING
+      midi_last_period = 0.0f;
+#endif
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      // Need some variable copies to resolve scope...
+      midi_clock_div = param_clockdiv;
+
+      // 24 PPQ or MIDI sync input
+      if( attr_clocksource == CLOCK_SOURCE_external )
+        {
+          if( inlet_24ppq && !old_24ppq )
+            {
+              on_24ppq_clock();
+            }
+        }
+      old_24ppq = inlet_24ppq;
+
+      uint32_t length;
+      if( attr_clocksource != CLOCK_SOURCE_internal )
+        {
+          length = midi_period;
+        }
+      else
+        {
+          length = __USAT(param_time + inlet_time, 27) >> (27-attr_delayname.LENGTHPOW);
+        }
+
+      if( length > attr_delayname.LENGTHMASK - BUFSIZE )
+        length = attr_delayname.LENGTHMASK - BUFSIZE;
+
+      uint32_t delay = attr_delayname.writepos - length - BUFSIZE;
+
+      ktimer++;
+
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      outlet_out= attr_delayname.array[(delay++) & attr_delayname.LENGTHMASK]<<14;
+
+    ]]></code.srate>
+    <code.midihandler><![CDATA[
+
+      if( attr_clocksource == CLOCK_SOURCE_midi && midi_device_test( dev, port, attr_device ) == 1 )
+        {
+          if( status == MIDI_TIMING_CLOCK )
+            {
+              on_24ppq_clock();
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+</objdefs>
