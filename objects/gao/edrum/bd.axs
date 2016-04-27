@@ -143,11 +143,18 @@
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>0</NPresets>
+      <NPresetEntries>0</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+      <Author>GaoTamanrasset</Author>
+      <License>GPL</License>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>49</x>
-      <y>52</y>
+      <x>119</x>
+      <y>66</y>
       <width>1125</width>
       <height>651</height>
    </windowPos>
