@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="encode 4" uuid="dfc0a689d7e237c2464fd01f6972f64d897863a4">
+      <sDescription>binary encoder (4 bit plus sign) </sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="b0" description="bit 0 LSB"/>
+         <bool32 name="b1" description="bit 1"/>
+         <bool32 name="b2" description="bit 2"/>
+         <bool32 name="b3" description="bit 3 MSB"/>
+         <bool32 name="sign" description="sign bit"/>
+      </inlets>
+      <outlets>
+         <int32 name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int i_out;]]></code.declaration>
+      <code.krate><![CDATA[
+	  i_out = inlet_b0*1 + inlet_b1*2 + inlet_b2*4 + inlet_b3*8;
+	  if (inlet_sign==1)
+	  i_out=-1-i_out;
+	  outlet_out = i_out;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
