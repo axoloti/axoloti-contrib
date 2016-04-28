@@ -5,7 +5,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="closed velocity" x="1022" y="28">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="closed velocity" x="1008" y="42">
       <params/>
       <attribs/>
    </obj>
@@ -38,42 +38,42 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp" x="476" y="84">
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp" x="462" y="98">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="51.0"/>
-         <frac32.u.map name="reso" onParent="true" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="closed" x="588" y="84">
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="closed" x="574" y="98">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="closed decay" x="700" y="84">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="closed decay" x="686" y="98">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" onParent="true" value="-47.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="812" y="84">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="798" y="98">
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/hp m" uuid="fdba806c3cfd2b7aca3256c733379a06e5811e66" name="hp_1" x="882" y="84">
+   <obj type="filter/hp m" uuid="fdba806c3cfd2b7aca3256c733379a06e5811e66" name="hp closed" x="868" y="98">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="11.0"/>
-         <frac32.u.map name="reso" onParent="true" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain closed" x="994" y="84">
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain closed" x="980" y="98">
       <params>
          <frac32.u.map name="amp" onParent="true" value="13.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_3" x="1106" y="84">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_3" x="1092" y="98">
       <params/>
       <attribs/>
    </obj>
@@ -95,71 +95,71 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="open velocity" x="1022" y="224">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="open velocity" x="1162" y="238">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="open" x="462" y="280">
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="open" x="462" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="toggle_1" x="574" y="280">
+   <obj type="timer/delayedpulse" uuid="3f05ee534ca67755fb20c7437f9e4de3d4c2f73d" name="open decay" x="546" y="294">
+      <params>
+         <frac32.s.map name="delay" onParent="true" value="-25.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="658" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ad_2" x="700" y="280">
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="toggle_1" x="728" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ad_2" x="840" y="294">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="-38.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="812" y="280">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="952" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/hp m" uuid="fdba806c3cfd2b7aca3256c733379a06e5811e66" name="hp_2" x="882" y="280">
+   <obj type="filter/hp m" uuid="fdba806c3cfd2b7aca3256c733379a06e5811e66" name="hp open" x="1022" y="294">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="11.0"/>
-         <frac32.u.map name="reso" onParent="true" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain open" x="994" y="280">
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain open" x="1134" y="294">
       <params>
          <frac32.u.map name="amp" onParent="true" value="13.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_4" x="1106" y="280">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_4" x="1246" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="timer/delayedpulse" uuid="3f05ee534ca67755fb20c7437f9e4de3d4c2f73d" name="open decay" x="462" y="392">
-      <params>
-         <frac32.s.map name="delay" onParent="true" value="-25.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="588" y="392">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="784" y="490">
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="882" y="504">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
          <frac32.u.map name="gain2" value="32.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="896" y="490">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="994" y="504">
       <params/>
       <attribs/>
    </obj>
    <nets>
       <net>
          <source obj="vca_1" outlet="o"/>
-         <dest obj="hp_1" inlet="in"/>
+         <dest obj="hp closed" inlet="in"/>
       </net>
       <net>
          <source obj="square_3" outlet="wave"/>
@@ -186,10 +186,6 @@
          <dest obj="mix_1" inlet="in6"/>
       </net>
       <net>
-         <source obj="mix_1" outlet="out"/>
-         <dest obj="bp" inlet="in"/>
-      </net>
-      <net>
          <source obj="closed decay" outlet="env"/>
          <dest obj="vca_1" inlet="v"/>
       </net>
@@ -214,7 +210,7 @@
       </net>
       <net>
          <source obj="vca_2" outlet="o"/>
-         <dest obj="hp_2" inlet="in"/>
+         <dest obj="hp open" inlet="in"/>
       </net>
       <net>
          <source obj="ad_2" outlet="env"/>
@@ -242,11 +238,11 @@
          <dest obj="vca_3" inlet="a"/>
       </net>
       <net>
-         <source obj="hp_1" outlet="out"/>
+         <source obj="hp closed" outlet="out"/>
          <dest obj="gain closed" inlet="in"/>
       </net>
       <net>
-         <source obj="hp_2" outlet="out"/>
+         <source obj="hp open" outlet="out"/>
          <dest obj="gain open" inlet="in"/>
       </net>
       <net>
@@ -273,6 +269,10 @@
          <source obj="open velocity" outlet="inlet"/>
          <dest obj="vca_4" inlet="v"/>
       </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="bp" inlet="in"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
@@ -280,8 +280,8 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>49</x>
-      <y>-4</y>
+      <y>24</y>
       <width>1317</width>
-      <height>772</height>
+      <height>744</height>
    </windowPos>
 </patch-1.0>

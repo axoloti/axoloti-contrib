@@ -56,14 +56,14 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp_1" x="266" y="420">
+   <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp" x="266" y="420">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="42.0"/>
          <frac32.u.map name="reso" value="37.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="jho/filter/notch" uuid="1f9c4090-02c0-44f2-a02a-a852f74d9022" name="hp_1" x="392" y="420">
+   <obj type="jho/filter/notch" uuid="1f9c4090-02c0-44f2-a02a-a852f74d9022" name="hp" x="392" y="420">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="53.0"/>
          <frac32.u.map name="reso" value="25.5"/>
@@ -85,7 +85,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="882" y="420">
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="882" y="420">
       <params>
          <frac32.u.map name="amp" onParent="true" value="9.0"/>
       </params>
@@ -111,14 +111,14 @@
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
-         <dest obj="lp_1" inlet="in"/>
+         <dest obj="lp" inlet="in"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="gain_1" outlet="out"/>
+         <source obj="gain" outlet="out"/>
          <dest obj="soft_1" inlet="in"/>
       </net>
       <net>
@@ -142,21 +142,21 @@
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
-         <source obj="hp_1" outlet="out"/>
+         <source obj="hp" outlet="out"/>
          <dest obj="vca_4" inlet="a"/>
       </net>
       <net>
-         <source obj="lp_1" outlet="out"/>
-         <dest obj="hp_1" inlet="in"/>
+         <source obj="lp" outlet="out"/>
+         <dest obj="hp" inlet="in"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
-         <dest obj="lp_1" inlet="pitch"/>
+         <dest obj="lp" inlet="pitch"/>
          <dest obj="noise decay" inlet="d"/>
       </net>
       <net>
          <source obj="*_1" outlet="result"/>
-         <dest obj="gain_1" inlet="in"/>
+         <dest obj="gain" inlet="in"/>
       </net>
       <net>
          <source obj="unipolar2bipolar_1" outlet="o"/>
@@ -183,13 +183,11 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author></Author>
-      <Attributions></Attributions>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>49</x>
-      <y>24</y>
+      <y>-4</y>
       <width>1317</width>
       <height>772</height>
    </windowPos>

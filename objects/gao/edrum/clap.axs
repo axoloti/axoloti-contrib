@@ -43,21 +43,21 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_2" x="854" y="224">
+   <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="pulse hp" x="854" y="224">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="15.0"/>
          <frac32.u.map name="reso" onParent="true" value="7.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="616" y="308">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad" x="616" y="308">
       <params>
          <frac32.s.map name="a" onParent="true" value="-64.0"/>
          <frac32.s.map name="d" onParent="true" value="-18.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_2" x="728" y="308">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="fb ad" x="728" y="308">
       <params>
          <frac32.s.map name="a" onParent="true" value="-54.0"/>
          <frac32.s.map name="d" onParent="true" value="8.0"/>
@@ -70,14 +70,14 @@
          <combo attributeName="octaves" selection="4"/>
       </attribs>
    </obj>
-   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_1" x="140" y="490">
+   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp" x="140" y="490">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="24.0"/>
          <frac32.u.map name="reso" onParent="true" value="49.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="280" y="490">
+   <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp" x="280" y="490">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="48.0"/>
          <frac32.u.map name="reso" onParent="true" value="54.0"/>
@@ -108,7 +108,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="1008" y="532">
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="1008" y="532">
       <params>
          <frac32.u.map name="amp" onParent="true" value="0.0"/>
       </params>
@@ -130,7 +130,7 @@
       <net>
          <source obj="delayedpulse_3" outlet="pulse"/>
          <dest obj="or_2" inlet="i2"/>
-         <dest obj="ad_2" inlet="trig"/>
+         <dest obj="fb ad" inlet="trig"/>
       </net>
       <net>
          <source obj="delayedpulse_1" outlet="pulse"/>
@@ -146,41 +146,41 @@
       </net>
       <net>
          <source obj="or_3" outlet="o"/>
-         <dest obj="ad_1" inlet="trig"/>
+         <dest obj="ad" inlet="trig"/>
          <dest obj="interp_1" inlet="i"/>
       </net>
       <net>
-         <source obj="ad_1" outlet="env"/>
+         <source obj="ad" outlet="env"/>
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
          <source obj="pink_1" outlet="out"/>
-         <dest obj="bp_1" inlet="in"/>
+         <dest obj="bp" inlet="in"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
          <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="lp_1" outlet="out"/>
+         <source obj="lp" outlet="out"/>
          <dest obj="mix_1" inlet="in1"/>
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="bp_1" outlet="out"/>
+         <source obj="bp" outlet="out"/>
          <dest obj="mix_1" inlet="in2"/>
-         <dest obj="lp_1" inlet="in"/>
+         <dest obj="lp" inlet="in"/>
       </net>
       <net>
          <source obj="interp_1" outlet="o"/>
-         <dest obj="hp_2" inlet="in"/>
+         <dest obj="pulse hp" inlet="in"/>
       </net>
       <net>
-         <source obj="hp_2" outlet="out"/>
+         <source obj="pulse hp" outlet="out"/>
          <dest obj="mix_2" inlet="in3"/>
       </net>
       <net>
-         <source obj="ad_2" outlet="env"/>
+         <source obj="fb ad" outlet="env"/>
          <dest obj="vca_2" inlet="v"/>
       </net>
       <net>
@@ -203,7 +203,7 @@
          <dest obj="pulselength_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="gain_1" outlet="out"/>
+         <source obj="gain" outlet="out"/>
          <dest obj="soft_1" inlet="in"/>
       </net>
       <net>
@@ -212,7 +212,7 @@
       </net>
       <net>
          <source obj="mix_2" outlet="out"/>
-         <dest obj="gain_1" inlet="in"/>
+         <dest obj="gain" inlet="in"/>
       </net>
    </nets>
    <settings>

@@ -48,15 +48,27 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="574" y="182">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="560" y="182">
+      <params>
+         <frac32.u.map name="amp" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="686" y="182">
+      <params>
+         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="798" y="182">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="672" y="182">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="896" y="182">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="display bits" x="672" y="252">
+   <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="display bits" x="882" y="252">
       <params/>
       <attribs/>
    </obj>
@@ -105,11 +117,19 @@
       </net>
       <net>
          <source obj="demux_1" outlet="o"/>
-         <dest obj="mux_1" inlet="i2"/>
+         <dest obj="*c_1" inlet="in"/>
       </net>
       <net>
          <source obj="filter mode" outlet="out"/>
          <dest obj="demux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="gain" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="gain" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -117,9 +137,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>426</x>
-      <y>158</y>
-      <width>857</width>
+      <x>168</x>
+      <y>94</y>
+      <width>1058</width>
       <height>577</height>
    </windowPos>
 </patch-1.0>

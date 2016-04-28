@@ -9,25 +9,25 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="294" y="14">
+   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="378" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/abs" uuid="f4078fd9b2dff40d4f1551b79900c9ab360c99" name="abs_1" x="392" y="14">
+   <obj type="math/abs" uuid="f4078fd9b2dff40d4f1551b79900c9ab360c99" name="abs_1" x="476" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="noise decay" x="462" y="14">
+   <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="noise decay" x="546" y="14">
       <params>
          <frac32.s.map name="d" onParent="true" value="-17.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_3" x="574" y="14">
+   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_3" x="658" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise level" x="644" y="14">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise level" x="728" y="14">
       <params>
          <frac32.u.map name="amp" onParent="true" value="18.5"/>
       </params>
@@ -37,9 +37,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/d lin m" uuid="e9d9a5152981b17626748fd93e7e6a39c0afe3aa" name="decay" x="98" y="182">
+   <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="decay" x="98" y="182">
       <params>
-         <frac32.s.map name="d" onParent="true" value="64.0"/>
+         <frac32.s.map name="d" onParent="true" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -55,37 +55,36 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="*_1" x="434" y="182">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="*_1" x="448" y="182">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_2" x="448" y="238">
+   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_2" x="448" y="252">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="square" x="518" y="238">
+   <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp" x="532" y="252">
+      <params>
+         <frac32.s.map name="pitch" onParent="true" value="64.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="658" y="252">
       <params>
          <frac32.u.map name="amp" onParent="true" value="1.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="644" y="238">
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="784" y="252">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" sha="72226293648dde4dd4739bc1b8bc46a6bf660595" name="out" x="742" y="238">
+   <obj type="patch/outlet a" sha="72226293648dde4dd4739bc1b8bc46a6bf660595" name="out" x="882" y="252">
       <params/>
       <attribs/>
    </obj>
    <nets>
-      <net>
-         <source obj="*_2" outlet="result"/>
-         <dest obj="square" inlet="in"/>
-      </net>
-      <net>
-         <source obj="curve" outlet="out"/>
-         <dest obj="freq 2" inlet="pitch"/>
-      </net>
       <net>
          <source obj="freq 2" outlet="wave"/>
          <dest obj="*_1" inlet="in1"/>
@@ -97,10 +96,6 @@
       <net>
          <source obj="*_3" outlet="result"/>
          <dest obj="noise level" inlet="in"/>
-      </net>
-      <net>
-         <source obj="noise level" outlet="out"/>
-         <dest obj="*_1" inlet="in2"/>
       </net>
       <net>
          <source obj="trig" outlet="inlet"/>
@@ -121,12 +116,8 @@
          <dest obj="*_3" inlet="b"/>
       </net>
       <net>
-         <source obj="square" outlet="out"/>
+         <source obj="gain" outlet="out"/>
          <dest obj="soft_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="soft_1" outlet="out"/>
-         <dest obj="out" inlet="outlet"/>
       </net>
       <net>
          <source obj="freq 1" outlet="env"/>
@@ -139,6 +130,26 @@
       <net>
          <source obj="decay m" outlet="inlet"/>
          <dest obj="decay" inlet="d"/>
+      </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
+         <dest obj="out" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="noise level" outlet="out"/>
+         <dest obj="*_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="curve" outlet="out"/>
+         <dest obj="freq 2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="lp" outlet="out"/>
+         <dest obj="gain" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*_2" outlet="result"/>
+         <dest obj="lp" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -155,7 +166,7 @@
    <windowPos>
       <x>119</x>
       <y>66</y>
-      <width>1125</width>
-      <height>651</height>
+      <width>995</width>
+      <height>482</height>
    </windowPos>
 </patch-1.0>
