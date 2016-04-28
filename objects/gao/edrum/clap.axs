@@ -45,22 +45,22 @@
    </obj>
    <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="pulse hp" x="854" y="224">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="15.0"/>
-         <frac32.u.map name="reso" onParent="true" value="7.5"/>
+         <frac32.s.map name="pitch" onParent="true" value="10.0"/>
+         <frac32.u.map name="reso" onParent="true" value="40.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad" x="616" y="308">
       <params>
-         <frac32.s.map name="a" onParent="true" value="-64.0"/>
-         <frac32.s.map name="d" onParent="true" value="-18.0"/>
+         <frac32.s.map name="a" onParent="true" value="-40.0"/>
+         <frac32.s.map name="d" onParent="true" value="-30.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="fb ad" x="728" y="308">
       <params>
-         <frac32.s.map name="a" onParent="true" value="-54.0"/>
-         <frac32.s.map name="d" onParent="true" value="8.0"/>
+         <frac32.s.map name="a" onParent="true" value="-53.0"/>
+         <frac32.s.map name="d" onParent="true" value="-2.0"/>
       </params>
       <attribs/>
    </obj>
@@ -72,15 +72,15 @@
    </obj>
    <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp" x="140" y="490">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="24.0"/>
-         <frac32.u.map name="reso" onParent="true" value="49.5"/>
+         <frac32.s.map name="pitch" onParent="true" value="23.0"/>
+         <frac32.u.map name="reso" onParent="true" value="51.5"/>
       </params>
       <attribs/>
    </obj>
    <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp" x="280" y="490">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="48.0"/>
-         <frac32.u.map name="reso" onParent="true" value="54.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="30.0"/>
+         <frac32.u.map name="reso" onParent="true" value="40.0"/>
       </params>
       <attribs/>
    </obj>
@@ -110,7 +110,7 @@
    </obj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="1008" y="532">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+         <frac32.u.map name="amp" onParent="true" value="16.5"/>
       </params>
       <attribs/>
    </obj>

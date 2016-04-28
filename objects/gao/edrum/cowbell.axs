@@ -12,7 +12,7 @@
    <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad" x="322" y="14">
       <params>
          <frac32.s.map name="a" onParent="true" value="-64.0"/>
-         <frac32.s.map name="d" onParent="true" value="16.0"/>
+         <frac32.s.map name="d" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -116,8 +116,8 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>49</x>
-      <y>-4</y>
+      <y>24</y>
       <width>1317</width>
-      <height>772</height>
+      <height>744</height>
    </windowPos>
 </patch-1.0>
