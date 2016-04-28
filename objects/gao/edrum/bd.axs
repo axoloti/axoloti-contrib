@@ -5,7 +5,7 @@
    </obj>
    <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="freq 1" x="98" y="14">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-7.0"/>
+         <frac32.s.map name="d" onParent="true" value="-22.0"/>
       </params>
       <attribs/>
    </obj>
@@ -19,7 +19,7 @@
    </obj>
    <obj type="env/d" uuid="190ae648e41832b41adbedb465317c18a010aefe" name="noise decay" x="546" y="14">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-17.0"/>
+         <frac32.s.map name="d" onParent="true" value="-25.0"/>
       </params>
       <attribs/>
    </obj>
@@ -29,7 +29,7 @@
    </obj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise level" x="728" y="14">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="18.5"/>
+         <frac32.u.map name="amp" onParent="true" value="20.0"/>
       </params>
       <attribs/>
    </obj>
@@ -39,19 +39,19 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="decay" x="98" y="182">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-64.0"/>
+         <frac32.s.map name="d" onParent="true" value="-2.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="curve" x="210" y="182">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="42.0"/>
+         <frac32.u.map name="amp" onParent="true" value="41.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="osc/sine" sha="edec4a9d5f533ea748cd564ce8c69673dd78742f" name="freq 2" x="322" y="182">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="-45.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="-41.0"/>
       </params>
       <attribs/>
    </obj>
@@ -65,14 +65,14 @@
    </obj>
    <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp" x="532" y="252">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="64.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="42.0"/>
          <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="658" y="252">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="1.0"/>
+         <frac32.u.map name="amp" onParent="true" value="3.5"/>
       </params>
       <attribs/>
    </obj>
@@ -164,8 +164,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>119</x>
-      <y>66</y>
+      <x>120</x>
+      <y>235</y>
       <width>995</width>
       <height>482</height>
    </windowPos>

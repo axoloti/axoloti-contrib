@@ -5,7 +5,7 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="body decay" x="448" y="14">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-27.53999948501587"/>
+         <frac32.s.map name="d" onParent="true" value="-31.540000915527344"/>
       </params>
       <attribs/>
    </obj>
@@ -44,7 +44,7 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="noise decay" x="392" y="294">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-16.0"/>
+         <frac32.s.map name="d" onParent="true" value="-14.0"/>
       </params>
       <attribs/>
    </obj>
@@ -58,15 +58,15 @@
    </obj>
    <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp" x="266" y="420">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="42.0"/>
-         <frac32.u.map name="reso" value="37.5"/>
+         <frac32.s.map name="pitch" onParent="true" value="38.0"/>
+         <frac32.u.map name="reso" onParent="true" value="49.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="jho/filter/notch" uuid="1f9c4090-02c0-44f2-a02a-a852f74d9022" name="hp" x="392" y="420">
+   <obj type="jho/filter/notch" uuid="1f9c4090-02c0-44f2-a02a-a852f74d9022" name="notch" x="392" y="420">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="53.0"/>
-         <frac32.u.map name="reso" value="25.5"/>
+         <frac32.s.map name="pitch" onParent="true" value="-1.0"/>
+         <frac32.u.map name="reso" onParent="true" value="6.0"/>
       </params>
       <attribs/>
    </obj>
@@ -87,7 +87,7 @@
    </obj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain" x="882" y="420">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="9.0"/>
+         <frac32.u.map name="amp" onParent="true" value="10.0"/>
       </params>
       <attribs/>
    </obj>
@@ -142,12 +142,12 @@
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
-         <source obj="hp" outlet="out"/>
+         <source obj="notch" outlet="out"/>
          <dest obj="vca_4" inlet="a"/>
       </net>
       <net>
          <source obj="lp" outlet="out"/>
-         <dest obj="hp" inlet="in"/>
+         <dest obj="notch" inlet="in"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -186,9 +186,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>49</x>
-      <y>-4</y>
-      <width>1317</width>
-      <height>772</height>
+      <x>59</x>
+      <y>64</y>
+      <width>1189</width>
+      <height>690</height>
    </windowPos>
 </patch-1.0>
