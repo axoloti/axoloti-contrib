@@ -39,7 +39,7 @@
    </obj>
    <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="decay" x="98" y="182">
       <params>
-         <frac32.s.map name="d" onParent="true" value="-2.0"/>
+         <frac32.s.map name="d" onParent="true" value="-42.0"/>
       </params>
       <attribs/>
    </obj>
@@ -164,8 +164,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>120</x>
-      <y>235</y>
+      <x>163</x>
+      <y>239</y>
       <width>995</width>
       <height>482</height>
    </windowPos>
