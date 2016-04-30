@@ -179,10 +179,11 @@
    <settings>
       <subpatchmode>normal</subpatchmode>
       <MidiChannel>1</MidiChannel>
-      <NPresets>8</NPresets>
-      <NPresetEntries>32</NPresetEntries>
-      <NModulationSources>8</NModulationSources>
-      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <NPresets>0</NPresets>
+      <NPresetEntries>0</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
