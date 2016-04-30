@@ -153,7 +153,7 @@
       </net>
    </nets>
    <settings>
-      <subpatchmode>no</subpatchmode>
+      <subpatchmode>normal</subpatchmode>
       <MidiChannel>1</MidiChannel>
       <NPresets>0</NPresets>
       <NPresetEntries>0</NPresetEntries>
@@ -165,7 +165,7 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>163</x>
-      <y>239</y>
+      <y>267</y>
       <width>995</width>
       <height>482</height>
    </windowPos>
