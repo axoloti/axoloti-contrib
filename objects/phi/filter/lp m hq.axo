@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="lp m hq" uuid="8703e111-64a3-432e-8d86-5fce92dc4565">
+      <sDescription>2-pole resonant low-pass filter (biquad) 24kHz</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.freq name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);
+]]></code.init>
+      <code.krate><![CDATA[      int32_t freq;
+      MTOF(param_pitch + inlet_pitch,freq);
+      biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+]]></code.krate>
+   </obj.normal>
+</objdefs>

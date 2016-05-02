@@ -1,0 +1,111 @@
+<objdefs>
+   <obj.normal id="ppq2resolution" uuid="a6b6e4b746767d6b652ct03a1b683bcz5b4f7d38">
+   <sDescription>ppq to note gates quantisation</sDescription>
+   <author>Jphiloop</author>
+   <license>BSD</license>
+   <helpPatch>logic_decode.axh</helpPatch>
+   <inlets>
+      <int32 name="24ppq" description="24ppq in"/>
+      <int32 name="quant" description="resolution"/>
+   </inlets>
+   <outlets>
+      <bool32 name="o1" description="output 1"/>
+   </outlets>
+   <displays/>
+   <params/>
+   <attribs/>
+   <includes/>
+   <code.declaration><![CDATA[
+int r;
+int r1;
+int r2;
+int r3;
+int r4;
+int r5;
+int r6;
+int r7;
+int r8;
+int r9;
+int r10;
+int dec;]]></code.declaration>
+   <code.init><![CDATA[r=0;
+r1=0;
+r2=0;
+r3=0;
+r4=0;
+r5=0;
+r6=0;
+r7=0;
+r8=0;
+r9=0;
+r10=0;
+dec = 0;]]></code.init>
+   <code.krate><![CDATA[
+    int p;
+if (inlet_24ppq >=0)
+  p = ((unsigned int)inlet_24ppq)/48;
+else  p = -(((unsigned int)(48-inlet_24ppq))/48);
+int a;
+a = inlet_24ppq-(p*48);
+   
+//if (a >=0)
+ // r = ((unsigned int)a);
+//else  r = -((unsigned int)(2-a));   
+if (a >=0)
+  r = ((unsigned int)a)/2;
+else  r = -(((unsigned int)(2-a))/2);
+if (a >=0)
+  r1 = ((unsigned int)a)/3;
+else  r1 = -(((unsigned int)(3-a))/3);
+if (a >=0)
+  r2 = ((unsigned int)a)/4;
+else  r2 = -(((unsigned int)(4-a))/4);
+if (a >=0)
+  r3 = ((unsigned int)a)/6;
+else  r3 = -(((unsigned int)(6-a))/6);
+if (a >=0)
+  r4 = ((unsigned int)a)/8;
+else  r4 = -(((unsigned int)(8-a))/8);
+if (a >=0)
+  r5 = ((unsigned int)a)/9;
+else  r5 = -(((unsigned int)(9-a))/9);
+if (a >=0)
+  r6 = ((unsigned int)a)/12;
+else  r6 = -(((unsigned int)(12-a))/12);
+if (a >=0)
+  r7 = ((unsigned int)a)/15;
+else  r7 = -(((unsigned int)(15-a))/15);
+if (a >=0)
+  r8 = ((unsigned int)a)/18;
+else  r8 = -(((unsigned int)(18-a))/18);
+if (a >=0)
+  r9 = ((unsigned int)a)/21;
+else  r9 = -(((unsigned int)(21-a))/21);
+if (a >=0)
+  r10 = ((unsigned int)a)/24;
+else  r10 = -(((unsigned int)(24-a))/24);
+
+
+       switch(inlet_quant>0?inlet_quant:0){
+      case 0: dec= a;break;
+      case 1: dec= r;break;
+      case 2: dec= r1;break;
+      case 3: dec= r2;break;
+      case 4: dec= r3;break;
+      case 5: dec= r4;break;
+      case 6: dec= r5;break;
+      case 7: dec= r6;break;
+      case 8: dec= r7;break;
+      case 9: dec= r8;break;
+      case 10: dec= r9;break;
+      case 11: dec= r10;break;
+      }
+
+outlet_o1 = ((dec == 0) 
+||(dec == 2) ||(dec == 4) ||(dec == 6) ||(dec == 8) ||(dec == 10)||(dec == 12)
+||(dec == 14)||(dec == 16)||(dec == 18)||(dec == 20)||(dec == 22)||(dec == 24)  
+||(dec == 26)||(dec == 28)||(dec == 30)||(dec == 32)||(dec == 34)||(dec == 36)
+||(dec == 38)||(dec == 40)||(dec == 42)||(dec == 44)||(dec == 46))?1:0;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
