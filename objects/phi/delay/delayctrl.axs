@@ -9,13 +9,13 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="xfade c" uuid="601566fe-6fc4-4f71-8a85-2e63797065d7" name="Dry/Wet" x="210" y="14">
+   <obj type="phi/mix/xfade c" uuid="601566fe-6fc4-4f71-8a85-2e43797065d7" name="xfade_1" x="210" y="14">
       <params>
          <frac32.u.map name="c" onParent="true" value="50.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="Out" x="294" y="14">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="Out" x="308" y="14">
       <params>
          <frac32.u.map name="amp" onParent="true" value="24.5"/>
       </params>
@@ -68,11 +68,11 @@
    <nets>
       <net>
          <source obj="read" outlet="inlet"/>
-         <dest obj="Dry/Wet" inlet="i2"/>
          <dest obj="FB" inlet="in1"/>
+         <dest obj="xfade_1" inlet="i2"/>
       </net>
       <net>
-         <source obj="Dry/Wet" outlet="o"/>
+         <source obj="xfade_1" outlet="o"/>
          <dest obj="Out" inlet="in"/>
       </net>
       <net>
@@ -93,8 +93,8 @@
       </net>
       <net>
          <source obj="In" outlet="out"/>
-         <dest obj="Dry/Wet" inlet="i1"/>
          <dest obj="+_1" inlet="in1"/>
+         <dest obj="xfade_1" inlet="i1"/>
       </net>
       <net>
          <source obj="Cross" outlet="out"/>
