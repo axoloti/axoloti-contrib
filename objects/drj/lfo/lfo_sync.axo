@@ -115,7 +115,7 @@
         return 0;
       }
 
-      void on_24ppq_clock( void )
+      void on_sync_clock( void )
       {
         if( midi_clock_run == 1  )
           {
@@ -195,9 +195,16 @@
       // 24 PPQ or MIDI sync input
       if( attr_clocksource == CLOCK_SOURCE_external )
         {
+          // Must keep the clock sync process running for external clock
+          // unless we obey the MIDI transport messages.
+          if( param_miditransport == 0 )
+            {
+              midi_clock_run = 1;
+            }
+
           if( inlet_24ppq && !old_24ppq )
             {
-              on_24ppq_clock();
+              on_sync_clock();
             }
         }
       old_24ppq = inlet_24ppq;
@@ -275,7 +282,7 @@
         {
           if( status == MIDI_TIMING_CLOCK )
             {
-              on_24ppq_clock();
+              on_sync_clock();
             }
           else if( midi_transport )
             {
