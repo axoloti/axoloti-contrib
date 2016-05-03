@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97">
+      <sDescription>2 stereo mix sq s-rate mixer, square gain scale</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="l1" description="input 1"/>
+         <frac32buffer name="r1" description="input 2"/>
+         <frac32buffer name="l2" description="input 3"/>
+         <frac32buffer name="r2" description="input 4"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="L" description="mix out"/>
+         <frac32buffer name="R" description="mix out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.squaregain name="gain1">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map.squaregain>
+         <frac32.u.map.squaregain name="gain2">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map.squaregain>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[   int32_t accum = ___SMMUL(inlet_l1,param_gain1);
+   accum = ___SMMLA(inlet_l2,param_gain2,accum);
+;   outlet_R= (accum<<1);
+int32_t accum1 = ___SMMUL(inlet_r1,param_gain1);
+   accum1 = ___SMMLA(inlet_r2,param_gain2,accum1);
+;   outlet_L= (accum1<<1);
+]]></code.srate>
+   </obj.normal>
+</objdefs>
