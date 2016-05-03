@@ -17,7 +17,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="xfade c" uuid="601566fe-6fc4-4f71-8a85-2e63797065d7" name="Dry/Wet" x="322" y="98">
+   <obj type="phi/mix/xfade c" uuid="601566fe-6fc4-4f71-8a85-2e43797065d7" name="xfade_1" x="322" y="98">
       <params>
          <frac32.u.map name="c" onParent="true" value="50.0"/>
       </params>
@@ -47,37 +47,37 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="phi/filter/lp m hq" uuid="8703e111-64a3-432e-8d86-5fce92dc4565" name="lp_1" x="966" y="98">
+   <obj type="phi/filter/lp m hq" uuid="8703e111-64a3-432e-8d86-5fce92dc4565" name="lp_1" x="896" y="98">
       <params>
          <frac32.u.map name="pitch" onParent="true" value="0.0"/>
          <frac32.u.map name="reso" value="18.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="phi/switch/sw 2-1a" uuid="350b79179fa4cce3d231eaa45f23eefa9121cb3b" name="lpOn" x="1092" y="98">
+   <obj type="phi/switch/sw 2-1a" uuid="350b79179fa4cce3d231eaa45f23eefa9121cb3b" name="lpOn" x="1008" y="98">
       <params>
          <bool32.tgl name="s" onParent="true" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1218" y="98">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1134" y="98">
       <params/>
       <attribs/>
    </obj>
-   <obj type="phi/filter/hp m hq" uuid="f6cb96ee-01df-47ec-b130-c1e780a638f8" name="hp_1" x="1302" y="98">
+   <obj type="phi/filter/hp m hq" uuid="f6cb96ee-01df-47ec-b130-c1e780a638f8" name="hp_1" x="1218" y="98">
       <params>
          <frac32.u.map name="pitch" onParent="true" value="0.0"/>
          <frac32.u.map name="reso" value="19.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="phi/switch/sw 2-1a" uuid="350b79179fa4cce3d231eaa45f23eefa9121cb3b" name="hpOn" x="1414" y="98">
+   <obj type="phi/switch/sw 2-1a" uuid="350b79179fa4cce3d231eaa45f23eefa9121cb3b" name="hpOn" x="1330" y="98">
       <params>
          <bool32.tgl name="s" onParent="true" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="write" x="1554" y="98">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="write" x="1456" y="98">
       <params/>
       <attribs/>
    </obj>
@@ -92,11 +92,11 @@
    <nets>
       <net>
          <source obj="read" outlet="inlet"/>
-         <dest obj="Dry/Wet" inlet="i2"/>
          <dest obj="Fbb" inlet="in1"/>
+         <dest obj="xfade_1" inlet="i2"/>
       </net>
       <net>
-         <source obj="Dry/Wet" outlet="o"/>
+         <source obj="xfade_1" outlet="o"/>
          <dest obj="Out" inlet="in"/>
       </net>
       <net>
@@ -110,7 +110,7 @@
       </net>
       <net>
          <source obj="In" outlet="out"/>
-         <dest obj="Dry/Wet" inlet="i1"/>
+         <dest obj="xfade_1" inlet="i1"/>
       </net>
       <net>
          <source obj="lpOn" outlet="o"/>
@@ -119,10 +119,6 @@
       <net>
          <source obj="hp_1" outlet="out"/>
          <dest obj="hpOn" inlet="i2"/>
-      </net>
-      <net>
-         <source obj="hpOn" outlet="o"/>
-         <dest obj="write" inlet="outlet"/>
       </net>
       <net>
          <source obj="lpf" outlet="inlet"/>
@@ -155,14 +151,18 @@
          <dest obj="FbGain" inlet="in"/>
          <dest obj="gain" inlet="i1"/>
       </net>
+      <net>
+         <source obj="hpOn" outlet="o"/>
+         <dest obj="write" inlet="outlet"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>0</x>
-      <y>0</y>
+      <x>258</x>
+      <y>242</y>
       <width>1640</width>
       <height>632</height>
    </windowPos>
