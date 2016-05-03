@@ -5,7 +5,7 @@
    <comment type="patch/comment" x="672" y="42" text="mix"/>
    <obj type="osc/square" uuid="aa9592566d3673fe64dcaede132e9ebd45d2202f" name="square_1" x="14" y="56">
       <params>
-         <frac32.s.map name="pitch" value="-28.0"/>
+         <frac32.s.map name="pitch" value="-17.0"/>
       </params>
       <attribs/>
    </obj>
@@ -21,19 +21,19 @@
    </obj>
    <obj type="phi/spat/pan st swap c" uuid="8f7fd9ff-bd0a-44e2-b153-7f197df809de" name="swap" x="350" y="56">
       <params>
-         <frac32.s.map name="pan" value="-26.0"/>
+         <frac32.s.map name="pan" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="phi/spat/pan st c" uuid="69e7925b-96ef-456d-8267-2a26d8284084" name="pan_4" x="504" y="56">
       <params>
-         <frac32.s.map name="pan" value="23.0"/>
+         <frac32.s.map name="pan" value="1.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="phi/mix/mix st sq" uuid="cf790039775b62697a4b34e7a5389b5a8cc36q30" name="mix_1" x="672" y="56">
       <params>
-         <frac32.u.map name="gain1" value="60.0"/>
+         <frac32.u.map name="gain1" value="32.5"/>
       </params>
       <attribs/>
    </obj>
@@ -43,7 +43,7 @@
    </obj>
    <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="14" y="140">
       <params>
-         <frac32.s.map name="pitch" value="-17.0"/>
+         <frac32.s.map name="pitch" value="2.0"/>
       </params>
       <attribs/>
    </obj>
@@ -55,7 +55,7 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="238" y="140">
       <params>
-         <frac32.s.map name="value" value="3.0"/>
+         <frac32.s.map name="value" value="2.0"/>
       </params>
       <attribs/>
    </obj>
@@ -71,6 +71,28 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix_2" x="840" y="210">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="238" text="swap m"/>
+   <obj type="phi/mix/pan st swap m" uuid="5f393a01-b620-4041-82b5-09249b7671a0" name="pan_1" x="70" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_9" x="196" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="14" y="280">
+      <params>
+         <frac32.s.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_6" x="350" y="350">
       <params/>
       <attribs/>
@@ -83,6 +105,10 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_10" x="196" y="434">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="mix_1" outlet="L"/>
@@ -91,26 +117,6 @@
       <net>
          <source obj="mix_1" outlet="R"/>
          <dest obj="out_1" inlet="right"/>
-      </net>
-      <net>
-         <dest obj="object_3" inlet="i2"/>
-         <dest obj="object_3" inlet="i2"/>
-      </net>
-      <net>
-         <dest obj="object_3" inlet="c"/>
-         <dest obj="object_3" inlet="c"/>
-      </net>
-      <net>
-         <dest obj="object_3" inlet="i1"/>
-         <dest obj="object_3" inlet="L"/>
-      </net>
-      <net>
-         <source obj="object_3" outlet="left"/>
-         <source obj="object_3" outlet="left"/>
-      </net>
-      <net>
-         <source obj="object_3" outlet="right"/>
-         <source obj="object_3" outlet="right"/>
       </net>
       <net>
          <source obj="dial_1" outlet="out"/>
@@ -153,6 +159,7 @@
       <net>
          <source obj="*c_1" outlet="out"/>
          <dest obj="pan_3" inlet="L"/>
+         <dest obj="pan_1" inlet="L"/>
       </net>
       <net>
          <source obj="saw_1" outlet="wave"/>
@@ -161,6 +168,19 @@
       <net>
          <source obj="*c_2" outlet="out"/>
          <dest obj="pan_3" inlet="R"/>
+         <dest obj="pan_1" inlet="R"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="pan_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="left"/>
+         <dest obj="scope_9" inlet="in"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="right"/>
+         <dest obj="scope_10" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -170,7 +190,7 @@
    <windowPos>
       <x>0</x>
       <y>0</y>
-      <width>1058</width>
-      <height>719</height>
+      <width>1063</width>
+      <height>757</height>
    </windowPos>
 </patch-1.0>
