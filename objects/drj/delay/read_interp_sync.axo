@@ -1,10 +1,10 @@
 <objdefs appVersion="1.0.9">
-  <obj.normal id="read_sync" uuid="9abca43569373145e559ad309eaf65a47b14cb54">
-    <sDescription>Syncable delay read, non-interpolated</sDescription>
+  <obj.normal id="read_interp_sync" uuid="e3d8b551c58865958823ab20186cc25ccf0466c7">
+    <sDescription>Sync_ble delay read, interpolated</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
-      <frac32 name="tmod"  description="Delay time modulation"/>
+      <frac32buffer  name="tmod"  description="Delay time modulation"/>
       <bool32.rising name="24ppq" description="Clock input"/>
       <int32         name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
       <int32         name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
@@ -178,32 +178,41 @@
             }
         }
 
-      uint32_t length;
-      if( clock_source != CLOCK_SOURCE_internal )
-        {
-          int32_t  time_mod  = ___SMMUL( delay_sync_time<<3, inlet_tmod<<2 );
-          length = __USAT(delay_sync_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
-        }
-      else
-        {
-          int32_t time_mod = ___SMMUL( param_time<<3, inlet_tmod<<2 );
-          length = __USAT(param_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
-        }
-
-      if( length > attr_delayname.LENGTHMASK - BUFSIZE )
-        {
-          length = attr_delayname.LENGTHMASK - BUFSIZE;
-        }
-
-      uint32_t delay = attr_delayname.writepos - length - BUFSIZE;
-
       old_24ppq = inlet_24ppq;
       ktimer++;
 
     ]]></code.krate>
     <code.srate><![CDATA[
 
-      outlet_out= attr_delayname.array[(delay++) & attr_delayname.LENGTHMASK]<<14;
+      uint32_t tmp_d;
+      uint32_t tmp_di;
+      uint32_t tmp_w1;
+      uint32_t tmp_w2;
+      int32_t  tmp_a1;
+      int32_t  tmp_a2;
+      int32_t  tmp_r;
+
+      if( clock_source != CLOCK_SOURCE_internal )
+        {
+          int32_t time_mod = ___SMMUL( delay_sync_time<<2, inlet_tmod<<2 );
+          tmp_d = __USAT(delay_sync_time + time_mod,27);
+        }
+      else
+        {
+          int32_t time_mod = ___SMMUL( param_time<<3, inlet_tmod<<2 );
+          tmp_d = __USAT(param_time + time_mod,27);
+        }
+
+      //tmp_d  = __USAT(param_time + inlet_time,27);
+      tmp_di = attr_delayname.writepos - (tmp_d>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index -1;
+      tmp_w1 = (tmp_d<<(attr_delayname.LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = attr_delayname.array[tmp_di&attr_delayname.LENGTHMASK]<<16;
+      tmp_a2 = attr_delayname.array[(tmp_di+1)&attr_delayname.LENGTHMASK]<<16;
+      tmp_r  = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r  = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+
+      outlet_out= tmp_r;
 
     ]]></code.srate>
     <code.midihandler><![CDATA[

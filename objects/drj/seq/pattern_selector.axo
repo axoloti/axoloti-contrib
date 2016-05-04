@@ -25,21 +25,21 @@
       <bool32 name="p4g1" description="Pattern 4 gate 1 input"/>
     </inlets>
     <outlets>
-      <int32  name="pattern" description="Current pattern number"/>
-      <bool32 name="switch" description="Pattern switch pulse"/>
-      <frac32 name="s1"  description="Signal 1 output"/>
-      <frac32 name="s2"  description="Signal 2 output"/>
-      <frac32 name="s3"  description="Signal 3 output"/>
-      <bool32 name="g1"  description="Gate 1 output"/>
+      <int32  name="pattern" description="Current pattern number output"/>
+      <bool32 name="switch"  description="Pattern switch pulse output"/>
+      <frac32 name="s1"      description="Signal 1 output"/>
+      <frac32 name="s2"      description="Signal 2 output"/>
+      <frac32 name="s3"      description="Signal 3 output"/>
+      <bool32 name="g1"      description="Gate 1 output"/>
     </outlets>
     <displays>
-      <int32.label name="pattern     "/>
+      <int32.label name="current   "/>
     </displays>
     <params>
-      <bool32.tgl name="extpattern" description="Use the pattern input"/>
+      <bool32.tgl name="extpattern" description="Use the pattern number input"/>
       <bool32.tgl name="syncclock"  description="Pattern switches on next clock pulse"/>
       <bool32.tgl name="syncstart"  description="Pattern switches on next start pulse"/>
-      <bool32.tgl name="mute"  description="Mutes the pattern outputs"/>
+      <bool32.tgl name="mute"       description="Mutes the pattern outputs"/>
       <int32.hradio name="pattern" noLabel="false">
          <MaxValue i="4"/>
       </int32.hradio>
@@ -65,9 +65,12 @@
 
       //  Cue up the next pattern for playing
 
-      if( param_extpattern && inlet_pattern != current_pattern )
+      if( param_extpattern )
         {
-          next_pattern = inlet_pattern;
+          if( inlet_pattern != current_pattern )
+            {
+              next_pattern = inlet_pattern;
+            }
         }
       else if( param_pattern != current_pattern )
         {
@@ -107,42 +110,38 @@
             }
         }
 
-      if( param_mute )
-        {
-          outlet_s1  = 0;
-          outlet_s2  = 0;
-          outlet_s3  = 0;
-          outlet_g1  = 0;
-        }
-      else
-        {
-          switch( current_pattern )
-            {
-              case 0:   outlet_s1  = inlet_p1s1;
-                        outlet_s2  = inlet_p1s2;
-                        outlet_s3  = inlet_p1s3;
-                        outlet_g1  = inlet_p1g1;
-                        break;
-              case 1:   outlet_s1  = inlet_p2s1;
-                        outlet_s2  = inlet_p2s2;
-                        outlet_s3  = inlet_p2s3;
-                        outlet_g1  = inlet_p2g1;
-                        break;
-              case 2:   outlet_s1  = inlet_p3s1;
-                        outlet_s2  = inlet_p3s2;
-                        outlet_s3  = inlet_p3s3;
-                        outlet_g1  = inlet_p3g1;
-                        break;
-              case 3:   outlet_s1  = inlet_p4s1;
-                        outlet_s2  = inlet_p4s2;
-                        outlet_s3  = inlet_p4s3;
-                        outlet_g1  = inlet_p4g1;
-                        break;
-            }
-        }
+        switch( param_mute ? 4 : current_pattern )
+          {
+            case 0:   outlet_s1  = inlet_p1s1;
+                      outlet_s2  = inlet_p1s2;
+                      outlet_s3  = inlet_p1s3;
+                      outlet_g1  = inlet_p1g1;
+                      break;
+            case 1:   outlet_s1  = inlet_p2s1;
+                      outlet_s2  = inlet_p2s2;
+                      outlet_s3  = inlet_p2s3;
+                      outlet_g1  = inlet_p2g1;
+                      break;
+            case 2:   outlet_s1  = inlet_p3s1;
+                      outlet_s2  = inlet_p3s2;
+                      outlet_s3  = inlet_p3s3;
+                      outlet_g1  = inlet_p3g1;
+                      break;
+            case 3:   outlet_s1  = inlet_p4s1;
+                      outlet_s2  = inlet_p4s2;
+                      outlet_s3  = inlet_p4s3;
+                      outlet_g1  = inlet_p4g1;
+                      break;
+            case 4 :
+            default:  outlet_s1  = 0;
+                      outlet_s2  = 0;
+                      outlet_s3  = 0;
+                      outlet_g1  = 0;
+                      break;
+          }
 
       outlet_pattern  = current_pattern;
-      disp_pattern    = current_pattern + 1;
+      disp_current    = current_pattern + 1;
       old_clock       = inlet_clock;
       old_start       = inlet_start;
 
