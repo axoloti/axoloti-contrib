@@ -1,5 +1,6 @@
 <patch-1.0 appVersion="1.0.9">
-   <comment type="patch/comment" x="518" y="0" text="-------- Ping/pong/stereo delay --------"/>
+   <comment type="patch/comment" x="518" y="14" text="-------- Stereo/ping-pong delay --------"/>
+   <comment type="patch/comment" x="826" y="14" text="Limit to avoid delay time wrap around"/>
    <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="in_l" x="42" y="42">
       <params/>
       <attribs/>
@@ -68,7 +69,6 @@
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="728" y="196" text="Limit to avoid delay time wrap around"/>
    <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="time_l" x="924" y="224">
       <params/>
       <attribs/>

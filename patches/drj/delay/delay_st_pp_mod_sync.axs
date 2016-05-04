@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.9">
-   <comment type="patch/comment" x="28" y="28" text="-------- Ping/pong/stereo delay --------"/>
+   <comment type="patch/comment" x="28" y="28" text="-------- Stereo/ping-pong syncable mod delay --------"/>
    <comment type="patch/comment" x="644" y="28" text="TIme control is bipolar in synced modes"/>
    <comment type="patch/comment" x="1148" y="28" text="Tim modulation"/>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="mod amt limiter" x="1246" y="42">
@@ -9,10 +9,10 @@
       <attribs/>
    </obj>
    <obj type="drj/math/&gt; const i" uuid="a498caeb4da17a59588d64bcf9d5e9b4a652362f" name="bipolar select" x="700" y="56">
-      <params>
-         <int32 name="value" value="1"/>
-      </params>
-      <attribs/>
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
    </obj>
    <obj type="drj/lfo/sin_ph_b" uuid="75f7330c26a11233215dcdd3ba3b9008545c1daa9" name="sin_ph_b_1" x="1414" y="56">
       <params>

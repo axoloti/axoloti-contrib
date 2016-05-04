@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.9">
-   <comment type="patch/comment" x="574" y="14" text="-------- Ping/pong/stereo delay --------"/>
+   <comment type="patch/comment" x="574" y="14" text="-------- Sterao/ping-pong mod delay --------"/>
    <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="in_l" x="98" y="56">
       <params/>
       <attribs/>

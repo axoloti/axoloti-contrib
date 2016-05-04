@@ -1,11 +1,11 @@
 <patch-1.0 appVersion="1.0.9">
-   <comment type="patch/comment" x="42" y="14" text="-------- Ping/pong/stereo/mod syncable delay --------"/>
+   <comment type="patch/comment" x="42" y="14" text="-------- Stereo/ping-pong syncable delay --------"/>
    <comment type="patch/comment" x="686" y="14" text="TIme control is bipolar in synced modes"/>
    <obj type="drj/math/&gt; const i" uuid="a498caeb4da17a59588d64bcf9d5e9b4a652362f" name="bipolar select" x="728" y="42">
-      <params>
-         <int32 name="value" value="1"/>
-      </params>
-      <attribs/>
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
    </obj>
    <obj type="math/-c" uuid="bc70bed87e5405985ade03f4806b9450609a9093" name="offset l" x="1008" y="70">
       <params>
