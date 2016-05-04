@@ -4,11 +4,11 @@
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
-      <frac32buffer  name="time"  description="Delay time as fraction of max length, inactive in synced modes"/>
-      <frac32buffer  name="tmod"  description="Delay time modulation"/>
+      <frac32buffer name="time" description="Delay time bias"/>
+      <frac32buffer name="tmod" description="Delay time modulation"/>
       <bool32.rising name="24ppq" description="Clock input"/>
-      <int32         name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
-      <int32         name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
+      <int32 name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
+      <int32 name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
     </inlets>
     <outlets>
       <frac32buffer name="out" description="Delay output"/>
@@ -77,7 +77,7 @@
       int32_t   clock_source;
       int32_t   clock_divider;
       float     delay_length_cpl; // cache result of  1.0 / lenght of delay line
-      uint32_t  delay_sync_time;  // Synced time expressed in fractional delay length
+      uint32_t  midi_sync_time;   // Synced time expressed in fractional delay length
       uint32_t  midi_period;      // Last measued sync period in samples
       uint32_t  midi_last_ktime;  // MIDI/24PPQ clock capture
       int32_t   midi_clock_count;
@@ -114,7 +114,7 @@
             midi_clock_count = 0;
             midi_last_ktime  = ktimer;
             float frac_time  = midi_period * delay_length_cpl;
-            delay_sync_time  = (uint32_t) (frac_time * (1<<27));
+            midi_sync_time  = (uint32_t) (frac_time * (1<<27));
           }
       }
 
@@ -126,7 +126,7 @@
       clock_source     = CLOCK_SOURCE_internal;
       clock_divider    = 12;
       delay_length_cpl = 1.0f/attr_delayname.LENGTH;
-      delay_sync_time  = 0;
+      midi_sync_time   = 0;
       midi_last_ktime  = 0;
       midi_period      = 0;
       midi_clock_count = 0;
@@ -171,12 +171,9 @@
         }
 
       // 24 PPQ sync input
-      if( clock_source == CLOCK_SOURCE_external )
+      if( clock_source == CLOCK_SOURCE_external && inlet_24ppq && !old_24ppq  )
         {
-          if( inlet_24ppq && !old_24ppq )
-            {
-              on_sync_clock();
-            }
+          on_sync_clock();
         }
 
       old_24ppq = inlet_24ppq;
@@ -195,8 +192,8 @@
 
       if( clock_source != CLOCK_SOURCE_internal )
         {
-          int32_t time_mod = ___SMMUL( delay_sync_time<<3, inlet_tmod<<2 );
-          tmp_d = __USAT(delay_sync_time + time_mod,27);
+          int32_t time_mod = ___SMMUL( (midi_sync_time + inlet_time)<<3, inlet_tmod<<2 );
+          tmp_d = __USAT(midi_sync_time + inlet_time + time_mod,27);
         }
       else
         {
