@@ -1,9 +1,10 @@
 <objdefs appVersion="1.0.9">
   <obj.normal id="read_interp_sync" uuid="e3d8b551c58865958823ab20186cc25ccf0466c7">
-    <sDescription>Sync_ble delay read, interpolated</sDescription>
+    <sDescription>Syncable delay read, interpolated, time modulation</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
+      <frac32buffer  name="time"  description="Delay time as fraction of max length, inactive in synced modes"/>
       <frac32buffer  name="tmod"  description="Delay time modulation"/>
       <bool32.rising name="24ppq" description="Clock input"/>
       <int32         name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
@@ -194,17 +195,27 @@
 
       if( clock_source != CLOCK_SOURCE_internal )
         {
-          int32_t time_mod = ___SMMUL( delay_sync_time<<2, inlet_tmod<<2 );
+          int32_t time_mod = ___SMMUL( delay_sync_time<<3, inlet_tmod<<2 );
           tmp_d = __USAT(delay_sync_time + time_mod,27);
         }
       else
         {
-          int32_t time_mod = ___SMMUL( param_time<<3, inlet_tmod<<2 );
-          tmp_d = __USAT(param_time + time_mod,27);
+          int32_t time_mod = ___SMMUL( (param_time + inlet_time)<<3, inlet_tmod<<2 );
+          tmp_d = __USAT(param_time + inlet_time + time_mod,27);
         }
 
-      //tmp_d  = __USAT(param_time + inlet_time,27);
-      tmp_di = attr_delayname.writepos - (tmp_d>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index -1;
+      // Must limit the length!
+      uint32_t tmp_d_limited = tmp_d>>(27-attr_delayname.LENGTHPOW);
+      if( tmp_d_limited > attr_delayname.LENGTHMASK - BUFSIZE )
+        {
+          tmp_d_limited = attr_delayname.LENGTHMASK - BUFSIZE;
+          tmp_d = 0;
+        }
+      tmp_di = attr_delayname.writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+
+      // Part of original code for read_interp replaced above by synced, modulated and limited version.
+      //  tmp_d  = __USAT(param_time + inlet_time,27);
+      //  tmp_di = attr_delayname.writepos - (tmp_d>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index -1;
       tmp_w1 = (tmp_d<<(attr_delayname.LENGTHPOW+3)) & 0x3FFFFFFF;
       tmp_w2 = (1<<30) - tmp_w1;
       tmp_a1 = attr_delayname.array[tmp_di&attr_delayname.LENGTHMASK]<<16;
