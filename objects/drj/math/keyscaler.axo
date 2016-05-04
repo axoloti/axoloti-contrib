@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.8">
+  <obj.normal id="keyscaler" uuid="8943f5491baed59bf140da20c3f2a025a2dffa8d">
+    <sDescription>Keyboard breakpoint and scaling, k-rate, out = offset + (note * scale)</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="note" description="Pitch input"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="out" description="Control level output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.pitch name="offset" description="Pitch offset"/>
+      <frac32.s.map.ratio name="scale" description="Pitch scaling"/>
+    </params>
+    <attribs/>
+    <code.krate><![CDATA[
+      //  out = breakpoint + (pitch * scaling )
+      outlet_out = __SSAT( ___SMMLA( param_scale<<3, inlet_note<<2, param_offset ), 28 );
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="offset_scale_1" uuid="8943f98651aed59bf140da20c3f97585a2dffa8d">
+    <sDescription>Offset and scale a signal, k-rate, out = offset + (in * scale)</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="in" description="Input"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="out" description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map name="offset" description="Offset"/>
+      <frac32.s.map.ratio name="scale" description="Scaling factor"/>
+    </params>
+    <attribs/>
+    <code.krate><![CDATA[
+      //  out = offset + (in * scale)
+      outlet_out = __SSAT( ___SMMLA( param_scale<<3, inlet_in<<2, param_offset ), 28 );
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="offset_scale_2" uuid="8943f87654aed59bf140da20c3f97585a2dffa8d">
+    <sDescription>Offset and scale a signal, s-rate, iut = offset + (in * scale)</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="in" description="Input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="out" description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map name="offset" description="Offset"/>
+      <frac32.s.map.ratio name="scale" description="Scaling factor"/>
+    </params>
+    <attribs/>
+    <code.srate><![CDATA[
+      //  out = offset + (in * scale)
+      outlet_out = __SSAT( ___SMMLA( param_scale<<3, inlet_in<<2, param_offset ), 28 );
+    ]]></code.srate>
+  </obj.normal>
+</objdefs>

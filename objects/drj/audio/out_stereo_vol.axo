@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.9">
+  <obj.normal id="out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189">
+    <sDescription>Audio output, stereo, volume control, 6dB gain</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="left" description="Left channel"/>
+      <frac32buffer.bipolar name="right" description="Right channel"/>
+    </inlets>
+    <outlets/>
+    <displays>
+      <frac32.vu name="vuLeft"/>
+      <frac32.vu name="vuRight"/>
+    </displays>
+    <params>
+      <frac32.u.map.squaregain name="volume"/>
+    </params>
+    <attribs/>
+    <code.krate><![CDATA[
+      int j,l,r;
+      for( j = 0; j < BUFSIZE; ++j )
+        {
+          l = ___SMMUL( param_volume, inlet_left[j]) <<2;
+          r = ___SMMUL( param_volume, inlet_right[j])<<2;
+          AudioOutputLeft[j]  += __SSAT(l,28);
+          AudioOutputRight[j] += __SSAT(r,28);
+        }
+      disp_vuLeft  = l;
+      disp_vuRight = r;
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>
