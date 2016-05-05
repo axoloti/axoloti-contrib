@@ -142,7 +142,7 @@
    <comment type="patch/comment" x="1064" y="182" text="Track 2 synth"/>
    <comment type="patch/comment" x="1190" y="182" text="Track mixer"/>
    <comment type="patch/comment" x="1302" y="182" text="Delay FX"/>
-   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="gate len" x="56" y="196">
+   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="gate len 1" x="56" y="196">
       <params/>
       <attribs/>
    </obj>
@@ -297,7 +297,7 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="140" y="546" text="Track 2"/>
-   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="gate len_" x="56" y="560">
+   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="gate len 2" x="56" y="560">
       <params/>
       <attribs/>
    </obj>
@@ -366,19 +366,19 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="938" y="812">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="pitch mix 1a" x="938" y="812">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="1008" y="812">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="pitch nix 1b" x="1008" y="812">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="1092" y="812">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="pitch nix 2a" x="1092" y="812">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_3" x="1162" y="812">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="pitch nix 2b" x="1162" y="812">
       <params/>
       <attribs/>
    </obj>
@@ -429,7 +429,7 @@
          <dest obj="i_1" inlet="in"/>
       </net>
       <net>
-         <source obj="gate len" outlet="out"/>
+         <source obj="gate len 1" outlet="out"/>
          <dest obj="seq_clk_sync_1" inlet="gatelength"/>
       </net>
       <net>
@@ -479,15 +479,15 @@
       </net>
       <net>
          <source obj="gate length 1" outlet="out"/>
-         <dest obj="gate len" inlet="in"/>
+         <dest obj="gate len 1" inlet="in"/>
       </net>
       <net>
-         <source obj="gate len_" outlet="out"/>
+         <source obj="gate len 2" outlet="out"/>
          <dest obj="seq_clk_sync_2" inlet="gatelength"/>
       </net>
       <net>
          <source obj="gate length 2" outlet="out"/>
-         <dest obj="gate len_" inlet="in"/>
+         <dest obj="gate len 2" inlet="in"/>
       </net>
       <net>
          <source obj="synth 1" outlet="out"/>
@@ -523,29 +523,29 @@
       </net>
       <net>
          <source obj="step enable 1" outlet="sig1"/>
-         <dest obj="+_2" inlet="in1"/>
+         <dest obj="pitch mix 1a" inlet="in1"/>
       </net>
       <net>
          <source obj="step enable 2" outlet="sig1"/>
-         <dest obj="+_1" inlet="in1"/>
+         <dest obj="pitch nix 2a" inlet="in1"/>
       </net>
       <net>
          <source obj="transpose" outlet="out"/>
-         <dest obj="+_1" inlet="in2"/>
-         <dest obj="+_2" inlet="in2"/>
+         <dest obj="pitch nix 2a" inlet="in2"/>
+         <dest obj="pitch mix 1a" inlet="in2"/>
       </net>
       <net>
-         <source obj="+_2" outlet="out"/>
-         <dest obj="+_4" inlet="in1"/>
+         <source obj="pitch mix 1a" outlet="out"/>
+         <dest obj="pitch nix 1b" inlet="in1"/>
       </net>
       <net>
-         <source obj="+_1" outlet="out"/>
-         <dest obj="+_3" inlet="in1"/>
+         <source obj="pitch nix 2a" outlet="out"/>
+         <dest obj="pitch nix 2b" inlet="in1"/>
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
-         <dest obj="+_4" inlet="in2"/>
-         <dest obj="+_3" inlet="in2"/>
+         <dest obj="pitch nix 1b" inlet="in2"/>
+         <dest obj="pitch nix 2b" inlet="in2"/>
       </net>
       <net>
          <source obj="MIDI x-pose" outlet="o"/>
@@ -589,11 +589,11 @@
          <dest obj="synth 2" inlet="pitch"/>
       </net>
       <net>
-         <source obj="+_3" outlet="out"/>
+         <source obj="pitch nix 2b" outlet="out"/>
          <dest obj="glide 2" inlet="in"/>
       </net>
       <net>
-         <source obj="+_4" outlet="out"/>
+         <source obj="pitch nix 1b" outlet="out"/>
          <dest obj="glide 1" inlet="in"/>
       </net>
       <net>
