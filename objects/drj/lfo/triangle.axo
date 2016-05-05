@@ -1,11 +1,12 @@
 <objdefs>
-  <obj.normal id="tri_b" uuid="ef2a162898b533c6e46ce43c0decba17b1862d85">
-    <sDescription>Triangle wave LFO, bipolar, pitch input</sDescription>
+  <obj.normal id="tri_ph_b" uuid="ef2a162898b533c6e46ce43c0decba17b1862d85">
+    <sDescription>Triangle wave LFO, bipolar, pitch, phase and reset inputs</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
       <frac32.bipolar name="pitch" description="Pitch input"/>
-      <bool32.rising name="reset" description="Reset phase"/>
+      <frac32.bipolar name="phase" description="phase input"/>
+      <bool32.rising  name="reset" description="Reset phase"/>
     </inlets>
     <outlets>
       <frac32.bipolar name="tri" description="Triangle wave"/>
@@ -49,18 +50,19 @@
         }
       old_reset = inlet_reset;
 
-      int32_t saw = (phase>>4) - (1<<27);
+      int32_t saw = (phase + inlet_phase << 4) - (1<<27);
       outlet_tri  = (1<<27) - ___ABS(saw<<1);
 
     ]]></code.krate>
   </obj.normal>
-  <obj.normal  id="tri_p" uuid="ef2a164985b533c6e46ce43c0decba17b1862d85">
-    <sDescription>Triangle wave LFO, unipolar, pitch input</sDescription>
+  <obj.normal  id="tri_ph_p" uuid="ef2a164985b533c6e46ce43c0decba17b1862d85">
+    <sDescription>Triangle wave LFO, unipolar, pitch, phase and reset inputs</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
       <frac32.bipolar name="pitch" description="Pitch Input"/>
-      <bool32.rising name="reset" description="Reset phase"/>
+      <frac32.bipolar name="phase" description="phase input"/>
+      <bool32.rising  name="reset" description="Reset phase"/>
     </inlets>
     <outlets>
       <frac32.positive name="tri" description="Triangle wave"/>
@@ -104,7 +106,7 @@
         }
       old_reset = inlet_reset;
 
-      int32_t saw = (phase>>4) - (1<<27);
+      int32_t saw = (phase + inlet_phase << 4) - (1<<27);
       outlet_tri  = (1<<27) - ___ABS( saw );
 
     ]]></code.krate>
