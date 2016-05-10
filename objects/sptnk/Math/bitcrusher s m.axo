@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="bitcrusher s m" uuid="91d5af62-a47b-4fff-9648-57c96701da38">
+      <sDescription>quantize to n bits</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="a"/>
+         <int32 name="nmod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="b" description="quant(a)"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="bits" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="28"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int nbits;]]></code.declaration>
+      <code.krate><![CDATA[nbits=__USAT(param_bits+inlet_nmod,5);]]></code.krate>
+      <code.srate><![CDATA[   outlet_b= (inlet_a & (~((1<<(28-nbits))-1)));
+]]></code.srate>
+   </obj.normal>
+</objdefs>
