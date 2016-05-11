@@ -11,6 +11,7 @@
       </inlets>
       <outlets>
          <frac32.positive name="env" description="envelope output"/>
+         <bool32.pulse name="end" description="end of cycle"/>
       </outlets>
       <displays/>
       <params>
@@ -32,11 +33,13 @@ stage = 1;]]></code.init>
 } else if (!(inlet_reset>0)) {
    nreset = 0;
 }
+outlet_end = 0;
 if (stage == 0){
    val = ___SMMUL(val,param_d)<<1;
    if (val<=0) {
    	stage = 1;
    	val = 0;
+   	outlet_end = 1;
    }
 } else {
    int32_t t;
