@@ -1,15 +1,17 @@
 <objdefs appVersion="1.0.9">
-   <obj.normal id="steptoggle" uuid="e63c883b-de4d-45d7-9aec-2edae0d39c6c">
+   <obj.normal id="steptoggle" uuid="8304a2f1-739f-4652-9fdd-04b615a6f68b">
       <sDescription>useful for step sequencing.if the table at index &apos;+a&apos; == 0 , index &apos;a+&apos; will be set to value &apos;v&apos;. if &apos;a+&apos; is NOT 0, it will be set to 0.</sDescription>
       <author>robert schirmer</author>
       <license>who cares</license>
       <helpPatch>table.axh</helpPatch>
       <inlets>
          <int32.positive name="a" description="index (integer, not fraction)"/>
-         <frac32 name="v"/>
-         <bool32 name="trig"/>
+         <frac32 name="v" description="step value if on"/>
+         <bool32 name="trig" description="toggle step"/>
       </inlets>
-      <outlets/>
+      <outlets>
+         <bool32 name="feedback" description="state of step"/>
+      </outlets>
       <displays/>
       <params/>
       <attribs>
@@ -17,7 +19,6 @@
       </attribs>
       <code.declaration><![CDATA[int ntrig;
 bool op;
-
 ]]></code.declaration>
       <code.init><![CDATA[   int ntrig = 0;
 ]]></code.init>
@@ -28,8 +29,12 @@ bool op;
       op = !op ;
       if (inlet_a<attr_table.LENGTH)
          attr_table.array[inlet_a]= (op * (__SSAT(inlet_v,28)>>attr_table.GAIN));
+
    }
-   if (!(inlet_trig>0)) ntrig=0;
+   if (!(inlet_trig>0)) {
+   	ntrig=0;
+   	outlet_feedback = op;
+   }
 ]]></code.krate>
    </obj.normal>
 </objdefs>
