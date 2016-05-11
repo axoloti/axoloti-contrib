@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="split 3 overlap" uuid="c137f6c5-1680-4053-b72b-5088b59c7af5">
+      <sDescription>Split the incoming signal in three, based on the amplitude, with hard overlap.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+         <frac32buffer name="o2"/>
+         <frac32buffer name="o3"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="cutoff1"/>
+         <frac32.s.map name="cutoff2"/>
+         <frac32.u.map name="overlap"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t center1;
+int32_t center2;
+int32_t width;
+int32_t o1;
+int32_t o2;
+int32_t o3;]]></code.declaration>
+      <code.krate><![CDATA[center1=param_cutoff1;
+center2=param_cutoff2;
+width=param_overlap;
+
+
+]]></code.krate>
+      <code.srate><![CDATA[if (center1<center2)
+{
+	if (inlet_in<center1-width)
+	{o1=inlet_in; o2=0; o3=0;}
+	else if (inlet_in>center2+width)
+	{o1=0; o2=0; o3=inlet_in;}
+	else if (inlet_in<center1+width)
+	{o1=inlet_in; o2=inlet_in; o3=0;}
+	else if (inlet_in>center2-width)
+	{o1=0; o2=inlet_in; o3=inlet_in;}
+	else
+	{o1=0; o2=inlet_in; o3=0;}
+
+}
+else if (center1>center2)
+{
+	if (inlet_in<center2-width)
+	{o1=inlet_in; o2=0; o3=0;}
+	else if (inlet_in>center1+width)
+	{o1=0; o2=0; o3=inlet_in;}
+	else if (inlet_in<center2+width)
+	{o1=inlet_in; o2=inlet_in; o3=0;}
+	else if (inlet_in>center1-width)
+	{o1=0; o2=inlet_in; o3=inlet_in;}
+	else
+	{o1=0; o2=inlet_in; o3=0;}
+
+}
+else
+{
+	if (inlet_in<center1-width)
+	{o1=inlet_in; o2=0; o3=0;}
+	else if (inlet_in>center1+width)
+	{o1=0; o2=0; o3=inlet_in;}
+	else
+	{o1=inlet_in; o2=inlet_in; o3=inlet_in;}
+
+}
+
+
+
+
+
+outlet_o1=o1;
+outlet_o2=o2;
+outlet_o3=o3;]]></code.srate>
+   </obj.normal>
+</objdefs>
