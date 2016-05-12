@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="sample and hold" uuid="4a454cae-32e7-4efc-9fd1-479a6a26fcdf">
+      <sDescription>Sample and hold module. Frequency adjust hold time (the higher the frequency, the finer the grain), while scaling routes the current sample amplitude to the hold time (unusual for a bitcrusher, but might add some character).
+Linear frequency scaling. The object is based on Johannes dist/samplehold cheap and osc/sine lin</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="freq"/>
+         <frac32 name="scaling"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freq"/>
+         <frac32.s.map name="scaling"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t phase; 
+int32_t phase_prev;
+int32_t scaling;
+uint32_t additional;
+int32_t hold;]]></code.declaration>
+      <code.init><![CDATA[phase = 0;
+phase_prev = 0;
+scaling = 0;
+additional = 0;
+hold=0;]]></code.init>
+      <code.krate><![CDATA[scaling=param_scaling+inlet_scaling<<4;]]></code.krate>
+      <code.srate><![CDATA[phase += (param_freq + inlet_freq + additional)<<1;
+
+  if ((phase<0)&&(phase_prev>0)){
+    hold = inlet_in>>1;
+    phase=0;
+    additional = ___SMMUL(hold>0?hold:-hold,scaling);
+  }
+  outlet_out = hold;
+phase_prev=phase;]]></code.srate>
+   </obj.normal>
+</objdefs>
