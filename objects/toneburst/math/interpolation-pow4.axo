@@ -12,18 +12,18 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="curve" description="interpolation curve"/>
+         <frac32.u.map name="curve" description="interpolation curve" noLabel="true"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[
 // Convert from int32_t to float in 0 >1 range
 // With thanks to Johannes for code
 
-float int2f(int32_t val) {
+__attribute__ ( ( always_inline ) ) __STATIC_INLINE float int2f(int32_t val) {
 	return val * (float)(1.0f / (1 << 27));
 }
 
-int32_t f2int(float val) {
+__attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t f2int(float val) {
 	return (int)(val * (float)(1 << 27));
 }
 ]]></code.declaration>
