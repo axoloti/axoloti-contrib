@@ -1,6 +1,6 @@
 <objdefs appVersion="1.0.10">
-  <obj.normal id="lfo_pwm" uuid="af2af5eb6271343f97d28f75811f4b3a41306743">
-    <sDescription>LFO with phase, pwm and reset inputs</sDescription>
+  <obj.normal id="lfo_pwm_b" uuid="af2af5eb6271343f97d28f75811f4b3a41306743">
+    <sDescription>Bipolar LFO with phase, pwm and reset inputs</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
@@ -61,6 +61,76 @@
       if( (phase2>>5) > pulsewidth )
         {
           outlet_pwm = -(1<<27);
+        }
+      else
+        {
+          outlet_pwm =  (1<<27)-1;
+        }
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="lfo_pwm_u" uuid="a194a5eb6271343f97d28f75811f4b3a41306813">
+    <sDescription>Unipolar LFO with phase, pwm and reset inputs</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32.bipolar name="phase" description="Phase input"/>
+      <frac32.bipolar name="pwm"   description="Pulse width modulation"/>
+      <bool32.rising  name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="pwm" description="PWM output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" description="Pitch"/>
+      <frac32.u.map.ratio    name="pw"    description="Pulse width"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t  phase;
+      int32_t   old_reset;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase     = 0;
+      old_reset = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      int32_t   pulsewidth;
+      uint32_t  phase2;
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      pulsewidth = param_pw + inlet_pwm;
+      if( pulsewidth > (1<<27) )
+        {
+          pulsewidth = (1<<27);
+        }
+      else if( pulsewidth < 0 )
+        {
+          pulsewidth = 0;
+        }
+
+      phase2 = phase + (inlet_phase << 4);
+      if( (phase2>>5) > pulsewidth )
+        {
+          outlet_pwm = 0;
         }
       else
         {
