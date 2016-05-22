@@ -1,0 +1,102 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="pitchshifter" uuid="1a2fe3ff-864f-474f-86e9-6cf883076899">
+      <sDescription>saw wave LFO, rising slope, frequency input</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="AudioIn"/>
+         <frac32 name="Hz" description="frequency"/>
+         <frac32 name="depth"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="AudioOut"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (13);
+static const uint32_t LENGTH = (1<<13);
+static const uint32_t LENGTHMASK = ((1<<13)-1);
+int16_t *array;
+uint32_t writepos;
+
+   int32_t _prev1;
+   int32_t _step1;
+   int32_t _prev2;
+   int32_t _step2;
+       
+
+uint32_t Phase;
+uint32_t r;
+uint32_t h;
+
+
+
+]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<13]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+   
+   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[int32_t wave;
+Phase += ((-inlet_Hz)/44*30);
+wave= (Phase>>5);
+int32_t Sin;
+SINE2TINTERP(Phase-(1<<29),Sin)
+int32_t sina=-(Sin>>5)+(1<<26);
+int32_t saw;
+saw=((Phase>>5)+(1<<24)) & ((1<<27)-1);
+int32_t saw2;
+saw2=(saw+(1<<26)) & ((1<<27)-1);
+
+int32_t timea;
+int32_t timeb;
+timea=___SMMUL(saw<<3,inlet_depth<<2);
+timeb=___SMMUL(saw2<<3,inlet_depth<<2);
+
+
+   _step1 = (timea - _prev1)>>4;
+   int32_t _i1 = _prev1;
+   _prev1 = timea;
+
+   _step2 = (timeb - _prev2)>>4;
+   int32_t _i2 = _prev2;
+   _prev2 = timeb;
+
+   int32_t ccompl = ((128<<20)-sina);]]></code.krate>
+      <code.srate><![CDATA[  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(inlet_AudioIn>>14,16);
+
+
+int32_t conv1;
+int32_t conv2;
+   conv1 = _i1;
+   _i1 += _step1;
+   conv2 = _i2;
+   _i2 += _step2;
+
+int32_t pitch1;
+int32_t pitch2;
+
+      uint32_t delay1 = attr_delayname.writepos - (__USAT(conv1,27)>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index;
+      pitch1= attr_delayname.array[delay1 & attr_delayname.LENGTHMASK]<<14;
+
+      uint32_t delay2 = attr_delayname.writepos - (__USAT(conv2,27)>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index;
+      pitch2= attr_delayname.array[delay2 & attr_delayname.LENGTHMASK]<<14;
+
+         {
+      int64_t a = (int64_t)pitch2 * sina;
+      a += (int64_t)pitch1 * ccompl;
+      outlet_AudioOut= a>>27;
+   }
+]]></code.srate>
+   </obj.normal>
+</objdefs>

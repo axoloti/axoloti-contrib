@@ -1,0 +1,114 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="analogue" uuid="a593e734-a265-40e8-828b-1d1bb04d7887">
+      <sDescription>cumulative sum, saturating to +-64 units</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="Audio"/>
+         <frac32 name="Gain"/>
+         <frac32 name="Feed"/>
+         <frac32 name="Power"/>
+         <int32.positive name="Mode"/>
+         <frac32 name="Pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="risetime"/>
+         <frac32.u.map name="falltime"/>
+         <frac32.u.map name="LPHP"/>
+         <frac32.s.map name="Freq"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t acc;
+int32_t gain;
+int32_t input;
+int32_t take;
+int32_t tak2;
+int32_t tak3;
+int32_t tak4;
+int32_t val1;
+int32_t val2;
+int32_t val3;
+int32_t val4;
+int32_t val5;
+int32_t audio;]]></code.declaration>
+      <code.init><![CDATA[acc = 0;
+
+gain=0;
+input=0;
+take=0;
+tak2=0;
+tak3=0;
+tak4=0;
+
+val1=0;
+val2=0;
+val3=0;
+val4=0;
+val5=0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_Freq+inlet_Pitch,f);
+]]></code.krate>
+      <code.srate><![CDATA[int32_t rise= (param_risetime/48*47)<<4;
+int32_t fall= (___SMMUL(rise>>1,param_falltime<<2))<<4;
+
+tak2=tak2>=0?tak2:-tak2;
+
+if((inlet_Mode==1)||(inlet_Mode==5))
+{
+take=___SMMUL((inlet_Audio+tak3)<<3,gain<<4);
+}
+else
+{
+	take=tak2;
+}
+take=take>=0?take:-take;
+
+if (inlet_Mode==0)
+{
+   if (take>val2)  {val2 = ___SMMLA(val2-take,(-1<<31)+(fall),val2);}
+   else            {val2 = ___SMMLA(val2-take,(-1<<31)+(rise),val2);}
+         take = val2;
+}
+
+acc += inlet_Power -(take);
+acc = __SSAT(acc,28);
+acc=acc<=0?0:acc;
+if (inlet_Mode>0)
+{
+   if (acc>val1)  {val1 = ___SMMLA(val1-acc,(-1<<31)+(rise),val1);}
+   else           {val1 = ___SMMLA(val1-acc,(-1<<31)+(fall),val1);}
+         acc = val1;
+}
+
+gain=acc>(inlet_Gain<<3)?(inlet_Gain<<3):acc;
+
+if ((inlet_Mode==2)||(inlet_Mode==5))
+{
+   if (gain>val3)  {val3 = ___SMMLA(val3-gain,(-1<<31)+(rise),val3);}
+   else            {val3 = ___SMMLA(val3-gain,(-1<<31)+(fall),val3);}
+         gain = val3;
+}
+
+audio=inlet_Audio+tak3;
+
+if ((inlet_Mode==4)||(inlet_Mode==5))
+{
+   if (audio>val4)  {val4 = ___SMMLA(val4-audio,(-1<<31)+(rise),val4);}
+   else            {val4 = ___SMMLA(val4-audio,(-1<<31)+(fall),val4);}
+         audio = val4;
+}
+
+tak2=__SSAT(___SMMUL(audio<<3,gain<<4),28);
+tak4=___SMMUL(tak2<<2,inlet_Feed<<2);
+
+   val5 = ___SMMLA((tak4-val5)<<1,f,val5);
+   tak3= tak4-(___SMMUL(val5<<3,param_LPHP<<2));
+outlet_out=tak2;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

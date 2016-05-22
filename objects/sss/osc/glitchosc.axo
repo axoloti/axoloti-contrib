@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="glitchosc" uuid="effe8b0d-f5d6-4d74-a1bf-ad98225083d4">
+      <sDescription>divide integer with constant, also outputs remainder (modulo)</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a"/>
+         <frac32 name="b"/>
+         <frac32 name="c"/>
+         <frac32 name="d"/>
+         <frac32 name="e"/>
+         <frac32 name="f"/>
+         <frac32 name="g"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[int res;
+int jump;
+int rem;
+int qnt;
+int qnd;
+int als;
+if (inlet_a >=0)
+  res = ((unsigned int)inlet_a)/inlet_b;
+else  res = -(((unsigned int)(inlet_b-inlet_a))/inlet_b);
+jump= res;
+rem = (inlet_a-(res*inlet_b))*((((jump*(inlet_d>>3))& ((1<<27)-1)))>>20)+inlet_c*jump+inlet_a;
+
+qnt=(rem/(1+inlet_e))*(1+inlet_e);
+als=qnt+___SMMUL(inlet_a<<3,inlet_f<<5)+___SMMUL(((inlet_a-(res*inlet_b))*inlet_b),inlet_g);
+ 
+ outlet_out= (als) & ((1<<27)-1);]]></code.srate>
+   </obj.normal>
+</objdefs>

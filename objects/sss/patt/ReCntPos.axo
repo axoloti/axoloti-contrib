@@ -1,0 +1,273 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="ReCntPos" uuid="d70d03ee-ddb8-4d9a-9503-3323a436a238">
+      <sDescription>inlet value passed through after hitting control value</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>hook.axh</helpPatch>
+      <inlets>
+         <int32 name="sel"/>
+         <frac32.positive name="in" description="input"/>
+         <bool32.rising name="trg"/>
+         <frac32 name="a"/>
+         <frac32 name="b"/>
+         <frac32 name="c"/>
+         <frac32 name="d"/>
+         <frac32 name="e"/>
+         <frac32 name="f"/>
+         <frac32 name="g"/>
+         <frac32 name="h"/>
+         <int32 name="count"/>
+      </inlets>
+      <outlets>
+         <int32 name="count"/>
+         <int32 name="step"/>
+         <int32 name="maxstep"/>
+         <int32 name="wrapped"/>
+         <int32 name="times"/>
+         <bool32 name="trg1"/>
+         <bool32 name="trg2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="a"/>
+         <frac32.u.map name="b"/>
+         <frac32.u.map name="c"/>
+         <frac32.u.map name="d"/>
+         <frac32.u.map name="e"/>
+         <frac32.u.map name="f"/>
+         <frac32.u.map name="g"/>
+         <frac32.u.map name="h"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t power;
+int32_t cache;
+int trg;]]></code.declaration>
+      <code.krate><![CDATA[   switch(inlet_sel>0?inlet_sel:0){
+   	
+	case 0:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_a],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 1:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 2:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_c],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 3:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_d],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 4:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_e],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 5:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_f],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 6:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_g],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+	
+	case 7:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_h],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+
+
+
+
+
+
+}
+
+
+uint32_t a;
+uint32_t z;
+int trg;
+int trs;
+uint32_t b;
+uint32_t sum;
+sum=(((param_a+inlet_a)>>21)+((param_b+inlet_b)>>21)+((param_c+inlet_c)>>21)+((param_d+inlet_d)>>21)+((param_e+inlet_e)>>21)+((param_f+inlet_f)>>21)+((param_g+inlet_g)>>21)+((param_h+inlet_h)>>21));
+if ((1<<power)<sum)
+{
+	power=power+1;
+}
+if ((1<<(power-1))>sum)
+{
+	power=power-1;
+}
+outlet_maxstep=power;
+if(sum>0)
+{
+	z=inlet_count & ((1<<power)-1);
+}
+else
+{
+	z=inlet_count;
+}
+outlet_wrapped=z;
+outlet_trg2= (z==0)?1:0;
+
+int r;
+if (inlet_count >=0)
+  r = ((unsigned int)inlet_count)/(1<<power);
+else  r = -(((unsigned int)((1<<power)-inlet_count))/(1<<power));
+outlet_times= r;
+
+
+//1
+a=(z>=((param_a+inlet_a)>>21));
+z= a?z-((param_a+inlet_a)>>21):z;
+
+b=a;
+//2
+if (a)
+{
+a=(z>=((param_b+inlet_b)>>21));
+z= a?z-((param_b+inlet_b)>>21):z;
+b=b+a;
+}
+
+//3
+
+
+if (a)
+{
+a=(z>=((param_c+inlet_c)>>21));
+z= a?z-((param_c+inlet_c)>>21):z;
+b=b+a;
+}
+//4
+if (a)
+{
+a=(z>=((param_d+inlet_d)>>21));
+z= a?z-((param_d+inlet_d)>>21):z;
+b=b+a;
+}
+//5
+if (a)
+{
+a=(z>=((param_e+inlet_e)>>21));
+z= a?z-((param_e+inlet_e)>>21):z;
+b=b+a;
+}
+//6
+if (a)
+{
+a=(z>=((param_f+inlet_f)>>21));
+z= a?z-((param_f+inlet_f)>>21):z;
+b=b+a;
+}
+//7
+if (a)
+{
+a=(z>=((param_g+inlet_g)>>21));
+z= a?z-((param_g+inlet_g)>>21):z;
+b=b+a;
+}
+//8
+if (a)
+{
+
+a=(z>=((param_h+inlet_h)>>21));
+z= a?z-((param_h+inlet_h)>>21):z;
+b=b+a;
+}
+outlet_count=z;
+
+if(sum>0)
+{
+     outlet_step=b;
+}
+else
+{
+	outlet_step=0;
+}
+
+outlet_trg1= (z==0)?1:0;]]></code.krate>
+   </obj.normal>
+</objdefs>

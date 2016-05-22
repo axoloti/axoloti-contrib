@@ -1,0 +1,56 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="doublepulsar" uuid="a7b0becd-7fa4-4338-a6ab-fe0106655d9f">
+      <sDescription>multiply</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="input"/>
+         <frac32 name="b"/>
+         <frac32 name="c"/>
+         <frac32 name="d"/>
+         <frac32 name="e"/>
+         <frac32 name="f"/>
+         <frac32 name="g"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[int32_t ef;
+int32_t a;
+int32_t b;
+int32_t c;
+int32_t pulse1;
+int32_t pulse2;
+int32_t pulse3;
+int32_t pulse4;
+if(inlet_a>(inlet_b+(1<<27))>>1)
+{
+pulse1=inlet_a*(inlet_c>>15);
+}
+else
+{
+pulse1 = inlet_a*(inlet_d>>15);
+}
+pulse2=pulse1>(1<<26)?(1<<26):0;
+
+
+if(inlet_a>(inlet_e+(1<<27))>>1)
+{
+pulse3=inlet_a*(inlet_f>>15);
+}
+else
+{
+pulse3 = inlet_a*(inlet_g>>15);
+}
+pulse4=pulse3>(1<<26)?(1<<26):0;
+
+
+
+outlet_result=pulse2+pulse4-(1<<26);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

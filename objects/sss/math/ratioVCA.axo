@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="ratioVCA" uuid="1d39334b-ebe6-4be4-b223-1131cdc89a65">
+      <sDescription>reciprocal, y = 64/x</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>reciprocal.axh</helpPatch>
+      <inlets>
+         <frac32 name="in"/>
+         <int32.positive name="Multiply"/>
+         <int32.positive name="Divide"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[int64_t ratio;
+if (inlet_Divide) {
+      float inf = inlet_Divide<<21;
+      ratio = ((int)(281474976710656.f/inf)*inlet_Multiply)>>6;
+    } else
+        ratio = 1<<27;
+
+outlet_out=___SMMUL(ratio<<3,inlet_in<<2)*64;]]></code.krate>
+   </obj.normal>
+</objdefs>

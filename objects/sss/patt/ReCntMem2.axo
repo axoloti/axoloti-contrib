@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="ReCntMem2" uuid="d0fae6e5-60df-4aa9-b541-542fe88ab440">
+      <sDescription>positive integer control</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32.positive name="select" description="output"/>
+         <frac32 name="value"/>
+         <bool32.pulse name="change"/>
+      </outlets>
+      <displays>
+         <bool32 name="1"/>
+         <bool32 name="2"/>
+         <bool32 name="3"/>
+         <bool32 name="4"/>
+         <bool32 name="5"/>
+         <bool32 name="6"/>
+         <bool32 name="7"/>
+         <bool32 name="8"/>
+      </displays>
+      <params>
+         <frac32.u.map name="select"/>
+         <frac32.u.map name="Change"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[   int ptrig;
+   int32_t pval;
+]]></code.declaration>
+      <code.init><![CDATA[ptrig = 0;
+pval = 0;
+]]></code.init>
+      <code.krate><![CDATA[int r=(param_select/8)>>21;
+
+outlet_select= r;
+outlet_value=param_Change;
+
+if ((pval != param_Change)&(!ptrig)) { 
+  outlet_change = 1;
+  pval = param_Change;
+  ptrig = 1;
+} else {
+  ptrig = 0;
+  outlet_change = 0;
+}
+
+
+
+disp_1= (r==0)?1:0;
+disp_2= (r==1)?1:0;
+disp_3= (r==2)?1:0;
+disp_4= (r==3)?1:0;
+disp_5= (r==4)?1:0;
+disp_6= (r==5)?1:0;
+disp_7= (r==6)?1:0;
+disp_8= (r==7)?1:0;
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>
