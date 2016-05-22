@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="%sw2_1i" uuid="faee68de-24c2-49ed-804b-3e6b988e621e">
+      <sDescription>probabiltiy switch 2-1i  </sDescription>
+      <author>Philoop</author>
+      <helpPatch>prob.axh</helpPatch>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="i1"/>
+         <int32 name="i2"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="prob" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;
+]]></code.declaration>
+      <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
+      ntrig = 0;
+     ]]></code.init>
+      <code.krate><![CDATA[ if ((inlet_trig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
+      else if (!(inlet_trig>0)) ntrig=0;     
+
+ outlet_o= val>=param_prob?inlet_i2:inlet_i1;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
