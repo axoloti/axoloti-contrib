@@ -1,24 +1,29 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="4RngCount" uuid="3a10c820-535e-4a5f-b0c9-b04509fe9a88">
+   <obj.normal id="4RngCount2" uuid="225eda29-154d-43cc-a876-e104db2428ef">
       <sDescription>quad range counter (divremc with internal level manipulation)</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>math.axh</helpPatch>
       <inlets>
-         <int32 name="Count" description="nominator"/>
+         <int32 name="Count" description="Count Input"/>
+         <frac32 name="CntOfs" description="Count Offset"/>
          <int32 name="PreRng" description="denominator"/>
          <frac32 name="PreMul"/>
          <frac32 name="PreJmp"/>
          <frac32 name="PreChg"/>
+         <frac32 name="PreOfs"/>
          <int32 name="MidRng"/>
          <frac32 name="MidMul"/>
          <frac32 name="MidJmp"/>
          <frac32 name="MidChg"/>
+         <frac32 name="MidOfs"/>
          <int32 name="PstRng"/>
          <frac32 name="PstMul"/>
          <frac32 name="PstJmp"/>
          <frac32 name="PstChg"/>
+         <frac32 name="PstOfs"/>
          <int32 name="AftRng"/>
+         <int32 name="AftOfs"/>
       </inlets>
       <outlets>
          <int32 name="PreRng"/>
@@ -26,7 +31,12 @@
          <int32 name="PstRng"/>
          <int32 name="AftRng"/>
       </outlets>
-      <displays/>
+      <displays>
+         <int32.label name="PreRng"/>
+         <int32.label name="MidRng"/>
+         <int32.label name="PstRng"/>
+         <int32.label name="AftRng"/>
+      </displays>
       <params/>
       <attribs/>
       <code.declaration><![CDATA[int32_t ptrig;
@@ -51,14 +61,15 @@ int k;
 int l;
 int m;
 int n;
+int32_t coun0;
+coun0=inlet_Count+inlet_CntOfs;
+if (coun0 >=0)
+  r = ((unsigned int)coun0)/inlet_PreRng;
+else  r = -(((unsigned int)(inlet_PreRng-coun0))/inlet_PreRng);
 
-if (inlet_Count >=0)
-  r = ((unsigned int)inlet_Count)/inlet_PreRng;
-else  r = -(((unsigned int)(inlet_PreRng-inlet_Count))/inlet_PreRng);
-
-a = inlet_Count-(r*inlet_PreRng);
+a = coun0-(r*inlet_PreRng);
 c = inlet_MidRng<<2;
-b = a*___SMMUL((inlet_PreMul)<<3,c)+r*___SMMUL(inlet_PreJmp<<3,c)+r*a*___SMMUL(inlet_PreChg<<3,c);
+b = a*___SMMUL((inlet_PreMul)<<3,c)+r*___SMMUL(inlet_PreJmp<<3,c)+r*a*___SMMUL(inlet_PreChg<<3,c)+inlet_PreOfs;
 
 if (b >=0)
   s = ((unsigned int)b)/inlet_MidRng;
@@ -66,7 +77,7 @@ else  s = -(((unsigned int)(inlet_MidRng-b))/inlet_MidRng);
 
 d = b-(s*inlet_MidRng);
 f = inlet_PstRng<<2;
-e = d*___SMMUL((inlet_MidMul)<<3,f)+s*___SMMUL(inlet_MidJmp<<3,f)+s*d*___SMMUL(inlet_MidChg<<3,f);
+e = d*___SMMUL((inlet_MidMul)<<3,f)+s*___SMMUL(inlet_MidJmp<<3,f)+s*d*___SMMUL(inlet_MidChg<<3,f)+inlet_MidOfs;
 
 
 if (e >=0)
@@ -75,19 +86,21 @@ else  t = -(((unsigned int)(inlet_PstRng-e))/inlet_PstRng);
 
 g = e-(t*inlet_PstRng);
 h = inlet_PstRng<<2;
-i = g*___SMMUL((inlet_PstMul)<<3,h)+t*___SMMUL(inlet_PstJmp<<3,h)+t*g*___SMMUL(inlet_PstChg<<3,h);
+i = g*___SMMUL((inlet_PstMul)<<3,h)+t*___SMMUL(inlet_PstJmp<<3,h)+t*g*___SMMUL(inlet_PstChg<<3,h)+inlet_PstOfs;
 
 if (i >=0)
   u = ((unsigned int)i)/inlet_AftRng;
 else  u = -(((unsigned int)(inlet_AftRng-i))/inlet_AftRng);
 
-j = i-(u*inlet_AftRng);
+j = i-(u*inlet_AftRng)+inlet_AftOfs;
 
 outlet_AftRng = j;
 outlet_PstRng = g;
 outlet_MidRng = d;
 outlet_PreRng = a;
-
-]]></code.krate>
+disp_AftRng = j;
+disp_PstRng = g;
+disp_MidRng = d;
+disp_PreRng = a;]]></code.krate>
    </obj.normal>
 </objdefs>

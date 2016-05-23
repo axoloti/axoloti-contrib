@@ -1,11 +1,11 @@
-<objdefs appVersion="1.0.9">
-   <obj.normal id="shapingLFO" uuid="309f593b-55c1-40d0-b9cd-d5f5bb8a2221">
-      <sDescription>LFO with multiple shaping tools</sDescription>
+<objdefs appVersion="1.0.10">
+   <obj.normal id="shapingOSC" uuid="1a190029-ee41-435a-b5ca-db44497a287e">
+      <sDescription>shaping oscillator with several shaping tools</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>lfo.axh</helpPatch>
       <inlets>
-         <frac32 name="Hz" description="frequency"/>
+         <frac32 name="pitch" description="frequency"/>
          <frac32 name="Phase" description="phase offset input (parallel to beziercurve!)"/>
          <frac32 name="reset" description="resets when reset input goes above 0."/>
          <int32 name="waveform" description="0=sine,1=triangle,2=saw,3=ramp,4=pulse"/>
@@ -16,8 +16,8 @@
          <frac32.bipolar name="sinedPhase"/>
       </inlets>
       <outlets>
-         <frac32 name="wave"/>
-         <frac32 name="sined"/>
+         <frac32buffer name="wave"/>
+         <frac32buffer name="sined"/>
       </outlets>
       <displays/>
       <params/>
@@ -35,13 +35,15 @@ int32_t wavr;]]></code.declaration>
       <code.init><![CDATA[   Phase = 0;
    r = 1;
 ]]></code.init>
-      <code.krate><![CDATA[   
+      <code.krate><![CDATA[   uint32_t freq;
+   MTOFEXTENDED(inlet_Pitch,freq);]]></code.krate>
+      <code.srate><![CDATA[   
       if ((inlet_reset>0) && r) {
          Phase = 0;
          r = 0;
       } else {
          if (!(inlet_reset>0)) r = 1;
-         Phase += ((inlet_Hz)/44*30);
+         Phase += (freq>>0);
       }
 
 int32_t Bezier;
@@ -138,6 +140,6 @@ switch(inlet_Bipolar>0?inlet_Bipolar:0){
       case 0: outlet_sined= sina;break;
       default: outlet_sined= (sina<<1)-(1<<27);break;
 }
-]]></code.krate>
+]]></code.srate>
    </obj.normal>
 </objdefs>
