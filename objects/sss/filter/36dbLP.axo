@@ -1,18 +1,20 @@
-<objdefs appVersion="1.0.9">
-   <obj.normal id="36dbLP" uuid="18f97cdb-23af-49b4-9f20-9611f9ee07e3">
+<objdefs appVersion="1.0.10">
+   <obj.normal id="36dbLP" uuid="9a5be10b-b555-4141-8e36-46d3ce38e5db">
       <sDescription>36dB filter</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>math.axh</helpPatch>
       <inlets>
          <frac32buffer name="in" description="in2"/>
+         <frac32 name="cut"/>
+         <frac32 name="res"/>
       </inlets>
       <outlets>
          <frac32buffer name="out" description="out"/>
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="hz"/>
+         <frac32.u.map name="cut"/>
          <frac32.u.map name="res"/>
       </params>
       <attribs/>
@@ -31,8 +33,8 @@ val4 = 0;
 val5 = 0;
 val6 = 0;]]></code.init>
       <code.krate><![CDATA[int32_t f;
-   MTOF((param_hz),f);]]></code.krate>
-      <code.srate><![CDATA[   valsat=((inlet_in-val6)*(___SMMUL(6<<3,param_res<<2)));
+   MTOF((param_cut+inlet_cut),f);]]></code.krate>
+      <code.srate><![CDATA[   valsat=((inlet_in-val6)*(___SMMUL(6<<3,(param_res+inlet_res)<<2)));
 
 int32_t ts = __SSAT(valsat,28);
 int32_t tsq31 = ts<<3;
