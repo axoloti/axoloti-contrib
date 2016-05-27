@@ -7,4 +7,4 @@ int32_t z;
 
 int32_t w;
 
-#endif
+#endif  // EQUATIONS_H

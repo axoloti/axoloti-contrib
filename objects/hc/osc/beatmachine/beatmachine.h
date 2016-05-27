@@ -3,6 +3,4 @@
 
 #include "./equations.c"
 
-
-
-#endif
+#endif // BEATMACHINE_H
