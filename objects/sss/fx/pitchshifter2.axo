@@ -1,13 +1,7 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="pitchshifter2" uuid="3d5cf830-8fee-434d-8fd8-1b33538da148">
+   <obj.normal id="pitchshifter2" uuid="f1b1c6aa-1c4c-49a3-a118-069680635974">
       <sDescription>audio PitchShifter
-Featuring:
--semitone shift
--Harmonic shift
--Ratio
--Rate to window ratio to finetune to incoming audio
-
-NOTE! Use phi-&gt;delay-&gt;write_pow_out delay-write-module to get the samplelength bit!!!</sDescription>
+NOTE! enter module&apos;s own name into combobox!</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>lfo.axh</helpPatch>
@@ -71,7 +65,7 @@ uint8_t ei = ar>>16;
 if (s>=0)
      result = ((expt[ei]<<s)<<2)-(1<<21);
 else result = ((expt[ei]>>(-s)))-(1<<21);
-
+   outlet_result=result;
 int32_t frac;
 int32_t depth;
 depth=___SMMUL((1<<25)<<3,invwindowratio<<2)<<2;
@@ -83,7 +77,7 @@ frac=(___SMMUL(((1<<25)+(1<<21)/20)<<3,windowratio<<2)<<2)<<(inlet_samplelength-
 
 freq=frac;
 freh=___SMMUL(freq<<3,inlet_harmshift)<<6;
-freq=___SMMUL(result<<3,freq<<2)<<6;
+freq=___SMMUL(result<<3,freq<<2)<<4;
 
 int32_t wave;
 int32_t fras=(-(freq+freh)>>4)<<2;
@@ -117,7 +111,7 @@ timeb=___SMMUL(saw2<<3,depth);
    _prev2 = timeb;
 
    int32_t ccompl = ((128<<20)-sina);
-   outlet_result=Phase>>5;
+
   
 
 
@@ -142,11 +136,7 @@ int32_t pitch2;
       int64_t a = (int64_t)pitch2 * sina;
       a += (int64_t)pitch1 * ccompl;
       
-   val = ___SMMLA(((a>>27)-val)<<1,f,val);
-   
-
-      
-      outlet_AudioOut= val;
+      outlet_AudioOut= a>>27;
    }
 ]]></code.srate>
    </obj.normal>
