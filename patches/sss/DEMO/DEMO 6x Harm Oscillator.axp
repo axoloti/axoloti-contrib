@@ -99,11 +99,15 @@
    </obj>
    <obj type="math/divremc" uuid="21072e57-6602-4547-b1a7-9adab17a24af" name="divremc_1" x="84" y="98">
       <params/>
-      <attribs/>
+      <attribs>
+         <spinner attributeName="denominator" value="1"/>
+      </attribs>
    </obj>
    <obj type="math/divremc" uuid="21072e57-6602-4547-b1a7-9adab17a24af" name="divremc_2" x="210" y="98">
       <params/>
-      <attribs/>
+      <attribs>
+         <spinner attributeName="denominator" value="1"/>
+      </attribs>
    </obj>
    <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_2" x="14" y="112">
       <params/>
@@ -176,6 +180,12 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_2" x="1652" y="196">
+      <params>
+         <int32 name="maximum" value="128"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_5" x="252" y="210">
       <params/>
       <attribs/>
@@ -205,6 +215,10 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="1358" y="238" text="Crossfading delay"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_30" x="1554" y="252">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="252" y="266">
       <params/>
       <attribs/>
@@ -219,75 +233,8 @@
       <params/>
       <attribs/>
    </obj>
-   <patchobj type="Oscillator/multiform" uuid="7f0c4425-9d04-426b-9af2-614839744284" name="object_14" x="1274" y="266">
+   <obj type="sss/lfo/latchfader" uuid="54ebc489-69e6-403a-9dc5-f253053e55cd" name="latchfader_1" x="1442" y="308">
       <params/>
-      <attribs/>
-      <object id="patch/object" uuid="7f0c4425-9d04-426b-9af2-614839744284">
-         <sDescription>saw wave LFO, rising slope, frequency input</sDescription>
-         <author>Johannes Taelman</author>
-         <license>BSD</license>
-         <helpPatch>lfo.axh</helpPatch>
-         <inlets>
-            <frac32 name="Hz" description="frequency"/>
-            <bool32.rising name="reset" description="reset phase"/>
-         </inlets>
-         <outlets>
-            <bool32.pulse name="trg1"/>
-            <bool32 name="trg2"/>
-            <frac32 name="sin"/>
-         </outlets>
-         <displays/>
-         <params/>
-         <attribs/>
-         <includes/>
-         <code.declaration><![CDATA[uint32_t Phase;
-uint32_t r;
-uint32_t h;
-
-   int trg1;
-   int trg2;
-   int trg3;
-   int trg4;]]></code.declaration>
-         <code.init><![CDATA[   Phase = 0;
-   r = 1;
-]]></code.init>
-         <code.krate><![CDATA[int32_t wave;
-      if (inlet_reset && r) {
-         Phase = 0;
-         r = 0;
-      } 
-      else {
-         if (!inlet_reset) r = 1;
-         Phase += ((inlet_Hz)/44*30);
-      }
-
-
-wave= (Phase>>5);
-
-
-trg1= (wave>(1<<26))?(1<<27):0;
-trg2=(1<<27)-trg1;
-
-outlet_trg1=trg1*((trg3==0)?1:0);
-outlet_trg2=trg2*((trg4==0)?1:0);
-trg3=trg1;
-trg4=trg2;
-
-int32_t Sin;
-SINE2TINTERP(Phase-(1<<29),Sin)
-outlet_sin=-(Sin>>5)+(1<<26);
-
-]]></code.krate>
-      </object>
-   </patchobj>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_30" x="1372" y="266">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_2" x="1442" y="266">
-      <params>
-         <int32 name="maximum" value="128"/>
-      </params>
       <attribs/>
    </obj>
    <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_2" x="252" y="322">
@@ -342,9 +289,23 @@ outlet_sin=-(Sin>>5)+(1<<26);
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/divremc" uuid="21072e57-6602-4547-b1a7-9adab17a24af" name="divremc_3" x="616" y="378">
+   <obj type="math/+1" uuid="13c1a4574bb81783beb8839e81782b9a34e3fc17" name="+1_1" x="1568" y="364">
       <params/>
       <attribs/>
+   </obj>
+   <obj type="math/*" uuid="13882852b58661ad012ffbe246470b5df4b6c5d1" name="*_21" x="1624" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/half" uuid="d3aa9c64dbf1ec7871bbc3e2d8905f8e443c9823" name="half_1" x="1680" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/divremc" uuid="21072e57-6602-4547-b1a7-9adab17a24af" name="divremc_3" x="616" y="378">
+      <params/>
+      <attribs>
+         <spinner attributeName="denominator" value="1"/>
+      </attribs>
    </obj>
    <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="742" y="378">
       <params/>
@@ -372,22 +333,6 @@ outlet_sin=-(Sin>>5)+(1<<26);
       <params>
          <int32 name="value" value="16"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="patterns/range_counter" uuid="9ae491ab-1d44-4954-8439-dbe99547d32a" name="range_counter_1" x="1344" y="378">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/+1" uuid="13c1a4574bb81783beb8839e81782b9a34e3fc17" name="+1_1" x="1470" y="378">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/*" uuid="13882852b58661ad012ffbe246470b5df4b6c5d1" name="*_21" x="1526" y="378">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/half" uuid="d3aa9c64dbf1ec7871bbc3e2d8905f8e443c9823" name="half_1" x="1582" y="378">
-      <params/>
       <attribs/>
    </obj>
    <obj type="sss/env/ADSRBezMem" uuid="5426747e-a625-47a0-b58a-81e74bcf7941" name="ADSRBezMem_1" x="280" y="420">
@@ -434,6 +379,10 @@ outlet_sin=-(Sin>>5)+(1<<26);
       <attribs/>
    </obj>
    <obj type="math/-1" uuid="5fd46bab471bb6509ae83de702dea72933683a98" name="-1_1" x="1288" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/patt/1RngCount" uuid="e7edeee6-ecd1-48c3-b210-b871cf5a9930" name="1RngCount_1" x="1596" y="462">
       <params/>
       <attribs/>
    </obj>
@@ -727,14 +676,6 @@ outlet_sin=-(Sin>>5)+(1<<26);
          <dest obj="smooth_5" inlet="in"/>
       </net>
       <net>
-         <source obj="Count Length" outlet="out"/>
-         <dest obj="divremc_2" inlet="denominator"/>
-      </net>
-      <net>
-         <source obj="Divide Steps" outlet="out"/>
-         <dest obj="divremc_1" inlet="denominator"/>
-      </net>
-      <net>
          <source obj="divremc_1" outlet="div"/>
          <dest obj="4RngCount2_1" inlet="Count"/>
          <dest obj="divremc_2" inlet="a"/>
@@ -789,10 +730,6 @@ outlet_sin=-(Sin>>5)+(1<<26);
          <source obj="Min" outlet="out"/>
          <dest obj="-_3" inlet="in2"/>
          <dest obj="+_1" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="-_3" outlet="out"/>
-         <dest obj="divremc_3" inlet="denominator"/>
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
@@ -877,25 +814,6 @@ outlet_sin=-(Sin>>5)+(1<<26);
          <dest obj="Clock2Timing_1" inlet="samplelength"/>
       </net>
       <net>
-         <source obj="range_counter_1" outlet="AftRng"/>
-         <dest obj="+1_1" inlet="a"/>
-      </net>
-      <net>
-         <source obj="object_14" outlet="trg1"/>
-         <dest obj="or_30" inlet="i1"/>
-         <dest obj="latch_1" inlet="trig"/>
-      </net>
-      <net>
-         <source obj="object_14" outlet="trg2"/>
-         <dest obj="or_30" inlet="i2"/>
-         <dest obj="latch_3" inlet="trig"/>
-      </net>
-      <net>
-         <source obj="object_14" outlet="sin"/>
-         <dest obj="xfade_3" inlet="c"/>
-         <dest obj="xfade_4" inlet="c"/>
-      </net>
-      <net>
          <source obj="latch_1" outlet="o"/>
          <dest obj="read_6" inlet="time"/>
          <dest obj="read_8" inlet="time"/>
@@ -924,25 +842,25 @@ outlet_sin=-(Sin>>5)+(1<<26);
       </net>
       <net>
          <source obj="divremc_2" outlet="rem"/>
-         <dest obj="object_14" inlet="reset"/>
          <dest obj="counter_2" inlet="r"/>
          <dest obj="shapingLFO_1" inlet="reset"/>
+         <dest obj="latchfader_1" inlet="reset"/>
       </net>
       <net>
          <source obj="counter_2" outlet="o"/>
-         <dest obj="range_counter_1" inlet="Count"/>
+         <dest obj="1RngCount_1" inlet="Count"/>
       </net>
       <net>
          <source obj="Pre" outlet="out"/>
-         <dest obj="range_counter_1" inlet="PreRng"/>
+         <dest obj="1RngCount_1" inlet="PreRng"/>
       </net>
       <net>
          <source obj="dial_2" outlet="out"/>
-         <dest obj="range_counter_1" inlet="PreJmp"/>
+         <dest obj="1RngCount_1" inlet="PreJmp"/>
       </net>
       <net>
          <source obj="dial_4" outlet="out"/>
-         <dest obj="range_counter_1" inlet="PreChg"/>
+         <dest obj="1RngCount_1" inlet="PreChg"/>
       </net>
       <net>
          <source obj="read_8" outlet="out"/>
@@ -962,7 +880,7 @@ outlet_sin=-(Sin>>5)+(1<<26);
       </net>
       <net>
          <source obj="dial_3" outlet="out"/>
-         <dest obj="range_counter_1" inlet="PreMul"/>
+         <dest obj="1RngCount_1" inlet="PreMul"/>
       </net>
       <net>
          <source obj="xfade_3" outlet="o"/>
@@ -987,7 +905,7 @@ outlet_sin=-(Sin>>5)+(1<<26);
       </net>
       <net>
          <source obj="ratioVCA_2" outlet="out"/>
-         <dest obj="object_14" inlet="Hz"/>
+         <dest obj="latchfader_1" inlet="Hz"/>
       </net>
       <net>
          <source obj="Clock2Timing_1" outlet="maxtimes"/>
@@ -1056,8 +974,27 @@ outlet_sin=-(Sin>>5)+(1<<26);
          <dest obj="Gate Length" inlet="in"/>
       </net>
       <net>
+         <source obj="1RngCount_1" outlet="AftRng"/>
+         <dest obj="+1_1" inlet="a"/>
+      </net>
+      <net>
          <source obj="-1_1" outlet="result"/>
-         <dest obj="range_counter_1" inlet="AftRng"/>
+         <dest obj="1RngCount_1" inlet="AftRng"/>
+      </net>
+      <net>
+         <source obj="latchfader_1" outlet="trg1"/>
+         <dest obj="or_30" inlet="i1"/>
+         <dest obj="latch_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="latchfader_1" outlet="trg2"/>
+         <dest obj="or_30" inlet="i2"/>
+         <dest obj="latch_3" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="latchfader_1" outlet="sin"/>
+         <dest obj="xfade_3" inlet="c"/>
+         <dest obj="xfade_4" inlet="c"/>
       </net>
    </nets>
    <settings>
@@ -1072,7 +1009,7 @@ outlet_sin=-(Sin>>5)+(1<<26);
    <windowPos>
       <x>-8</x>
       <y>-8</y>
-      <width>1696</width>
-      <height>1026</height>
+      <width>1936</width>
+      <height>1096</height>
    </windowPos>
 </patch-1.0>
