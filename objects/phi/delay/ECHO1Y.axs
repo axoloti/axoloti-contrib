@@ -1,11 +1,4 @@
-<patch-1.0 appVersion="1.0.10">
-   <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="224" y="0">
-      <params>
-         <frac32.s.map name="pitch" onParent="true" value="-64.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
+<patch-1.0>
    <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="echo" x="14" y="14">
       <params/>
       <attribs/>
@@ -20,6 +13,13 @@
       <params>
          <frac32.u.map name="gain1" onParent="true" value="64.0"/>
          <frac32.u.map name="gain2" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp m" sha="c2224dc682842eae1af4496f3f94a6afc1525ee4" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="HP IN" x="224" y="112">
+      <params>
+         <frac32.s.map name="pitch" onParent="true" value="64.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -76,6 +76,10 @@
    </obj>
    <nets>
       <net>
+         <source obj="HP IN" outlet="out"/>
+         <dest obj="echoloti" inlet="in"/>
+      </net>
+      <net>
          <source obj="FbLp " outlet="out"/>
          <dest obj="vca_1" inlet="a"/>
          <dest obj="fba" inlet="in"/>
@@ -120,11 +124,7 @@
       </net>
       <net>
          <source obj="" outlet="out"/>
-         <dest obj="hp_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="hp_1" outlet="out"/>
-         <dest obj="echoloti" inlet="in"/>
+         <dest obj="HP IN" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -140,8 +140,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>529</x>
-      <y>202</y>
+      <x>308</x>
+      <y>87</y>
       <width>1129</width>
       <height>748</height>
    </windowPos>
