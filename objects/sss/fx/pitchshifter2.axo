@@ -1,12 +1,11 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="pitchshifter2" uuid="f1b1c6aa-1c4c-49a3-a118-069680635974">
+   <obj.normal id="pitchshifter2" uuid="83a522af-b079-4d6e-b1f3-9965d7c8c915">
       <sDescription>audio PitchShifter
 NOTE! enter module&apos;s own name into combobox!</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>lfo.axh</helpPatch>
       <inlets>
-         <frac32buffer name="AudioIn"/>
          <int32.positive name="samplelength" description="Use with Phi-delay-&quot;write_pow_out&quot; module to set used samplelength set in the delay_write module"/>
          <frac32.bipolar name="semitone" description="Shift by semitone"/>
          <frac32.bipolar name="harmshift" description="Shift by harmonic. ratio is 4:1 (1 harmonic per knob value 4)"/>
@@ -57,7 +56,11 @@ int32_t sami=inlet_semitone>0?0:inlet_semitone;
       <code.srate><![CDATA[
 
 
-
+int32_t ratioshift;
+if(inlet_ratioshift)
+{ratioshift=inlet_ratioshift;}
+else
+{ratioshift=(1<<24);}
 int32_t result;
 int32_t ar=inlet_semitone*8/12;
 int8_t s = (ar>>24)+4;
@@ -81,7 +84,7 @@ freq=___SMMUL(result<<3,freq<<2)<<4;
 
 int32_t wave;
 int32_t fras=(-(freq+freh)>>4)<<2;
-int32_t ratoo=___SMMUL((inlet_ratioshift-(1<<24))<<1,(fras+frac)<<2)<<1;
+int32_t ratoo=___SMMUL((ratioshift-(1<<24))<<1,(fras+frac)<<2)<<1;
 
 Phase += (fras-ratoo);
 wave= (Phase>>5);

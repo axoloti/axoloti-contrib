@@ -1,0 +1,62 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="multiform" uuid="f5252524-4c76-4df4-a554-93290a937424">
+      <sDescription>saw wave LFO, rising slope, frequency input</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="Hz" description="frequency"/>
+         <bool32.rising name="reset" description="reset phase"/>
+         <int32 name="waveform"/>
+         <bool32 name="Bipolar"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="wave" description="saw wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t r;
+uint32_t h;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=h" (result)
+                         : "h" (op1)
+                       );
+        return(result);
+      };]]></code.declaration>
+      <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[   {
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += ((inlet_Hz)/44*30);
+      }
+int32_t r;
+int32_t wave;
+      switch(inlet_waveform>0?inlet_waveform:0){
+      case 0: SINE2TINTERP(Phase,r) wave= (r>>5)+(1<<26);break;
+      case 1: wave= (((Phase>>4)-(1<<27))>(1<<27)?((Phase>>4)-(1<<27)):-((Phase>>4)-(1<<27)))+(1<<27);break;
+      case 2: wave= (Phase>>5);break;
+      case 3: wave= (1<<27)-(Phase>>5);break;
+      default: wave= (((Phase>>4)-(1<<27))>(1<<27)?(1<<27):0);break;
+}
+      switch(inlet_Bipolar>0?inlet_Bipolar:0){
+      case 0: outlet_wave= wave;break;
+      default: outlet_wave= (wave<<1)-(1<<27);break;
+}
+}
+   
+
+   ;]]></code.krate>
+   </obj.normal>
+</objdefs>
