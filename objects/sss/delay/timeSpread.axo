@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="timeSpread" uuid="5c61253a-992b-46ae-8877-11532c281c77">
+      <sDescription>Sets timing division between left and right time of the delayModPing module.
+Parts1 and parts2 get summed and this outcome divides part1. Internally in the delayModPing, this is scaled back to the internal left/right timing difference.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>reciprocal.axh</helpPatch>
+      <inlets>
+         <int32 name="parts1" description="set parts of time 1"/>
+         <int32 name="parts2"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[int32_t in=(inlet_parts1+inlet_parts2)<<21;
+int32_t reci;
+if (in) {
+      float inf = in;
+      reci = (int)(281474976710656.f/inf);
+    } else
+        reci = 1<<27;
+        
+outlet_out= ((reci*inlet_parts1)-(1<<26))*2;]]></code.krate>
+   </obj.normal>
+</objdefs>
