@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pllSine" uuid="b2e610b7-e42a-4e57-af41-111cbed4d998">
+      <sDescription>sine wave oscillator with PLL function and frequency modulation with frequency dependent modulation index</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="PLLphase" description="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="power"/>
+         <bool32.tgl name="mode"/>
+         <frac32.s.map name="overtones"/>
+         <frac32.s.map name="FM"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t prev;
+int32_t diff;
+int32_t power;
+int64_t r;
+int32_t p2;
+int32_t overtones;
+int64_t val1;
+int64_t val2;
+int64_t out;
+int32_t FM;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[   int64_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+]]></code.krate>
+      <code.srate><![CDATA[diff= ((inlet_PLLphase<<4)-Phase) & ((1<<32)-1);
+diff=diff;
+power=___SMMUL(param_power,diff);
+power=___SMMUL(power<<3,power<<2);
+if(param_mode==0)
+{if(diff>prev)
+{
+	Phase+=(power);
+}
+if(diff<prev)
+{
+	Phase-=(power);
+}}
+else
+{if(diff>prev)
+{
+	Phase-=(power);
+}
+if(diff<prev)
+{
+	Phase+=(power);
+}}
+prev=diff;
+FM=___SMMUL(inlet_freq<<4,param_FM<<4);
+Phase += (freq + ___SMMUL(freq<<5,FM));
+val1=val1+((param_overtones-val1)>>7);
+p2 = Phase;
+SINE2TINTERP(p2,r)
+overtones=___SMMUL(r,val1<<4);
+SINE2TINTERP(p2+(overtones<<4),r)
+val2=val2+(((r<<32)-val2)>>2);
+out=val2>>38;
+outlet_wave= out;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
