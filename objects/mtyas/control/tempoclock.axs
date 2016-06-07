@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.10">
    <obj type="midi/in/clock" uuid="f1aa3a79d6de9bd6d38dc64c9d4bb5c9de4f4198" name="clock_1" x="70" y="28">
       <params/>
       <attribs/>
@@ -64,7 +64,7 @@
    </obj>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="364" y="602">
       <params>
-         <frac32.s.map name="pitch" value="-12.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
