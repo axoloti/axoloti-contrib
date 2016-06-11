@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="spectralOscillator" uuid="9f420329-2546-463e-961d-f28a471fd647">
+      <sDescription>Spectral Oscillator with up to 32 harmonics.
+Depending on the jump, offset and range parameters, the oscillator creates different waveforms.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32buffer name="freq"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="FM"/>
+         <int32 name="harmonics">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="jump">
+            <MinValue i="0"/>
+            <MaxValue i="150"/>
+         </int32>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="range">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[    int32_t  _Phase[32];
+    int32_t  _sine[32];
+    int32_t  _harm[32];
+    int32_t  _Ranged[32];
+int32_t phase;
+
+int32_t range;
+int64_t sum;
+int32_t Ranged;
+int32_t FM;]]></code.declaration>
+      <code.krate><![CDATA[int32_t freq;
+MTOF(param_pitch+inlet_pitch,freq)
+
+range=param_range;]]></code.krate>
+      <code.srate><![CDATA[FM=___SMMUL(inlet_freq<<3,param_FM<<3);
+phase+=freq+___SMMUL(freq<<8,FM<<4);
+sum=0;
+    for(int i=0;i<=param_harmonics;i++) {
+    	_sine[i]=0;
+    	SINE2TINTERP(phase+phase*((i*param_jump+((i*param_jump)>>param_range)*param_offset) & ((1<<param_range)-1))+((i*param_jump)<<30),_sine[i])
+sum+=(_sine[i<param_harmonics?i:param_harmonics]>>5)/(1+i);
+}
+
+outlet_out=sum>>2;]]></code.srate>
+   </obj.normal>
+</objdefs>
