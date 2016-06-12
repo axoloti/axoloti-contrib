@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="spectralOscillator" uuid="9f420329-2546-463e-961d-f28a471fd647">
+   <obj.normal id="spectralOscillator" uuid="28d1973e-1946-4486-84de-3578c42eaf4c">
       <sDescription>Spectral Oscillator with up to 32 harmonics.
 Depending on the jump, offset and range parameters, the oscillator creates different waveforms.</sDescription>
       <author>Remco van der Most</author>
@@ -7,6 +7,9 @@ Depending on the jump, offset and range parameters, the oscillator creates diffe
       <inlets>
          <frac32 name="pitch"/>
          <frac32buffer name="freq"/>
+         <int32 name="jump"/>
+         <int32 name="offset"/>
+         <int32 name="after"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -25,6 +28,10 @@ Depending on the jump, offset and range parameters, the oscillator creates diffe
          </int32>
          <int32 name="offset">
             <MinValue i="0"/>
+            <MaxValue i="150"/>
+         </int32>
+         <int32 name="after">
+            <MinValue i="0"/>
             <MaxValue i="32"/>
          </int32>
          <int32 name="range">
@@ -42,17 +49,24 @@ int32_t phase;
 int32_t range;
 int64_t sum;
 int32_t Ranged;
-int32_t FM;]]></code.declaration>
+int32_t FM;
+int32_t jump;
+int32_t offset;
+int32_t after;]]></code.declaration>
       <code.krate><![CDATA[int32_t freq;
 MTOF(param_pitch+inlet_pitch,freq)
 
-range=param_range;]]></code.krate>
+range=param_range;
+
+jump=inlet_jump+param_jump;
+offset=param_offset+inlet_offset;
+after=param_after+inlet_after;]]></code.krate>
       <code.srate><![CDATA[FM=___SMMUL(inlet_freq<<3,param_FM<<3);
 phase+=freq+___SMMUL(freq<<8,FM<<4);
 sum=0;
     for(int i=0;i<=param_harmonics;i++) {
     	_sine[i]=0;
-    	SINE2TINTERP(phase+phase*((i*param_jump+((i*param_jump)>>param_range)*param_offset) & ((1<<param_range)-1))+((i*param_jump)<<30),_sine[i])
+    	SINE2TINTERP(phase+phase*((i*jump+(i>>after)*offset) & ((1<<param_range)-1))+((i*jump)<<30),_sine[i])
 sum+=(_sine[i<param_harmonics?i:param_harmonics]>>5)/(1+i);
 }
 
