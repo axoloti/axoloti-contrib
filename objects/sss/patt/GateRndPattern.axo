@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="GateRndPattern" uuid="e830b15a-0d8f-4776-8efd-72b5a1ad8f48">
+      <sDescription>random gate pattern generator
+connect &quot;COUNT&quot; to a counter (sss-logic)
+connect &quot;LENGTH&quot; to the max-count control
+CHANCE sets the level to which the internal random pattern is compared. If CHANCE is higher, a high gate is generated.
+REPEAT sets an euclidian division over the entire length. The smaller the value, the smaller the steps-&gt;more gates.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count"/>
+         <int32 name="length"/>
+      </inlets>
+      <outlets>
+         <bool32 name="rand"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="rand"/>
+         <frac32.u.map name="chance"/>
+         <frac32.u.map name="repeat"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _val[128];
+int32_t vol;
+int ntrig;
+int8_t lng;
+int i;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<64;i++) _val[i] = (GenerateRandomNumber())>>4;{}
+ntrig=0;]]></code.init>
+      <code.krate><![CDATA[int32_t repeat=___SMMUL(param_repeat<<3,inlet_count<<2);
+int32_t gtrig=inlet_count-(inlet_count/repeat)*repeat;
+gtrig=gtrig==0?(1<<27):0;
+
+lng=inlet_length;
+if((param_rand>0)&&(!(ntrig)))
+{
+for(i=0;i<lng;i++) _val[i] = (GenerateRandomNumber())>>4;
+{}
+ntrig=1;
+}
+else if(!(param_rand>0))
+{ntrig=0;}
+   vol=_val[inlet_count];
+   outlet_rand=(param_chance+gtrig>(vol>>1))?(1<<27):0;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
