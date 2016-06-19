@@ -1,0 +1,84 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="allpass_HQ" uuid="081409ce-7755-4413-b803-61411e7b79b9">
+      <sDescription>HQ allpass effect.
+use the pitch parameter or input to set the delaytime. The longer the buffer, the less interpolation between buffer points.
+
+Set the recording delay to a high value (21.8s) to be able to morph from small to large modulation width.
+Then use an int-control to set the length of the phaser&apos;s counter (see delay&apos;s XML for the maximum &quot;power&quot; length sizes of the delay buffer).</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <int32 name="length" description="Use int-control to set &quot;power length&quot; (see delay module for corresponding &quot;power values&quot;"/>
+         <frac32 name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t phase1;
+int64_t val;
+int64_t ctrl0;
+int64_t ctrl1;
+int64_t ctrl2;
+int64_t ctrl3;
+int64_t ctrl4;
+int64_t ctrl5;
+int64_t ctrl6;
+int64_t next1;
+int64_t next2;
+int64_t next3;
+int64_t next4;
+int64_t next5;
+int64_t next6;
+int64_t prev;
+int64_t ccomp1;
+int trg1;
+int trg2;
+int64_t dir;
+int64_t val2;
+int64_t out1;
+int64_t out2;
+int64_t sine1;
+int64_t sine2;
+int32_t freq;]]></code.declaration>
+      <code.krate><![CDATA[
+   int32_t fraq;
+   MTOF(0-param_pitch - inlet_pitch,fraq);
+]]></code.krate>
+      <code.srate><![CDATA[freq=freq+((fraq-freq)>>14);
+ctrl3=(freq>>27-(inlet_length-1));
+ctrl2=(freq>>27-(inlet_length-1))+1;
+ctrl1=(freq>>27-(inlet_length-1))+2;
+phase1=(freq-(ctrl3<<(27-(inlet_length-1))))<<(inlet_length-1);
+
+
+ccomp1=(1<<27)-phase1;
+
+
+SINE2TINTERP(((ctrl2<<(33-inlet_length))-(phase1>>(33-inlet_length)))-(1<<30),sine1)
+sine1=(sine1>>5)+(1<<26);
+sine2=(1<<27)-sine1;
+
+
+      uint32_t delay1 = attr_delayname.writepos - ctrl3 - BUFSIZE + buffer_index;
+      next1= attr_delayname.array[delay1 & attr_delayname.LENGTHMASK]<<14;
+      uint32_t delay2 = attr_delayname.writepos - ctrl2 - BUFSIZE + buffer_index;
+      next2= attr_delayname.array[delay2 & attr_delayname.LENGTHMASK]<<14;
+      uint32_t delay3 = attr_delayname.writepos - ctrl1 - BUFSIZE + buffer_index;
+      next3= attr_delayname.array[delay3 & attr_delayname.LENGTHMASK]<<14;
+
+
+
+out1=(___SMMUL(ccomp1<<3,next1<<2)+next2+___SMMUL(phase1<<3,next3<<2))>>1;
+val2=val2+(((out1)<<32)-val2)>>1;
+outlet_out=((val2)>>32);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

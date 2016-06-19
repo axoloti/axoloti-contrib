@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="64stp_4ch_Prst_Seq" uuid="6b4a83e0-4090-4af7-84aa-bf7245136893">
+      <sDescription>write to table</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32.positive name="count" description="index (integer, not fraction)"/>
+         <frac32 name="v"/>
+         <bool32.rising name="trig"/>
+         <int32 name="select"/>
+         <int32 name="barlength"/>
+      </inlets>
+      <outlets>
+         <bool32 name="o1"/>
+         <bool32 name="o2"/>
+         <bool32 name="o3"/>
+         <bool32 name="o4"/>
+         <int32 name="maxcount"/>
+      </outlets>
+      <displays>
+         <bool32 name="01"/>
+         <bool32 name="02"/>
+         <bool32 name="03"/>
+         <bool32 name="04"/>
+         <bool32 name="05"/>
+         <bool32 name="06"/>
+         <bool32 name="07"/>
+         <bool32 name="08"/>
+         <bool32 name="09"/>
+         <bool32 name="10"/>
+         <bool32 name="11"/>
+         <bool32 name="12"/>
+         <bool32 name="13"/>
+         <bool32 name="14"/>
+         <bool32 name="15"/>
+         <bool32 name="16"/>
+         <int32.bar16 name="position"/>
+      </displays>
+      <params>
+         <int32.hradio name="channel">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32.hradio name="bar">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="length">
+            <MinValue i="0"/>
+            <MaxValue i="4"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[   int ntrig;
+int32_t pcount;]]></code.declaration>
+      <code.init><![CDATA[   int ntrig = 0;
+]]></code.init>
+      <code.krate><![CDATA[int TRIG=inlet_count!=pcount?1:0;
+int32_t bor=param_bar*16;
+int32_t select=inlet_select+param_channel*64+param_preset*256+bor;
+   
+   if ((inlet_trig>0) && !ntrig) {
+      ntrig=1;
+      if (select<attr_table.LENGTH)
+         attr_table.array[select]=__SSAT(inlet_v,28)>>attr_table.GAIN;
+   }
+   if (!(inlet_trig>0)) ntrig=0;
+
+int32_t readA=inlet_count+param_preset*256;
+   outlet_o1= (attr_table.array[__USAT(readA,attr_table.LENGTHPOW)]<<attr_table.GAIN) && TRIG;
+   outlet_o2= (attr_table.array[__USAT(readA+64,attr_table.LENGTHPOW)]<<attr_table.GAIN) && TRIG;
+   outlet_o3= (attr_table.array[__USAT(readA+128,attr_table.LENGTHPOW)]<<attr_table.GAIN) && TRIG;
+   outlet_o4= (attr_table.array[__USAT(readA+192,attr_table.LENGTHPOW)]<<attr_table.GAIN) && TRIG;
+
+
+int32_t addbar=(inlet_count>>4)<<4;
+disp_position=inlet_count-addbar;
+int32_t readB=param_channel*64+param_preset*256+bor+addbar;
+disp_01=attr_table.array[__USAT(readB,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_02=attr_table.array[__USAT(readB+1,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_03=attr_table.array[__USAT(readB+2,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_04=attr_table.array[__USAT(readB+3,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_05=attr_table.array[__USAT(readB+4,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_06=attr_table.array[__USAT(readB+5,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_07=attr_table.array[__USAT(readB+6,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_08=attr_table.array[__USAT(readB+7,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_09=attr_table.array[__USAT(readB+8,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_10=attr_table.array[__USAT(readB+9,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_11=attr_table.array[__USAT(readB+10,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_12=attr_table.array[__USAT(readB+11,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_13=attr_table.array[__USAT(readB+12,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_14=attr_table.array[__USAT(readB+13,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_15=attr_table.array[__USAT(readB+14,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+disp_16=attr_table.array[__USAT(readB+15,attr_table.LENGTHPOW)]<<attr_table.GAIN;
+
+pcount=inlet_count;
+outlet_maxcount=inlet_barlength*param_length;]]></code.krate>
+   </obj.normal>
+</objdefs>
