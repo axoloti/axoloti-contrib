@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="stutter_read" uuid="6c427240-7a79-4dc7-9969-f4ce16642135">
+      <sDescription>repeater delay with shift/predelay (shifted within range)
+TO BE USED WITH THE stutter_write!!!!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="predelayA"/>
+         <frac32 name="predelayK"/>
+         <frac32 name="Range"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+         <frac32 name="range"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="predelay"/>
+         <frac32.u.map name="range"/>
+      </params>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t range;
+int32_t ronge;
+int32_t ringe;
+int64_t predelayK;]]></code.declaration>
+      <code.krate><![CDATA[ringe=___SMMUL((param_range-1)<<3,(param_range-1)<<2)+1;
+
+ronge=__SSAT((ringe+inlet_Range),28);
+
+outlet_range=ronge;]]></code.krate>
+      <code.srate><![CDATA[      predelayK=(param_predelay+inlet_predelayK);
+
+      uint32_t delay1 = attr_delayname.writepos - (__USAT(inlet_predelayA+predelayK,27)>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index;
+      range=___SMMUL((1<<attr_delayname.LENGTHPOW)<<3,ronge<<2);
+      delay1=delay1-((delay1/range)*range);
+      outlet_out= attr_delayname.array[delay1 & attr_delayname.LENGTHMASK]<<14;
+      ]]></code.srate>
+   </obj.normal>
+</objdefs>

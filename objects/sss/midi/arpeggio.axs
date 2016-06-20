@@ -3,12 +3,33 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="Count Divide" x="168" y="210">
+   <patchobj type="patch/object" uuid="7f4c175e-1aa5-4205-959d-a04b37ea366b" name="Count Divide" x="168" y="210">
       <params>
          <int32 name="value" onParent="true" value="1"/>
       </params>
       <attribs/>
-   </obj>
+      <object id="patch/object" uuid="7f4c175e-1aa5-4205-959d-a04b37ea366b">
+         <sDescription>positive integer control</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>ctrl.axh</helpPatch>
+         <inlets/>
+         <outlets>
+            <int32.positive name="out" description="output"/>
+         </outlets>
+         <displays/>
+         <params>
+            <int32 name="value" noLabel="true">
+               <MinValue i="1"/>
+               <MaxValue i="32"/>
+            </int32>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.krate><![CDATA[outlet_out= param_value;
+]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="math/divremc" uuid="21072e57-6602-4547-b1a7-9adab17a24af" name="divremc_1" x="238" y="210">
       <params/>
       <attribs/>
@@ -27,8 +48,8 @@
       <params/>
       <attribs>
          <combo attributeName="poly" selection="8"/>
-         <combo attributeName="midichannel" selection="inherit"/>
-         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midichannel" selection="1"/>
+         <combo attributeName="mididevice" selection="din"/>
          <combo attributeName="midiport" selection="omni"/>
       </attribs>
    </obj>
