@@ -1,0 +1,89 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="scalar" uuid="9a01353c-5476-4d0b-8fe5-9f24abc3d048">
+      <sDescription>Scales incoming notes to major C-scale+key offset (key-offset is multiplied by fifths, thus 1 semitone higher will add one &quot;#&quot; to the scale and one lower will add a &quot;b&quot; to the scale). 
+Unlike the native scaler, this one will leave the keyboard-layout intact!
+When the incoming note isn&apos;t in the scale, it&apos;s either shifted up or down 1 semitone (each time it happens, it inverses the shift).
+
+When &quot;bend&quot; is &quot;on&quot;, incoming notes, not belonging to the scale, will automatically switch on glide-mode.
+
+outlets:
+
+-scaled: outputs the scaled notes.
+-gateScale: outputs a trigger when scaled output changes.
+-Skipped: outputs the note that has been skipped. (might be used to trigger extra functions)
+-Gateskip: outputs a trigger when Skipped output changes.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="note"/>
+         <int32 name="key"/>
+      </inlets>
+      <outlets>
+         <frac32 name="Scaled"/>
+         <bool32 name="GateScale"/>
+         <int32 name="Skipped"/>
+         <bool32 name="GateSkip"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="Bend"/>
+         <frac32.s.map.kpitch name="Glide"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[    int8_t  _scale[12];
+    int32_t note;
+    int32_t octave;
+    int32_t skipped;
+    int32_t key;
+    int32_t oldnote;
+    int32_t Scaled;
+    int32_t val;
+    int32_t Bend;
+    int a;
+    int trg;]]></code.declaration>
+      <code.init><![CDATA[    for(int i=0;i<12;i++) {
+        _scale[i] = 0;
+    }
+    _scale[0]=0;
+    _scale[1]=0;
+    _scale[2]=2;
+    _scale[3]=2;
+    _scale[4]=4;
+    _scale[5]=5;
+    _scale[6]=5;
+    _scale[7]=7;
+    _scale[8]=7;
+    _scale[9]=9;
+    _scale[10]=9;
+    _scale[11]=11;
+    a=1;]]></code.init>
+      <code.krate><![CDATA[
+key=(inlet_key*7);
+key=key-((key/12)*12);
+
+octave=(((inlet_note-key)/12)*12);
+note=inlet_note-key-octave;
+Scaled=_scale[note]+octave+key;
+outlet_Scaled=(Scaled<<21)+(val);
+outlet_GateScale=((Scaled)!=oldnote);
+outlet_GateSkip=inlet_note!=Scaled;
+
+
+if(outlet_GateSkip)
+{skipped=inlet_note;
+if(param_Bend)
+{Bend=(Scaled-outlet_Skipped)+a;
+val = ___SMMLA(val-(Bend<<21),(-1<<26)+(param_Glide>>1),val);
+}
+if (trg!=1)
+{a=-a;
+}
+trg=1;
+}
+else
+{Bend=0;val=0;trg=0;}
+
+outlet_Skipped=skipped;
+oldnote=Scaled;]]></code.krate>
+   </obj.normal>
+</objdefs>
