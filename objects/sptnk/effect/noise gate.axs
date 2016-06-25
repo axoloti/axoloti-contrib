@@ -18,7 +18,7 @@
    <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="envelope" x="322" y="308">
       <params>
          <frac32.s.map name="a" onParent="true" value="0.0"/>
-         <frac32.s.map name="d" value="0.0"/>
+         <frac32.s.map name="d" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
