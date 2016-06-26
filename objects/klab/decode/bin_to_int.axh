@@ -1,0 +1,147 @@
+<patch-1.0 appVersion="1.0.10">
+   <comment type="patch/comment" x="112" y="14" text="Accepts boolean input to each "/>
+   <comment type="patch/comment" x="112" y="28" text="of the inputs. Like &quot;toggle&quot;"/>
+   <comment type="patch/comment" x="112" y="42" text="boxes or input from gpio:"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="126" y="56">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_2" x="126" y="112">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="378" y="140" text="Reads the 8 inputs as 8-bit binary, and"/>
+   <comment type="patch/comment" x="378" y="154" text="outputs the corresponding int between 0 and 255"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_3" x="126" y="168">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="448" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="klab/decode/bin8_to_int" uuid="52a1af60-5e05-4954-bdf7-c2bcf5358925" name="bin8_to_int_1" x="238" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_4" x="126" y="224">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="406" y="266" text="One use case is for picking"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_5" x="140" y="280">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="406" y="280" text="a patch to load from SD-card"/>
+   <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_1" x="392" y="294">
+      <params/>
+      <attribs>
+         <table attributeName="prefix" table="fileName_"/>
+         <table attributeName="suffix" table="/patch.axp"/>
+      </attribs>
+   </obj>
+   <obj type="patch/load fn" uuid="12a194acdd5b94470e044f98e8e025d0dac65e18" name="load_1" x="602" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_6" x="140" y="336">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_7" x="140" y="392">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="406" y="420" text="Another is for loading presets:"/>
+   <obj type="patch/preset" uuid="f7916cc01d45a5b1bbd444216031e0a02cc0b94c" name="preset_1" x="434" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_8" x="140" y="448">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="280" y="532" text="Trigger the action:"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="294" y="546">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="toggle_2" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="toggle_3" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="toggle_4" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="bin8_to_int_1" outlet="o0"/>
+         <dest obj="i_1" inlet="in"/>
+         <dest obj="indexed_1" inlet="index"/>
+         <dest obj="preset_1" inlet="preset"/>
+      </net>
+      <net>
+         <source obj="indexed_1" outlet="out"/>
+         <dest obj="load_1" inlet="fn"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="load_1" inlet="trig"/>
+         <dest obj="preset_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="toggle_5" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i4"/>
+      </net>
+      <net>
+         <source obj="toggle_6" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i5"/>
+      </net>
+      <net>
+         <source obj="toggle_7" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i6"/>
+      </net>
+      <net>
+         <source obj="toggle_8" outlet="o"/>
+         <dest obj="bin8_to_int_1" inlet="i7"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>1126</x>
+      <y>69</y>
+      <width>719</width>
+      <height>955</height>
+   </windowPos>
+</patch-1.0>
