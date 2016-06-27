@@ -1,0 +1,170 @@
+<objdefs appVersion="1.0.10">
+  <obj.normal id="tap_tempo" uuid="218abeeb612323af53436541811139814b3a4793">
+    <sDescription>Tap tempo, mul/div as live parameters</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <bool32.rising  name="tap" description="Tap input"/>
+    </inlets>
+    <outlets>
+      <bool32.pulse   name="clock"  description="Clock output"/>
+      <frac32.bipolar name="phasor" description="Phasor output"/>
+     </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockmul" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+      <int32 name="clockdiv" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+      <bool32.mom name="tap" noLabel="false"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t  ktimer;
+      uint32_t  last_ktime;
+      uint32_t  phase;
+      float     base_freq;
+      uint32_t  old_phase;
+      uint32_t  old_inlet_tap;
+      uint32_t  old_param_tap;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      ktimer        = 0;
+      last_ktime    = 0;
+      phase         = 0;
+      base_freq     = 64.0f * (double)(1 << 30) * 1.0f / (SAMPLERATE * 1.0f);
+      old_phase     = 0;
+      old_inlet_tap = 0;
+      old_param_tap = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if(   (inlet_tap && !old_inlet_tap)
+         || (param_tap && !old_param_tap)
+        )
+        {
+          float period = (ktimer - last_ktime);
+          if( period < 15000 ) // 5 seconds at most between taps
+            {
+              period = period * 16;
+              if( period < 1.0f )
+                {
+                  period = 1.0f;
+                }
+              float f_clock = SAMPLERATE / period;
+              base_freq     = 64.0f * (float)(1 << 30) * f_clock / (SAMPLERATE * 1.0f);
+              phase         = 0;
+            }
+          last_ktime  = ktimer;
+        }
+
+      float freq  = (base_freq * (float) param_clockmul) / (float) param_clockdiv;
+      phase += (uint32_t) freq;
+
+      outlet_clock = 0;
+      if( phase < old_phase )
+        {
+          outlet_clock = 1;
+        }
+
+      outlet_phasor = (phase>>5);
+
+      old_phase     = phase;
+      old_inlet_tap = inlet_tap;
+      old_param_tap = param_tap;
+
+      ktimer++;
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="tap_tempo" uuid="23218abeeb61123af5343654811139814b3a4793">
+    <sDescription>Tap tempo, mul/div as attributes (lowest CPU usage)</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <bool32.rising  name="tap" description="Tap input"/>
+    </inlets>
+    <outlets>
+      <bool32.pulse   name="clock"  description="Clock output"/>
+      <frac32.bipolar name="phasor" description="Phasor output"/>
+     </outlets>
+    <displays/>
+    <params>
+      <bool32.mom name="tap" noLabel="false"/>
+    </params>
+    <attribs>
+      <spinner name="clockmul" MinValue="1" MaxValue="128" DefaultValue="1"/>
+      <spinner name="clockdiv" MinValue="1" MaxValue="128" DefaultValue="1"/>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      uint32_t  ktimer;
+      uint32_t  last_ktime;
+      uint32_t  phase;
+      int32_t   clock_freq;
+      uint32_t  old_phase;
+      uint32_t  old_inlet_tap;
+      uint32_t  old_param_tap;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      ktimer        = 0;
+      last_ktime    = 0;
+      phase         = 0;
+      clock_freq    = 64 * (uint32_t) ((float)(1 << 30) * 1.0f / (SAMPLERATE * 1.0f));
+      old_phase     = 0;
+      old_inlet_tap = 0;
+      old_param_tap = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if(   (inlet_tap && !old_inlet_tap)
+         || (param_tap && !old_param_tap)
+        )
+        {
+          float period = (ktimer - last_ktime);
+          if( period < 15000 ) // 5 seconds at most between taps
+            {
+              period = period * 16;
+              if( period < 1.0f )
+                {
+                  period = 1.0f;
+                }
+              float f_clock = SAMPLERATE / period;
+              float freq    = 64.0f * (float)(1 << 30) * f_clock / (SAMPLERATE * 1.0f);
+              freq          = (freq * (float) attr_clockmul) / (float) attr_clockdiv;
+              clock_freq    = (uint32_t) freq;
+              phase         = 0;
+            }
+          last_ktime  = ktimer;
+        }
+
+      phase += clock_freq;
+
+      outlet_clock = 0;
+      if( phase < old_phase )
+        {
+          outlet_clock = 1;
+        }
+
+      outlet_phasor = (phase>>5);
+
+      old_phase     = phase;
+      old_inlet_tap = inlet_tap;
+      old_param_tap = param_tap;
+
+      ktimer++;
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>
