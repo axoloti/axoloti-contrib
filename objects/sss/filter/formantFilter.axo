@@ -1,0 +1,149 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="formantFilter" uuid="16d28919-6c3d-4f69-82c9-d86e803f2c14">
+      <sDescription>Formant filter
+Connect the corresponding outputs on the formant controller to the inputs of the filter.
+Feed a signal into the &quot;in&quot; input to induce the formants on (normally a saw is used, but you can use any oscillator!)
+
+Two BP filter modes (I like 2 the most with resonance set to around 20).
+
+The resonance knob adds extra resonance to the normal settings (so 0 would be the setting set by the formant controller, but I like the resonance to be a bit higher).
+
+If you have high volume problems, lower the volume of the input sound or add the &quot;fatbasterd&quot; module to soft-clip it.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="frq1"/>
+         <frac32 name="frq2"/>
+         <frac32 name="frq3"/>
+         <frac32 name="frq4"/>
+         <frac32 name="frq5"/>
+         <frac32 name="bw1"/>
+         <frac32 name="bw2"/>
+         <frac32 name="bw3"/>
+         <frac32 name="bw4"/>
+         <frac32 name="bw5"/>
+         <frac32 name="gain1"/>
+         <frac32 name="gain2"/>
+         <frac32 name="gain3"/>
+         <frac32 name="gain4"/>
+         <frac32 name="gain5"/>
+         <frac32.positive name="resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="resonance"/>
+         <int32.hradio name="mode">
+            <MaxValue i="2"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float32_t f0[5];
+float32_t dBgain[5];
+float32_t BW[5];
+float32_t A[5];
+float32_t w0[5];
+float32_t alpha[5];
+float32_t b0[5];
+float32_t b1[5];
+float32_t b2[5];
+float32_t a0[5];
+float32_t a1[5];
+float32_t a2[5];
+float32_t wcos0[5];
+int32_t sum[5];
+int32_t bprev1;
+int32_t bprev2;
+int32_t anext1[5];
+int32_t anext2[5];
+float32_t ln;
+int32_t sam;
+float32_t E;
+int i;
+int j;
+float32_t e;
+int32_t sim;
+int shift;]]></code.declaration>
+      <code.init><![CDATA[bprev1=0;
+bprev2=0;
+for(i=0;i<5;i++)
+{
+anext1[i]=0;
+anext2[i]=0;
+}
+
+ln=0.693147180559945309417232121458;
+e=2.718281828459045235360287471352662497757247093;]]></code.init>
+      <code.krate><![CDATA[float32_t Fs=48000;
+float32_t res=(float)(param_resonance+param_resonance);
+float32_t pi=3.141592653589793238462643383279502884;
+
+f0[0]=((float)inlet_frq1)/(1<<16);
+f0[1]=((float)inlet_frq2)/(1<<16);
+f0[2]=((float)inlet_frq3)/(1<<16);
+f0[3]=((float)inlet_frq4)/(1<<16);
+f0[4]=((float)inlet_frq5)/(1<<16);
+dBgain[0]=((float)inlet_gain1)/(1<<21);
+dBgain[1]=((float)inlet_gain2)/(1<<21);
+dBgain[2]=((float)inlet_gain3)/(1<<21);
+dBgain[3]=((float)inlet_gain4)/(1<<21);
+dBgain[4]=((float)inlet_gain5)/(1<<21);
+BW[0]=((float)inlet_bw1)/(1<<16);
+BW[1]=((float)inlet_bw2)/(1<<16);
+BW[2]=((float)inlet_bw3)/(1<<16);
+BW[3]=((float)inlet_bw4)/(1<<16);
+BW[4]=((float)inlet_bw5)/(1<<16);
+
+for(i=0;i<5;i++)
+{
+	dBgain[i]=dBgain[i]<-20?-20:dBgain[i];
+A[i]=(powf(10,dBgain[i])/40);
+w0[i]=2*pi*f0[i]/Fs;
+wcos0[i]=cosf(w0[i]);
+
+
+   switch(param_mode>0?param_mode:0){
+case 0:
+alpha[i]=(sinf(w0[i]))/(((res/(1<<24))+2)*BW[i]/f0[i]);
+a0[i] =1+alpha[i];
+b0[i]=sinf(w0[i])/2/a0[i];
+b1[i]=0;
+b2[i]=-sinf(w0[i])/2/a0[i];
+a1[i]=-2*wcos0[i]/a0[i];
+a2[i]=1-alpha[i]/a0[i];
+dBgain[i]=powf(0.5,-dBgain[i]/6);
+shift=0;
+break;
+case 1:
+alpha[i]=(sinf(w0[i]))/(((res/(1<<20))+2)*BW[i]/f0[i]);
+a0[i] =1+alpha[i];
+b0[i]=alpha[i]/a0[i];
+b1[i]=0;
+b2[i]=-alpha[i]/a0[i];
+a1[i]=-2*wcos0[i]/a0[i];
+a2[i]=1-alpha[i]/a0[i];
+dBgain[i]=powf(0.5,-dBgain[i]/6);
+shift=0;
+break;
+}}
+]]></code.krate>
+      <code.srate><![CDATA[sam=0;
+int32_t in=inlet_in>>1;
+bprev2=bprev1;
+bprev1=in;
+for(j=0;j<5;j++)
+{
+sum[j]= in*b0[j] + bprev2*b2[j]- anext1[j]*a1[j] - anext2[j]*a2[j];
+anext2[j]=anext1[j];
+anext1[j]=sum[j];
+
+sim+=(___SMMUL(sum[j],(1<<31)-(res))*dBgain[i]);
+
+
+   }
+outlet_out=sim>>5;]]></code.srate>
+   </obj.normal>
+</objdefs>
