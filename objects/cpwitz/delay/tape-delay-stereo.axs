@@ -1,8 +1,8 @@
-<patch-1.0 appVersion="1.0.9">
+<patch-1.0 appVersion="1.0.10">
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="buffer-l" x="826" y="0">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="2048"/>
+         <combo attributeName="size" selection="65536"/>
          <text attributeName="init">
             <sText><![CDATA[]]></sText>
          </text>
@@ -11,7 +11,7 @@
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="buffer-r" x="966" y="0">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="2048"/>
+         <combo attributeName="size" selection="65536"/>
          <text attributeName="init">
             <sText><![CDATA[]]></sText>
          </text>
