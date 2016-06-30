@@ -136,11 +136,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="logic/xor 4" sha="9b2bad8832984b33de7257901c69268b80104567" uuid="4d70bbe27bfe5c2f07f9a80c0efda99e9b8e771c" name="xor_4" x="280" y="406">
+   <obj type="phi/logic/xor 4" uuid="4d70bbe27bfe5c2f07f9a80c0efda9ae9b8e771c" name="xor_1" x="280" y="406">
       <params/>
       <attribs/>
    </obj>
-   <obj type="conv/to b" sha="b045cb41b877b7bf951bee343db05e80b252b6e5" uuid="91ff898f0f2bf6e4dc0165515e0be7c2281da18b" name="to_1" x="364" y="406">
+   <obj type="conv/to b" sha="b045cb41b877b7bf951bee343db05e80b252b6e5" uuid="91ff898f0f2bf6e4dc0165515e0be7c2281da18b" name="to_1" x="378" y="406">
       <params/>
       <attribs/>
    </obj>
@@ -285,19 +285,19 @@
       <net>
          <source obj="Midiin" outlet="active"/>
          <dest obj="or_1" inlet="i1"/>
-         <dest obj="xor_4" inlet="i1"/>
+         <dest obj="xor_1" inlet="i1"/>
       </net>
       <net>
          <source obj="Midi out " outlet="active"/>
-         <dest obj="xor_4" inlet="i2"/>
+         <dest obj="xor_1" inlet="i2"/>
       </net>
       <net>
          <source obj="reset" outlet="inlet"/>
-         <dest obj="xor_4" inlet="i4"/>
+         <dest obj="xor_1" inlet="i4"/>
       </net>
       <net>
          <source obj="res" outlet="o"/>
-         <dest obj="xor_4" inlet="i3"/>
+         <dest obj="xor_1" inlet="i3"/>
       </net>
       <net>
          <source obj="xBar*x" outlet="o"/>
@@ -345,7 +345,7 @@
          <dest obj="mux_3" inlet="i2"/>
       </net>
       <net>
-         <source obj="xor_4" outlet="o"/>
+         <source obj="xor_1" outlet="o"/>
          <dest obj="to_1" inlet="i"/>
       </net>
       <net>
