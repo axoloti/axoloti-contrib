@@ -1,0 +1,325 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="arpeggiator" uuid="cpwitz-midi-arpeggiator">
+      <sDescription>A MIDI arpeggiator. It receives MIDI notes from the MIDI device and channel configured in the patch settings. Arpeggio directions: Up, down, up/down, random and play order. Configurable note length and velocity (velocity setting at 0 uses the velocity of the played note). Hold mode to latch played notes. MIDI sustain pedal also triggers hold. Needs to be clocked from an LFO or MIDI clock input to produce notes. Semitone transpose input. Can add up to 3 octaves to the arpeggiated notes.</sDescription>
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <helpPatch>arpeggiator.axh</helpPatch>
+   <inlets>
+      <bool32.rising name="clock"/>
+      <bool32 name="hold"/>
+      <int32.bipolar name="transpose"/>
+   </inlets>
+   <outlets>
+      <frac32.bipolar name="pitch"/>
+      <frac32.positive name="velocity"/>
+      <bool32 name="gate"/>
+   </outlets>
+   <displays>
+      <int32.label name="notes"/>
+      <bool32 name="holding"/>
+   </displays>
+   <params>
+      <int32.hradio name="direction" description="↑, ↓, ↕, rand, order">
+         <MaxValue i="5"/>
+      </int32.hradio>
+      <frac32.s.map.klineartime.exp name="notelength"/>
+      <int32.hradio name="octaves">
+         <MaxValue i="4"/>
+      </int32.hradio>
+      <frac32.u.map name="velocity" description="0=as played"/>
+   </params>
+   <attribs>
+      <spinner name="MIDIchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+   </attribs>
+   <includes/>
+   <code.declaration><![CDATA[int8_t notes[128];
+int8_t notes_ord[128];
+int8_t released_on_hold[128];
+int notecount;
+int ntrigclock;
+int highest_note;
+int lowest_note;
+int order_pos;
+int octave;
+int moveup;
+int holding;
+int sustainpedal;
+int dehold_lock;
+int32_t lastnote;
+int32_t gateval;
+int32_t outpitch;
+uint32_t outvelo;
+]]></code.declaration>
+   <code.init><![CDATA[outpitch = 0;
+outvelo = 0;
+notecount = 0;
+ntrigclock = 0;
+lastnote = 0;
+gateval = 0;
+highest_note = 0;
+lowest_note = 0;
+order_pos = 0;
+octave = 0;
+moveup = 1;
+holding = 0;
+sustainpedal = 0;
+dehold_lock = 0;
+
+for (int i=0;i<128;i++) {
+  notes[i] = 0;
+  notes_ord[i] = 0;
+  released_on_hold[i] = 0;
+}
+]]></code.init>
+   <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
+   // clock received
+   if (notecount>0) {
+        int32_t playnote = 0;
+        int32_t nextnote;
+        int nextoctave = octave;
+	   if (param_direction==0) {
+		// up
+		nextnote = lastnote;
+		do {
+			nextnote = (nextnote+1)%128;
+			if (notes[nextnote]!=0) {
+				playnote = nextnote;
+				if (playnote==highest_note) {
+					nextoctave = (octave+1)%(param_octaves+1);
+				}
+				break;
+			}
+		}
+		while (nextnote!=lastnote);
+	   }
+	   if (param_direction==1) {
+	   	// down
+	   	nextnote = lastnote;
+		do {
+			nextnote = nextnote-1;
+			if (nextnote<0) nextnote = 127;
+			if (notes[nextnote]!=0) {
+				playnote = nextnote;
+				if (playnote==lowest_note) {
+					nextoctave = octave-1;
+					if (nextoctave<0) {
+						nextoctave = param_octaves;
+					};
+				}
+				break;
+			}
+		}
+		while (nextnote!=lastnote);
+	   }
+	   if (param_direction==2) {
+	   	// up/down
+	   	nextnote = lastnote;
+	   	if (moveup) {
+			do {
+				nextnote = (nextnote+1)%128;
+				if (notes[nextnote]!=0) {
+					playnote = nextnote;
+					if (playnote==highest_note) {
+						nextoctave = (octave+1)%(param_octaves+1);
+						if (nextoctave==0) {
+							nextoctave = octave;
+							moveup = 0;
+						}
+					}
+					break;
+				}
+			}
+			while (nextnote!=lastnote);
+	   		
+	   	}
+	   	else {
+			do {
+				nextnote = nextnote-1;
+				if (nextnote<0) nextnote = 127;
+				if (notes[nextnote]!=0) {
+					playnote = nextnote;
+					if (playnote==lowest_note) {
+						nextoctave = octave-1;
+						if (nextoctave<0) {
+							nextoctave = 0;
+							moveup = 1;
+						};
+					}
+					break;
+				}
+			}
+			while (nextnote!=lastnote);
+	   	}
+	   }
+	   if (param_direction==3) {
+	   	// rand
+	   	int rand = GenerateRandomNumber();
+	   	int randpos = ((rand<0?-rand+1:rand)%(notecount));
+	   	playnote = notes_ord[randpos];
+	   	rand = GenerateRandomNumber();
+	   	nextoctave = ((rand<0?-rand+1:rand)%(param_octaves+1));
+	   }
+	   if (param_direction==4) {
+	   	// order
+		playnote = notes_ord[order_pos];
+		if (order_pos == notecount-1) {
+			nextoctave = (octave+1)%(param_octaves+1);
+		}
+	   	order_pos = (order_pos+1)%notecount;
+	   }
+	   if (playnote>0) {
+		outpitch = (playnote+inlet_transpose+12*octave-64)<<21;
+		//LogTextMessage("Triggering #%i %i", playnote, outpitch);
+		outvelo = param_velocity>0?param_velocity:(notes[playnote]<<20);
+		gateval = 1<<30;
+		lastnote = playnote;
+		octave = nextoctave;
+	   }
+   }
+   ntrigclock = 1;
+}
+if (!(inlet_clock>0) && ntrigclock) {
+   ntrigclock=0;
+}
+
+
+// create gate pulse
+if (gateval>0) {
+    int32_t t;
+    MTOF(-param_notelength,t);
+     gateval -= t>>3;
+     if (gateval<=0) outlet_gate = 0;
+     else outlet_gate = 1;
+} 
+else outlet_gate = 0;
+
+outlet_pitch = outpitch;
+outlet_velocity = outvelo;
+disp_notes = notecount;
+int new_holding = sustainpedal | inlet_hold;
+if (holding==1 && new_holding==0) {
+	dehold_lock = 1;
+	// here comes nasty copy&paste code from the midi section :(
+	for (int r=0;r<128;r++) {
+		if (released_on_hold[r]==1) {
+			released_on_hold[r] = 0;
+			notes[r] = 0;
+			notecount--;
+			// find in play order array and remove it
+			int orderpos = -1;
+			for (int i=0;i<128;i++) {
+				if (notes_ord[i]==r) {
+					orderpos = i;
+					break;
+				}
+			}
+			if (orderpos>-1) {
+				for (int i=0;i<notecount-orderpos;i++) {
+					notes_ord[i+orderpos] = notes_ord[i+orderpos+1];
+				}
+				notes_ord[notecount+1] = 0;
+			}
+		}
+	}
+	for (int i=0; i<128; i++) {
+		if (notes[i]>0) {
+			lowest_note = i;
+			break;
+		}
+	}
+	for (int i=127; i>=0; i--) {
+		if (notes[i]>0) {
+			highest_note = i;
+			break;
+		}
+	}
+	dehold_lock = 0;
+}
+holding = new_holding;
+disp_holding = holding;
+]]></code.krate>
+   <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
+int cmd = (status & 0x70) >> 4;
+
+if (channel!=attr_MIDIchannel || dehold_lock) {
+	return;	
+}
+
+bool resetStartNote = false;
+
+// some midi devices send note on with velocity 0 instead of note off
+if (cmd==1 && data2==0) {
+	cmd = 0;
+}
+
+if (cmd==1) {
+	// note on
+	// LogTextMessage("Pressed: %i (%i)", data1, data2);
+	if (notecount==0) {
+		resetStartNote = true;
+	}
+	if (notes[data1]==0) {
+		notecount++;
+		notes_ord[notecount-1] = data1;
+	}
+	notes[data1] = data2;
+}
+else if (cmd==0) {
+	// note off
+	// LogTextMessage("Release: %i", data1);
+	if (holding) {
+		released_on_hold[data1] = 1;
+	}
+	else {
+		if (notes[data1]!=0) {
+			notecount--;
+			notes[data1] = 0;
+			// find in play order array and remove it
+			int orderpos = -1;
+			for (int i=0;i<128;i++) {
+				if (notes_ord[i]==data1) {
+					orderpos = i;
+					break;
+				}
+			}
+			if (orderpos>-1) {
+				for (int i=0;i<notecount-orderpos;i++) {
+					notes_ord[i+orderpos] = notes_ord[i+orderpos+1];
+				}
+				notes_ord[notecount+1] = 0;
+			}
+		}
+	}
+}
+else if (cmd==3 && data1==64) {
+	sustainpedal = data2>0?1:0;
+}
+
+if (cmd==0 || cmd==1) {
+	// find highest and lowest note
+	for (int i=0; i<128; i++) {
+		if (notes[i]>0) {
+			lowest_note = i;
+			break;
+		}
+	}
+	for (int i=127; i>=0; i--) {
+		if (notes[i]>0) {
+			highest_note = i;
+			break;
+		}
+	}
+	if (resetStartNote) {
+		order_pos = 0;
+		octave = 0;
+		moveup = 1;
+		lastnote = 0;
+	}
+	/*// debug out
+	for (int i=0;i<notecount;i++) {
+		LogTextMessage("%i = #%i", i+1, notes_ord[i]);	
+	} */
+}
+]]></code.midihandler>
+</obj.normal>
+</objdefs>
