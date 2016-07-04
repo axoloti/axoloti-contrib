@@ -1,11 +1,17 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="morphor" uuid="8c9c096d-dccc-405c-9d0b-6814eb827481">
-      <sDescription>Table oscillator that uses the waveforms which are created with the sculptor (saves a bit of cpu).
+   <obj.normal id="morphor" uuid="03db46f2-d10e-4383-90ca-1e8280fcc834">
+      <sDescription>based on the sculptor, but without the editing parameters.
+First make a wavetable (or load a previous designed wavetable), then load the table into the module. If there is no wavetable, there won&apos;t be a sound!
 
-Controls are mostly the same as in the sculptor, except for the preset-morphing, which uses an internal LFO to updates one of the waveform-tables to the currently selected preset and morphs slowely to it using a sine shape.
+Also, instead of a &quot;lowpass morphed&quot; change between presets, this uses an internal LFO to update the two tables to the currently selected preset-value and to morph between them using a sine-shape (thus always smooth)
 
-Internal rate of the &quot;morph&quot; knob is 1/8 hz when value is 1.
-External hz input corresponds to the clock2timing module for host-synced morphs.</sDescription>
+You can &quot;override&quot; the load by sending a gate high to the load input (will update one of the tables and the other one at the next trigger, over and over..etc) This is useful, since the tables are updated by the LFO and it might take a while before the first trigger is send to update the table from a preset.
+
+An extra phase-output (also in the sculptor) is added that you can use for adding shaped signals to the wavetable sound (eg use one of my phase-shaper modules).
+
+NOTE!!!
+Don&apos;t forget to add the table allocation module and set the name to a table that you have recorded to!
+If you haven&apos;t made a wavetable yet, by using the sculptor, you won&apos;t hear a thing!!!!!!!!</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
@@ -189,7 +195,7 @@ if((inlet_sync>0) && (!(tok)))
 tok=1;}
 else
 {phase+=frq+___SMMUL(frq<<6,FMW<<3); if(inlet_sync<0){tok=0;}}
-phose=phase+___SMMUL((inlet_phase<<5),param_pm);
+phose=phase+___SMMUL((inlet_phase<<5),param_pm<<5);
 outlet_phase=phose>>5;
 phose=phose>>22;
 //phise=(phose<<16);

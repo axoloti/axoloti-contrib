@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="sculptor" uuid="d50ecd16-6bed-46ab-8297-c0d8598a6ad8">
+   <obj.normal id="sculptor" uuid="c7b64769-30e8-403a-b0a9-ac0eded0a060">
       <sDescription>-sculptor is based on wavetable synthesis and uses a table to save it&apos;s waveforms.
 
 -each waveform is 1024 samples long.
@@ -50,7 +50,9 @@ NOTE! To be able to actually save your waveforms, you need to add the table-save
          <frac32buffer name="out"/>
          <frac32buffer.positive name="phase"/>
       </outlets>
-      <displays/>
+      <displays>
+         <int8array128.vbar name="wave" noLabel="true"/>
+      </displays>
       <params>
          <frac32.s.map.pitch name="pitch" description="controls oscillator pitch"/>
          <frac32.s.map name="fm" description="controls frequency modulation width"/>
@@ -73,19 +75,16 @@ NOTE! To be able to actually save your waveforms, you need to add the table-save
             <MaxValue i="31"/>
          </int32>
          <bool32.mom name="sine"/>
-         <bool32.mom name="randomise" description="small random change to current waveform"/>
          <bool32.mom name="change"/>
-         <bool32.mom name="smooth" description="averages/smoothes points"/>
          <int32 name="with" description="average each point with another point with this offset to the &quot;first point&quot;... get it? hmm..">
             <MinValue i="1"/>
             <MaxValue i="256"/>
          </int32>
-         <bool32.mom name="normalise" description="normalises the current selected waveform"/>
+         <bool32.mom name="smooth" description="averages/smoothes points"/>
+         <bool32.mom name="mirroradd"/>
+         <bool32.mom name="randomise" description="small random change to current waveform"/>
          <bool32.mom name="dcRemove" description="removes dc offset of current waveform"/>
-         <int32 name="softness" description="LP-filter">
-            <MinValue i="1"/>
-            <MaxValue i="1024"/>
-         </int32>
+         <bool32.mom name="normalise" description="normalises the current selected waveform"/>
          <bool32.mom name="save" description="saves current waveform to selected preset"/>
          <bool32.mom name="load" description="loads selected preset to current waveform"/>
          <int32 name="preset" description="sets preset to load from/save to.">
@@ -93,6 +92,11 @@ NOTE! To be able to actually save your waveforms, you need to add the table-save
             <MaxValue i="512"/>
          </int32>
          <frac32.u.map name="morph" description="morph rate when new preset is selected."/>
+         <int32 name="softness" description="LP-filter">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.mom name="update"/>
       </params>
       <attribs>
          <objref name="table"/>
@@ -105,9 +109,11 @@ int ntrig;
 int atrig;
 int xtrig;
 int strig;
+int mtrig;
 int ctrig;
 int itrig;
 int ftrig;
+int Utrig;
 int32_t sine;
 uint32_t phase;
 uint32_t phose;
@@ -179,13 +185,17 @@ if(param_sine>0)
 ceunt=ceunt & ((1<<7)-1);
 if(ceunt==1)
 {ciunt+=1;
-ceunt=ceunt & ((1<<param_steps)-1);}
+ciunt=ciunt -(ciunt/param_steps)*param_steps;
+}
 }
 else
 {ceunt=0;ciunt=0;}
 
 if ((ceunt>0) && (!itrig)) 
-{for (i=0;i<1024;i++) {(SINE2TINTERP((((i)<<22)*(param_harmonic+ciunt*param_jump))+ ((param_harmonic&1)<<param_phase),(sine))); array[i] = array[i]+((sine>>9)/(1+((param_harmonic-1)/2)));
+{for (i=0;i<1024;i++) {
+	
+	int32_t harmonic=(param_harmonic+ciunt*param_jump);
+	(SINE2TINTERP((((i)<<22)*(harmonic))+ (((harmonic)&1)<<param_phase),(sine))); array[i] = array[i]+((sine>>9)/(1+((harmonic-1)/2)));
 } itrig=1;}
 else if (!(ceunt>0)) {itrig=0;}
    
@@ -197,7 +207,11 @@ if ((param_normalise>0) && (!xtrig))
 {float32_t norm=(float32_t)(1<<26)/(float32_t)vul;
 for (i=0;i<1024;i++) {array[i] = (array[i])*norm;} xtrig=1;}
 else if (!(param_normalise>0)) {xtrig=0;}
-   
+
+if ((param_mirroradd>0) && (!mtrig)) 
+{for (i=0;i<1024;i++) {arrey[i] = (array[i]+array[1023-i])>>1;} mtrig=1;}
+else if (!(param_mirroradd>0)) {mtrig=0;}
+
 if ((param_dcRemove>0) && (!strig)) 
 {for (i=0;i<1024;i++) {array[i] = array[i]-vol;} strig=1;}
 else if (!(param_dcRemove>0)) {strig=0;}
@@ -220,7 +234,7 @@ else
 
 if ((count==1) && (!atrig)) 
 {for (i=0;i<1024;i++)	
-array[i] = (array[i]*2+array[(i+param_with)-((i+param_with)/1024)*1024])/3;	
+array[i] = (array[i]+array[(i+param_with)-((i+param_with)/1024)*1024])/2;	
 {} atrig=1;}
 else if (!(count>1)) {atrig=0;}
 
@@ -230,6 +244,12 @@ for(i=0;i<1024;i++)
 {attr_table.array[i+(preset)*1024]=(array[i])>>attr_table.GAIN;}
 }
 if (!(param_save>0)) save=0;
+
+if((param_update>0) && (!(Utrig==1)))
+{for(i=0;i<128;i++) 
+{disp_wave[i]=(array[i*8]+array[i*8+1]+array[i*8+2]+array[i*8+3]+array[i*8+4]+array[i*8+5]+array[i*8+6]+array[i*8+7])>>23;}
+Utrig=1;}
+else if (!(param_update>0)) {Utrig=0;}
 }
 
 
@@ -246,19 +266,26 @@ if(param_sine>0)
 ceunt=ceunt & ((1<<7)-1);
 if(ceunt==1)
 {ciunt+=1;
-ceunt=ceunt & ((1<<param_steps)-1);}
+ciunt=ciunt -(ciunt/param_steps)*param_steps;}
 }
 else
 {ceunt=0;ciunt=0;}
 
 if ((ceunt>0) && (!itrig)) 
-{for (i=0;i<1024;i++) {(SINE2TINTERP((((i)<<22)*(param_harmonic+ciunt*param_jump))+ ((param_harmonic&1)<<param_phase),(sine))); arrey[i] = arrey[i]+((sine>>9)/(1+((param_harmonic-1)/2)));
+{for (i=0;i<1024;i++) {
+	int32_t harmonic=(param_harmonic+ciunt*param_jump);
+	(SINE2TINTERP((((i)<<22)*(harmonic))+ (((harmonic)&1)<<param_phase),(sine))); arrey[i] = arrey[i]+((sine>>9)/(1+((harmonic-1)/2)));
+	
 } itrig=1;}
 else if (!(ceunt>0)) {itrig=0;}
    
 if ((param_randomise>0) && (!ntrig)) 
 {for (i=0;i<1024;i++) arrey[i] = -(1<<25)+((GenerateRandomNumber())>>6);{} ntrig=1;}
 else if (!(param_randomise>0)) {ntrig=0;}
+
+if ((param_mirroradd>0) && (!mtrig)) 
+{for (i=0;i<1024;i++) {arrey[i] = (arrey[i]+arrey[1023-i])>>1;} mtrig=1;}
+else if (!(param_mirroradd>0)) {mtrig=0;}
 
 if ((param_normalise>0) && (!xtrig)) 
 {float32_t norm=(float32_t)(1<<26)/(float32_t)vul;
@@ -287,7 +314,7 @@ else
 
 if ((count==1) && (!atrig)) 
 {for (i=0;i<1024;i++)	
-arrey[i] = (arrey[i]*2+arrey[(i+param_with)-((i+param_with)/1024)*1024])/3;	
+arrey[i] = (arrey[i]*2+arrey[(i+param_with)-((i+param_with)/1024)*1024])>>23;	
 {} atrig=1;}
 else if (!(count>1)) {atrig=0;}
 
@@ -298,18 +325,16 @@ for(i=0;i<1024;i++)
 {attr_table.array[i+(preset)*1024]=(arrey[i])>>attr_table.GAIN;}
 }
 if (!(param_save>0)) save=0;
+
+
+
+if((param_update>0) && (!(Utrig==1)))
+{for(i=0;i<128;i++)
+{disp_wave[i]=(arrey[i*8]+arrey[i*8+1]+arrey[i*8+2]+arrey[i*8+3]+arrey[i*8+4]+arrey[i*8+5]+arrey[i*8+6]+arrey[i*8+7])>>23;}
+Utrig=1;}
+else if (!(param_update>0)) {Utrig=0;}
+
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
