@@ -141,7 +141,8 @@
     <params>
       <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
       <frac32.u.map.ratio    name="pw"       noLabel="false" description="Pulse width"/>
-       <bool32.tgl           name="unipolar" noLabel="false" description="Unipolar output"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
+      <bool32.tgl            name="unipolar" noLabel="false" description="Unipolar output"/>
       <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
         <MinValue i="1"/>
         <MaxValue i="5"/>
@@ -174,9 +175,12 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      int32_t freq;
-      MTOFEXTENDED( param_pitch, freq );
-      phase += freq>>2;
+      int32_t pitch;
+      pitch = param_pitch + inlet_pitch;
+      if( pitch > 0x07FFFFFF )
+        pitch = 0x07FFFFFF;
+      MTOFEXTENDED( pitch, pitch );
+      phase += pitch>>2;
 
       uint32_t phase1 = phase;
 
@@ -223,6 +227,8 @@
         {
           outlet_out = (outlet_out<<1) - (1<<27);
         }
+
+     outlet_out = ___SMMUL( param_amp << 3, outlet_out << 2 );
 
     ]]></code.krate>
   </obj.normal>
@@ -386,6 +392,7 @@
     <params>
       <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
       <frac32.u.map.ratio    name="pw"       noLabel="false" description="LFO square pulse width"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
       <bool32.tgl            name="unipolar" noLabel="false" description="Unipolar output"/>
       <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
         <MinValue i="1"/>
@@ -418,12 +425,14 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      int32_t freq;
-      MTOFEXTENDED( param_pitch, freq );
-      phase += freq>>2;
+      int32_t pitch;
+      pitch = param_pitch + inlet_pitch;
+      if( pitch > 0x07FFFFFF )
+        pitch = 0x07FFFFFF;
+      MTOFEXTENDED( pitch, pitch );
+      phase += pitch>>2;
 
-      uint32_t phase  = phase;
-      uint32_t phase2 = phase  - 0x40000000;
+      uint32_t phase1 = phase  - 0x40000000;
 
       switch( param_wave )
         {
@@ -431,7 +440,7 @@
             // Triangle
             outlet_0  = (phase>>4) - (1<<27);
             outlet_0  = (1<<27) - ___ABS(outlet_0);
-            outlet_90 = (phase2>>4) - (1<<27);
+            outlet_90 = (phase1>>4) - (1<<27);
             outlet_90 = (1<<27) - ___ABS(outlet_90);
             break;
 
@@ -439,20 +448,20 @@
             // Sine
             SINE2TINTERP( phase, outlet_0 )
             outlet_0 = (outlet_0>>5) + (1<<26);
-            SINE2TINTERP( phase2, outlet_90 )
+            SINE2TINTERP( phase1, outlet_90 )
             outlet_90 = (outlet_90>>5) + (1<<26);
             break;
 
           case 3 :
             // Saw rising
             outlet_0  = (phase>>5);
-            outlet_90 = (phase2>>5);
+            outlet_90 = (phase1>>5);
             break;
 
           case 4 :
             // Saw falling
             outlet_0  = (1<<27) - (phase>>5);
-            outlet_90 = (1<<27) - (phase2>>5);
+            outlet_90 = (1<<27) - (phase1>>5);
             break;
 
           case 5 :
@@ -466,7 +475,7 @@
                 {
                   outlet_0 = (1<<27)-1;
                 }
-              if( (phase2>>5) > param_pw )
+              if( (phase1>>5) > param_pw )
                 {
                   outlet_90 = 0;
                 }
@@ -483,6 +492,9 @@
           outlet_0  = (outlet_0<<1)  - (1<<27);
           outlet_90 = (outlet_90<<1) - (1<<27);
         }
+
+     outlet_0  =  ___SMMUL( param_amp << 3, outlet_0  << 2 );
+     outlet_90 =  ___SMMUL( param_amp << 3, outlet_90 << 2 );
 
     ]]></code.krate>
   </obj.normal>
