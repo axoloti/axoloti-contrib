@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="square" uuid="5d7c2cad-0bfe-4285-8376-ac9152e2db30">
+      <sDescription>square wave LFO, boolean output, input in hz
+simple mod of &apos;lfo/square&apos;</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="hz" description="pitch"/>
+         <bool32.rising name="reset" description="reset phase"/>
+      </inlets>
+      <outlets>
+         <bool32 name="wave" description="square wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t Phase;
+uint32_t r;
+]]></code.declaration>
+      <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[   {
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += inlet_hz << 2;
+      }
+      outlet_wave= (Phase>0)?1:0;
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>
