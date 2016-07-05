@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="shufflingGateSequencer" uuid="48c76cc0-02e2-449a-bd2e-ba3f9b7acaa8">
+   <obj.normal id="shufflingGateSequencer" uuid="0f8e833e-114c-467b-8b45-9a770ab0cac2">
       <sDescription>&quot;constant from 16 flags&quot;.....hmmmm... that one evolved quickly...
 
 FIRST ADD A TABLE ALLOCATION MODULE AND &quot;TABLE SAVE&quot; MODULE FROM THE FACTORY TABLE FOLDER!!!!!!!!!! and make a structure to save the table into a .tab file! BEFORE EDITTING!!!
@@ -54,7 +54,17 @@ All those boolean-inputs at the side??
 -First one is of course for triggering the internal counter.
 -Counting modifications to bitswap/shift/logic, bit-invert and reverse (from current play position) the counter output with external sequences/controls. (internal counter itself is untouched, so it always goes back to where it should have been if  the modification wouldn&apos;t happen.)
 
-well.. guess that&apos;s the &quot;only couple of things you need to know&quot;..... ghehe</sDescription>
+well.. guess that&apos;s the &quot;only couple of things you need to know&quot;..... ghehe
+
+ahh shit, I added more functionality.. ;)
+
+live recorder:
+to record to a channel, select the channel with the toggle switches (recG1 to recG4).
+You can record to multiple channels at the same time (to record parallel hits)
+
+then hit any of the c0rec/c1rec/c2rec/Grec buttons to add a white,light grey, dark grey or black step to the recording position.
+
+to clear a pattern (white steps only), press the &quot;clear&quot; button.</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>ctrl.axh</helpPatch>
@@ -73,6 +83,7 @@ well.. guess that&apos;s the &quot;only couple of things you need to know&quot;.
          <bool32 name="andShift"/>
          <int32 name="andValue"/>
          <int32 name="shiftValue"/>
+         <bool32.risingfalling name="Pload"/>
       </inlets>
       <outlets>
          <bool32 name="g1" description="output gate for sequence 1"/>
@@ -81,6 +92,8 @@ well.. guess that&apos;s the &quot;only couple of things you need to know&quot;.
          <bool32 name="g4" description="output gate for sequence 4"/>
          <int32.positive name="pos16" description="outputs count in 16 steps max, then wraps back to zero."/>
          <int32 name="count" description="outputs count in steps till maximum set by the &quot;step&quot; parameter."/>
+         <int32 name="normcount" description="outputs unmodified count"/>
+         <int32 name="maxcount"/>
       </outlets>
       <displays/>
       <params>
@@ -115,11 +128,21 @@ well.. guess that&apos;s the &quot;only couple of things you need to know&quot;.
             <MinValue i="0"/>
             <MaxValue i="64"/>
          </int32>
+         <bool32.mom name="Grec"/>
+         <bool32.mom name="c0rec"/>
+         <bool32.mom name="c1rec"/>
+         <bool32.mom name="c2rec"/>
+         <bool32.tgl name="recG1"/>
+         <bool32.tgl name="recG2"/>
+         <bool32.tgl name="recG3"/>
+         <bool32.tgl name="recG4"/>
+         <bool32.mom name="clear"/>
       </params>
       <attribs>
          <objref name="table"/>
       </attribs>
       <code.declaration><![CDATA[int32_t array[1024];
+int record[64];
 int32_t positionread;
 int32_t positionwrite;
 int32_t mem01;
@@ -155,7 +178,14 @@ int bit2;
 int bit3;
 int bit4;
 int bit5;
-int bit6;]]></code.declaration>
+int bit6;
+int32_t sum1;
+int32_t sum2;
+int32_t sum3;
+int32_t sum4;]]></code.declaration>
+      <code.init><![CDATA[int j;
+for( j=0;j<64;j++) record[j]=0;{}
+]]></code.init>
       <code.krate><![CDATA[int32_t steps=param_steps;
 
 //generate counter
@@ -165,6 +195,8 @@ cont+=1;
 cont=cont>=steps?0:cont;}
 else if (!(inlet_trig>0))
 {ttrig=0;}
+
+outlet_normcount=cont;
 
 //reverse direction
 if(inlet_reverse>0)
@@ -260,6 +292,29 @@ count=bit1+2*bit2+4*bit3+8*bit4+16*bit5+32*bit6;
 
 outlet_count=count;
 
+//record to array
+if(param_Grec>0)
+{record[count]=3;}
+if(param_c0rec>0)
+{record[count]=0;}
+if(param_c1rec>0)
+{record[count]=1;}
+if(param_c2rec>0)
+{record[count]=2;}
+if((param_Grec+param_c0rec+param_c1rec+param_c2rec)>0)
+{
+sum1=0;
+sum2=0;
+sum3=0;
+sum4=0;
+for(i=0;i<16;i++){sum1+=(record[i]*3)<<(i*2);}
+for(i=0;i<16;i++){sum2+=(record[i+16]*3)<<(i*2);}
+for(i=0;i<16;i++){sum3+=(record[i+32]*3)<<(i*2);}
+for(i=0;i<16;i++){sum4+=(record[i+48]*3)<<(i*2);}
+}
+if(param_clear>0)
+{for(i=0;i<64;i++){record[i]=0;}}
+
 //array positioning
 bar=param_bar;
 sequence=param_seqRead;
@@ -284,7 +339,48 @@ array[positionwrite+3] = (param_b4);
 }
 else if (!(param_save>0))
 {strig=0;;}
+
+
+int cranged=count /16;
+int Cranged=count-cranged*16;
+cranged=cranged*4;
+int gate=ttrig+param_gate;
 int32_t bank=param_bank;
+
+//save record to memory
+if(param_recG1>0)
+{
+	array[inlet_sequence*16]=sum1;
+	array[inlet_sequence*16+4]=sum2;
+	array[inlet_sequence*16+8]=sum3;
+	array[inlet_sequence*16+12]=sum4;
+}
+
+if(param_recG2>0)
+{
+	array[inlet_sequence*16+1]=sum1;
+	array[inlet_sequence*16+5]=sum2;
+	array[inlet_sequence*16+9]=sum3;
+	array[inlet_sequence*16+13]=sum4;
+}
+
+if(param_recG3>0)
+{
+	array[inlet_sequence*16+2]=sum1;
+	array[inlet_sequence*16+6]=sum2;
+	array[inlet_sequence*16+10]=sum3;
+	array[inlet_sequence*16+14]=sum4;
+}
+
+if(param_recG4>0)
+{
+	array[inlet_sequence*16+3]=sum1;
+	array[inlet_sequence*16+7]=sum2;
+	array[inlet_sequence*16+11]=sum3;
+	array[inlet_sequence*16+15]=sum4;
+}
+
+
 //save to table
 if ((param_Psave>0) && (!save)) {
 save=1;
@@ -294,18 +390,15 @@ for(i=0;i<1024;i++)
 if (!(param_Psave>0)) {save=0;}
 //load from table
 
-if ((param_Pload>0) && (!load)) {
+if (((param_Pload+inlet_Pload)>0) && (!load)) {
 load=1;
 for(i=0;i<1024;i++)
 {(array[i])=attr_table.array[i+(bank)*1024]<<attr_table.GAIN;}
 }
-if (!(param_Pload>0)) {load=0;}
+if (!((param_Pload+inlet_Pload)>0)) {load=0;}
 
 
-int cranged=count /16;
-int Cranged=count-cranged*16;
-cranged=cranged*4;
-int gate=ttrig+param_gate;
+
 int g1=(array[inlet_sequence*16+cranged]>>((Cranged)*2))&3;
 int g2=(array[inlet_sequence*16+cranged+1]>>((Cranged)*2))&3;
 int g3=(array[inlet_sequence*16+cranged+2]>>((Cranged)*2))&3;
@@ -333,6 +426,7 @@ outlet_pos16=Cranged;
 outlet_g1=((((g1==0)&(param_chance0>rnd9))?(1<<27):0)+(((g1==1)&(param_chance1>rnd1))?(1<<27):0)+(((g1==2)&(param_chance2>rnd5))?(1<<27):0)+((g1==3)?(1<<27):0))*(((inlet_trig+param_gate)>0)?1:0);
 outlet_g2=((((g2==0)&(param_chance0>rnda))?(1<<27):0)+(((g2==1)&(param_chance1>rnd1))?(1<<27):0)+(((g2==2)&(param_chance2>rnd6))?(1<<27):0)+((g2==3)?(1<<27):0))*(((inlet_trig+param_gate)>0)?1:0);
 outlet_g3=((((g3==0)&(param_chance0>rndb))?(1<<27):0)+(((g3==1)&(param_chance1>rnd1))?(1<<27):0)+(((g3==2)&(param_chance2>rnd7))?(1<<27):0)+((g3==3)?(1<<27):0))*(((inlet_trig+param_gate)>0)?1:0);
-outlet_g4=((((g4==0)&(param_chance0>rndc))?(1<<27):0)+(((g4==1)&(param_chance1>rnd1))?(1<<27):0)+(((g4==2)&(param_chance2>rnd8))?(1<<27):0)+((g4==3)?(1<<27):0))*(((inlet_trig+param_gate)>0)?1:0);]]></code.krate>
+outlet_g4=((((g4==0)&(param_chance0>rndc))?(1<<27):0)+(((g4==1)&(param_chance1>rnd1))?(1<<27):0)+(((g4==2)&(param_chance2>rnd8))?(1<<27):0)+((g4==3)?(1<<27):0))*(((inlet_trig+param_gate)>0)?1:0);
+outlet_maxcount=param_steps;]]></code.krate>
    </obj.normal>
 </objdefs>
