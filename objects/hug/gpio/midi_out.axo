@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="midi_out" uuid="5b59680d-2f1f-4b05-b08b-812be65047c0">
+      <sDescription>script that serves as an extra MIDI OUT port</sDescription>
+      <author>Johannes Taelman, Florian Bruenig</author>
+      <license>BSD</license>
+      <helpPatch>script.axh</helpPatch>
+      <inlets>
+         <frac32 name="in1_"/>
+         <frac32 name="in2_"/>
+         <frac32 name="in3_" description="in2"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="script"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t in1,in2,in3;
+attr_script
+msg_t ThreadX2(){
+  setup();
+  while(!chThdShouldTerminate()){
+     loop();
+     chThdSleepMilliseconds(1);
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;
+]]></code.declaration>
+      <code.init><![CDATA[in1=0;in2=0;in3;
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);
+]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);
+]]></code.dispose>
+      <code.krate><![CDATA[this->in1 = inlet_in1__;
+this->in2 = inlet_in2__;
+this->in3 = inlet_in3__;]]></code.krate>
+   </obj.normal>
+</objdefs>
