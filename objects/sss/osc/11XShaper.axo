@@ -1,0 +1,658 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="11XShaper" uuid="f54f2b7f-407a-4a85-83fc-61a05bae8fe5">
+      <sDescription>multicore phase-shaper:
+0=hard bezier
+1=soft bezier
+2=vosim 
+3=6x spectral morph
+4=glitch multi shaper
+5=phased tripple sine AM
+6=6x spectral morph AM
+7=dual double pulsar
+8=saw-tri-square-sine morpher
+9=random all-shape glitch
+10=superdupersaw
+11=table writer</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="phase input"/>
+         <frac32.positive name="b" description="parameter 1"/>
+         <frac32.positive name="c" description="parameter 2"/>
+         <frac32.positive name="d" description="parameter 3"/>
+         <frac32.positive name="e" description="parameter 4"/>
+         <frac32.positive name="f" description="parameter 5"/>
+         <frac32.positive name="g" description="parameter 6"/>
+         <int32 name="mode" description="shape mode"/>
+         <int32 name="s1" description="fixed variation input for certain shapers"/>
+         <int32 name="s2" description="fixed variation input for certain shapers"/>
+         <int32 name="s3" description="fixed variation input for certain shapers"/>
+         <int32 name="s4" description="fixed variation input for certain shapers"/>
+         <int32 name="s5" description="fixed variation input for certain shapers"/>
+         <int32 name="s6" description="fixed variation input for certain shapers"/>
+         <int32 name="r1" description="Range for harmonic morpher osc1"/>
+         <int32 name="r2" description="Range for harmonic morpher osc2"/>
+         <int32 name="r3" description="Range for harmonic morpher osc3"/>
+         <int32 name="r4" description="Range for harmonic morpher osc4"/>
+         <int32 name="r5" description="Range for harmonic morpher osc5"/>
+         <int32 name="r6" description="Range for harmonic morpher osc6"/>
+         <int32 name="Min" description="Minimum Harmonic value for harmonic morpher (root =1)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[   int32_t a1;
+   int32_t b1;
+   int32_t c1;
+   int32_t d1; 
+   int32_t r11;
+   int32_t r21;
+   int32_t s11;
+   int32_t s21;
+
+   int32_t a2;
+   int32_t b2;
+   int32_t c2;
+   int32_t d2; 
+   int32_t r12;
+   int32_t r22;
+   int32_t s12;
+   int32_t s22;
+
+   int32_t a3;
+   int32_t b3;
+   int32_t c3;
+   int32_t d3; 
+   int32_t r13;
+   int32_t r23;
+   int32_t s13;
+   int32_t s23;
+
+   int32_t a4;
+   int32_t b4;
+   int32_t c4;
+   int32_t d4; 
+   int32_t r14;
+   int32_t r24;
+   int32_t s14;
+   int32_t s24;
+
+   int32_t a5;
+   int32_t b5;
+   int32_t c5;
+   int32_t d5; 
+   int32_t r15;
+   int32_t r25;
+   int32_t s15;
+   int32_t s25;
+
+   int32_t a6;
+   int32_t b6;
+   int32_t c6;
+   int32_t d6; 
+   int32_t r16;
+   int32_t r26;
+   int32_t s16;
+   int32_t s26;
+
+   int32_t x1;
+   int32_t x2;
+   int32_t x3;
+   int32_t x4;
+   int32_t x5;
+   int32_t x6;
+
+   	  int32_t kh;
+   	  int32_t base;
+   	  int32_t ka;
+	  int32_t kb;
+	  int32_t kc;
+	  int32_t offs;
+
+
+int32_t pulse1;
+int32_t pulse2;
+int32_t pulse3;
+int32_t pulse4;
+
+int32_t phases;
+int32_t phaset;
+int32_t phaseu;
+int32_t phasev;
+int32_t phasew;
+int32_t phasex;
+int32_t phasey;
+int32_t phasez;
+int32_t sina;
+int32_t sinb;
+int32_t mixa;
+int32_t mixb;
+int32_t mixc;
+int32_t mixd;
+int32_t wa;
+int32_t wb;
+int32_t wc;
+int32_t we;
+int32_t wf;
+int32_t phaseg1;
+int32_t phaseg2;
+int32_t phaseg3;
+int32_t phaseg4;
+
+int32_t phaseinv;
+int32_t ua;
+int32_t ub;
+int32_t uc;
+int32_t ud;
+
+int32_t phaseofs1;
+int32_t phaseofs2;
+int32_t phaseofs3;
+int32_t siner;
+int32_t sawterp;
+int32_t mixf;
+int32_t mixg1;
+int32_t mixg2;
+
+int ntrig;
+   int ptrig;
+   int32_t pval;
+     int32_t trig;
+]]></code.declaration>
+      <code.init><![CDATA[   int ntrig = 0;
+   ptrig = 0;
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[
+
+
+if (inlet_mode==5){
+	
+
+c1= (inlet_b-((inlet_b>>21)<<21));
+d1=((1<<21)-c1);
+s11=(inlet_Min+((inlet_b>>21)*inlet_s1 & ((inlet_r1)-1)));
+s21=(inlet_Min+(((inlet_b>>21)+1)*inlet_s1 & ((inlet_r1)-1)));
+
+c2= (inlet_c-((inlet_c>>21)<<21));
+d2=((1<<21)-c2);
+s12=(inlet_Min+((inlet_c>>21)*inlet_s2 & ((inlet_r2)-1)));
+s22=(inlet_Min+(((inlet_c>>21)+1)*inlet_s2 & ((inlet_r2)-1)));
+
+c3= (inlet_d-((inlet_d>>21)<<21));
+d3=((1<<21)-c3);
+s13=(inlet_Min+((inlet_d>>21)*inlet_s3 & ((inlet_r3)-1)));
+s23=(inlet_Min+(((inlet_d>>21)+1)*inlet_s3 & ((inlet_r3)-1)));
+
+c4= (inlet_e-((inlet_e>>21)<<21));
+d4=((1<<21)-c4);
+s14=(inlet_Min+((inlet_e>>21)*inlet_s4 & ((inlet_r4)-1)));
+s24=(inlet_Min+(((inlet_e>>21)+1)*inlet_s4 & ((inlet_r4)-1)));
+
+c5= (inlet_f-((inlet_f>>21)<<21));
+d5=((1<<21)-c5);
+s15=(inlet_Min+((inlet_f>>21)*inlet_s5 & ((inlet_r5)-1)));
+s25=(inlet_Min+(((inlet_f>>21)+1)*inlet_s5 & ((inlet_r5)-1)));
+
+c6= (inlet_g-((inlet_g>>21)<<21));
+d6=((1<<21)-c6);
+s16=(inlet_Min+((inlet_g>>21)*inlet_s6 & ((inlet_r6)-1)));
+s26=(inlet_Min+(((inlet_g>>21)+1)*inlet_s6 & ((inlet_r6)-1)));
+
+}
+else
+if (inlet_mode==6){
+	
+
+c1= (inlet_b-((inlet_b>>21)<<21));
+d1=((1<<21)-c1);
+s11=(inlet_Min+((inlet_b>>21)*inlet_s1 & ((inlet_r1)-1)));
+s21=(inlet_Min+(((inlet_b>>21)+1)*inlet_s1 & ((inlet_r1)-1)));
+
+c2= (inlet_c-((inlet_c>>21)<<21));
+d2=((1<<21)-c2);
+s12=(inlet_Min+((inlet_c>>21)*inlet_s2 & ((inlet_r2)-1)));
+s22=(inlet_Min+(((inlet_c>>21)+1)*inlet_s2 & ((inlet_r2)-1)));
+
+c3= (inlet_d-((inlet_d>>21)<<21));
+d3=((1<<21)-c3);
+s13=(inlet_Min+((inlet_d>>21)*inlet_s3 & ((inlet_r3)-1)));
+s23=(inlet_Min+(((inlet_d>>21)+1)*inlet_s3 & ((inlet_r3)-1)));
+
+c4= (inlet_e-((inlet_e>>21)<<21));
+d4=((1<<21)-c4);
+s14=(inlet_Min+((inlet_e>>21)*inlet_s4 & ((inlet_r4)-1)));
+s24=(inlet_Min+(((inlet_e>>21)+1)*inlet_s4 & ((inlet_r4)-1)));
+
+c5= (inlet_f-((inlet_f>>21)<<21));
+d5=((1<<21)-c5);
+s15=(inlet_Min+((inlet_f>>21)*inlet_s5 & ((inlet_r5)-1)));
+s25=(inlet_Min+(((inlet_f>>21)+1)*inlet_s5 & ((inlet_r5)-1)));
+
+c6= (inlet_g-((inlet_g>>21)<<21));
+d6=((1<<21)-c6);
+s16=(inlet_Min+((inlet_g>>21)*inlet_s6 & ((inlet_r6)-1)));
+s26=(inlet_Min+(((inlet_g>>21)+1)*inlet_s6 & ((inlet_r6)-1)));
+
+}
+else
+if (inlet_mode==10){
+phaseofs1+=inlet_f>>12;
+phaseofs2+=(inlet_f>>12)*1.3333+(1<<9);
+phaseofs3+=(inlet_f>>12)*1.75+(1<<10);
+}
+else
+if (inlet_mode==11){
+
+if ((pval != inlet_b)&(!ptrig)) { 
+  trig = 1;
+  pval = inlet_b;
+  ptrig = 1;
+} else {
+  ptrig = 0;
+  trig = 0;
+}	
+
+if ((trig>0) && !ntrig) {
+      ntrig=1;
+      attr_table.array[__USAT(((inlet_b<<1)+(1<<26)),27)>>(27-attr_table.LENGTHPOW)]=__SSAT(inlet_c,28)>>attr_table.GAIN;
+   }
+   if (!(trig>0)) ntrig=0;
+}]]></code.krate>
+      <code.srate><![CDATA[int32_t posx;
+int32_t invx;   
+int32_t y; 
+int32_t a1;
+int32_t a2;
+int32_t a3;
+
+int32_t mode=(inlet_mode+(inlet_mode==9?(outlet_result>>24)-9:0)) & ((1<<4)-1);
+   
+   switch(mode>0?mode:0){
+      case 0: 
+
+posx=(inlet_a+inlet_e) & ((1<<27)-1);
+invx=(1<<27)-posx;
+y=inlet_b;
+a1=___SMMUL(posx<<3,y<<2);
+a2=___SMMUL(invx<<3,y<<2)+___SMMUL(posx<<3,(1<<27)<<2);
+a3=___SMMUL(invx<<3,a1<<2)+___SMMUL(posx<<3,a2<<2);
+a3=(a3-inlet_e) & ((1<<27)-1);
+
+posx=(a3+inlet_f) & ((1<<27)-1);
+invx=(1<<27)-posx;
+y=inlet_c;
+a1=___SMMUL(posx<<3,y<<2);
+a2=___SMMUL(invx<<3,y<<2)+___SMMUL(posx<<3,(1<<27)<<2);
+a3=___SMMUL(invx<<3,a1<<2)+___SMMUL(posx<<3,a2<<2);
+a3=(a3-inlet_f) & ((1<<27)-1);
+
+posx=(a3+inlet_g) & ((1<<27)-1);
+invx=(1<<27)-posx;
+y=inlet_d;
+a1=___SMMUL(posx<<3,y<<2);
+a2=___SMMUL(invx<<3,y<<2)+___SMMUL(posx<<3,(1<<27)<<2);
+a3=___SMMUL(invx<<3,a1<<2)+___SMMUL(posx<<3,a2<<2);
+a3=(a3-inlet_g) & ((1<<27)-1);
+
+ int32_t r;
+   SINE2TINTERP(a3<<6,r)
+
+   outlet_result= (r>>5);
+
+;break;
+
+	case 1:
+   {int(x1)=inlet_a;
+   int(y1)=((128<<20)-inlet_a);
+   int p0 = (int64_t)inlet_b;
+   int p1 = (int64_t)inlet_c;
+   int p2 = (int64_t)inlet_d;
+   int p3 = (int64_t)inlet_b-inlet_c;
+   int p4 = (int64_t)inlet_b;
+
+   int x2 = ___SMMUL(x1<<3,x1<<2);
+   int x3 = ___SMMUL(x2<<3,x1<<2);
+   int x4 = ___SMMUL(x3<<3,x1<<2);
+   int y2 = ___SMMUL(y1<<3,y1<<2);
+   int y3 = ___SMMUL(y2<<3,y1<<2);
+   int y4 = ___SMMUL(y3<<3,y1<<2);
+
+   int a = ___SMMUL(y4<<3,p0<<3);
+   int b = ___SMMUL(x1<<3,___SMMUL(y3<<3,p1<<3)<<2)*4;
+   int c = ___SMMUL(x2<<3,___SMMUL(y2<<3,p2<<3)<<2)*6;
+   int d = ___SMMUL(x3<<3,___SMMUL(y1<<3,p3<<3)<<2)*4;
+   int e = ___SMMUL(x4<<3,p4<<3);
+   int f = (inlet_a+a+b+c+d+e) & ((1<<27)-1);
+
+
+
+   int(r1)=f;
+   int(t1)=((128<<20)-f);
+   int q0 = (int64_t)inlet_e;
+   int q1 = (int64_t)inlet_f;
+   int q2 = (int64_t)inlet_g;
+   int q3 = (int64_t)inlet_e-inlet_f;
+   int q4 = (int64_t)inlet_e;
+
+   int r2 = ___SMMUL(r1<<3,r1<<2);
+   int r3 = ___SMMUL(r2<<3,r1<<2);
+   int r4 = ___SMMUL(r3<<3,r1<<2);
+   int t2 = ___SMMUL(t1<<3,t1<<2);
+   int t3 = ___SMMUL(t2<<3,t1<<2);
+   int t4 = ___SMMUL(t3<<3,t1<<2);
+
+   int g = ___SMMUL(t4<<3,q0<<2);
+   int h = ___SMMUL(r1<<3,___SMMUL(t3<<3,q1<<3)<<2)*4;
+   int i = ___SMMUL(r2<<3,___SMMUL(t2<<3,q2<<3)<<2)*6;
+   int j = ___SMMUL(r3<<3,___SMMUL(t1<<3,q3<<3)<<2)*4;
+   int k = ___SMMUL(r4<<3,q4<<2);
+   int l = (inlet_a+g+h+i+j+k) & ((1<<27)-1);
+   int32_t r;
+   SINE2TINTERP(l<<5,r)
+
+   outlet_result= (r>>5);
+
+   }
+
+
+   
+   ;break;
+
+   case 2:
+       float32_t r6;
+       float32_t s6;
+       float32_t t6;
+       int32_t u6;
+       int32_t v6;
+       int32_t w6;
+       SINE2TINTERP((inlet_a*(1+(inlet_b>>17))),r6)
+       SINE2TINTERP((inlet_a*(1+((inlet_c+inlet_b)>>17))),s6)
+       SINE2TINTERP((inlet_a*(1+((inlet_d+inlet_b+inlet_c)>>17))),t6)
+       SINE2TINTERP(((inlet_a<<5)-(1<<30)),v6)
+       w6=(v6>>4);
+       u6=(w6>>1)+(1<<26);
+       int32_t t5;
+       SINE2TINTERP(___SMMUL((___SMMUL(r6,inlet_e*2)+___SMMUL(s6,inlet_f*2)+___SMMUL(t6,inlet_g*2))<<1,u6<<3)<<5,t5);
+outlet_result= (t5>>5);
+       ;break;
+
+
+	case 3:
+
+	int res;
+int jump;
+int rem;
+int qnt;
+int qnd;
+int als;
+if (inlet_a >=0)
+  res = ((unsigned int)inlet_a)/inlet_b;
+else  res = -(((unsigned int)(inlet_b-inlet_a))/inlet_b);
+jump= res;
+rem = (inlet_a-(res*inlet_b))*((((jump*(inlet_d>>6))& ((1<<27)-1)))>>20)+(inlet_c>>6)*jump+inlet_a;
+
+qnt=(rem/(1+inlet_e))*(1+inlet_e);
+als=qnt+___SMMUL(inlet_a<<3,inlet_f<<5)+___SMMUL(((inlet_a-(res*inlet_b))*inlet_b),inlet_g>>5);
+int32_t sina;
+SINE2TINTERP(als<<5,sina)
+ 
+ outlet_result= sina>>5;
+ ;break;
+
+   case 4:
+   int32_t sine;
+int32_t window;
+
+ sina;
+base=(inlet_a+inlet_e) & ((1<<27)-1);
+   SINE2TINTERP (((base)>>8)*(inlet_b>>9),sine)
+   HANNING2TINTERP ((base)<<6,window)
+   sina= ___SMMUL(sine>>3,window>>2);
+
+base=(inlet_a+inlet_f) & ((1<<27)-1);
+int32_t sinb;
+   SINE2TINTERP (((___SMMUL(base<<2,sina<<2))>>9)*(inlet_c>>9),sine)
+   HANNING2TINTERP ((base)<<6,window)
+   
+   sinb= ___SMMUL(sine>>3,window>>2);
+
+base=(inlet_a+inlet_g) & ((1<<27)-1);
+int32_t sinc;
+   SINE2TINTERP (((___SMMUL(base<<2,sinb<<2))>>9)*(inlet_d>>9),sine)
+   HANNING2TINTERP ((base)<<6,window)
+   
+   sinc= ___SMMUL(sine>>3,window>>2);
+
+   int32_t sind;
+   SINE2TINTERP (___SMMUL(___SMMUL(sina<<4,sinb<<3)<<5,sinc<<5)<<5,sind);
+   outlet_result =sind>>5;
+   ;break;
+
+	case 5:
+
+a1=inlet_a*s11;
+b1=inlet_a*s21;
+       SINE2TINTERP(a1<<5,r11)
+       SINE2TINTERP(b1<<5,r21)
+       x1= (___SMMUL((r11),(d1<<7)/((s11-1)/2+1))+___SMMUL((r21),(c1<<7))/((s21-1)/2+1))>>2;
+
+a2=inlet_a*s12;
+b2=inlet_a*s22;
+       SINE2TINTERP(a2<<5,r12)
+       SINE2TINTERP(b2<<5,r22)
+       x2= (___SMMUL((r12),(d2<<7)/((s12-1)/2+1))+___SMMUL((r22),(c2<<7))/((s22-1)/2+1))>>2;
+
+a3=inlet_a*s13;
+b3=inlet_a*s23;
+       SINE2TINTERP(a3<<5,r13)
+       SINE2TINTERP(b3<<5,r23)
+       x3= (___SMMUL((r13),(d3<<7)/((s13-1)/2+1))+___SMMUL((r23),(c3<<7))/((s23-1)/2+1))>>2;
+
+a4=inlet_a*s14;
+b4=inlet_a*s24;
+       SINE2TINTERP(a4<<5,r14)
+       SINE2TINTERP(b4<<5,r24)
+       x4= (___SMMUL((r14),(d4<<7)/((s14-1)/2+1))+___SMMUL((r24),(c4<<7))/((s24-1)/2+1))>>2;
+
+a5=inlet_a*s15;
+b5=inlet_a*s25;
+       SINE2TINTERP(a5<<5,r15)
+       SINE2TINTERP(b5<<5,r25)
+       x5= (___SMMUL((r15),(d5<<7)/((s15-1)/2+1))+___SMMUL((r25),(c5<<7))/((s25-1)/2+1))>>2;
+
+a6=inlet_a*s16;
+b6=inlet_a*s26;
+       SINE2TINTERP(a6<<5,r16)
+       SINE2TINTERP(b6<<5,r26)
+       x6= (___SMMUL((r16),(d6<<7)/((s16-1)/2+1))+___SMMUL((r26),(c6<<7))/((s26-1)/2+1))>>2;
+	  int32_t kh;
+       SINE2TINTERP((x1+x2+x3+x4+x5+x6)<<6,kh);
+	  outlet_result=kh>>5
+;break;
+
+
+	case 6:
+
+a1=inlet_a*s11;
+b1=inlet_a*s21;
+       SINE2TINTERP(a1<<5,r11)
+       SINE2TINTERP(b1<<5,r21)
+       x1= (___SMMUL((r11),(d1<<7)/((s11-1)/4+1))+___SMMUL((r21),(c1<<7))/((s21-1)/4+1))>>2;
+
+a2=inlet_a*s12;
+b2=inlet_a*s22;
+       SINE2TINTERP(a2<<5,r12)
+       SINE2TINTERP(b2<<5,r22)
+       x2= (___SMMUL((r12),(d2<<7)/((s12-1)/4+1))+___SMMUL((r22),(c2<<7))/((s22-1)/4+1))>>2;
+
+a3=inlet_a*s13;
+b3=inlet_a*s23;
+       SINE2TINTERP(a3<<5,r13)
+       SINE2TINTERP(b3<<5,r23)
+       x3= (___SMMUL((r13),(d3<<7)/((s13-1)/4+1))+___SMMUL((r23),(c3<<7))/((s23-1)/4+1))>>2;
+
+a4=inlet_a*s14;
+b4=inlet_a*s24;
+       SINE2TINTERP(a4<<5,r14)
+       SINE2TINTERP(b4<<5,r24)
+       x4= (___SMMUL((r14),(d4<<7)/((s14-1)/4+1))+___SMMUL((r24),(c4<<7))/((s24-1)/4+1))>>2;
+
+a5=inlet_a*s15;
+b5=inlet_a*s25;
+       SINE2TINTERP(a5<<5,r15)
+       SINE2TINTERP(b5<<5,r25)
+       x5= (___SMMUL((r15),(d5<<7)/((s15-1)/4+1))+___SMMUL((r25),(c5<<7))/((s25-1)/4+1))>>2;
+
+a6=inlet_a*s16;
+b6=inlet_a*s26;
+       SINE2TINTERP(a6<<5,r16)
+       SINE2TINTERP(b6<<5,r26)
+       x6= (___SMMUL((r16),(d6<<7)/((s16-1)/4+1))+___SMMUL((r26),(c6<<7))/((s26-1)/4+1))>>2;
+ 
+ka=  ___SMMUL(x1<<4,x2<<4)<<6;
+kb=  ___SMMUL(x3<<4,x4<<4)<<6;
+kc=  ___SMMUL(x5<<4,x6<<4)<<6;       
+       
+       
+       SINE2TINTERP((ka+kb+kc)<<1,kh)
+	  outlet_result=kh>>5;
+;break;
+
+   case 7:
+if(inlet_a>(inlet_b+(1<<27))>>1)
+{
+pulse1=inlet_a*(inlet_c>>15);
+}
+else
+{
+pulse1 = inlet_a*(inlet_d>>15);
+}
+pulse2=pulse1>(1<<26)?(1<<26):0;
+
+if(inlet_a>(inlet_e+(1<<27))>>1)
+{
+pulse3=inlet_a*(inlet_f>>15);
+}
+else
+{
+pulse3 = inlet_a*(inlet_g>>15);
+}
+pulse4=pulse3>(1<<26)?(1<<26):0;
+outlet_result=(pulse2+pulse4-(1<<26))<<3;
+
+   ;break;
+
+
+case 8:
+wa=inlet_a;
+wb=(inlet_b>>1)+(1<<26);
+wc=(1<<27)-wb;
+
+if(wa<wb)
+{phaseu=wa*((1<<30)/wb)>>3;}
+else
+{phaseu=(1<<27)-((wa-wb)*((1<<30)/wc)>>3);}
+
+phasev=(phaseu+(wa>wb?(___SMMUL(inlet_c<<3,(wa-wb)<<4)):0)) ;
+phaset= (phasev>0?phasev:-phasev)  &( (1<<27)-1);
+
+SINE2TINTERP((phaset<<4)-(1<<30),sina)
+mixa=(sina>>5)+(1<<26);
+mixb=(1<<27)-inlet_f;
+phasew=___SMMUL(inlet_f<<3,phaset<<2)+___SMMUL(mixb<<3,mixa<<2);
+
+we=(inlet_d>>1)+(1<<26);
+wf=(1<<27)-we;
+
+if(phasew<we)
+{phasex=phasew*((1<<30)/we)>>3;}
+else
+{phasex=(1<<27)-((phasew-we)*((1<<30)/wf)>>3);}
+
+phasey=(phasex+(phasew>we?(___SMMUL(inlet_e<<3,(phasew-we)<<4)):0)) ;
+phases= (phasey>0?phasey:-phasey)  &( (1<<27)-1);
+
+SINE2TINTERP((phases<<4)-(1<<30),sinb)
+mixc=(sinb>>5)+(1<<26);
+mixd=(1<<27)-inlet_g;
+phasez=___SMMUL(inlet_g<<3,phases<<2)+___SMMUL(mixd<<3,mixc<<2);
+phaseg3=phasez & ((1<<28)-1);
+phaseg1=phaseg3<0?-phaseg3:phaseg3;
+phaseg2=phaseg1>(1<<27)?(1<<28)-phaseg1:phaseg1;
+outlet_result=phaseg2-(1<<26);
+;break;
+
+case 9:
+   outlet_result=(inlet_b+inlet_c+inlet_d+inlet_e+inlet_f+inlet_g) & ((1<<27)-1);
+   ;break;
+
+case 10:
+phaseinv=((1<<27)-inlet_a+phaseofs3) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,inlet_b<<4)+phaseofs1) & ((1<<25)-1))<<5,phaseinv<<2));
+ub=ua*0.25;
+
+phaseinv=((1<<27)-inlet_a+phaseofs1) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_b-inlet_c)<<4)+phaseofs2) & ((1<<25)-1))<<5,phaseinv<<2));
+uc=ua*0.2;
+
+phaseinv=((1<<27)-inlet_a+phaseofs2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_b+inlet_c)<<4)+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+ud=ua*0.15;
+
+ SINE2TINTERP ((ub+uc+ud-(inlet_a/2))<<6,siner);
+ sawterp=((ub+uc+ud)<<1 & ((1<<26)-1))-(1<<25);
+mixf=(1<<27)- (inlet_g & ((1<<27)-1));
+mixg1=___SMMUL(mixf<<3,sawterp<<2)+___SMMUL((inlet_g & ((1<<27)-1))<<3,siner>>4);
+
+
+
+
+phaseinv=-(inlet_a+phaseofs2*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,inlet_d<<4)+phaseofs2+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+ub=ua*0.25;
+
+phaseinv=-(inlet_a+phaseofs3*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_d-inlet_e)<<4)+phaseofs1+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+uc=ua*0.2;
+
+phaseinv=-(inlet_a+phaseofs1*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_d+inlet_e)<<4)+phaseofs1+phaseofs2) & ((1<<25)-1))<<5,phaseinv<<2));
+ud=ua*0.15;
+
+ SINE2TINTERP ((ub+uc+ud-(inlet_a/2))<<6,siner);
+ sawterp=((ub+uc+ud)<<1 & ((1<<26)-1))-(1<<25);
+mixf=(1<<27)- (inlet_g & ((1<<27)-1));
+mixg2=___SMMUL(mixf<<3,sawterp<<2)+___SMMUL((inlet_g & ((1<<27)-1))<<3,siner>>4);
+
+
+
+ outlet_result= (mixg1+mixg2)*1.5;
+;break;
+case 11:
+   outlet_result=( attr_table.array[__USAT(inlet_a,27)>>(27-attr_table.LENGTHPOW)]<<attr_table.GAIN)<<2;
+;break;
+case 12:
+outlet_result=0;
+;break;
+case 13:
+outlet_result=0;
+;break;
+case 14:
+outlet_result=0;
+;break;
+case 15:
+outlet_result=0;
+;break;
+
+
+   
+   }
+]]></code.srate>
+   </obj.normal>
+</objdefs>

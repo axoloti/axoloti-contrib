@@ -1,0 +1,69 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="64stpSeqController" uuid="b84f8bcc-ad4e-457a-b9f5-cec3aad43636">
+      <sDescription>controller for the 64step, 4 channel, preset sequencer.
+connect outputs to corresponding inputs.
+Use &quot;selectbar&quot; on the sequencer module to select bar 2,3 and 4 for counts longer then 16.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32 name="value"/>
+         <bool32.pulse name="add"/>
+         <int32 name="select"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bin16 name="b16" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+int trig;
+int32_t mem;
+int32_t value;]]></code.declaration>
+      <code.krate><![CDATA[if(!(prev==param_b16));
+{trig=1;
+mem=param_b16-prev;
+value=mem>0?(1<<27):0;}
+if(prev==param_b16)
+{trig=0;}
+
+mem=mem>0?mem:-mem;
+if(mem==1)
+{mem=0;}
+if(mem==2)
+{mem=1;}
+if(mem==4)
+{mem=2;}
+if(mem==8)
+{mem=3;}
+if(mem==16)
+{mem=4;}
+if(mem==32)
+{mem=5;}
+if(mem==64)
+{mem=6;}
+if(mem==128)
+{mem=7;}
+if(mem==256)
+{mem=8;}
+if(mem==512)
+{mem=9;}
+if(mem==1024)
+{mem=10;}
+if(mem==2048)
+{mem=11;}
+if(mem==4096)
+{mem=12;}
+if(mem==8192)
+{mem=13;}
+if(mem==16384)
+{mem=14;}
+if(mem==32768)
+{mem=15;}
+outlet_value=value;
+outlet_select=mem;
+outlet_add=trig;
+prev=param_b16;]]></code.krate>
+   </obj.normal>
+</objdefs>

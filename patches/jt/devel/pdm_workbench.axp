@@ -1,0 +1,446 @@
+<patch-1.0 appVersion="1.0.10">
+   <comment type="patch/comment" x="14" y="14" text="This is a &quot;workbench&quot; patch, exploring new techniques in development"/>
+   <comment type="patch/comment" x="14" y="42" text="PDM = pulse density modulation"/>
+   <comment type="patch/comment" x="14" y="56" text="The general idea is to oversample audio to 32*48kHz=1536MHz, but using only 1 bit per sample"/>
+   <comment type="patch/comment" x="14" y="70" text="This allows synthesizing good quality complex square waveforms"/>
+   <comment type="patch/comment" x="14" y="84" text="Comments welcome on the forum thread: http://community.axoloti.com/t/pdm-domain-processing/1712"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="574" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="154" y="168" text="genereate PDM square waves"/>
+   <patchobj type="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f" name="pdm_square_osc" x="154" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f">
+         <sDescription>pdm square wave oscillator</sDescription>
+         <inlets>
+            <frac32.bipolar name="pitch"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.pitch name="pitch"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int phase=0;]]></code.declaration>
+         <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+freq=freq>>5;]]></code.krate>
+         <code.srate><![CDATA[//int f;
+
+
+phase+=freq*32;
+//    p+=random(-pnoise, pnoise);
+if ((phase&0x80000000)!=0) {
+ int f32=(phase-0x80000000)/(freq);
+ if (f32>31) {
+   outlet_out=0xFFFFFFFF;
+ } else {
+   outlet_out=~(0xFFFFFFFFu>>f32);
+ }
+} else {
+ int f32=phase/freq;
+ if (f32>31) {
+   outlet_out=0x00000000;
+ } else {
+//   outlet_out=~((-1)<<(31-f32));
+   outlet_out=(0xFFFFFFFFu>>f32);
+ }
+}
+]]></code.srate>
+      </object>
+   </patchobj>
+   <patchobj type="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f" name="pdm_square_osc2" x="154" y="294">
+      <params>
+         <frac32.s.map name="pitch" value="14.039999961853027"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f">
+         <sDescription>pdm square wave oscillator</sDescription>
+         <inlets>
+            <frac32.bipolar name="pitch"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.pitch name="pitch"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int phase=0;]]></code.declaration>
+         <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+freq=freq>>5;]]></code.krate>
+         <code.srate><![CDATA[//int f;
+
+
+phase+=freq*32;
+//    p+=random(-pnoise, pnoise);
+if ((phase&0x80000000)!=0) {
+ int f32=(phase-0x80000000)/(freq);
+ if (f32>31) {
+   outlet_out=0xFFFFFFFF;
+ } else {
+   outlet_out=~(0xFFFFFFFFu>>f32);
+ }
+} else {
+ int f32=phase/freq;
+ if (f32>31) {
+   outlet_out=0x00000000;
+ } else {
+//   outlet_out=~((-1)<<(31-f32));
+   outlet_out=(0xFFFFFFFFu>>f32);
+ }
+}
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="i_1" x="294" y="308">
+      <params>
+         <int32.vradio name="value" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="392" y="350" text="square wave 1"/>
+   <comment type="patch/comment" x="392" y="364" text="square wave 2"/>
+   <comment type="patch/comment" x="392" y="378" text="ring modulated square 1 &amp; square 2"/>
+   <comment type="patch/comment" x="392" y="392" text="AND&apos;ed square 1 &amp; square 2 (PWM)"/>
+   <patchobj type="patch/object" uuid="a44b3919-d13b-4ade-99a0-33ea96e08d7f" name="XOR" x="98" y="406">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="a44b3919-d13b-4ade-99a0-33ea96e08d7f">
+         <sDescription>bitwise xor
+is a ringmodulator
+for PDM signals</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <inlets>
+            <frac32buffer name="i1"/>
+            <frac32buffer name="i2"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.srate><![CDATA[outlet_out=inlet_i1 ^ inlet_i2;
+]]></code.srate>
+      </object>
+   </patchobj>
+   <patchobj type="patch/object" uuid="a44b3919-d13b-4ade-99a0-33ea96e08d7f" name="AND" x="182" y="406">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="a44b3919-d13b-4ade-99a0-33ea96e08d7f">
+         <sDescription>bitwise and
+for PDM signals</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <inlets>
+            <frac32buffer name="i1"/>
+            <frac32buffer name="i2"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.srate><![CDATA[outlet_out=inlet_i1 & inlet_i2;
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="308" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="462" y="462" text="convert PDM to regular PCM"/>
+   <patchobj type="patch/object" uuid="2ce1e11f-8cda-43f0-af4d-04193b134485" name="pdm_converter" x="462" y="490">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="2ce1e11f-8cda-43f0-af4d-04193b134485">
+         <sDescription>Converts pulse density modulation (PDM) signal to regular pulse code modulation (PCM) signal. The PDM signal has a 32 times higher sample frequency than the audio sampling frequency, and only one bit per sample. This allows 
+
+Using CIC filter.
+CIC filter spec:
+- decimation ratio: 32
+- 3 integrator/differentiator stages
+- M=1
+Additional [1+z^-1] filter added to attenuate near Nyquist.</sDescription>
+         <author>Johannes Taelman</author>
+         <license>GPL</license>
+         <inlets>
+            <frac32buffer name="pdm"/>
+         </inlets>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int cic_b8_int1[256];
+int cic_b8_int2[256];
+int cic_b8_int3[256];
+
+void build_cictable_b8(void) {
+  int i,j;
+  for (i=0; i<256; i++) {
+    int a0=0;
+    int a1=0;
+    int a2=0;
+    for (j=0; j<8; j++) {
+      if ((i&(1<<j))>0) {
+        a0+=1;
+      } else {
+        a0+=-1;
+      }
+      a1+=a0;
+      a2+=a1;
+    }
+    cic_b8_int1[i]=a0;
+    cic_b8_int2[i]=a1;
+    cic_b8_int3[i]=a2;
+  }
+}
+
+void cic31_b8(uint8_t b8, int *acc) {
+  int a0 = cic_b8_int1[b8] + acc[0];
+  int a1 = cic_b8_int2[b8] + acc[1] + 8*acc[0];
+  int a2 = cic_b8_int3[b8] + acc[2] + 8*acc[1] + 36*acc[0];  
+  acc[0]=a0;
+  acc[1]=a1;
+  acc[2]=a2;
+}
+
+void cic31_b32(uint32_t b32, int *acc) {
+  cic31_b8(b32, acc);
+  cic31_b8(b32>>8, acc);
+  cic31_b8(b32>>16, acc);
+  cic31_b8(b32>>24, acc);
+}
+
+int accu[3];
+int p1=0;
+int p2=0;
+int p3=0;  
+int p4=0;  
+]]></code.declaration>
+         <code.init><![CDATA[build_cictable_b8();
+accu[0]=0;
+accu[1]=0;
+accu[2]=0;
+]]></code.init>
+         <code.srate><![CDATA[cic31_b32(inlet_pdm, &accu[0]);
+int d = accu[2];
+int d_1 = d-p1; 
+int d_2 = d_1-p2;
+int d_3 = d_2-p3;
+p1 = d;
+p2 = d_1;
+p3 = d_2;
+// add null at nyquist
+outlet_out=(d_3+p4)<<10;
+p4 = d_3;
+]]></code.srate>
+      </object>
+   </patchobj>
+   <comment type="patch/comment" x="14" y="546" text="comparison: The old way: 2 BLT square oscillators"/>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="588" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="700" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_3" x="798" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/square" uuid="aa9592566d3673fe64dcaede132e9ebd45d2202f" name="square_1" x="140" y="574">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/square" uuid="aa9592566d3673fe64dcaede132e9ebd45d2202f" name="square_2" x="140" y="658">
+      <params>
+         <frac32.s.map name="pitch" value="14.039999961853027"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_1" x="112" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/muls 2" uuid="c3083089dc169cd87133000659a02789dec5a151" name="muls_1" x="182" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_3" x="280" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_3" x="588" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_2" x="700" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="798" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 2 v" uuid="77fcdb5018cb76ee8fce628eb2b57f1adeecc835" name="i_2" x="392" y="784">
+      <params>
+         <int32.vradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="490" y="826" text="the new PDM way"/>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_2" x="616" y="826">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="700" y="826">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="854" y="826">
+      <params>
+         <frac32.u.map name="amp" value="8.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="490" y="840" text="the old PCM approach"/>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="854" y="924">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="mux_2" outlet="o"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+         <dest obj="mux_3" inlet="s"/>
+      </net>
+      <net>
+         <source obj="pdm_square_osc" outlet="out"/>
+         <dest obj="XOR" inlet="i1"/>
+         <dest obj="AND" inlet="i1"/>
+         <dest obj="mux_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="pdm_square_osc2" outlet="out"/>
+         <dest obj="XOR" inlet="i2"/>
+         <dest obj="AND" inlet="i2"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="XOR" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="AND" outlet="out"/>
+         <dest obj="mux_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="pdm_converter" inlet="pdm"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="pdm_square_osc" inlet="pitch"/>
+         <dest obj="pdm_square_osc2" inlet="pitch"/>
+         <dest obj="square_1" inlet="pitch"/>
+         <dest obj="square_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="pdm_converter" outlet="out"/>
+         <dest obj="mux_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="mux_2" inlet="s"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="mux_3" inlet="i0"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="square_2" outlet="wave"/>
+         <dest obj="*_1" inlet="b"/>
+         <dest obj="mux_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="mux_3" outlet="o"/>
+         <dest obj="mux_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="muls_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="muls_1" outlet="out"/>
+         <dest obj="mux_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_1" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+         <dest obj="-_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_3" outlet="t"/>
+         <dest obj="-_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="-_2" outlet="out"/>
+         <dest obj="i_4" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>42</x>
+      <y>29</y>
+      <width>1126</width>
+      <height>1116</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,105 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="compressor" uuid="f9af0862-9cd6-4e94-8851-86db52795a3d">
+      <sDescription>audio compressor</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input wave"/>
+         <frac32.positive name="gainAdd" description="adds gain to input audio"/>
+         <frac32.positive name="threshold" description="Level Threshold (with auto make-up gain)"/>
+         <frac32.positive name="attack"/>
+         <frac32.positive name="decay" description="Release rate"/>
+         <frac32.positive name="goal" description="Goal Volume"/>
+         <frac32.positive name="expander" description="Open to turn Compressor into expander (glitches when both threshold and expander values are high, causing a fat, harsh distortion. Awesome for bassdrums!)"/>
+         <bool32 name="AutoGain"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t out1;
+int32_t out2;
+int32_t out3;
+
+int32_t val;]]></code.declaration>
+      <code.krate><![CDATA[int64_t attack = (1<<27)-inlet_attack;
+int64_t decay = (1<<27)-inlet_decay;
+attack=___SMMUL(attack<<3,attack<<2);
+attack=___SMMUL(attack<<3,attack<<2);
+decay=___SMMUL(decay<<3,decay<<2);
+decay=___SMMUL(decay<<3,decay<<2);
+int64_t arate;
+int64_t drate;
+arate=(1<<27)-attack;
+drate=(1<<27)-decay;]]></code.krate>
+      <code.srate><![CDATA[
+
+
+int32_t in;
+in=___SMMUL(inlet_in<<3,((1<<26)+(inlet_gainAdd))<<3);
+
+int sabs;
+sabs=(in>=0)?in:-in;
+
+
+ if (sabs>val)      val = ___SMMLA(val-sabs, (-1<<26)+(arate>>1),val);
+      else val = ___SMMLA(val-sabs,(-1<<26)+(drate>>1),val);
+   out1 = val;
+
+
+
+int32_t thresa=(inlet_threshold>=(1<<18))?inlet_threshold:(1<<18);
+Float_t f;
+f.f = (thresa);
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t thresh = r1 + r2;
+int32_t thresb;
+thresb=___SMMUL(out1<<2,inlet_expander<<3)+___SMMUL(thresa<<3,((1<<27)-inlet_expander)<<2);
+
+f.f = (thresb>out1)?(thresb):(out1);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t audioIn = r1 + r2;
+
+
+int32_t slog= (thresh-audioIn);
+
+f.f = (1<<27);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t normal = r1 + r2;
+
+int32_t normat= (normal-thresh);
+
+int8_t s = (slog>>24)+12;
+uint8_t ei = slog>>16;
+int32_t audioOut;
+if (s>=0)
+     audioOut = (expt[ei]<<s);
+else audioOut = (expt[ei]>>(-s));
+
+s = (normat>>24)+6;
+ei = normat>>16;
+int32_t norman;
+if (s>=0)
+     norman = (expt[ei]<<s);
+else norman = (expt[ei]>>(-s));
+
+int32_t outa=___SMMUL(audioOut<<2,in<<3);
+int32_t outb=(outa>>3)*(norman>>18);
+if(inlet_AutoGain>0)
+{
+	outlet_out=___SMMUL(outb<<3,inlet_goal<<2);
+}
+
+else
+{
+	outlet_out=___SMMUL(outa<<3,inlet_goal<<2);
+}
+]]></code.srate>
+   </obj.normal>
+</objdefs>

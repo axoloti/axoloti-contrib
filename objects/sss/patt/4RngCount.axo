@@ -1,0 +1,93 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="4RngCount" uuid="3a10c820-535e-4a5f-b0c9-b04509fe9a88">
+      <sDescription>quad range counter (divremc with internal level manipulation)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <int32 name="Count" description="nominator"/>
+         <int32 name="PreRng" description="denominator"/>
+         <frac32 name="PreMul"/>
+         <frac32 name="PreJmp"/>
+         <frac32 name="PreChg"/>
+         <int32 name="MidRng"/>
+         <frac32 name="MidMul"/>
+         <frac32 name="MidJmp"/>
+         <frac32 name="MidChg"/>
+         <int32 name="PstRng"/>
+         <frac32 name="PstMul"/>
+         <frac32 name="PstJmp"/>
+         <frac32 name="PstChg"/>
+         <int32 name="AftRng"/>
+      </inlets>
+      <outlets>
+         <int32 name="PreRng"/>
+         <int32 name="MidRng"/>
+         <int32 name="PstRng"/>
+         <int32 name="AftRng"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t ptrig;
+int32_t pval;]]></code.declaration>
+      <code.init><![CDATA[ptrig = 0;
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[int r;
+int s;
+int t;
+int u;
+int a;
+int b;
+int c;
+int d;
+int e;
+int f;
+int g;
+int h;
+int i;
+int j;
+int k;
+int l;
+int m;
+int n;
+
+if (inlet_Count >=0)
+  r = ((unsigned int)inlet_Count)/inlet_PreRng;
+else  r = -(((unsigned int)(inlet_PreRng-inlet_Count))/inlet_PreRng);
+
+a = inlet_Count-(r*inlet_PreRng);
+c = inlet_MidRng<<2;
+b = a*___SMMUL((inlet_PreMul)<<3,c)+r*___SMMUL(inlet_PreJmp<<3,c)+r*a*___SMMUL(inlet_PreChg<<3,c);
+
+if (b >=0)
+  s = ((unsigned int)b)/inlet_MidRng;
+else  s = -(((unsigned int)(inlet_MidRng-b))/inlet_MidRng);
+
+d = b-(s*inlet_MidRng);
+f = inlet_PstRng<<2;
+e = d*___SMMUL((inlet_MidMul)<<3,f)+s*___SMMUL(inlet_MidJmp<<3,f)+s*d*___SMMUL(inlet_MidChg<<3,f);
+
+
+if (e >=0)
+  t = ((unsigned int)e)/inlet_PstRng;
+else  t = -(((unsigned int)(inlet_PstRng-e))/inlet_PstRng);
+
+g = e-(t*inlet_PstRng);
+h = inlet_PstRng<<2;
+i = g*___SMMUL((inlet_PstMul)<<3,h)+t*___SMMUL(inlet_PstJmp<<3,h)+t*g*___SMMUL(inlet_PstChg<<3,h);
+
+if (i >=0)
+  u = ((unsigned int)i)/inlet_AftRng;
+else  u = -(((unsigned int)(inlet_AftRng-i))/inlet_AftRng);
+
+j = i-(u*inlet_AftRng);
+
+outlet_AftRng = j;
+outlet_PstRng = g;
+outlet_MidRng = d;
+outlet_PreRng = a;
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

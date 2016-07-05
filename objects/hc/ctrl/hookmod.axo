@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="hookmod" uuid="8001ceb3-f152-47b0-a789-c4d1ec4f49c4">
+      <sDescription>inlet value passed through after hitting control value. unhooked by rising edge on unhook input.</sDescription>
+      <author>Johannes Taelman &amp; Stephen Hughes</author>
+      <license>BSD</license>
+      <helpPatch>hookmod.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="in" description="input"/>
+         <bool32.rising name="unhook"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out" description="output"/>
+         <bool32 name="hooked" description="hooked"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="value" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t nhooked; //0:hooked, 1:gt, 2:lt, 4:unhooked
+int32_t param_cache;
+bool unhook;]]></code.declaration>
+      <code.init><![CDATA[nhooked = 4;
+unhook = 0;]]></code.init>
+      <code.krate><![CDATA[//0:hooked, 1:gt, 2:lt, 4:unhooked
+
+if (inlet_unhook) unhook = 1;
+
+if (nhooked) {
+	outlet_out = param_value;
+	if (param_value > inlet_in){
+		nhooked |= 1;
+		if (nhooked == 7) {
+			nhooked = 0;
+			param_cache = param_value;
+		}
+	} else {
+		nhooked |= 2;
+		if (nhooked == 7) {
+			nhooked = 0;
+			param_cache = param_value;
+		}
+	}
+} else {
+	outlet_out = inlet_in;
+	if (param_cache != param_value || unhook) {
+		nhooked = 4;
+		unhook = 0;
+	} else {
+		PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],inlet_in,0xFFFD);
+		param_cache = inlet_in;
+	}
+}
+outlet_hooked = !nhooked;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

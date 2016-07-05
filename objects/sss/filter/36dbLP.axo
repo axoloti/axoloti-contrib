@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="36dbLP" uuid="9a5be10b-b555-4141-8e36-46d3ce38e5db">
+      <sDescription>36dB filter</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="in2"/>
+         <frac32 name="cut"/>
+         <frac32 name="res"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="cut"/>
+         <frac32.u.map name="res"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val1;
+int32_t val2;
+int32_t val3;
+int32_t val4;
+int32_t val5;
+int32_t val6;
+int32_t valres;
+int32_t valsat;]]></code.declaration>
+      <code.init><![CDATA[val1 = 0;
+val2 = 0;
+val3 = 0;
+val4 = 0;
+val5 = 0;
+val6 = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF((param_cut+inlet_cut),f);]]></code.krate>
+      <code.srate><![CDATA[   valsat=((inlet_in-val6)*(___SMMUL(6<<3,(param_res+inlet_res)<<2)));
+
+int32_t ts = __SSAT(valsat,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+valres = ts + (ts>>1) - (tsq31p3);
+
+   
+   
+
+   val1 = ___SMMLA(((inlet_in+valres)-val1)<<1,f,val1);
+   val2 = ___SMMLA((val1-val2)<<1,f*1.3,val2);
+   val3 = ___SMMLA((val2-val3)<<1,f*1.45,val3);
+   val4 = ___SMMLA((val3-val4)<<1,f*1.65,val4);
+   val5 = ___SMMLA((val4-val5)<<1,f*1.8,val5);
+   val6 = ___SMMLA((val5-val6)<<1,f*1.9,val6);
+   outlet_out= val6;]]></code.srate>
+   </obj.normal>
+</objdefs>

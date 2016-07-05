@@ -1,9 +1,9 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.10">
    <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="336" y="42">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/control/rbrt/control/gate_hold" uuid="484da049-8773-470e-aae4-e632b53e1fda" name="gate_hold_1" x="420" y="42">
+   <obj type="rbrt/control/gate_hold" uuid="4c315d47-8c76-4c21-bf06-e3d5001b8c21" name="gate_hold_1" x="420" y="42">
       <params/>
       <attribs/>
    </obj>
@@ -39,7 +39,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/control/rbrt/control/gate_hold" uuid="484da049-8773-470e-aae4-e632b53e1fda" name="gate_hold_2" x="420" y="112">
+   <obj type="rbrt/control/gate_hold" uuid="4c315d47-8c76-4c21-bf06-e3d5001b8c21" name="gate_hold_2" x="420" y="112">
       <params/>
       <attribs/>
    </obj>
@@ -67,13 +67,13 @@
       </net>
       <net>
          <source obj="demux_1" outlet="o0"/>
-         <dest obj="gate_hold_1" inlet="in"/>
          <dest obj="demux_1" inlet="d0"/>
+         <dest obj="gate_hold_1" inlet="in"/>
       </net>
       <net>
          <source obj="demux_1" outlet="o1"/>
-         <dest obj="gate_hold_2" inlet="in"/>
          <dest obj="demux_1" inlet="d1"/>
+         <dest obj="gate_hold_2" inlet="in"/>
       </net>
       <net>
          <source obj="gate" outlet="inlet"/>
@@ -132,7 +132,6 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>

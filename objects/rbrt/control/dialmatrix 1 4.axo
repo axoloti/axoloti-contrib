@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="dialmatrix 1 4" uuid="a7c486e1-004e-461a-a37c-78303e088bcc">
+      <sDescription>demultiplexes incoming data to 4 dials.the target is set by the inlet &apos;s&apos;.
+the dials have to be named &apos;0&apos; , &apos;1&apos; , &apos;2&apos; ,&apos;3&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <frac32 name="in0"/>
+         <int32.positive name="s"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev0;
+   ]]></code.declaration>
+      <code.init><![CDATA[
+prev0 = 0;
+
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_s == 0) && (inlet_in0 != prev0)){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_0_value],inlet_in0,0xFFFD);
+}
+
+if ((inlet_s == 1) && (inlet_in0 != prev0)){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_1_value],inlet_in0,0xFFFD);
+}
+
+if ((inlet_s == 2) && (inlet_in0 != prev0)){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_2_value],inlet_in0,0xFFFD);
+}
+
+if ((inlet_s == 3) && (inlet_in0 != prev0)){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_3_value],inlet_in0,0xFFFD);
+}
+
+prev0 = inlet_in0 ;
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

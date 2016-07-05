@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.10">
    <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="trig" x="42" y="14">
       <params/>
       <attribs/>
@@ -14,6 +14,10 @@
          <frac32.s.map name="a" onParent="true" value="-64.0"/>
          <frac32.s.map name="d" onParent="true" value="0.0"/>
       </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="pitch" x="42" y="140">
+      <params/>
       <attribs/>
    </obj>
    <obj type="osc/square" uuid="aa9592566d3673fe64dcaede132e9ebd45d2202f" name="sine 2" x="28" y="224">
@@ -103,6 +107,11 @@
       <net>
          <source obj="gain" outlet="out"/>
          <dest obj="outlet_1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="pitch" outlet="inlet"/>
+         <dest obj="sine 2" inlet="pitch"/>
+         <dest obj="sine 1" inlet="pitch"/>
       </net>
    </nets>
    <settings>

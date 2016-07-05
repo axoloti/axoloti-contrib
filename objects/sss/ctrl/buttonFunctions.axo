@@ -1,0 +1,113 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="buttonFunctions" uuid="cf74f184-5959-47eb-a9b5-9dd2e3794cbc">
+      <sDescription>Multifunction momentary button to toggled boolean.
+
+4 &quot;short&quot; outputs: depending on how many times you click the button within the specified time, will it switch one of the &quot;short&quot; outputs, unless the button is held for longer then the &quot;time&quot; setting.
+
+&quot;long&quot; output toggles when button has been pressed longer then the &quot;time&quot; setting EXCEPT if it&apos;s held longer then twice the &quot;time&quot; setting.
+
+&quot;verylong&quot; output toggles when button has been pressed longer then twice the &quot;time&quot; setting.
+
+&quot;count&quot; outputs the krate counter, so you can better see the timing-setting that you need. The count only gets reset if the button is pressed while the counter is at max.
+
+&quot;clicks&quot; outputs the amount of times the button has been pressed before count reaches the &quot;time&quot; value.
+
+&quot;update&quot; sends a trigger out when the counter reaches it&apos;s max while the button is released. This is the same moment the short and long outputs are updated.
+
+&quot;loopupdate&quot; send a trigger out when the counter restarts (as long as you hold the button down, the counter will loop and this will thus create repeating triggers each time the counter is at zero.)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="button"/>
+      </inlets>
+      <outlets>
+         <bool32 name="short1"/>
+         <bool32 name="short2"/>
+         <bool32 name="short3"/>
+         <bool32 name="short4"/>
+         <bool32 name="long"/>
+         <bool32 name="verylong"/>
+         <int32 name="count"/>
+         <int32 name="clicks"/>
+         <bool32.pulse name="update"/>
+         <bool32.pulse name="loopupdate"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="time" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="10000"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t count;
+int32_t held;
+int32_t Held;
+int hold1;
+int hold2;
+int preprint;
+int prevprint;
+int print;
+int Clicks;
+int clicks;
+int trig;
+int ttrig;
+int HOLD;
+int prevtrig;
+int Short1;
+int Short2;
+int Short3;
+int Short4;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_button>0)
+{held+=1;Held=held;}
+else
+{held=0;}
+count+=1;
+if((inlet_button>0) && (count>=param_time))
+{count=0;}
+count=count>param_time?param_time:count;
+
+//print when end is reached
+if((count>=param_time) && (!(ttrig)))
+{
+	Clicks=clicks;
+	clicks=0;
+     if (Held>=param_time)
+     {
+     	if(Held<(param_time<<1))
+     	hold1=hold1>0?0:1;
+          if(Held>=(param_time<<1))
+     	hold2=hold2>0?0:1;
+     }
+     else
+     if(Clicks==1)
+     {Short1=Short1>0?0:1;}
+     if(Clicks==2)
+     {Short2=Short2>0?0:1;}
+     if(Clicks==3)
+     {Short3=Short3>0?0:1;}
+     if(Clicks>=4)
+     {Short4=Short4>0?0:1;}
+     
+     ttrig=1;
+}
+else if (count<param_time){ttrig=0;}
+
+if((count<param_time) && (!(trig)) && (inlet_button>0))
+{clicks+=1;trig=1;}
+else if (inlet_button==0){trig=0;}
+
+
+outlet_short1=Short1;
+outlet_short2=Short2;
+outlet_short3=Short3;
+outlet_short4=Short4;
+outlet_long=hold1;
+outlet_verylong=hold2;
+outlet_count=count;
+outlet_clicks=Clicks;
+outlet_update=ttrig;
+outlet_loopupdate=count==0?1:0;
+prevtrig=ttrig;]]></code.krate>
+   </obj.normal>
+</objdefs>

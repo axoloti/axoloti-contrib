@@ -1,8 +1,8 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.10">
    <obj type="delay/write sdram" sha="63d300dd732507b7237b5fd45676bc14c9e77ce7" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound" x="42" y="28">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="524288 (10.9s)"/>
+         <combo attributeName="size" selection="1048576 (21.8s)"/>
       </attribs>
    </obj>
    <obj type="patch/inlet a" sha="709c10aa648c6e5a3c00da4b5dd238899a7c109c" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_1" x="42" y="98">
@@ -11,8 +11,8 @@
    </obj>
    <obj type="mix/mix 3" sha="5d346e1293f2b7a8bf6bf2542e88a629e67a201e" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="350" y="140">
       <params>
-         <frac32.u.map name="gain1" value="45.5"/>
-         <frac32.u.map name="gain2" value="45.0"/>
+         <frac32.u.map name="gain1" value="44.5"/>
+         <frac32.u.map name="gain2" value="60.0"/>
          <frac32.u.map name="gain3" value="42.5"/>
       </params>
       <attribs/>
@@ -41,7 +41,7 @@
    </obj>
    <obj type="math/smooth" sha="74c40dd64acc980ba4e6ffc729e07365b00044fa" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_1" x="84" y="336">
       <params>
-         <frac32.u.map name="time" value="55.5"/>
+         <frac32.u.map name="time" value="58.5"/>
       </params>
       <attribs/>
    </obj>

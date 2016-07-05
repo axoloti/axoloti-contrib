@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="Clock2Timing" uuid="38febde0-bf25-48f4-afff-80b58fac2cb9">
+      <sDescription>measures the time interval between triggers and converts them into several usable data</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>timeri.axh</helpPatch>
+      <inlets>
+         <int32.positive name="samplelength" description="Set bits of max delay length (delay write module setting)"/>
+         <bool32.rising name="trig" description="Timing calculation is based on incoming clock."/>
+      </inlets>
+      <outlets>
+         <int32 name="Ksamples" description="time interval in k-rate ticks (0.333ms)"/>
+         <frac32.positive name="Seconds"/>
+         <frac32.positive name="Hz"/>
+         <frac32.positive name="Khz"/>
+         <frac32 name="basedelay"/>
+         <frac32 name="maxdelay"/>
+         <int32 name="maxtimes"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+int rtrig;
+int count;
+int32_t trigstart;
+int32_t trigstop;
+int32_t tc;
+int32_t tlatch;
+int32_t s;
+int32_t t;
+
+]]></code.declaration>
+      <code.init><![CDATA[count=0;
+ntrig = 0;
+rtrig = 0;
+trigstart = 0;
+trigstop = 0;
+tlatch = 0;
+tc = 0;
+t=1;
+s=tlatch;
+]]></code.init>
+      <code.krate><![CDATA[int c;
+c=0;
+if ((inlet_trig>0) && !ntrig) {
+   count += 1; if (count>=2) {count = 0; c = 1;}
+   ntrig=1;
+}
+else if (!(inlet_trig>0)) ntrig=0;
+
+
+
+
+
+outlet_Seconds = ((tlatch<<13)/48000)<<8;
+outlet_Hz = 4398046500000.f/outlet_Seconds;
+outlet_Khz = outlet_Hz/1000;
+
+outlet_Ksamples = tlatch;
+int r;
+r=((unsigned int)(1<<inlet_samplelength))/tlatch;
+outlet_maxtimes=r;
+outlet_maxdelay= ((r*tlatch*64)/(1<<inlet_samplelength))<<21;
+outlet_basedelay=((tlatch*(1<<14))/(1<<inlet_samplelength))<<13;
+if ((s*2)<(1<<inlet_samplelength))
+{
+	t=t+1;	
+}
+s=tlatch*(1<<t);
+if ((s)>(1<<inlet_samplelength))
+{
+	t=t-1;
+}
+s=tlatch*(1<<t);
+
+
+
+
+]]></code.krate>
+      <code.srate><![CDATA[
+if ((c > 0) && !trigstart) {
+  tc = 0;
+  trigstart = 1;
+} else if (!(c > 0)) {
+    trigstart = 0;
+}
+if ((count > 0) && !trigstop) {
+  tlatch = tc;
+  trigstop = 1;
+} else if (!(count > 0)) {
+    trigstop = 0;
+}
+
+
+
+tc++;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="inverseFilter" uuid="45960f74-7eab-46e3-928f-e90acc1963bc">
+      <sDescription>Linear maximum changerate filter.
+Limits the rise/fall of the input signal, adding harmonics to the signal.
+Eg. a sine turns into a triangle.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="rate" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+]]></code.init>
+      <code.krate><![CDATA[
+]]></code.krate>
+      <code.srate><![CDATA[int32_t diff=inlet_in-val;
+int32_t sign=diff>0?1:-1;
+diff=diff>0?diff:-diff;
+int32_t freq=___SMMUL(param_rate<<3,param_rate<<2);
+freq=___SMMUL(freq<<3,freq<<2);
+diff=diff>freq?freq:diff;
+diff=diff*sign;
+   val += diff;
+
+   outlet_out= val;
+prev=inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

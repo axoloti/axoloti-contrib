@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="3FMbandOsc" uuid="72d4bd38-b8f5-46e8-b609-84a697deadb2">
+      <sDescription>tripple sine wave oscillator with internal frequency modulation.
+
+NOTE!!!-&gt; sideband1 and sideband2 are sideband &quot;goal&quot; frequencies created by the FM! So these are not the actual rates of the oscillators!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch1"/>
+         <frac32.bipolar name="sideband1"/>
+         <frac32.bipolar name="sideband2"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32 name="FM1"/>
+         <frac32 name="FM2"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch1"/>
+         <frac32.s.map.pitch name="sideband1"/>
+         <frac32.s.map.pitch name="sideband2"/>
+         <frac32.s.map name="FM1"/>
+         <frac32.s.map name="FM2"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase1;
+uint32_t Phase2;
+uint32_t Phase3;]]></code.declaration>
+      <code.init><![CDATA[Phase1 = 0;
+Phase2 = 0;
+Phase3=0;]]></code.init>
+      <code.krate><![CDATA[   int32_t freq1;
+   MTOFEXTENDED(param_pitch1 + inlet_pitch1,freq1);
+   int32_t freq2;
+   MTOFEXTENDED(param_sideband1 + inlet_sideband1,freq2);
+   int32_t freq3;
+   MTOFEXTENDED(param_sideband2 + inlet_sideband2,freq3);]]></code.krate>
+      <code.srate><![CDATA[int32_t FM1=param_FM1+inlet_FM1;
+int32_t FM2=param_FM2+inlet_FM2;
+
+int32_t freqa=(freq2 - freq1);
+Phase3 += freq3 - (freqa);
+int32_t r3;
+int32_t p3 = Phase3 + (inlet_phase<<4);
+SINE2TINTERP(p3,r3)
+int32_t FMW2=___SMMUL((r3>>3)+(inlet_freq<<2),FM2);
+
+Phase2 += freqa+(___SMMUL(freqa<<3,FMW2<<2)<<5);
+int32_t r2;
+int32_t p2 = Phase2 + (inlet_phase<<4);
+SINE2TINTERP(p2,r2)
+int32_t FMW1=___SMMUL((r2>>3)+(inlet_freq<<2),FM1);
+
+Phase1 += freq1+(___SMMUL(freq1<<3,FMW1)<<5);
+int32_t r1;
+int32_t p1 = Phase1 + (inlet_phase<<4);
+SINE2TINTERP(p1,r1)
+outlet_wave= (r1>>4);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

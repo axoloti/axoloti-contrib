@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pllOSC" uuid="0a238640-569f-4f83-a553-0cff007e51ea">
+      <sDescription>PLL oscillator.
+Feed another audio signal into the &quot;MOD&quot; inlet and turn up the PLL to force the oscillator into tracking the incoming signal.
+FM and PM controls modulation of the oscillator by the MOD input.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="MOD" description="phase"/>
+         <frac32 name="FM"/>
+         <frac32 name="PM"/>
+         <frac32 name="PLL"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map.pitch name="LP"/>
+         <frac32.s.map name="FM"/>
+         <frac32.s.map name="PM"/>
+         <frac32.u.map name="PLL"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase1;
+uint32_t Phase2;
+int32_t min1;
+int32_t min2;
+int32_t min3;
+int32_t val;
+int32_t wave;]]></code.declaration>
+      <code.init><![CDATA[Phase1 = 0;
+Phase2 = 0;
+val = 0;
+]]></code.init>
+      <code.krate><![CDATA[   int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+int32_t f;
+   MTOF(param_LP,f);]]></code.krate>
+      <code.srate><![CDATA[
+Phase1 += freq + val;
+int32_t r1;
+int32_t p2 = Phase1;
+SINE2TINTERP(p2,r1)
+min3=((r1>>4)>(min2))?-1:1;
+wave= (r1>>4);
+
+min1 = ___SMMUL((wave-inlet_MOD)<<3,(inlet_PLL+param_PLL)*min3<<2);
+   val = ___SMMLA((min1-val)<<1,f,val);
+min2=wave;
+int32_t FM= ___SMMUL((inlet_FM+param_FM)<<3,inlet_MOD<<2);
+Phase2 += freq + val+___SMMUL(FM<<1,(freq+val)<<5);
+int32_t r2;
+outlet_wave=(SINE2TINTERP(Phase2+___SMMUL(inlet_MOD<<3,(inlet_PM+param_PM)<<2)<<4,r2))>>4;]]></code.srate>
+   </obj.normal>
+</objdefs>

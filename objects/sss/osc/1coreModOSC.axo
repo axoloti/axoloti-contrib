@@ -1,0 +1,273 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="1coreModOSC" uuid="b06e2c35-981d-43eb-88d0-dc80120d8c03">
+      <sDescription>Single core oscillator featuring:
+-external exponential and linear FM (LFM=indexed to internally modulated frequency) and external phase modulation
+-internal exponential and linear FM (LFM=indexed to internal frequency) and phase modulation.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="Efreq" description="frequency"/>
+         <frac32buffer name="Lfreq"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32 name="ExtLFM"/>
+         <frac32 name="ExtEFM"/>
+         <frac32 name="ExtPM"/>
+         <frac32 name="EFM"/>
+         <frac32 name="LFM"/>
+         <frac32 name="PM"/>
+         <int32 name="BuckReadEFM"/>
+         <int32 name="BuckReadLFM"/>
+         <int32 name="BuckReadPM"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map.pitch name="LP"/>
+         <frac32.s.map.pitch name="HP"/>
+         <frac32.s.map name="ExtEFM"/>
+         <frac32.s.map name="ExtLFM"/>
+         <frac32.s.map name="ExtPM"/>
+         <frac32.s.map name="EFM"/>
+         <frac32.s.map name="LFM"/>
+         <frac32.s.map name="PM"/>
+         <int32 name="BuckReadEFM">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+         <int32 name="BuckReadLFM">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+         <int32 name="BuckReadPM">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t p2; 
+int32_t P01;
+int32_t P02;
+int32_t P03;
+int32_t P04;
+int32_t P05;
+int32_t P06;
+int32_t P07;
+int32_t P08;
+int32_t P09;
+int32_t P10;
+int32_t P11;
+int32_t P12;
+int32_t P13;
+int32_t P14;
+int32_t P15;
+int32_t P16;
+int32_t P17;
+int32_t P18;
+int32_t P19;
+int32_t P20;
+int32_t P21;
+int32_t P22;
+int32_t P23;
+int32_t P24;
+int32_t P25;
+int32_t P26;
+int32_t P27;
+int32_t P28;
+int32_t P29;
+int32_t P30;
+int32_t P31;
+int32_t P32;
+
+
+
+
+int32_t r1;
+int32_t r2;
+int32_t Ar;
+int32_t Fr1;
+int32_t Fr2;
+int32_t Fr3;
+int32_t val2;
+int32_t val4;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t PMW=inlet_ExtPM+param_ExtPM;]]></code.krate>
+      <code.srate><![CDATA[   int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch+___SMMUL((inlet_EFM+param_EFM)<<3,Fr3>>2)+___SMMUL((inlet_ExtEFM+param_ExtEFM)<<3,inlet_Efreq<<2),freq);
+int32_t f;
+   MTOF(param_HP+inlet_pitch+param_pitch,f);
+   int32_t g;
+   MTOF(param_LP+inlet_pitch+param_pitch,g);
+
+
+int32_t LFM=___SMMUL((inlet_LFM+param_LFM)<<3,Fr2);
+int32_t ExtLFM= ___SMMUL((inlet_ExtLFM+param_ExtLFM)<<3,inlet_Lfreq<<2);
+int32_t OwnFrq = freq +___SMMUL(LFM<<4,freq);
+Phase += OwnFrq +___SMMUL(ExtLFM<<4,OwnFrq<<5);
+
+p2 = Phase + (___SMMUL(PMW<<3,(inlet_phase<<2))<<4)+___SMMUL((inlet_PM+param_PM)<<4,Fr1<<1);
+
+SINE2TINTERP(p2,r2)
+val2 = ___SMMLA(((r2>>2)-val2)<<1,f,val2);
+int32_t val3=(r2>>2)-val2;
+val4 = ___SMMLA((val3-val4)<<1,g,val4);
+int32_t val5=val4;
+P32=P31;
+P31=P30;
+P30=P29;
+P29=P28;
+P28=P27;
+P27=P26;
+P26=P25;
+P25=P24;
+P24=P23;
+P23=P22;
+P22=P21;
+P21=P20;
+P20=P19;
+P19=P18;
+P18=P17;
+P17=P16;
+P16=P15;
+P15=P14;
+P14=P13;
+P13=P12;
+P12=P11;
+P11=P10;
+P10=P09;
+P09=P08;
+P08=P07;
+P07=P06;
+P06=P05;
+P05=P04;
+P04=P03;
+P03=P02;
+P02=P01;
+P01=val5;
+
+   switch((inlet_BuckReadPM+param_BuckReadPM)>0?((inlet_BuckReadPM+1+param_BuckReadPM)):1){
+      case 0: Ar= p2;break;
+      case 1: Ar= P01;break;
+      case 2: Ar= P02;break;
+      case 3: Ar= P03;break;
+      case 4: Ar= P04;break;
+      case 5: Ar= P05;break;
+      case 6: Ar= P06;break;
+      case 7: Ar= P07;break;
+      case 8: Ar= P08;break;
+      case 9: Ar= P09;break;
+      case 10: Ar= P10;break;
+      case 11: Ar= P11;break;
+      case 12: Ar= P12;break;
+      case 13: Ar= P13;break;
+      case 14: Ar= P14;break;
+      case 15: Ar= P15;break;
+      case 16: Ar= P16;break;
+      case 17: Ar= P17;break;
+      case 18: Ar= P18;break;
+      case 19: Ar= P19;break;
+      case 20: Ar= P20;break;
+      case 21: Ar= P21;break;
+      case 22: Ar= P22;break;
+      case 23: Ar= P23;break;
+      case 24: Ar= P24;break;
+      case 25: Ar= P25;break;
+      case 26: Ar= P26;break;
+      case 27: Ar= P27;break;
+      case 28: Ar= P28;break;
+      case 29: Ar= P29;break;
+      case 30: Ar= P30;break;
+      case 31: Ar= P31;break;
+      case 32: Ar= P32;break;
+      default: Ar= P32;break;
+}
+Fr1=Ar;
+
+   switch((inlet_BuckReadLFM+param_BuckReadLFM)>0?((inlet_BuckReadLFM+1+param_BuckReadLFM)):1){
+      case 0: Ar= p2;break;
+      case 1: Ar= P01;break;
+      case 2: Ar= P02;break;
+      case 3: Ar= P03;break;
+      case 4: Ar= P04;break;
+      case 5: Ar= P05;break;
+      case 6: Ar= P06;break;
+      case 7: Ar= P07;break;
+      case 8: Ar= P08;break;
+      case 9: Ar= P09;break;
+      case 10: Ar= P10;break;
+      case 11: Ar= P11;break;
+      case 12: Ar= P12;break;
+      case 13: Ar= P13;break;
+      case 14: Ar= P14;break;
+      case 15: Ar= P15;break;
+      case 16: Ar= P16;break;
+      case 17: Ar= P17;break;
+      case 18: Ar= P18;break;
+      case 19: Ar= P19;break;
+      case 20: Ar= P20;break;
+      case 21: Ar= P21;break;
+      case 22: Ar= P22;break;
+      case 23: Ar= P23;break;
+      case 24: Ar= P24;break;
+      case 25: Ar= P25;break;
+      case 26: Ar= P26;break;
+      case 27: Ar= P27;break;
+      case 28: Ar= P28;break;
+      case 29: Ar= P29;break;
+      case 30: Ar= P30;break;
+      case 31: Ar= P31;break;
+      case 32: Ar= P32;break;
+      default: Ar= P32;break;
+}
+Fr2=Ar;
+
+   switch((inlet_BuckReadEFM+param_BuckReadEFM)>0?((inlet_BuckReadEFM+param_BuckReadEFM)+1):1){
+      case 0: Ar= p2;break;
+      case 1: Ar= P01;break;
+      case 2: Ar= P02;break;
+      case 3: Ar= P03;break;
+      case 4: Ar= P04;break;
+      case 5: Ar= P05;break;
+      case 6: Ar= P06;break;
+      case 7: Ar= P07;break;
+      case 8: Ar= P08;break;
+      case 9: Ar= P09;break;
+      case 10: Ar= P10;break;
+      case 11: Ar= P11;break;
+      case 12: Ar= P12;break;
+      case 13: Ar= P13;break;
+      case 14: Ar= P14;break;
+      case 15: Ar= P15;break;
+      case 16: Ar= P16;break;
+      case 17: Ar= P17;break;
+      case 18: Ar= P18;break;
+      case 19: Ar= P19;break;
+      case 20: Ar= P20;break;
+      case 21: Ar= P21;break;
+      case 22: Ar= P22;break;
+      case 23: Ar= P23;break;
+      case 24: Ar= P24;break;
+      case 25: Ar= P25;break;
+      case 26: Ar= P26;break;
+      case 27: Ar= P27;break;
+      case 28: Ar= P28;break;
+      case 29: Ar= P29;break;
+      case 30: Ar= P30;break;
+      case 31: Ar= P31;break;
+      case 32: Ar= P32;break;
+      default: Ar= P32;break;
+}
+int32_t LOL;
+Fr3=Ar;
+
+
+SINE2TINTERP(p2,r1)
+outlet_wave= (r1>>4);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

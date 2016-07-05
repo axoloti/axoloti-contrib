@@ -1,0 +1,76 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="resonatorP" uuid="0070274a-7d71-4590-a304-b578529e9639">
+      <sDescription>Complex Resonator filter
+
+Filter can be used for formant creation, allpass effects, frequency-resonator, plucked string (using dirac module), percussion, etc..
+
+pitch control is in semitones (0=440hz, this is changable to other values if you want, just embed the module and change the &quot;440&quot; of the &quot;f0=440*power;&quot; in the k-rate code to the required base-frequency).
+
+resonance sets resonation length (the higher the tone, the shorter it will be-&gt;logarithmic response). When fed a dirac pulse it will make a sine that quickly fades out.
+
+gain and max controls are from the &quot;fatbasterd&quot; distortion, to saveguard the output and enabling a nasty resonating distortion.
+
+Max sets max-output value (where the amplitude will be dampened at a max level)
+
+Gain sets the rate at which the output goes to the max, respectively to the input.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in" description="audio in"/>
+         <frac32.bipolar name="pitch" description="semitone control over pitch"/>
+         <frac32.positive name="resonance" description="resonance length control"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.u.map name="resonance"/>
+         <frac32.u.map name="gain"/>
+         <frac32.u.map name="max"/>
+         <bool32.tgl name="mode"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t real;
+int32_t imaginary;
+float32_t f0;
+float32_t sinw0;
+float32_t cosw0;
+float32_t pi;
+float32_t Fs;
+float32_t f1;
+int32_t out;]]></code.declaration>
+      <code.init><![CDATA[pi=3.1415926535897932384626433832795028841971693993751058209749445;
+Fs=48000;
+]]></code.init>
+      <code.krate><![CDATA[int32_t frq;
+int32_t pitch=__SSAT(inlet_pitch+param_pitch,28)-(12<<21);
+float32_t power=powf(2,((float)(pitch))/(12<<21));
+f0=440*power;
+int32_t res=__USAT(param_resonance+inlet_resonance,27);
+res=res;
+float32_t ras=((float)res)/(1<<27);
+float r=0.0001*power+1-(1-((float)res+(1<<30))/(9<<27))/power;
+//f1=-((float)110)/f0;
+//float r=1.000+(ras*f1);
+
+float32_t w0=2*pi*f0/Fs;
+sinw0=sinf(w0)*r;
+cosw0=cosf(w0)*r;
+]]></code.krate>
+      <code.srate><![CDATA[imaginary=real*sinw0+imaginary*cosw0;
+real=(inlet_in>>4)+real*cosw0-imaginary*sinw0;
+outlet_out=imaginary;
+if(param_mode==0)
+{out=imaginary;}
+else
+{out=real;}
+int dir=out>0?1:-1;
+int32_t in=out>0?out:-out;
+int32_t gian=___SMMUL(param_gain<<3,param_gain<<2);
+float32_t gain=___SMMUL((gian+(1<<17))<<2,in<<3);
+gain=1+gain/(1<<19);
+outlet_out=((param_max)-((param_max)-in)/gain)*dir;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,68 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="notehold_fixed" uuid="ac280c94-3b4d-4b84-ad20-70c57386b321">
+      <sDescription>Midi note hold.if &apos;gate&apos; is true,&apos;velon&apos; is held on &apos;trig&apos;.if &apos;gate&apos; is false,&apos;veloff&apos; is held on &apos;trig&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="gate"/>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="note">
+            <MinValue i="0"/>
+            <MaxValue i="128"/>
+         </int32>
+         <int32 name="velon">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="veloff">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;
+int lastnote;]]></code.declaration>
+      <code.init><![CDATA[ntrig=0;
+]]></code.init>
+      <code.krate><![CDATA[if (inlet_gate &&((inlet_trig>0) && !ntrig)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),param_note,param_velon);  ntrig=1;
+}
+
+if (!inlet_gate &&((inlet_trig>0) && !ntrig)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),param_note,param_veloff);  ntrig=1;
+}
+
+if (!(inlet_trig>0) && ntrig) {
+ntrig=0;}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

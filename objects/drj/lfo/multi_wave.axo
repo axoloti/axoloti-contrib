@@ -1,0 +1,501 @@
+<objdefs>
+  <obj.normal id="multi_wave" uuid="dd0f7330c0008545c1da17a321a3b9a5dc3b26a29" >
+    <sDescription>LFO, bipolar, multi wave, modulation inputs</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32.bipolar name="phase" description="Phase modulation"/>
+      <frac32.bipolar name="pwm"   description="Pulse width modulation"/>
+      <frac32.bipolar name="am"    description="Amplitude modulation"/>
+      <int32.bipolar  name="wave"  description="Waveform, added to wave parameter"/>
+      <bool32.rising  name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32 name="out"  description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
+      <frac32.u.map.ratio    name="pw"       noLabel="false" description="Pulse width"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
+       <bool32.tgl           name="unipolar" noLabel="false" description="Unipolar output"/>
+      <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t  old_reset;
+
+     __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+      old_reset = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t pitch;
+          pitch = param_pitch + inlet_pitch;
+          if( pitch > 0x07FFFFFF )
+            pitch = 0x07FFFFFF;
+          MTOFEXTENDED( pitch, pitch );
+          phase += pitch>>2;
+        }
+      old_reset = inlet_reset;
+
+      uint32_t phase1 = phase + (inlet_phase<<3);
+
+      switch( param_wave + inlet_wave )
+        {
+          default:
+          case 1 :
+            // Triangle
+            outlet_out  = (phase1>>4) - (1<<27);
+            outlet_out  = (1<<27) - ___ABS(outlet_out);
+            break;
+
+          case 2 :
+            // Sine
+            SINE2TINTERP( phase1, outlet_out )
+            outlet_out = (outlet_out>>5) + (1<<26);
+            break;
+
+          case 3 :
+            // Saw rising
+            outlet_out  = (phase1>>5);
+            break;
+
+          case 4 :
+            // Saw falling
+            outlet_out  = (1<<27) - (phase1>>5);
+            break;
+
+          case 5 :
+            // Square
+            {
+              int32_t pulsewidth = param_pw + inlet_pwm;
+              if( pulsewidth > (1<<27) )
+                {
+                  pulsewidth = (1<<27);
+                }
+              else if( pulsewidth < 0 )
+                {
+                  pulsewidth = 0;
+                }
+              if( (phase1>>5) > pulsewidth )
+                {
+                  outlet_out = 0;
+                }
+              else
+                {
+                  outlet_out = (1<<27)-1;
+                }
+            }
+            break;
+        }
+
+      if( !param_unipolar )
+        {
+          outlet_out = (outlet_out<<1) - (1<<27);
+        }
+
+     outlet_out = __SSAT( ___SMMUL( (param_amp + inlet_am) << 3, outlet_out << 2 ), 28 );
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="multi_wave" uuid="dd0f1c30c0026545c19a5dc3b26a29daa1a321a3b" >
+    <sDescription>LFO, bipolar, multi wave</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+    </inlets>
+    <outlets>
+      <frac32 name="out"  description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
+      <frac32.u.map.ratio    name="pw"       noLabel="false" description="Pulse width"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
+      <bool32.tgl            name="unipolar" noLabel="false" description="Unipolar output"/>
+      <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t  old_reset;
+
+     __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+      old_reset = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      int32_t pitch;
+      pitch = param_pitch + inlet_pitch;
+      if( pitch > 0x07FFFFFF )
+        pitch = 0x07FFFFFF;
+      MTOFEXTENDED( pitch, pitch );
+      phase += pitch>>2;
+
+      uint32_t phase1 = phase;
+
+      switch( param_wave )
+        {
+          case 1 :
+            // Triangle
+            outlet_out  = (phase1>>4) - (1<<27);
+            outlet_out  = (1<<27) - ___ABS(outlet_out);
+            break;
+
+          case 2 :
+            // Sine
+            SINE2TINTERP( phase1, outlet_out )
+            outlet_out = (outlet_out>>5) + (1<<26);
+            break;
+
+          case 3 :
+            // Saw rising
+            outlet_out  = (phase1>>5);
+            break;
+
+          case 4 :
+            // Saw falling
+            outlet_out  = (1<<27) - (phase1>>5);
+            break;
+
+          case 5 :
+            // Square
+            {
+              if( (phase1>>5) > param_pw )
+                {
+                  outlet_out = 0;
+                }
+              else
+                {
+                  outlet_out = (1<<27)-1;
+                }
+            }
+            break;
+        }
+
+      if( !param_unipolar )
+        {
+          outlet_out = (outlet_out<<1) - (1<<27);
+        }
+
+     outlet_out = ___SMMUL( param_amp << 3, outlet_out << 2 );
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="dual_multi_wave" uuid="0f7330c5dcdd3b26a10008545c1da123321a3b9a9" >
+    <sDescription>Quadrature LFO, 0 and 90 degree outputs, bipolar, multi wave, modulation inputs</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32.bipolar name="phase" description="Phase modulation"/>
+      <frac32.bipolar name="pwm"   description="Pulse width modulation"/>
+      <frac32.bipolar name="am"    description="Amplitude modulation"/>
+      <int32.bipolar  name="wave"  description="Waveform, added to wave parameter"/>
+      <bool32.rising  name="reset" description="Reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32 name="0"  description="0 degrees output"/>
+      <frac32 name="90" description="90 degrees output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
+      <frac32.u.map.ratio    name="pw"       noLabel="false" description="LFO square pulse width"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
+      <bool32.tgl            name="unipolar" noLabel="false" description="Unipolar output"/>
+      <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t  old_reset;
+
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+      old_reset = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t pitch;
+          pitch = param_pitch + inlet_pitch;
+          if( pitch > 0x07FFFFFF )
+            pitch = 0x07FFFFFF;
+          MTOFEXTENDED( pitch, pitch );
+          phase += pitch>>2;
+        }
+      old_reset = inlet_reset;
+
+      uint32_t phase1 = phase + (inlet_phase<<3);
+      uint32_t phase2 = phase1 - 0x40000000;
+
+      switch( param_wave + inlet_wave )
+        {
+          default:
+          case 1 :
+            // Triangle
+            outlet_0  = (phase1>>4) - (1<<27);
+            outlet_0  = (1<<27) - ___ABS(outlet_0);
+            outlet_90 = (phase2>>4) - (1<<27);
+            outlet_90 = (1<<27) - ___ABS(outlet_90);
+            break;
+
+          case 2 :
+            // Sine
+            SINE2TINTERP( phase1, outlet_0 )
+            outlet_0 = (outlet_0>>5) + (1<<26);
+            SINE2TINTERP( phase2, outlet_90 )
+            outlet_90 = (outlet_90>>5) + (1<<26);
+            break;
+
+          case 3 :
+            // Saw rising
+            outlet_0  = (phase1>>5);
+            outlet_90 = (phase2>>5);
+            break;
+
+          case 4 :
+            // Saw falling
+            outlet_0  = (1<<27) - (phase1>>5);
+            outlet_90 = (1<<27) - (phase2>>5);
+            break;
+
+          case 5 :
+            // Square
+            {
+              int32_t pulsewidth = param_pw + inlet_pwm;
+              if( pulsewidth > (1<<27) )
+                {
+                  pulsewidth = (1<<27);
+                }
+              else if( pulsewidth < 0 )
+                {
+                  pulsewidth = 0;
+                }
+              if( (phase1>>5) > pulsewidth )
+                {
+                  outlet_0 = 0;
+                }
+              else
+                {
+                  outlet_0 = (1<<27)-1;
+                }
+              if( (phase2>>5) > pulsewidth )
+                {
+                  outlet_90 = 0;
+                }
+              else
+                {
+                  outlet_90 = (1<<27)-1;
+                }
+            }
+            break;
+        }
+
+      if( !param_unipolar )
+        {
+          outlet_0  = (outlet_0<<1)  - (1<<27);
+          outlet_90 = (outlet_90<<1) - (1<<27);
+        }
+
+     outlet_0  =  __SSAT( ___SMMUL( (param_amp + inlet_am) << 3, outlet_0  << 2 ), 28 );
+     outlet_90 =  __SSAT( ___SMMUL( (param_amp + inlet_am) << 3, outlet_90 << 2 ), 28 );
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="dual_multi_wave" uuid="0f733017005dcdaab26a08545c1da123321a3b9a9" >
+    <sDescription>Quadrature LFO, 0 and 90 degree outputs, bipolar, multi wave</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+    </inlets>
+    <outlets>
+      <frac32 name="0"  description="0 degrees output"/>
+      <frac32 name="90" description="90 degrees output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch"    noLabel="false" description="Pitch"/>
+      <frac32.u.map.ratio    name="pw"       noLabel="false" description="LFO square pulse width"/>
+      <frac32.s.map          name="amp"      noLabel="false" description="Amplitude"/>
+      <bool32.tgl            name="unipolar" noLabel="false" description="Unipolar output"/>
+      <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t  old_reset;
+
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+      old_reset = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      int32_t pitch;
+      pitch = param_pitch + inlet_pitch;
+      if( pitch > 0x07FFFFFF )
+        pitch = 0x07FFFFFF;
+      MTOFEXTENDED( pitch, pitch );
+      phase += pitch>>2;
+
+      uint32_t phase1 = phase  - 0x40000000;
+
+      switch( param_wave )
+        {
+          case 1 :
+            // Triangle
+            outlet_0  = (phase>>4) - (1<<27);
+            outlet_0  = (1<<27) - ___ABS(outlet_0);
+            outlet_90 = (phase1>>4) - (1<<27);
+            outlet_90 = (1<<27) - ___ABS(outlet_90);
+            break;
+
+          case 2 :
+            // Sine
+            SINE2TINTERP( phase, outlet_0 )
+            outlet_0 = (outlet_0>>5) + (1<<26);
+            SINE2TINTERP( phase1, outlet_90 )
+            outlet_90 = (outlet_90>>5) + (1<<26);
+            break;
+
+          case 3 :
+            // Saw rising
+            outlet_0  = (phase>>5);
+            outlet_90 = (phase1>>5);
+            break;
+
+          case 4 :
+            // Saw falling
+            outlet_0  = (1<<27) - (phase>>5);
+            outlet_90 = (1<<27) - (phase1>>5);
+            break;
+
+          case 5 :
+            // Square
+            {
+              if( (phase>>5) > param_pw )
+                {
+                  outlet_0 = 0;
+                }
+              else
+                {
+                  outlet_0 = (1<<27)-1;
+                }
+              if( (phase1>>5) > param_pw )
+                {
+                  outlet_90 = 0;
+                }
+              else
+                {
+                  outlet_90 = (1<<27)-1;
+                }
+            }
+            break;
+        }
+
+      if( !param_unipolar )
+        {
+          outlet_0  = (outlet_0<<1)  - (1<<27);
+          outlet_90 = (outlet_90<<1) - (1<<27);
+        }
+
+     outlet_0  =  ___SMMUL( param_amp << 3, outlet_0  << 2 );
+     outlet_90 =  ___SMMUL( param_amp << 3, outlet_90 << 2 );
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>

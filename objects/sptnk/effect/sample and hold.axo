@@ -1,8 +1,7 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="sample and hold" uuid="41cb9a8f-c246-4a6e-bd28-8ceb072b00ae">
-      <sDescription>Sample and hold module with hold time scaling parameter (what this does is adjusting the hold time according to the current sample amplitude)
-
-Based on Johannes Taelman dist/samplehold cheap and osc/sine lin</sDescription>
+   <obj.normal id="sample and hold" uuid="4a454cae-32e7-4efc-9fd1-479a6a26fcdf">
+      <sDescription>Sample and hold module. Frequency adjust hold time (the higher the frequency, the finer the grain), while scaling routes the current sample amplitude to the hold time (unusual for a bitcrusher, but might add some character).
+Linear frequency scaling. The object is based on Johannes dist/samplehold cheap and osc/sine lin</sDescription>
       <author>Sputnki</author>
       <license>BSD</license>
       <helpPatch>osc.axh</helpPatch>
@@ -12,39 +11,33 @@ Based on Johannes Taelman dist/samplehold cheap and osc/sine lin</sDescription>
          <frac32 name="scaling"/>
       </inlets>
       <outlets>
-         <frac32buffer name="out"/>
+         <frac32buffer.bipolar name="out" description="output"/>
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map.freq name="freq" noLabel="true"/>
+         <frac32.u.map name="freq"/>
          <frac32.s.map name="scaling"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[uint32_t Phase; 
+      <code.declaration><![CDATA[int32_t phase; 
+int32_t phase_prev;
+int32_t scaling;
+uint32_t additional;
+int32_t hold;]]></code.declaration>
+      <code.init><![CDATA[phase = 0;
+phase_prev = 0;
+scaling = 0;
+additional = 0;
+hold=0;]]></code.init>
+      <code.krate><![CDATA[scaling=param_scaling+inlet_scaling<<4;]]></code.krate>
+      <code.srate><![CDATA[phase += (param_freq + inlet_freq + additional)<<1;
 
-
-int32_t in0;
-int32_t hold;
-int32_t additional;
-int32_t scaling;]]></code.declaration>
-      <code.init><![CDATA[Phase = 0;
-
-
-in0 = 0;
-hold = 0;
-additional = 0;]]></code.init>
-      <code.krate><![CDATA[scaling= inlet_scaling+param_scaling;]]></code.krate>
-      <code.srate><![CDATA[Phase += (param_freq + inlet_freq + additional)<<4;
-int32_t r;
-SINE2TINTERP(Phase,r)
-
-
-if ((r>0)&&!(in0>0)){
-    hold = inlet_in;
-    additional=___SMMUL(scaling,hold>0?hold:-hold)<<5;
+  if ((phase<0)&&(phase_prev>0)){
+    hold = inlet_in>>1;
+    phase=0;
+    additional = ___SMMUL(hold>0?hold:-hold,scaling);
   }
-in0 = r;
-
-outlet_out = hold;]]></code.srate>
+  outlet_out = hold;
+phase_prev=phase;]]></code.srate>
    </obj.normal>
 </objdefs>

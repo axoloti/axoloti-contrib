@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.10">
+  <obj.normal id="clk_div" uuid="ae123abb3a471eb627811120af4abcaf5343f972">
+    <sDescription>Clock divider</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <bool32.rising  name="clk" description="Clock input"/>
+    </inlets>
+    <outlets>
+      <bool32.pulse   name="clk" description="Clock output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockdiv" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t  clock_count;
+      uint32_t  old_clk;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      clock_count = 0;
+      old_clk     = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      outlet_clk = 0;
+
+      if( inlet_clk && !old_clk )
+        {
+          clock_count++;
+          if( clock_count >= param_clockdiv )
+            {
+              clock_count = 0;
+              outlet_clk  = 1;
+            }
+        }
+
+      old_clk = inlet_clk;
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>

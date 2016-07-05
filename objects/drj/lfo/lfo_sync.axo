@@ -1,6 +1,6 @@
-<objdefs appVersion="1.0.9">
+<objdefs appVersion="1.0.10">
   <obj.normal id="lfo_sync" uuid="d28abeeb627413af5343f9718111306f4b3a4793">
-    <sDescription>LFO, midi/24ppq sync</sDescription>
+    <sDescription>LFO, midi/24ppq sync, multiple waveforms</sDescription>
     <author>Are Leistad</author>
     <license>BSD</license>
     <inlets>
@@ -16,7 +16,6 @@
       <frac32.bipolar name="sine"   description="Sine output"/>
       <bool32.pulse   name="clock"  description="Clock output"/>
       <bool32.pulse   name="24ppq"  description="24 PPQ clock output"/>
-      <!-- frac32.bipolar name="phasor" description="Phasor"/ -->
     </outlets>
     <displays/>
     <params>
@@ -133,7 +132,7 @@
 #endif
                 if( period < 1.0f )
                   {
-                    period == 1.0f;
+                    period = 1.0f;
                   }
 
                 // Using slightly lower frequency (63.99 vs 64.0) so we avoid leading edge spikes from late phase resets.
@@ -274,6 +273,327 @@
 
       ktimer++;
 
+    ]]></code.krate>
+    <code.midihandler><![CDATA[
+
+      if( attr_clocksource == CLOCK_SOURCE_midi && midi_device_test( dev, port, attr_device ) == 1 )
+        {
+          if( status == MIDI_TIMING_CLOCK )
+            {
+              on_sync_clock();
+            }
+          else if( midi_transport )
+            {
+              if( status == MIDI_START )
+                {
+                  midi_clock_run   = 1;
+                  midi_clock_count = midi_clock_div; // Start immediately
+                 }
+              else if( status == MIDI_STOP )
+                {
+                  midi_clock_run = 0;
+                }
+              else if( status == MIDI_CONTINUE )
+                {
+                  midi_clock_run = 1;
+                }
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+
+  <obj.normal id="multi_wave_sync" uuid="3af5343f97181d28abeeb6274177306f4b3a4793">
+    <sDescription>LFO, midi/24ppq sync, selectable waveform</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar  name="freq"  description="Frequency modulation"/>
+      <frac32.bipolar  name="pwm"   description="Pulse width modulation"/>
+      <frac32.bipolar  name="phase" description="Phase modulation"/>
+      <bool32.rising   name="24ppq" description="External 24 PPQ clock"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="out"    description="Output"/>
+      <bool32.pulse   name="clock"  description="Clock output"/>
+      <bool32.pulse   name="24ppq"  description="24 PPQ clock output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockdiv" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+      <bool32.tgl            name="miditransport" description="Obey MIDI transport messages"/>
+      <frac32.s.map.lfopitch name="freq"          description="Internal frequency"/>
+      <frac32.u.map.ratio    name="pw"            description="Pulse width"/>
+      <frac32.s.map          name="amp"           description="Amplitude"/>
+      <bool32.tgl            name="unipolar"      description="Unipolar output"/>
+      <int32                 name="wave"     noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+    </params>
+    <attribs>
+      <combo name="clocksource">
+        <MenuEntries>
+          <string>Internal</string>
+          <string>External</string>
+          <string>MIDI</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+        </CEntries>
+      </combo>
+      <combo name="device">
+        <MenuEntries>
+          <string>omni</string>
+          <string>din</string>
+          <string>usb host port 1</string>
+          <string>usb host port 2</string>
+          <string>usb host port 3</string>
+          <string>usb host port 4</string>
+          <string>internal port 1</string>
+          <string>internal port 2</string>
+          <string>usb device port 1</string>
+        </MenuEntries>
+        <CEntries>
+          <string>MIDI_DEVICE_OMNI, 0</string>
+          <string>MIDI_DEVICE_DIN, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 2</string>
+          <string>MIDI_DEVICE_USB_HOST, 3</string>
+          <string>MIDI_DEVICE_USB_HOST, 4</string>
+          <string>MIDI_DEVICE_INTERNAL, 1</string>
+          <string>MIDI_DEVICE_INTERNAL, 2</string>
+          <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+        </CEntries>
+      </combo>
+
+    </attribs>
+    <code.declaration><![CDATA[
+
+      //#define USE_CLOCK_SMOOTHING
+
+      enum
+      {
+        CLOCK_SOURCE_internal = 0,
+        CLOCK_SOURCE_external = 1,
+        CLOCK_SOURCE_midi     = 2
+      } CLOCK_SOURCE;
+
+      uint32_t  start_sequence;
+      uint32_t  ktimer;           // 3kHz timer
+      uint32_t  phase;
+      uint32_t  old_phase;
+      uint32_t  old_24ppq;
+      uint32_t  midi_clock_24;
+      uint32_t  midi_last_ktime;  // MIDI/24PPQ clock capture
+#ifdef USE_CLOCK_SMOOTHING
+      float     midi_last_period;
+#endif
+      int32_t   midi_clock_freq;
+      int32_t   midi_clock_div;
+      int32_t   midi_clock_run;
+      int32_t   midi_clock_count;
+      int32_t   midi_transport;
+
+      __attribute__(( always_inline )) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+
+      __attribute__ (( always_inline )) __STATIC_INLINE int midi_device_test( midi_device_t dev, uint8_t port, int selected_dev, uint8_t selected_port )
+      {
+        if(    (selected_dev == MIDI_DEVICE_OMNI)
+            || (selected_dev == dev && selected_port == port)
+            )
+          return 1;
+        return 0;
+      }
+
+      void on_sync_clock( void )
+      {
+        if( midi_clock_run == 1  )
+          {
+            midi_clock_count++;
+            midi_clock_24 = 1;
+
+            if( midi_clock_count >= midi_clock_div )
+              {
+                // Find noof sample periods since last time;
+                float period  = (ktimer - midi_last_ktime) * 16;
+#ifdef USE_CLOCK_SMOOTHING
+                // Leaky integrator to avoid spiky clock on tempo changes
+                period = period + 0.1f * (midi_last_period - period);
+                midi_last_period = period;
+#endif
+                if( period < 1.0f )
+                  {
+                    period = 1.0f;
+                  }
+
+                // Using slightly lower frequency (63.99 vs 64.0) so we avoid leading edge spikes from late phase resets.
+                float f_clock = SAMPLERATE / period;
+                double freq = 63.99 * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0);
+
+                midi_clock_freq  = (uint32_t)freq;
+                phase            = 0;
+                midi_clock_count = 0;
+                midi_last_ktime  = ktimer;
+              }
+          }
+      }
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      start_sequence   = 0;
+      ktimer           = 0;
+      phase            = 0;
+      old_phase        = 0;
+      old_24ppq        = 0;
+      midi_last_ktime  = 0;
+#ifdef USE_CLOCK_SMOOTHING
+      midi_last_period = 0.0f;
+#endif
+      midi_clock_24    = 0;
+      midi_clock_freq  = 0;
+      midi_clock_div   = 12;
+      midi_clock_run   = 1;
+      midi_clock_count = 0;
+      midi_transport   = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      int32_t freq;
+      int32_t pulsewidth;
+      uint32_t phase2;
+
+      // Reset output pulses
+      outlet_clock = 0;
+      outlet_24ppq = 0;
+
+      // Need some variable copies to resolve scope...
+      midi_clock_div = param_clockdiv;
+      midi_transport = param_miditransport;
+
+      // Prevent MIDI sync from starting without a MIDI start message
+      if( start_sequence == 0 )
+        {
+          if( param_miditransport == 1 )
+            {
+              midi_clock_run = 0;
+            }
+          start_sequence++;
+        }
+
+      // 24 PPQ sync input
+      if( attr_clocksource == CLOCK_SOURCE_external )
+        {
+          // Must keep the clock sync process running for external clock
+          // unless we obey the MIDI transport messages.
+          if( param_miditransport == 0 )
+            {
+              midi_clock_run = 1;
+            }
+
+          if( inlet_24ppq && !old_24ppq )
+            {
+              on_sync_clock();
+            }
+        }
+      old_24ppq = inlet_24ppq;
+
+      if( attr_clocksource == CLOCK_SOURCE_internal || midi_clock_run == 1 )
+        {
+          if( attr_clocksource == CLOCK_SOURCE_internal )
+            {
+              MTOFEXTENDED( param_freq + inlet_freq, freq );
+              phase += freq>>2;
+            }
+          else
+            {
+              // Reclocking the internal LFO
+              phase += midi_clock_freq;
+
+              // Maintain 24 PPQ clock pulse
+              if( midi_clock_24 )
+                {
+                  outlet_24ppq  = 1;
+                  midi_clock_24 = 0;
+                }
+            }
+
+          if( phase < old_phase )
+            {
+              outlet_clock = 1;
+            }
+          old_phase = phase;
+
+          switch( param_wave )
+            {
+              default:
+              case 1 :
+                // Triangle
+                outlet_out  = (phase>>4) - (1<<27);
+                outlet_out  = (1<<27) - ___ABS(outlet_out);
+                break;
+
+              case 2 :
+                // Sine
+                SINE2TINTERP( phase, outlet_out )
+                outlet_out = (outlet_out>>5) + (1<<26);
+                break;
+
+              case 3 :
+                // Saw rising
+                outlet_out  = (phase>>5);
+                break;
+
+              case 4 :
+                // Saw falling
+                outlet_out  = (1<<27) - (phase>>5);
+                break;
+
+              case 5 :
+                // Square
+                {
+                  if( (phase>>5) > param_pw )
+                    {
+                      outlet_out = 0;
+                    }
+                  else
+                    {
+                      outlet_out = (1<<27)-1;
+                    }
+                }
+                break;
+            }
+
+          if( !param_unipolar )
+            {
+              outlet_out = (outlet_out<<1) - (1<<27);
+            }
+
+          outlet_out = __SSAT( ___SMMUL( param_amp << 3, outlet_out << 2 ), 28 );
+        }
+      else
+        {
+          outlet_out  = 0;
+        }
+
+      ktimer++;
 
     ]]></code.krate>
     <code.midihandler><![CDATA[

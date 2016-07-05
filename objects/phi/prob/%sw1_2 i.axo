@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="%sw1_2 i" uuid="5d76bd33-9c00-40ea-b5e0-6e2c4c32754f">
+      <sDescription>probabiltiy switch 1-2i with hold filters 0</sDescription>
+      <author>Philoop</author>
+      <helpPatch>prob.axh</helpPatch>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="i1"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+         <int32 name="a"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="prob" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;
+int mtrig;
+int otrig;
+int prob1;
+int prob2;
+int latch1;
+int latch2;]]></code.declaration>
+      <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
+      ntrig = 0;
+      mtrig =0;
+      otrig=0; 
+      prob1=0;
+      prob2=0;
+      latch1=0;
+      latch2=0;]]></code.init>
+      <code.krate><![CDATA[ if ((inlet_trig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
+      else if (!(inlet_trig>0)) ntrig=0;
+      
+ prob1= ((val>=param_prob))?inlet_i1:0;
+ prob2= ((val<param_prob))?inlet_i1:0;
+
+
+      
+ if ((prob1!=0) && !mtrig) {latch1 = prob1; mtrig=1;}
+else mtrig=0;
+outlet_o= latch1;
+ if ((prob2!=0) && !otrig) {latch2 = prob2; otrig=1;}
+else otrig=0;
+outlet_a= latch2;
+
+      
+ 
+]]></code.krate>
+   </obj.normal>
+</objdefs>

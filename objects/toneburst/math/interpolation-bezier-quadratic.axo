@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="interpolation-bezier-quadratic" uuid="227a4c7f-c432-4d81-93f2-cd3c2853713f">
+      <sDescription>quadratic bezier interpolation</sDescription>
+      <author>toneburst</author>
+      <license>BSD</license>
+      <helpPatch>interpolations.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="in" description="input value"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out" description="interpolated output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="curve" description="curve" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[__attribute__ ( ( always_inline ) ) __STATIC_INLINE float int2f(int32_t val) {
+	return val * (float)(1.0f / (1 << 27));
+}
+
+__attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t f2int(float val) {
+	return (int)(val * (float)(1 << 27));
+}]]></code.declaration>
+      <code.krate><![CDATA[
+// Transform inlet val to float in 0 > 1 range
+float x = int2f(inlet_in);
+
+// Transform curve param to float in 0 > 1 range
+float a = int2f(param_curve);
+
+// Quadratic Bezier interpolation
+// http://blog.demofox.org/2014/08/28/one-dimensional-bezier-curves/
+float outf = a * 2 * (1 - x) * x + (x * x);
+
+// Output int
+outlet_out = f2int(outf);
+]]></code.krate>
+   </obj.normal>
+</objdefs>
