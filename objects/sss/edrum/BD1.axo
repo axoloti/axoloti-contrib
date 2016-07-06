@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="BD1" uuid="688abf37-2062-4350-a0c4-e6eebb4a3a3d">
+   <obj.normal id="BD1" uuid="6fbc791c-4f31-4e21-bcac-e2a8a94f762c">
       <sDescription>sine wave oscillator</sDescription>
       <author>Johannes Taelman</author>
       <license>BSD</license>
@@ -10,6 +10,8 @@
          <frac32 name="env"/>
          <frac32 name="amp"/>
          <frac32 name="submix"/>
+         <int32 name="rateM"/>
+         <int32 name="rateD"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -78,7 +80,8 @@ int64_t MOd5;
 int32_t dest;
 int32_t Width;
 int32_t sine;
-int32_t slew;]]></code.declaration>
+int32_t slew;
+int rateD;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
 Sub=0;
 ntrig1 = 0;
@@ -130,7 +133,7 @@ if (stage1 == 0){
 }
 ENV1 = val1>>4;
 
-
+rateD=inlet_rateD>0?inlet_rateD:1;
 
 //volume envelope
 if ((inlet_gate>0) && !ntrig2) {
@@ -157,7 +160,7 @@ ENV2 = val2>>3;
          R = 1;
       } else {
          
-         Phose += Rate;
+         Phose += Rate*inlet_rateM/rateD;
       }
       if (!inlet_gate) {R = 0;}
 

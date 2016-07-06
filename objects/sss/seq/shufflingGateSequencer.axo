@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="shufflingGateSequencer" uuid="0f8e833e-114c-467b-8b45-9a770ab0cac2">
+   <obj.normal id="shufflingGateSequencer" uuid="ff0003d5-e942-4d0f-a805-20fd84ed0865">
       <sDescription>&quot;constant from 16 flags&quot;.....hmmmm... that one evolved quickly...
 
 FIRST ADD A TABLE ALLOCATION MODULE AND &quot;TABLE SAVE&quot; MODULE FROM THE FACTORY TABLE FOLDER!!!!!!!!!! and make a structure to save the table into a .tab file! BEFORE EDITTING!!!
@@ -70,6 +70,7 @@ to clear a pattern (white steps only), press the &quot;clear&quot; button.</sDes
       <helpPatch>ctrl.axh</helpPatch>
       <inlets>
          <bool32.rising name="trig"/>
+         <bool32.rising name="reset"/>
          <int32 name="sequence"/>
          <bool32 name="reverse"/>
          <bool32 name="ones"/>
@@ -148,6 +149,7 @@ int32_t positionwrite;
 int32_t mem01;
 int32_t sequence;
 int ttrig;
+int Rtrig;
 int ltrig;
 int strig;
 int rndtrig;
@@ -195,6 +197,12 @@ cont+=1;
 cont=cont>=steps?0:cont;}
 else if (!(inlet_trig>0))
 {ttrig=0;}
+
+//reset counter
+if((inlet_reset>0)&&(!(Rtrig)))
+{Rtrig=1;
+cont=0;}
+else {if(!(inlet_reset>0))Rtrig=0;}
 
 outlet_normcount=cont;
 

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="CR1" uuid="b7abaf01-75ba-4a39-a404-62ae5c554591">
+   <obj.normal id="CR1" uuid="d57bcbde-38af-45a4-93c8-379261215d61">
       <sDescription>ROOT sets the base frequency from where the pitch offsets are calculated
 OFS sets a frequency offset to the root pitch, functioning as a frequency shifter (remember Bode?).
 SPREAD sets an extra offset for each next oscillator pitch (harmonic spreading).
@@ -15,6 +15,14 @@ MODE (unused yet, leave this to zero!) will control several different FM routing
       <license>BSD</license>
       <inlets>
          <bool32.rising name="gate"/>
+         <frac32 name="root"/>
+         <frac32 name="ofs"/>
+         <frac32 name="spread"/>
+         <frac32 name="rotate"/>
+         <frac32 name="decay"/>
+         <frac32 name="crash"/>
+         <frac32 name="influence"/>
+         <bool32 name="rndFM"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -69,13 +77,18 @@ int32_t X2;
 int32_t X3;
 int32_t X4;
 int32_t X5;
-int32_t X6;]]></code.declaration>
+int32_t X6;
+int32_t sane[6];
+int32_t sone[6];
+int gtrig;
+int rnd[12];
+int i;]]></code.declaration>
       <code.krate><![CDATA[int32_t offset;
-MTOF(param_ofs,offset)
+MTOF(param_ofs+inlet_ofs,offset)
 int32_t root;
-MTOF(param_root,root)
+MTOF(param_root+inlet_root,root)
 int32_t spread;
-MTOF(param_spread,spread)
+MTOF(param_spread+inlet_spread,spread)
 
    int32_t t;
    MTOF((1<<27)-param_hit,t);
@@ -84,20 +97,31 @@ MTOF(param_spread,spread)
    int32_t msine4;
    int32_t msine5;
    int32_t msine6;
-   SINE2TINTERP(param_rotate<<3,msine2)
-   SINE2TINTERP((param_rotate*17)<<2,msine3)
-   SINE2TINTERP((param_rotate*23)<<2,msine4)
-   SINE2TINTERP((param_rotate*29)<<2,msine5)
-   SINE2TINTERP((param_rotate*31)<<2,msine6)
+   SINE2TINTERP((param_rotate+inlet_rotate)<<3,msine2)
+   SINE2TINTERP(((param_rotate+inlet_rotate)*17)<<2,msine3)
+   SINE2TINTERP(((param_rotate+inlet_rotate)*23)<<2,msine4)
+   SINE2TINTERP(((param_rotate+inlet_rotate)*29)<<2,msine5)
+   SINE2TINTERP(((param_rotate+inlet_rotate)*31)<<2,msine6)
    MTOF(msine2>>5,msine2)
    MTOF(msine3>>5,msine3)
    MTOF(msine4>>5,msine4)
    MTOF(msine5>>5,msine5)
-   MTOF(msine6>>5,msine6)]]></code.krate>
+   MTOF(msine6>>5,msine6)
+
+
+   if((inlet_rndFM>0) &(!(gtrig)))
+   {
+   	gtrig=1;
+   	for(i=0;i<12;i++)
+   	{rnd[i]=(int32_t)(GenerateRandomNumber()% (6));}   	
+   }
+   else if (!(inlet_rndFM>0))
+   {gtrig=0;}
+]]></code.krate>
       <code.srate><![CDATA[//envelope
 
 ccomp=(1<<31)-val1;
-decay=param_d2-param_d1;
+decay=param_d2-param_d1+inlet_decay;
 decay=___SMMUL(val1>>1,decay<<2);
 
 if ((inlet_gate>0) && !ntrig1) {
@@ -125,7 +149,7 @@ Ph4=root+offset+spread*3+msine4;
 Ph5=root-offset-spread*2+msine5;
 Ph6=root-offset+spread*5+msine6;
 
-int32_t crash= param_crash+___SMMUL(((1<<27)-ENV1)<<3,param_influence<<2);
+int32_t crash= param_crash+inlet_crash+___SMMUL(((1<<27)-ENV1)<<3,(inlet_influence+param_influence)<<2);
 FM1=___SMMUL(crash<<3,Ph1);
 FM2=___SMMUL(crash<<3,Ph2);
 FM3=___SMMUL(crash<<3,Ph3);
@@ -167,6 +191,45 @@ outlet_out=___SMMUL(sum<<3,ENV1<<3);
              X5=sine4;
              X6=sine5;
       break;
-   }]]></code.srate>
+      case 1:
+      sane[0]=sine1;
+      sane[1]=sine2;
+      sane[2]=sine3;
+      sane[3]=sine4;
+      sane[4]=sine5;
+      sane[5]=sine6;
+      
+      sone[rnd[1]]=sane[rnd[0]];
+      sone[rnd[3]]=sane[rnd[2]];
+      sone[rnd[5]]=sane[rnd[4]];
+      sone[rnd[7]]=sane[rnd[6]];
+      sone[rnd[9]]=sane[rnd[8]];
+      sone[rnd[11]]=sane[rnd[10]];
+
+      X1=sone[0];
+      X2=sone[1];
+      X3=sone[2];
+      X4=sone[3];
+      X5=sone[4];
+      X6=sone[5];
+      break;
+   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ]]></code.srate>
    </obj.normal>
 </objdefs>
