@@ -1,0 +1,106 @@
+<patch-1.0 appVersion="1.0.10">
+   <comment type="patch/comment" x="28" y="28" text="Sound source, osc or noise"/>
+   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="252" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3 sq" uuid="d7b47d5c17ec70f49b38661d48ad251bad22aace" name="mix_1" x="378" y="56">
+      <params>
+         <frac32.u.map name="gain1" value="0.0"/>
+         <frac32.u.map name="gain2" value="53.0"/>
+         <frac32.u.map name="gain3" value="52.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="../fx/stereo_phaser" uuid="85b41796-b943-4fa5-8c0a-58718a796133" name="stereo_phaser3_1" x="490" y="56">
+      <params>
+         <frac32.s.map name="manual" value="-36.0"/>
+         <frac32.s.map name="lr_diff" value="10.0"/>
+         <frac32.u.map name="mod amt" value="24.0"/>
+         <frac32.s.map name="mod freq" value="-27.0"/>
+         <frac32.s.map name="mod phase" value="-2.0"/>
+         <frac32.s.map name="feedback" value="29.0"/>
+         <frac32.u.map name="mix" value="43.0"/>
+         <int32 name="delay" value="2"/>
+         <int32 name="stages" value="8"/>
+         <bool32.tgl name="saturate" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="616" y="56">
+      <params>
+         <frac32.u.map name="volume" value="23.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_2" x="28" y="112">
+      <params>
+         <frac32.s.map name="pitch" value="-41.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="140" y="112">
+      <params>
+         <frac32.u.map name="amp" value="3.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/pwm" uuid="a6b40ff63f161d8bac8ea2eba5b0dbffcf49b472" name="pwm_2" x="252" y="112">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="252" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="-24.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="pwm_2" inlet="pitch"/>
+         <dest obj="saw_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="square_2" outlet="wave"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="pwm_2" outlet="wave"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="stereo_phaser3_1" inlet="in_l"/>
+         <dest obj="stereo_phaser3_1" inlet="in_r"/>
+      </net>
+      <net>
+         <source obj="stereo_phaser3_1" outlet="out_l"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="stereo_phaser3_1" outlet="out_r"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>957</x>
+      <y>201</y>
+      <width>819</width>
+      <height>602</height>
+   </windowPos>
+</patch-1.0>

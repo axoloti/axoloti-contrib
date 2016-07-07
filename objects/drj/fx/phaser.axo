@@ -1,0 +1,396 @@
+<objdefs appVersion="1.0.10">
+  <obj.normal id="phaser_32_mod" uuid="b82ec53ed5921d8040ae5f7aa34e145a7d1eb902">
+    <sDescription>Phaser, 0 to 32 stages, modulation</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>phaser_info.axh</helpPatch>
+    <inlets>
+      <frac32buffer   name="in"     description="Input"/>
+      <frac32buffer   name="mod"    description="Modulation"/>
+      <bool32.rising  name="reset"  description="Reset LFO phase"/>
+      <int32          name="delay"  description="Stage delay in sample periods, added to delay param"/>
+      <int32          name="stages" description="Number of stages, added to stages param"/>
+    </inlets>
+    <outlets>
+      <frac32buffer name="out"  description="Mix output"/>
+      <frac32       name="lfo"  description="LFO output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map            name="manual"   noLabel="false" description="Manual frequency"/>
+      <frac32.u.map.squaregain name="lfoamt"   noLabel="false" description="LFO amount"/>
+      <frac32.s.map.lfopitch   name="lfofreq"  noLabel="false" description="LFO frequency"/>
+      <frac32.u.map.ratio      name="lfopw"    noLabel="false" description="LFO square pulse width"/>
+      <int32                   name="lfowave"  noLabel="false" description="1-5 = tri, sine, saw+, saw-, square">
+        <MinValue i="1"/>
+        <MaxValue i="5"/>
+      </int32>
+      <frac32.s.map name="feedback" noLabel="false" description="Feedback gain"/>
+      <bool32.tgl   name="saturate" noLabel="false" description="Use soft saturation in the feedback loop"/>
+      <frac32.u.map name="mix"      noLabel="false" description="Dry/wet mix"/>
+      <int32        name="delay"    noLabel="false" description="Stage delay in sample perdiods">
+        <MinValue i="1"/>
+        <MaxValue i="32"/>
+      </int32>
+      <int32 name="stages"   noLabel="false" description="Number of stages">
+        <MinValue i="0"/>
+        <MaxValue i="32"/>
+      </int32>
+    </params>
+    <attribs>
+      <combo name="wordsize">
+        <MenuEntries>
+          <string>32 bit</string>
+          <string>16 bit</string>
+        </MenuEntries>
+        <CEntries>
+          <string>#define PHASER32_32_BIT</string>
+          <string>#define PHASER32_16_BIT</string>
+        </CEntries>
+      </combo>
+      <spinner name="maxdelay"  MinValue="1"  MaxValue="32" DefaultValue="16"/>
+      <spinner name="maxstages" MinValue="1"  MaxValue="32" DefaultValue="16"/>
+    </attribs>
+    <depends>
+      <depend>fatfs</depend>
+    </depends>
+    <code.declaration><![CDATA[
+
+      attr_wordsize
+      #define PHASER32_DELAY_SIZE attr_maxdelay
+      #define PHASER32_SECTIONS   attr_maxstages
+      #define PHASER32_32_FB_SAT
+
+  #ifdef PHASER32_32_BIT
+      int32_t delay_line[PHASER32_DELAY_SIZE * PHASER32_SECTIONS];
+  #else
+      int16_t delay_line[PHASER32_DELAY_SIZE * PHASER32_SECTIONS];
+  #endif
+
+      int32_t   old_out;
+      int32_t   dpos;
+      uint32_t  phase;
+      uint32_t  old_reset;
+      int32_t   lfo_out;
+      int32_t   lfo_out_interp;
+      int32_t   _prev;
+      int32_t   _step;
+      int32_t   _i;
+
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      for( int i = 0; i < PHASER32_DELAY_SIZE * PHASER32_SECTIONS; i++ )
+        {
+          delay_line[i] = 0;
+        }
+      dpos       = 0;
+      phase      = 0;
+      old_reset  = 0;
+      old_out    = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_lfofreq, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      switch( param_lfowave )
+        {
+          case 1 :
+            // Triangle
+            lfo_out = (phase>>4) - (1<<27);
+            lfo_out = (1<<27) - ___ABS(lfo_out<<1);
+            break;
+
+          case 2 :
+            // Sine
+            SINE2TINTERP( phase, lfo_out )
+            lfo_out = (lfo_out>>4);
+            break;
+
+          case 3 :
+            // Saw rising
+            lfo_out = (phase>>4) - (1<<27);
+            break;
+
+          case 4 :
+            // Saw falling
+            lfo_out = - ((phase>>4) - (1<<27));
+            break;
+
+          case 5 :
+            // Square
+            if( (phase>>5) > param_lfopw )
+              {
+                lfo_out = -(1<<27);
+              }
+            else
+              {
+                lfo_out =  (1<<27)-1;
+              }
+            break;
+        }
+
+      outlet_lfo = lfo_out;
+      //lfo_out = ___SMMUL( param_lfoamt<<3, lfo_out<<2 );
+      lfo_out = ___SMMUL( param_lfoamt, lfo_out<<2 );
+      _step   = (lfo_out - _prev)>>4;
+      _i      = _prev;
+      _prev   = lfo_out;
+
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      // LFO smoothing
+      lfo_out_interp = _i;
+      _i += _step;
+
+      // Delay bounds
+      int32_t delay_size = param_delay + inlet_delay;
+      if( delay_size > PHASER32_DELAY_SIZE )
+        {
+          delay_size = PHASER32_DELAY_SIZE;
+        }
+      else if( delay_size < 1 )
+        {
+          delay_size = 1;
+        }
+
+      int32_t stages = param_stages + inlet_stages;
+      if( stages < 0 )
+        {
+          stages = 0;
+        }
+      else if( stages > PHASER32_SECTIONS )
+        {
+          stages = PHASER32_SECTIONS;
+        }
+
+  #ifdef PHASER32_32_FB_SAT
+      // soft saturation distortion: y=1.5*x-0.5*x^3
+      if( param_saturate )
+        {
+          int32_t tsq31   = old_out<<3;
+          int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+          old_out         = old_out + (old_out>>1) - (tsq31p3);
+        }
+  #endif
+
+      // Input
+      int32_t dout, din, allpass;
+
+      allpass = ___SMMLA( param_feedback<<3, old_out<<2, inlet_in );
+      allpass = __SSAT( allpass, 30 );
+
+      // 16 or 32 bit filters
+  #ifdef PHASER32_32_BIT
+      int32_t g2 = inlet_mod + lfo_out_interp - param_manual;
+      g2 = __SSAT( g2<<2, 31 );
+      int32_t *dptr = delay_line + dpos;
+  #else
+      int32_t g2 = inlet_mod + lfo_out_interp - param_manual;
+      g2 = __SSAT( g2<<3, 31 );
+      int16_t *dptr = delay_line + dpos;
+  #endif
+
+      for( int i = 0; i < stages; ++i )
+        {
+  #ifdef PHASER32_32_BIT
+          dout     = *dptr;
+          din      = ___SMMLA( g2, dout<<2, allpass );
+          din      = __SSAT( din, 30 );
+          *dptr    = din;
+          allpass  = ___SMMLS( g2, din<<2, dout) ;
+          dptr    += PHASER32_DELAY_SIZE;
+  #else
+          dout     = *dptr<<16;
+          din      = ___SMMLA( g2, dout, allpass>>1 );
+          din      = __SSAT( din, 30 );
+          *dptr    = din>>15;
+          allpass  = ___SMMLS( g2, din<<1, dout>>1 )<<1;
+          dptr    += PHASER32_DELAY_SIZE;
+  #endif
+        }
+
+      allpass     = __SSAT( allpass, 28 );
+      int32_t wet = ___SMMUL(          param_mix<<3,  allpass<<2 );
+      outlet_out  = ___SMMLA( ((1<<27)-param_mix)<<3, inlet_in<<2, wet );
+      old_out     = allpass;
+
+      if( ++dpos >= delay_size )
+        {
+          dpos = 0;
+        }
+
+    ]]></code.srate>
+  </obj.normal>
+  <obj.normal id="phaser_32" uuid="14e14b82ec5d8040ae5f7aa33ed5925a7d1eb902">
+    <sDescription>Phaser, 0 to 32 stages, external control</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>phaser_info.axh</helpPatch>
+    <inlets>
+      <frac32buffer     name="in"       description="Input"/>
+      <frac32buffer     name="mod"      description="Modulation"/>
+      <frac32           name="feedback" description="Feedback amount"/>
+      <bool32           name="saturate" description="Use soft saturation in the feedback loop"/>
+      <frac32.positive  name="mix"      description="Dry/wet mix"/>
+      <int32.positive   name="delay"    description="Stage delay in sample periods"/>
+      <int32.positive   name="stages"   description="Number of stages, 0 = bypass"/>
+    </inlets>
+    <outlets>
+      <frac32buffer name="out"   description="Mix output"/>
+    </outlets>
+    <displays/>
+    <params>
+    </params>
+    <attribs>
+      <combo name="wordsize">
+        <MenuEntries>
+          <string>32 bit</string>
+          <string>16 bit</string>
+        </MenuEntries>
+        <CEntries>
+          <string>#define PHASER32B_32_BIT</string>
+          <string>#define PHASER16BS_16_BIT</string>
+        </CEntries>
+      </combo>
+      <spinner name="maxdelay"  MinValue="1"  MaxValue="32" DefaultValue="16"/>
+      <spinner name="maxstages" MinValue="1"  MaxValue="32" DefaultValue="16"/>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      attr_wordsize
+      #define PHASER32B_DELAY_SIZE attr_maxdelay
+      #define PHASER32B_SECTIONS   attr_maxstages
+      #define PHASER32B_32_FB_SAT
+
+  #ifdef PHASER32B_32_BIT
+      int32_t delay_line[PHASER32B_DELAY_SIZE * PHASER32B_SECTIONS];
+  #else
+      int16_t delay_line[PHASER32B_DELAY_SIZE * PHASER32B_SECTIONS];
+  #endif
+
+      int32_t   old_out;
+      int32_t   dpos;
+      int32_t   delay_size;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      for( int i = 0; i < PHASER32B_DELAY_SIZE * PHASER32B_SECTIONS; i++ )
+        {
+          delay_line[i] = 0;
+        }
+      dpos       = 0;
+      delay_size = 1;
+      old_out    = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      // Delay bounds
+      delay_size = inlet_delay;
+      if( delay_size > PHASER32B_DELAY_SIZE )
+        {
+          delay_size = PHASER32B_DELAY_SIZE;
+        }
+      else if( delay_size < 1 )
+        {
+          delay_size = 1;
+        }
+
+      int32_t stages = inlet_stages;
+      if( stages < 0 )
+        {
+          stages = 0;
+        }
+      else if( stages > PHASER32B_SECTIONS )
+        {
+          stages = PHASER32B_SECTIONS;
+        }
+
+  #ifdef PHASER32B_32_FB_SAT
+      // soft saturation distortion: y=1.5*x-0.5*x^3
+      if( inlet_saturate )
+        {
+          //int32_t ts      = __SSAT(old_out,28);
+          int32_t tsq31   = old_out<<3;
+          int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+          old_out         = old_out + (old_out>>1) - (tsq31p3);
+        }
+  #endif
+
+      // Input
+      int32_t dout, din, allpass;
+
+      allpass = ___SMMLA( inlet_feedback<<3, old_out<<2, inlet_in );
+      allpass = __SSAT( allpass, 30 );
+
+      // 16 or 32 bit filters
+  #ifdef PHASER32B_32_BIT
+      int32_t g2 = inlet_mod;
+      g2 = __SSAT( g2<<2, 31 );
+      int32_t *dptr = delay_line + dpos;
+  #else
+      int32_t g2 = inlet_mod;
+      g2 = __SSAT( g2<<3, 31 );
+      int16_t *dptr = delay_line + dpos;
+  #endif
+
+      for( int i = 0; i < stages; ++i )
+        {
+  #ifdef PHASER32B_32_BIT
+          dout     = *dptr;
+          din      = ___SMMLA(g2,dout<<2,allpass);
+          din      = __SSAT( din, 30 );
+          *dptr    = din;
+          allpass  = ___SMMLS(g2,din<<2,dout);
+          dptr    += PHASER32B_DELAY_SIZE;
+  #else
+          dout      = *dptr<<16;
+          din       = ___SMMLA(g2,dout,allpass>>1);
+          din       = __SSAT( din, 30 );
+          *dptr     = din>>15;
+          allpass   = ___SMMLS(g2,din<<1,dout>>1)<<1;
+          dptr     += PHASER32B_DELAY_SIZE;
+  #endif
+        }
+
+      allpass     = __SSAT( allpass, 28 );
+      int32_t wet = ___SMMUL(          inlet_mix<<3,  allpass<<2 );
+      outlet_out  = ___SMMLA( ((1<<27)-inlet_mix)<<3, inlet_in<<2, wet );
+      old_out     = allpass;
+
+      if( ++dpos >= delay_size )
+        {
+          dpos = 0;
+        }
+
+    ]]></code.srate>
+  </obj.normal>
+</objdefs>
