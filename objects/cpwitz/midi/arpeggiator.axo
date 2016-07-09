@@ -4,39 +4,42 @@
       <author>Peter Witzel</author>
       <license>CC0</license>
       <helpPatch>arpeggiator.axh</helpPatch>
-   <inlets>
-      <bool32.rising name="clock"/>
-      <bool32 name="hold"/>
-      <int32.bipolar name="transpose"/>
-   </inlets>
-   <outlets>
-      <frac32.bipolar name="pitch"/>
-      <frac32.positive name="velocity"/>
-      <bool32 name="gate"/>
-   </outlets>
-   <displays>
-      <int32.label name="notes"/>
-      <bool32 name="holding"/>
-   </displays>
-   <params>
-      <int32.hradio name="direction" description="↑, ↓, ↕, rand, order">
-         <MaxValue i="5"/>
-      </int32.hradio>
-      <frac32.s.map.klineartime.exp name="notelength"/>
-      <int32.hradio name="octaves">
-         <MaxValue i="4"/>
-      </int32.hradio>
-      <frac32.u.map name="velocity" description="0=as played"/>
-   </params>
-   <attribs>
-      <spinner name="MIDIchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
-   </attribs>
-   <includes/>
-   <code.declaration><![CDATA[int8_t notes[128];
+      <inlets>
+         <bool32.rising name="clock"/>
+         <bool32 name="hold"/>
+         <int32.bipolar name="transpose" description="transpose semitones"/>
+         <frac32.bipolar name="notelength" description="modulate note length"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.positive name="velocity"/>
+         <bool32 name="gate"/>
+         <int32.positive name="notes" description="number of notes in arpeggio"/>
+      </outlets>
+      <displays>
+         <int32.label name="notes"/>
+         <bool32 name="holding"/>
+      </displays>
+      <params>
+         <int32.hradio name="direction" description="↑, ↓, ↕, rand, order">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <frac32.s.map.klineartime.exp name="notelength"/>
+         <bool32.tgl name="retrigger" description="retrigger gate if notelength is longer than clock input"/>
+         <int32.hradio name="octaves">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.u.map name="velocity" description="0=as played"/>
+      </params>
+      <attribs>
+         <spinner name="MIDIchannel" description="arpeggio input midi channel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t notes[128];
 int8_t notes_ord[128];
 int8_t released_on_hold[128];
 int notecount;
 int ntrigclock;
+int ngate;
 int highest_note;
 int lowest_note;
 int order_pos;
@@ -50,12 +53,13 @@ int32_t gateval;
 int32_t outpitch;
 uint32_t outvelo;
 ]]></code.declaration>
-   <code.init><![CDATA[outpitch = 0;
+      <code.init><![CDATA[outpitch = 0;
 outvelo = 0;
 notecount = 0;
 ntrigclock = 0;
 lastnote = 0;
 gateval = 0;
+ngate = 0;
 highest_note = 0;
 lowest_note = 0;
 order_pos = 0;
@@ -71,7 +75,7 @@ for (int i=0;i<128;i++) {
   released_on_hold[i] = 0;
 }
 ]]></code.init>
-   <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
+      <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
    // clock received
    if (notecount>0) {
         int32_t playnote = 0;
@@ -171,7 +175,7 @@ for (int i=0;i<128;i++) {
 		outpitch = (playnote+inlet_transpose+12*octave-64)<<21;
 		//LogTextMessage("Triggering #%i %i", playnote, outpitch);
 		outvelo = param_velocity>0?param_velocity:(notes[playnote]<<20);
-		gateval = 1<<30;
+		ngate = 1;
 		lastnote = playnote;
 		octave = nextoctave;
 	   }
@@ -184,9 +188,20 @@ if (!(inlet_clock>0) && ntrigclock) {
 
 
 // create gate pulse
+if (ngate>0) {
+	// check if gate is closed
+	if (gateval<=0 || param_retrigger==0) {
+		gateval = 1<<30;
+		ngate = 0;
+	}
+	else {
+		// retrigger
+		gateval = 0;
+	}
+}
 if (gateval>0) {
     int32_t t;
-    MTOF(-param_notelength,t);
+    MTOF(-(param_notelength+inlet_notelength),t);
      gateval -= t>>3;
      if (gateval<=0) outlet_gate = 0;
      else outlet_gate = 1;
@@ -196,6 +211,7 @@ else outlet_gate = 0;
 outlet_pitch = outpitch;
 outlet_velocity = outvelo;
 disp_notes = notecount;
+outlet_notes = notecount;
 int new_holding = sustainpedal | inlet_hold;
 if (holding==1 && new_holding==0) {
 	dehold_lock = 1;
@@ -238,7 +254,7 @@ if (holding==1 && new_holding==0) {
 holding = new_holding;
 disp_holding = holding;
 ]]></code.krate>
-   <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
+      <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
 int cmd = (status & 0x70) >> 4;
 
 if (channel!=attr_MIDIchannel || dehold_lock) {
@@ -321,5 +337,5 @@ if (cmd==0 || cmd==1) {
 	} */
 }
 ]]></code.midihandler>
-</obj.normal>
+   </obj.normal>
 </objdefs>
