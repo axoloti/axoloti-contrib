@@ -6,7 +6,10 @@
       <helpPatch>arpeggiator.axh</helpPatch>
       <inlets>
          <bool32.rising name="clock"/>
-         <bool32 name="hold"/>
+         <bool32 name="hold" description="hold arpeggio"/>
+         <bool32 name="double" description="double stroke each arpeggiated note"/>
+         <int32.positive name="direction" description="arp direction (0-4)"/>
+         <int32.positive name="octaves" description="number of addition octaves (0-3)"/>
          <int32.bipolar name="transpose" description="transpose semitones"/>
          <frac32.bipolar name="notelength" description="modulate note length"/>
       </inlets>
@@ -52,7 +55,7 @@ int32_t lastnote;
 int32_t gateval;
 int32_t outpitch;
 uint32_t outvelo;
-]]></code.declaration>
+int secondclock;]]></code.declaration>
       <code.init><![CDATA[outpitch = 0;
 outvelo = 0;
 notecount = 0;
@@ -68,6 +71,7 @@ moveup = 1;
 holding = 0;
 sustainpedal = 0;
 dehold_lock = 0;
+secondclock = 0;
 
 for (int i=0;i<128;i++) {
   notes[i] = 0;
@@ -78,65 +82,33 @@ for (int i=0;i<128;i++) {
       <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
    // clock received
    if (notecount>0) {
-        int32_t playnote = 0;
-        int32_t nextnote;
-        int nextoctave = octave;
-	   if (param_direction==0) {
-		// up
-		nextnote = lastnote;
-		do {
-			nextnote = (nextnote+1)%128;
-			if (notes[nextnote]!=0) {
-				playnote = nextnote;
-				if (playnote==highest_note) {
-					nextoctave = (octave+1)%(param_octaves+1);
-				}
-				break;
-			}
-		}
-		while (nextnote!=lastnote);
+	   if (inlet_double>0 && secondclock>0) {
+		ngate = 1;
 	   }
-	   if (param_direction==1) {
-	   	// down
-	   	nextnote = lastnote;
-		do {
-			nextnote = nextnote-1;
-			if (nextnote<0) nextnote = 127;
-			if (notes[nextnote]!=0) {
-				playnote = nextnote;
-				if (playnote==lowest_note) {
-					nextoctave = octave-1;
-					if (nextoctave<0) {
-						nextoctave = param_octaves;
-					};
-				}
-				break;
-			}
-		}
-		while (nextnote!=lastnote);
-	   }
-	   if (param_direction==2) {
-	   	// up/down
-	   	nextnote = lastnote;
-	   	if (moveup) {
+	   else {
+	        int32_t playnote = 0;
+	        int32_t nextnote;
+	        int nextoctave = octave;
+	        int direction=(param_direction+inlet_direction)%5;
+	        int number_octaves = (param_octaves+inlet_octaves)%4;
+		   if (direction==0) {
+			// up
+			nextnote = lastnote;
 			do {
 				nextnote = (nextnote+1)%128;
 				if (notes[nextnote]!=0) {
 					playnote = nextnote;
 					if (playnote==highest_note) {
-						nextoctave = (octave+1)%(param_octaves+1);
-						if (nextoctave==0) {
-							nextoctave = octave;
-							moveup = 0;
-						}
+						nextoctave = (octave+1)%(number_octaves+1);
 					}
 					break;
 				}
 			}
 			while (nextnote!=lastnote);
-	   		
-	   	}
-	   	else {
+		   }
+		   if (direction==1) {
+		   	// down
+		   	nextnote = lastnote;
 			do {
 				nextnote = nextnote-1;
 				if (nextnote<0) nextnote = 127;
@@ -145,40 +117,80 @@ for (int i=0;i<128;i++) {
 					if (playnote==lowest_note) {
 						nextoctave = octave-1;
 						if (nextoctave<0) {
-							nextoctave = 0;
-							moveup = 1;
+							nextoctave = number_octaves;
 						};
 					}
 					break;
 				}
 			}
 			while (nextnote!=lastnote);
-	   	}
+		   }
+		   if (direction==2) {
+		   	// up/down
+		   	nextnote = lastnote;
+		   	if (moveup) {
+				do {
+					nextnote = (nextnote+1)%128;
+					if (notes[nextnote]!=0) {
+						playnote = nextnote;
+						if (playnote==highest_note) {
+							nextoctave = (octave+1)%(number_octaves+1);
+							if (nextoctave==0) {
+								nextoctave = octave;
+								moveup = 0;
+							}
+						}
+						break;
+					}
+				}
+				while (nextnote!=lastnote);
+		   		
+		   	}
+		   	else {
+				do {
+					nextnote = nextnote-1;
+					if (nextnote<0) nextnote = 127;
+					if (notes[nextnote]!=0) {
+						playnote = nextnote;
+						if (playnote==lowest_note) {
+							nextoctave = octave-1;
+							if (nextoctave<0) {
+								nextoctave = 0;
+								moveup = 1;
+							};
+						}
+						break;
+					}
+				}
+				while (nextnote!=lastnote);
+		   	}
+		   }
+		   if (direction==3) {
+		   	// rand
+		   	int rand = GenerateRandomNumber();
+		   	int randpos = ((rand<0?-rand+1:rand)%(notecount));
+		   	playnote = notes_ord[randpos];
+		   	rand = GenerateRandomNumber();
+		   	nextoctave = ((rand<0?-rand+1:rand)%(number_octaves+1));
+		   }
+		   if (direction==4) {
+		   	// order
+			playnote = notes_ord[order_pos];
+			if (order_pos == notecount-1) {
+				nextoctave = (octave+1)%(number_octaves+1);
+			}
+		   	order_pos = (order_pos+1)%notecount;
+		   }
+		   if (playnote>0) {
+			outpitch = (playnote+inlet_transpose+12*octave-64)<<21;
+			//LogTextMessage("Triggering #%i %i", playnote, outpitch);
+			outvelo = param_velocity>0?param_velocity:(notes[playnote]<<20);
+			ngate = 1;
+			lastnote = playnote;
+			octave = nextoctave;
+		   }
 	   }
-	   if (param_direction==3) {
-	   	// rand
-	   	int rand = GenerateRandomNumber();
-	   	int randpos = ((rand<0?-rand+1:rand)%(notecount));
-	   	playnote = notes_ord[randpos];
-	   	rand = GenerateRandomNumber();
-	   	nextoctave = ((rand<0?-rand+1:rand)%(param_octaves+1));
-	   }
-	   if (param_direction==4) {
-	   	// order
-		playnote = notes_ord[order_pos];
-		if (order_pos == notecount-1) {
-			nextoctave = (octave+1)%(param_octaves+1);
-		}
-	   	order_pos = (order_pos+1)%notecount;
-	   }
-	   if (playnote>0) {
-		outpitch = (playnote+inlet_transpose+12*octave-64)<<21;
-		//LogTextMessage("Triggering #%i %i", playnote, outpitch);
-		outvelo = param_velocity>0?param_velocity:(notes[playnote]<<20);
-		ngate = 1;
-		lastnote = playnote;
-		octave = nextoctave;
-	   }
+	   secondclock = secondclock==0?1:0;
    }
    ntrigclock = 1;
 }
