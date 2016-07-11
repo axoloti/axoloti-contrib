@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="shiftRegister" uuid="54d2ffa0-1d73-4965-bfbe-441291a7e9cb">
+      <sDescription>FOUR 74HC595 SHIFT REGISTERS
+by paul</sDescription>
+      <author>Hugo</author>
+      <license>BSD</license>
+      <helpPatch>disp.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="in" description="input"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <depends>
+         <depend>SPID1</depend>
+      </depends>
+      <code.declaration><![CDATA[// FOUR 74HC595 SHIFT REGISTERS
+// by paul
+int32_t in1;
+
+uint8_t *txbuf;
+
+void setup(void){
+    
+    static uint8_t _txbuf[32] __attribute__ ((section (".sram2")));
+    txbuf = _txbuf;
+
+}
+
+void loop(void){
+    spiSelect(&SPID1);
+
+    txbuf[0] = (in1>>24);     // SHIFTREGISTER 1
+    txbuf[1] = (in1>>16);    // SHIFTREGISTER 2
+    txbuf[2] = (in1>>8);    // SHIFTREGISTER 3
+    txbuf[3] = (in1);    // SHIFTREGISTER 4
+
+    spiSend(&SPID1,4,txbuf);
+    spiUnselect(&SPID1);
+    chThdSleepMilliseconds(1);
+}
+
+msg_t ThreadX2(){
+  setup();
+  while(!chThdShouldTerminate()){
+     loop();
+     chThdSleepMilliseconds(1);
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;]]></code.declaration>
+      <code.init><![CDATA[in1=0;
+Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);
+]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);]]></code.dispose>
+      <code.krate><![CDATA[this->in1 = inlet_in;]]></code.krate>
+   </obj.normal>
+</objdefs>
