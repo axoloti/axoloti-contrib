@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="debug_threads" uuid="ccfd56d2-6206-4133-a813-8f057f7b195e">
+      <sDescription>For developers: dumps a list of current threads and their status.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>GPL</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.mom name="dump" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool p;]]></code.declaration>
+      <code.krate><![CDATA[static const char *states[] = {THD_STATE_NAMES};
+
+if (param_dump & !p){
+	p=1;
+	Thread *thd1 = chRegFirstThread();
+	Thread *thd = thd1;
+#if CH_DBG_FILL_THREADS	
+	LogTextMessage("Thread Name Status StkUnused");
+#else
+	LogTextMessage("Thread Name Status");
+#endif
+	while(thd){
+		const char *name = "????";
+		if (chRegGetThreadName(thd)){
+			name = chRegGetThreadName(thd);
+		}
+#if CH_DBG_FILL_THREADS	
+		char *stk = (char *)(thd->p_stklimit);
+		int nfree = 0;
+		while(*stk == 0x55){
+			nfree++;
+			stk++;
+		}
+		LogTextMessage("%-16s %-16s %6d",name,states[thd->p_state],nfree);
+#else
+		LogTextMessage("%-16s %-16s",name,states[thd->p_state]);
+#endif		
+		thd = chRegNextThread(thd);
+		if (thd == thd1) break;
+	}
+} else if (!param_dump) {
+	p=0;	
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,6 +1,7 @@
-<objdefs appVersion="1.0.9">
-   <obj.normal id="smthRotator" uuid="462f1671-25aa-4dd9-985b-34c0bfda8f0f">
-      <sDescription>Smooth input rotator. Smoothly rotates all the inputs along the 8 outputs.</sDescription>
+<objdefs appVersion="1.0.10">
+   <obj.normal id="smthRotator" uuid="12660d2b-8723-4bc2-ac44-00233eafb84c">
+      <sDescription>Smooth input rotator. Smoothly rotates all the inputs along the 8 outputs.
+This new version has a linear and exponential output-jump size, skipping outputs and so generating different patterns</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>mux.axh</helpPatch>
@@ -26,7 +27,16 @@
          <frac32 name="o7"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <int32 name="jump">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <int32 name="exp">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+      </params>
       <attribs/>
       <code.krate><![CDATA[   int32_t a1;
    int32_t b1;
@@ -46,8 +56,17 @@
    int32_t h2;
    int32_t x;
    int32_t y;
+
+   int32_t selectbase;
+   int32_t select1;
+   int32_t select2;
+   selectbase=((inlet_s>>24));
+   select1=((selectbase*param_jump)+(selectbase*selectbase*param_exp)) &7;
+   select2=(((selectbase+1)*param_jump)+((selectbase+1)*(selectbase+1)*param_exp)) &7;
    
-   switch(int(inlet_s>>24)>0?inlet_s>>24:0){
+
+   
+   switch(int(select1)>0?select1:0){
       case 0: a1= inlet_i0,b1= inlet_i1,c1= inlet_i2,d1= inlet_i3,e1= inlet_i4,f1= inlet_i5,g1= inlet_i6,h1= inlet_i7;break;
       case 1: a1= inlet_i1,b1= inlet_i2,c1= inlet_i3,d1= inlet_i4,e1= inlet_i5,f1= inlet_i6,g1= inlet_i7,h1= inlet_i0;break;
       case 2: a1= inlet_i2,b1= inlet_i3,c1= inlet_i4,d1= inlet_i5,e1= inlet_i6,f1= inlet_i7,g1= inlet_i0,h1= inlet_i1;break;
@@ -58,17 +77,19 @@
       case 7: a1= inlet_i7,b1= inlet_i0,c1= inlet_i1,d1= inlet_i2,e1= inlet_i3,f1= inlet_i4,g1= inlet_i5,h1= inlet_i6;break;
       default: a1= inlet_i0,b1= inlet_i1,c1= inlet_i2,d1= inlet_i3,e1= inlet_i4,f1= inlet_i5,g1= inlet_i6,h1= inlet_i7;break;
 }
-   switch(int(inlet_s>>24)>0?inlet_s>>24:0){
-      case 0: a2= inlet_i1,b2= inlet_i2,c2= inlet_i3,d2= inlet_i4,e2= inlet_i5,f2= inlet_i6,g2= inlet_i7,h2= inlet_i0;break;
-      case 1: a2= inlet_i2,b2= inlet_i3,c2= inlet_i4,d2= inlet_i5,e2= inlet_i6,f2= inlet_i7,g2= inlet_i0,h2= inlet_i0;break;
-      case 2: a2= inlet_i3,b2= inlet_i4,c2= inlet_i5,d2= inlet_i6,e2= inlet_i7,f2= inlet_i0,g2= inlet_i1,h2= inlet_i0;break;
-      case 3: a2= inlet_i4,b2= inlet_i5,c2= inlet_i6,d2= inlet_i7,e2= inlet_i0,f2= inlet_i1,g2= inlet_i2,h2= inlet_i0;break;
-      case 4: a2= inlet_i5,b2= inlet_i6,c2= inlet_i7,d2= inlet_i0,e2= inlet_i1,f2= inlet_i2,g2= inlet_i3,h2= inlet_i0;break;
-      case 5: a2= inlet_i6,b2= inlet_i7,c2= inlet_i0,d2= inlet_i1,e2= inlet_i2,f2= inlet_i3,g2= inlet_i4,h2= inlet_i0;break;
-      case 6: a2= inlet_i7,b2= inlet_i0,c2= inlet_i1,d2= inlet_i2,e2= inlet_i3,f2= inlet_i4,g2= inlet_i5,h2= inlet_i0;break;
-      case 7: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3,e2= inlet_i4,f2= inlet_i5,g2= inlet_i6,h2= inlet_i0;break;
-      default: a2= inlet_i1,b2= inlet_i2,c2= inlet_i3,d2= inlet_i4,e2= inlet_i5,f2= inlet_i6,g2= inlet_i7,h2= inlet_i0;break;
+
+   switch(int(select2)>0?select2:0){
+      case 0: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3,e2= inlet_i4,f2= inlet_i5,g2= inlet_i6,h2= inlet_i7;break;
+      case 1: a2= inlet_i1,b2= inlet_i2,c2= inlet_i3,d2= inlet_i4,e2= inlet_i5,f2= inlet_i6,g2= inlet_i7,h2= inlet_i0;break;
+      case 2: a2= inlet_i2,b2= inlet_i3,c2= inlet_i4,d2= inlet_i5,e2= inlet_i6,f2= inlet_i7,g2= inlet_i0,h2= inlet_i1;break;
+      case 3: a2= inlet_i3,b2= inlet_i4,c2= inlet_i5,d2= inlet_i6,e2= inlet_i7,f2= inlet_i0,g2= inlet_i1,h2= inlet_i2;break;
+      case 4: a2= inlet_i4,b2= inlet_i5,c2= inlet_i6,d2= inlet_i7,e2= inlet_i0,f2= inlet_i1,g2= inlet_i2,h2= inlet_i3;break;
+      case 5: a2= inlet_i5,b2= inlet_i6,c2= inlet_i7,d2= inlet_i0,e2= inlet_i1,f2= inlet_i2,g2= inlet_i3,h2= inlet_i4;break;
+      case 6: a2= inlet_i6,b2= inlet_i7,c2= inlet_i0,d2= inlet_i1,e2= inlet_i2,f2= inlet_i3,g2= inlet_i4,h2= inlet_i5;break;
+      case 7: a2= inlet_i7,b2= inlet_i0,c2= inlet_i1,d2= inlet_i2,e2= inlet_i3,f2= inlet_i4,g2= inlet_i5,h2= inlet_i6;break;
+      default: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3,e2= inlet_i4,f2= inlet_i5,g2= inlet_i6,h2= inlet_i7;break;
 }
+
 x= inlet_s-((inlet_s>>24)<<24);
 y=(1<<24)-x;
 
