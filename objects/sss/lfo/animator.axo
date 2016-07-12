@@ -1,0 +1,138 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="animator" uuid="6c0ba322-885b-4c39-9d9d-900616763959">
+      <sDescription>Frame animation module.
+Module records values into an array and from there builds a smoothed out table from the added/available points.
+Features a save/load system to be able to save the internal table into the table-allocator.
+Use the table save/load module to save this table after you&apos;re finished editting!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.positive name="position"/>
+         <bool32.rising name="load"/>
+         <int32 name="preset"/>
+      </inlets>
+      <outlets>
+         <frac32 name="1"/>
+      </outlets>
+      <displays>
+         <bool32 name="used" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.tgl name="ext" description="switches frames&apos; control over to external input"/>
+         <frac32.u.map name="position" description="internal position designator and readout if external input is not selected"/>
+         <frac32.s.map name="value" description="this value will be put into the frame when you hit &quot;add&quot;"/>
+         <bool32.mom name="add" description="clicking this will put the value into the array at the selected position"/>
+         <bool32.mom name="delete" description="clicking this will delete the currently selected position (see &quot;used&quot; display if it is in use)"/>
+         <bool32.mom name="delALL" description="clicking this will delete ALL the data in the internal memory, cleaning up the animation"/>
+         <bool32.mom name="load" description="load will load a selected preset to the internal memory"/>
+         <int32 name="preset" description="selects the preset to which you want to save (this will be another 64 points extra in the table-allocator for each new preset!)">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.mom name="save" description="Don&apos;t forget to hit &quot;save&quot; for the table-save module!!"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t array[64];
+int8_t used[64];
+int32_t draw[64];
+int32_t mapped[65];
+int32_t position;
+int atrig;
+int dtrig;
+int etrig;
+int utrig;
+int saved;
+int count;
+int i;
+int j;
+int keep;
+int s;
+int load;
+int lave;]]></code.declaration>
+      <code.krate><![CDATA[saved=0;
+
+int Load;
+int Save;
+Load=param_load+inlet_load;
+Save=param_save;
+int32_t preset;
+preset=param_preset+inlet_preset;
+if (((Load)>0) && !load) {
+     load=1;
+     for(i=0;i<64;i++)
+     {(array[i])=attr_table.array[i+(preset)*128]<<attr_table.GAIN;
+     (used[i])=attr_table.array[i+64+(preset)*128]<<attr_table.GAIN;
+     
+     }}
+else if (!(Load>0)){load=0;}
+
+if (((Save)>0) && !lave) {
+     lave=1;
+     for(i=0;i<64;i++)
+         {(attr_table.array[i+(preset)*128]=array[i]>>attr_table.GAIN);
+         (attr_table.array[i+64+(preset)*128]=used[i]>>attr_table.GAIN);
+         }}
+else if (!(Save>0)){lave=0;} 
+
+
+if((param_add>0)&& !atrig)
+{
+array[param_position>>21]=param_value;
+used[param_position>>21]=1;
+atrig=1;
+}
+else if(!(param_add>0)){ atrig=0;}
+
+if((param_delete>0)&& !dtrig)
+{
+array[param_position>>21]=0;
+used[param_position>>21]=0;
+dtrig=1;
+}
+else if(!(param_add>0)){ dtrig=0;}
+
+if((param_delALL>0)&& !etrig)
+{
+
+for(j=0;j<64;j++)
+{array[j]=0;
+used[j]=0;
+draw[j]=0;}
+etrig=1;
+}
+else if(!(param_delALL>0)){ etrig=0;}
+
+
+if((param_add||param_delete)||(param_delALL||Load))
+{for(i=0;i<64;i++)
+{saved+=used[i];
+if(used[i]==1)
+{draw[saved-1]=i;}
+if(i==63)
+{keep=saved;}
+}
+for(i=0;i<=keep;i++){
+//s=(i+1)-(((i+1)/(keep+1))*(keep+1));
+for(j=draw[i];j<draw[i+1];j++)
+mapped[j]=array[draw[i]]+(array[draw[s]]-array[draw[i]])/(draw[s]-draw[i])*(j-draw[i]);}}
+
+
+if(param_ext>0)
+{position=(inlet_position-((inlet_position>>21)<<21))<<6;
+int32_t ccomp=(1<<27)-position;
+outlet_1=___SMMUL(ccomp<<2,mapped[((inlet_position>>21)-1)&63]<<2)+___SMMUL(position<<2,mapped[((inlet_position>>21)+1)&63]<<2)+(mapped[(inlet_position>>21)]>>1);
+}
+else
+{position=(param_position-((param_position>>21)<<21))<<6;
+int32_t ccomp=(1<<27)-position;
+outlet_1=___SMMUL(ccomp<<2,mapped[((param_position>>21)-1)&63]<<2)+___SMMUL(position<<2,mapped[((param_position>>21)+1)&63]<<2)+(mapped[(param_position>>21)]>>1);}
+
+disp_used=used[param_position>>21];
+
+       
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

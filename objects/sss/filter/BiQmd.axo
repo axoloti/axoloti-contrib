@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="BiQmd" uuid="baa61fa7-099e-41a0-8ca3-17e212bc3f87">
+      <sDescription>2-pole resonant filter (biquad)
+4 modes and two different outputs:
+0=off
+1=LP/lowshelf
+2=HP/highshelf
+3=BP/parametric</sDescription>
+      <author>Johannes Taelman (edit by Remco van der Most)</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i" description="filter input"/>
+         <frac32 name="p" description="pitch"/>
+         <frac32 name="r" description="filter resonance"/>
+         <int32 name="m"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="m"/>
+         <frac32buffer name="s" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="p"/>
+         <frac32.u.map.filterq name="r"/>
+         <frac32.s.map name="g"/>
+         <int32.hradio name="m">
+            <MaxValue i="4"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+int32_t out;]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);
+]]></code.init>
+      <code.krate><![CDATA[int a=(param_m+inlet_m)&3;
+if(a>0)
+      {
+      int32_t freq;
+      MTOF(param_p + inlet_p,freq);
+      if(a==1)
+      biquad_bp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_r + param_r,27)<<4));
+      if(a==2)
+      biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_r + param_r,27)<<4));
+      if(a==3)
+      biquad_hp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_r + param_r,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_i,outlet_m);
+      }]]></code.krate>
+      <code.srate><![CDATA[if(a>0)
+{outlet_s=___SMMUL(param_g<<4,outlet_m<<3)+inlet_i;
+}
+else
+{outlet_s=inlet_i;
+outlet_m=inlet_i;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
