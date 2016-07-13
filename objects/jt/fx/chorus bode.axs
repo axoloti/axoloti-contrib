@@ -53,7 +53,15 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="756" y="224">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="L" x="756" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="832edca3a945aa25ae1875d277bdd12d6709031a" name="-_1" x="658" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="R" x="756" y="294">
       <params/>
       <attribs/>
    </obj>
@@ -69,10 +77,12 @@
       <net>
          <source obj="*_1" outlet="result"/>
          <dest obj="+_1" inlet="in1"/>
+         <dest obj="-_1" inlet="in1"/>
       </net>
       <net>
          <source obj="*_2" outlet="result"/>
          <dest obj="+_1" inlet="in2"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
       <net>
          <source obj="phasor_1" outlet="phasor"/>
@@ -89,7 +99,7 @@
       </net>
       <net>
          <source obj="+_1" outlet="out"/>
-         <dest obj="out" inlet="outlet"/>
+         <dest obj="L" inlet="outlet"/>
       </net>
       <net>
          <source obj="div_1" outlet="out"/>
@@ -111,6 +121,10 @@
          <source obj="in" outlet="inlet"/>
          <dest obj="iqsplitf_1" inlet="in"/>
       </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="R" inlet="outlet"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
@@ -121,13 +135,12 @@
       <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
       <Author>Johannes Taelman</Author>
       <License>GPL</License>
-      <Attributions></Attributions>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>28</x>
       <y>101</y>
       <width>898</width>
-      <height>426</height>
+      <height>555</height>
    </windowPos>
 </patch-1.0>

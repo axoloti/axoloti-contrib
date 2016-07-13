@@ -10,7 +10,7 @@
    </obj>
    <obj type="osc/phasor" uuid="e5553f226015bf75f4fdc3faa39be1bee4f84044" name="pitch" x="14" y="154">
       <params>
-         <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+         <frac32.s.map name="pitch" onParent="true" value="-24.0"/>
       </params>
       <attribs/>
    </obj>
@@ -34,11 +34,19 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="364" y="238">
+   <obj type="math/-" uuid="832edca3a945aa25ae1875d277bdd12d6709031a" name="-_1" x="364" y="224">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="462" y="252">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="up" x="462" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="364" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="down" x="462" y="308">
       <params/>
       <attribs/>
    </obj>
@@ -54,10 +62,12 @@
       <net>
          <source obj="*_1" outlet="result"/>
          <dest obj="+_1" inlet="in1"/>
+         <dest obj="-_1" inlet="in1"/>
       </net>
       <net>
          <source obj="*_2" outlet="result"/>
          <dest obj="+_1" inlet="in2"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
       <net>
          <source obj="pitch" outlet="phasor"/>
@@ -74,7 +84,7 @@
       </net>
       <net>
          <source obj="+_1" outlet="out"/>
-         <dest obj="out" inlet="outlet"/>
+         <dest obj="down" inlet="outlet"/>
       </net>
       <net>
          <source obj="in" outlet="inlet"/>
@@ -83,6 +93,10 @@
       <net>
          <source obj="pitchm" outlet="inlet"/>
          <dest obj="pitch" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="up" inlet="outlet"/>
       </net>
    </nets>
    <settings>
@@ -102,6 +116,6 @@ It shifts the frequency content in a linear way, unlike a pitch shifter.
       <x>54</x>
       <y>313</y>
       <width>705</width>
-      <height>491</height>
+      <height>530</height>
    </windowPos>
 </patch-1.0>
