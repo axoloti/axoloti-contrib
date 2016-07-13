@@ -14,7 +14,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="jt/filters/iqsplitf" uuid="f28528cc-df41-4eb6-ab71-bd7a485d4b5d" name="iqsplitf_1" x="126" y="154">
+   <obj type="jt/filter/iqsplit" uuid="5a98950c-1137-4b6a-ab61-e95f01f55787" name="iqsplit_1" x="126" y="154">
       <params/>
       <attribs/>
    </obj>
@@ -52,11 +52,11 @@
    </obj>
    <nets>
       <net>
-         <source obj="iqsplitf_1" outlet="i"/>
+         <source obj="iqsplit_1" outlet="i"/>
          <dest obj="*_1" inlet="a"/>
       </net>
       <net>
-         <source obj="iqsplitf_1" outlet="q"/>
+         <source obj="iqsplit_1" outlet="q"/>
          <dest obj="*_2" inlet="a"/>
       </net>
       <net>
@@ -88,7 +88,7 @@
       </net>
       <net>
          <source obj="in" outlet="inlet"/>
-         <dest obj="iqsplitf_1" inlet="in"/>
+         <dest obj="iqsplit_1" inlet="in"/>
       </net>
       <net>
          <source obj="pitchm" outlet="inlet"/>
