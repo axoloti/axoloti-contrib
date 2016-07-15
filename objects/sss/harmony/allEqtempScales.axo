@@ -1,0 +1,95 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="allEqtempScales" uuid="e7a65383-f9a6-419f-9aac-2fb2997b4e97">
+      <sDescription>generic scaling module.
+Input expects 1v/note, so with 19 notes in an octave, next octave starts at 20.
+Output is scaled back to 12v/octave to be used with the oscillators with a &quot;pitch&quot; input.
+
+&quot;key&quot; sets the key for the scale that&apos;s being generated, jumps with &quot;interval&quot; size through the available notes in the octave. This parameter is normalised to the &quot;notes&quot; parameter, so it always fits the total amount of notes per octave.
+
+&quot;Notes&quot; sets the total amount of notes per octave (this means without scaling. western temperament = 12 notes) This can go up to even 128 notes per octave! Famous scales are 12, 19, 22, 31, 53.
+
+&quot;Use&quot; sets the amount of notes which are active in the scale (western temperament = 7 notes). This parameter is normalised to the &quot;notes&quot; parameter, so it always fits the total amount of notes per octave.
+
+&quot;Interval&quot; sets the interval by which the active notes are selected (western temperament = interval 7). This parameter is normalised to the &quot;notes&quot; parameter, so it always fits the total amount of notes per octave.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32 name="note"/>
+         <int32 name="notes"/>
+      </outlets>
+      <displays>
+         <int32.label name="use"/>
+         <int32.label name="interval"/>
+         <int32.label name="key"/>
+      </displays>
+      <params>
+         <frac32.s.map name="key"/>
+         <int32 name="notes">
+            <MinValue i="12"/>
+            <MaxValue i="128"/>
+         </int32>
+         <frac32.u.map name="use"/>
+         <frac32.u.map name="interval"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int array[64];
+int i;
+int j;
+int32_t temp[64];
+int32_t tamp[64];
+int8_t count;
+int32_t postnotes;
+int32_t postuse;
+int32_t postinterval;
+int32_t use;
+int32_t interval;
+int32_t key;
+]]></code.declaration>
+      <code.krate><![CDATA[
+
+use=___SMMUL(param_use<<3,param_notes<<2);
+interval=___SMMUL(param_interval<<3,param_notes<<2);
+key=___SMMUL(param_key<<3,param_notes<<2)*interval;
+key=(key)-(((key)/param_notes)*param_notes);
+key=key>=0?key:param_notes+key-1;
+disp_use=use;
+disp_interval=interval;
+disp_key=key;
+int32_t render;
+render=param_use==postuse?0:1;
+render+=param_interval==postinterval?0:1;
+render+=param_notes==postnotes?0:1;
+
+int32_t pitch;
+pitch=(inlet_pitch>>21)+key;
+int32_t patch;
+patch=pitch/param_notes;
+pitch=pitch-(patch*param_notes);
+pitch=pitch>=0?pitch:param_notes-1+pitch;
+
+if(render>0)
+{for(i=0;i<(use);i++)
+{array[i]=(i*interval)-(((i*interval)/param_notes)*param_notes);}}
+
+
+if(!(render>0))
+{
+for(j=0;j<(use-1);j++)
+{if(array[j]>array[j+1]){
+temp[j]=array[j+1];
+tamp[j]=array[j];
+array[j+1]=tamp[j];
+array[j]=temp[j];
+}}}
+
+outlet_note=(((array[pitch*use/param_notes]<<21)*12)/param_notes)+((12*patch)<<21)-((key<<21)*12/param_notes);
+
+postnotes=param_notes;
+postuse=param_use;
+postinterval=param_interval;
+outlet_notes=param_notes;]]></code.krate>
+   </obj.normal>
+</objdefs>
