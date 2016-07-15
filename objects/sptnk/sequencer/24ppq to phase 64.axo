@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="24ppq to phase 64" uuid="035de234-3018-4ade-a159-702cc6dbf4d7">
+      <sDescription>This object generates a phase signal that goes from 0 to 64 in 64 beats (16 quarters) when fed with a 24ppq signal.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <int32.positive name="24ppq"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="pos64q"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ppq=0;
+int ppqprev=0;
+float counter=0;
+int ppqcount=0;
+
+
+float bpm=0;
+
+uint32_t phase=0;]]></code.declaration>
+      <code.krate><![CDATA[counter+=1;
+phase +=  bpm*(2796202.6667);
+
+ppq = inlet_24ppq - 1536*(inlet_24ppq/1536);  
+									
+if (ppq!=ppqprev)
+{
+	phase = ppq*2796202.6667f;
+	
+		bpm=1.0f/counter;			
+		counter=0;
+}
+ppqprev = ppq;
+
+
+
+outlet_pos64q=phase>>5;
+
+//the bpm variable does not really contain bpm information.. ]]></code.krate>
+   </obj.normal>
+</objdefs>

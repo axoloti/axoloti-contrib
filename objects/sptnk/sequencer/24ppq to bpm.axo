@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="24ppq to bpm" uuid="082b822c-8cf2-46be-b041-62c5d6114eff">
+      <sDescription>This object can be used to detect the bpm speed of a midi clock signal expressed in 24ppq.
+Outlets:
+-bpm     - outputs the integer part of the bpm 
+-mill    - outputs the fractional part of the bpm
+-1000bpm - outputs bpm*100</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="24ppq"/>
+      </inlets>
+      <outlets>
+         <int32 name="bpm"/>
+         <int32 name="mill"/>
+         <int32 name="1000bpm"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int counter;
+int tcount;
+bool ttrig;
+int bpm;
+int mill;
+int _1000bpm; 
+int ppq_previous;]]></code.declaration>
+      <code.init><![CDATA[counter =0 ;
+ttrig =0;
+tcount =0;
+bpm=0;
+mill=0;
+_1000bpm=0;]]></code.init>
+      <code.krate><![CDATA[counter+=1;
+
+
+if (inlet_24ppq != ppq_previous)
+{
+	ppq_previous=inlet_24ppq;
+	tcount+=1;
+
+		if (tcount >23)
+		{
+			bpm = 180000/counter;
+			_1000bpm=180000000/counter;
+			mill = _1000bpm-bpm*1000;
+			tcount=0;
+			counter=0;
+		}
+}
+
+
+outlet_mill=mill;
+outlet_bpm=bpm;
+outlet_1000bpm=_1000bpm;]]></code.krate>
+   </obj.normal>
+</objdefs>
