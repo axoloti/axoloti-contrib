@@ -1,0 +1,93 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="allphaseHQ" uuid="5007c0ce-9ae5-470d-ac42-1379622aad33">
+      <sDescription>High quality allpass/phaser effect with internal memory.
+&quot;Max&quot; sets the maximum length of the buffer in power of 2.
+Read knob offsets the read input position.
+Feed allows to feed back the output into the input.
+Size sets the &quot;working&quot; size, thus you can adjust the size while playing.
+Dry and wet controls control the volume of original and phased signals.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="read"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="read"/>
+         <frac32.s.map name="feed"/>
+         <int32 name="size">
+            <MinValue i="1"/>
+            <MaxValue i="13"/>
+         </int32>
+         <frac32.s.map name="dry"/>
+         <frac32.s.map name="wet"/>
+      </params>
+      <attribs>
+         <spinner name="max" MinValue="2" MaxValue="13" DefaultValue="8"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t delay[1<<attr_max];
+int32_t position;
+int64_t read;
+int64_t rea1;
+int64_t rea2;
+int64_t rea3;
+int64_t reb1;
+int64_t reb2;
+int64_t reb3;
+int64_t raad;
+int64_t reed;
+int64_t out;
+int64_t mix;
+int32_t ccomp;
+int64_t prev;
+int64_t READ;
+int64_t ofs1;
+int64_t ofs2;
+int64_t ofs3;
+float32_t scale;
+int32_t prav;
+int8_t dir;
+int16_t size;]]></code.declaration>
+      <code.krate><![CDATA[raad=(1<<27)-((param_read+inlet_read)&((1<<27)-1));
+dir=raad>prav?1:0;
+size=param_size>attr_max?attr_max:param_size;
+
+prav=raad;]]></code.krate>
+      <code.srate><![CDATA[position+=1;
+position=position-((position>>size)<<size);
+
+reed=reed+((raad-reed)>>9);
+READ=((reed)>>(27-size));
+
+if(!(READ==prev)){
+     ofs1=ofs2;
+     ofs2=ofs3;
+	ofs3=READ;
+}
+
+
+rea1=position+ofs1;
+rea2=position+ofs2;
+rea3=position+ofs3;
+rea1=rea1-((rea1>>size)<<size);
+rea2=rea2-((rea2>>size)<<size);
+rea3=rea3-((rea3>>size)<<size);
+
+
+mix=reed-((READ<<27)>>size);
+mix=(mix<<size);
+if(dir==1)
+{mix=(1<<27)-mix;}
+ccomp=(1<<27)-mix;
+
+delay[position]=inlet_in+___SMMUL(out<<3,param_feed<<2);
+out=(delay[rea2]+___SMMUL(mix<<3,delay[rea1]<<2)+___SMMUL(ccomp<<3,delay[rea3]<<2))>>1;
+
+outlet_out=___SMMUL(param_wet<<2,out<<3)+___SMMUL(param_dry<<2,inlet_in<<3);
+prev=READ;]]></code.srate>
+   </obj.normal>
+</objdefs>
