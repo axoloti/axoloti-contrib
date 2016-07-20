@@ -1,19 +1,20 @@
-<objdefs>
-   <obj.normal id="turing" uuid="a453b67d20eff2de8f96b5d6c135143c1999317a" sha="ffb621cd98cfe15d04dbdb022de3ae3878ef0d8">
+<objdefs appVersion="1.0.10">
+   <obj.normal id="turing" uuid="a453b67d20eff2de8f96b5d6c135143c1999317a">
       <sDescription>Turing Machine Random Looping Sequencer</sDescription>
       <author>Jérôme Burlando</author>
       <license>BSD</license>
       <helpPatch>turing.axh</helpPatch>
       <inlets>
-	 <int32 name="initvalue" description="Buffer init value for current buffer"/>
-	 <int32 name="trigmask" description="If current_buffer and (bitwise operator) trig_mask > 0 then output pulse"/>
+         <int32 name="initvalue" description="Buffer init value for current buffer"/>
+         <int32 name="trigmask" description="If current_buffer and (bitwise operator) trig_mask &gt; 0 then output pulse"/>
          <bool32.rising name="trig" description="Tempo entry"/>
          <frac32.positive name="random" description="Random entry"/>
       </inlets>
       <outlets>
-	 <int32 name="initvalue" description="Buffer init value of current buffer"/>
+         <int32 name="initvalue" description="Buffer init value of current buffer"/>
          <frac32.bipolar name="note" description="Output note"/>
-         <bool32 name="o" description="Output pulse when current_buffer and (bitwise operator) trig_mask > 0"/>
+         <bool32 name="o" description="Output pulse when current_buffer and (bitwise operator) trig_mask &gt; 0"/>
+         <bool32 name="o2"/>
       </outlets>
       <displays/>
       <params/>
@@ -35,6 +36,8 @@ bufferinitvalue = 0;
 ]]></code.init>
       <code.krate><![CDATA[
 outlet_o = 0;
+outlet_o2 = 0;
+
 if(inlet_trig > 0 && !ntrig){
     ntrig = 1;
 
@@ -55,7 +58,10 @@ if(inlet_trig > 0 && !ntrig){
     }
     buffer = (buffer >> 1) | (newbit << 7);
 
-    if((inlet_trigmask & buffer) > 0) outlet_o = 1;
+    
+} else {
+	if((inlet_trigmask & buffer) > 0) outlet_o = 1; // Pour maintenir la note jusqu'au prochain trig
+	if(buffer & 1) outlet_o2 = 1;
 }
 
 if(!(inlet_trig > 0)) ntrig = 0;

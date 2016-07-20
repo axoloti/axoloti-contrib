@@ -9,6 +9,7 @@
          <bool32.rising name="trig" description=""/>
          <frac32 name="pitch"/>
          <bool32.risingfalling name="revert"/>
+         <bool32.risingfalling name="retrig"/>
       </inlets>
       <outlets>
          <frac32buffer name="o"/>
@@ -19,12 +20,12 @@
       <displays>
          <bool32 name="rec"/>
          <bool32 name="play"/>
+         <bool32 name="retrig"/>
       </displays>
       <params>
          <frac32.u.map name="attack_threshold"/>
          <frac32.s.map name="decay_threshold"/>
          <frac32.u.map name="silence_threshold"/>
-         <bool32.tgl name="retrig"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[static const uint32_t LENGTH = 262144; 		// 5,46133.. seconds
@@ -163,8 +164,9 @@ silencethreshold = param_silence__threshold >> SCALE;
 /* Play logic */
 /**************/
 
-if((inlet_trig > 0) && !ntrig && !rec && (param_retrig || !play)){
-	if(param_retrig && play) {
+if((inlet_trig > 0) && !ntrig && !rec && (inlet_retrig || !play)){
+	revert = inlet_revert;
+	if(inlet_retrig && play) {
 		fadeoutphase = HANMID;
 	} else {
 		MTOFEXTENDED(inlet_pitch, f0);
@@ -176,7 +178,6 @@ if((inlet_trig > 0) && !ntrig && !rec && (param_retrig || !play)){
 	}
 	play = 1;
 	ntrig = 1;
-	revert = inlet_revert;
 } else if(!(inlet_trig > 0) && ntrig) {
 	ntrig = 0;
 }
@@ -222,6 +223,7 @@ curchunk %= NB_CHUNK_FRAME;
 /************************/
 disp_rec = rec;
 disp_play = play;
+disp_retrig = inlet_retrig;
 outlet_rec__status = rec;
 outlet_attack = peakenvelope << 2;
 outlet_decay = diff << (SCALE - 2);]]></code.krate>
