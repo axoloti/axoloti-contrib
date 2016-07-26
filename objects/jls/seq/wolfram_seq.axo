@@ -1,6 +1,6 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="wolfram_seq" uuid="54350c99-74d8-4c5f-b7d1-499d455bb674">
-      <sDescription>Wolfram cellular automata sequencer</sDescription>
+   <obj.normal id="wolfram_seq" uuid="d5dce04b-f00d-487d-935a-8d7ef7349046">
+      <sDescription>Wolfram cellular automata sequencer - https://en.wikipedia.org/wiki/Elementary_cellular_automaton</sDescription>
       <author>JLS</author>
       <license>BSD</license>
       <helpPatch>wolfram_seq.axh</helpPatch>
@@ -32,7 +32,7 @@
       </displays>
       <params/>
       <attribs>
-         <combo name="seed">
+         <combo name="width" description="bit width">
             <MenuEntries>
                <string>8</string>
                <string>16</string>
@@ -56,18 +56,18 @@
                <string>2048</string>
             </CEntries>
          </combo>
+         <spinner name="rule" description="rule" MinValue="0" MaxValue="255" DefaultValue="30"/>
       </attribs>
       <code.declaration><![CDATA[int gate1,gate2;
 
-int out[attr_seed];
+int out[attr_width];
 
 int b0,b1,b2,b3,b4,b5,b6,b7;
 
-
 int rules[8];
 
-int state[attr_seed];
-int newstate[attr_seed];
+int state[attr_width];
+int newstate[attr_width];
 int i,k;]]></code.declaration>
       <code.init><![CDATA[gate1 = 0;
 gate2 = 0;
@@ -75,29 +75,30 @@ gate2 = 0;
 i = 0;
 k = 0;
 
-rules[0] = 0;
-rules[1] = 1;
-rules[2] = 1;
-rules[3] = 1;
-rules[4] = 1;
-rules[5] = 0;
-rules[6] = 0;
-rules[7] = 0;
+for (i=0;i<attr_width;i++) state[i] = GenerateRandomNumber()%3;
+for (i=0;i<attr_width;i++) newstate[i] = 0;
 
-for (i=0;i<attr_seed;i++) state[i] = GenerateRandomNumber()%3;
-for (i=0;i<attr_seed;i++) newstate[i] = 0;]]></code.init>
+rules[0] = (attr_rule & 0x01)?1:0;
+rules[1] = (attr_rule & 0x02)?1:0;
+rules[2] = (attr_rule & 0x04)?1:0;
+rules[3] = (attr_rule & 0x08)?1:0;
+rules[4] = (attr_rule & 0x10)?1:0;
+rules[5] = (attr_rule & 0x20)?1:0;
+rules[6] = (attr_rule & 0x40)?1:0;
+rules[7] = (attr_rule & 0x80)?1:0;]]></code.init>
       <code.krate><![CDATA[{
 
 if ((inlet_trig) && gate1) {
 
-	for (i=0;i<attr_seed;i++) {
+	for (i=0;i<attr_width;i++) {
 
-         k = 4*state[(i-1+attr_seed)%attr_seed] + 2*state[i] + state[(i+1)%attr_seed];
+         k = 4*state[(i-1+attr_width)%attr_width] + 2*state[i] + state[(i+1)%attr_width];
+         
          newstate[i] = rules[k];
          
 	}
 
-	for (i=0;i<attr_seed;i++) { 
+	for (i=0;i<attr_width;i++) { 
 		
 		state[i] = newstate[i];
 
@@ -109,9 +110,12 @@ if ((inlet_trig) && gate1) {
 
 	if (inlet_rst && gate2) {
 
-		for (i=0;i<attr_seed;i++) newstate[i] = 0;
-		for (i=0;i<attr_seed;i++) state[i] = GenerateRandomNumber()%3;
+		for (i=0;i<attr_width;i++) newstate[i] = 0;
+		
+		for (i=0;i<attr_width;i++) state[i] = GenerateRandomNumber()%3;
+		
 		k = 0;
+		
 		gate2 = 0;
 		
 	}
