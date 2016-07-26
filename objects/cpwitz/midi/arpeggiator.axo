@@ -1,46 +1,44 @@
 <objdefs appVersion="1.0.10">
    <obj.normal id="arpeggiator" uuid="cpwitz-midi-arpeggiator">
-      <sDescription>MIDI arpeggiator. Receives MIDI notes on the channel set with the attribute MIDIchannel (0=all channels). Arpeggio directions: Up, down, up/down, random and play order. Configurable note length and velocity (velocity setting 0 uses the velocity of the played note). &quot;Hold mode &quot; to latch played notes (MIDI sustain pedal also triggers hold). Needs to be clocked from an LFO or MIDI clock input to produce notes. Semitone transpose input. Can add up to 3 octaves to the arpeggiated notes. &quot;Retrigger &quot; checkbox: If the notelength is longer than the clock interval, retriggers the gate every time a new arpeggio note is played. &quot;Ignore &quot; inlet: incoming MIDI notes are ignored as long as input is &quot;high&quot;. Special feature: If &quot;ignore&quot; is on and &quot;hold&quot; is re-enabled, the last used latched notes are loaded again.
-      </sDescription>
+      <sDescription>MIDI arpeggiator. Receives MIDI notes on the channel set with the attribute MIDIchannel (0=all channels). Arpeggio directions: Up, down, up/down, random and play order. Configurable note length and velocity (velocity setting 0 uses the velocity of the played note). &quot;Hold mode &quot; to latch played notes (MIDI sustain pedal also triggers hold). Needs to be clocked from an LFO or MIDI clock input to produce notes. Semitone transpose input. Can add up to 3 octaves to the arpeggiated notes. &quot;Retrigger &quot; checkbox: If the notelength is longer than the clock interval, retriggers the gate every time a new arpeggio note is played. &quot;Ignore &quot; inlet: incoming MIDI notes are ignored as long as input is &quot;high&quot;. Special feature: If &quot;ignore&quot; is on and &quot;hold&quot; is re-enabled, the last used latched notes are loaded again.</sDescription>
       <author>Peter Witzel</author>
       <license>CC0</license>
       <helpPatch>arpeggiator.axh</helpPatch>
       <inlets>
-      <bool32.rising name="clock"/>
-      <bool32 name="hold" description="hold arpeggio"/>
-      <bool32 name="double" description="double stroke each arpeggiated note"/>
-      <int32.positive name="direction" description="arp direction (0-4)"/>
-      <int32.positive name="octaves" description="number of addition octaves (0-3)"/>
-      <int32.bipolar name="transpose" description="transpose semitones"/>
-      <frac32.bipolar name="notelength" description="modulate note length"/>
-      <bool32 name="ignore" description="don&apos;t receive midi notes!"/>
-   </inlets>
-   <outlets>
-      <frac32.bipolar name="pitch"/>
-      <frac32.positive name="velocity"/>
-      <bool32 name="gate"/>
-      <int32.positive name="notes" description="number of notes in arpeggio"/>
-   </outlets>
-   <displays>
-      <int32.label name="notes"/>
-      <bool32 name="holding"/>
-   </displays>
-   <params>
-      <int32.hradio name="direction" description="↑, ↓, ↕, rand, order">
-         <MaxValue i="5"/>
-      </int32.hradio>
-      <frac32.s.map.klineartime.exp name="notelength"/>
-      <bool32.tgl name="retrigger" description="retrigger gate if notelength is longer than clock input"/>
-      <int32.hradio name="octaves">
-         <MaxValue i="4"/>
-      </int32.hradio>
-      <frac32.u.map name="velocity" description="0=as played"/>
-   </params>
-   <attribs>
-      <spinner name="MIDIchannel" description="arpeggio input midi channel (0=all channels)" MinValue="0" MaxValue="16" DefaultValue="0"/>
-   </attribs>
-   <includes/>
-   <code.declaration><![CDATA[int8_t notes[128];
+         <bool32.rising name="clock"/>
+         <bool32 name="hold" description="hold arpeggio"/>
+         <bool32 name="double" description="double stroke each arpeggiated note"/>
+         <int32.positive name="direction" description="arp direction (0-4)"/>
+         <int32.positive name="octaves" description="number of addition octaves (0-3)"/>
+         <int32.bipolar name="transpose" description="transpose semitones"/>
+         <frac32.bipolar name="notelength" description="modulate note length"/>
+         <bool32 name="ignore" description="don&apos;t receive midi notes!"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.positive name="velocity"/>
+         <bool32 name="gate"/>
+         <int32.positive name="notes" description="number of notes in arpeggio"/>
+      </outlets>
+      <displays>
+         <int32.label name="notes"/>
+         <bool32 name="holding"/>
+      </displays>
+      <params>
+         <int32.hradio name="direction" description="↑, ↓, ↕, rand, order">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <frac32.s.map.klineartime.exp name="notelength"/>
+         <bool32.tgl name="retrigger" description="retrigger gate if notelength is longer than clock input"/>
+         <int32.hradio name="octaves">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.u.map name="velocity" description="0=as played"/>
+      </params>
+      <attribs>
+         <spinner name="MIDIchannel" description="arpeggio input midi channel (0=all channels)" MinValue="0" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t notes[128];
 int8_t notes_ord[128];
 int8_t released_on_hold[128];
 int8_t latched_notes[256]; // holdes last latched and ordered notes
@@ -61,7 +59,7 @@ int32_t gateval;
 int32_t outpitch;
 uint32_t outvelo;
 int secondclock;]]></code.declaration>
-   <code.init><![CDATA[outpitch = 0;
+      <code.init><![CDATA[outpitch = 0;
 outvelo = 0;
 notecount = 0;
 ntrigclock = 0;
@@ -86,7 +84,7 @@ for (int i=0;i<128;i++) {
   latched_notes[i] = latched_notes[i+128] = 0;
 }
 ]]></code.init>
-   <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
+      <code.krate><![CDATA[if ((inlet_clock>0) && !ntrigclock) {
    // clock received
    if (notecount>0) {
 	   if (inlet_double>0 && secondclock>0) {
@@ -299,7 +297,7 @@ if (holding==1 && new_holding==0) {
 }
 holding = new_holding;
 disp_holding = holding;]]></code.krate>
-   <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
+      <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
 int cmd = (status & 0x70) >> 4;
 
 if ((channel!=attr_MIDIchannel && attr_MIDIchannel>0) || dehold_lock) {
@@ -324,6 +322,7 @@ if (cmd==1 && ignored==0) {
 		notes_ord[notecount-1] = data1;
 	}
 	notes[data1] = data2;
+	released_on_hold[data1] = 0;
 }
 else if (cmd==0) {
 	// note off
