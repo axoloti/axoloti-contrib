@@ -1,0 +1,165 @@
+<patch-1.0 appVersion="1.0.10">
+   <comment type="patch/comment" x="28" y="14" text="Example script to drive WS2811 LED strings"/>
+   <comment type="patch/comment" x="28" y="42" text="you need to connect PB8 to PA5 !"/>
+   <comment type="patch/comment" x="28" y="70" text="WS2811 data out is on PA6 "/>
+   <obj type="script/script2" uuid="d39e743cf47c9221f4e99c133430148cf74c68c5" name="script2_1" x="28" y="98">
+      <params/>
+      <attribs>
+         <text attributeName="script">
+            <sText><![CDATA[static const int nleds = 10;
+typedef struct {
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+} rgb_t;
+
+rgb_t *rgb;
+
+// you need to connect PB8 to PA5 !!!
+// WS2811 data out is on PA6
+
+void setup(){
+ // create 0.3125 us period squarewave on PB8
+   static const PWMConfig pwmcfg = {6400000, 
+                                 2, 
+                                 NULL, { {PWM_OUTPUT_ACTIVE_HIGH, NULL}, {
+                                     PWM_OUTPUT_ACTIVE_HIGH, NULL},
+                                        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, {
+                                            PWM_OUTPUT_ACTIVE_HIGH, NULL}},
+                                 0};
+   pwmStop(&PWMD4);
+   pwmStart(&PWMD4, &pwmcfg);
+   palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(2));
+   pwmEnableChannel(&PWMD4, 2, (pwmcnt_t)1);
+
+// force spi slave
+   palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(5));// SCK
+   palSetPadMode(GPIOA, 6, PAL_MODE_ALTERNATE(5));// MISO
+   palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5));// MOSI
+
+  static const SPIConfig spicfg =
+    {NULL, GPIOA, 15, SPI_CR1_BR_0 | SPI_CR1_BR_1};
+
+   spiStart(&SPID1, &spicfg);
+   SPID1.spi->CR1 &= ~SPI_CR1_SPE;
+   SPID1.spi->CR1 &= ~SPI_CR1_MSTR;
+   SPID1.spi->CR1 &= ~SPI_CR1_SSM;
+   SPID1.spi->CR1 &= ~SPI_CR1_SSI;
+   SPID1.spi->CR1 |= SPI_CR1_SPE;
+
+   static rgb_t _rgb[nleds];
+   rgb = &_rgb[0];
+
+   int i;
+   for(i=0;i<nleds;i++){
+   	rgb[i].r=0;
+   	rgb[i].g=0;
+   	rgb[i].b=0;
+   }
+}
+
+
+void example_lightshow() {
+   // scrolling colors
+   int i,j;
+   static int s=0;
+   for(i=0;i<nleds;i++){
+     rgb[i].r = 0;
+     rgb[i].g = 0;
+     rgb[i].b = 0;
+   	int v = ((s>>1) + (i*32))&0xFF;
+   	if (v<0x80) {
+   	   rgb[i].r = v<<1;
+   	} else {
+   	   rgb[i].r = 0xFF - (v<<1);
+   	}
+   	v = (v+85)&0xFF;
+   	if (v<0x80) {
+   	   rgb[i].g = v<<1;
+   	} else {
+   	   rgb[i].g = 0xFF - (v<<1);
+   	}
+   	v = (v+85)&0xFF;
+   	if (v<0x80) {
+   	   rgb[i].b = v<<1;
+   	} else {
+   	   rgb[i].b = 0xFF - (v<<1);
+   	}
+   }
+   s++;
+}
+
+void setv(int v, uint8_t *p) {
+	// expands intensity value v 
+	// into 4 spi data bytes at p
+	// for WS2811
+	*p=0x88;
+	if (v & 0x80){
+		*p |= 0x40;
+	}
+	if (v & 0x40){
+		*p |= 0x04;
+	}
+	p++;
+	*p=0x88;
+	if (v & 0x20){
+		*p |= 0x40;
+	}
+	if (v & 0x10){
+		*p |= 0x04;
+	}
+	p++;
+	*p=0x88;
+	if (v & 0x08){
+		*p |= 0x40;
+	}
+	if (v & 0x04){
+		*p |= 0x04;
+	}
+	p++;
+	*p=0x88;
+	if (v & 0x02){
+		*p |= 0x40;
+	}
+	if (v & 0x01){
+		*p |= 0x04;
+	}
+}
+
+void loop(){
+
+   example_lightshow();
+
+   int i,j,k;
+   static uint8_t _txbuf[8+nleds*3*4] __attribute__ ((section (".sram2")));
+   static uint8_t _rxbuf[8+nleds*3*4] __attribute__ ((section (".sram2")));
+   _txbuf[nleds*3*4] = 0x88;
+   _txbuf[1+nleds*3*4] = 0;
+   uint8_t *p = &_txbuf[0];
+   for(i=0;i<nleds;i++){
+   	setv(rgb[i].r,p);
+   	p+=4;
+   	setv(rgb[i].g,p);
+   	p+=4;
+   	setv(rgb[i].b,p);
+   	p+=4;   	
+   }
+   spiExchange(&SPID1,2+nleds*3*4,&_txbuf[0],&_rxbuf[0]);
+   chThdSleepMilliseconds(3);
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <nets/>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>265</x>
+      <y>117</y>
+      <width>400</width>
+      <height>400</height>
+   </windowPos>
+</patch-1.0>
