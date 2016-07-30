@@ -1,0 +1,110 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="SN1" uuid="4b65e90e-1244-4ba7-9b55-e2afb4b78a95">
+      <sDescription>snare</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <bool32 name="gate"/>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch1" noLabel="true"/>
+         <frac32.s.map name="pitch2"/>
+         <frac32.u.map name="Penv"/>
+         <frac32.u.map name="Pdec"/>
+         <frac32.u.map name="Ndec"/>
+         <frac32.u.map name="Vdec"/>
+         <int32 name="octaves">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase1;
+uint32_t Phase2;
+int32_t ad1;
+int32_t ad2;
+int32_t ad3;
+int32_t freq;
+int32_t decay1;
+int32_t decay2;
+int32_t decay3;
+int ttrig;
+static const int noct = 10;
+int32_t obuf[noct];
+int32_t sum;
+uint32_t seed;
+int index;
+const int8_t * dyadictree(void){
+   static const int8_t dtree[] = {
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,6,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,7};
+   return dtree;
+}
+]]></code.declaration>
+      <code.init><![CDATA[Phase1 = 0;
+Phase2 = 0;
+int i;
+for(i=0;i<noct;i++)
+   obuf[i]=0;
+index = 0;
+sum = 0;
+seed = 0x830af41e + GenerateRandomNumber();
+]]></code.init>
+      <code.krate><![CDATA[decay1=(1<<27)-param_Pdec;
+decay1=___SMMUL(decay1<<3,decay1<<2);
+decay1=___SMMUL(decay1<<3,decay1<<2);
+decay1=(1<<27)-decay1;
+decay2=(1<<27)-param_Vdec;
+decay2=___SMMUL(decay2<<3,decay2<<2);
+decay2=___SMMUL(decay2<<3,decay2<<2);
+decay2=(1<<27)-decay2;
+decay3=(1<<27)-param_Ndec;
+decay3=___SMMUL(decay3<<3,decay3<<2);
+decay3=___SMMUL(decay3<<3,decay3<<2);
+decay3=(1<<27)-decay3;
+]]></code.krate>
+      <code.srate><![CDATA[int o = dyadictree()[index++];
+if (o==param_octaves){
+   index=0;
+} else {
+   sum -= obuf[o];
+   seed = (seed * 196314165) + 907633515;
+   obuf[o] = ((int32_t)seed)>>7;
+   sum += obuf[o];
+}
+seed = (seed * 196314165) + 907633515;
+int32_t noise= sum + (((int32_t)seed)>>param_octaves);
+
+
+
+if((inlet_gate>0)&&(!(ttrig)))
+{Phase1=0;
+Phase2=0;
+ad1=(1<<27);
+ad2=(1<<27);
+ad3=(1<<27);
+}
+ad1=___SMMUL(ad1<<3,decay1<<2);
+ad2=___SMMUL(ad2<<3,decay2<<2);
+ad3=___SMMUL(ad3<<3,decay3<<2);
+MTOFEXTENDED(param_pitch1 + inlet_pitch+___SMMUL(ad1<<3,param_Penv<<2),freq);
+Phase1 += freq + inlet_freq;
+Phase2 += freq+inlet_freq+___SMMUL(param_pitch2<<3,(freq + inlet_freq)<<5);
+int32_t r1;
+int32_t r2;
+SINE2TINTERP(Phase1,r1)
+SINE2TINTERP(Phase2,r2)
+outlet_wave= ___SMMUL(ad3<<3,(noise>>3)+(___SMMUL(ad2<<3,(r1>>1)+(r2>>1))));
+]]></code.srate>
+   </obj.normal>
+</objdefs>
