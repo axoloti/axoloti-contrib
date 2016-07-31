@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="syncModOsc" uuid="a89c8601-4557-44fa-9091-74ba5c92f7c2">
+      <sDescription>multi modulated oscillator on sine basis.
+&quot;pitch&quot; controls pitch in normal logarithic sense
+&quot;lin&quot; adds a linear offset to the rate of the oscillator
+&quot;LFM&quot; and &quot;EFM&quot; are modulation width controls for linear and exponential modulation
+&quot;SoftFM&quot; controls the width of the phase modulation by pseudo-derivative of sync-input.
+&quot;PM&quot; controls the width of the normal phase modulation
+&quot;AM&quot; controls the width of amplitude modulation
+&quot;hardsync&quot; resets phase to zero immediatly at sync&gt;0.
+&quot;soft&quot; resets phase to zero at sync&gt;0, but smoothed by a lowpass filter, which is controlled by &quot;softness&quot;
+&quot;SH&quot; takes current wave-output value and adds it as an offset at sync&gt;0, smoothed by the &quot;smoothSH&quot; control
+&quot;reverse&quot; reverses play direction at sync&gt;0
+&quot;shift&quot; shifts the phase by the amount of the pseudo derivate of the sync signal when sync&gt;0
+
+features external &quot;modulation width&quot; inputs to control those with LFO&apos;s, sequencers or envelopes.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="LFM" description="linear FM audio input"/>
+         <frac32 name="LFW" description="linear FM width control"/>
+         <frac32buffer name="EFM" description="exponential FM audio input"/>
+         <frac32 name="EFW" description="exponential FM width control"/>
+         <frac32 name="softFM" description="softFM width control"/>
+         <frac32buffer name="phase" description="phase modulation audio input"/>
+         <frac32 name="PMW" description="phase modulation width control"/>
+         <frac32buffer name="AM" description="amplitude modulation audio input"/>
+         <frac32 name="AW" description="amplitude modulation width control"/>
+         <frac32buffer name="sync" description="sync audio input"/>
+         <frac32 name="softness" description="softsync softness control"/>
+         <frac32 name="smoothSH" description="smoothSH softness control"/>
+         <bool32 name="hardsync" description="off/on hardsync control"/>
+         <bool32 name="softsync" description="off/on softsync control"/>
+         <bool32 name="smthSH" description="off/on smoothSH control"/>
+         <bool32 name="reverse" description="off/on reverse control"/>
+         <bool32 name="shift" description="off/on shift control"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="logarithmic pitch control (normal)"/>
+         <frac32.s.map name="lin" description="linear pitch detune"/>
+         <frac32.s.map name="LFM" description="linear FM width"/>
+         <frac32.s.map name="EFM" description="exponential FM width"/>
+         <frac32.s.map name="softFM" description="softFM width"/>
+         <frac32.s.map name="PM" description="phase modulation width"/>
+         <frac32.s.map name="AM" description="amplitude modulation width"/>
+         <bool32.tgl name="hardsync" description="hardsyncs signal to phase=0 at sync"/>
+         <bool32.tgl name="soft" description="softsyncs signal to phase=0 at sync"/>
+         <bool32.tgl name="SH" description="adds current wave-position as offset to the wave at sync"/>
+         <bool32.tgl name="reverse" description="reverses play direction at sync"/>
+         <bool32.tgl name="shift" description="shifts at sync by pseudoderivative of sync signal"/>
+         <frac32.s.map.pitch name="softness" description="smooths out softsync"/>
+         <frac32.s.map.pitch name="smoothSH" description="smooths out SH sync"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t prev;
+int32_t r;
+int32_t p2;
+int trig;
+int32_t val1;
+int32_t val2;
+int32_t vol;
+int32_t prav;
+int8_t dir;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+dir=1;]]></code.init>
+      <code.krate><![CDATA[
+   int32_t fq;
+   MTOF(param_softness+inlet_softness+inlet_pitch,fq);
+      int32_t fs;
+   MTOF(param_smoothSH+inlet_pitch,fs);
+   int32_t ccomp;
+   ccomp=(1<<27)-((param_AM+inlet_AW)>0?(param_AM+inlet_AW):(-param_AM-inlet_AW));]]></code.krate>
+      <code.srate><![CDATA[   int32_t freq;
+   MTOFEXTENDED(param_pitch+___SMMUL((param_EFM+inlet_EFW)<<3,inlet_EFM<<2) + inlet_pitch,freq);
+Phase += (param_lin+freq + ___SMMUL(inlet_LFM<<3,(param_LFM+inlet_LFW)<<2)+(___SMMUL((inlet_sync-prev)<<5,(param_softFM+inlet_softFM)<<4)<<2))*dir;
+if((inlet_sync>0)&&(!(trig))){
+trig=1;
+if(param_hardsync+inlet_hardsync>0){Phase=0;}
+if(param_soft+inlet_softsync>0){vol=-p2;}
+if(param_SH+inlet_smthSH>0){prav=-(r>>5);}
+if(param_reverse+inlet_reverse>0){dir=dir>0?-1:1;;}
+if(param_shift+inlet_shift>0){Phase=Phase-((inlet_sync-prev)<<3);}
+
+}
+else if(inlet_sync<=0){trig=0;}
+val2 = ___SMMLA((prav-val2)<<1,fs,val2);
+val1 = ___SMMLA((vol-val1)<<1,fq,val1);
+p2 = Phase + val1+(___SMMUL(inlet_phase<<4,(param_PM+inlet_PMW)<<4)<<4);
+SINE2TINTERP(p2,r)
+
+outlet_wave= ___SMMUL((((r)>>5)+val2*((param_SH+inlet_smthSH)>0?1:0))<<3,(ccomp+___SMMUL((param_AM+inlet_AW)<<3,inlet_AM<<2)<<2));
+prev=inlet_sync;]]></code.srate>
+   </obj.normal>
+</objdefs>
