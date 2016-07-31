@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="multiladder" uuid="f7da6498-a797-4e9d-828a-b658c045a102">
+   <obj.normal id="multiladder" uuid="70b742f2-e51a-4dd8-82ff-432afb8f5ea8">
       <sDescription>nth order lowpass and bandpass filter (max filters=32)
 freq sets cutoff center frequency
 spread spreads the cutoff frequencies between cascaded filters (for HP inversed), so can be seen as slope-control.
@@ -32,12 +32,12 @@ gain boosts the resonance in the feedback loop-&gt;adds upper harmonics to the r
          <frac32.s.map name="spread"/>
          <frac32.u.map name="BW"/>
          <frac32.u.map name="res"/>
-         <int32 name="LPcasc">
+         <int32 name="LP">
             <MinValue i="0"/>
             <MaxValue i="32"/>
          </int32>
          <int32 name="HP">
-            <MinValue i="1"/>
+            <MinValue i="0"/>
             <MaxValue i="32"/>
          </int32>
          <int32 name="feed">
@@ -60,10 +60,10 @@ int32_t vola;]]></code.declaration>
       <code.init><![CDATA[for(i=0;i<33;i++)
 {val[i] = 0;}
 ]]></code.init>
-      <code.krate><![CDATA[for(i=0;i<=param_LPcasc;i++)
+      <code.krate><![CDATA[for(i=0;i<=(param_LP+param_HP);i++)
 {if(i>0)
-MTOF(inlet_BW+param_BW+param_freq+inlet_freq+___SMMUL(((param_spread+inlet_spread)/param_LPcasc)<<4,i<<26),f[i]);
-MTOF(-inlet_BW-param_BW+param_freq+inlet_freq-___SMMUL(((param_spread+inlet_spread)/param_LPcasc)<<4,i<<26),g[i]);
+MTOF(inlet_BW+param_BW+param_freq+inlet_freq+___SMMUL(((param_spread+inlet_spread)/(param_LP+param_HP))<<4,i<<26),f[i]);
+MTOF(-inlet_BW-param_BW+param_freq+inlet_freq-___SMMUL(((param_spread+inlet_spread)/(param_LP+param_HP))<<4,i<<26),g[i]);
 }
 ]]></code.krate>
       <code.srate><![CDATA[   int32_t input=inlet_in;
@@ -79,9 +79,9 @@ volres=inlet_in+((param_max)-((param_max)-in)/gain)*dir;
 
 
    
-   for(i=1;i<=param_LPcasc;i++)
+   for(i=1;i<=(param_LP+param_HP);i++)
 {
-   if(i<param_HP)
+   if(i<=param_LP)
    {if(i==1)
         { 
    	     val[i] = ___SMMLA((volres-val[i])<<1,f[i],val[i]);}
@@ -91,7 +91,7 @@ volres=inlet_in+((param_max)-((param_max)-in)/gain)*dir;
         	vil[i]=val[i];
         }
    
-   if(i>=param_HP)
+   if(i>param_LP)
    {
    	if(i==1)
    	{
@@ -107,20 +107,20 @@ volres=inlet_in+((param_max)-((param_max)-in)/gain)*dir;
    
 }
    
-   if(param_LPcasc>0)
-   { 
-   	outlet_out= vil[param_LPcasc];}
-   if(param_LPcasc<1)
+   if((param_LP+param_HP)>0)
+   {outlet_out= vil[param_LP+param_HP];}
+   if((param_LP+param_HP)<1)
    {outlet_out=inlet_in;}
-   int resread=param_feed>param_LPcasc?param_LPcasc:param_feed;
    
-   if(resread<param_HP)
+   int resread=param_feed>=(param_LP+param_HP)?(param_LP+param_HP):param_feed;
+   
+   if(resread<param_LP)
    {if(resread>1)
    {resonance=val[resread]-vil[(resread)-1];}
    if(resread==1)
    {resonance=-inlet_in+val[resread];}}
  
-   if(resread>=param_HP)
+   if(resread>=param_LP)
    {if(resread>1)
    {resonance=val[resread];}
    if(resread==1)
