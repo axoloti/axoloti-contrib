@@ -1,11 +1,11 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="lorenz_osc" uuid="1b0ac9e2-ad25-410d-8484-fcfd74087c58">
-      <sDescription>Lorenz chaotic attractor - oscillator
+   <obj.normal id="rossler_osc" uuid="65306016-fa31-483b-8b09-64e612c2535d">
+      <sDescription>Rossler chaotic attractor - oscillator
 
-https://en.wikipedia.org/wiki/Lorenz_system</sDescription>
+https://en.wikipedia.org/wiki/R%C3%B6ssler_attractor</sDescription>
       <author>JLS</author>
       <license>BSD</license>
-      <helpPatch>lorenz_osc.axh</helpPatch>
+      <helpPatch>rossler_osc.axh</helpPatch>
       <inlets/>
       <outlets>
          <frac32buffer.bipolar name="x" description="axis x"/>
@@ -21,20 +21,20 @@ float y;
 float ty;
 float z;
 float tz;
-float s;
-float r;
+float a;
 float b;
+float c;
 float dt;]]></code.declaration>
       <code.init><![CDATA[x = 0.1;
 y = 0.1;
 z = 0.1;
-s = 10.0;
-r = 28.0;
-b = 2.66;
+a = 0.2;
+b = 0.2;
+c = 14.0;
 dt = 0.005;]]></code.init>
-      <code.srate><![CDATA[tx = s * (y - x);
-ty = (r * x) - y - (x * z);
-tz = (x * y) - (b * z);
+      <code.srate><![CDATA[tx = -y - z;
+ty = x + a * y;
+tz = b + z * (x - c);
 
 x = x + tx * dt;
 y = y + ty * dt;
@@ -42,7 +42,6 @@ z = z + tz * dt;
 
 outlet_x = (int32_t) (x * (1<<22));
 outlet_y = (int32_t) (y * (1<<22));
-outlet_z = (int32_t) (z * (1<<21));
-]]></code.srate>
+outlet_z = (int32_t) (z * (1<<20));]]></code.srate>
    </obj.normal>
 </objdefs>
