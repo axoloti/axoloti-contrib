@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="fineknob" uuid="64857110-b892-44b8-bd70-1b03dfc7c8a7">
+      <sDescription>integer and fractional knobs, wrapping when either boundary is reached
+
+use DRJ&apos;s  preset manager to save presets (or save all three knobs one by one manually...).</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>hook.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.positive name="out" description="output"/>
+      </outlets>
+      <displays>
+         <int32.label name="int"/>
+         <int32.label name="frac"/>
+      </displays>
+      <params>
+         <frac32.u.map name="frac" description="=value"/>
+         <frac32.s.map name="int" description="=mem2"/>
+         <frac32.s.map name="mem" description="=mem1"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t mem;
+int reset;]]></code.declaration>
+      <code.init><![CDATA[reset=1;]]></code.init>
+      <code.krate><![CDATA[if(reset==1)
+{
+	
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_int],(param_mem>>21)<<21,0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_frac],(param_mem<<10)>>4,0xFFFD);
+//	mem=param_mem2;
+	reset=0;
+}
+
+if(param_frac==((1<<27)-1))
+{
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_frac],1,0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_int],((param_int>>21)<<21)+(1<<21),0xFFFD);
+//	mem=param_mem2;
+}
+if(param_frac==0)
+{
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_frac],((1<<27)-2),0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_int],((param_int>>21)<<21)-(1<<21),0xFFFD);	
+//	mem=param_mem2;
+}
+
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_mem],(param_frac>>6)+((param_int>>21)<<21),0xFFFD);
+//	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_mem2],mem,0xFFFD);	
+outlet_out=param_mem;
+
+if(outlet_out>0)
+{
+	disp_int=outlet_out>>21;
+	disp_frac=(((((outlet_out-(disp_int<<21)))*1000)>>15)*1000)>>6;
+}
+else
+{
+	disp_int=(outlet_out>>21)+1;
+	disp_frac=-(1000000-((((((outlet_out-((disp_int-1)<<21)))*1000)>>15)*1000)>>6));
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
