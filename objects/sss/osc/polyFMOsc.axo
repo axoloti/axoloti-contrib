@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="polyFMOsc" uuid="c26bd293-4ebb-4f37-9d71-2f3bc58e9d72">
+   <obj.normal id="polyFMOsc" uuid="e5e92725-906e-4443-be7d-09ca4d65dec8">
       <sDescription>4-voice &quot;chord&quot; oscillator with internal FM and source selection for each of the 8 internal oscillators and individual amplitude control for the 4 voices.
 
 *connect a non-bandlimited saw-LFO to the &quot;morph&quot; input to update note-values and morph between the internal oscillators.
@@ -36,6 +36,7 @@ Glide generates a portamento for each oscillator, changing to another note.
          <frac32 name="fm6"/>
          <frac32 name="fm7"/>
          <frac32 name="fm8"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -99,8 +100,9 @@ int32_t omp[4];
 int8_t sel[8];
 int32_t fm[8];
 int32_t follow;
-]]></code.declaration>
-      <code.krate><![CDATA[int32_t morph=(inlet_morph+inlet_mod)&((1<<27)-1);
+int32_t morph;]]></code.declaration>
+      <code.krate><![CDATA[ if(inlet_active>0){  
+morph=(inlet_morph+inlet_mod)&((1<<27)-1);
 morph=morph<(1<<26)?morph<<1:(1<<27)-((morph-(1<<26))<<1);
 morph=(morph-(1<<26))*8/6+(1<<26);
 marph=marph+((morph-marph)>>1);
@@ -162,8 +164,9 @@ fm[7]=fm[7]+inlet_fm8;
 for(i=0;i<8;i++){
 fm[i]=___SMMUL(param_extfm<<3,___SMMUL(fm[i]<<2,___SMMUL(fm[i]<<3,fm[i]<<2)<<2)<<2);
 }
-]]></code.krate>
-      <code.srate><![CDATA[sum=0;
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){  
+sum=0;
 mirph=mirph+((marph-mirph)>>8);
 morph=mirph<0?0:mirph;
 morph=morph>(1<<27)?(1<<27):morph;
@@ -181,6 +184,6 @@ LP2=LP2+(((LP1)-LP2)>>1);
 HP=HP+((LP1-HP)>>12);
 outlet_out=LP1-HP;
 //outlet_out=wave[0]>>5;
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

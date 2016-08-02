@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="syncModOsc" uuid="a89c8601-4557-44fa-9091-74ba5c92f7c2">
+   <obj.normal id="syncModOsc" uuid="dec31a17-99b2-4ee3-a716-0d34d92a24c1">
       <sDescription>multi modulated oscillator on sine basis.
 &quot;pitch&quot; controls pitch in normal logarithic sense
 &quot;lin&quot; adds a linear offset to the rate of the oscillator
@@ -36,6 +36,7 @@ features external &quot;modulation width&quot; inputs to control those with LFO&
          <bool32 name="smthSH" description="off/on smoothSH control"/>
          <bool32 name="reverse" description="off/on reverse control"/>
          <bool32 name="shift" description="off/on shift control"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -67,17 +68,24 @@ int32_t val1;
 int32_t val2;
 int32_t vol;
 int32_t prav;
-int8_t dir;]]></code.declaration>
+int8_t dir;
+int32_t fq;
+int32_t fs;
+int32_t ccomp;
+
+]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
 dir=1;]]></code.init>
-      <code.krate><![CDATA[
-   int32_t fq;
+      <code.krate><![CDATA[ if(inlet_active>0){  
+   
    MTOF(param_softness+inlet_softness+inlet_pitch,fq);
-      int32_t fs;
+      
    MTOF(param_smoothSH+inlet_pitch,fs);
-   int32_t ccomp;
-   ccomp=(1<<27)-((param_AM+inlet_AW)>0?(param_AM+inlet_AW):(-param_AM-inlet_AW));]]></code.krate>
-      <code.srate><![CDATA[   int32_t freq;
+   
+   ccomp=(1<<27)-((param_AM+inlet_AW)>0?(param_AM+inlet_AW):(-param_AM-inlet_AW));
+ }]]></code.krate>
+      <code.srate><![CDATA[ if(inlet_active>0){  
+   int32_t freq;
    MTOFEXTENDED(param_pitch+___SMMUL((param_EFM+inlet_EFW)<<3,inlet_EFM<<2) + inlet_pitch,freq);
 Phase += (param_lin+freq + ___SMMUL(inlet_LFM<<3,(param_LFM+inlet_LFW)<<2)+(___SMMUL((inlet_sync-prev)<<5,(param_softFM+inlet_softFM)<<4)<<2))*dir;
 if((inlet_sync>0)&&(!(trig))){
@@ -96,6 +104,7 @@ p2 = Phase + val1+(___SMMUL(inlet_phase<<4,(param_PM+inlet_PMW)<<4)<<4);
 SINE2TINTERP(p2,r)
 
 outlet_wave= ___SMMUL((((r)>>5)+val2*((param_SH+inlet_smthSH)>0?1:0))<<3,(ccomp+___SMMUL((param_AM+inlet_AW)<<3,inlet_AM<<2)<<2));
-prev=inlet_sync;]]></code.srate>
+prev=inlet_sync;
+ }]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="3FMbandOsc" uuid="72d4bd38-b8f5-46e8-b609-84a697deadb2">
+   <obj.normal id="3FMbandOsc" uuid="41e92ce6-39d5-4499-bf62-ad9bc0c60a39">
       <sDescription>tripple sine wave oscillator with internal frequency modulation.
 
 NOTE!!!-&gt; sideband1 and sideband2 are sideband &quot;goal&quot; frequencies created by the FM! So these are not the actual rates of the oscillators!</sDescription>
@@ -14,6 +14,7 @@ NOTE!!!-&gt; sideband1 and sideband2 are sideband &quot;goal&quot; frequencies c
          <frac32buffer name="phase" description="phase"/>
          <frac32 name="FM1"/>
          <frac32 name="FM2"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -29,17 +30,23 @@ NOTE!!!-&gt; sideband1 and sideband2 are sideband &quot;goal&quot; frequencies c
       <attribs/>
       <code.declaration><![CDATA[uint32_t Phase1;
 uint32_t Phase2;
-uint32_t Phase3;]]></code.declaration>
+uint32_t Phase3;
+int32_t freq1;
+int32_t freq2;
+int32_t freq3;]]></code.declaration>
       <code.init><![CDATA[Phase1 = 0;
 Phase2 = 0;
 Phase3=0;]]></code.init>
-      <code.krate><![CDATA[   int32_t freq1;
+      <code.krate><![CDATA[
+   if(inlet_active>0){
    MTOFEXTENDED(param_pitch1 + inlet_pitch1,freq1);
-   int32_t freq2;
+   
    MTOFEXTENDED(param_sideband1 + inlet_sideband1,freq2);
-   int32_t freq3;
-   MTOFEXTENDED(param_sideband2 + inlet_sideband2,freq3);]]></code.krate>
-      <code.srate><![CDATA[int32_t FM1=param_FM1+inlet_FM1;
+   
+   MTOFEXTENDED(param_sideband2 + inlet_sideband2,freq3);
+   }]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t FM1=param_FM1+inlet_FM1;
 int32_t FM2=param_FM2+inlet_FM2;
 
 int32_t freqa=(freq2 - freq1);
@@ -60,6 +67,6 @@ int32_t r1;
 int32_t p1 = Phase1 + (inlet_phase<<4);
 SINE2TINTERP(p1,r1)
 outlet_wave= (r1>>4);
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

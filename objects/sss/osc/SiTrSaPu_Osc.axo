@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="SiTrSaPu_Osc" uuid="c991c232-07eb-41aa-ab44-4b74750e86da">
+   <obj.normal id="SiTrSaPu_Osc" uuid="87a0121c-c4db-4382-b582-4c73d70c44cd">
       <sDescription>description</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -11,6 +11,7 @@
          <frac32.positive name="slope"/>
          <frac32.positive name="shift"/>
          <frac32.positive name="saturate"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -38,14 +39,20 @@ int32_t Shift;
 int32_t Fmw;
 int32_t FMW;
 int32_t vil;
-int32_t HP;]]></code.declaration>
-      <code.krate><![CDATA[int32_t freq;
+int32_t HP;
+int32_t freq;
+int32_t saturate;
+float32_t scale;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
 MTOF(param_pitch+inlet_pitch,freq)
-int32_t saturate=((1<<27)-(param_saturate+inlet_saturate))+64;
+saturate=((1<<27)-(param_saturate+inlet_saturate))+64;
 saturate=saturate<64?64:saturate;
 saturate=saturate>((1<<27)-64)?((1<<27)-64):saturate;
-float32_t scale = (float)1/(((float)(1<<28))/((float)((1<<28)+((saturate)<<3))));]]></code.krate>
-      <code.srate><![CDATA[int32_t slape=__SSAT(param_slope+inlet_slope,28);
+scale = (float)1/(((float)(1<<28))/((float)((1<<28)+((saturate)<<3))));
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t slape=__SSAT(param_slope+inlet_slope,28);
 Slope=Slope+((slape-Slope)>>6);
 int32_t shaft=__SSAT(param_shift+inlet_shift,28);
 Shift=Shift+(((1<<27)-shaft-Shift)>>6);
@@ -72,6 +79,7 @@ int32_t dir=val>=0?1:-1;
 int32_t ccomp=(((float)(vol))/((float)(vol+((saturate)<<3))))*(1<<27)*dir*scale;
 vil=vil+((ccomp-vil)>>1);
 HP=HP + ((vil-HP)>>9);
-outlet_out=(vil-HP)>>1;]]></code.srate>
+outlet_out=(vil-HP)>>1;
+}]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="supertrisaw" uuid="fd2bfd9f-3dca-4339-98e4-c538225216d0">
+   <obj.normal id="supertrisaw" uuid="31e8d693-1278-4188-9a99-372253b95d5f">
       <sDescription>super triangle/saw-morpher
 up to 8 voices</sDescription>
       <author>Remco van der Most</author>
@@ -10,6 +10,7 @@ up to 8 voices</sDescription>
          <frac32buffer name="freq"/>
          <frac32buffer name="phase"/>
          <frac32.positive name="slope"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -35,15 +36,20 @@ int32_t out[8];
 int32_t Slope;
 int32_t Fmw;
 int32_t FMW;
-int i;]]></code.declaration>
-      <code.krate><![CDATA[
-
-
+int i;
 int32_t freq;
+int32_t fmw;
+int32_t slape;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
+
+
 MTOF(param_pitch+inlet_pitch,freq)
-int32_t slape=__SSAT(param_slope+inlet_slope,28);
-int32_t fmw=__SSAT(param_FM+inlet_FMW,29);]]></code.krate>
-      <code.srate><![CDATA[int32_t sum=0;
+slape=__SSAT(param_slope+inlet_slope,28);
+fmw=__SSAT(param_FM+inlet_FMW,29);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t sum=0;
 Slope=Slope+((slape-Slope)>>6);
 Fmw=Fmw+((fmw-Fmw)>>6);
 FMW=___SMMUL(inlet_freq<<4,(Fmw)<<2);
@@ -63,6 +69,7 @@ out[i]=-(((Phase[i]-(Slope<<5))>>5)*slope1n[i])-(1<<30);
 }
 sum+=(out[i]>>4)/(1+i/2);
 }
-outlet_out=sum>>1;]]></code.srate>
+outlet_out=sum>>1;
+}]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,0 +1,70 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="trisaw" uuid="5dd689cd-07f2-4ba8-bcd4-e4e6e4637fd3">
+      <sDescription>tri/saw oscillator with optional sine shaper</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32.bipolar name="FMW"/>
+         <frac32 name="slope"/>
+         <frac32buffer name="sync"/>
+         <bool32 name="active"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="sine"/>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="FM"/>
+         <frac32.u.map name="slope"/>
+         <frac32.s.map name="Swidth"/>
+         <frac32.s.map name="Slope"/>
+         <bool32.tgl name="AM"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+float32_t slope1n;
+uint64_t slope1d;
+uint64_t slope1e;
+int32_t out;
+int32_t sine;
+int32_t Slope;
+int32_t Fmw;
+int32_t FMW;
+int ttrig;
+int32_t freq;
+int32_t fmw;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
+MTOF(param_pitch+inlet_pitch,freq)
+
+fmw=__SSAT(param_FM+inlet_FMW,29);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+if((inlet_sync>0)&&(!(ttrig==1)))
+{ttrig=1;Phase=0;}
+else if(inlet_sync<0){ttrig=0;}
+
+int32_t slape=__SSAT(param_slope+___SMMUL((inlet_slope)<<3,param_Swidth<<2)+___SMMUL(inlet_sync<<3,param_Slope<<2),27);
+Slope=Slope+((slape-Slope)>>8);
+Fmw=Fmw+((fmw-Fmw)>>6);
+FMW=___SMMUL(inlet_sync<<4,(Fmw)<<2);
+Phase+=freq+___SMMUL(FMW<<4,freq<<4);
+slope1d=(1<<27)-Slope;
+if(Phase<(Slope<<5))
+{slope1n=((float)((1<<31)))/((float)(Slope));
+out=((Phase>>5)*slope1n)+(1<<30);
+}
+else
+{slope1n=((float)((1<<31)))/((float)(slope1d));
+out=-(((Phase-(Slope<<5))>>5)*slope1n)-(1<<30);
+}
+if(param_sine>0)
+{SINE2TINTERP(out,sine)}
+else{sine=out<<1;}
+outlet_out=___SMMUL(sine,((param_AM<1?(1<<28):0)+___SMMUL(inlet_sync<<3,param_AM>0?(1<<30):0)));
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="polyScanner" uuid="ccac227e-63a4-419b-acb5-f1ee36baac22">
+   <obj.normal id="polyScanner" uuid="cf82c0ad-d776-42da-907b-ea7acbe10a2d">
       <sDescription>4-voice &quot;chord&quot; oscillator with xy scanning between the 4 sine voices
 features PW control for exponential curving the phase
 
@@ -19,6 +19,7 @@ pairs really well with the 4RngCount2 module to provide note-inputs</sDescriptio
          <frac32.bipolar name="PW"/>
          <frac32.bipolar name="x"/>
          <frac32.bipolar name="y"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -61,7 +62,8 @@ int32_t y2;
 int32_t mix1;
 int32_t mix2;
 int32_t mix3;]]></code.declaration>
-      <code.krate><![CDATA[for(i=0;i<4;i++){
+      <code.krate><![CDATA[ if(inlet_active>0){  
+for(i=0;i<4;i++){
 int32_t a;
 a=(inlet_scan+i*inlet_offset)&((1<<27)-1);
 morph[i]=a<(1<<26)?a<<1:(1<<27)-((a-(1<<26))<<1);
@@ -100,8 +102,10 @@ pu=((param_PW+inlet_PW+(1<<27))&((1<<28)-1))-(1<<27);
 x1=(1<<26)+(inlet_x>>1);
 x2=(1<<27)-x1;
 y1=(1<<26)+(inlet_y>>1);
-y2=(1<<27)-y1;]]></code.krate>
-      <code.srate><![CDATA[PW=PW+((pu-PW)>>8);
+y2=(1<<27)-y1;
+ }]]></code.krate>
+      <code.srate><![CDATA[ if(inlet_active>0){  
+PW=PW+((pu-PW)>>8);
 
 for(i=0;i<4;i++){
 mirph[i]=mirph[i]+((marph[i]-mirph[i])>>8);
@@ -134,6 +138,6 @@ LP1=LP1+(((mix3)-LP1)>>2);
 HP=HP+((LP1-HP)>>12);
 outlet_out=LP1-HP;
 //outlet_out=wave[0]>>5;
-]]></code.srate>
+ }]]></code.srate>
    </obj.normal>
 </objdefs>

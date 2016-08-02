@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="polyWaveform" uuid="a0f82bd4-b346-4e83-817e-0d3c0e8eec8b">
+   <obj.normal id="polyWaveform" uuid="4d2b0db3-a35e-4132-bb43-4298b9dad066">
       <sDescription>4-voice &quot;chord&quot; oscillator with multiple waveforms
 
 connect a positive saw-LFO (non-bandlimited) to the morph input for normal operation
@@ -21,6 +21,7 @@ connect note patterns to the note(1-4) inputs, these will be scaled to the selec
          <frac32 name="note4"/>
          <frac32 name="PW"/>
          <int32 name="waveform"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -61,7 +62,8 @@ int32_t LP1;
 int32_t LP2;
 int32_t HP;
 int32_t PW;]]></code.declaration>
-      <code.krate><![CDATA[for(i=0;i<4;i++){
+      <code.krate><![CDATA[if(inlet_active>0){  
+for(i=0;i<4;i++){
 int32_t a;
 a=(inlet_morph+i*inlet_mofs)&((1<<27)-1);
 morph[i]=a<(1<<26)?a<<1:(1<<27)-((a-(1<<26))<<1);
@@ -94,8 +96,9 @@ m2trig[i]=1;
 }
 else if ((morph[i]==(1<<27))) {m2trig[i]=0;}
 }
-]]></code.krate>
-      <code.srate><![CDATA[PW=PW+(((((param_PW+inlet_PW+(1<<27))&((1<<28)-1))-(1<<27))-PW)>>8);
+}]]></code.krate>
+      <code.srate><![CDATA[ if(inlet_active>0){  
+PW=PW+(((((param_PW+inlet_PW+(1<<27))&((1<<28)-1))-(1<<27))-PW)>>8);
 sum=0;
 for(i=0;i<4;i++){
 mirph[i]=mirph[i]+((marph[i]-mirph[i])>>8);
@@ -131,6 +134,6 @@ LP1=LP1+(((sum>>2)-LP1)>>2);
 HP=HP+((LP1-HP)>>12);
 outlet_out=LP1-HP;
 //outlet_out=wave[0]>>5;
-]]></code.srate>
+ }]]></code.srate>
    </obj.normal>
 </objdefs>

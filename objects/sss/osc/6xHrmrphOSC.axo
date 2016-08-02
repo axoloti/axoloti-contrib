@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="6xHrmrphOSC" uuid="1e81b8cd-5c7f-4bf3-a6b3-3cf229c49750">
+   <obj.normal id="6xHrmrphOSC" uuid="98356b92-5bdf-4ed7-aefe-8bac4c33ca04">
       <sDescription>Massive spectral harmonic&amp;FM morphing oscillator</sDescription>
       <author>Remco van der most</author>
       <license>BSD</license>
@@ -28,6 +28,7 @@
          <frac32 name="ShiftHalf" description="FM Algorithm source selection offset. Offsets selector 4, 5 and 6."/>
          <frac32 name="ShiftSecond" description="FM Algorithm source selection offset. Offsets 2, 4 and 6."/>
          <frac32 name="ShiftThirds" description="FM Algorithm source selection offset. Offsets 2, 3, 5 and 6."/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="o1"/>
@@ -146,21 +147,8 @@ int32_t val7;
 int32_t aG;
 int32_t bG;
 int32_t cG;
-int32_t dG; ]]></code.declaration>
-      <code.init><![CDATA[trace = 0;
-Phase1a=0;
-Phase2a=0;
-Phase3a=0;
-Phase4a=0;
-Phase5a=0;
-Phase6a=0;
-Phase1b=0;
-Phase2b=0;
-Phase3b=0;
-Phase4b=0;
-Phase5b=0;
-Phase6b=0;]]></code.init>
-      <code.krate><![CDATA[int k11;
+int32_t dG;
+int k11;
 int k21;
 int k12;
 int k22;
@@ -184,29 +172,64 @@ int32_t sa5;
 int32_t sb5;
 int32_t sa6;
 int32_t sb6;
+int32_t freq;
+int32_t base;
+int32_t mainspread;
+int32_t spread1;
+int32_t spread2;
+int32_t expo;
+int32_t AM;
+int32_t ms1;
+int32_t ms2;
+int32_t ms3;
+int32_t ms4;
+int32_t ms5;
+int32_t n2;
+int32_t n3;
+int32_t n4;
+int32_t n5;
+int32_t n6;
+int32_t ofs;
+]]></code.declaration>
+      <code.init><![CDATA[trace = 0;
+Phase1a=0;
+Phase2a=0;
+Phase3a=0;
+Phase4a=0;
+Phase5a=0;
+Phase6a=0;
+Phase1b=0;
+Phase2b=0;
+Phase3b=0;
+Phase4b=0;
+Phase5b=0;
+Phase6b=0;]]></code.init>
+      <code.krate><![CDATA[
 
-int32_t freq=param_Walk+(inlet_Walk);
-         trace += freq>>8;
+if(inlet_active>0){
+
+freq=param_Walk+(inlet_Walk);
+trace += freq>>8;
 outlet_Walk=trace>>5;
 
 
-int32_t base=((trace>>5)/32*(inlet_r1))<<1;
-int32_t mainspread=inlet_MainSprd;
-int32_t spread1=inlet_Sprd1;
-int32_t spread2=inlet_Sprd2;
-int32_t expo=inlet_ExpSprd;
-int32_t AM=inlet_AM;
-int32_t ms1=mainspread;
-int32_t ms2=mainspread*2;
-int32_t ms3=mainspread*3;
-int32_t ms4=mainspread*4;
-int32_t ms5=mainspread*5;
-int32_t n2=(base+ms1-spread2) ;
-int32_t n3=(base+ms2+spread2+(expo^2)) ;
-int32_t n4=(base+ms3+spread1-spread2+(expo^3)) ;
-int32_t n5=(base+ms4+spread1+(expo^4)) ;
-int32_t n6=(base+ms5+spread1+spread2+(expo^5)) ;
-int32_t ofs=inlet_s1;
+base=((trace>>5)/32*(inlet_r1))<<1;
+mainspread=inlet_MainSprd;
+spread1=inlet_Sprd1;
+spread2=inlet_Sprd2;
+expo=inlet_ExpSprd;
+AM=inlet_AM;
+ms1=mainspread;
+ms2=mainspread*2;
+ms3=mainspread*3;
+ms4=mainspread*4;
+ms5=mainspread*5;
+n2=(base+ms1-spread2) ;
+n3=(base+ms2+spread2+(expo^2)) ;
+n4=(base+ms3+spread1-spread2+(expo^3)) ;
+n5=(base+ms4+spread1+(expo^4)) ;
+n6=(base+ms5+spread1+spread2+(expo^5)) ;
+ofs=inlet_s1;
 
 
 c1= ((base)-(((base)>>21)<<21));
@@ -336,8 +359,10 @@ algo6 = AlgoX-(r*(1<<27));
 
 //HP-filter FM
 
-   MTOF(param_HP,frq);]]></code.krate>
-      <code.srate><![CDATA[//oscillators
+   MTOF(param_HP,frq);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+//oscillators
 
 // osc1
 FM=___SMMUL((SO1+(inlet_FMin>>3))<<3,freq1<<6);
@@ -598,6 +623,7 @@ SO6= ___SMMUL(dG<<4,aG<<4)+___SMMUL(cG<<4,bG<<4);
 
 val6 = ___SMMLA((SO6-val6)<<1,frq,val6);
 SO6= SO6-val6;
+}
 
 
 ]]></code.srate>

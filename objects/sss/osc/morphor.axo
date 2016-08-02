@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="morphor" uuid="03db46f2-d10e-4383-90ca-1e8280fcc834">
+   <obj.normal id="morphor" uuid="1f2aaba0-a102-4570-84ce-59205ec81d50">
       <sDescription>based on the sculptor, but without the editing parameters.
 First make a wavetable (or load a previous designed wavetable), then load the table into the module. If there is no wavetable, there won&apos;t be a sound!
 
@@ -23,6 +23,7 @@ If you haven&apos;t made a wavetable yet, by using the sculptor, you won&apos;t 
          <frac32buffer name="sync" description="connect external signal to sync waveform at positive zero-crossing"/>
          <frac32 name="Hz"/>
          <bool32.rising name="reset"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -101,7 +102,13 @@ uint32_t h;
    int trg4;
 
 int32_t prevA;
-int32_t prevB;]]></code.declaration>
+int32_t prevB;
+int32_t preset;
+int32_t wave;
+int32_t Sin;
+int32_t fine;
+int32_t mos;
+int32_t frq;]]></code.declaration>
       <code.init><![CDATA[for (i=0;i<1024;i++) (array[i])=attr_table.array[i+(0)*1024]<<attr_table.GAIN;(array[i])=attr_table.array[i+(1)*1024]<<attr_table.GAIN;{}
 phose=0;
 vil=0;
@@ -113,9 +120,10 @@ LoadB=(1<<27);
    Phase = 0;
    r = 1;
 ]]></code.init>
-      <code.krate><![CDATA[int32_t preset=param_preset+inlet_preset;
+      <code.krate><![CDATA[if(inlet_active>0){
+preset=param_preset+inlet_preset;
 
-int32_t wave;
+
       if (inlet_reset && r) {
          Phase = 0;
          r = 0;
@@ -138,9 +146,9 @@ LOAdA=trg2*(trg4==0)?(1<<27):0;
 trg3=trg1;
 trg4=trg2;
 
-int32_t Sin;
+
 SINE2TINTERP(Phase-(1<<29),Sin)
-int32_t fine;
+
 fine=-(Sin>>5)+(1<<26);
 
 if((LOAdA>0) && (!(trhg)))
@@ -183,13 +191,14 @@ else if ((LOAD)<1)
    }
    if (!((LoadB)>0)) loadB=0;
 
-  int32_t mos=___SMMUL(((1<<27)-param_morph)<<3,((1<<27)-param_morph)<<2);
+  mos=___SMMUL(((1<<27)-param_morph)<<3,((1<<27)-param_morph)<<2);
   mos=___SMMUL(mos<<3,mos<<2);
-  int32_t frq;
-MTOFEXTENDED(param_pitch+inlet_pitch,frq)
 
+MTOFEXTENDED(param_pitch+inlet_pitch,frq)
+}
 ]]></code.krate>
-      <code.srate><![CDATA[int32_t FMW=___SMMUL(param_fm<<3,inlet_fm<<2);
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t FMW=___SMMUL(param_fm<<3,inlet_fm<<2);
 if((inlet_sync>0) && (!(tok)))
 {phase=0;
 tok=1;}
@@ -214,6 +223,6 @@ else
 {vul=vul*0.9999;}
 
 outlet_out=vil;
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

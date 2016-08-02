@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="tableOsc" uuid="1964a337-d11b-49d7-9824-beed68c15dc5">
+   <obj.normal id="tableOsc" uuid="89b9aa9a-aacc-45fe-85dd-aac1c6a46b64">
       <sDescription>table oscillator
 Can use the tables created by the &quot;sculptor&quot; module or any other &quot;raw&quot; table data.
 Inputs (same as corresponding parameters)
@@ -24,6 +24,7 @@ Inputs (same as corresponding parameters)
          <frac32 name="shift"/>
          <frac32 name="size"/>
          <frac32 name="mix"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -60,19 +61,25 @@ int32_t offset1;
 int32_t offset2;
 int32_t offset3;
 int32_t index;
-int32_t mix;]]></code.declaration>
+int32_t mix;
+uint32_t freq;
+int32_t cut;
+
+]]></code.declaration>
       <code.init><![CDATA[Phase = 0;val1 = 0;val2 = 0;
 ]]></code.init>
-      <code.krate><![CDATA[   uint32_t freq;
+      <code.krate><![CDATA[
+   if(inlet_active>0){
    MTOFEXTENDED(param_pitch + inlet_pitch,freq);
    freq=freq;
-   int32_t cut;
+
    MTOF(__USAT(param_pitch+param_cut,27),cut);
    cut=cut*param_harmonic;
 offset1=___SMMUL((param_pitch+inlet_pitch+(1<<26))<<3,param_p2shift<<2);
 offset2=___SMMUL((param_pitch+inlet_pitch+(24<<21))<<3,param_p2size>>4)+param_size+inlet_size &((1<<27)-1);
-]]></code.krate>
-      <code.srate><![CDATA[offset3=offset3+((offset2-offset3)>>8);
+   }]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+offset3=offset3+((offset2-offset3)>>8);
 mix=mix+((inlet_mix-mix)>>8);
 out=0;
 Phase += (freq>>0) + ___SMMUL(inlet_freq<<3,param_fm);
@@ -83,6 +90,7 @@ val1 = ___SMMLA(((tap<<2)-val1)<<1,cut,val1);
 val2 = ___SMMLA((val1-val2),cut,val2);
 int32_t sine;
 SINE2TINTERP(Phase*param_root,sine)
-outlet_out=___SMMUL(val2<<3,mix<<3)+___SMMUL((1<<27)-(mix),sine);]]></code.srate>
+outlet_out=___SMMUL(val2<<3,mix<<3)+___SMMUL((1<<27)-(mix),sine);
+}]]></code.srate>
    </obj.normal>
 </objdefs>

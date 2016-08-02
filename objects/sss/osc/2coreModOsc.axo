@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="2coreModOsc" uuid="897efccd-8f6a-40e7-b07f-3325357a76ab">
+   <obj.normal id="2coreModOsc" uuid="33475073-0ca6-445a-91ee-3730a2274d9f">
       <sDescription>2-core oscillator featuring:
 -two cores which are treated as x/y coördinates to perform a &quot;distance-from-center-relocation&quot;-function.
  (or how the hack you want to name it, it provides a shaping control and that&apos;s what matters)
@@ -25,6 +25,7 @@
          <frac32 name="EFM2"/>
          <frac32 name="LFM2"/>
          <frac32 name="Filtertrack"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -52,7 +53,10 @@ int32_t r2;
 int32_t r7;
 int32_t val1;
 int32_t val2;
-int32_t val3;]]></code.declaration>
+int32_t val3;
+int32_t pitcin;
+int32_t f;
+int32_t g;]]></code.declaration>
       <code.init><![CDATA[Phase1 = 0;
 Phase2 = 0;
 val1 = 0;
@@ -61,14 +65,16 @@ val3=0;
 r1=0;
 r2=0;
 r7=0;]]></code.init>
-      <code.krate><![CDATA[int32_t pitcin= ___SMMUL((((inlet_pitch1+inlet_pitch2)>>1)+((param_pitch1+param_pitch2)>>1))<<2,(inlet_Filtertrack+param_Filtertrack)<<3);
+      <code.krate><![CDATA[if(inlet_active>0){
+pitcin= ___SMMUL((((inlet_pitch1+inlet_pitch2)>>1)+((param_pitch1+param_pitch2)>>1))<<2,(inlet_Filtertrack+param_Filtertrack)<<3);
 
-int32_t f;
+
    MTOF(param_LP+pitcin,f);
 
-int32_t g;
-   MTOF(param_HP+pitcin,g);]]></code.krate>
-      <code.srate><![CDATA[
+
+   MTOF(param_HP+pitcin,g);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
    
    int32_t freq1;
    MTOFEXTENDED(param_pitch1 + inlet_pitch1+___SMMUL((inlet_EFM1+param_EFM1)<<3,r2>>2),freq1);
@@ -107,6 +113,7 @@ val1 = ___SMMLA((r0-val1)<<1,f,val1);
 val2 = ___SMMLA((val1-val2)<<1,g,val2);
    
 val3=val1-val2;
-   outlet_wave= val3;]]></code.srate>
+   outlet_wave= val3;
+}]]></code.srate>
    </obj.normal>
 </objdefs>

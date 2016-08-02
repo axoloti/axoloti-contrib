@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="spectralOscillator" uuid="970229bb-a69f-47dd-89cf-610622778755">
+   <obj.normal id="spectralOscillator" uuid="86d1f544-9acf-4f37-b7a1-9973f6d737d0">
       <sDescription>Spectral Oscillator with up to 32 harmonics.
 Depending on the jump, offset and range parameters, the oscillator creates different waveforms.</sDescription>
       <author>Remco van der Most</author>
@@ -13,6 +13,7 @@ Depending on the jump, offset and range parameters, the oscillator creates diffe
          <int32 name="after"/>
          <int32 name="expo"/>
          <frac32.positive name="damp"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -67,8 +68,10 @@ int32_t offset;
 int32_t after;
 int32_t start;
 int32_t expo;
-uint32_t damp;]]></code.declaration>
-      <code.krate><![CDATA[int32_t freq;
+uint32_t damp;
+int32_t freq;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
 MTOF(param_pitch+inlet_pitch,freq)
 
 range=param_range;
@@ -78,8 +81,9 @@ offset=param_offset+inlet_offset;
 after=param_after+inlet_after;
 start=inlet_start+param_start;
 expo=inlet_expo+param_expo;
-]]></code.krate>
-      <code.srate><![CDATA[FM=___SMMUL(inlet_freq<<3,param_FM<<3);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+FM=___SMMUL(inlet_freq<<3,param_FM<<3);
 phase+=freq+___SMMUL(freq<<8,FM<<4);
 damp=inlet_damp+param_damp;
 sum=0;
@@ -89,6 +93,7 @@ sum=0;
 sum+=(_sine[i<param_harmonics?i:param_harmonics]>>5)/(1+___SMMUL(i<<8,damp));
 }
 
-outlet_out=sum>>2;]]></code.srate>
+outlet_out=sum>>2;
+}]]></code.srate>
    </obj.normal>
 </objdefs>

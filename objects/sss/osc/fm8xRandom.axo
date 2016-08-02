@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="fm8xRandom" uuid="b06c0539-8227-4b60-a451-37a712789412">
+   <obj.normal id="fm8xRandom" uuid="c500e8ec-ec5b-4f90-b36b-d04e665bd55d">
       <sDescription>8x sine wave oscillator with internal FM.
 generated harmonics and FM routing are random.
 Harmonics and FM routing can be independently randomised with the buttons and inputs.
@@ -14,6 +14,7 @@ Range sets the maximum harmonic range.</sDescription>
          <bool32.rising name="rndHrm"/>
          <frac32buffer name="phase" description="phase"/>
          <frac32 name="fm"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -46,7 +47,8 @@ int strig;]]></code.declaration>
 {val[i] = (int32_t)(GenerateRandomNumber()% (7));
 harm[i] = (int32_t)(GenerateRandomNumber()% (48));}
 ntrig = 0;]]></code.init>
-      <code.krate><![CDATA[if (((param_rndFM+inlet_rndFM)>0) && !ntrig) {
+      <code.krate><![CDATA[if(inlet_active>0){
+if (((param_rndFM+inlet_rndFM)>0) && !ntrig) {
          for(i=0;i<8;i++)
          {val[i] = (int32_t)(GenerateRandomNumber()% (param_voices));}
       ntrig=1;
@@ -64,8 +66,10 @@ if (((param_rndHrm+inlet_rndHrm)>0) && !strig) {
 
 
 
-MTOFEXTENDED(param_pitch+inlet_pitch,freq)]]></code.krate>
-      <code.srate><![CDATA[int32_t sum=0;
+MTOFEXTENDED(param_pitch+inlet_pitch,freq)
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t sum=0;
 phase[0]+=freq+___SMMUL(freq<<3,___SMMUL((param_fm+inlet_fm)<<3,(inlet_freq<<3)+sine[val[0]])<<2);
 SINE2TINTERP(phase[0],sine[0])
 for(i=1;i<param_voices;i++)
@@ -76,6 +80,7 @@ for(i=0;i<param_voices;i++)
 }
 
 outlet_wave=sum>>3;
-//outlet_wave=sum>>3;]]></code.srate>
+//outlet_wave=sum>>3;
+}]]></code.srate>
    </obj.normal>
 </objdefs>

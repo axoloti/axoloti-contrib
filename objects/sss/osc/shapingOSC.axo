@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="shapingOsc" uuid="b42d4b74-75e9-470b-b80b-351901e04090">
+   <obj.normal id="shapingOsc" uuid="245fc561-57c6-4ebf-a48c-501258492b88">
       <sDescription>shaping oscillator with several shaping tools</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -14,6 +14,7 @@
          <frac32.bipolar name="Bezier2" description="Bezier phase distortion B"/>
          <int32 name="curve" description="0=normal, 1=exp,2=inv exp,3=S-peak,4=S-sqr"/>
          <frac32.bipolar name="sinedPhase"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="wave"/>
@@ -31,13 +32,16 @@ uint32_t h;
 int32_t crv1;
 int32_t crv2;
 int32_t wavs;
-int32_t wavr;]]></code.declaration>
+int32_t wavr;
+uint32_t freq;]]></code.declaration>
       <code.init><![CDATA[   Phase = 0;
    r = 1;
 ]]></code.init>
-      <code.krate><![CDATA[   uint32_t freq;
-   MTOFEXTENDED(inlet_Pitch,freq);]]></code.krate>
-      <code.srate><![CDATA[   
+      <code.krate><![CDATA[
+ if(inlet_active>0){  
+   MTOFEXTENDED(inlet_Pitch,freq);
+ }]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){  
       if ((inlet_reset>0) && r) {
          Phase = 0;
          r = 0;
@@ -140,6 +144,6 @@ switch(inlet_Bipolar>0?inlet_Bipolar:0){
       case 0: outlet_sined= sina;break;
       default: outlet_sined= (sina<<1)-(1<<27);break;
 }
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

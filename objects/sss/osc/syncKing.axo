@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="syncKing" uuid="6f987b01-6cc2-40dd-b627-5830620225b3">
+   <obj.normal id="syncKing" uuid="6cae0f8e-3083-4242-bc29-25de9ea79355">
       <sDescription>Oscillator with lots of sync options and modulation:
 -two waveform functions, each with their own &quot;PWM&quot; control mode.
 -control inlets for FM and AM width (eg for envelopes). FM is linear FM with frequency dependent modulation-index-width.
@@ -34,6 +34,7 @@
          <bool32 name="possync"/>
          <bool32 name="stepsync"/>
          <bool32 name="Ring"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.positive name="out" description="phasor wave"/>
@@ -94,22 +95,27 @@ int32_t afeed;
 int32_t bfeed;
 int32_t FW;
 int32_t phaswidth;
-int32_t phsw;]]></code.declaration>
+int32_t phsw;
+uint32_t freq;
+int32_t f1;
+int32_t f2;
+int32_t f3;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
 dir=1;
 swp=1;
 val1=0;
 val2=1;
 val3=0;]]></code.init>
-      <code.krate><![CDATA[   uint32_t freq;
+      <code.krate><![CDATA[ if(inlet_active>0){    
+
    MTOFEXTENDED(param_pitch + inlet_pitch,freq);
 
-int32_t f1;
+
    MTOF(param_RespSo,f1);
-int32_t f2;
+
    MTOF(param_pitch+(1<<21)*24,f2);
 
-      int32_t f3;
+      
    MTOF(param_RespPo,f3);
 
 
@@ -130,8 +136,10 @@ int32_t f2;
    stAM=(PosAM>=0)?PosAM:-PosAM;
    InvAM=(1<<27)-stAM;
 
-phaswidth=(inlet_PM+param_PM)<<3;]]></code.krate>
-      <code.srate><![CDATA[phsw=___SMMUL(inlet_phase<<3,phaswidth<<2);
+phaswidth=(inlet_PM+param_PM)<<3;
+ }]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+phsw=___SMMUL(inlet_phase<<3,phaswidth<<2);
 //put inlet_syncsource into "sync"
 sync=inlet_syncsource;
 
@@ -200,6 +208,6 @@ async=sync;
 AM=___SMMUL(inlet_am<<3,phasu<<2);
 outlet_out=___SMMUL((phasu-(1<<26))<<3,InvAM<<2)+___SMMUL(PosAM<<3,AM<<2);
 
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

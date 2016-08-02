@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="sculptor" uuid="c7b64769-30e8-403a-b0a9-ac0eded0a060">
+   <obj.normal id="sculptor" uuid="d2c5b39d-39a3-4bab-99af-63c8259e9d48">
       <sDescription>-sculptor is based on wavetable synthesis and uses a table to save it&apos;s waveforms.
 
 -each waveform is 1024 samples long.
@@ -45,6 +45,7 @@ NOTE! To be able to actually save your waveforms, you need to add the table-save
          <frac32buffer name="fm" description="connect external signal to do FM"/>
          <frac32buffer name="phase" description="connect external signal to do PM"/>
          <frac32buffer name="sync" description="connect external signal to sync waveform at positive zero-crossing"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -139,7 +140,10 @@ int32_t morph;
 int32_t mot;
 int32_t ccomp;
 int tok;
-int32_t x;]]></code.declaration>
+int32_t x;
+int32_t preset;
+int32_t mos;
+int32_t frq;]]></code.declaration>
       <code.init><![CDATA[for (i=0;i<1024;i++) array[i] = -(1<<27)+((GenerateRandomNumber())>>4);arrey[i] = -(1<<27)+((GenerateRandomNumber())>>4);{}
 phose=0;
 vil=0;
@@ -148,7 +152,8 @@ vol=0;
 vil=0;
 LoadA=1;
 LoadB=(1<<27);]]></code.init>
-      <code.krate><![CDATA[int32_t preset=param_preset+inlet_preset;
+      <code.krate><![CDATA[if(inlet_active>0){
+preset=param_preset+inlet_preset;
 LOAD=__USAT(param_load+inlet_load,28);
 if(((LOAD)>0) &&(!(trip)))
 {trip=1;
@@ -339,12 +344,13 @@ else if (!(param_update>0)) {Utrig=0;}
 
 
 
-  int32_t mos=___SMMUL(((1<<27)-param_morph)<<3,((1<<27)-param_morph)<<2);
+  mos=___SMMUL(((1<<27)-param_morph)<<3,((1<<27)-param_morph)<<2);
   mos=___SMMUL(mos<<3,mos<<2);
-  int32_t frq;
+
 MTOFEXTENDED(param_pitch+inlet_pitch,frq)
-]]></code.krate>
-      <code.srate><![CDATA[int32_t FMW=___SMMUL(param_fm<<3,inlet_fm<<2);
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t FMW=___SMMUL(param_fm<<3,inlet_fm<<2);
 if((inlet_sync>0) && (!(tok)))
 {phase=0;
 tok=1;}
@@ -369,6 +375,6 @@ else
 {vul=vul*0.9999;}
 
 outlet_out=vil;
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.9">
-   <obj.normal id="3xModOsc" uuid="7d6d049e-1aa2-4830-b713-be9ce3fac04f">
+<objdefs appVersion="1.0.10">
+   <obj.normal id="3xModOsc" uuid="b71b3086-27d5-44bb-8610-397bfefd141c">
       <sDescription>3-core oscillator with serial FM,PM and AM</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -9,6 +9,7 @@
          <frac32 name="FM"/>
          <frac32 name="PM"/>
          <frac32 name="AM"/>
+         <bool32 name="active"/>
       </inlets>
       <outlets>
          <frac32buffer.positive name="phasor" description="phasor wave"/>
@@ -38,7 +39,8 @@ int32_t MOD3;
 
 uint32_t phase;
 
-uint32_t lfo;]]></code.declaration>
+uint32_t lfo;
+int32_t freq;]]></code.declaration>
       <code.init><![CDATA[Phase1 = 0;
 Phase2 = 0;
 Phase3 = 0;
@@ -46,10 +48,13 @@ Phase3 = 0;
 phase = 0;
 
 ]]></code.init>
-      <code.krate><![CDATA[int32_t freq;
+      <code.krate><![CDATA[
+if(inlet_active>0){
          MTOFEXTENDED(inlet_pitch + param_lfo,freq);
-         lfo += freq>>2;]]></code.krate>
-      <code.srate><![CDATA[   uint32_t f;
+         lfo += freq>>2;
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+   uint32_t f;
    MTOFEXTENDED(param_pitch1 + inlet_pitch,f);
    f=f*(param_Hrm1>>20);
    MOD1= ___SMMUL(inlet_FM,c<<3);
@@ -80,6 +85,6 @@ ring3=___SMMUL(a>>2,c>>3)>>3;
 ring4=___SMMUL(ring1,c>>3)>>3;
 
    outlet_phasor = (a>>6)+(b>>6)+(c>>6)+___SMMUL(inlet_AM<<3,(ring1+ring2+ring3+ring4)<<4);
-]]></code.srate>
+}]]></code.srate>
    </obj.normal>
 </objdefs>
