@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="switches" uuid="891af40c-754c-4024-b434-5326d5c08fde">
+      <sDescription>Axoloti Control (AxoC) - switch control</sDescription>
+      <author>Mark Harris</author>
+      <helpPatch>axoc.axh</helpPatch>
+      <license>GPL</license>
+      <inlets>
+         <bool32 name="led1"/>
+         <bool32 name="led2"/>
+         <bool32 name="led3"/>
+      </inlets>
+      <outlets>
+         <bool32 name="out1"/>
+         <bool32 name="out2"/>
+         <bool32 name="out3"/>
+      </outlets>
+      <displays>
+         <bool32 name="d1"/>
+         <bool32 name="d2"/>
+         <bool32 name="d3"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.init><![CDATA[//leds
+palSetPadMode(GPIOB,1,PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOB,8,PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOB,9,PAL_MODE_OUTPUT_PUSHPULL);
+
+
+//switches
+palSetPadMode(GPIOC,1,PAL_MODE_INPUT_PULLDOWN);
+palSetPadMode(GPIOC,2,PAL_MODE_INPUT_PULLDOWN);
+palSetPadMode(GPIOC,3,PAL_MODE_INPUT_PULLDOWN);
+]]></code.init>
+      <code.krate><![CDATA[palWritePad(GPIOB,1,(inlet_led1>0));
+palWritePad(GPIOB,8,(inlet_led2>0));
+palWritePad(GPIOB,9,(inlet_led3>0));
+
+outlet_out1= palReadPad(GPIOC,1)<<27;
+outlet_out2= palReadPad(GPIOC,2)<<27;
+outlet_out3= palReadPad(GPIOC,3)<<27;
+
+disp_d1= outlet_out1;
+disp_d2= outlet_out2;
+disp_d3= outlet_out3;
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>
