@@ -248,7 +248,8 @@ if (holding==0 && new_holding>0 && ignored>0 && notecount==0) {
 	}
 	octave = 0;
 	moveup = 1;
-	lastnote = 0;
+	lastnote = notecount>0?notecount-1:0;
+	secondclock = 0;
 	dehold_lock = 0;
 }
 if (holding==1 && new_holding==0) {
@@ -264,7 +265,7 @@ if (holding==1 && new_holding==0) {
 		if (released_on_hold[r]==1) {
 			released_on_hold[r] = 0;
 			notes[r] = 0;
-			notecount--;
+			notecount = notecount>0?notecount-1:0;
 			// find in play order array and remove it
 			int orderpos = -1;
 			for (int i=0;i<128;i++) {
@@ -324,7 +325,7 @@ if (cmd==1 && ignored==0) {
 	notes[data1] = data2;
 	released_on_hold[data1] = 0;
 }
-else if (cmd==0) {
+else if (cmd==0 && ignored==0) {
 	// note off
 	// LogTextMessage("Release: %i", data1);
 	if (holding) {
@@ -332,7 +333,7 @@ else if (cmd==0) {
 	}
 	else {
 		if (notes[data1]!=0) {
-			notecount--;
+			notecount = notecount>0?notecount-1:0;
 			notes[data1] = 0;
 			// find in play order array and remove it
 			int orderpos = -1;
@@ -355,7 +356,7 @@ else if (cmd==3 && data1==64 && ignored==0) {
 	sustainpedal = data2>0?1:0;
 }
 
-if (cmd==0 || cmd==1) {
+if (ignored==0 && (cmd==0 || cmd==1)) {
 	// find highest and lowest note
 	for (int i=0; i<128; i++) {
 		if (notes[i]>0) {
