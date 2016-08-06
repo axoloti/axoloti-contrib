@@ -1,0 +1,152 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="sendMatrix" uuid="fa3a7224-9904-4c4c-b0c7-f1da5627f618">
+      <sDescription>control send module, fractional type
+to be used with my receive module and a 32b (sd)ram module (enter it&apos;s name in the box!)
+you can use the internal knob and control it by midi-CC or connect an external signal to the CV inlet (eg analogue controls). These last ones will update the internal CV knob like the &quot;hook&quot; control module.
+
+The &quot;select&quot; selector selects which output of the receiving module will be controlled
+The &quot;destiny&quot; selector selects which receiver is being controlled.
+These controls can be controlled externally by (analogue) button-presses to step through the menu.
+
+extra inlets:
+&quot;update&quot; updates the knob to the table value. eg when you load a new table (double trigger/press is needed though!)
+&quot;maxdestinations&quot; should be the same as the amount of receiving modules you are using. The less receiving modules, the more presets you can make.
+&quot;preset&quot; shifts the table-write/readout to select a new part to save/load presets.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="update"/>
+         <int32 name="maxdestinations"/>
+         <int32 name="preset"/>
+         <frac32 name="CV"/>
+         <bool32 name="selectUp"/>
+         <bool32 name="selectDown"/>
+         <bool32 name="destinationUp"/>
+         <bool32 name="destinationDown"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map name="CV"/>
+         <int32 name="select">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <int32 name="destiny">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t nhooked;
+int32_t param_cache;
+int32_t CV;
+int32_t prevsel;
+int32_t select;
+uint32_t count;
+int32_t selact;
+int32_t destiny;
+int32_t destyny;
+int32_t prevCV;
+int utrig;
+int ytrig;
+int32_t preset;
+int sUtrig;
+int sDtrig;
+int dUtrig;
+int dDtrig;]]></code.declaration>
+      <code.init><![CDATA[utrig=0;
+nhooked = 4;
+]]></code.init>
+      <code.krate><![CDATA[if (nhooked) {
+	CV = param_CV;
+	if (param_CV > inlet_CV){
+		nhooked |= 1;
+		if (nhooked == 7) {
+			nhooked = 0;
+			param_cache = param_CV;
+		}
+	} else {
+		nhooked |= 2;
+		if (nhooked == 7) {
+			nhooked = 0;
+			param_cache = param_CV;
+		}
+	}
+} else {
+	CV = inlet_CV;
+	if (param_cache != param_CV) 
+		nhooked = 4;
+	else
+		PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_CV],inlet_CV,0xFFFD);
+		param_cache = inlet_CV;
+}
+
+
+
+
+
+if((inlet_selectUp>0)&&(!(sUtrig==1))){
+sUtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_select],(selact+1)&7,0xFFFD);}
+else if(!(inlet_selectUp>0)){sUtrig=0;}
+
+if((inlet_selectDown>0)&&(!(sDtrig==1))){
+sDtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_select],(selact-1)&7,0xFFFD);}
+else if(!(inlet_selectDown>0)){sDtrig=0;}
+
+if((inlet_destinationUp>0)&&(!(dUtrig==1))){
+dUtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_destiny],(destiny+1)-((destiny+1)/inlet_maxdestinations)*inlet_maxdestinations,0xFFFD);}
+else if(!(inlet_destinationUp>0)){dUtrig=0;}
+
+if((inlet_destinationDown>0)&&(!(dDtrig==1))){
+dDtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_destiny],(destiny-1)-((destiny-1)/inlet_maxdestinations)*inlet_maxdestinations,0xFFFD);}
+else if(!(inlet_destinationDown>0)){dDtrig=0;}
+
+
+
+preset=inlet_preset*8*inlet_maxdestinations;
+destyny=param_destiny>inlet_maxdestinations?inlet_maxdestinations:param_destiny;
+destyny=destyny*8;
+if((!(param_select+param_destiny==prevsel))||((inlet_update>0)&&(!(utrig==1)))){
+	utrig=1;
+
+switch(param_select>0?param_select:0)
+{	
+case 0: select = attr_table.array[__USAT(destyny+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 1: select = attr_table.array[__USAT(destyny+1+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 2: select = attr_table.array[__USAT(destyny+2+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 3: select = attr_table.array[__USAT(destyny+3+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 4: select = attr_table.array[__USAT(destyny+4+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 5: select = attr_table.array[__USAT(destyny+5+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 6: select = attr_table.array[__USAT(destyny+6+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+case 7: select = attr_table.array[__USAT(destyny+7+preset,attr_table.LENGTHPOW)]<<attr_table.GAIN;break;
+}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_CV],select,0xFFFD);
+}
+if(!(prevCV==CV)){
+switch(param_select>0?param_select:0){
+case 0: attr_table.array[destyny+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 1: attr_table.array[destyny+1+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 2: attr_table.array[destyny+2+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 3: attr_table.array[destyny+3+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 4: attr_table.array[destyny+4+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 5: attr_table.array[destyny+5+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 6: attr_table.array[destyny+6+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+case 7: attr_table.array[destyny+7+preset]=__SSAT(CV,28)>>attr_table.GAIN;break;
+}
+
+}
+if(!(inlet_update>0)){utrig=0;}
+prevsel=param_select+param_destiny;
+prevCV=CV;
+selact=param_select;
+destiny=param_destiny;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
