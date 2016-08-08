@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="quadEnv" uuid="9702ff4e-6075-47f9-829f-578de0debb3c">
+   <obj.normal id="quadEnv" uuid="16351535-e8c6-40d5-b96b-55ca9a0739c4">
       <sDescription>Quad Attack/decay envelope, linear attack, exponential decay.
 
 &quot;Amin&quot;, &quot;Amax&quot;, &quot;Dmin&quot; and &quot;Dmax&quot; define the range of the attack and decay values for all 4 envelope generators.
@@ -21,6 +21,7 @@ Values are spreaded following a sine-curve of 45 degrees offset for each envelop
          <frac32.positive name="env2"/>
          <frac32.positive name="env3"/>
          <frac32.positive name="env4"/>
+         <frac32.positive name="max"/>
       </outlets>
       <displays/>
       <params>
@@ -39,7 +40,9 @@ int trig[4];
 int32_t a[4];
 int32_t d[4];
 int32_t sine[8];
-int i;]]></code.declaration>
+int i;
+int32_t max1;
+int32_t max2;]]></code.declaration>
       <code.init><![CDATA[for(i=0;i<4;i++)
 {ntrig[i] = 0;
 val[i] = 0;}
@@ -88,6 +91,9 @@ if (stage[i] == 0){
 outlet_env1 = val[0]>>4;
 outlet_env2 = val[1]>>4;
 outlet_env3 = val[2]>>4;
-outlet_env4 = val[3]>>4;]]></code.krate>
+outlet_env4 = val[3]>>4;
+max1=outlet_env1>outlet_env2?outlet_env1:outlet_env2;
+max2=max1>outlet_env3?max1:outlet_env3;
+outlet_max=max2>outlet_env4?max2:outlet_env4;]]></code.krate>
    </obj.normal>
 </objdefs>
