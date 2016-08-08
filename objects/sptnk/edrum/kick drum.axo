@@ -1,10 +1,11 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="kick 808" uuid="a719b004-4233-482e-8fe9-830d546a80c0">
+   <obj.normal id="kick drum" uuid="a719b004-4233-482e-8fe9-830d546a80c0">
       <sDescription>Consistent kick drum object</sDescription>
       <author>Sputnki</author>
       <license>BSD</license>
       <inlets>
          <bool32.rising name="t"/>
+         <frac32 name="pitch"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -16,6 +17,7 @@
          <frac32.u.map name="pitchenvamt" description="pitch envelope amount"/>
          <frac32.s.map.pitch name="basepitch" description="basic tuning"/>
          <frac32.u.map.gain name="click" description="amount of click at the beginning of the kick"/>
+         <bool32.tgl name="shape"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t envcounter =0;
@@ -32,10 +34,10 @@ int32_t r;
 
 
 bool ttrig = 0;]]></code.declaration>
-      <code.krate><![CDATA[k_decay = (((1<<22) - (param_decay>>5)))+(1<<18);
-k_pitchdecay = (((1<<22) - (param_pitchdecay>>5)))+(1<<18);
+      <code.krate><![CDATA[k_decay = ((8500000 - (param_decay>>4)));
+k_pitchdecay = ((8500000 - (param_pitchdecay>>4)));
 k_pitchenv = (param_pitchenvamt<<4);
-MTOF(param_basepitch,k_basepitch);
+MTOF(param_basepitch+inlet_pitch,k_basepitch);
 
 if (inlet_t && !ttrig)
 {
@@ -50,10 +52,12 @@ ttrig = 0;]]></code.krate>
 pitchenvcounter = ___SMMLS(pitchenvcounter,k_pitchdecay,pitchenvcounter);
 
 SINE2TINTERP(phasor,r);
+if (param_shape)
+SINE2TINTERP(r,r);
 r=___SMMUL(r,envcounter);
 
 pitch = ___SMMLA(pitchenvcounter,k_pitchenv,k_basepitch);
 phasor += pitch;
-outlet_out=r<<1;]]></code.srate>
+outlet_out=__SSAT(r<<2,27);]]></code.srate>
    </obj.normal>
 </objdefs>
