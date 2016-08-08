@@ -1,12 +1,14 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="trisaw" uuid="8b2c4e31-8b02-4685-9284-513d7d252bb6">
-      <sDescription>tri/saw oscillator with optional sine shaper, sync and AM modulation</sDescription>
+   <obj.normal id="bassOsc" uuid="d34a8c96-e9a6-4254-bc8c-73143cf21b7d">
+      <sDescription>tri/saw oscillator with added sine ringmodulation for vowel-like or bass sounds</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
          <frac32 name="pitch"/>
          <frac32.bipolar name="FMW"/>
          <frac32 name="slope"/>
+         <frac32 name="mult"/>
+         <bool32 name="Onsync"/>
          <frac32buffer name="sync"/>
          <bool32 name="active"/>
       </inlets>
@@ -15,13 +17,15 @@
       </outlets>
       <displays/>
       <params>
-         <bool32.tgl name="sine"/>
          <frac32.s.map.pitch name="pitch"/>
-         <frac32.s.map name="FM"/>
          <frac32.u.map name="slope"/>
-         <frac32.s.map name="Swidth"/>
          <frac32.s.map name="Slope"/>
+         <frac32.s.map name="mult"/>
+         <frac32.s.map name="Mult"/>
          <bool32.tgl name="AM"/>
+         <frac32.s.map name="FM"/>
+         <frac32.s.map name="Swidth"/>
+         <bool32.tgl name="sync"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[uint32_t Phase;
@@ -35,19 +39,24 @@ int32_t Fmw;
 int32_t FMW;
 int ttrig;
 int32_t freq;
-int32_t fmw;]]></code.declaration>
+int32_t fmw;
+int32_t sine1;
+int32_t sine2;
+int32_t mult;
+int32_t Mult;]]></code.declaration>
       <code.krate><![CDATA[
 if(inlet_active>0){
 MTOF(param_pitch+inlet_pitch,freq)
 
 fmw=__SSAT(param_FM+inlet_FMW,29);
+Mult=___SMMUL((param_Mult)<<3,inlet_mult<<2)+param_mult;
 }]]></code.krate>
       <code.srate><![CDATA[if(inlet_active>0){
-if((inlet_sync>0)&&(!(ttrig==1)))
+if(((inlet_sync&&(param_sync||inlet_Onsync))>0)&&(!(ttrig==1)))
 {ttrig=1;Phase=0;}
 else if(inlet_sync<0){ttrig=0;}
 
-int32_t slape=__SSAT(param_slope+___SMMUL((inlet_slope)<<3,param_Swidth<<2)+___SMMUL(inlet_sync<<3,param_Slope<<2),28);
+int32_t slape=__SSAT(param_slope+___SMMUL((inlet_slope)<<3,param_Slope<<2)+___SMMUL(inlet_sync<<3,param_Swidth<<2),28);
 Slope=Slope+((slape-Slope)>>8);
 Fmw=Fmw+((fmw-Fmw)>>6);
 FMW=___SMMUL(inlet_sync<<4,(Fmw)<<2);
@@ -61,10 +70,11 @@ else
 {slope1n=((float)((1<<31)))/((float)(slope1d));
 out=-(((Phase-(Slope<<5))>>5)*slope1n)-(1<<30);
 }
-if(param_sine>0)
-{SINE2TINTERP(out,sine)}
-else{sine=out<<1;}
-outlet_out=___SMMUL(sine,((param_AM<1?(1<<28):0)+___SMMUL(inlet_sync<<3,param_AM>0?(1<<30):0)));
-}]]></code.srate>
+mult=mult+((Mult-mult)>>8);
+SINE2TINTERP((___SMMUL(out+(1<<31),mult<<4)<<6)+(3<<30),sine1)
+SINE2TINTERP((___SMMUL(-out+(1<<31),mult<<4)<<6)-(3<<30),sine2)
+outlet_out=___SMMUL((((out>>3))+___SMMUL(((out>>4)+(1<<27)),sine2)+___SMMUL((1<<28)-((out>>4)+(1<<27)),sine1)),((param_AM<1?(1<<28):0)+___SMMUL(inlet_sync<<3,param_AM>0?(1<<30):0)))<<3;
+}
+]]></code.srate>
    </obj.normal>
 </objdefs>
