@@ -2,11 +2,14 @@
    <obj.normal id="chaotic_lfo" uuid="e945f019-3bcb-4d36-8dfe-ccc6a5f46eb7">
       <sDescription>Simple chaotic lfo
 
-- parameter value is range from oscillation to chaos</sDescription>
+- parameter &quot;val&quot; is range from oscillation to chaos</sDescription>
       <author>JLS</author>
       <license>BSD</license>
       <helpPatch>chaotic_lfo.axh</helpPatch>
-      <inlets/>
+      <inlets>
+         <bool32 name="active" description="active"/>
+         <bool32.rising name="reset" description="reset"/>
+      </inlets>
       <outlets>
          <frac32.bipolar name="x" description="axis x"/>
          <frac32.bipolar name="y" description="axis y"/>
@@ -14,7 +17,7 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="value" description="from oscillation to chaos" noLabel="true"/>
+         <frac32.u.map name="val" description="from oscillation to chaos" noLabel="false"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[float x;
@@ -24,15 +27,17 @@ float ty;
 float z;
 float tz;
 float a;
-float dt;]]></code.declaration>
+float dt;
+int res;]]></code.declaration>
       <code.init><![CDATA[x = 0.1;
 y = 0.1;
 z = 0.1;
-a = 0.43;
-dt = 0.02;]]></code.init>
-      <code.srate><![CDATA[{
+a = 0;
+dt = 0.02;
+res = 0;]]></code.init>
+      <code.srate><![CDATA[if (inlet_active>0) {
 	
-	a = 0.2 + (param_value/640000000.0);
+	a = 0.2 + (param_val/640000000.0);
 
 	tx = -y + (z * z);
 	ty = x + a * y;
@@ -46,6 +51,27 @@ dt = 0.02;]]></code.init>
 	outlet_y = (int32_t) ((-0.5+y) * (1<<25));
 	outlet_z = (int32_t) ((0.25+z) * (1<<25));
 
+}
+
+else {
+
+	outlet_x = 0;
+	outlet_y = 0;
+	outlet_z = 0;
+	
+}
+
+if ((inlet_reset>0) && !res) {
+	
+   	res = 1;
+   	x = 0.1;
+	y = 0.1;
+	z = 0.1;
+	a = 0;
+	dt = 0.02;
+	
+} else if (!(inlet_reset>0)) {
+   res = 0;
 }]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -15,7 +15,7 @@
    </obj>
    <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="308" y="28">
       <params>
-         <frac32.s.map name="pitch" value="12.0"/>
+         <frac32.s.map name="pitch" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -43,9 +43,15 @@
    </obj>
    <obj type="jls/lfo/chaotic_lfo" uuid="e945f019-3bcb-4d36-8dfe-ccc6a5f46eb7" name="chaotic_lfo_1" x="294" y="238">
       <params>
-         <frac32.u.map name="value" value="0.0"/>
+         <frac32.u.map name="val" value="0.0"/>
       </params>
       <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="56" y="266">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
    </obj>
    <obj type="logic/samplehold" uuid="55479a62c4ed7e3536b6e6f339ce05a802a81b9d" name="samplehold_1" x="434" y="266">
       <params/>
@@ -62,13 +68,12 @@
       </net>
       <net>
          <source obj="square_1" outlet="wave"/>
-         <dest obj="samplehold_1" inlet="s_h"/>
          <dest obj="ad_1" inlet="trig"/>
+         <dest obj="samplehold_1" inlet="s_h"/>
       </net>
       <net>
          <source obj="chaotic_lfo_1" outlet="z"/>
          <dest obj="kscope_3" inlet="in"/>
-         <dest obj="samplehold_1" inlet="in"/>
       </net>
       <net>
          <source obj="samplehold_1" outlet="out"/>
@@ -90,6 +95,11 @@
       <net>
          <source obj="chaotic_lfo_1" outlet="y"/>
          <dest obj="kscope_2" inlet="in"/>
+         <dest obj="samplehold_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="chaotic_lfo_1" inlet="active"/>
       </net>
    </nets>
    <settings>
