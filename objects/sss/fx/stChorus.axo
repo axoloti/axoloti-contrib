@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="stChorus" uuid="c4ee9000-6e19-496a-b481-ad8bcbfaa9e8">
+   <obj.normal id="stChorus" uuid="51e31bf8-000d-483c-b57f-31a7d58a4588">
       <sDescription>stereo chorus module
 connect delay_write modules to the recL and recR output.
 Normal chorus setting would be 100ms max</sDescription>
@@ -11,6 +11,7 @@ Normal chorus setting would be 100ms max</sDescription>
          <frac32buffer name="audioR"/>
          <frac32 name="pre"/>
          <frac32 name="depth"/>
+         <frac32 name="rate"/>
       </inlets>
       <outlets>
          <frac32buffer name="outL" description="wave"/>
@@ -36,14 +37,18 @@ int32_t pre;
 int32_t depth;
 int32_t idepth;
 int32_t Pre;
-int32_t Depth;]]></code.declaration>
+int32_t Depth;
+int32_t Rate;]]></code.declaration>
       <code.krate><![CDATA[pre=inlet_pre+param_pre;
 depth=__USAT(inlet_depth+param_depth,27);
+depth=___SMMUL(depth<<3,depth<<2);
 idepth=(1<<27)-depth;
 
 int32_t pra=___SMMUL(pre<<3,idepth<<2)+(depth>>1);
-int32_t rate=___SMMUL(param_rate<<3,param_rate<<2)>>6;]]></code.krate>
-      <code.srate><![CDATA[phase+=rate;
+int32_t rate=param_rate+inlet_rate;
+rate=___SMMUL(rate<<3,rate<<2)>>6;]]></code.krate>
+      <code.srate><![CDATA[Rate=Rate+((rate-Rate)>>6);
+phase+=Rate;
 Pre=Pre+((pra-Pre)>>6);
 Depth=Depth+((depth-Depth)>>6);
 int32_t sine;
