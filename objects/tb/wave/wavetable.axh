@@ -1,5 +1,9 @@
 <patch-1.0 appVersion="1.0.10">
-   <obj type="tb/wave/wavetable load" uuid="79be5e1d-3c11-489e-9cae-5c2e69d60ddc" name="wt" x="70" y="14">
+   <comment type="patch/comment" x="70" y="0" text="simple poly wavetable example"/>
+   <comment type="patch/comment" x="70" y="14" text="play with midi keyboard, mod wheel changes wave"/>
+   <comment type="patch/comment" x="70" y="56" text="specify wavetable file, number of waves and size of EACH wave"/>
+   <comment type="patch/comment" x="812" y="56" text="utils"/>
+   <obj type="tb/wave/wavetable load" uuid="79be5e1d-3c11-489e-9cae-5c2e69d60ddc" name="wt" x="70" y="70">
       <params/>
       <attribs>
          <combo attributeName="waves" selection="4"/>
@@ -7,28 +11,27 @@
          <file attributeName="filename" file="sisqswsi.raw"/>
       </attribs>
    </obj>
-   <obj type="tb/midi/utils/midiled" uuid="952fc352-41c6-45db-aa95-55d5d3a5546e" name="midiled_1" x="294" y="14">
+   <obj type="tb/midi/utils/midiled" uuid="952fc352-41c6-45db-aa95-55d5d3a5546e" name="midiled_1" x="812" y="70">
       <params/>
       <attribs>
          <combo attributeName="input" selection="omni"/>
       </attribs>
    </obj>
-   <obj type="audio/outconfig" uuid="eace67e3304afaa1bb695b444e9345f2d8adaf00" name="outconfig_1" x="672" y="14">
+   <obj type="audio/outconfig" uuid="eace67e3304afaa1bb695b444e9345f2d8adaf00" name="outconfig_1" x="812" y="112">
       <params/>
       <attribs>
          <combo attributeName="headphones" selection="-54dB"/>
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="84" y="140" text="simple poly wavetable example"/>
-   <comment type="patch/comment" x="84" y="154" text="play with midi keyboard, mod wheel changes wave"/>
-   <patcher type="patch/patcher" uuid="74ef1a52-b0c5-49b6-ba19-236360e4b0d6" name="patcher_1" x="434" y="196">
+   <comment type="patch/comment" x="434" y="182" text="note: tb/wave/wavetable play in HERE"/>
+   <patcher type="patch/patcher" uuid="0ab3522d-0d21-45bf-9055-e79d8cd7f758" name="patcher_1" x="434" y="196">
       <params>
          <frac32.s.map name="adsr_1:a" value="0.0"/>
          <frac32.s.map name="adsr_1:d" value="0.0"/>
          <frac32.u.map name="adsr_1:s" value="34.5"/>
          <frac32.s.map name="adsr_1:r" value="0.0"/>
-         <frac32.s.map name="wavetable_1:pitch" value="10.0"/>
+         <frac32.s.map name="wavetable_1:pitch" value="0.0"/>
          <frac32.u.map name="wavetable_1:windex" value="0.0"/>
          <bool32.tgl name="wavetable_1:xfade" value="1"/>
       </params>
@@ -44,6 +47,7 @@
             <params/>
             <attribs/>
          </obj>
+         <comment type="patch/comment" x="476" y="98" text="play the wavetable"/>
          <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="56" y="112">
             <params/>
             <attribs/>
@@ -83,6 +87,7 @@
             <params/>
             <attribs/>
          </obj>
+         <comment type="patch/comment" x="602" y="238" text="assign to mod wheel"/>
          <nets>
             <net>
                <source obj="keyb_1" outlet="gate"/>
@@ -143,21 +148,23 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="672" y="210">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="672" y="196">
       <params>
          <frac32.u.map name="amp" value="32.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="812" y="210">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="812" y="196">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="616" y="350">
+   <comment type="patch/comment" x="672" y="308" text="pretty waves here"/>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="672" y="322">
       <params/>
       <attribs/>
    </obj>
    <comment type="patch/comment" x="252" y="476" text="turn off xfade to get discrete waves"/>
+   <comment type="patch/comment" x="448" y="532" text="tip: turn up WT pitch, if you want to see the entire wave, and play 1 note only"/>
    <nets>
       <net>
          <source obj="*c_1" outlet="out"/>
