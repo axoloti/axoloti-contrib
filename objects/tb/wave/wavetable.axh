@@ -1,0 +1,179 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="tb/wave/wavetable load" uuid="79be5e1d-3c11-489e-9cae-5c2e69d60ddc" name="wt" x="70" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="waves" selection="4"/>
+         <combo attributeName="size" selection="2048"/>
+         <file attributeName="filename" file="sisqswsi.raw"/>
+      </attribs>
+   </obj>
+   <obj type="tb/midi/utils/midiled" uuid="952fc352-41c6-45db-aa95-55d5d3a5546e" name="midiled_1" x="294" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="input" selection="omni"/>
+      </attribs>
+   </obj>
+   <obj type="audio/outconfig" uuid="eace67e3304afaa1bb695b444e9345f2d8adaf00" name="outconfig_1" x="658" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="headphones" selection="-54dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="f60aed2e-cc4b-4e50-a759-788bf3ed8023" name="patcher_1" x="434" y="196">
+      <params>
+         <frac32.s.map name="adsr_1:a" value="0.0"/>
+         <frac32.s.map name="adsr_1:d" value="0.0"/>
+         <frac32.u.map name="adsr_1:s" value="34.5"/>
+         <frac32.s.map name="adsr_1:r" value="0.0"/>
+         <frac32.s.map name="wavetable_1:pitch" value="10.0"/>
+         <bool32.tgl name="wavetable_1:xfade" value="1"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="16"/>
+      </attribs>
+      <subpatch appVersion="1.0.10">
+         <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="56" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/div 32" uuid="40e43d0d284fded6b6cfadd45a5cb69c8d713691" name="div_1" x="154" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="56" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="224" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="322" y="112">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="0.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+               <frac32.u.map name="s" onParent="true" value="0.0"/>
+               <frac32.s.map name="r" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tb/wave/wavetable play" uuid="e5b9cbd3-09d0-4809-bdc9-c3ddee14b112" name="wavetable_1" x="476" y="112">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.u.map name="windex" MidiCC="1" value="0.0"/>
+               <bool32.tgl name="xfade" onParent="true" value="1"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../wt"/>
+            </attribs>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="630" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="700" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="812" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="wavetable_1" outlet="o"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="bend_1" outlet="bend"/>
+               <dest obj="div_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="div_1" outlet="out"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="wavetable_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="+_1" inlet="in2"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>954</x>
+            <y>552</y>
+            <width>1038</width>
+            <height>648</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="672" y="210">
+      <params>
+         <frac32.u.map name="amp" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="812" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="616" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="*c_1" inlet="in"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>585</x>
+      <y>475</y>
+      <width>1047</width>
+      <height>877</height>
+   </windowPos>
+</patch-1.0>
