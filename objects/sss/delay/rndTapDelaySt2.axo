@@ -1,7 +1,9 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="rndTapDelayStereoOut" uuid="9bcdfcc7-48f5-4a94-acd1-bb7f9a2501d4">
+   <obj.normal id="rndTapDelaySt2" uuid="649bf187-314f-400b-9768-2572ca313007">
       <sDescription>random multi-tap delay/early reflections with controllable tap-amount.
-length sets the amount of taps.</sDescription>
+length sets the amount of taps.
+
+this version uses two external delay-write modules to enable random ping-ping delays/reverberation</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>delay.axh</helpPatch>
@@ -24,17 +26,20 @@ length sets the amount of taps.</sDescription>
          <frac32.u.map name="minimum"/>
       </params>
       <attribs>
-         <objref name="delayname"/>
+         <objref name="delayname1"/>
+         <objref name="delayname2"/>
       </attribs>
       <code.declaration><![CDATA[int32_t _val[16];
 int32_t _vol[16];
-int32_t _pan[16];
-int32_t _com[16];
-int32_t _sam[16];
+uint32_t _pan[16];
+uint32_t _com[16];
+int32_t _sam1[16];
+int32_t _sam2[16];
 int ntrig;
 int8_t lng;
 int i;
-uint32_t _delay[16];
+uint32_t _delay1[16];
+uint32_t _delay2[16];
 int32_t sumL;
 int32_t sumR;
 int32_t mad;
@@ -66,18 +71,20 @@ mid=mid+((width-mid)>>1);
   sumL=0;
   sumR=0;
 for(i=0;i<lng;i++) 
-   {_delay[i] = attr_delayname.writepos - (__USAT(___SMMUL(mid<<3,(_val[i])<<2)+mad,27)>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE+buffer_index;
+   {_delay1[i] = attr_delayname1.writepos - (__USAT(___SMMUL(mid<<3,(_val[i])<<2)+mad,27)>>(27-attr_delayname1.LENGTHPOW)) - BUFSIZE+buffer_index;
+    _delay2[i] = attr_delayname2.writepos - (__USAT(___SMMUL(mid<<3,(_val[i])<<2)+mad,27)>>(27-attr_delayname2.LENGTHPOW)) - BUFSIZE+buffer_index;
    } 
 
   for(i=0;i<lng;i++) 
-  _sam[i]=(___SMMUL((attr_delayname.array[(_delay[i]) & attr_delayname.LENGTHMASK]<<14)<<3,_vol[i]<<2))/(1+lng/2);{}
+  _sam1[i]=(___SMMUL((attr_delayname1.array[(_delay1[i]) & attr_delayname1.LENGTHMASK]<<14)<<3,_vol[i]<<2))/(1+lng/2);{}
   for(i=0;i<lng;i++) 
-  sumL+=___SMMUL((_sam[i])<<3,(_pan[i])<<4);{}
+  _sam2[i]=(___SMMUL((attr_delayname2.array[(_delay2[i]) & attr_delayname2.LENGTHMASK]<<14)<<3,_vol[i]<<2))/(1+lng/2);{}
   for(i=0;i<lng;i++) 
-  sumR+=___SMMUL((_sam[i])<<3,(_com[i])<<4);{}
+  {sumL+=___SMMUL((_sam1[i])<<3,(_pan[i])<<4);{}}
+  for(i=0;i<lng;i++) 
+  {sumR+=___SMMUL((_sam2[i])<<3,(_com[i])<<4);{}}
   outlet_outL=sumL;
   outlet_outR=sumR;
-
 ]]></code.srate>
    </obj.normal>
 </objdefs>

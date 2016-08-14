@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="stChorus" uuid="51e31bf8-000d-483c-b57f-31a7d58a4588">
+   <obj.normal id="stChorus" uuid="526c7e67-3757-46d5-abca-9f33fa0367d6">
       <sDescription>stereo chorus module
 connect delay_write modules to the recL and recR output.
 Normal chorus setting would be 100ms max</sDescription>
@@ -12,6 +12,8 @@ Normal chorus setting would be 100ms max</sDescription>
          <frac32 name="pre"/>
          <frac32 name="depth"/>
          <frac32 name="rate"/>
+         <frac32 name="wet"/>
+         <frac32 name="dry"/>
       </inlets>
       <outlets>
          <frac32buffer name="outL" description="wave"/>
@@ -46,7 +48,9 @@ idepth=(1<<27)-depth;
 
 int32_t pra=___SMMUL(pre<<3,idepth<<2)+(depth>>1);
 int32_t rate=param_rate+inlet_rate;
-rate=___SMMUL(rate<<3,rate<<2)>>6;]]></code.krate>
+rate=___SMMUL(rate<<3,rate<<2)>>6;
+int32_t wet=param_wet+inlet_wet;
+int32_t dry=param_dry+inlet_dry;]]></code.krate>
       <code.srate><![CDATA[Rate=Rate+((rate-Rate)>>6);
 phase+=Rate;
 Pre=Pre+((pra-Pre)>>6);
@@ -64,7 +68,7 @@ int32_t read2=__USAT(-___SMMUL(Depth,sine>>1)+Pre,27);
       int32_t tmp_a2 = attr_delayname1.array[(tmp_di+1)&attr_delayname1.LENGTHMASK]<<16;
       int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
       tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
-outlet_outL=___SMMUL(param_dry<<3,inlet_audioL<<2)+___SMMUL(param_wet<<3,tmp_r<<2);
+outlet_outL=___SMMUL(dry<<3,inlet_audioL<<2)+___SMMUL(wet<<3,tmp_r<<2);
 outlet_recL=inlet_audioL+___SMMUL(param_feedback<<3,tmp_r<<2);
 
       tmp_d =  read2;
@@ -75,7 +79,7 @@ outlet_recL=inlet_audioL+___SMMUL(param_feedback<<3,tmp_r<<2);
       tmp_a2 = attr_delayname2.array[(tmp_di+1)&attr_delayname2.LENGTHMASK]<<16;
       tmp_r = ___SMMUL(tmp_a1,tmp_w1);
       tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
-outlet_outR=___SMMUL(param_dry<<3,inlet_audioR<<2)+___SMMUL(param_wet<<3,tmp_r<<2);
+outlet_outR=___SMMUL(dry<<3,inlet_audioR<<2)+___SMMUL(wet<<3,tmp_r<<2);
 outlet_recR=inlet_audioR+___SMMUL(param_feedback<<3,tmp_r<<2);]]></code.srate>
    </obj.normal>
 </objdefs>

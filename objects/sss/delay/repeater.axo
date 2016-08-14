@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="repeater" uuid="30bcea1c-e468-40c5-9863-e740a2e2ed64">
+   <obj.normal id="repeater" uuid="74e98cd6-47c3-46a8-807f-09abea67eee3">
       <sDescription>audio repeater module. Can be used in-line in your audio-chain and doesn&apos;t need an external delay write module. When input &quot;on&quot; is low, audio input is just send thru to the output.
 
 when input &quot;on&quot; goes high, starts repeating the last audio that came in.
@@ -8,7 +8,8 @@ NOTE! size is set in samples! Use my clock2timing module to get the sample lengt
 
 the repeat input sets the amount of times the buffer is repeated as long as the &quot;on&quot; input is high. After that, a new sample is taken which itself will be repeated the set amount of times before another sample is taken again.
 
-Bit of a drawback of the way the module is coded, is that there is no pitch-control possible. The idea was to make a granulizer, though I&apos;ll need to make another module for that I guess..</sDescription>
+Bit of a drawback of the way the module is coded, is that there is no pitch-control possible.
+Use the &quot;grainer&quot; module if you want pitch-control</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
@@ -19,6 +20,7 @@ Bit of a drawback of the way the module is coded, is that there is no pitch-cont
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
+         <bool32 name="rec"/>
       </outlets>
       <displays/>
       <params>
@@ -72,7 +74,7 @@ uint32_t writepos;
 uint32_t phase;
 int32_t size;
 int32_t times;
-int rec;
+int32_t rec;
 int32_t out;
 int32_t aut;
 int32_t window;
@@ -90,40 +92,35 @@ array = &_array[parent->polyIndex][0];
       <code.krate><![CDATA[size=param_size;
 size=___SMMUL(size<<3,size<<2);
 size=___SMMUL(size<<3,LENGTH<<2)+inlet_size;
-repeat=inlet_repeat+param_repeat;]]></code.krate>
+repeat=inlet_repeat+param_repeat;
+outlet_rec=rec;]]></code.krate>
       <code.srate><![CDATA[//(on>0?on-rec:on)
-ON=ON+(((on>0?on-rec:on)-ON)>>8);
+ON=ON+(((on>0?on-(rec<<27):on)-ON)>>8);
 
 if((inlet_in>0)&&(!(ttrig)))
 {ttrig=1;
 on=inlet_on>0?(1<<27):0;}
 else if (inlet_in<0){ttrig=0;}
-
 out=___SMMUL(((1<<27)-ON)<<3,inlet_in<<2);
 
-
-if((!(on>0))+(rec==1)){
+if((!(on>0))+(rec>0)){
 writepos = (writepos + 1)&LENGTHMASK;
 array[writepos] = __SSAT(out,27);
-
 }
 
-
-
-
 if(!(inlet_on>0)){times=0;phase=0;}
+
 if(on>0)
 {
 	phase+=1;
 	phase=phase-((phase/size)*size);
 	times=phase==0?times+1:times;
 	times=times-((times/repeat)*repeat);
-	rec=times==param_repeat-1?1:0;
+	rec=times>=(repeat-1)?1:0;
 }
-	aut=array[(writepos+phase-size)&LENGTHMASK]>>1;
-	aut+=array[(writepos-phase)&LENGTHMASK]>>1;
 
-
+aut=array[(writepos+phase-size)&LENGTHMASK]>>1;
+aut+=array[(writepos-phase)&LENGTHMASK]>>1;
 outlet_out=out+___SMMUL(ON<<3,aut<<2);
 ]]></code.srate>
    </obj.normal>
