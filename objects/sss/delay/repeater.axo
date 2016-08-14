@@ -1,0 +1,130 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="repeater" uuid="30bcea1c-e468-40c5-9863-e740a2e2ed64">
+      <sDescription>audio repeater module. Can be used in-line in your audio-chain and doesn&apos;t need an external delay write module. When input &quot;on&quot; is low, audio input is just send thru to the output.
+
+when input &quot;on&quot; goes high, starts repeating the last audio that came in.
+repeating size is set by the &quot;size&quot; inlet. 
+NOTE! size is set in samples! Use my clock2timing module to get the sample length to fit host tempo and connect the size input through a &quot;ratioVCAI&quot; module (math folder) to the &quot;ksamples&quot; output on the &quot;clock2timing&quot; module. The &quot;ratioVCAI&quot; can then be used to set any desirable ratio to the host tempo 
+
+the repeat input sets the amount of times the buffer is repeated as long as the &quot;on&quot; input is high. After that, a new sample is taken which itself will be repeated the set amount of times before another sample is taken again.
+
+Bit of a drawback of the way the module is coded, is that there is no pitch-control possible. The idea was to make a granulizer, though I&apos;ll need to make another module for that I guess..</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <bool32 name="on"/>
+         <int32 name="size" description="connect to &quot;Ksamples&quot; on my clock2timing module. Use ratioVCAI to set ratio to host tempo"/>
+         <int32 name="repeat"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="size"/>
+         <int32 name="repeat">
+            <MinValue i="0"/>
+            <MaxValue i="256"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int32_t *array;
+uint32_t writepos;
+uint32_t phase;
+int32_t size;
+int32_t times;
+int rec;
+int32_t out;
+int32_t aut;
+int32_t window;
+int32_t val;
+int ttrig;
+int32_t on;
+int32_t repeat;
+int32_t ON;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+]]></code.init>
+      <code.krate><![CDATA[size=param_size;
+size=___SMMUL(size<<3,size<<2);
+size=___SMMUL(size<<3,LENGTH<<2)+inlet_size;
+repeat=inlet_repeat+param_repeat;]]></code.krate>
+      <code.srate><![CDATA[//(on>0?on-rec:on)
+ON=ON+(((on>0?on-rec:on)-ON)>>8);
+
+if((inlet_in>0)&&(!(ttrig)))
+{ttrig=1;
+on=inlet_on>0?(1<<27):0;}
+else if (inlet_in<0){ttrig=0;}
+
+out=___SMMUL(((1<<27)-ON)<<3,inlet_in<<2);
+
+
+if((!(on>0))+(rec==1)){
+writepos = (writepos + 1)&LENGTHMASK;
+array[writepos] = __SSAT(out,27);
+
+}
+
+
+
+
+if(!(inlet_on>0)){times=0;phase=0;}
+if(on>0)
+{
+	phase+=1;
+	phase=phase-((phase/size)*size);
+	times=phase==0?times+1:times;
+	times=times-((times/repeat)*repeat);
+	rec=times==param_repeat-1?1:0;
+}
+	aut=array[(writepos+phase-size)&LENGTHMASK]>>1;
+	aut+=array[(writepos-phase)&LENGTHMASK]>>1;
+
+
+outlet_out=out+___SMMUL(ON<<3,aut<<2);
+]]></code.srate>
+   </obj.normal>
+</objdefs>
