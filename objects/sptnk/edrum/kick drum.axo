@@ -17,7 +17,6 @@
          <frac32.u.map name="pitchenvamt" description="pitch envelope amount"/>
          <frac32.s.map.pitch name="basepitch" description="basic tuning"/>
          <frac32.u.map.gain name="click" description="amount of click at the beginning of the kick"/>
-         <bool32.tgl name="shape"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t envcounter =0;
@@ -52,12 +51,10 @@ ttrig = 0;]]></code.krate>
 pitchenvcounter = ___SMMLS(pitchenvcounter,k_pitchdecay,pitchenvcounter);
 
 SINE2TINTERP(phasor,r);
-if (param_shape)
-SINE2TINTERP(r,r);
 r=___SMMUL(r,envcounter);
 
 pitch = ___SMMLA(pitchenvcounter,k_pitchenv,k_basepitch);
 phasor += pitch;
-outlet_out=__SSAT(r<<2,27);]]></code.srate>
+outlet_out=r;]]></code.srate>
    </obj.normal>
 </objdefs>
