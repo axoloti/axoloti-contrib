@@ -1,0 +1,431 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pianoroll" uuid="487bf153-9ef6-47f8-aa93-c3542da7524c">
+      <sDescription>Pianoroll module
+
+first:
+1. set the size of the table. For each sequence (=4 octaves with 16 steps), 48 positions are used.
+2. set the filename in the &quot;file&quot; edit box. (I chose 0:/pianoroll.tab)
+3. if it starts bitching about &quot;no such file found&quot;, create a table under that name first using the table-save module..
+
+use &quot;octave&quot; and &quot;sequence&quot; selectors to select a specific part of the entire sequence.
+each sequence is 16 steps and can cover 4 octaves.
+
+EDITING
+to edit the part of the sequence:
+-to reset the editor to &quot;whole octave, no gates-on&quot;, press &quot;reset&quot;.
+
+-press &quot;load&quot; if you want to load the already created sequence that was saved in this part (part= octave&amp;sequence_
+
+-press the boxes in the editor to add notes to the sequence. The boxes can have 4 values: 0,1,2,3, which can be used to control extra functions in your synth, select slides, velocity etc.
+
+-to save the edit, select the right sequence and octave and press &quot;save&quot;.
+
+-to copy a sequence to another sequence (copies all 4 octaves):
+     -select the sequence you want to copy FROM using the &quot;sequence&quot; selector.
+     -select the sequence you want to copy TO using the &quot;CopyTo&quot; selector.
+     -press &quot;copy&quot;.
+you can use this to make repeating 16-step patterns, which can later be edited for variation.
+
+-to clear ALL sequences (emtpy array), press the &quot;CLEARSEQ&quot; button.
+
+-to save the entire array to your SD-card for future recall, press &quot;SAVE2FILE&quot;.
+
+RECORDING MODE
+for this, a subpatch of mine is needed: &quot;8voice2rec&quot;. This translates polyphonic note-input to 8 seperate note&amp;gate channels (gate has 4 values 0,1,2,3).
+-connect the corresponding outputs and inputs (gates to gates, notes to notes, duh..)
+-set polyphony on &quot;8voice2rec&quot; to 8 and set it to the incoming midi channel, device and port.
+
+when you want to record, press the &quot;rec&quot; toggle-button above the sequence-editor and start playing while the count is running.
+Note that more then 8 voices can be recorded into the sequencer! Depending on the follow-up of notes, this can create some nice variations when the sequencer repeats, due to the voice-allocation-algorithm.</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count" description="in"/>
+         <int32 name="gate1"/>
+         <int32 name="note1"/>
+         <int32 name="gate2"/>
+         <int32 name="note2"/>
+         <int32 name="gate3"/>
+         <int32 name="note3"/>
+         <int32 name="gate4"/>
+         <int32 name="note4"/>
+         <int32 name="gate5"/>
+         <int32 name="note5"/>
+         <int32 name="gate6"/>
+         <int32 name="note6"/>
+         <int32 name="gate7"/>
+         <int32 name="note7"/>
+         <int32 name="gate8"/>
+         <int32 name="note8"/>
+      </inlets>
+      <outlets>
+         <int32 name="gate1"/>
+         <int32 name="note1"/>
+         <int32 name="gate2"/>
+         <int32 name="note2"/>
+         <int32 name="gate3"/>
+         <int32 name="note3"/>
+         <int32 name="gate4"/>
+         <int32 name="note4"/>
+         <int32 name="gate5"/>
+         <int32 name="note5"/>
+         <int32 name="gate6"/>
+         <int32 name="note6"/>
+         <int32 name="gate7"/>
+         <int32 name="note7"/>
+         <int32 name="gate8"/>
+         <int32 name="note8"/>
+         <int32 name="gates"/>
+      </outlets>
+      <displays>
+         <int32.bar16 name="in" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.tgl name="rec"/>
+         <bool32.mom name="reset"/>
+         <int2x16 name="Bb"/>
+         <int2x16 name="Ais"/>
+         <int2x16 name="Aa"/>
+         <int2x16 name="Gis"/>
+         <int2x16 name="Gg"/>
+         <int2x16 name="Fis"/>
+         <int2x16 name="Ff"/>
+         <int2x16 name="Ee"/>
+         <int2x16 name="Dis"/>
+         <int2x16 name="Dd"/>
+         <int2x16 name="Cis"/>
+         <int2x16 name="Cc"/>
+         <bool32.mom name="load"/>
+         <int32.hradio name="octave">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="sequence">
+            <MinValue i="0"/>
+            <MaxValue i="512"/>
+         </int32>
+         <bool32.mom name="save"/>
+         <int32 name="CopyTo">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.mom name="copy"/>
+         <bool32.mom name="CLEARSEQ"/>
+         <bool32.mom name="SAVE2FILE"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+            </MenuEntries>
+            <CEntries>
+               <string>CEntries1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <text name="file"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t *array;
+
+int gate[8];
+int16_t pnote[8];
+int16_t note[8];
+int used;
+int32_t writesequence;
+int32_t readsequence;
+int32_t prev;
+
+int strig;
+int ltrig;
+int octave;
+int Gates;
+int Gotes;
+int Gites;
+int sel;
+int i;
+int j;
+int rtrig;
+int ctrig;
+int cltrig;
+int ntrig;
+
+]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+
+for(i=0;i<LENGTH;i++)
+{
+	array[i]=0;
+}
+
+
+
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, "attr_file", FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,"attr_file"); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,"attr_file"); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,"attr_file"); return;};
+  
+  ntrig = 0;
+
+
+
+
+sel=0;]]></code.init>
+      <code.krate><![CDATA[int32_t in=inlet_count&15;
+octave=param_octave*12;
+writesequence=(param_sequence+(inlet_count>>4))*48;
+readsequence=(param_sequence)*48;
+
+if((param_rec>0)&&(!(inlet_count==prev))){
+
+if(inlet_gate1>0){
+	array[inlet_note1+writesequence]+=inlet_gate1<<in*2;
+}
+
+if(inlet_gate2>0){
+	array[inlet_note2+writesequence]+=inlet_gate2<<in*2;
+}
+
+if(inlet_gate3>0){
+	array[inlet_note3+writesequence]+=inlet_gate3<<in*2;
+}
+
+if(inlet_gate4>0){
+	array[inlet_note4+writesequence]+=inlet_gate4<<in*2;
+}
+
+if(inlet_gate5>0){
+	array[inlet_note5+writesequence]+=inlet_gate5<<in*2;
+}
+
+if(inlet_gate6>0){
+	array[inlet_note6+writesequence]+=inlet_gate6<<in*2;
+}
+
+if(inlet_gate7>0){
+	array[inlet_note7+writesequence]+=inlet_gate7<<in*2;
+}
+
+if(inlet_gate8>0){
+	array[inlet_note8+writesequence]+=inlet_gate8<<in*2;
+}
+
+	
+}
+
+
+
+if((param_save>0)&!strig)
+{strig=1;
+array[0+octave+readsequence]=param_Cc;
+array[1+octave+readsequence]=param_Cis;
+array[2+octave+readsequence]=param_Dd;
+array[3+octave+readsequence]=param_Dis;
+array[4+octave+readsequence]=param_Ee;
+array[5+octave+readsequence]=param_Ff;
+array[6+octave+readsequence]=param_Fis;
+array[7+octave+readsequence]=param_Gg;
+array[8+octave+readsequence]=param_Gis;
+array[9+octave+readsequence]=param_Aa;
+array[10+octave+readsequence]=param_Ais;
+array[11+octave+readsequence]=param_Bb;
+}
+else if(!(param_save>0)){strig=0;}
+
+if((param_load>0)&!ltrig)
+{ltrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Cc],array[0+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Cis],array[1+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Dd],array[2+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Dis],array[3+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ee],array[4+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ff],array[5+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Fis],array[6+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Gg],array[7+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Gis],array[8+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Aa],array[9+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ais],array[10+octave+readsequence],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Bb],array[11+octave+readsequence],0xFFFD);}
+else if(!(param_load>0)){ltrig=0;}
+
+if((param_reset>0)&!rtrig)
+{rtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Cc],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Cis],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Dd],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Dis],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ee],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ff],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Fis],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Gg],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Gis],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Aa],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Ais],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Bb],0,0xFFFD);}
+else if(!(param_reset>0)){rtrig=0;}
+
+if((param_copy>0)&!ctrig)
+{ctrig=1;for(i=0;i<48;i++){array[i+param_CopyTo*48]=array[i+readsequence];}}
+else if(!(param_copy>0)){ctrig=0;}
+
+if((param_CLEARSEQ>0)&!cltrig)
+{cltrig=1;for(i=0;i<LENGTH;i++){array[i]=0;}}
+else if(!(param_CLEARSEQ>0)){cltrig=0;}
+
+Gates=0;
+if ((in>=0)&&(!(in==prev)))
+{
+for(i=0;i<48;i++){
+
+used=0;
+for(j=0;j<8;j++){
+used+=note[j]==i;}
+
+if((used==0))
+{
+for(j=0;j<8;j++)
+{if(Gates==0){Gates=gate[j]==0?j:0;}
+}
+
+if(Gates==0)
+{
+Gotes+=((((array[i+writesequence]>>(in*2))&3)>0))?1:0; 
+Gotes=Gotes&7; 
+Gites=Gotes;
+}
+
+if(Gates>0)
+{Gites=Gates;}
+gate[Gites]=((array[i+writesequence]>>(in*2))&3)>0?1:0;
+note[Gites]=gate[Gites]>0?i:note[Gites];
+}}
+
+used=0;
+for(i=0;i<8;i++){
+gate[i]=((array[note[i]+writesequence]>>(in*2))&3)>0?((array[note[i]+writesequence]>>(in*2))&3):0;
+gate[i]=((used>0)&(note[i]==0))?0:gate[i];
+used+=note[i]==0?1:0;
+}}
+
+
+disp_in=inlet_count&15;
+
+outlet_gate1=gate[0];
+outlet_gate2=gate[1];
+outlet_gate3=gate[2];
+outlet_gate4=gate[3];
+outlet_gate5=gate[4];
+outlet_gate6=gate[5];
+outlet_gate7=gate[6];
+outlet_gate8=gate[7];
+outlet_gates=Gates;
+
+outlet_note1=pnote[0]=note[0];
+outlet_note2=pnote[1]=note[1];
+outlet_note3=pnote[2]=note[2];
+outlet_note4=pnote[3]=note[3];
+outlet_note5=pnote[4]=note[4];
+outlet_note6=pnote[5]=note[5];
+outlet_note7=pnote[6]=note[6];
+outlet_note8=pnote[7]=note[7];
+
+
+
+
+  if ((param_SAVE2FILE>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, "attr_file", FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"attr_file"); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"attr_file");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"attr_file");
+  }
+  else if (!(param_SAVE2FILE>0)) ntrig=0;
+
+
+
+prev=inlet_count;]]></code.krate>
+      <code.midihandler><![CDATA[
+]]></code.midihandler>
+   </obj.normal>
+</objdefs>
