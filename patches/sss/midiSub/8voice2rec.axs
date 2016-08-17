@@ -58,12 +58,35 @@
          <code.krate><![CDATA[outlet_result= inlet_a-8;]]></code.krate>
       </object>
    </patchobj>
-   <obj type="math/divremc" uuid="fd7d945542e16344358136d7e22cffd5be704260" name="divremc_1" x="504" y="140">
+   <patchobj type="patch/object" uuid="337950ee-0b26-4a62-836d-61b57abcedda" name="divremc_1" x="504" y="140">
       <params/>
       <attribs>
          <spinner attributeName="denominator" value="48"/>
       </attribs>
-   </obj>
+      <object id="patch/object" uuid="337950ee-0b26-4a62-836d-61b57abcedda">
+         <sDescription>divide integer with constant, also outputs remainder (modulo)</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>math.axh</helpPatch>
+         <inlets>
+            <int32 name="a" description="nominator"/>
+         </inlets>
+         <outlets>
+            <int32 name="rem" description="remainder of division by denominator"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <spinner name="denominator" MinValue="1" MaxValue="128" DefaultValue="1"/>
+         </attribs>
+         <includes/>
+         <code.krate><![CDATA[int32_t r;
+int32_t a=inlet_a+88;
+r=a/attr_denominator;
+outlet_rem = inlet_a+88-(r*attr_denominator);
+]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="demux/demux 8" uuid="424562e2d235f474eefb20fa34619b76498b7c63" name="demux_1" x="616" y="140">
       <params/>
       <attribs/>
@@ -140,11 +163,12 @@
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="-8_1" inlet="a"/>
+         <dest obj="divremc_1" inlet="a"/>
       </net>
       <net>
          <source obj="polyindex_1" outlet="index"/>
-         <dest obj="demux_2" inlet="s"/>
          <dest obj="demux_1" inlet="s"/>
+         <dest obj="demux_2" inlet="s"/>
       </net>
       <net>
          <source obj="demux_1" outlet="o0"/>
@@ -231,10 +255,6 @@
          <dest obj="mux_1" inlet="i2"/>
       </net>
       <net>
-         <source obj="-8_1" outlet="result"/>
-         <dest obj="divremc_1" inlet="a"/>
-      </net>
-      <net>
          <source obj="divremc_1" outlet="rem"/>
          <dest obj="demux_1" inlet="i"/>
       </net>
@@ -250,9 +270,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>1</x>
-      <y>0</y>
-      <width>1691</width>
+      <x>67</x>
+      <y>72</y>
+      <width>1696</width>
       <height>1026</height>
    </windowPos>
 </patch-1.0>
