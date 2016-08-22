@@ -1,11 +1,10 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="granular player 2 stereo" uuid="c168713a-5dbf-4e32-9ca6-874c00b3d9dc">
-      <sDescription>Granular sample player, second version. This one is slightly resource cheaper and allows for a denser grain distribution. Playback scaling is different from granular player 1 (see parameter info) and the maximum grain number is now 64</sDescription>
+   <obj.normal id="granular player 4 stereo" uuid="6081993e-2944-4390-bcbd-feb6fbf5d0a0">
+      <sDescription>cheap granular player, with rectangular envelope for grains (hold parameter instead of attack and decay)</sDescription>
       <author>Sputnki</author>
       <license>BSD</license>
       <inlets>
-         <frac32 name="attack" description="modulation inlet for attack parameter"/>
-         <frac32 name="decay" description="modulation inlet for decay parameter"/>
+         <frac32 name="hold" description="modulation inlet for hold parameter"/>
          <frac32 name="density" description="modulation inlet for density parameter"/>
          <frac32 name="playback" description="modulation inlet for playback parameter"/>
          <frac32 name="pos" description="modulation inlet for pos parameter"/>
@@ -18,8 +17,7 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map.klineartime.exp name="attack" description="set the attack length for a grain"/>
-         <frac32.s.map.klineartime.exp name="decay" description="set the decay length for a grain"/>
+         <frac32.s.map.klineartime.exp name="hold" description="set the hold time for a grain"/>
          <frac32.u.map name="density" description="how many grains per second are played (not in natural units)"/>
          <frac32.s.map.ratio name="playback" description="playback speed for grains.0=stop; +16 = normal speed; -16 reverse playback"/>
          <frac32.u.map name="pos" description="position in the table from where to read audio"/>
@@ -48,8 +46,7 @@ uint32_t temp_32;
 
 uint32_t freq;
 
-uint32_t global_attack;
-uint32_t global_decay;
+uint32_t global_hold;
 
 uint32_t pitchmul =   66000*((1<<27)/attr_table.LENGTH); // this coefficient should be adjusted (const*48000*2^27 / LENGTH)
 
@@ -77,8 +74,7 @@ if(!inlet_reset)
 }
 
 
-MTOF(-param_attack-inlet_attack,global_attack);
-MTOF(-param_decay-inlet_decay,global_decay);
+MTOF(-param_hold-inlet_hold,global_hold);
 
 freq= ___SMMUL(param_playback+inlet_playback>>9,pitchmul);	
 
@@ -110,22 +106,16 @@ int voicealloc=0;
 for(int i=0;i<attr_grains;i++)
 {
 	
-	if (grain_active[i]) //if in attack phase (active)
+	if (grain_active[i]) //if in hold phase (active)
 		{
-		temp_32=grain_amp[i]+(global_attack>>1);
+		temp_32=grain_amp[i]+(global_hold>>1);
 		if (temp_32>grain_amp[i])
 			grain_amp[i]=temp_32;
 		else
+			{
 			grain_active[i]=0;
-			voicealloc++;
-		}
-	else if (grain_amp[i]) //not active but in decay phase
-		{
-		temp_32=grain_amp[i]-(global_decay>>1);
-		if (temp_32<grain_amp[i])
-			grain_amp[i]=temp_32;
-		else
 			grain_amp[i]=0;
+			}
 			voicealloc++;
 		}
 
@@ -133,7 +123,7 @@ for(int i=0;i<attr_grains;i++)
 		{
 			if (grain_amp[i]) //if in attack phase (active)
 			{
-				accum[j][grain_pan[i]]+=___SMMUL(attr_table.array[__USAT(grain_phase[i],27)>>(27-attr_table.LENGTHPOW)]<<attr_table.GAIN,grain_amp[i]>>1)>>param_gainreduction;
+				accum[j][grain_pan[i]]+=attr_table.array[__USAT(grain_phase[i],27)>>(27-attr_table.LENGTHPOW)]<<attr_table.GAIN>>param_gainreduction;
 				grain_phase[i]+=freq;
 			}
 		}
