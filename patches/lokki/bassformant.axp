@@ -1,21 +1,21 @@
 <patch-1.0 appVersion="1.0.11">
    <comment type="patch/comment" x="14" y="0" text="based on cwitz formant synth, added f3 for more clarity in the vowels and changed f1 and f2 frequencies"/>
-   <obj type="formant-voices" uuid="da8473cb-3969-44e5-8f90-5783e2b706dd" name="formant-voices_1" x="434" y="28">
+   <obj type="lokki/bassformantvoice" uuid="1af04475-c4bc-41a5-91c7-dc9472b99de7" name="obj_1" x="434" y="28">
       <params>
          <frac32.u.map name="glide_3" value="16.5"/>
-         <frac32.s.map name="bass vcf:pitch" value="12.0"/>
+         <frac32.u.map name="bassvcf:reso" value="6.5"/>
          <frac32.u.map name="velocity-sens" value="33.5"/>
          <frac32.u.map name="Q" value="42.0"/>
-         <frac32.u.map name="supersaw_1:detune" value="1.5"/>
+         <frac32.u.map name="supersaw:detune" value="14.0"/>
          <frac32.s.map name="env:a" value="-64.0"/>
          <frac32.s.map name="env:d" value="19.0"/>
          <frac32.u.map name="env:s" value="32.5"/>
          <frac32.s.map name="env:r" value="-64.0"/>
          <frac32.u.map name="formant volume" value="64.0"/>
          <frac32.u.map name="noisy" value="1.1999998092651367"/>
-         <frac32.u.map name="humanize" value="27.5"/>
-         <frac32.u.map name="bass volume" value="32.0"/>
-         <frac32.u.map name="smoothaftertouch" value="10.0"/>
+         <frac32.u.map name="humanize" value="8.5"/>
+         <frac32.u.map name="bass volume" value="49.0"/>
+         <frac32.u.map name="aftertouchsmooth" value="10.5"/>
       </params>
       <attribs>
          <combo attributeName="midichannel" selection="1"/>
@@ -50,14 +50,14 @@
    <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="756" y="182">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="54.5"/>
+         <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="756" y="336">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="54.5"/>
+         <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -71,15 +71,7 @@
          <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="formant all touch" outlet="out"/>
-         <dest obj="formant-voices_1" inlet="formant2"/>
-      </net>
-      <net>
-         <source obj="formant no touch" outlet="out"/>
-         <dest obj="formant-voices_1" inlet="formant1"/>
-      </net>
-      <net>
-         <source obj="formant-voices_1" outlet="bass out"/>
+         <source obj="obj_1" outlet="bass out"/>
          <dest obj="mix_1" inlet="in2"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
@@ -92,8 +84,16 @@
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
-         <source obj="formant-voices_1" outlet="formant out"/>
+         <source obj="obj_1" outlet="formant out"/>
          <dest obj="obj_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="formant no touch" outlet="out"/>
+         <dest obj="obj_1" inlet="formant 1"/>
+      </net>
+      <net>
+         <source obj="formant all touch" outlet="out"/>
+         <dest obj="obj_1" inlet="formant 2"/>
       </net>
    </nets>
    <settings>
