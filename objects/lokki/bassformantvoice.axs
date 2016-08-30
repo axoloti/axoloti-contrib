@@ -16,7 +16,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/div 8" uuid="4a6007f5cb2024c50e8449b3bb6bcaef6ac42edb" name="div_1" x="518" y="28">
+   <obj type="math/div 4" uuid="507955275561b256e540f7205386d31545a2828f" name="div_1" x="518" y="28">
       <params/>
       <attribs/>
    </obj>
@@ -56,7 +56,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/bp m" uuid="f26437572c3a1f6be883bb219c773a9906ff8296" name="bp_1" x="1708" y="112">
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_1" x="1708" y="112">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
          <frac32.u.map name="reso" value="0.0"/>
@@ -147,7 +147,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/bp m" uuid="f26437572c3a1f6be883bb219c773a9906ff8296" name="bp_2" x="1708" y="266">
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_2" x="1708" y="266">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
          <frac32.u.map name="reso" value="0.0"/>
@@ -156,6 +156,18 @@
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="2100" y="308">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="formant shift" x="490" y="322">
+      <params>
+         <frac32.s.map name="value" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="mix shift/pitch" x="574" y="322">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="0.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="1162" y="322">
@@ -172,6 +184,10 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_5" x="672" y="350">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="980" y="420">
       <params/>
       <attribs/>
@@ -184,7 +200,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/bp m" uuid="f26437572c3a1f6be883bb219c773a9906ff8296" name="bp_3" x="1708" y="420">
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_3" x="1708" y="420">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
          <frac32.u.map name="reso" value="0.0"/>
@@ -612,9 +628,21 @@
       </net>
       <net>
          <source obj="div_1" outlet="out"/>
+         <dest obj="xfade_5" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="formant shift" outlet="out"/>
+         <dest obj="xfade_5" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="xfade_5" outlet="o"/>
          <dest obj="+_1" inlet="in1"/>
          <dest obj="+_2" inlet="in1"/>
          <dest obj="+_5" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix shift/pitch" outlet="out"/>
+         <dest obj="xfade_5" inlet="c"/>
       </net>
    </nets>
    <settings>
