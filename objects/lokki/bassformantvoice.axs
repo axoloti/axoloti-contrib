@@ -20,6 +20,18 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="div_3" x="1344" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="1092" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="1232" y="84">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="jt/filter/vcf4pole" uuid="f926d4ad-3053-4a66-be48-6db4447a260a" name="bassvcf" x="1484" y="84">
       <params>
          <frac32.s.map name="pitch" value="12.0"/>
@@ -96,12 +108,10 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="env" x="1050" y="182">
+   <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="1050" y="182">
       <params>
          <frac32.s.map name="a" onParent="true" value="0.0"/>
          <frac32.s.map name="d" onParent="true" value="19.0"/>
-         <frac32.u.map name="s" onParent="true" value="0.0"/>
-         <frac32.s.map name="r" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -424,7 +434,7 @@
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="env" outlet="env"/>
+         <source obj="ahd_1" outlet="env"/>
          <dest obj="*_1" inlet="b"/>
       </net>
       <net>
@@ -515,7 +525,7 @@
          <dest obj="flipflop_1" inlet="reset"/>
          <dest obj="uniform_2" inlet="trig"/>
          <dest obj="d_1" inlet="trig"/>
-         <dest obj="env" inlet="gate"/>
+         <dest obj="ahd_1" inlet="gate"/>
       </net>
       <net>
          <source obj="keyb_3" outlet="gate2"/>
@@ -529,8 +539,8 @@
          <source obj="glide_3" outlet="out"/>
          <dest obj="+_6" inlet="in1"/>
          <dest obj="square_1" inlet="pitch"/>
-         <dest obj="bassvcf" inlet="pitch"/>
          <dest obj="div_1" inlet="in"/>
+         <dest obj="+_4" inlet="in1"/>
       </net>
       <net>
          <source obj="bp_1" outlet="out"/>
@@ -605,6 +615,7 @@
          <dest obj="xfade_1" inlet="c"/>
          <dest obj="xfade_2" inlet="c"/>
          <dest obj="xfade_4" inlet="c"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
       </net>
       <net>
          <source obj="touch_1" outlet="o"/>
@@ -643,6 +654,18 @@
       <net>
          <source obj="mix shift/pitch" outlet="out"/>
          <dest obj="xfade_5" inlet="c"/>
+      </net>
+      <net>
+         <source obj="+_4" outlet="out"/>
+         <dest obj="div_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="+_4" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="div_3" outlet="out"/>
+         <dest obj="bassvcf" inlet="pitch"/>
       </net>
    </nets>
    <settings>
