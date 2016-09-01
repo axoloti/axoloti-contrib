@@ -36,7 +36,7 @@
    </obj>
    <obj type="math/glide" uuid="cfa0324c7cc8ebfd6e03c6b92f41115e3172d0d9" name="glide_3" x="266" y="42">
       <params>
-         <frac32.u.map name="time" onParent="true" value="0.0"/>
+         <frac32.u.map name="time" onParent="true" value="16.5"/>
       </params>
       <attribs/>
    </obj>
@@ -159,7 +159,7 @@
    <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="1050" y="224">
       <params>
          <frac32.s.map name="a" onParent="true" value="-64.0"/>
-         <frac32.s.map name="d" onParent="true" value="-62.0"/>
+         <frac32.s.map name="d" onParent="true" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -228,7 +228,7 @@
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="humanize" x="182" y="378">
       <params>
-         <frac32.u.map name="value" onParent="true" value="0.0"/>
+         <frac32.u.map name="value" onParent="true" value="14.5"/>
       </params>
       <attribs/>
    </obj>
@@ -412,7 +412,7 @@
    </obj>
    <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="aftertouchsmooth" x="476" y="1008">
       <params>
-         <frac32.u.map name="time" onParent="true" value="0.0"/>
+         <frac32.u.map name="time" onParent="true" value="10.0"/>
       </params>
       <attribs/>
    </obj>
