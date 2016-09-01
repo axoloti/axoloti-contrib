@@ -2,8 +2,14 @@
    <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="1386" y="0">
       <params/>
       <attribs>
-         <spinner attributeName="value" value="32"/>
+         <spinner attributeName="value" value="64"/>
       </attribs>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="filter range" x="1162" y="14">
+      <params>
+         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
    </obj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="inversesweep" x="1274" y="14">
       <params>
@@ -13,6 +19,12 @@
    </obj>
    <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="1484" y="14">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="cutoff minimum" x="1680" y="28">
+      <params>
+         <frac32.u.map name="c" onParent="true" value="0.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="midi/in/keyb zone lru" uuid="36a44968a4f8b980273e94dca846b7544a3c45d2" name="keyb_3" x="42" y="42">
@@ -28,11 +40,19 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_1" x="994" y="42">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="mux/mux 2" uuid="3bcb8a666381ed18b8962eda50b1aa679136f618" name="mux_1" x="1596" y="42">
       <params/>
       <attribs/>
    </obj>
    <obj type="logic/flipflop" uuid="f9b15363f5ee203152e062c08a8846f0074b0ea5" name="flipflop_1" x="168" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="div_3" x="826" y="56">
       <params/>
       <attribs/>
    </obj>
@@ -44,7 +64,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/div 2" uuid="f14884de1baf3e615e12ee162a96a013eca76789" name="div_3" x="1344" y="98">
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_2" x="1274" y="84">
       <params/>
       <attribs/>
    </obj>
@@ -128,7 +148,7 @@
    <obj type="osc/supersaw" uuid="ece83feb36cfaee7dc3964b75c485774ea0309cf" name="supersaw" x="1162" y="210">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="detune" onParent="true" value="21.5"/>
+         <frac32.u.map name="detune" onParent="true" value="12.0"/>
       </params>
       <attribs/>
    </obj>
@@ -153,16 +173,6 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="formant " x="2072" y="238">
-      <params>
-         <frac32.u.map name="amp" onParent="true" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="formant out" x="2184" y="238">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="1386" y="252">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
@@ -171,11 +181,19 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="2044" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="formant out" x="2114" y="252">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1498" y="280">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise" x="1274" y="308">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="1274" y="308">
       <params>
          <frac32.u.map name="amp" onParent="true" value="1.0"/>
       </params>
@@ -186,10 +204,6 @@
          <frac32.s.map name="pitch" value="0.0"/>
          <frac32.u.map name="reso" value="0.0"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="2100" y="350">
-      <params/>
       <attribs/>
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="formant shift" x="490" y="364">
@@ -241,17 +255,15 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="baas " x="2016" y="462">
-      <params>
-         <frac32.u.map name="amp" onParent="true" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="1918" y="476">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="bass out" x="2128" y="476">
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="1988" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="bass out" x="2072" y="476">
       <params/>
       <attribs/>
    </obj>
@@ -421,19 +433,15 @@
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
-         <dest obj="noise" inlet="in"/>
+         <dest obj="*c_2" inlet="in"/>
       </net>
       <net>
-         <source obj="noise" outlet="out"/>
+         <source obj="*c_2" outlet="out"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
          <source obj="+_3" outlet="out"/>
          <dest obj="supersaw" inlet="pitch"/>
-      </net>
-      <net>
-         <source obj="formant " outlet="out"/>
-         <dest obj="formant out" inlet="outlet"/>
       </net>
       <net>
          <source obj="mix_2" outlet="out"/>
@@ -571,10 +579,6 @@
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="vca_1" outlet="o"/>
-         <dest obj="formant " inlet="in"/>
-      </net>
-      <net>
          <source obj="bp_2" outlet="out"/>
          <dest obj="mix_1" inlet="in2"/>
       </net>
@@ -583,12 +587,8 @@
          <dest obj="mix_1" inlet="in3"/>
       </net>
       <net>
-         <source obj="baas " outlet="out"/>
-         <dest obj="bass out" inlet="outlet"/>
-      </net>
-      <net>
          <source obj="vca_2" outlet="o"/>
-         <dest obj="baas " inlet="in"/>
+         <dest obj="soft_1" inlet="in"/>
       </net>
       <net>
          <source obj="bassvcf" outlet="out"/>
@@ -689,12 +689,7 @@
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
-         <dest obj="bassvcf" inlet="pitch"/>
-      </net>
-      <net>
-         <source obj="div_3" outlet="out"/>
-         <dest obj="inv_1" inlet="in"/>
-         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="cutoff minimum" inlet="in"/>
       </net>
       <net>
          <source obj="inv_1" outlet="out"/>
@@ -711,6 +706,35 @@
       <net>
          <source obj="i_3" outlet="out"/>
          <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="formant out" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
+         <dest obj="bass out" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="filter range" outlet="out"/>
+         <dest obj="unipolar2bipolar_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="bipolar2unipolar_1" outlet="o"/>
+         <dest obj="filter range" inlet="in"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_2" outlet="o"/>
+         <dest obj="inv_1" inlet="in"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="div_3" outlet="out"/>
+         <dest obj="bipolar2unipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="cutoff minimum" outlet="out"/>
+         <dest obj="bassvcf" inlet="pitch"/>
       </net>
    </nets>
    <settings>
