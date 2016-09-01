@@ -2,7 +2,7 @@
    <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="1386" y="0">
       <params/>
       <attribs>
-         <spinner attributeName="value" value="64"/>
+         <spinner attributeName="value" value="32"/>
       </attribs>
    </obj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="inversesweep" x="1274" y="14">
@@ -153,7 +153,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="formant volume" x="2072" y="238">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="formant " x="2072" y="238">
       <params>
          <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
@@ -175,7 +175,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise volume" x="1274" y="308">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise" x="1274" y="308">
       <params>
          <frac32.u.map name="amp" onParent="true" value="1.0"/>
       </params>
@@ -241,7 +241,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="bass volume" x="2016" y="462">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="baas " x="2016" y="462">
       <params>
          <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
@@ -421,10 +421,10 @@
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
-         <dest obj="noise volume" inlet="in"/>
+         <dest obj="noise" inlet="in"/>
       </net>
       <net>
-         <source obj="noise volume" outlet="out"/>
+         <source obj="noise" outlet="out"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
@@ -432,7 +432,7 @@
          <dest obj="supersaw" inlet="pitch"/>
       </net>
       <net>
-         <source obj="formant volume" outlet="out"/>
+         <source obj="formant " outlet="out"/>
          <dest obj="formant out" inlet="outlet"/>
       </net>
       <net>
@@ -572,7 +572,7 @@
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
-         <dest obj="formant volume" inlet="in"/>
+         <dest obj="formant " inlet="in"/>
       </net>
       <net>
          <source obj="bp_2" outlet="out"/>
@@ -583,12 +583,12 @@
          <dest obj="mix_1" inlet="in3"/>
       </net>
       <net>
-         <source obj="bass volume" outlet="out"/>
+         <source obj="baas " outlet="out"/>
          <dest obj="bass out" inlet="outlet"/>
       </net>
       <net>
          <source obj="vca_2" outlet="o"/>
-         <dest obj="bass volume" inlet="in"/>
+         <dest obj="baas " inlet="in"/>
       </net>
       <net>
          <source obj="bassvcf" outlet="out"/>
@@ -636,10 +636,10 @@
       </net>
       <net>
          <source obj="aftertouchsmooth" outlet="out"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
          <dest obj="xfade_1" inlet="c"/>
          <dest obj="xfade_2" inlet="c"/>
          <dest obj="xfade_4" inlet="c"/>
-         <dest obj="unipolar2bipolar_1" inlet="i"/>
       </net>
       <net>
          <source obj="touch_1" outlet="o"/>
@@ -693,21 +693,24 @@
       </net>
       <net>
          <source obj="div_3" outlet="out"/>
-         <dest obj="mux_1" inlet="i2"/>
          <dest obj="inv_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="inv_1" outlet="out"/>
-         <dest obj="-_1" inlet="in2"/>
          <dest obj="mux_1" inlet="i1"/>
       </net>
       <net>
-         <source obj="i_3" outlet="out"/>
+         <source obj="inv_1" outlet="out"/>
          <dest obj="-_1" inlet="in1"/>
       </net>
       <net>
          <source obj="inversesweep" outlet="o"/>
          <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
    </nets>
    <settings>
