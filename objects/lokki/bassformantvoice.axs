@@ -21,9 +21,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="cutoff minimum" x="1680" y="28">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="cutoff min" x="1736" y="14">
       <params>
-         <frac32.u.map name="c" onParent="true" value="0.0"/>
+         <frac32.s.map name="value" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -45,6 +45,10 @@
       <attribs/>
    </obj>
    <obj type="mux/mux 2" uuid="3bcb8a666381ed18b8962eda50b1aa679136f618" name="mux_1" x="1596" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_7" x="1820" y="42">
       <params/>
       <attribs/>
    </obj>
@@ -193,7 +197,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="1274" y="308">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise" x="1274" y="308">
       <params>
          <frac32.u.map name="amp" onParent="true" value="1.0"/>
       </params>
@@ -433,10 +437,10 @@
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
-         <dest obj="*c_2" inlet="in"/>
+         <dest obj="noise" inlet="in"/>
       </net>
       <net>
-         <source obj="*c_2" outlet="out"/>
+         <source obj="noise" outlet="out"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
@@ -689,7 +693,7 @@
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
-         <dest obj="cutoff minimum" inlet="in"/>
+         <dest obj="+_7" inlet="in1"/>
       </net>
       <net>
          <source obj="inv_1" outlet="out"/>
@@ -725,15 +729,19 @@
       </net>
       <net>
          <source obj="unipolar2bipolar_2" outlet="o"/>
-         <dest obj="inv_1" inlet="in"/>
          <dest obj="mux_1" inlet="i1"/>
+         <dest obj="inv_1" inlet="in"/>
       </net>
       <net>
          <source obj="div_3" outlet="out"/>
          <dest obj="bipolar2unipolar_1" inlet="i"/>
       </net>
       <net>
-         <source obj="cutoff minimum" outlet="out"/>
+         <source obj="cutoff min" outlet="out"/>
+         <dest obj="+_7" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_7" outlet="out"/>
          <dest obj="bassvcf" inlet="pitch"/>
       </net>
    </nets>
