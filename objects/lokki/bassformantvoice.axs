@@ -11,6 +11,10 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="1484" y="14">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="midi/in/keyb zone lru" uuid="36a44968a4f8b980273e94dca846b7544a3c45d2" name="keyb_3" x="42" y="42">
       <params/>
       <attribs>
@@ -22,10 +26,6 @@
       <params>
          <frac32.u.map name="time" onParent="true" value="0.0"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="1498" y="42">
-      <params/>
       <attribs/>
    </obj>
    <obj type="mux/mux 2" uuid="3bcb8a666381ed18b8962eda50b1aa679136f618" name="mux_1" x="1596" y="42">
@@ -113,7 +113,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="math/*" x="448" y="182">
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_4" x="448" y="182">
       <params/>
       <attribs/>
    </obj>
@@ -134,8 +134,8 @@
    </obj>
    <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="1050" y="224">
       <params>
-         <frac32.s.map name="a" onParent="true" value="0.0"/>
-         <frac32.s.map name="d" onParent="true" value="19.0"/>
+         <frac32.s.map name="a" onParent="true" value="-64.0"/>
+         <frac32.s.map name="d" onParent="true" value="-62.0"/>
       </params>
       <attribs/>
    </obj>
@@ -155,7 +155,7 @@
    </obj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="formant volume" x="2072" y="238">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="32.0"/>
+         <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -175,9 +175,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noisy" x="1274" y="308">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise volume" x="1274" y="308">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="7.0"/>
+         <frac32.u.map name="amp" onParent="true" value="1.0"/>
       </params>
       <attribs/>
    </obj>
@@ -243,7 +243,7 @@
    </obj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="bass volume" x="2016" y="462">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="32.0"/>
+         <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -421,10 +421,10 @@
       </net>
       <net>
          <source obj="uniform_1" outlet="wave"/>
-         <dest obj="noisy" inlet="in"/>
+         <dest obj="noise volume" inlet="in"/>
       </net>
       <net>
-         <source obj="noisy" outlet="out"/>
+         <source obj="noise volume" outlet="out"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
@@ -501,15 +501,15 @@
       </net>
       <net>
          <source obj="*_2" outlet="result"/>
-         <dest obj="math/*" inlet="a"/>
+         <dest obj="*_4" inlet="a"/>
       </net>
       <net>
-         <source obj="math/*" outlet="result"/>
+         <source obj="*_4" outlet="result"/>
          <dest obj="+_6" inlet="in2"/>
       </net>
       <net>
          <source obj="humanize" outlet="out"/>
-         <dest obj="math/*" inlet="b"/>
+         <dest obj="*_4" inlet="b"/>
          <dest obj="*_3" inlet="a"/>
       </net>
       <net>
@@ -561,10 +561,10 @@
       </net>
       <net>
          <source obj="glide_3" outlet="out"/>
-         <dest obj="+_6" inlet="in1"/>
          <dest obj="square_1" inlet="pitch"/>
          <dest obj="div_1" inlet="in"/>
          <dest obj="+_4" inlet="in1"/>
+         <dest obj="+_6" inlet="in1"/>
       </net>
       <net>
          <source obj="bp_1" outlet="out"/>
@@ -693,16 +693,13 @@
       </net>
       <net>
          <source obj="div_3" outlet="out"/>
-         <dest obj="inv_1" inlet="in"/>
          <dest obj="mux_1" inlet="i2"/>
-      </net>
-      <net>
-         <source obj="-_1" outlet="out"/>
-         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="inv_1" inlet="in"/>
       </net>
       <net>
          <source obj="inv_1" outlet="out"/>
          <dest obj="-_1" inlet="in2"/>
+         <dest obj="mux_1" inlet="i1"/>
       </net>
       <net>
          <source obj="i_3" outlet="out"/>
