@@ -169,6 +169,12 @@
          <spinner attributeName="shift" value="5"/>
       </attribs>
    </obj>
+   <obj type="mix/mix 1 g" uuid="2065eeca525a4691f1bc08a7dc5468871de651b7" name="mix_4" x="896" y="238">
+      <params>
+         <frac32.u.map name="gain1" onParent="true" value="30.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="1932" y="238">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
@@ -210,6 +216,19 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="humanize" x="126" y="322">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="14.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="896" y="336">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="1"/>
+         <spinner attributeName="default" value="0"/>
+      </attribs>
+   </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="formant shift" x="490" y="364">
       <params>
          <frac32.s.map name="value" onParent="true" value="0.0"/>
@@ -226,17 +245,11 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="humanize" x="182" y="378">
-      <params>
-         <frac32.u.map name="value" onParent="true" value="14.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="294" y="378">
       <params/>
       <attribs/>
    </obj>
-   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_5" x="672" y="392">
+   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_5" x="700" y="378">
       <params/>
       <attribs/>
    </obj>
@@ -260,10 +273,6 @@
       <attribs/>
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="1918" y="476">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="1988" y="476">
       <params/>
       <attribs/>
    </obj>
@@ -375,6 +384,10 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="1862" y="546">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="humanizer" x="28" y="644">
       <params>
          <frac32.s.map name="pitch" value="-18.0"/>
@@ -442,10 +455,6 @@
       <net>
          <source obj="noise" outlet="out"/>
          <dest obj="mix_2" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="+_3" outlet="out"/>
-         <dest obj="supersaw" inlet="pitch"/>
       </net>
       <net>
          <source obj="mix_2" outlet="out"/>
@@ -592,11 +601,11 @@
       </net>
       <net>
          <source obj="vca_2" outlet="o"/>
-         <dest obj="soft_1" inlet="in"/>
+         <dest obj="bass out" inlet="outlet"/>
       </net>
       <net>
          <source obj="bassvcf" outlet="out"/>
-         <dest obj="vca_2" inlet="a"/>
+         <dest obj="sat_1" inlet="in"/>
       </net>
       <net>
          <source obj="square_1" outlet="wave"/>
@@ -716,10 +725,6 @@
          <dest obj="formant out" inlet="outlet"/>
       </net>
       <net>
-         <source obj="soft_1" outlet="out"/>
-         <dest obj="bass out" inlet="outlet"/>
-      </net>
-      <net>
          <source obj="filter range" outlet="out"/>
          <dest obj="unipolar2bipolar_2" inlet="i"/>
       </net>
@@ -743,6 +748,22 @@
       <net>
          <source obj="+_7" outlet="out"/>
          <dest obj="bassvcf" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="sat_1" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="mix_4" outlet="out"/>
+         <dest obj="supersaw" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="+_3" outlet="out"/>
+         <dest obj="mix_4" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="cc_1" outlet="midiCC"/>
+         <dest obj="mix_4" inlet="in1"/>
       </net>
    </nets>
    <settings>
