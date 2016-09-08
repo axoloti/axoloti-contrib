@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="filther" uuid="5d1e6092-f03e-4cb0-b797-e42bf62a395a">
+      <sDescription>a custom designed filthy lowpass filter with resonance-brightness
+&quot;cut&quot; controls the filtering of the increase/decrease for the linear filter, causing a frequency-controlled linear smoothing of the signal, but also inducing a raw resonance.
+
+&quot;max&quot; sets a maximum to the linear changing rate, causing an extra linear lowpass filtering of the input signal and resonance.
+
+&quot;darkness&quot; feeds back the output to the input of the filter.
+notice though, that due to the design of the filter, there&apos;s always resonance and the resonance knob just fades between bright and dark resonance.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="lp"/>
+         <frac32buffer name="hp"/>
+         <frac32 name="cut"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="cut" description="sets cutoff frequency"/>
+         <frac32.s.map name="extCut" description="sets modulation width of the cut-input"/>
+         <frac32.u.map name="max" description="sets maximum changerate: linear filter"/>
+         <frac32.s.map name="darkness" description="controls character of resonance"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+int32_t get;
+int32_t cnt;
+int32_t val1;
+int32_t val2;
+int32_t filter;
+int32_t increase;
+int32_t Increase;
+int32_t max;]]></code.declaration>
+      <code.krate><![CDATA[int32_t f;
+MTOF(param_cut+___SMMUL(param_extCut<<4,inlet_cut<<2),f)
+
+max=(param_max>>4)+(1<<17);]]></code.krate>
+      <code.srate><![CDATA[int32_t in=inlet_lp+inlet_hp+___SMMUL(param_darkness<<2,(filter-inlet_hp)<<2);
+cnt+=1;
+if(!(prev==in)){
+     val2=val1;
+     val1=in;    
+     get=cnt;
+	cnt=0;
+}
+
+increase=(val1-val2)/get;
+increase=increase>0?increase:-increase;
+increase=increase>max?max:increase;
+int32_t Filter=in>filter?increase:-increase;
+Increase=___SMMLA((Filter-Increase)<<1,f,Increase);
+filter=filter+Increase;
+outlet_out=filter-inlet_hp;
+
+
+
+
+prev=in;]]></code.srate>
+   </obj.normal>
+</objdefs>
