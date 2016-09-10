@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="diracFilter" uuid="d985f8db-4e2b-4581-b6c4-82378d513667">
+      <sDescription>weird dirac/slope-change filter, mostly used for taking away fast changes in the signal rate-change (like in saw and pulse waves).
+
+It takes the difference of the difference of the difference between 2 samples.
+The last one is the current rate, the incoming signal is changing.
+The middle one is the rate at which this incoming rate is changing.
+And the first one would then be the change-rate of the changerate of the rate of the incoming signal.... get it?
+
+The faster the signal-rate-change changes, the more it will push down the frequency of the LP filter, removing more high frequencies and thus, smoothing the signal where it&apos;s needed.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="cut"/>
+         <frac32.u.map.gain name="gain"/>
+         <frac32.s.map.pitch name="smooth"/>
+         <int32.hradio name="mode">
+            <MaxValue i="3"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t prev1;
+int32_t prev2;
+int32_t prev3;
+int32_t diff1;
+int32_t diff2;
+int32_t diff3;
+int32_t rate;
+int32_t LP;
+int32_t smooth;
+int32_t HP;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+LP=0;
+HP=0;]]></code.init>
+      <code.srate><![CDATA[int32_t in=inlet_in;
+diff1=in-prev1;
+diff2=diff1-prev2;
+diff3=diff2-prev3;
+
+rate=___SMMUL(__SSAT(param_mode>0?(param_mode>1?diff3<<3:diff2):diff1>>3,24)<<8,param_gain);
+rate=rate>0?-rate:rate;
+int32_t g;
+MTOF(param_smooth-rate,g)
+smooth=__SMMLA((rate-smooth)<<1,g,smooth);
+int32_t freq;
+MTOF(param_cut+smooth,freq)
+LP=__SMMLA((in-LP)<<1,freq,LP);
+HP=HP+((LP-HP)>>12);
+outlet_out=LP-HP;
+
+
+
+prev1=in;
+prev2=diff1;
+prev3=diff2;]]></code.srate>
+   </obj.normal>
+</objdefs>
