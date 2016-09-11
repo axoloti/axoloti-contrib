@@ -1,0 +1,96 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="trippleComb" uuid="c74cd389-bff1-4817-9fac-8b250eca26a4">
+      <sDescription>Tripple phaser/comb-filter
+Pitch controls the frequency position of the comb-filter.
+Resonance controls the feedback amount of all three comb-filters.
+Wet controls the level of the effected audio.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="main"/>
+         <frac32 name="pitch1"/>
+         <frac32 name="pitch2"/>
+         <frac32 name="pitch3"/>
+         <frac32 name="feed"/>
+         <frac32 name="wet"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch1"/>
+         <frac32.s.map.pitch name="pitch2"/>
+         <frac32.s.map.pitch name="pitch3"/>
+         <frac32.s.map name="resonance"/>
+         <frac32.s.map name="wet"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t array[2048];
+int32_t write;
+int32_t Freq1;
+int32_t Freq2;
+int32_t Freq3;
+int32_t Freq4;
+int32_t Freq5;
+int32_t Freq6;
+int32_t wet;]]></code.declaration>
+      <code.init><![CDATA[for(int i=0;i<248;i++){array[i]=0;}
+]]></code.init>
+      <code.krate><![CDATA[   int32_t pitch1=-param_pitch1 - inlet_pitch1+inlet_main;
+   int32_t pitch2=-param_pitch2 - inlet_pitch2+inlet_main;
+   int32_t pitch3=-param_pitch3 - inlet_pitch3+inlet_main;
+   int32_t Wet=param_wet+inlet_wet;
+   Wet=Wet>(-1<<27)?Wet:(-1<<27);
+   Wet=Wet<(1<<27)?Wet:(1<<27);]]></code.krate>
+      <code.srate><![CDATA[
+   Freq1=Freq1+((pitch1-Freq1)>>8);
+   Freq2=Freq2+((Freq1-Freq2)>>8);
+   pitch1=Freq2;
+   int32_t freq1;
+   MTOF(pitch1,freq1);
+   int32_t frac1=freq1;
+   freq1=freq1>>19;
+   frac1=(frac1-(freq1<<19))<<10;
+   freq1=freq1>1?freq1:2;
+   int32_t ifrac1=(1<<29)-frac1;
+
+
+   Freq3=Freq3+((pitch2-Freq3)>>8);
+   Freq4=Freq4+((Freq3-Freq4)>>8);
+   pitch2=Freq4;
+   int32_t freq2;
+   MTOF(pitch2,freq2);
+   int32_t frac2=freq2;
+   freq2=freq2>>19;
+   frac2=(frac2-(freq2<<19))<<10;
+   freq2=freq2>1?freq2:2;
+   int32_t ifrac2=(1<<29)-frac2;
+
+
+   Freq5=Freq5+((pitch3-Freq6)>>8);
+   Freq6=Freq6+((Freq5-Freq6)>>8);
+   pitch3=Freq6;
+   int32_t freq3;
+   MTOF(pitch3,freq3);
+   int32_t frac3=freq3;
+   freq3=freq3>>19;
+   frac3=(frac3-(freq3<<19))<<10;
+   freq3=freq3>1?freq3:2;
+   int32_t ifrac3=(1<<29)-frac3;
+wet=wet+((Wet-wet)>>8);
+write+=1;
+write=write&2047;
+int32_t temp=0;
+temp+=___SMMUL(array[(write-freq1-1)&2047]<<2,frac1);
+temp+=___SMMUL(array[(write-freq1)&2047]<<2,ifrac1);
+temp+=___SMMUL(array[(write-freq2-1)&2047]<<2,frac2);
+temp+=___SMMUL(array[(write-freq2)&2047]<<2,ifrac2);
+temp+=___SMMUL(array[(write-freq3-1)&2047]<<2,frac3);
+temp+=___SMMUL(array[(write-freq3)&2047]<<2,ifrac3);
+outlet_out=___SMMUL(temp<<3,wet<<2)+(inlet_in);
+array[write]=inlet_in+___SMMUL(temp<<3,param_resonance<<1);
+]]></code.srate>
+   </obj.normal>
+</objdefs>
