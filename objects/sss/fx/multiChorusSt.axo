@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="multiChorusSt" uuid="fc5f56fd-b318-4923-b8c0-9317939dacc3">
+   <obj.normal id="multiChorusSt" uuid="d1741cb7-88ee-4d76-943f-456eb84d8754">
       <sDescription>multi-stage chorus up to 16 stages.
 rate: the base rate of the internal LFO&apos;s for controlling the delaytime
 drift: offsetting the rate of the seperate LFO&apos;s for changing chorus characteristics
@@ -57,6 +57,7 @@ More drastically even, when you also connect the gate for the volume envelope to
             <MinValue i="0"/>
             <MaxValue i="32"/>
          </int32>
+         <frac32.s.map name="wet"/>
       </params>
       <attribs>
          <combo name="size">
@@ -132,22 +133,22 @@ for(i=0;i<param_stack;i++){
 	phase[i]+=((freq+___SMMUL(i*freq<<2,param_drift<<3)+___SMMUL(param_FMW,FMsine))>>7);
 SINE2TINTERP(phase[i]+((i*param_phsSprd/param_stack+param_phase+inlet_phase)<<4),sine[i])
 pan[i]=(sine[i]>>5)+(1<<26);
-sine[i]=((___SMMUL((sine[i]>>1)+(1<<30),param_depth<<4)<<1)+(___SMMUL(((1<<27)-param_depth),(i*param_spread))<<4));
+sine[i]=((___SMMUL((sine[i]>>1)+(1<<30),param_depth<<4)<<1)+(___SMMUL(((1<<27)-param_depth)<<4,(i*param_spread/param_stack))<<9));
 
 }
 ]]></code.krate>
       <code.srate><![CDATA[  writepos = (writepos + 1)&LENGTHMASK;
-  array[writepos] = inlet_in+___SMMUL(param_feed<<4,(sum1+sum2)<<2)/param_stack;
+  array[writepos] = inlet_in+___SMMUL(param_feed<<3,(sum1+sum2)<<4)/param_stack;
 sum1=0;
 sum2=0;
 for(i=0;i<param_stack;i++){
 val[i]=val[i]+((sine[i]-val[i])>>param_smooth);
 int Z=i*param_skip+param_other-((i*param_skip+param_other)/param_stack)*param_stack;
-sum1+=___SMMUL(array[(writepos-((val[i])>>32-LENGTHPOW)&LENGTHMASK)],pan[Z]<<4);
-sum2+=___SMMUL(array[(writepos-((val[i])>>32-LENGTHPOW)&LENGTHMASK)],((1<<27)-pan[Z])<<4);
+sum1+=___SMMUL(array[(writepos-((val[i])>>32-LENGTHPOW)&LENGTHMASK)],pan[Z]<<3);
+sum2+=___SMMUL(array[(writepos-((val[i])>>32-LENGTHPOW)&LENGTHMASK)],((1<<27)-pan[Z])<<3);
 }
 
-outlet_outL=sum1+inlet_in>>2;
-outlet_outR=sum2+inlet_in>>2;]]></code.srate>
+outlet_outL=___SMMUL(sum1<<3,param_wet<<2)+inlet_in>>1;
+outlet_outR=___SMMUL(sum2<<3,param_wet<<2)+inlet_in>>1;]]></code.srate>
    </obj.normal>
 </objdefs>

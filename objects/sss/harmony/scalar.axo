@@ -41,10 +41,7 @@ outlets:
     int32_t Bend;
     int a;
     int trg;]]></code.declaration>
-      <code.init><![CDATA[    for(int i=0;i<12;i++) {
-        _scale[i] = 0;
-    }
-    _scale[0]=0;
+      <code.init><![CDATA[    _scale[0]=0;
     _scale[1]=0;
     _scale[2]=2;
     _scale[3]=2;
@@ -63,6 +60,8 @@ key=key-((key/12)*12);
 
 octave=(((inlet_note-key)/12)*12);
 note=inlet_note-key-octave;
+octave=note>0?octave:octave-12;
+note=note>0?note:note+12;
 Scaled=_scale[note]+octave+key;
 outlet_Scaled=(Scaled<<21)+(val);
 outlet_GateScale=((Scaled)!=oldnote);
