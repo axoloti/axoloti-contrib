@@ -49,12 +49,12 @@ expo(inlet_env,-__SSAT(param_expVCA+inlet_expVCA,27));
 int32_t varA=EXPO;
 level=__USAT(inlet_cutoff+param_cutoff,27);
 expo(inlet_env,-__SSAT(param_expLPG+inlet_expLPG,27));
-int32_t varB=___SMMUL(EXPO<<3,level<<2)-(1<<27);
+int32_t varB=___SMMUL(EXPO<<3,level<<3)-(1<<27);
 ]]></code.krate>
       <code.srate><![CDATA[   step1 =step1+((varA-step1)>>6);
    step2 =step2+((varB-step2)>>6);
    int32_t freq;
-   MTOF((step2<<1),freq)
+   MTOF((step2),freq)
    int32_t o =  ___SMMUL(inlet_a<<3,step1<<3);
    LP=__SMMLA((o-LP)<<1,freq,LP);
    outlet_o=LP;
