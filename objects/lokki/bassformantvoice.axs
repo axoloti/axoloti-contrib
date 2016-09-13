@@ -171,7 +171,7 @@
    </obj>
    <obj type="mix/mix 1 g" uuid="2065eeca525a4691f1bc08a7dc5468871de651b7" name="mix_4" x="896" y="238">
       <params>
-         <frac32.u.map name="gain1" onParent="true" value="30.0"/>
+         <frac32.u.map name="gain1" onParent="true" value="12.0"/>
       </params>
       <attribs/>
    </obj>
