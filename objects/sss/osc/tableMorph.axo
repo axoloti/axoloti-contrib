@@ -1,0 +1,174 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="tableMorph" uuid="7442440c-c46d-4efb-9ba6-f2c98ab62d30">
+      <sDescription>morphing wavetable oscillator
+loads wavetables created with the &quot;TheCreator&quot; module.
+
+mixes between the waveforms over 3 axes.
+X/Y/Z axis is controlled by mix1, mix2 and mix3 respectively. Range is unipolar fractional and negates the mix direction when over the min/max limits.
+step1, step2 and step3 control the stepsize between selected waveform-presets.
+quant1, quant2 and quant3 control how many waveforms will be played within the min/max range of the mix. This is multiplied by the steps1/2/3 to select the different waveforms. The set amount will also be send to the divide1/2/3 outputs to connect to the tempo-synced-LFO division-inputs. This keeps the rate of morph the same if you add more steps to the morph.
+Depending on the mix-position of all 3 axes, 1 up to 8 different waveforms can be mixed together.
+
+Controlling the mixes with tempo-synced LFO&apos;s or envelopes can create lots of different characters.
+Using triangle or sine shapes (as long as there&apos;s no jump in value) will create a continuous morph
+Using saw, pulse or fast envelopes (as long as there&apos;s a fast change or jump in value) will create continuous morphs with sudden changes happening rhytmically.
+
+When using the same step values as those that have been set in the waveform creator &quot;TheCreator&quot;, enables you to morph through the waveforms, following the wavetable generation settings.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="linFM" description="frequency"/>
+         <frac32buffer name="expFM"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32buffer name="sync"/>
+         <int32 name="waveform"/>
+         <frac32 name="mixSine"/>
+         <frac32 name="mix1"/>
+         <frac32 name="mix2"/>
+         <frac32 name="mix3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+         <int32 name="divide1"/>
+         <int32 name="divide2"/>
+         <int32 name="divide3"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32 name="octSine">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <frac32.u.map name="mixSine"/>
+         <int32 name="waveform">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <frac32.s.map.pitch name="LP"/>
+         <frac32.u.map name="mix1"/>
+         <int32 name="step1">
+            <MinValue i="1"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="quant1">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.u.map name="mix2"/>
+         <int32 name="step2">
+            <MinValue i="1"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="quant2">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.u.map name="mix3"/>
+         <int32 name="step3">
+            <MinValue i="1"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="quant3">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t mix[4];
+int32_t ccomp;
+int32_t read1;
+int32_t read2;
+int32_t P[6];
+int i;
+int Strig;
+int32_t wave;
+int32_t smooth;
+int32_t mixSine;
+int32_t F;
+int32_t tableOsc(int32_t inst,int32_t Phs,int32_t preset1a,int32_t preset1b, int32_t Mix,int32_t preset2)
+	{
+		read1=attr_table.array[(((Phs)&1023)+((preset1a+preset2)<<10))&attr_table.LENGTHMASK];
+		read2=attr_table.array[(((Phs)&1023)+((preset1b+preset2)<<10))&attr_table.LENGTHMASK];
+		ccomp=(1<<27)-Mix;
+		mix[inst]=___SMMUL(ccomp<<3,read1<<2)+___SMMUL(Mix<<3,read2<<2);
+	};
+int32_t tablemix(int32_t inst,int32_t WaveA,int32_t WaveB,int32_t Mix){
+	mix[inst]=___SMMUL(((1<<27)-Mix)<<3,WaveA<<2)+___SMMUL(Mix<<3,WaveB<<2);}
+
+uint64_t MIX1;
+uint64_t MIX2;
+uint64_t MIX3;
+int32_t MX(int32_t T){
+	T=T>0?T:-T;
+	T=T&((1<<28)-1);
+	F=T>(1<<27)?(1<<28)-T:T;
+}
+]]></code.declaration>
+      <code.init><![CDATA[
+Phase = 0;]]></code.init>
+      <code.krate><![CDATA[
+int16_t Preset=(param_waveform+inlet_waveform)&1023;
+int32_t f;
+MTOF(param_LP,f)
+
+MIX1=param_mix1+inlet_mix1;
+MIX2=param_mix2+inlet_mix2;
+MIX3=param_mix3+inlet_mix3;
+MX(MIX1);
+MIX1=F;
+MX(MIX2);
+MIX2=F;
+MX(MIX3);
+MIX3=F;
+P[0]=(MIX1*param_quant1)>>27;
+MIX1=(MIX1-(P[0]<<27)/param_quant1)*param_quant1;
+P[0]=P[0]*param_step1;
+P[1]=P[0]+param_step1;
+P[2]=(MIX2*param_quant2)>>27;
+MIX2=(MIX2-(P[2]<<27)/param_quant2)*param_quant2;
+P[2]=P[2]*param_step2;
+P[3]=P[2]+param_step2;
+P[4]=(MIX3*param_quant3)>>27;
+MIX3=(MIX3-(P[4]<<27)/param_quant3)*param_quant3;
+P[4]=P[4]*param_step3;
+P[5]=P[4]+param_step3;
+outlet_divide1=param_quant1;
+outlet_divide2=param_quant2;
+outlet_divide3=param_quant3;
+]]></code.krate>
+      <code.srate><![CDATA[   int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch+inlet_expFM,freq);
+int32_t Freq=freq + ___SMMUL(inlet_linFM<<3,freq<<3);
+if((inlet_sync>0)&&!Strig){
+Phase=0;
+Strig=1;}
+else if (inlet_sync<1){Strig=0;}
+
+mixSine=mixSine+(((param_mixSine+inlet_mixSine)-mixSine)>>8);
+
+Phase+= Freq;
+int32_t r;
+int32_t p2 = Phase+inlet_phase;
+SINE2TINTERP((p2)<<param_octSine,r)
+int32_t phase=p2>>22;
+
+tableOsc(0,phase,P[0],P[1],MIX1,P[2]+P[4]+Preset);
+tableOsc(1,phase,P[0],P[1],MIX1,P[3]+P[4]+Preset);
+tableOsc(2,phase,P[0],P[1],MIX1,P[2]+P[5]+Preset);
+tableOsc(3,phase,P[0],P[1],MIX1,P[3]+P[5]+Preset);
+tablemix(0,mix[0],mix[1],MIX2);
+tablemix(1,mix[2],mix[3],MIX2);
+tablemix(0,mix[0],mix[1],MIX3);
+
+
+wave=(___SMMUL(mixSine<<3,mix[0]<<2)+___SMMUL(r,(1<<27)-mixSine))<<1;
+smooth=__SMMLA((wave-smooth)<<1,f,smooth);
+outlet_wave=smooth;]]></code.srate>
+   </obj.normal>
+</objdefs>
