@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="tablestore demux" uuid="c727ea84-383a-42a6-a4a0-1ab83734e0f5">
+   <obj.normal id="tablestore demux" uuid="eb9a7e4c-9c60-4735-8b1f-71eae63debb2">
       <sDescription>writes and outputs values to a table at position &apos;i&apos; + &apos;offset&apos;.</sDescription>
       <author>robert schirmer</author>
       <license>who cares</license>
@@ -19,87 +19,24 @@
       <attribs>
          <objref name="table"/>
       </attribs>
-      <code.declaration><![CDATA[int32_t prev0;
-      int32_t prev1;
-         int32_t prev2;
-      int32_t prev3;
-       int32_t prev4;
-      int32_t prev5;
-         int32_t prev6;
-      int32_t prev7;
+      <code.declaration><![CDATA[int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[prev = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_i == 0) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 0]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+if ((inlet_i == 1) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 1]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+if ((inlet_i == 2) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 2]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+if ((inlet_i == 3) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 3]=__SSAT(inlet_in,28)>>attr_table.GAIN;
 
-      int32_t hold0;
-      int32_t hold1;
-      int32_t hold2;
-      int32_t hold3;
-            int32_t prev;
+	prev=inlet_in;
 
-                        int32_t o0;
-                         int32_t o1;
-                         int32_t o2;
-                         int32_t o3;]]></code.declaration>
-      <code.init><![CDATA[prev0 = 0;
-prev1 = 0;
-prev2 = 0;
-prev3 = 0;
 
-prev = 0;]]></code.init>
-      <code.krate><![CDATA[if ((inlet_i == 0) && (inlet_in != prev)){
-	hold0 = inlet_in;
-	o0 = inlet_in;
-}else {
-	o0 = hold0;
-}
 
-if ((inlet_i == 1) && (inlet_in != prev)) {
-	hold1 = inlet_in;
-	o1 = inlet_in;
-}else {
-	o1 = hold1;
-}
-
-if ((inlet_i == 2) && (inlet_in != prev)){
-	hold2 = inlet_in;
-	o2 = inlet_in;
-}else {
-	o2 = hold2;
-}
-
-if ((inlet_i == 3) && (inlet_in != prev)) {
-	hold3 = inlet_in;
-	o3 = inlet_in;
-}else {
-	o3 = hold3;
-}
-
-prev = inlet_in ;
-
-if (o0 != prev0){
-attr_table.array[inlet_offset + 0]=__SSAT(o0,28)>>attr_table.GAIN;
 outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-prev0 = o0;
-}
-else {outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
-
-if (o1 != prev1){
-attr_table.array[inlet_offset + 1]=__SSAT(o1,28)>>attr_table.GAIN;
 outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-prev1 = o1;
-}
-else {outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
-
-if (o2 != prev2){
-attr_table.array[inlet_offset + 2]=__SSAT(o2,28)>>attr_table.GAIN;
 outlet_v2= attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-prev2 = o2;
-}
-else {outlet_v2= attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
-
-if (o3 != prev3){
-attr_table.array[inlet_offset + 3]=__SSAT(o3,28)>>attr_table.GAIN;
-outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-prev3 = o3;
-}
-else {outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;}]]></code.krate>
+outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;]]></code.krate>
    </obj.normal>
 </objdefs>

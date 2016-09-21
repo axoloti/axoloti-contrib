@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="loop_multi" uuid="c9dc3001-e37c-4842-afd6-48cd3778ab85">
+   <obj.normal id="loop_multi" uuid="770d7919-d783-4c1c-8ec4-6e1d28218073">
       <sDescription>records audio to a table.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
@@ -50,7 +50,8 @@ int rec_max;
 int shift;
 int  spos;
 int csample;
-int start;]]></code.declaration>
+int start;
+int mode;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 start = 0;
@@ -79,14 +80,15 @@ rec_max =attr_table.LENGTH >> attr_slots;]]></code.krate>
       recpos = 0;
       spos = csample ;
       start = inlet_pos;
-
- } 
-
-   //wait for rollover
-   
+      outlet_range = 0;
+      outlet_freq = 0;
+      outlet_start = 0;
+      mode = inlet_sync;
+       } 
+       
+  //rec stopped-wait for rollover  
  else if (!(inlet_rec)) {
-
- 	if (inlet_sync)	{
+ 	if (mode)	{
         if (csample == spos)  { rec = 0;} 
         } else rec = 0;
    }
@@ -97,23 +99,20 @@ rec_max =attr_table.LENGTH >> attr_slots;]]></code.krate>
               attr_table.array[(recpos+rec_offset)] = __SSAT(inlet_wave,28 )>>attr_table.GAIN;
    if (recpos >= rec_max)         
    { recpos = 0;}
-   outlet_start = 0;
-    }
+}
 
-    //rec done
+   //rec done
 
-      if (!rec){  
+      if (!rec) {  
      outlet_range = (recpos << shift); 
 
+    if (recpos) { 
+     outlet_freq = (int)(281474976710656.f/ (recpos * (128<<3))); } 
+     else outlet_freq = 0;
+     
+    if (mode)
+     outlet_start = start; 
 
-      if (recpos) {
-      outlet_freq = (int)(281474976710656.f/ (recpos * (128<<3)));
-            outlet_range = (recpos << shift);
-    } else
-        outlet_freq = 0;
-   
-     if (inlet_sync){
-     outlet_start = start ;}
       } 
 
         outlet_rec = rec;]]></code.srate>
