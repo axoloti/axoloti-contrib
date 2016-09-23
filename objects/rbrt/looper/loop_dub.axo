@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_dub" uuid="d2263ab5-c351-4924-b717-614bf3e9334e">
+      <sDescription>adds data to the content of a table,at inlet pos (in fraction of the table&apos;s size)</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="pos" description="index in fraction of table size"/>
+         <frac32buffer name="wave" description="audio in"/>
+         <bool32.risingfalling name="overdub" description="overdub"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t csample;
+  uint32_t dub;]]></code.declaration>
+      <code.srate><![CDATA[csample =  (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+dub= (attr_table.array[csample]<<attr_table.GAIN);
+
+if (inlet_overdub) attr_table.array[csample] = __SSAT((inlet_wave + dub),28 )>>attr_table.GAIN;]]></code.srate>
+   </obj.normal>
+</objdefs>

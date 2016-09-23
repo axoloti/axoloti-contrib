@@ -1,0 +1,123 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_multi_stereo" uuid="1e1f70b0-8ff3-4bf1-987b-ba1cc089bf0e">
+      <sDescription>records audio to a table.
+the table can be divided into 1,2,4 or 8 slots.
+when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
+and after &apos;rec&apos; is zero,recording will continue until the starting point is reached.
+after recording is done,the tempo if the recording in hz is sent out,
+as well as the length of the recording (in fraction of the table&apos;s size).</sDescription>
+      <author>Robert Schirmer</author>
+      <license>who cares</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="waveL" description="audio in L"/>
+         <frac32buffer name="waveR" description="audio in R"/>
+         <frac32buffer name="pos" description="sync position in"/>
+         <bool32.risingfalling name="rec" description="record,set tempo"/>
+         <int32 name="slot" description="select slot to record to"/>
+         <bool32 name="sync" description="sync on/off"/>
+      </inlets>
+      <outlets>
+         <frac32 name="offset" description="offset of the selected slot in the table"/>
+         <frac32.positive name="range" description="length of recording in fraction of the slot"/>
+         <frac32 name="freq" description="tempo in hz"/>
+         <frac32 name="start" description="recording offset when recording in sync"/>
+         <bool32 name="rec" description="record state"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="tableL" description="table to record to "/>
+         <objref name="tableR" description="table to record to"/>
+         <combo name="slots" description="number of slots in the table">
+            <MenuEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+int recpos;
+int offset;
+int rec_offset;
+int rec_max;
+int shift;
+int  spos;
+int csample;
+int start;
+int mode;]]></code.declaration>
+      <code.init><![CDATA[recpos =0;
+rec = 0;
+start = 0;
+
+//set 'shift factor' for storing the recording length/the sync output
+    if (attr_tableL.LENGTH == 2048){shift = 16; }
+    if (attr_tableL.LENGTH == 4096){shift = 15; }
+    if (attr_tableL.LENGTH == 8192){shift = 14; }
+    if (attr_tableL.LENGTH == 16384){shift = 13; }
+    if (attr_tableL.LENGTH == 32768){shift = 12; }
+    if (attr_tableL.LENGTH == 65536){shift = 11; }
+    if (attr_tableL.LENGTH == 131072){shift = 10;}
+    if (attr_tableL.LENGTH == 262144){shift = 9;}
+    if (attr_tableL.LENGTH == 524288){shift = 8;}
+    if (attr_tableL.LENGTH == 1048576 ){shift = 7;}
+    if (attr_tableL.LENGTH == 2097152 ){shift = 6;}
+    if (attr_tableL.LENGTH == 4194304 ){shift = 5;}]]></code.init>
+      <code.krate><![CDATA[offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
+outlet_offset = offset;
+rec_offset = (__USAT(offset,27)>>(27-attr_tableL.LENGTHPOW));
+rec_max =attr_tableL.LENGTH >> attr_slots;]]></code.krate>
+      <code.srate><![CDATA[csample = (inlet_pos >> 11);
+
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      recpos = 0;
+      spos = csample ;
+      start = inlet_pos;
+      outlet_range = 0;
+      outlet_freq = 0;
+      outlet_start = 0;
+      mode = inlet_sync;
+       } 
+       
+  //rec stopped-wait for rollover  
+ else if (!(inlet_rec)) {
+ 	if (mode)	{
+        if (csample == spos)  { rec = 0;} 
+        } else rec = 0;
+   }
+           
+   //record   
+   if (rec)  {
+              recpos ++;
+              attr_tableL.array[(recpos+rec_offset)] = __SSAT(inlet_waveL,28 )>>attr_tableL.GAIN;
+              attr_tableR.array[(recpos+rec_offset)] = __SSAT(inlet_waveR,28 )>>attr_tableR.GAIN;
+   if (recpos >= rec_max)         
+   { recpos = 0;}
+}
+
+   //rec done
+
+      if (!rec) {  
+     outlet_range = (recpos << shift); 
+
+    if (recpos) { 
+     outlet_freq = (int)(281474976710656.f/ (recpos * (128<<3))); } 
+     else outlet_freq = 0;
+     
+    if (mode)
+     outlet_start = start; 
+
+      } 
+
+        outlet_rec = rec;]]></code.srate>
+   </obj.normal>
+</objdefs>

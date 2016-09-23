@@ -1,13 +1,13 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="loop_drive" uuid="241e8f8e-0399-4ea6-8b9f-64bc44ab252a">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_drive" uuid="33e40343-dfb5-4c34-a178-48ba1b7d7e14">
       <sDescription>drives the transport for reading/writing data from/to tables.
 tempo in hz and length of the recording is translated to index in fraction of table size</sDescription>
       <author>robert schirmer</author>
       <license>who cares</license>
       <helpPatch>lfo.axh</helpPatch>
       <inlets>
-         <frac32 name="length" description="length in fraction of the table"/>
-         <frac32 name="hz" description="tempo in hz"/>
+         <frac32 name="range" description="length in fraction of the table"/>
+         <frac32 name="freq" description="tempo in hz"/>
          <bool32.rising name="reset" description="reset phase"/>
       </inlets>
       <outlets>
@@ -17,22 +17,18 @@ tempo in hz and length of the recording is translated to index in fraction of ta
       <params/>
       <attribs/>
       <code.declaration><![CDATA[uint32_t Phase;
-uint32_t r;
-]]></code.declaration>
-      <code.init><![CDATA[   Phase = 0;
-   r = 1;
-]]></code.init>
-      <code.srate><![CDATA[   {
+uint32_t r;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+   r = 1;]]></code.init>
+      <code.srate><![CDATA[{
       if (inlet_reset && r) {
          Phase = 0;
          r = 0;
       } else {
          if (!inlet_reset) r = 1;
-         Phase += inlet_hz>>6;
+         Phase += inlet_freq>>6;
       }
-         outlet_pos = ___SMMUL(inlet_length,(Phase>>5)) << 5;
-   }
-
-]]></code.srate>
+         outlet_pos = ___SMMUL(inlet_range,(Phase>>5)) << 5;
+   }]]></code.srate>
    </obj.normal>
 </objdefs>

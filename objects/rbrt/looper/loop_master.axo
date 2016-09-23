@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="loop_master" uuid="d31145a3-159b-421a-a7f2-ada27c770bac">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_master" uuid="fc74dd1b-5d6f-45b6-ac8a-64805b62a46a">
       <sDescription>records audio to a table.after recording is done,the tempo if the recording in hz is sent out,
 as well as the length of the recording (in fraction of the table&apos;s size)</sDescription>
       <author>Robert Schirmer</author>
@@ -10,8 +10,8 @@ as well as the length of the recording (in fraction of the table&apos;s size)</s
          <bool32.risingfalling name="rec" description="record,set tempo"/>
       </inlets>
       <outlets>
-         <frac32.positive name="length" description="length of recording in fraction of the table"/>
-         <frac32 name="hz" description="tempo in hz"/>
+         <frac32.positive name="range" description="length of recording in fraction of the table"/>
+         <frac32 name="freq" description="tempo in hz"/>
       </outlets>
       <displays/>
       <params/>
@@ -20,8 +20,7 @@ as well as the length of the recording (in fraction of the table&apos;s size)</s
       </attribs>
       <code.declaration><![CDATA[bool rec;
 int recpos;
-int shift;
-]]></code.declaration>
+int shift;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 
@@ -38,38 +37,18 @@ rec = 0;
     if (attr_table.LENGTH == 1048576 ){shift = 7;}
     if (attr_table.LENGTH == 2097152 ){shift = 6;}
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.krate><![CDATA[
- 
-
-
-
-
-
-
-
-     
-
-
-
-   
-    
-
-
-  
-]]></code.krate>
-      <code.srate><![CDATA[  
-    if ((inlet_rec) && !rec) {
+      <code.srate><![CDATA[if ((inlet_rec) && !rec) {
       rec = 1;
       recpos = 0;
  } 
  else if (!(inlet_rec)) {
       rec = 0;
-      outlet_length = (recpos << shift);
+      outlet_range = (recpos << shift);
          if (recpos) {
-      outlet_hz = (int)(281474976710656.f/ (recpos * (128<<3)));
-            outlet_length = (recpos << shift);
+      outlet_freq = (int)(281474976710656.f/ (recpos * (128<<3)));
+            outlet_range = (recpos << shift);
     } else
-        outlet_hz = 0;
+        outlet_freq = 0;
         }
  
 
@@ -77,17 +56,6 @@ rec = 0;
    if (rec)  {
               recpos ++;
               attr_table.array[recpos] = __SSAT(inlet_wave,28 )>>attr_table.GAIN;
-   }
-   
-
-
-
-
- 
- 	  
-     
-	
-
-]]></code.srate>
+   }]]></code.srate>
    </obj.normal>
 </objdefs>
