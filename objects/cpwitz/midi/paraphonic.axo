@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="paraphonic" uuid="cpwitz-midi-paraphonic">
       <sDescription>4 note paraphonic midi input. DISCLAIMER: &quot;Paraphonic&quot; does not mean &quot;polyphonic&quot;. If you intend to build a real polyphonic patch, use the recommended &quot;polyphonic subpatch&quot; approach!
 
@@ -13,40 +13,39 @@ The velocity outlet delivers the velocity of the first hit key.
 If you just want to make a &quot;duophonic&quot; voice (2 pitches) or &quot;triphonic&quot; (3 pitches) just connect only note1-2 or note1-3 and leave the remaining notes unconnected.
 
 Set the receiving input midi channel with the MIDIchannel attribute. Channel 0 means &quot;listen on all channels&quot;.</sDescription>
-   <author>Peter Witzel</author>
-   <license>CC0</license>
-   <inlets/>
-   <outlets>
-      <frac32.bipolar name="note1"/>
-      <frac32.bipolar name="note2"/>
-      <frac32.bipolar name="note3"/>
-      <frac32.bipolar name="note4"/>
-      <frac32.positive name="velocity"/>
-      <bool32 name="gate"/>
-      <int32 name="notecount"/>
-   </outlets>
-   <displays/>
-   <params>
-      <bool32.tgl name="retrigger"/>
-   </params>
-   <attribs>
-      <spinner name="MIDIchannel" MinValue="0" MaxValue="16" DefaultValue="0"/>
-   </attribs>
-   <includes/>
-   <code.declaration><![CDATA[#define MAX_VOX 4
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="note1"/>
+         <frac32.bipolar name="note2"/>
+         <frac32.bipolar name="note3"/>
+         <frac32.bipolar name="note4"/>
+         <frac32.positive name="velocity"/>
+         <bool32 name="gate"/>
+         <int32 name="notecount"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="retrigger" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="MIDIchannel" MinValue="0" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[#define MAX_VOX 4
 int8_t pressed_note[MAX_VOX];
 int32_t pitches[MAX_VOX];
 int notecount=0;
 int32_t velocity=0;
 int retrigger = 0;
 int doretrigger = 0;]]></code.declaration>
-   <code.init><![CDATA[
+      <code.init><![CDATA[
 for (int i=0;i<MAX_VOX;i++) {
 	pressed_note[i] = 0;
 	pitches[i] = 0;
 }
 ]]></code.init>
-   <code.krate><![CDATA[if (doretrigger) {
+      <code.krate><![CDATA[if (doretrigger) {
 	doretrigger = 0;
 	outlet_gate = 0;	
 }
@@ -60,7 +59,7 @@ outlet_note4 = pitches[3];
 outlet_velocity = velocity;
 outlet_notecount = notecount;
 retrigger = param_retrigger;]]></code.krate>
-   <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
+      <code.midihandler><![CDATA[int channel = (status & 0xf) + 1;
 int cmd = (status & 0x70) >> 4;
 
 if ((channel!=attr_MIDIchannel && attr_MIDIchannel>0)) {
@@ -113,5 +112,11 @@ if ((cmd==1 || cmd==0) && notecount>0) {
 		notei++;
 	}	
 }
-]]></code.midihandler>   </obj.normal>
+if ((cmd == 3)&&(data1 == 123)) { // all notes off message
+	for (int i=0;i<MAX_VOX;i++) {
+		pressed_note[i] = 0;
+	}
+	notecount = 0;
+}]]></code.midihandler>
+   </obj.normal>
 </objdefs>
