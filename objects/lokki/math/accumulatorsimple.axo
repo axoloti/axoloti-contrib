@@ -1,0 +1,22 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="accumulatorsimple" uuid="212b126b-cd19-4f1a-9a41-2281765843ab">
+      <sDescription>Saturating accumulator. Adds input to accumulator on trigger. Reset clears the accumulator to zero.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i"/>
+         <frac32buffer name="trigandrst"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int accu;]]></code.declaration>
+      <code.init><![CDATA[accu = 0;]]></code.init>
+      <code.srate><![CDATA[if ((inlet_trigandrst>0)  ) {accu += inlet_i;  accu = __SSAT(accu,28);} else {accu = 0;}
+outlet_o= accu;]]></code.srate>
+   </obj.normal>
+</objdefs>
