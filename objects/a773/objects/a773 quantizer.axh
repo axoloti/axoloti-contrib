@@ -1,0 +1,120 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="14" y="56" text="generate random notes"/>
+   <comment type="patch/comment" x="294" y="56" text="note into quantizer"/>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="70">
+      <params>
+         <frac32.s.map name="pitch" value="-6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="126" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/note" uuid="ce3190ad98b73b468f22221f555b01feee03226a" name="note_1" x="294" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="546" y="70">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="658" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="126" y="126" text="scale note range"/>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="126" y="140">
+      <params>
+         <frac32.u.map name="amp" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="294" y="140" text="note out of quantizer"/>
+   <obj type="disp/note" uuid="ce3190ad98b73b468f22221f555b01feee03226a" name="note_2" x="294" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="546" y="196" text="trigger on new quantized note"/>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="546" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="294" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="294" y="322" text="select which notes are in the scale"/>
+   <obj type="a773 quantizer" uuid="d5343a4fea87a3e4f4dae20287226084550ea8df" name="a773_1" x="294" y="336">
+      <params>
+         <bin12 name="b12" value="2741"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="294" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="294" y="462" text="cpu cycles burned..."/>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="294" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="378" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="uniform_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="note_1" inlet="in"/>
+         <dest obj="a773_1" inlet="note"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="a773_1" outlet="note"/>
+         <dest obj="note_2" inlet="in"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="rand"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_1" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="a773_1" outlet="change"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>772</x>
+      <y>104</y>
+      <width>937</width>
+      <height>842</height>
+   </windowPos>
+</patch-1.0>

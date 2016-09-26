@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="a773 quantizer" uuid="d5343a4fea87a3e4f4dae20287226084550ea8df">
+      <sDescription>quantize note input to a scale</sDescription>
+      <author>a773</author>
+      <license>GPL</license>
+      <helpPatch>a773 quantizer.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="note"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="note" description="note number (-64..63)"/>
+         <bool32 name="change" description="triggers on new quantized note"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bin12 name="b12" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t	_scaleVal;
+float	_last_note;
+int32_t	_out;
+int32_t	_last_out_note;
+int		_midi_notes[252];
+int32_t	_last_scale;
+int		_gate_hi_counter;
+int		_nb_waits;]]></code.declaration>
+      <code.init><![CDATA[_nb_waits = 1;]]></code.init>
+      <code.krate><![CDATA[if (_last_scale != param_b12) {
+	_last_scale = param_b12;
+	int offset = 8;
+	for(int i=0; i<12; i++){
+    		for(int octave=0; octave<20; octave++){
+    			if((param_b12 & (1 << i)) << 21){
+    				_midi_notes[i + octave*12 + offset] = i + octave*12;
+    			} else {
+    				_midi_notes[i + octave*12 + offset] = -1;
+    			}
+    		}
+    }
+ }
+
+
+
+if (_last_note != inlet_note) {
+	_last_note = inlet_note;	
+  	//_out = inlet_note;
+
+  	int _initial_guess;
+	int guess;
+
+  	_initial_guess = (inlet_note >> 21) + 120;
+	for(guess=_initial_guess; guess >=0; guess--){
+		if(_midi_notes[guess] > -1){
+			_out = (guess-120) << 21;
+			if(_out != _last_out_note){
+				outlet_change = true;
+				_gate_hi_counter = _nb_waits;
+				_last_out_note = _out;
+			}
+			guess = -1;
+		}
+	}
+}
+
+if(_gate_hi_counter-- < 1){
+	outlet_change = false;
+}
+
+outlet_note = _out;]]></code.krate>
+   </obj.normal>
+</objdefs>
