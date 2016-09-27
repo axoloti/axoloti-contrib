@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="gateEuclid" uuid="4701d084-c8a7-466e-8a53-2acd231ea7bf">
+      <sDescription>euclidian gate generator with multiple outs (n-outputs are inverted gates of the other outputs)
+
+maxcount set the base for the repeat/start/width controls. Normally this would be the same value as the maximum count of the counter, but this can also be controlled independently if you want to set a smaller base then the max-count.
+
+repeat A and B set the size of the euclidian repetition respective to the maxcount input.
+start A and B offset the position of the euclidian repetition respective to the repetition size.
+width A and B set the gate length within each euclidian repetition respective to the repetition size.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <int32 name="count" description="nominator"/>
+         <int32 name="maxcount"/>
+         <frac32 name="repeatA"/>
+         <frac32 name="startA"/>
+         <frac32 name="widthA"/>
+         <frac32 name="repeatB"/>
+         <frac32 name="startB"/>
+         <frac32 name="widthB"/>
+      </inlets>
+      <outlets>
+         <bool32 name="A"/>
+         <bool32 name="nA"/>
+         <bool32 name="B"/>
+         <bool32 name="nB"/>
+         <bool32 name="X"/>
+         <bool32 name="nX"/>
+         <bool32 name="O"/>
+         <bool32 name="nO"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[int32_t a;
+int32_t repeatA=___SMMUL(inlet_repeatA<<3,inlet_maxcount<<2);
+int32_t repeatB=___SMMUL(inlet_repeatB<<3,inlet_maxcount<<2);
+a=inlet_count-___SMMUL(inlet_startA<<3,repeatA<<2);
+int32_t r;
+if (a >=0)
+  r = ((unsigned int)a)/repeatA;
+else  r = -(((unsigned int)(repeatA-a))/repeatA);
+int32_t Rem = a-(r*repeatA);
+outlet_A=Rem<___SMMUL(inlet_widthA<<3,repeatA<<2)?1:0;
+outlet_nA=!outlet_A;
+a=a+___SMMUL(inlet_startB<<3,repeatB<<2);
+if (a >=0)
+  r = ((unsigned int)a)/repeatB;
+else  r = -(((unsigned int)(repeatB-a))/repeatB);
+Rem = a-(r*repeatB);
+outlet_B=Rem<___SMMUL(inlet_widthB<<3,repeatB<<2)?1:0;
+outlet_nB=!outlet_B;
+outlet_X=outlet_A&outlet_B;
+outlet_nX=!outlet_X;
+outlet_O=outlet_A||outlet_B;
+outlet_nO=!outlet_O;]]></code.krate>
+   </obj.normal>
+</objdefs>
