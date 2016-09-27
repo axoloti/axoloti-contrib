@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tablestore demux 2" uuid="97417256-1c93-491a-9254-84973df12d1d">
+      <sDescription>writes and outputs values to a table at position &apos;i&apos; + &apos;offset&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <frac32 name="in"/>
+         <int32 name="i"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+      </inlets>
+      <outlets>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[prev = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_i == 0) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 0]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+if ((inlet_i == 1) && (inlet_in != prev))
+	attr_table.array[inlet_offset + 1]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+
+	prev=inlet_in;
+
+
+
+outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;]]></code.krate>
+   </obj.normal>
+</objdefs>

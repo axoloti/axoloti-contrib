@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="phasor div" uuid="a88cfdd6-8eb9-479b-9d88-bda5354f0042">
+      <sDescription>saw wave signal-rate LFO, rising slope, frequency input.lets call it &apos;phasor&apos;.copy-pasted from &apos;lfo/saw lin&apos; by Johannes.
+inlet &apos;divider&apos; will left-shift the value of inlet &apos;freq&apos; n times.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="freq" description="frequency"/>
+         <bool32.rising name="reset" description="reset phase"/>
+         <int32 name="divider"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t r;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+   r = 1;]]></code.init>
+      <code.srate><![CDATA[{
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += ((inlet_freq>>6)<<inlet_divider);
+      }
+      outlet_wave= (Phase>>5);
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>

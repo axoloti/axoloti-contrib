@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="loop_multi_stereo" uuid="1e1f70b0-8ff3-4bf1-987b-ba1cc089bf0e">
+   <obj.normal id="loop_multi_stereo" uuid="3ebcb425-9348-4f2e-996e-02c7c5ee6cb4">
       <sDescription>records audio to a table.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
@@ -8,7 +8,7 @@ after recording is done,the tempo if the recording in hz is sent out,
 as well as the length of the recording (in fraction of the table&apos;s size).</sDescription>
       <author>Robert Schirmer</author>
       <license>who cares</license>
-      <helpPatch>table.axh</helpPatch>
+      <helpPatch>loop multi.axh</helpPatch>
       <inlets>
          <frac32buffer name="waveL" description="audio in L"/>
          <frac32buffer name="waveR" description="audio in R"/>
@@ -57,6 +57,7 @@ int mode;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 start = 0;
+rec_max =attr_tableL.LENGTH >> attr_slots;
 
 //set 'shift factor' for storing the recording length/the sync output
     if (attr_tableL.LENGTH == 2048){shift = 16; }
@@ -71,10 +72,6 @@ start = 0;
     if (attr_tableL.LENGTH == 1048576 ){shift = 7;}
     if (attr_tableL.LENGTH == 2097152 ){shift = 6;}
     if (attr_tableL.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.krate><![CDATA[offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
-outlet_offset = offset;
-rec_offset = (__USAT(offset,27)>>(27-attr_tableL.LENGTHPOW));
-rec_max =attr_tableL.LENGTH >> attr_slots;]]></code.krate>
       <code.srate><![CDATA[csample = (inlet_pos >> 11);
 
    if ((inlet_rec) && !rec) {
@@ -86,6 +83,9 @@ rec_max =attr_tableL.LENGTH >> attr_slots;]]></code.krate>
       outlet_freq = 0;
       outlet_start = 0;
       mode = inlet_sync;
+      offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
+      rec_offset = (__USAT(offset,27)>>(27-attr_tableL.LENGTHPOW));
+
        } 
        
   //rec stopped-wait for rollover  
@@ -118,6 +118,7 @@ rec_max =attr_tableL.LENGTH >> attr_slots;]]></code.krate>
 
       } 
 
-        outlet_rec = rec;]]></code.srate>
+        outlet_rec = rec;
+        outlet_offset = offset;]]></code.srate>
    </obj.normal>
 </objdefs>
