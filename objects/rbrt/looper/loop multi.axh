@@ -52,7 +52,7 @@
    </obj>
    <obj type="ctrl/i radio 2 h" uuid="965a945535a206a17296f000802fd0cfaf0e09e0" name="MASTER/SLAVE" x="56" y="182">
       <params>
-         <int32.hradio name="value" value="0"/>
+         <int32.hradio name="value" value="1"/>
       </params>
       <attribs/>
    </obj>
@@ -124,7 +124,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/osc/phasor div" uuid="a88cfdd6-8eb9-479b-9d88-bda5354f0042" name="phasor_1" x="546" y="434">
+   <obj type="rbrt/osc/phasor" uuid="8015d52c-de35-43b7-af2c-e01f5e6d9128" name="phasor_1" x="546" y="434">
       <params/>
       <attribs/>
    </obj>
@@ -147,6 +147,10 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="56" y="448" text="record 1 bar when recording a slave-loop"/>
+   <obj type="rbrt/math/wrappo" uuid="3c613d69-70e9-4409-93fe-e3c5bb765e28" name="wrappo_1" x="546" y="504">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t1" x="56" y="518">
       <params/>
       <attribs>
@@ -408,15 +412,19 @@
       </net>
       <net>
          <source obj="phasor_1" outlet="wave"/>
-         <dest obj="global transport_" inlet="in"/>
-         <dest obj="sync MASTER" inlet="pos"/>
-         <dest obj="sync SLAVE" inlet="pos"/>
-         <dest obj="loop_multi_1" inlet="pos"/>
+         <dest obj="wrappo_1" inlet="in"/>
       </net>
       <net>
          <source obj="&gt;&gt;_2" outlet="out"/>
          <dest obj="i_1" inlet="in"/>
-         <dest obj="phasor_1" inlet="divider"/>
+         <dest obj="wrappo_1" inlet="bits"/>
+      </net>
+      <net>
+         <source obj="wrappo_1" outlet="out"/>
+         <dest obj="sync MASTER" inlet="pos"/>
+         <dest obj="sync SLAVE" inlet="pos"/>
+         <dest obj="loop_multi_1" inlet="pos"/>
+         <dest obj="global transport_" inlet="in"/>
       </net>
    </nets>
    <settings>
