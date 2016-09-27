@@ -25,9 +25,10 @@ int32_t	_last_scale;
 int		_gate_hi_counter;
 int		_nb_waits;]]></code.declaration>
       <code.init><![CDATA[_nb_waits = 1;]]></code.init>
-      <code.krate><![CDATA[if (_last_scale != param_b12) {
+      <code.krate><![CDATA[// calculate new lookup table when scale is updated
+if (_last_scale != param_b12) {
 	_last_scale = param_b12;
-	int offset = 8;
+	int offset = 8; // aloloti treats 0 as E
 	for(int i=0; i<12; i++){
     		for(int octave=0; octave<20; octave++){
     			if((param_b12 & (1 << i)) << 21){
@@ -43,25 +44,29 @@ int		_nb_waits;]]></code.declaration>
 
 if (_last_note != inlet_note) {
 	_last_note = inlet_note;	
-  	//_out = inlet_note;
 
   	int _initial_guess;
 	int guess;
 
+	// handle negative numbers
   	_initial_guess = (inlet_note >> 21) + 120;
+  	
 	for(guess=_initial_guess; guess >=0; guess--){
 		if(_midi_notes[guess] > -1){
+			// appropiate note found
 			_out = (guess-120) << 21;
 			if(_out != _last_out_note){
+				// new value on note outlet
 				outlet_change = true;
 				_gate_hi_counter = _nb_waits;
 				_last_out_note = _out;
 			}
-			guess = -1;
+			guess = -1; // leave loop
 		}
 	}
 }
 
+// set change outlet low after _nb_waits cycles
 if(_gate_hi_counter-- < 1){
 	outlet_change = false;
 }
