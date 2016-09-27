@@ -1,0 +1,90 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="tune" uuid="67bff232-c950-4bd8-8ec5-e77371c00455">
+      <sDescription>scaled tuning module for controlling the pitch oscillators
+scale is controlled by the rescale module
+
+the piano-control adds a frequency offset to each next note, starting from middle C (center can be adjusted using &quot;offset&quot;). This allows for a piano-like offset (though the frequency offset calculation is only a crude approximation to a real piano).</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <int32 name="root"/>
+      </inlets>
+      <outlets>
+         <frac32 name="scaled"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="piano"/>
+         <frac32.s.map name="offset"/>
+      </params>
+      <attribs>
+         <objref name="scale"/>
+      </attribs>
+      <code.declaration><![CDATA[;
+int8_t octave;
+int8_t semitone;
+float32_t freq;
+int32_t scaled;
+int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+
+
+Float_t f;
+float32_t intfreq;
+float32_t LOG1;
+float32_t LOG2;
+float32_t LOG3;
+int32_t r1;
+int32_t r2;
+float32_t base;
+float32_t scale[12];
+
+]]></code.declaration>
+      <code.init><![CDATA[base=((float32_t)330)/1000;
+
+f.f = 2<<21;
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+LOG3 = r1 + r2;
+
+f.f = base*(4<<21);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+LOG2 = r1 + r2;]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=(inlet_pitch>>21)+48;
+octave=pitch/12;
+semitone=pitch-octave*12;
+octave=octave-4;
+int32_t root=inlet_root*7;
+root=root-(root/12)*12;
+root=root<0?root+12:root;
+
+
+
+
+if(octave>=0){intfreq=(base*attr_scale.scale[semitone])*(1<<octave)*attr_scale.scale[root];}
+if(octave<0) {intfreq=(base*attr_scale.scale[semitone])/(1<<-octave)*attr_scale.scale[root];}
+
+
+f.f = intfreq*(4<<21);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+LOG1 = r1 + r2;
+
+scaled=((LOG1-LOG2)/LOG3)*(36<<21);
+int32_t piano;
+piano=___SMMUL(scaled+param_offset,param_piano);
+int32_t P=piano;
+P=P>0?P:-P;
+piano=___SMMUL(piano<<3,P<<2);
+outlet_scaled=scaled+piano;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
