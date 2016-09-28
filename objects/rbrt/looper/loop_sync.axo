@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="loop_sync" uuid="2d468173-048a-4b63-97d3-db9666f2bcf4">
+   <obj.normal id="loop_sync" uuid="8f4d1aba-2e74-422d-b76a-0907014493ce">
       <sDescription>if &apos;wait&apos; is high,&apos;loop_sync&apos; will wait until the signal at &apos;pos&apos; reaches the value defined by &apos;start&apos;.
 the, a pulse is put out at outlet &apos;trig&apos;.</sDescription>
       <author>robert schirmer</author>
@@ -16,7 +16,10 @@ the, a pulse is put out at outlet &apos;trig&apos;.</sDescription>
       <displays/>
       <params/>
       <attribs/>
-      <code.srate><![CDATA[if ((inlet_wait) && ((inlet_pos >> 15) == (inlet_start >> 15))) {
+      <code.srate><![CDATA[int csample = (inlet_pos >> 13);
+int spos =    (inlet_start >> 13);
+
+if ((inlet_wait) && ((csample > (spos -24)) && (csample < (spos +24)))) {
       outlet_trig = 1;} else 
       outlet_trig = 0;]]></code.srate>
    </obj.normal>

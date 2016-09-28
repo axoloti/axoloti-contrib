@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="loop_multi" uuid="94b73e87-6296-4c21-8dcd-2c8c26110ef3">
+   <obj.normal id="loop_multi" uuid="5f86378d-5e30-4d88-99e1-9519d8fc6d61">
       <sDescription>records audio to a table.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
@@ -22,6 +22,7 @@ as well as the length of the recording (in fraction of the table&apos;s size).</
          <frac32 name="freq" description="tempo in hz"/>
          <frac32 name="start" description="recording offset when recording in sync"/>
          <bool32 name="rec" description="record state"/>
+         <int32 name="test"/>
       </outlets>
       <displays/>
       <params/>
@@ -70,7 +71,7 @@ start = 0;
     if (attr_table.LENGTH == 1048576 ){shift = 7;}
     if (attr_table.LENGTH == 2097152 ){shift = 6;}
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.srate><![CDATA[csample = (inlet_pos >> 11);
+      <code.srate><![CDATA[csample = (inlet_pos >> 7);
 
    if ((inlet_rec) && !rec) {
       rec = 1;
@@ -89,7 +90,7 @@ start = 0;
   //rec stopped-wait for rollover  
  else if (!(inlet_rec)) {
  	if (mode)	{
-        if (csample == spos)  { rec = 0;} 
+        if ((csample > (spos -12)) && (csample < (spos +12))) { rec = 0;} 
         } else rec = 0;
    }
            
@@ -105,6 +106,7 @@ start = 0;
 
       if (!rec) {  
      outlet_range = (recpos << shift); 
+     outlet_test = recpos;
 
     if (recpos) { 
      outlet_freq = (int)(281474976710656.f/ (recpos * (128<<3))); } 
