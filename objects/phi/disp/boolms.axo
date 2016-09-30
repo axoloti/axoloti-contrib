@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="boolms" uuid="4d2b0662-f881-4953-832a-a286daf5b6a3">
+      <sDescription>Generates a single pulse after a rising edge on trigger input. A new trigger before the pulse finishes at the output, extends the pulse.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>pulselength.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <bool32 name="bool" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig > 0) && !ntrig) {
+  val = 1 << 30;
+  ntrig = 1;
+  disp_bool = 1;
+}
+else {
+  if (!(inlet_trig > 0))
+    ntrig = 0;
+  if (val>0) {
+    int32_t t;
+    MTOF(-64,t);
+     val -= t>>3;
+     if (val<=0) disp_bool = 0;
+     else disp_bool = 1;
+  } else disp_bool = 0;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
