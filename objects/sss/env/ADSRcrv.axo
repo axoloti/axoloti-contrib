@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="ADSRcrv" uuid="678618ab-21ad-422c-8e96-60bc9d1befd9">
+   <obj.normal id="ADSRcrv" uuid="30ccda6c-56c8-402a-894f-23d87dd1bc84">
       <sDescription>ADSR module with exp/inverse exp controls for attack, decay and release stages. Also outputs stage number and a gate high when it changes from stage (eg selecting different waveforms for my wavetable oscillators for each stage. you could use the autoCurve (patt-folder) to morph between settings at the different stages of the envelope.)
 
 the exponential/inverse exponential sides of the A, D and R are swapped for D and R. This is done for a more intuitive control: 
@@ -29,7 +29,7 @@ the exponential/inverse exponential sides of the A, D and R are swapped for D an
          <frac32.s.map.klineartime.exp name="D"/>
          <frac32.s.map name="crvD"/>
          <frac32.u.map name="S"/>
-         <frac32.u.map name="R"/>
+         <frac32.s.map name="R"/>
          <frac32.s.map name="crvR"/>
       </params>
       <attribs/>
@@ -70,11 +70,13 @@ int32_t sus;
 int32_t CrvA=__SSAT(param_crvA+inlet_crvA,27);
 int32_t CrvD=__SSAT(param_crvD+inlet_crvD,27);
 int32_t CrvR=__SSAT(param_crvR+inlet_crvR,27);
-sus=__USAT((1<<27)-param_S-inlet_S,27);
+sus=__USAT((1<<27)-5-param_S-inlet_S,27);
 int32_t rel;
 MTOF(-param_A-inlet_A,att)
 MTOF(-param_D-inlet_D,dec)
 MTOF(-param_R-inlet_R,rel)
+int32_t choke;
+MTOF(32<<21,choke)
 att=att>>3;
 dec=dec>>3;
 rel=rel>>3;
@@ -85,19 +87,32 @@ else if(!(inlet_gate>0)){trig=0;stage=0;}
 
 if(stage==1){
 env1+=att;
-if(env1>(1<<30)){stage=2;}
+env1=__USAT(env1,30);
+if(env1>=((1<<30)-1)){stage=2;}
 }
 if(stage==2){
 env2+=dec;
-if(env2>(1<<30)){stage=3;}
+env2=__USAT(env2,30);
+if(env2>=((1<<30)-1)){stage=3;}
 }
 curving(env1,CrvA);
 Cenv1=curved<<3;
 curving(env2,-CrvD);
 Cenv2=curved<<3;
-
 int32_t Env2=___SMMUL(Cenv2,sus<<3)<<2;
-if((stage==0)&!trg){
+
+if(stage==0){
+env3=env3>0?env3-rel:0;
+curving(env3,CrvR);
+Cenv3=___SMMUL(curved<<3,relLvl>>1)<<3;
+}
+if(stage>0){
+env3=env3>0?env3-choke:0;
+curving(env3,CrvR);
+Cenv3=___SMMUL(curved<<3,relLvl>>1)<<3;
+}
+
+if((stage==0)&(!(trg))){
 trg=1;
 relLvl=Cenv1-Env2;
 env3=(1<<30);
@@ -105,16 +120,11 @@ env1=0;
 env2=0;}
 else if(stage>0){trg=0;}
 
-if(stage==0){
 
-env3=env3>0?env3-rel:0;
-
-curving(env3,CrvR);
-Cenv3=___SMMUL(curved<<3,relLvl>>1)<<3;
-}
-outlet_out=Cenv1-Env2+Cenv3>>3;
+outlet_out=__USAT(Cenv1-Env2+Cenv3>>3,27);
 outlet_nxtStg=prev==stage?0:1;
 outlet_stage=stage;
+
 prev=stage;]]></code.krate>
    </obj.normal>
 </objdefs>
