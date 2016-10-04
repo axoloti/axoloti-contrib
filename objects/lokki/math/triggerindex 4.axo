@@ -14,38 +14,34 @@
          <int32.positive name="enc"/>
       </outlets>
       <displays>
-         <int32.label name="binary" noLabel="true"/>
+         <int32.label name="enc" noLabel="true"/>
       </displays>
       <params>
          <bool32.tgl name="indexlatch" description="latch index" noLabel="true"/>
       </params>
-      <attribs/>
+      <attribs>
+         <spinner name="c1" MinValue="1" MaxValue="16" DefaultValue="3"/>
+         <spinner name="c2" MinValue="1" MaxValue="16" DefaultValue="5"/>
+         <spinner name="c3" MinValue="1" MaxValue="16" DefaultValue="6"/>
+         <spinner name="c4" MinValue="1" MaxValue="16" DefaultValue="7"/>
+      </attribs>
       <code.declaration><![CDATA[int index;
 int combi;]]></code.declaration>
       <code.init><![CDATA[index = 0;]]></code.init>
       <code.krate><![CDATA[combi = inlet_b1 + (inlet_b2 << 1) + (inlet_b3 << 2) + (inlet_b4 << 3);
 
-switch (combi) {
 
-case 1:
-index = 1;
-break;
-case 2:
-index = 2;
-break;
-case 4:
-index = 3;
-break;
-case 8:
-index = 4;
-break;
-default:
-if (!param_indexlatch) index = 0;
-break;
-}
+if (combi == 1) index = 1;
+else if (combi == 2) index = 2;
+else if (combi == 4) index = 3;
+else if (combi == 8) index = 4;
+else if (combi == attr_c1) index = 5;
+else if (combi == attr_c2) index = 6;
+else if (!param_indexlatch) index = 0;
+
 outlet_out = index;
 outlet_enc = combi;
-disp_binary = combi;
+disp_enc = combi;
 /*if (inlet_b1) index = 1; 
 else if (inlet_b2) index = 2;
 else if (inlet_b3) index = 3;
