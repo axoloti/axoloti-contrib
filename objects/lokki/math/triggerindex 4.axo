@@ -3,7 +3,6 @@
       <sDescription>trigger an index according to a connected boolean source, index can be momentary or latching</sDescription>
       <author>Simon Iten</author>
       <license>BSD</license>
-      <helpPatch></helpPatch>
       <inlets>
          <bool32 name="b1"/>
          <bool32 name="b2"/>
@@ -12,19 +11,47 @@
       </inlets>
       <outlets>
          <int32.positive name="out" description="output"/>
+         <int32.positive name="enc"/>
       </outlets>
-      <displays/>
+      <displays>
+         <int32.label name="binary" noLabel="true"/>
+      </displays>
       <params>
          <bool32.tgl name="indexlatch" description="latch index" noLabel="true"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[int index;]]></code.declaration>
+      <code.declaration><![CDATA[int index;
+int combi;]]></code.declaration>
       <code.init><![CDATA[index = 0;]]></code.init>
-      <code.krate><![CDATA[if (inlet_b1) index = 1; 
+      <code.krate><![CDATA[combi = inlet_b1 + (inlet_b2 << 1) + (inlet_b3 << 2) + (inlet_b4 << 3);
+
+switch (combi) {
+
+case 1:
+index = 1;
+break;
+case 2:
+index = 2;
+break;
+case 4:
+index = 3;
+break;
+case 8:
+index = 4;
+break;
+default:
+if (!param_indexlatch) index = 0;
+break;
+}
+outlet_out = index;
+outlet_enc = combi;
+disp_binary = combi;
+/*if (inlet_b1) index = 1; 
 else if (inlet_b2) index = 2;
 else if (inlet_b3) index = 3;
 else if (inlet_b4) index = 4;
 else if (!param_indexlatch)index = 0;
-outlet_out = index;]]></code.krate>
+outlet_out = index;
+*/]]></code.krate>
    </obj.normal>
 </objdefs>
