@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.10">
+<patch-1.0 appVersion="1.0.11">
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="buffer-l" x="826" y="0">
       <params/>
       <attribs>
@@ -73,7 +73,7 @@
    </obj>
    <obj type="osc/phasor lin" uuid="ee34c4d34eba2cbd849b9e5631e60ce1651faf4c" name="phasor_1" x="504" y="266">
       <params>
-         <frac32.u.map name="freq" value="0.0"/>
+         <frac32.u.map name="freq" value="27.0"/>
       </params>
       <attribs/>
    </obj>
@@ -123,7 +123,7 @@
    </obj>
    <obj type="osc/phasor lin" uuid="ee34c4d34eba2cbd849b9e5631e60ce1651faf4c" name="phasor_2" x="504" y="406">
       <params>
-         <frac32.u.map name="freq" value="0.0"/>
+         <frac32.u.map name="freq" value="27.0"/>
       </params>
       <attribs/>
    </obj>
