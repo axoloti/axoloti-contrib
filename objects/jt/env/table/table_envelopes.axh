@@ -1,0 +1,105 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="28" y="14" text="table envelopes process a 128-element chromatic amplitude table"/>
+   <obj type="jt/drawbars/pulse" uuid="c8814dae-b5b2-4286-8796-9ba8fb5deaef" name="pulse_1" x="28" y="56">
+      <params>
+         <frac32.u.map name="velosense" value="0.0"/>
+         <frac32.u.map name="f1" value="0.0"/>
+         <frac32.u.map name="f2" value="0.0"/>
+         <frac32.u.map name="f3" value="64.0"/>
+         <frac32.u.map name="f4" value="0.0"/>
+         <frac32.u.map name="f5" value="64.0"/>
+         <frac32.u.map name="f6" value="0.0"/>
+         <frac32.u.map name="f7" value="64.0"/>
+         <frac32.u.map name="f8" value="64.0"/>
+         <frac32.u.map name="f9" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="140" y="56" text="extend pulse to release envelope"/>
+   <obj type="jt/drawbars/switched" uuid="6b06b1dd-7e6d-40e5-8dc6-4c1e5ebf94e0" name="switched_1" x="350" y="56">
+      <params>
+         <frac32.u.map name="velosense" value="0.0"/>
+         <frac32.u.map name="f1" value="0.0"/>
+         <frac32.u.map name="f2" value="0.0"/>
+         <frac32.u.map name="f3" value="64.0"/>
+         <frac32.u.map name="f4" value="0.0"/>
+         <frac32.u.map name="f5" value="64.0"/>
+         <frac32.u.map name="f6" value="0.0"/>
+         <frac32.u.map name="f7" value="64.0"/>
+         <frac32.u.map name="f8" value="64.0"/>
+         <frac32.u.map name="f9" value="0.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="476" y="56" text="attack/release envelope works on drawbars/switched, "/>
+   <comment type="patch/comment" x="476" y="70" text="the pulses produced by drawbars/pulse are to short to substantially open the attack"/>
+   <obj type="jt/env/table/r" uuid="54152b22-8950-4963-bef3-a6abab0a76d8" name="r_1" x="140" y="84">
+      <params>
+         <frac32.s.map name="release" value="35.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="input" obj="pulse_1"/>
+      </attribs>
+   </obj>
+   <obj type="jt/env/table/ar" uuid="87f5a900-ad36-4e93-b7e6-9c99f09b879e" name="ar_1" x="476" y="98">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <frac32.s.map name="release" value="23.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="input" obj="switched_1"/>
+      </attribs>
+   </obj>
+   <obj type="jt/drawbars/scope" uuid="c80468f9-494e-4c7f-abd6-9c94f6a8e4dc" name="scope_1" x="140" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="a1" obj="r_1"/>
+      </attribs>
+   </obj>
+   <obj type="jt/drawbars/scope" uuid="c80468f9-494e-4c7f-abd6-9c94f6a8e4dc" name="scope_2" x="616" y="196">
+      <params/>
+      <attribs>
+         <objref attributeName="a1" obj="ar_1"/>
+      </attribs>
+   </obj>
+   <obj type="jt/equal" uuid="57a444e6-e5e1-448f-999c-040c6c2716b6" name="equal_1" x="476" y="392">
+      <params>
+         <frac32.s.map name="C" value="-4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jt/tonewheels/sine" uuid="7ba83694-44c8-4197-94cb-63dbe7db78e6" name="sine_1" x="224" y="490">
+      <params/>
+      <attribs>
+         <objref attributeName="amplitudes" obj="r_1"/>
+         <objref attributeName="tuning" obj="equal_1"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="392" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="14" y="532" text="replace &quot;r_1&quot; with &quot;ar_1&quot; -----------&gt;"/>
+   <comment type="patch/comment" x="28" y="546" text="or &quot;switched_1&quot; (bypass)"/>
+   <comment type="patch/comment" x="28" y="560" text="or &quot;pulse_1&quot; for microsound lovers"/>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>85</x>
+      <y>153</y>
+      <width>955</width>
+      <height>862</height>
+   </windowPos>
+</patch-1.0>

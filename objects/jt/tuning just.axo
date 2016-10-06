@@ -1,0 +1,128 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="tuning just" uuid="4cb1fdab-c81a-49e4-b46f-1b723abc2cb5">
+      <sDescription>Tuning table for tonewheels using just intonation.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="detune" description="in semitones"/>
+         <int32 name="root" description="root note"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="C">
+            <DefaultValue v="-4.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="Db">
+            <DefaultValue v="-3.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="D">
+            <DefaultValue v="-2.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="Eb">
+            <DefaultValue v="-1.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="E">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="F">
+            <DefaultValue v="1.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="Gb">
+            <DefaultValue v="2.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="G">
+            <DefaultValue v="3.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="Ab">
+            <DefaultValue v="4.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="A">
+            <DefaultValue v="5.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="Bb">
+            <DefaultValue v="6.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map.pitch name="B">
+            <DefaultValue v="7.0"/>
+         </frac32.s.map.pitch>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 4;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = (1<<LENGTHPOW)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t array[LENGTH];]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<LENGTH;i++) {
+	array[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[int r = inlet_root + 12*8 + 4;
+r = r-12*(r/12);
+int pitch=0;
+
+switch (r){
+	case  0: pitch = param_C ; break;
+	case  1: pitch = param_Db; break;
+	case  2: pitch = param_D ; break;
+	case  3: pitch = param_Eb; break;
+	case  4: pitch = param_E ; break;
+	case  5: pitch = param_F ; break;
+	case  6: pitch = param_Gb; break;
+	case  7: pitch = param_G ; break;
+	case  8: pitch = param_Ab; break;
+	case  9: pitch = param_A ; break;
+	case 10: pitch = param_Bb; break;
+	case 11: pitch = param_B ; break;
+	default: break;
+}
+
+int32_t f0 = mtof48k_ext_q31(pitch + inlet_detune);
+
+static const int32_t intervals[] = {
+	0, 
+	(1ll<<31)/15, 
+	(1ll<<31)/8,
+	(1ll<<31)/5,
+	(1ll<<31)/4,
+	(1ll<<31)/3,
+	(2ll<<31)/5,
+	(1ll<<31)/2,
+	(3ll<<31)/5,
+	(2ll<<31)/3,
+	(7ll<<31)/9,
+	(7ll<<31)/8
+};
+
+// LCM = 5*3*3*2*2*2 = 360
+
+static const int32_t intervals2[] = {
+	360+0, 
+	360+24,
+	360+48,
+	360+72,
+	360+90,
+	360+120,
+	360+144,
+	360+180,
+	360+216,
+	360+240,
+	360+280,
+	360+315
+};
+
+int32_t f1 = f0/2880;
+f1=f1<<3;
+int i;
+int j = 0;
+for(i=r;i<12;i++){
+	array[i] = f1*intervals2[j++];
+}
+i-=12;
+f1 = f1>>1;
+for(;i<r;i++){
+	array[i] = f1*intervals2[j++];
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

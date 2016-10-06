@@ -1,0 +1,144 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="sine" uuid="7ba83694-44c8-4197-94cb-63dbe7db78e6">
+      <sDescription>Sine wave tonewheels.
+Processes note number 24 to 117.
+No amplitude interpolation.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>tonewheels.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="amplitudes" description="Table containing the amplitudes (32bit)"/>
+         <objref name="tuning" description="Tuning table"/>
+      </attribs>
+      <code.declaration><![CDATA[class osc_sine_plus_octave_cheap {
+	// processes TWO octaves!
+	// cheaper version, but fails when cos(f)<0.5 or sin(f)>0.5
+	public:
+
+	void init(){
+	}
+
+	void render(int32_t *pOut, int32_t amp1, int32_t amp2, uint32_t freq, uint32_t phase){
+		// out: pointer to s32 output buffer, adds values
+		// amp: s32 amplitude
+		int i;
+		amp1=amp1>>3;
+		int32_t ss = sin_q31(phase);
+		int32_t sc = sin_q31(phase + 0x40000000);
+		ss=ss>>1;
+		sc=sc>>1;		
+		int32_t rs = sin_q31(freq);
+		int32_t rc = sin_q31(freq + 0x40000000);
+		rs = rs<<1;
+		rc = (0x80000000-rc)<<1;
+		for(i=0;i<BUFSIZE;i++) {
+			int32_t ss2 = __SMMLA(sc,rs,___SMMLS(ss,rc,ss));
+			sc = ___SMMLS(ss,rs,___SMMLS(sc,rc,sc));
+			ss = ss2;
+			int32_t out = *pOut;
+			out = __SMMLA(ss,amp1,out);
+			int32_t ss2f = ___SMMUL(sc,ss);
+			out = __SMMLA(ss2f,amp2,out);
+			*pOut = out;
+			pOut++;
+		}
+	}
+};
+
+class osc_sine_plus_octave {
+	// processes TWO octaves!
+	// slightly more expensive version works for all frequencies
+	public:
+
+	void init(){
+	}
+
+	void render(int32_t *pOut, int32_t amp1, int32_t amp2, uint32_t freq, uint32_t phase){
+		// out: pointer to s32 output buffer, adds values
+		// amp: s32 amplitude
+		int i;
+		amp1=amp1>>3;
+		int32_t ss = sin_q31(phase);
+		int32_t sc = sin_q31(phase + 0x40000000);
+		ss=ss>>1;
+		sc=sc>>1;
+		int32_t rs = sin_q31(freq);
+		int32_t rc = sin_q31(freq + 0x40000000);
+		for(i=0;i<BUFSIZE;i++) {
+			int32_t ss2 = __SMMLA(ss,rc,___SMMUL(sc,rs))<<1;
+			sc = ___SMMLS(ss,rs,___SMMUL(sc,rc))<<1;
+			ss = ss2;
+			int32_t out = *pOut;
+			out = __SMMLA(ss,amp1,out);
+			int32_t ss2f = ___SMMUL(sc,ss);
+			out = __SMMLA(ss2f,amp2,out);			
+			*pOut++ = out;
+		}
+	}
+};
+
+static const int n_octaves3 = 6;
+static const int n_octaves4 = 2;
+
+class chroma {
+	int phase;
+		
+	public:
+	osc_sine_plus_octave_cheap octaves3[n_octaves3/2];
+	osc_sine_plus_octave octaves4[n_octaves4/2];
+	
+	void init(){
+		phase = 0;
+		int i;
+		for(i=0;i<n_octaves3/2;i++){
+			octaves3[i].init();
+		}
+		for(i=0;i<n_octaves4/2;i++){
+			octaves4[i].init();
+		}
+	};
+
+	void render(uint32_t freq, int32_t *pOut, int32_t *amp){
+		amp += 24;
+		phase += freq<<4;
+		uint32_t p = phase;
+		uint32_t f = freq;
+		int i;
+		for(i=0;i<n_octaves3/2;i++){
+			octaves3[i].render(pOut,*amp,amp[12],f,p);
+			amp+=24;
+			p=p<<2;
+			f=f<<2;
+		}
+		for(i=0;i<n_octaves4/2;i++){
+			octaves4[i].render(pOut,*amp,amp[12],f,p);
+			amp+=24;
+			p=p<<2;
+			f=f<<2;
+		}
+	}
+};
+
+chroma chromas[12];]]></code.declaration>
+      <code.init><![CDATA[int i;
+
+for(i=0;i<12;i++) {
+	chromas[i].init();
+}]]></code.init>
+      <code.krate><![CDATA[int i;
+
+for(i=0;i<BUFSIZE;i++) {
+	outlet_wave[i]=0;
+}
+
+for(i=0;i<12;i++){
+	chromas[i].render(attr_tuning.array[i]>>3,&outlet_wave[0] ,&attr_amplitudes.array[i]);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

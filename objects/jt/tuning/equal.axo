@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="equal" uuid="2bcbd7e3-c07f-4574-893c-573310323448">
+      <sDescription>Equal temperament 12-tone tuning. This is the standard tuning.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>tuning.axh</helpPatch>
+      <inlets>
+         <frac32 name="detune"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="C" description="reference C tuning" noLabel="true">
+            <DefaultValue v="-4.0"/>
+         </frac32.s.map.pitch>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 4;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = (1<<LENGTHPOW)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t array[LENGTH];]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<LENGTH;i++) {
+	array[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[uint32_t ref_c = mtof48k_ext_q31(param_C  + inlet_detune);
+array[0] =  ref_c;
+ref_c *= 2;
+array[1] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.0594630943f))>>32;
+array[2] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.1224620483f))>>32;
+array[3] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.1892071150f))>>32;
+array[4] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.2599210498f))>>32;
+array[5] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.3348398541f))>>32;
+array[6] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.4142135623f))>>32;
+array[7] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.4983070768f))>>32;
+array[8] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.5874010519f))>>32;
+array[9] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.6817928305f))>>32;
+array[10] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.7817974362f))>>32;
+array[11] = ((uint64_t)ref_c*(uint32_t)((1u<<31) * 1.8877486253f))>>32;]]></code.krate>
+   </obj.normal>
+</objdefs>
