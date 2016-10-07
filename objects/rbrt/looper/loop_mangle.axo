@@ -1,0 +1,86 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_mangle" uuid="39a7d698-11c2-434b-a691-dc7ca1cd80e7">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>loop_mangle.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.bipolar name="speed" description="sample increment,+ 64 normal speed forward, - 64 backward"/>
+         <frac32buffer.positive name="looplength" description="length of the loop inside range"/>
+         <frac32buffer.positive name="loopstart" description="start of the loop inside range"/>
+         <bool32.rising name="reset" description="reset to zero"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="pos" description="phase"/>
+         <int32 name="count" description="loop count since reset"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[float32_t index;
+uint32_t r;
+uint32_t pos;
+int shift;
+int range;
+int looplength;
+int loopstart;
+int reset;
+int count;
+bool add;]]></code.declaration>
+      <code.init><![CDATA[index = 0;
+   r = 1;
+
+   //set 'shift factor' for storing the recording length/the sync output
+    if (attr_table.LENGTH == 2048){shift = 16; }
+    if (attr_table.LENGTH == 4096){shift = 15; }
+    if (attr_table.LENGTH == 8192){shift = 14; }
+    if (attr_table.LENGTH == 16384){shift = 13; }
+    if (attr_table.LENGTH == 32768){shift = 12; }
+    if (attr_table.LENGTH == 65536){shift = 11; }
+    if (attr_table.LENGTH == 131072){shift = 10;}
+    if (attr_table.LENGTH == 262144){shift = 9;}
+    if (attr_table.LENGTH == 524288){shift = 8;}
+    if (attr_table.LENGTH == 1048576 ){shift = 7;}
+    if (attr_table.LENGTH == 2097152 ){shift = 6;}
+    if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
+      <code.srate><![CDATA[range = (inlet_range >> shift);
+looplength = ((___SMMUL(inlet_range,inlet_looplength)<<5)>>shift);
+loopstart = ((___SMMUL(inlet_range,inlet_loopstart)<<5)>>shift);
+
+{
+      if (inlet_reset && r) {
+         index = 0;
+         r = 0;
+         count = 0;
+
+      } else {
+         if (!inlet_reset) r = 1;
+
+        
+         index += (inlet_speed*(float)(1.0f/(1<<27)));
+         pos = (index + loopstart);
+         add = range;
+
+//set a range
+
+      if (inlet_speed > 0){
+      if ((pos >= (range))||(pos >= (loopstart + looplength))) {index = 0; count += add;} 
+      } 
+      else{
+      if (pos <= loopstart) {index = (looplength);count += add;}
+      //the next line is causing problems:'index' will start oscillating when 'inlet_loopstart' and 'inlet_looplength' are BOTH
+      //greater than 64 (K-rate units)
+      if (pos >= (range ))  {index =  (range - loopstart);count += add;}
+               }   
+           
+      } 
+
+      outlet_pos = ((pos << shift)+inlet_offset); 
+      outlet_count = count;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

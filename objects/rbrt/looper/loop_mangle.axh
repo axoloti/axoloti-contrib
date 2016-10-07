@@ -1,0 +1,331 @@
+<patch-1.0 appVersion="1.0.11">
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="t1" x="210" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="378" y="14" text="example 1: CHEAP &apos;warp&apos;"/>
+   <comment type="patch/comment" x="378" y="28" text="control playback speed independent of playback pitch!!!"/>
+   <comment type="patch/comment" x="378" y="56" text="example 2: casio SK-1"/>
+   <comment type="patch/comment" x="378" y="70" text="expertiment with &apos;loop length&apos;,&apos;loop start&apos; and &apos;ffwd/reverse&apos;"/>
+   <comment type="patch/comment" x="378" y="84" text="try very short lengths."/>
+   <obj type="rbrt/looper/loop_master" uuid="b711b066-c1a4-430e-84d0-4f4f467345e4" name="loop_master_1" x="210" y="98">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="record" x="28" y="112">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="speed" x="406" y="126">
+      <params>
+         <frac32.u.map name="value" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="700" y="126" text="CHEAPO &apos;WARP&apos;"/>
+   <obj type="rbrt/looper/loop_mangle" uuid="39a7d698-11c2-434b-a691-dc7ca1cd80e7" name="loop_mangle_1" x="938" y="126">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_1" x="1092" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/&lt;&lt;" uuid="b03d8d8009c0480be0ccb29ed65933a82fa4a80f" name="&lt;&lt;_1" x="504" y="154">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="drj/math/inv_pos" uuid="ae23d42592d86ae7d7f2202cb1124490774d118a" name="inv_pos_1" x="602" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="714" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="28" y="182" text="1.record something"/>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="210" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 2 h" uuid="965a945535a206a17296f000802fd0cfaf0e09e0" name="choose example" x="28" y="210">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="pitch" x="406" y="210">
+      <params>
+         <frac32.s.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="616" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/osc/phasor" uuid="8015d52c-de35-43b7-af2c-e01f5e6d9128" name="phasor_2" x="700" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="28" y="280" text="2.choose example"/>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="1190" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/read interp" uuid="42918ec2255011ae3787cc5488c9b29980d796a8" name="read_3" x="1274" y="280">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1414" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1498" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="grain size" x="406" y="308">
+      <params>
+         <frac32.u.map name="value" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/nointerp" uuid="5e7389d61f8cd8945790bb71f1670b3a0904c15b" name="nointerp_3" x="616" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb zone lru" uuid="36a44968a4f8b980273e94dca846b7544a3c45d2" name="keyb_1" x="210" y="420">
+      <params/>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <obj type="conv/mtof" uuid="ff3acbab734a93d2098a49e1c4c5d1ad10e0e8bf" name="mtof_1" x="406" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="13882852b58661ad012ffbe246470b5df4b6c5d1" name="*_4" x="504" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="ffwd/reverse" x="588" y="434">
+      <params>
+         <frac32.s.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="686" y="434" text="casio SK-1 stylee"/>
+   <obj type="rbrt/looper/loop_mangle" uuid="39a7d698-11c2-434b-a691-dc7ca1cd80e7" name="loop_mangle_2" x="938" y="434">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_3" x="1092" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_5" x="714" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="transpose" x="406" y="476">
+      <params>
+         <int32 name="value" value="92"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="loop length" x="406" y="546">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/nointerp" uuid="5e7389d61f8cd8945790bb71f1670b3a0904c15b" name="nointerp_1" x="504" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/nointerp" uuid="5e7389d61f8cd8945790bb71f1670b3a0904c15b" name="nointerp_2" x="504" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="loop start" x="406" y="630">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="loop_master_1" inlet="wave"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="record" outlet="o"/>
+         <dest obj="loop_master_1" inlet="rec"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="loop_master_1" outlet="range"/>
+         <dest obj="loop_mangle_2" inlet="range"/>
+         <dest obj="loop_mangle_1" inlet="range"/>
+      </net>
+      <net>
+         <source obj="grain size" outlet="out"/>
+         <dest obj="nointerp_3" inlet="i"/>
+      </net>
+      <net>
+         <source obj="nointerp_3" outlet="o"/>
+         <dest obj="loop_mangle_1" inlet="looplength"/>
+      </net>
+      <net>
+         <source obj="loop_mangle_1" outlet="pos"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="*_1" inlet="b"/>
+         <dest obj="phasor_2" inlet="reset"/>
+         <dest obj="loop_mangle_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="phasor_2" outlet="wave"/>
+         <dest obj="loop_mangle_1" inlet="loopstart"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="inv_pos_1" outlet="out"/>
+         <dest obj="+_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="loop_master_1" outlet="freq"/>
+         <dest obj="*_2" inlet="b"/>
+      </net>
+      <net>
+         <source obj="*_2" outlet="result"/>
+         <dest obj="phasor_2" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="loop_mangle_1" inlet="speed"/>
+      </net>
+      <net>
+         <source obj="pitch" outlet="out"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="&lt;&lt;_1" outlet="result"/>
+         <dest obj="inv_pos_1" inlet="in"/>
+         <dest obj="*_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="speed" outlet="out"/>
+         <dest obj="&lt;&lt;_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mtof_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="loop_mangle_2" outlet="pos"/>
+         <dest obj="*_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="nointerp_1" outlet="o"/>
+         <dest obj="loop_mangle_2" inlet="looplength"/>
+      </net>
+      <net>
+         <source obj="nointerp_2" outlet="o"/>
+         <dest obj="loop_mangle_2" inlet="loopstart"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="*_3" inlet="b"/>
+         <dest obj="loop_mangle_2" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="read_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="loop length" outlet="out"/>
+         <dest obj="nointerp_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="loop start" outlet="out"/>
+         <dest obj="nointerp_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="*_4" outlet="result"/>
+         <dest obj="*_5" inlet="b"/>
+      </net>
+      <net>
+         <source obj="mtof_1" outlet="frequency"/>
+         <dest obj="*_4" inlet="a"/>
+      </net>
+      <net>
+         <source obj="transpose" outlet="out"/>
+         <dest obj="*_4" inlet="b"/>
+      </net>
+      <net>
+         <source obj="*_5" outlet="result"/>
+         <dest obj="loop_mangle_2" inlet="speed"/>
+      </net>
+      <net>
+         <source obj="ffwd/reverse" outlet="out"/>
+         <dest obj="*_5" inlet="a"/>
+      </net>
+      <net>
+         <source obj="read_3" outlet="o"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="choose example" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="*_3" outlet="result"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>
