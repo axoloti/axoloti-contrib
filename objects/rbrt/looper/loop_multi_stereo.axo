@@ -72,7 +72,7 @@ rec_max =attr_tableL.LENGTH >> attr_slots;
     if (attr_tableL.LENGTH == 1048576 ){shift = 7;}
     if (attr_tableL.LENGTH == 2097152 ){shift = 6;}
     if (attr_tableL.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.srate><![CDATA[csample = (inlet_pos >> 11);
+      <code.srate><![CDATA[csample = (inlet_pos >> 7);
 
    if ((inlet_rec) && !rec) {
       rec = 1;
@@ -91,9 +91,8 @@ rec_max =attr_tableL.LENGTH >> attr_slots;
   //rec stopped-wait for rollover  
  else if (!(inlet_rec)) {
  	if (mode)	{
-        if (csample == spos)  { rec = 0;} 
+        if ((csample > (spos -12)) && (csample < (spos +12))) { rec = 0;} 
         } else rec = 0;
-   }
            
    //record   
    if (rec)  {
