@@ -4,10 +4,12 @@
       <author>Simon Iten</author>
       <license>BSD</license>
       <inlets>
-         <int32 name="s" description="select"/>
+         <int32 name="s1" description="select vowel1"/>
+         <int32 name="s2" description="select vowel2"/>
+         <frac32.positive name="c" description="xfade vowels"/>
       </inlets>
       <outlets>
-         <frac32.bipolar name="f1"/>
+         <frac32.bipolar name="f1" description=""/>
          <frac32.bipolar name="f2"/>
          <frac32.bipolar name="f3"/>
          <frac32.bipolar name="f4"/>
@@ -19,7 +21,8 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="time" description="smooth" noLabel="true"/>
+         <frac32.u.map name="smoothxfade" description="smooth out xfade input"/>
+         <frac32.u.map name="vowelsmooth" description="smooth vowel change"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t val0;
@@ -31,6 +34,16 @@ int32_t val5;
 int32_t val6;
 int32_t val7;
 int32_t val8;
+int32_t valb0;
+int32_t valb1;
+int32_t valb2;
+int32_t valb3;
+int32_t valb4;
+int32_t valb5;
+int32_t valb6;
+int32_t valb7;
+int32_t valb8;
+int32_t xfade;
 const int32_t filtersettings[225] {
 	//values for 5 bandpass filters, formant 1 to 5, 
 	//a e i o u, for alto, bass, countertenor, soprano, tenor.
@@ -52,24 +65,63 @@ val4 = 0;
 val5 = 0;
 val6 = 0;
 val7 = 0;
-val8 = 0;]]></code.init>
-      <code.krate><![CDATA[val0 = ___SMMLA(val0-filtersettings[inlet_s],(-1<<26)+(param_time>>1),val0);
-outlet_f1 = val0;
-val1 = ___SMMLA(val1-filtersettings[inlet_s + 25],(-1<<26)+(param_time>>1),val1);
-outlet_f2 = val1;
-val2 = ___SMMLA(val2-filtersettings[inlet_s + 50],(-1<<26)+(param_time>>1),val2);
-outlet_f3 = val2;
-val3 = ___SMMLA(val3-filtersettings[inlet_s + 75],(-1<<26)+(param_time>>1),val3);
-outlet_f4 = val3;
-val4 = ___SMMLA(val4-filtersettings[inlet_s + 100],(-1<<26)+(param_time>>1),val4);
-outlet_f5 = val4;
-val5 = ___SMMLA(val5-filtersettings[inlet_s + 125],(-1<<26)+(param_time>>1),val5);
-outlet_a2 = val5;
-val6 = ___SMMLA(val6-filtersettings[inlet_s + 150],(-1<<26)+(param_time>>1),val6);
-outlet_a3 = val6;
-val7 = ___SMMLA(val7-filtersettings[inlet_s + 175],(-1<<26)+(param_time>>1),val7);
-outlet_a4 = val7;
-val8 = ___SMMLA(val8-filtersettings[inlet_s + 200],(-1<<26)+(param_time>>1),val8);
-outlet_a5 = val8;]]></code.krate>
+val8 = 0;
+valb0 = 0;
+valb1 = 0;
+valb2 = 0;
+valb3 = 0;
+valb4 = 0;
+valb5 = 0;
+valb6 = 0;
+valb7 = 0;
+valb8 = 0;
+xfade = 0;]]></code.init>
+      <code.krate><![CDATA[xfade = ___SMMLA(xfade-inlet_c,(-1<<26)+(param_smoothxfade>>1),xfade);
+
+val0 = ___SMMLA(val0-filtersettings[inlet_s1],(-1<<26)+(param_vowelsmooth>>1),val0);
+valb0 = ___SMMLA(valb0-filtersettings[inlet_s2],(-1<<26)+(param_vowelsmooth>>1),valb0);
+int64_t a = (int64_t)valb0 * xfade;
+      a += (int64_t)val0 * ((128<<20)-xfade);
+      outlet_f1= a>>27;
+val1 = ___SMMLA(val1-filtersettings[inlet_s1 + 25],(-1<<26)+(param_vowelsmooth>>1),val1);
+valb1 = ___SMMLA(valb1-filtersettings[inlet_s2 + 25],(-1<<26)+(param_vowelsmooth>>1),valb1);
+int64_t b = (int64_t)valb1 * xfade;
+      b += (int64_t)val1 * ((128<<20)-xfade);
+      outlet_f2= b>>27;
+val2 = ___SMMLA(val2-filtersettings[inlet_s1 + 50],(-1<<26)+(param_vowelsmooth>>1),val2);
+valb2 = ___SMMLA(valb2-filtersettings[inlet_s2 + 50],(-1<<26)+(param_vowelsmooth>>1),valb2);
+int64_t c = (int64_t)valb2 * xfade;
+      c += (int64_t)val2 * ((128<<20)-xfade);
+      outlet_f3= c>>27;
+val3 = ___SMMLA(val3-filtersettings[inlet_s1 + 75],(-1<<26)+(param_vowelsmooth>>1),val3);
+valb3 = ___SMMLA(valb3-filtersettings[inlet_s2 + 75],(-1<<26)+(param_vowelsmooth>>1),valb3);
+int64_t d = (int64_t)valb3 * xfade;
+      d += (int64_t)val3 * ((128<<20)-xfade);
+      outlet_f4= d>>27;
+val4 = ___SMMLA(val4-filtersettings[inlet_s1 + 100],(-1<<26)+(param_vowelsmooth>>1),val4);
+valb4 = ___SMMLA(valb4-filtersettings[inlet_s2 + 100],(-1<<26)+(param_vowelsmooth>>1),valb4);
+int64_t e = (int64_t)valb4 * xfade;
+      e += (int64_t)val4 * ((128<<20)-xfade);
+      outlet_f5= e>>27;
+val5 = ___SMMLA(val5-filtersettings[inlet_s1 + 125],(-1<<26)+(param_vowelsmooth>>1),val5);
+valb5 = ___SMMLA(valb5-filtersettings[inlet_s2 + 125],(-1<<26)+(param_vowelsmooth>>1),valb5);
+int64_t f = (int64_t)valb5 * xfade;
+      f += (int64_t)val5 * ((128<<20)-xfade);
+      outlet_a2= f>>27;
+val6 = ___SMMLA(val6-filtersettings[inlet_s1 + 150],(-1<<26)+(param_vowelsmooth>>1),val6);
+valb6 = ___SMMLA(valb6-filtersettings[inlet_s2 + 150],(-1<<26)+(param_vowelsmooth>>1),valb6);
+int64_t g = (int64_t)valb6 * xfade;
+      g += (int64_t)val6 * ((128<<20)-xfade);
+      outlet_a3= g>>27;
+val7 = ___SMMLA(val7-filtersettings[inlet_s1 + 175],(-1<<26)+(param_vowelsmooth>>1),val7);
+valb7 = ___SMMLA(valb7-filtersettings[inlet_s2 + 175],(-1<<26)+(param_vowelsmooth>>1),valb7);
+int64_t h = (int64_t)valb7 * xfade;
+      h += (int64_t)val7 * ((128<<20)-xfade);
+      outlet_a4= h>>27;
+val8 = ___SMMLA(val8-filtersettings[inlet_s1 + 200],(-1<<26)+(param_vowelsmooth>>1),val8);
+valb8 = ___SMMLA(valb8-filtersettings[inlet_s2 + 200],(-1<<26)+(param_vowelsmooth>>1),valb8);
+int64_t i = (int64_t)valb8 * xfade;
+      i += (int64_t)val8 * ((128<<20)-xfade);
+      outlet_a5= i>>27;]]></code.krate>
    </obj.normal>
 </objdefs>
