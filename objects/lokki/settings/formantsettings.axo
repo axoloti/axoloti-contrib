@@ -7,7 +7,10 @@
       <inlets>
          <int32 name="s1" description="select vowel1"/>
          <int32 name="s2" description="select vowel2"/>
-         <frac32.positive name="c" description="xfade vowels"/>
+         <frac32.positive name="c" description="xfade vowel1 and vowel2"/>
+         <frac32.bipolar name="formantshift" description="shift formants up/down"/>
+         <frac32 name="pitch" description="formants follow pitch (if xfade is on pitch side)"/>
+         <frac32.positive name="c2" description="xfade pitch and formantshift"/>
       </inlets>
       <outlets>
          <frac32.bipolar name="f1" description=""/>
@@ -78,32 +81,34 @@ valb7 = 0;
 valb8 = 0;
 xfade = 0;]]></code.init>
       <code.krate><![CDATA[xfade = ___SMMLA(xfade-inlet_c,(-1<<26)+(param_smoothxfade>>1),xfade);
+int64_t j = (int64_t)(inlet_pitch) * inlet_c2;
+      j += (int64_t)inlet_formantshift * ((128<<20)-inlet_c2);
 
 val0 = ___SMMLA(val0-filtersettings[inlet_s1],(-1<<26)+(param_vowelsmooth>>1),val0);
 valb0 = ___SMMLA(valb0-filtersettings[inlet_s2],(-1<<26)+(param_vowelsmooth>>1),valb0);
 int64_t a = (int64_t)valb0 * xfade;
       a += (int64_t)val0 * ((128<<20)-xfade);
-      outlet_f1= a>>27;
+      outlet_f1= (a>>27) + (j>>27);
 val1 = ___SMMLA(val1-filtersettings[inlet_s1 + 25],(-1<<26)+(param_vowelsmooth>>1),val1);
 valb1 = ___SMMLA(valb1-filtersettings[inlet_s2 + 25],(-1<<26)+(param_vowelsmooth>>1),valb1);
 int64_t b = (int64_t)valb1 * xfade;
       b += (int64_t)val1 * ((128<<20)-xfade);
-      outlet_f2= b>>27;
+      outlet_f2= (b>>27) + (j>>27);
 val2 = ___SMMLA(val2-filtersettings[inlet_s1 + 50],(-1<<26)+(param_vowelsmooth>>1),val2);
 valb2 = ___SMMLA(valb2-filtersettings[inlet_s2 + 50],(-1<<26)+(param_vowelsmooth>>1),valb2);
 int64_t c = (int64_t)valb2 * xfade;
       c += (int64_t)val2 * ((128<<20)-xfade);
-      outlet_f3= c>>27;
+      outlet_f3= (c>>27) + (j>>27);
 val3 = ___SMMLA(val3-filtersettings[inlet_s1 + 75],(-1<<26)+(param_vowelsmooth>>1),val3);
 valb3 = ___SMMLA(valb3-filtersettings[inlet_s2 + 75],(-1<<26)+(param_vowelsmooth>>1),valb3);
 int64_t d = (int64_t)valb3 * xfade;
       d += (int64_t)val3 * ((128<<20)-xfade);
-      outlet_f4= d>>27;
+      outlet_f4= (d>>27) + (j>>27);
 val4 = ___SMMLA(val4-filtersettings[inlet_s1 + 100],(-1<<26)+(param_vowelsmooth>>1),val4);
 valb4 = ___SMMLA(valb4-filtersettings[inlet_s2 + 100],(-1<<26)+(param_vowelsmooth>>1),valb4);
 int64_t e = (int64_t)valb4 * xfade;
       e += (int64_t)val4 * ((128<<20)-xfade);
-      outlet_f5= e>>27;
+      outlet_f5= (e>>27) + (j>>27);
 val5 = ___SMMLA(val5-filtersettings[inlet_s1 + 125],(-1<<26)+(param_vowelsmooth>>1),val5);
 valb5 = ___SMMLA(valb5-filtersettings[inlet_s2 + 125],(-1<<26)+(param_vowelsmooth>>1),valb5);
 int64_t f = (int64_t)valb5 * xfade;

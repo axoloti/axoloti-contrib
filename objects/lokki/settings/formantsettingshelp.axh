@@ -12,7 +12,7 @@
    </obj>
    <obj type="math/glide" uuid="cfa0324c7cc8ebfd6e03c6b92f41115e3172d0d9" name="legatoglidetime" x="308" y="0">
       <params>
-         <frac32.u.map name="time" onParent="true" value="10.0"/>
+         <frac32.u.map name="time" value="10.0"/>
       </params>
       <attribs/>
    </obj>
@@ -57,13 +57,13 @@
    <comment type="patch/comment" x="14" y="182" text="0-4: alto 5-9: bass 10-14: countertenor 15-19: soprano 20-24:tenor "/>
    <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="98" y="224">
       <params>
-         <int32 name="value" value="0"/>
+         <int32 name="value" value="8"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lokki/mix/mix 5 gsc" uuid="87fa173b-891d-4db6-bd38-3fe9090566fa" name="mix_1" x="924" y="238">
       <params>
-         <frac32.u.map name="gain1" value="30.0"/>
+         <frac32.u.map name="gain1" value="12.5"/>
       </params>
       <attribs/>
    </obj>
@@ -95,12 +95,19 @@
    </obj>
    <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="98" y="294">
       <params>
-         <int32 name="value" value="2"/>
+         <int32 name="value" value="7"/>
       </params>
       <attribs/>
    </obj>
    <comment type="patch/comment" x="0" y="364" text="xfade setting one and two"/>
+   <comment type="patch/comment" x="154" y="364" text="xfade formant and pitch"/>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="xfade settings" x="28" y="392">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="xfade f and p" x="168" y="392">
       <params>
          <frac32.u.map name="value" value="0.0"/>
       </params>
@@ -115,6 +122,19 @@
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_3" x="756" y="420">
       <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="140" y="518" text="shift formants up/down"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="84" y="546">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="196" y="546">
+      <params>
+         <frac32.u.map name="amp" value="1.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_5" x="644" y="560">
@@ -245,6 +265,7 @@
       <net>
          <source obj="legatoglidetime" outlet="out"/>
          <dest obj="phasor_1" inlet="pitch"/>
+         <dest obj="formantsettings_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="ahd_1" outlet="env"/>
@@ -262,6 +283,18 @@
          <dest obj="bp_3" inlet="reso"/>
          <dest obj="bp_4" inlet="reso"/>
          <dest obj="bp_5" inlet="reso"/>
+      </net>
+      <net>
+         <source obj="xfade f and p" outlet="out"/>
+         <dest obj="formantsettings_1" inlet="c2"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="formantsettings_1" inlet="formantshift"/>
       </net>
    </nets>
    <settings>
