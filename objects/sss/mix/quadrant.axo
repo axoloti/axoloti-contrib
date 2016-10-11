@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="quadrant" uuid="9429f380-2589-4361-ab16-f26c415a46f3">
+      <sDescription>crossfade between four inputs</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1" description="input"/>
+         <frac32buffer name="i2" description="input"/>
+         <frac32buffer name="i3"/>
+         <frac32buffer name="i4"/>
+         <frac32.positive name="x" description="control"/>
+         <frac32.positive name="y"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[
+
+   int32_t ccomp1=(1<<27)-inlet_x;
+   int32_t ccomp2=(1<<27)-inlet_y;
+
+]]></code.krate>
+      <code.srate><![CDATA[   
+      int32_t a = ___SMMUL(inlet_i2<<3,inlet_x<<2);
+      a += ___SMMUL(inlet_i1<<3,ccomp1<<2);
+      int32_t b = ___SMMUL(inlet_i4<<3,inlet_x<<2);
+      b += ___SMMUL(inlet_i3<<3,ccomp1<<2);
+      int32_t c = ___SMMUL(b<<3,inlet_y<<2);
+      c += ___SMMUL(a<<3,ccomp2<<2);
+      outlet_o= c;
+ 
+]]></code.srate>
+   </obj.normal>
+</objdefs>
