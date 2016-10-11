@@ -1,9 +1,10 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="lifeGame" uuid="1324397a-7b28-429f-bc6a-14c374cb5754">
+   <obj.normal id="lifeGame" uuid="94219ab1-1b09-4e7a-837c-4ee33ebdbd33">
       <sDescription>This is the core &quot;game of life&quot; module which can be read out by the other life modules.
 It can also be used as a normal XY-sequencer (not using the evolver)
 It can only &quot;evolve&quot; when play is high.
-You can create your own starting pattern (set play to off!!), use the rnd (total randomise-&gt;drastic and quite chaotic, often lots of &quot;invinsible&quot; black cells) or use the &quot;change&quot;, which makes use of the chance-parameter to set what the chance is for each cell to get randomised.
+You can create your own starting pattern (set play to off!!), use the rnd (total randomise-&gt;drastic and quite chaotic, often lots of &quot;invinsible&quot; black cells) or use the &quot;change&quot;, which makes use of the chance-parameter to set what the chance is for each cell to get randomised. The max-parameter sets which values may be generated and leaves higher values untouched.
+
 Then press &quot;save&quot; to put it into the internal array for calculation and press play (if you actually want it to evolve, that is.. you can also use it as a fixed XY-sequencer.)
 
 Each step can be 0,1,2 or 3. These generate different outcomes for the readout modules, but also have different characteristics when it comes to the game of life!
@@ -52,6 +53,9 @@ Enjoy playing! :)</sDescription>
          <bool32.mom name="load"/>
          <bool32.mom name="save"/>
          <bool32.mom name="reset"/>
+         <int32.hradio name="max">
+            <MaxValue i="3"/>
+         </int32.hradio>
          <bool32.mom name="rnd"/>
          <bool32.mom name="change"/>
          <frac32.u.map name="chance"/>
@@ -118,25 +122,12 @@ count+=1;
 if((rnd>0)&&!rtrig){
 	count=0;
 	rtrig=1;
-	for(i=0;i<32;i++)
-	{
-		array[0][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[1][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[2][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[3][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[4][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[5][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[6][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[7][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[8][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[9][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[10][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[11][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[12][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[13][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[14][i]=((uint32_t)(GenerateRandomNumber()>>30));
-		array[15][i]=((uint32_t)(GenerateRandomNumber()>>30));
-	}
+	for(i=0;i<16;i++){
+	for(j=0;j<16;j++){
+		if(array[j][i]<(param_max+2)){
+		array[j][i]=((uint32_t)(GenerateRandomNumber()>>30)*(param_max+2))>>2;}
+
+	}}
 }
 else if(rnd==0){rtrig=0;}
 
@@ -145,41 +136,12 @@ else if(rnd==0){rtrig=0;}
 if((change>0)&&!ctrig){
 	ctrig=1;
 	count=0;
-	for(i=0;i<32;i++)
-	{    if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[0][i]=((uint32_t)(GenerateRandomNumber()>>30));}
+	for(i=0;i<16;i++)
+	{for(j=0;j<16;j++){
+		if(array[j][i]<(param_max+2)){	
 		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[1][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[2][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[3][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[4][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[5][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[6][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[7][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[8][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[9][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[10][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[11][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[12][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[13][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[14][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
-		array[15][i]=((uint32_t)(GenerateRandomNumber()>>30));}
-	}
-}
+		array[j][i]=((uint32_t)(GenerateRandomNumber()>>30)*(param_max+2))>>2;}
+	}}}}
 else if(change==0){ctrig=0;}
 
 
