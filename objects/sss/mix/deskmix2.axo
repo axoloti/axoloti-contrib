@@ -1,0 +1,133 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="deskmix2" uuid="e6a5ceba-0092-4a46-a9c5-3abf2b15736a">
+      <sDescription>8 input s-rate mixer, controlled remotely from the control modules (deskCtrl2 module, load this as many times as the channels you are using)
+Features solo/mute/gain/pan/sendLvl/sendSelect for all channels-&gt;controlled with deskCtrl2 module.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="1"/>
+         <frac32buffer name="2"/>
+         <frac32buffer name="3"/>
+         <frac32buffer name="4"/>
+         <frac32buffer name="5"/>
+         <frac32buffer name="6"/>
+         <frac32buffer name="7"/>
+         <frac32buffer name="8"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="L" description="mix out"/>
+         <frac32buffer name="R"/>
+         <frac32buffer name="send1"/>
+         <frac32buffer name="send2"/>
+         <frac32buffer name="send3"/>
+         <frac32buffer name="send4"/>
+         <frac32buffer name="send5"/>
+         <frac32buffer name="send6"/>
+         <frac32buffer name="send7"/>
+         <frac32buffer name="send8"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="volume"/>
+         <frac32.u.map.gain name="send"/>
+         <bool32.mom name="unmute"/>
+         <bool32.mom name="unsolo"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t gain[8];
+int solo[8];
+int32_t in[8];
+int32_t send[8];
+int select[8];
+int32_t pan[8];
+int32_t ccomp[8];
+int32_t Pan[8];
+int32_t Ccomp[8];
+int32_t Send[8];
+int Solo;
+int mod;
+int i;
+int32_t ACC[8];
+int32_t MUTE;
+int32_t SOLO;]]></code.declaration>
+      <code.krate><![CDATA[int Solo=0;
+for(i=0;i<mod;i++){
+Solo+=solo[i];
+Solo=Solo>0?1:0;}
+for(i=0;i<mod;i++){
+Ccomp[i]=((Solo>0)&(!solo[i]))?0:___SMMUL(ccomp[i]<<2,param_volume);
+Pan[i]=((Solo>0)&(!solo[i]))?0:___SMMUL(pan[i]<<2,param_volume);
+Send[i]=((Solo>0)&(!solo[i]))?0:___SMMUL(send[i]<<2,param_send);
+}
+MUTE=param_unmute;
+SOLO=param_unsolo;]]></code.krate>
+      <code.srate><![CDATA[in[0]=inlet_1<<3;
+in[1]=inlet_2<<3;
+in[2]=inlet_3<<3;
+in[3]=inlet_4<<3;
+in[4]=inlet_5<<3;
+in[5]=inlet_6<<3;
+in[6]=inlet_7<<3;
+in[7]=inlet_8<<3;
+int32_t sumL=0;
+int32_t sumR=0;
+ACC[0]=0;
+ACC[1]=0;
+ACC[2]=0;
+ACC[3]=0;
+ACC[4]=0;
+ACC[5]=0;
+ACC[6]=0;
+ACC[7]=0;
+sumL += ___SMMUL(in[0],Ccomp[0]);
+sumR += ___SMMUL(in[0],Pan[0]);
+ACC[select[0]] += ___SMMUL(in[0],Send[0]);
+if(mod>1){
+sumL += ___SMMUL(in[1],Ccomp[1]);
+sumR += ___SMMUL(in[1],Pan[1]);
+ACC[select[1]] += ___SMMUL(in[1],Send[1]);
+}if(mod>2){
+sumL += ___SMMUL(in[2],Ccomp[2]);
+sumR += ___SMMUL(in[2],Pan[2]);
+ACC[select[2]] += ___SMMUL(in[2],Send[2]);
+}if(mod>3){
+sumL += ___SMMUL(in[3],Ccomp[3]);
+sumR += ___SMMUL(in[3],Pan[3]);
+ACC[select[3]] += ___SMMUL(in[3],Send[3]);
+}if(mod>4){
+sumL += ___SMMUL(in[4],Ccomp[4]);
+sumR += ___SMMUL(in[4],Pan[4]);
+ACC[select[4]] += ___SMMUL(in[4],Send[4]);
+}if(mod>5){
+sumL += ___SMMUL(in[5],Ccomp[5]);
+sumR += ___SMMUL(in[5],Pan[5]);
+ACC[select[5]] += ___SMMUL(in[5],Send[5]);
+}if(mod>6){
+sumL += ___SMMUL(in[6],Ccomp[6]);
+sumR += ___SMMUL(in[6],Pan[6]);
+ACC[select[6]] += ___SMMUL(in[6],Send[6]);
+}if(mod>7){
+sumL += ___SMMUL(in[7],Ccomp[7]);
+sumR += ___SMMUL(in[7],Pan[7]);
+ACC[select[7]] += ___SMMUL(in[7],Send[7]);
+}
+
+
+
+
+
+
+
+
+outlet_L=  sumL;
+outlet_R=  sumR;
+outlet_send1= ACC[0]<<1;
+outlet_send2= ACC[1]<<1;
+outlet_send3= ACC[2]<<1;
+outlet_send4= ACC[3]<<1;
+outlet_send5= ACC[4]<<1;
+outlet_send6= ACC[5]<<1;
+outlet_send7= ACC[6]<<1;
+outlet_send8= ACC[7]<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>

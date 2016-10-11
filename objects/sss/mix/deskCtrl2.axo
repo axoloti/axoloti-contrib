@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="deskCtrl2" uuid="7926dfa3-287d-4c64-ae38-343a1f2d9edb">
+      <sDescription>control module for the deskmix2 module
+Enter the name of the deskmix2 module in the reference box!
+mute: channel mute
+solo: channel solo
+gain: channel level
+pan: channel panning
+sendLvl: volume of audio send to selected send-output
+select: selects which send-output the audio is send to
+
+all parameters can be k-rate modulated for complex controlled mixing</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="mute"/>
+         <bool32 name="solo"/>
+         <frac32 name="gain"/>
+         <frac32 name="pan"/>
+         <frac32 name="sendLvl"/>
+         <int32 name="sendSel"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.tgl name="mute"/>
+         <bool32.tgl name="solo"/>
+         <frac32.u.map.gain name="gain"/>
+         <frac32.s.map name="pan"/>
+         <frac32.u.map name="sendLvl"/>
+         <int32 name="select">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="a"/>
+      </attribs>
+      <code.declaration><![CDATA[int mod;
+
+int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[mod=attr_a.mod;
+attr_a.mod+=1;
+prev=0;]]></code.init>
+      <code.krate><![CDATA[
+int32_t gain=param_mute+inlet_mute>0?0:__USAT((param_gain>>1)+(inlet_gain<<3),30)<<1;
+attr_a.solo[mod]=param_solo+inlet_solo;
+attr_a.send[mod]=__SSAT(param_sendLvl+inlet_sendLvl,28);
+int32_t pan=(__SSAT(param_pan+inlet_pan,27)>>1)+(1<<26);
+attr_a.select[mod]=param_select+inlet_sendSel;
+attr_a.pan[mod]=___SMMUL(pan<<3,gain);
+attr_a.ccomp[mod]=___SMMUL(((1<<27)-pan)<<3,gain);
+
+if(attr_a.MUTE>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_mute],0,0xFFFD);}
+if(attr_a.SOLO>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_solo],0,0xFFFD);}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

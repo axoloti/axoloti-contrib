@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="euclidToggle" uuid="ba9d60ea-3e03-46d1-8944-ffa36e166894">
+      <sDescription>Euclidian toggling gate generator
+Feed it a counter and it will toggle the gate everytime one of the denominators wraps the count</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <int32 name="a" description="nominator"/>
+      </inlets>
+      <outlets>
+         <bool32 name="gate"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="denom1">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="denom2">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="denom3">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int gate;
+int prev;]]></code.declaration>
+      <code.krate><![CDATA[int r;
+if (inlet_a >=0)
+  r = ((unsigned int)inlet_a)/param_denom1;
+else  r = -(((unsigned int)(param_denom1-inlet_a))/param_denom1);
+int s=r;
+if (inlet_a >=0)
+  r = ((unsigned int)inlet_a)/param_denom2;
+else  r = -(((unsigned int)(param_denom2-inlet_a))/param_denom2);
+int t=r;
+if (inlet_a >=0)
+  r = ((unsigned int)inlet_a)/param_denom2;
+else  r = -(((unsigned int)(param_denom2-inlet_a))/param_denom2);
+
+
+if(!(prev==s+r+t)){
+gate=(gate+1)&1;
+
+}
+prev= s+r+t;
+outlet_gate=gate;]]></code.krate>
+   </obj.normal>
+</objdefs>

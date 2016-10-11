@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="autoKnob" uuid="46ac1a34-a25f-4b4b-a666-c9daac680e6b">
+      <sDescription>knob with an inbuild (randomisable) automator and pattern selector for live use. Doesn&apos;t save it&apos;s patterns! Pattern size and amount of patterns can be set using the attributes.
+you can randomise just the selected pattern or all patterns at the same time.
+Use the max/min knobs to set your desired output scaling</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>hook.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+         <int32 name="pattern"/>
+         <bool32.rising name="RndAll"/>
+         <bool32.rising name="RndPt"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="value" noLabel="true"/>
+         <bool32.mom name="RndPt"/>
+         <bool32.mom name="RndAll"/>
+         <int32 name="max">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="min">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <spinner name="size" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <spinner name="patt" MinValue="1" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t LENGTH=(attr_size*attr_patt);
+int32_t LENGTHMASK=attr_size;
+int32_t array[attr_size*attr_patt];
+int32_t prev;
+int32_t prav;
+int atrig;
+int rtrig;
+int i;]]></code.declaration>
+      <code.krate><![CDATA[int32_t pattern=(inlet_pattern-(inlet_pattern/attr_patt)*attr_patt)*attr_size;
+int32_t count=(inlet_count-(inlet_count/LENGTHMASK)*LENGTHMASK)+pattern;
+if(!(count==prav)){
+if(!(param_value==array[prav])){
+array[count]=__USAT(param_value,27);}
+else
+{PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],array[count],0xFFFD);}
+}
+outlet_out=array[count];
+prav=count;
+
+if((param_RndAll||inlet_RndAll)&&!atrig){
+	atrig=1;
+	int32_t diff=(param_max-param_min)<<21;
+for(i=0;i<LENGTH;i++)
+array[i]=___SMMUL(((uint32_t)(GenerateRandomNumber()>>1)),diff<<1)+(param_min<<21);
+}
+else if ((param_RndAll||inlet_RndAll)==0){atrig=0;}
+
+if((param_RndPt||inlet_RndPt)&&!rtrig){
+	rtrig=1;
+	int32_t diff=(param_max-param_min)<<21;
+for(i=0;i<LENGTHMASK;i++)
+array[i+pattern]=___SMMUL(((uint32_t)(GenerateRandomNumber()>>1)),diff<<1)+(param_min<<21);
+}
+else if ((param_RndPt||inlet_RndPt)==0){rtrig=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>
