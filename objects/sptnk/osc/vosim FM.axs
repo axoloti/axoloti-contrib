@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.11">
    <comment type="patch/comment" x="1092" y="392" text="eliminating DC signals"/>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="448" y="406">
       <params/>
@@ -10,11 +10,11 @@
          <spinner attributeName="shift" value="4"/>
       </attribs>
    </obj>
-   <obj type="math/sin" uuid="3fd3c55bdecb474393c99b2a5b01e9bed143eca7" name="sin_1" x="672" y="406">
+   <obj type="math/sin" uuid="3fd3c55bdecb474393c99b2a5b01e9bed143eca7" name="sin_1" x="630" y="406">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_3" x="728" y="406">
+   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_3" x="700" y="406">
       <params/>
       <attribs/>
    </obj>
@@ -42,22 +42,54 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/exp" uuid="e1823a9cb09047a52fa9ff06f72142c07e1a3800" name="exp_1" x="518" y="504">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/window" uuid="5582d4d31acd67073be69df4d31d686304e17161" name="window_1" x="588" y="504">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="FM mod" x="0" y="518">
       <params/>
       <attribs/>
    </obj>
-   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="700" y="546">
-      <params/>
+   <patchobj type="patch/object" uuid="4cd3a610-ca1d-4a80-b3eb-8adafb16d7f0" name="window" x="574" y="532">
+      <params>
+         <frac32.u.map name="size" value="0.0"/>
+      </params>
       <attribs/>
-   </obj>
+      <object id="patch/object" uuid="4cd3a610-ca1d-4a80-b3eb-8adafb16d7f0">
+         <sDescription></sDescription>
+         <inlets>
+            <frac32buffer name="in"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="size"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.srate><![CDATA[int32_t halfsize = param_size>>1;
+int32_t halfsize_compl = (1<<27) - halfsize;
+
+float arg1 = (inlet_in/halfsize)*67108864.0f;
+float arg2 = ((inlet_in-halfsize_compl)/halfsize)*67108864.0f;
+
+int32_t r1;
+int32_t r2;
+
+SINE2TINTERP(((int32_t) arg1 )<<4,r1);
+SINE2TINTERP(((int32_t) arg2 )<<4,r2);
+
+
+if (inlet_in < halfsize)
+{
+	outlet_out = r1>>4;
+}
+else if (inlet_in > halfsize_compl)
+{
+	outlet_out = r2>>4
+}
+else
+outlet_out = inlet_in;]]></code.srate>
+      </object>
+   </patchobj>
    <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="FM osc" x="126" y="560">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
@@ -68,11 +100,11 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/window" uuid="5582d4d31acd67073be69df4d31d686304e17161" name="window_2" x="588" y="560">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="fold mod" x="0" y="602">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="Folds Mod" x="0" y="602">
+   <obj type="math/cos" uuid="c813904f245103af9eafbc05ed6521f94472aed4" name="cos_1" x="714" y="672">
       <params/>
       <attribs/>
    </obj>
@@ -82,17 +114,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="Folds" x="168" y="812">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="fold" x="168" y="812">
       <params>
-         <int32 name="value" onParent="true" value="4"/>
+         <frac32.u.map name="value" onParent="true" value="0.0"/>
       </params>
       <attribs/>
-   </obj>
-   <obj type="math/&lt;&lt;" uuid="b03d8d8009c0480be0ccb29ed65933a82fa4a80f" name="quantize_1" x="280" y="812">
-      <params/>
-      <attribs>
-         <spinner attributeName="shift" value="2"/>
-      </attribs>
    </obj>
    <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="392" y="812">
       <params>
@@ -100,7 +126,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="168" y="896">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="168" y="896">
       <params/>
       <attribs/>
    </obj>
@@ -114,20 +140,14 @@
       <net>
          <source obj="Formant osc" outlet="phasor"/>
          <dest obj="vca_1" inlet="a"/>
-         <dest obj="exp_1" inlet="a"/>
-         <dest obj="mux_1" inlet="i0"/>
-         <dest obj="window_2" inlet="phase"/>
+         <dest obj="window" inlet="in"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
          <dest obj="&gt;&gt;_1" inlet="a"/>
       </net>
       <net>
-         <source obj="Window type" outlet="out"/>
-         <dest obj="mux_1" inlet="s"/>
-      </net>
-      <net>
-         <source obj="Folds" outlet="out"/>
+         <source obj="fold" outlet="out"/>
          <dest obj="+_1" inlet="in1"/>
       </net>
       <net>
@@ -169,28 +189,15 @@
          <dest obj="hp1_1" inlet="in"/>
       </net>
       <net>
-         <source obj="exp_1" outlet="result"/>
-         <dest obj="window_1" inlet="phase"/>
-         <dest obj="mux_1" inlet="i1"/>
-      </net>
-      <net>
-         <source obj="window_1" outlet="win"/>
-         <dest obj="mux_1" inlet="i3"/>
-      </net>
-      <net>
-         <source obj="mux_1" outlet="o"/>
-         <dest obj="*_1" inlet="b"/>
-      </net>
-      <net>
-         <source obj="window_2" outlet="win"/>
-         <dest obj="mux_1" inlet="i2"/>
-      </net>
-      <net>
          <source obj="FM amount" outlet="out"/>
          <dest obj="*_2" inlet="v"/>
       </net>
       <net>
-         <source obj="quantize_1" outlet="result"/>
+         <source obj="fold mod" outlet="inlet"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
          <dest obj="+c_1" inlet="in"/>
       </net>
       <net>
@@ -198,12 +205,8 @@
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
-         <source obj="Folds Mod" outlet="inlet"/>
-         <dest obj="+_1" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="+_1" outlet="out"/>
-         <dest obj="quantize_1" inlet="a"/>
+         <source obj="window" outlet="out"/>
+         <dest obj="*_1" inlet="b"/>
       </net>
    </nets>
    <settings>
