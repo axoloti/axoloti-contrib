@@ -1,0 +1,325 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="462" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="bbbab5c1-28c3-4494-9c4d-d69dc75c5642" name="note2cut" x="560" y="336">
+      <params>
+         <frac32.s.map name="note" onParent="true" value="23.0"/>
+         <frac32.s.map name="vel" onParent="true" value="-11.0"/>
+         <frac32.s.map name="touch" onParent="true" value="14.0"/>
+         <int32 name="select" value="0"/>
+         <frac32.s.map name="n2p" value="23.0"/>
+         <frac32.s.map name="v2p" value="-11.0"/>
+         <frac32.s.map name="t2p" value="14.0"/>
+         <frac32.s.map name="n2t" value="0.0"/>
+         <frac32.s.map name="v2t" value="0.0"/>
+         <frac32.s.map name="t2t" value="0.0"/>
+         <frac32.s.map name="n2c" value="0.0"/>
+         <frac32.s.map name="v2c" value="0.0"/>
+         <frac32.s.map name="t2c" value="0.0"/>
+         <frac32.s.map name="n2m" value="0.0"/>
+         <frac32.s.map name="v2m" value="0.0"/>
+         <frac32.s.map name="t2m" value="0.0"/>
+         <frac32.s.map name="n2s" value="-23.0"/>
+         <frac32.s.map name="v2s" value="18.0"/>
+         <frac32.s.map name="t2s" value="22.0"/>
+         <frac32.s.map name="n2i" value="0.0"/>
+         <frac32.s.map name="v2i" value="0.0"/>
+         <frac32.s.map name="t2i" value="0.0"/>
+         <frac32.s.map name="n2BPc" value="0.0"/>
+         <frac32.s.map name="v2BPc" value="0.0"/>
+         <frac32.s.map name="t2BPc" value="-12.0"/>
+         <frac32.s.map name="n2BPr" value="0.0"/>
+         <frac32.s.map name="v2BPr" value="0.0"/>
+         <frac32.s.map name="t2BPr" value="0.0"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="bbbab5c1-28c3-4494-9c4d-d69dc75c5642">
+         <sDescription>Multiply (attenuate) with a constant value</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>math.axh</helpPatch>
+         <inlets>
+            <frac32 name="pitch" description="input"/>
+            <frac32 name="velocity"/>
+            <frac32 name="touch"/>
+         </inlets>
+         <outlets>
+            <frac32 name="position" description="output"/>
+            <frac32 name="tailtime"/>
+            <frac32 name="color"/>
+            <frac32 name="mode"/>
+            <frac32 name="strength"/>
+            <frac32 name="influence"/>
+            <frac32 name="BPcut"/>
+            <frac32 name="BPres"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map name="note"/>
+            <frac32.s.map name="vel"/>
+            <frac32.s.map name="touch"/>
+            <int32 name="select" description="0=position,1=tailtime,2=color,3=mode,4=strength,5=influence,6=BP Cut,7=BP res">
+               <MinValue i="0"/>
+               <MaxValue i="7"/>
+            </int32>
+            <frac32.s.map name="n2p"/>
+            <frac32.s.map name="v2p"/>
+            <frac32.s.map name="t2p"/>
+            <frac32.s.map name="n2t"/>
+            <frac32.s.map name="v2t"/>
+            <frac32.s.map name="t2t"/>
+            <frac32.s.map name="n2c"/>
+            <frac32.s.map name="v2c"/>
+            <frac32.s.map name="t2c"/>
+            <frac32.s.map name="n2m"/>
+            <frac32.s.map name="v2m"/>
+            <frac32.s.map name="t2m"/>
+            <frac32.s.map name="n2s"/>
+            <frac32.s.map name="v2s"/>
+            <frac32.s.map name="t2s"/>
+            <frac32.s.map name="n2i"/>
+            <frac32.s.map name="v2i"/>
+            <frac32.s.map name="t2i"/>
+            <frac32.s.map name="n2BPc"/>
+            <frac32.s.map name="v2BPc"/>
+            <frac32.s.map name="t2BPc"/>
+            <frac32.s.map name="n2BPr"/>
+            <frac32.s.map name="v2BPr"/>
+            <frac32.s.map name="t2BPr"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int select;]]></code.declaration>
+         <code.krate><![CDATA[if(!(param_select==select)){
+
+switch(param_select>0?param_select:0){
+case 0: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2p,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2p,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2p,0xFFFD);break;
+case 1: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2t,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2t,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2t,0xFFFD);break;
+case 2: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2c,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2c,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2c,0xFFFD);break;
+case 3: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2m,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2m,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2m,0xFFFD);break;
+case 4: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2s,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2s,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2s,0xFFFD);break;
+case 5: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2i,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2i,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2i,0xFFFD);break;
+case 6: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2BPc,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2BPc,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2BPc,0xFFFD);break;
+case 7: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_note],	param_n2BPr,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_vel],	param_v2BPr,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_touch],	param_t2BPr,0xFFFD);break;
+}}
+
+
+switch(param_select>0?param_select:0){
+case 0: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2p],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2p],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2p],param_touch,0xFFFD);break;
+case 1: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2t],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2t],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2t],param_touch,0xFFFD);break;
+case 2: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2c],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2c],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2c],param_touch,0xFFFD);break;
+case 3: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2m],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2m],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2m],param_touch,0xFFFD);break;    	
+case 4: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2s],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2s],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2s],param_touch,0xFFFD);break;
+case 5: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2i],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2i],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2i],param_touch,0xFFFD);break;
+case 6: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2BPc],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2BPc],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2BPc],param_touch,0xFFFD);break;
+case 7: 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_n2BPr],param_note,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_v2BPr],param_vel,0xFFFD);
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t2BPr],param_touch,0xFFFD);break;    
+}
+
+outlet_position	= ___SMMUL(param_n2p<<3,inlet_pitch<<2)+___SMMUL(param_v2p<<3,inlet_velocity<<2)+___SMMUL(param_t2p<<3,inlet_touch<<2);
+outlet_tailtime	= ___SMMUL(param_n2t<<3,inlet_pitch<<2)+___SMMUL(param_v2t<<3,inlet_velocity<<2)+___SMMUL(param_t2t<<3,inlet_touch<<2);
+outlet_color		= ___SMMUL(param_n2c<<3,inlet_pitch<<2)+___SMMUL(param_v2c<<3,inlet_velocity<<2)+___SMMUL(param_t2c<<3,inlet_touch<<2);
+outlet_mode		= ___SMMUL(param_n2m<<3,inlet_pitch<<2)+___SMMUL(param_v2m<<3,inlet_velocity<<2)+___SMMUL(param_t2m<<3,inlet_touch<<2);
+outlet_strength	= ___SMMUL(param_n2s<<3,inlet_pitch<<2)+___SMMUL(param_v2s<<3,inlet_velocity<<2)+___SMMUL(param_t2s<<3,inlet_touch<<2);
+outlet_influence	= ___SMMUL(param_n2i<<3,inlet_pitch<<2)+___SMMUL(param_v2i<<3,inlet_velocity<<2)+___SMMUL(param_t2i<<3,inlet_touch<<2);
+outlet_BPcut		= ___SMMUL(param_n2BPc<<3,inlet_pitch<<2)+___SMMUL(param_v2BPc<<3,inlet_velocity<<2)+___SMMUL(param_t2BPc<<3,inlet_touch<<2);
+outlet_BPres		= ___SMMUL(param_n2BPr<<3,inlet_pitch<<2)+___SMMUL(param_v2BPr<<3,inlet_velocity<<2)+___SMMUL(param_t2BPr<<3,inlet_touch<<2);
+
+select=param_select;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="Feed" x="700" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="A" x="700" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="D" x="700" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="S" x="700" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="R" x="700" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="adsr_1" x="770" y="546">
+      <params>
+         <frac32.s.map name="a" onParent="true" value="-64.0"/>
+         <frac32.s.map name="d" onParent="true" value="-52.0"/>
+         <frac32.u.map name="s" onParent="true" value="0.0"/>
+         <frac32.s.map name="r" onParent="true" value="-57.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="840" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/bp m" uuid="f26437572c3a1f6be883bb219c773a9906ff8296" name="bp_1" x="896" y="798">
+      <params>
+         <frac32.s.map name="pitch" onParent="true" value="-1.0"/>
+         <frac32.u.map name="reso" onParent="true" value="20.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/delay/KarplusStrong2" uuid="e0ae375a-c621-4865-94d5-dd136330a55c" name="KarplusStrong2_1" x="994" y="938">
+      <params>
+         <frac32.s.map name="pitch" onParent="true" value="-24.0"/>
+         <frac32.u.map name="position" onParent="true" value="32.0"/>
+         <frac32.u.map name="tailtime" onParent="true" value="10.0"/>
+         <frac32.s.map name="color" onParent="true" value="20.0"/>
+         <frac32.u.map name="mode" onParent="true" value="4.5"/>
+         <frac32.u.map name="strength" onParent="true" value="14.0"/>
+         <frac32.s.map name="influence" onParent="true" value="47.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1134" y="938">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate2"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="Feed" outlet="inlet"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="bp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bp_1" outlet="out"/>
+         <dest obj="KarplusStrong2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="KarplusStrong2_1" outlet="out"/>
+         <dest obj="outlet_1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="KarplusStrong2_1" inlet="pitch"/>
+         <dest obj="note2cut" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="velocity"/>
+         <dest obj="note2cut" inlet="velocity"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="touch"/>
+         <dest obj="note2cut" inlet="touch"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="position"/>
+         <dest obj="KarplusStrong2_1" inlet="position"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="tailtime"/>
+         <dest obj="KarplusStrong2_1" inlet="tailtime"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="color"/>
+         <dest obj="KarplusStrong2_1" inlet="color"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="mode"/>
+         <dest obj="KarplusStrong2_1" inlet="mode"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="strength"/>
+         <dest obj="KarplusStrong2_1" inlet="strength"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="influence"/>
+         <dest obj="KarplusStrong2_1" inlet="influence"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="BPcut"/>
+         <dest obj="bp_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="note2cut" outlet="BPres"/>
+         <dest obj="bp_1" inlet="reso"/>
+      </net>
+      <net>
+         <source obj="A" outlet="inlet"/>
+         <dest obj="adsr_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="D" outlet="inlet"/>
+         <dest obj="adsr_1" inlet="d"/>
+      </net>
+      <net>
+         <source obj="S" outlet="inlet"/>
+         <dest obj="adsr_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="R" outlet="inlet"/>
+         <dest obj="adsr_1" inlet="r"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>polyphonic</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>Remco van der Most</Author>
+      <License>Secret</License>
+      <Attributions></Attributions>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1696</width>
+      <height>1026</height>
+   </windowPos>
+</patch-1.0>
