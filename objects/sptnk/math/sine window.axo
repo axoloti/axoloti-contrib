@@ -1,6 +1,6 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="sine window" uuid="73d63b7f-5221-4931-8867-b0b85c550539">
-      <sDescription>Adjustable sine-shaped window.</sDescription>
+   <obj.normal id="sine window" uuid="6e86836e-3513-4677-9317-428b96c59768">
+      <sDescription>Adjustable sine-shaped window. Pretty heavyweight</sDescription>
       <author>Sputnki</author>
       <license>BSD</license>
       <inlets>
@@ -11,23 +11,25 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="size" noLabel="true"/>
+         <frac32.u.map name="size" description="determines the size of the sine shaped flanks" noLabel="true"/>
       </params>
       <attribs/>
-      <code.srate><![CDATA[float halfsize = param_size>>1;
-float halfsize_compl = (1<<27) - halfsize;
+      <code.declaration><![CDATA[int32_t r1;
+int32_t r2;]]></code.declaration>
+      <code.krate><![CDATA[float halfsize = param_size>>1;
+float halfsize_compl = (1<<27) - halfsize;]]></code.krate>
+      <code.srate><![CDATA[float arg1 = 1073741824.0f*(inlet_in/halfsize);
+float arg2 = (1+(inlet_in-halfsize_compl)/halfsize)*1073741824.0f;
 
-float arg1 = 67108864.0f*(inlet_in/halfsize);
-float arg2 = (1+(inlet_in-halfsize_compl)/halfsize)*67108864.0f;
-
-int32_t r1;
-int32_t r2;
-
-SINE2TINTERP(((int32_t) arg1 )<<4,r1);
-SINE2TINTERP(((int32_t) arg2 )<<4,r2);
+SINE2TINTERP(((int32_t) arg1 ),r1);
+SINE2TINTERP(((int32_t) arg2 ),r2);
 
 
-if (inlet_in < halfsize)
+if (inlet_in < 0 || inlet_in > 1<<27)
+{
+	outlet_out = 0;
+}
+else if (inlet_in < halfsize)
 {
 	outlet_out = r1>>4;
 }
