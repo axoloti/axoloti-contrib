@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="potcv" uuid="e6798a45-31db-4671-b8c3-a41e09ac0afa">
+   <sDescription>mod script2 object with 8 outlets for received pot and cv in values.</sDescription>
+   <author>Paul</author>
+   <license>BSD</license>
+   <helpPatch></helpPatch>
+   <inlets>
+   </inlets>
+   <outlets>
+      <frac32 name="pot1" description="pot1"/>
+      <frac32 name="pot2" description="pot2"/>
+      <frac32 name="pot3" description="pot3"/>
+      <frac32 name="pot4" description="pot4"/>
+      <frac32 name="pot5" description="pot5"/>
+      <frac32 name="pot6" description="pot6"/>
+      <frac32 name="pot7" description="pot7"/>
+      <frac32 name="pot8" description="pot8"/>
+      <frac32 name="cvin1" description="cvin1"/>
+      <frac32 name="cvin2" description="cvin2"/>
+      <frac32 name="cvin3" description="cvin3"/>
+      <frac32 name="cvin4" description="cvin4"/>
+      <frac32 name="cvin5" description="cvin5"/>
+      <frac32 name="cvin6" description="cvin6"/>
+      <frac32 name="cvin7" description="cvin7"/>
+      <frac32 name="cvin8" description="cvin8"/>
+   </outlets>
+   <displays/>
+   <params/>
+   <attribs>
+      <text name="script"/>
+   </attribs>
+   <includes/>
+   <code.declaration><![CDATA[
+int32_t pot1,pot2,pot3,pot4,pot5,pot6,pot7,pot8;
+int32_t cvin1,cvin2,cvin3,cvin4,cvin5,cvin6,cvin7,cvin8;
+attr_script
+msg_t ThreadX2(){
+  setup();
+  while(!chThdShouldTerminate()){
+     loop();
+     chThdSleepMilliseconds(1);
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;
+]]></code.declaration>
+   <code.init><![CDATA[
+cvin1=0;cvin2=0;cvin3=0;cvin4=0;cvin5=0;cvin6=0;cvin7=0;cvin8=0;
+pot1=0;pot2=0;pot3=0;pot4=0;pot5=0;pot6=0;pot7=0;pot8=0;
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);
+]]></code.init>
+   <code.dispose><![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);
+]]></code.dispose>
+   <code.krate><![CDATA[
+outlet_pot1 = this->pot1;
+outlet_pot2 = this->pot2;
+outlet_pot3 = this->pot3;
+outlet_pot4 = this->pot4;
+outlet_pot5 = this->pot5;
+outlet_pot6 = this->pot6;
+outlet_pot7 = this->pot7;
+outlet_pot8 = this->pot8;
+
+outlet_cvin1 = this->cvin1;
+outlet_cvin2 = this->cvin2;
+outlet_cvin3 = this->cvin3;
+outlet_cvin4 = this->cvin4;
+outlet_cvin5 = this->cvin5;
+outlet_cvin6 = this->cvin6;
+outlet_cvin7 = this->cvin7;
+outlet_cvin8 = this->cvin8;
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>
