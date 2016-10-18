@@ -17,6 +17,7 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
          <bool32.rising name="rnd" description="trigger"/>
          <int32 name="count"/>
          <int32 name="length"/>
+         <int32 name="chance"/>
       </inlets>
       <outlets>
          <int32.positive name="v"/>
@@ -47,7 +48,10 @@ int on;
       <code.init><![CDATA[      on=1;
 ntrig = 0;
 ]]></code.init>
-      <code.krate><![CDATA[int trig=inlet_rnd+param_rnd;
+      <code.krate><![CDATA[int chance=param_chance+inlet_chance;
+chance=chance<0?0:chance;
+chance=chance>100?100:chance;
+int trig=inlet_rnd+param_rnd;
 if(inlet_length>0){
 length=___SMMUL(param_length<<3,inlet_length<<2);}
 else length=param_length>>21;
@@ -56,7 +60,7 @@ int TRIG=0;
    	TRIG=1;
       for(i=0;i<64;i++){
          get[i] = (int32_t)(GenerateRandomNumber()% (100));
-         if(get[i]<=param_chance){
+         if(get[i]<=chance){
          val[i] = (int32_t)(GenerateRandomNumber()% (param_max));}}
       ntrig=1;
    }
