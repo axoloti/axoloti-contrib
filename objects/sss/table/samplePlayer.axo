@@ -1,35 +1,6 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="samplePlayer" uuid="bf88fa56-6059-42b4-a042-cb92822979f2">
-      <sDescription>sample player
-PLEASE FOLLOW INSTRUCTIONS! There are several steps which are really important!
-
-IMPORTANT-this module uses a table to read it&apos;s waves from. It&apos;s meant to use a table containing 128 samples of 8192-samplelength each.
-(though the sample-length can be changed, for fun, but also to allow more/less samples which are shorter/longer respecively. 
-IMPORTANT Default 8192-samplelength at the selector is 13!!)
-IMPORTANT Before you can use this module, you thus need to make a table containing the right amount of (drum)samples, each at the right length and add the reference to that module into the box! (or use the one I uploaded to test it, which contains 128 samples -&gt;set samplelength to 13)
-for reference:
-12-&gt;     4096 samplelength -&gt; 256 samples -&gt;  0.085 sec/sample
-13-&gt;     8192 samplelength -&gt; 128 samples -&gt;  0.171 sec/sample
-14 -&gt;   16384 samplelength -&gt;  64 samples -&gt;  0.342 sec/sample
-15 -&gt;   32768 samplelength -&gt;  32 samples -&gt;  0.684 sec/sample
-16 -&gt;   65536 samplelength -&gt;  16 samples -&gt;  1.368 sec/sample
-17 -&gt;  131072 samplelength -&gt;   8 samples -&gt;  2.736 sec/sample
-18 -&gt;  262144 samplelength -&gt;   4 samples -&gt;  5.472 sec/sample
-19 -&gt;  524288 samplelength -&gt;   2 samples -&gt; 10.542 sec/sample
-20 -&gt; 1048376 samplelength -&gt;   1 sample  -&gt; 21.084 sec/sample
-
-
--The waveplayer is divided into 3 parts: start, loop and end.
--Each part has it&apos;s own sample-select, play/loop-length (start/end) and pitch.
--The loop stage can be skipped (default) and is only used when LOOP is high.
--loopmode has 3 different modes: 0=forward, 1=reverse, 2=alternate.
--depending on the values of the start/end controls, the play-direction can be reversed for all 3 stages. Note that this will also depend on the loopmode for the loop!
--the fm-input allows an extra internal oscillator be fed a frequency, which is then added to the playposition of the sample.
--use a VCA behind the sampler to remove any possible DC-offset when the sample stops playing (shouldn&apos;t happen, but still..an extra envelope is useful anyways). In the ENV folder, you can find a AHDSR that&apos;s very useful to combine with the sampler.
-
--when using this as a keyboard-controlled sampler to load different samples and settings at different keys, you could use the pitch to control selectors (sel-folder) to drive the settings of the sampler, though I&apos;m also busy making a module for this.
-
--the &quot;intExt&quot; toggle button serves to set the samplelength from internally (selector) or externally (input-&gt;for use with sampler-settings-controller)</sDescription>
+   <obj.normal id="samplePlayer" uuid="c7983270-8432-4bea-865b-3728f34dfdb5">
+      <sDescription>read from table, nearest neighbour</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>table.axh</helpPatch>
@@ -88,7 +59,11 @@ direction2=1;]]></code.init>
 if(param_intExt>0){
 samplelength=1<<param_samplelength;}
 if(param_intExt==0) {samplelength=1<<inlet_samplelength;}
-int32_t MASK=((1<<(20-param_samplelength))-1);
+int32_t MASK;
+if(param_intExt>0){
+MASK=((1<<(20-param_samplelength))-1);}
+if(param_intExt==0){
+MASK=((1<<(20-inlet_samplelength))-1);}
 outlet_pitch=pitch;]]></code.krate>
       <code.srate><![CDATA[phase+=___SMMUL(inlet_fm>>3,inlet_FMwidth<<2);
 Phase=phase>>19;
@@ -217,7 +192,7 @@ if(inlet_trig>0)
 		if(count==loopend){direction2=-DIR3;}}
 	}
 
-	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<param_samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
 	
 }
 
@@ -231,7 +206,7 @@ if(stage==0)
 	{if(!(count==end))
 		{
 		count+=count<end?1:-1;
-		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<param_samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
 		
 		}
 	if(count==end){outlet_o=0;}
