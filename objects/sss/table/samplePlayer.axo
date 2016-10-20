@@ -1,0 +1,243 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="samplePlayer" uuid="bf88fa56-6059-42b4-a042-cb92822979f2">
+      <sDescription>sample player
+PLEASE FOLLOW INSTRUCTIONS! There are several steps which are really important!
+
+IMPORTANT-this module uses a table to read it&apos;s waves from. It&apos;s meant to use a table containing 128 samples of 8192-samplelength each.
+(though the sample-length can be changed, for fun, but also to allow more/less samples which are shorter/longer respecively. 
+IMPORTANT Default 8192-samplelength at the selector is 13!!)
+IMPORTANT Before you can use this module, you thus need to make a table containing the right amount of (drum)samples, each at the right length and add the reference to that module into the box! (or use the one I uploaded to test it, which contains 128 samples -&gt;set samplelength to 13)
+for reference:
+12-&gt;     4096 samplelength -&gt; 256 samples -&gt;  0.085 sec/sample
+13-&gt;     8192 samplelength -&gt; 128 samples -&gt;  0.171 sec/sample
+14 -&gt;   16384 samplelength -&gt;  64 samples -&gt;  0.342 sec/sample
+15 -&gt;   32768 samplelength -&gt;  32 samples -&gt;  0.684 sec/sample
+16 -&gt;   65536 samplelength -&gt;  16 samples -&gt;  1.368 sec/sample
+17 -&gt;  131072 samplelength -&gt;   8 samples -&gt;  2.736 sec/sample
+18 -&gt;  262144 samplelength -&gt;   4 samples -&gt;  5.472 sec/sample
+19 -&gt;  524288 samplelength -&gt;   2 samples -&gt; 10.542 sec/sample
+20 -&gt; 1048376 samplelength -&gt;   1 sample  -&gt; 21.084 sec/sample
+
+
+-The waveplayer is divided into 3 parts: start, loop and end.
+-Each part has it&apos;s own sample-select, play/loop-length (start/end) and pitch.
+-The loop stage can be skipped (default) and is only used when LOOP is high.
+-loopmode has 3 different modes: 0=forward, 1=reverse, 2=alternate.
+-depending on the values of the start/end controls, the play-direction can be reversed for all 3 stages. Note that this will also depend on the loopmode for the loop!
+-the fm-input allows an extra internal oscillator be fed a frequency, which is then added to the playposition of the sample.
+-use a VCA behind the sampler to remove any possible DC-offset when the sample stops playing (shouldn&apos;t happen, but still..an extra envelope is useful anyways). In the ENV folder, you can find a AHDSR that&apos;s very useful to combine with the sampler.
+
+-when using this as a keyboard-controlled sampler to load different samples and settings at different keys, you could use the pitch to control selectors (sel-folder) to drive the settings of the sampler, though I&apos;m also busy making a module for this.
+
+-the &quot;intExt&quot; toggle button serves to set the samplelength from internally (selector) or externally (input-&gt;for use with sampler-settings-controller)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="startsample"/>
+         <frac32 name="startpitch"/>
+         <frac32 name="startStrt"/>
+         <frac32 name="startEnd"/>
+         <int32 name="loopsample"/>
+         <frac32 name="looppitch"/>
+         <frac32 name="loopStrt"/>
+         <frac32 name="loopEnd"/>
+         <int32 name="loopmode"/>
+         <bool32 name="LOOP"/>
+         <int32 name="endsample"/>
+         <frac32 name="endpitch"/>
+         <frac32 name="endStrt"/>
+         <frac32 name="endEnd"/>
+         <int32 name="samplelength"/>
+         <frac32 name="FMwidth"/>
+         <frac32buffer name="fm"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="table[a]"/>
+         <int32 name="stage"/>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="samplelength">
+            <MinValue i="12"/>
+            <MaxValue i="20"/>
+         </int32>
+         <bool32.tgl name="intExt"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t count;
+int ntrig;
+int stage;
+int direction1;
+int direction2;
+int LOOP;
+int sample;
+float32_t pitch;
+int32_t out;
+uint32_t phase;
+uint32_t Phase;
+int etrig;]]></code.declaration>
+      <code.init><![CDATA[count=0;
+direction1=1;
+direction2=1;]]></code.init>
+      <code.krate><![CDATA[int32_t samplelength;
+if(param_intExt>0){
+samplelength=1<<param_samplelength;}
+if(param_intExt==0) {samplelength=1<<inlet_samplelength;}
+int32_t MASK=((1<<(20-param_samplelength))-1);
+outlet_pitch=pitch;]]></code.krate>
+      <code.srate><![CDATA[phase+=___SMMUL(inlet_fm>>3,inlet_FMwidth<<2);
+Phase=phase>>19;
+pitch=pitch/(1<<21)/12;
+int32_t totalcount=(samplelength)*powf(2,pitch);
+float32_t ratio=(float32_t)(samplelength)/(float32_t)(totalcount);
+LOOP=inlet_LOOP;
+int32_t start=___SMMUL(inlet_startStrt<<2,totalcount<<3);
+int32_t stend=___SMMUL(inlet_startEnd<<2,totalcount<<3);
+int32_t enstart=___SMMUL(inlet_endStrt<<2,totalcount<<3);
+int32_t end=___SMMUL(inlet_endEnd<<2,totalcount<<3);
+int32_t loopstart=___SMMUL(inlet_loopStrt<<2,totalcount<<3);
+int32_t loopend=___SMMUL(inlet_loopEnd<<2,totalcount<<3);
+
+int DIR1=end>start?1:-1;
+int DIR2=stend>start?1:-1;
+int DIR3=loopstart<loopend?1:-1;
+
+
+if((inlet_trig>0)&&!ntrig)
+	{	stage=1;
+		phase=0;
+		if(LOOP==0){direction1=DIR1;}
+		if(LOOP==1){direction1=DIR2;}
+		ntrig=1;
+		count=start;
+	}
+else if(inlet_trig==0){ntrig=0;stage=0;}
+
+
+if(stage==1){
+	sample=inlet_startsample;
+	pitch=-inlet_startpitch;
+}
+if(stage==2){
+	sample=inlet_loopsample;
+	pitch=-inlet_looppitch;
+	}
+if(stage==0){
+	sample=inlet_endsample;
+	pitch=-inlet_endpitch;
+	}
+
+
+sample=sample&MASK;
+
+if(inlet_trig>0)
+{
+	if(stage==1){
+		count+=direction1;
+		if(LOOP==0)
+		{
+			if(start<end){
+			if(count>=end){stage=0;}}
+			if(start>end){
+			if(count<=end){stage=0;}}
+		}
+	
+		if(LOOP==1)
+		{
+		
+			if((inlet_loopmode==0)||(inlet_loopmode==2))
+			{
+				if(start<stend)
+				{
+					if(count>=stend)
+					{
+						stage=2;
+						direction2=DIR3;
+						count=loopstart;
+					}
+				}
+				if(start>stend)
+				{
+					if(count<=stend){
+						stage=2;
+						direction2=DIR3;
+						count=loopstart;}
+				}
+			}
+
+
+			if(inlet_loopmode==1)
+			{
+				if(start<stend)
+				{
+					if(count>=stend)
+					{
+						stage=2;
+						direction2=-DIR3;
+						count=loopend;
+					}
+				}
+				if(start>stend)
+				{
+					if(count<=stend)
+					{
+						stage=2;
+						direction2=DIR3;
+						count=loopend;
+					}
+				}
+			}
+		}}
+	
+	if(stage==2)
+	{
+	count+=direction2;
+	if(inlet_loopmode==0)
+	{
+		if(loopstart<loopend){
+		if(count>=loopend){count=loopstart;}}
+		if(loopstart>loopend){
+		if(count<=loopend){count=loopstart;}}
+	}	
+	if(inlet_loopmode==1)
+	{
+		if(loopstart<loopend){
+		if(count<=loopstart){count=loopend;}}
+		if(loopstart>loopend){
+		if(count>=loopstart){count=loopend;}}
+		
+	}
+	if(inlet_loopmode==2){
+		if(count==loopstart){direction2=DIR3;}
+		if(count==loopend){direction2=-DIR3;}}
+	}
+
+	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<param_samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+	
+}
+
+if((stage==0)&&!etrig){
+	etrig=1;
+	if(LOOP>0){count=enstart;}
+}
+else if(stage>0){etrig=0;}
+
+if(stage==0)
+	{if(!(count==end))
+		{
+		count+=count<end?1:-1;
+		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<param_samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+		
+		}
+	if(count==end){outlet_o=0;}
+}
+
+outlet_o=out;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
