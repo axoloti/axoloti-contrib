@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="samplePlayer" uuid="c7983270-8432-4bea-865b-3728f34dfdb5">
+   <obj.normal id="samplePlayer" uuid="cb37c415-e51a-4229-a85b-61a87b2d6e34">
       <sDescription>read from table, nearest neighbour</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -56,15 +56,26 @@ int etrig;]]></code.declaration>
 direction1=1;
 direction2=1;]]></code.init>
       <code.krate><![CDATA[int32_t samplelength;
-if(param_intExt>0){
-samplelength=1<<param_samplelength;}
-if(param_intExt==0) {samplelength=1<<inlet_samplelength;}
+int32_t Samplelength;
 int32_t MASK;
-if(param_intExt>0){
-MASK=((1<<(20-param_samplelength))-1);}
-if(param_intExt==0){
-MASK=((1<<(20-inlet_samplelength))-1);}
-outlet_pitch=pitch;]]></code.krate>
+if(param_intExt>0)
+{
+samplelength=(1<<param_samplelength);
+Samplelength=param_samplelength;
+MASK=((1<<(20-param_samplelength))-1);
+}
+else 
+{
+	samplelength=(1<<inlet_samplelength);
+	Samplelength=inlet_samplelength;
+	MASK=((1<<(20-inlet_samplelength))-1);
+}
+
+
+
+
+outlet_pitch=pitch;
+outlet_stage=sample;]]></code.krate>
       <code.srate><![CDATA[phase+=___SMMUL(inlet_fm>>3,inlet_FMwidth<<2);
 Phase=phase>>19;
 pitch=pitch/(1<<21)/12;
@@ -192,7 +203,7 @@ if(inlet_trig>0)
 		if(count==loopend){direction2=-DIR3;}}
 	}
 
-	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<Samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
 	
 }
 
@@ -206,7 +217,7 @@ if(stage==0)
 	{if(!(count==end))
 		{
 		count+=count<end?1:-1;
-		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<Samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
 		
 		}
 	if(count==end){outlet_o=0;}
