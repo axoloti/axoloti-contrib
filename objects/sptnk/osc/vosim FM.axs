@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.8">
+<patch-1.0 appVersion="1.0.11">
    <comment type="patch/comment" x="1092" y="392" text="eliminating DC signals"/>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="448" y="406">
       <params/>
