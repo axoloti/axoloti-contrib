@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="rCount" uuid="21d40881-cfd8-4318-ad96-414c2664a9b4">
+      <sDescription>cyclic up counter that is initiated at position -1 and reset to position -1.
+Had to make this one for the sample-table creator, otherwise the first sample was always skipped for the record.</sDescription>
+      <author>Johannes Taelman editted by Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>counter.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <bool32.rising name="r" description="reset"/>
+         <int32 name="MaxSampleAmount"/>
+      </inlets>
+      <outlets>
+         <int32 name="o" description="output"/>
+         <bool32.pulse name="c" description="carry pulse"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[   int ntrig;
+   int rtrig;
+   int count;
+]]></code.declaration>
+      <code.init><![CDATA[    count=-1;
+   ntrig = 0;
+   rtrig = 0;
+]]></code.init>
+      <code.krate><![CDATA[outlet_c=0;
+if ((inlet_trig>0) && !ntrig) {
+   count += 1; if (count>=inlet_MaxSampleAmount) {count = 0; outlet_c = 1;}
+   ntrig=1;
+}
+else if (!(inlet_trig>0)) ntrig=0;
+if ((inlet_r>0) && !rtrig) {count=-1; rtrig = 1;}
+else if (!(inlet_r>0)) rtrig=0;
+outlet_o= count;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
