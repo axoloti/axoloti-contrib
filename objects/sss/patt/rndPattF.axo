@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="rndPatt" uuid="8139b931-84bc-46b3-9f19-790c0016121e">
+   <obj.normal id="rndPattF" uuid="51e68084-34f7-4ce7-b29e-6d2fb66a8b71">
       <sDescription>random generated pattern
 each time a trigger is received, positions of the pattern will be randomised or not, depending on the change parameter (in percentage, so 100 is randomising the whole pattern when triggered).
 
@@ -18,27 +18,31 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
          <int32 name="count"/>
          <int32 name="length"/>
          <int32 name="chance"/>
+         <frac32 name="change"/>
+         <frac32 name="max"/>
+         <frac32 name="min"/>
       </inlets>
       <outlets>
-         <int32.positive name="v"/>
+         <frac32 name="v"/>
          <bool32.pulse name="rnd"/>
       </outlets>
       <displays/>
       <params>
-         <int32 name="max" noLabel="true">
-            <MinValue i="0"/>
-            <MaxValue i="65536"/>
-         </int32>
-         <frac32.u.map name="length"/>
-         <bool32.mom name="rnd"/>
+         <frac32.u.map name="repeat"/>
          <int32 name="chance">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
+         <frac32.u.map name="change"/>
+         <frac32.s.map name="max"/>
+         <frac32.s.map name="min"/>
+         <bool32.mom name="rnd"/>
       </params>
-      <attribs/>
-      <code.declaration><![CDATA[int get[64];
-int32_t val[64];
+      <attribs>
+         <spinner name="maxSteps" MinValue="1" MaxValue="1024" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int get[attr_maxSteps];
+uint32_t val[attr_maxSteps];
 int ntrig;
 int count;
 int32_t length;
@@ -49,27 +53,35 @@ int on;
 ntrig = 0;
 ]]></code.init>
       <code.krate><![CDATA[int chance=param_chance+inlet_chance;
+int32_t change=param_change+inlet_change;
 chance=chance<0?0:chance;
 chance=chance>100?100:chance;
 int trig=inlet_rnd+param_rnd;
+int32_t width=param_max+inlet_max-param_min-inlet_min;
 if(inlet_length>0){
-length=___SMMUL(param_length<<3,inlet_length<<2);}
-else length=param_length>>21;
+length=___SMMUL(param_repeat<<3,inlet_length<<2);}
+else length=param_repeat>>21;
 int TRIG=0;
    if ((trig>0) && !ntrig) {
    	TRIG=1;
-      for(i=0;i<64;i++){
+   	int32_t size=change<<3;
+      for(i=0;i<attr_maxSteps;i++){
          get[i] = (int32_t)(GenerateRandomNumber()% (100));
          if(get[i]<=chance){
-         val[i] = (int32_t)(GenerateRandomNumber()% (param_max));}}
+         val[i] += (___SMMUL((uint32_t)(GenerateRandomNumber()&((1<<31)-1)),size)<<2)-size;
+         val[i]=val[i]&((1<<31)-1);
+         val[i]= val[i]>(1<<30)?(1<<31)-val[i]:val[i];   
+         }
+
+         }
       ntrig=1;
    }
    else if (!(trig>0)) ntrig=0;
    count=inlet_count-(inlet_count/length)*length;
-   outlet_v = val[count];
+   outlet_v = (___SMMUL(val[count]>>1,width)<<3)+param_min+inlet_min;
 if(on>0){
-	for(i=0;i<64;i++){
-         val[i] = (int32_t)(GenerateRandomNumber()% (param_max));}
+	for(i=0;i<attr_maxSteps;i++){
+         val[i] = (uint32_t)(GenerateRandomNumber()>>2);}
 }
 
 on=0;
