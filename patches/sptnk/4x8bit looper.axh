@@ -11,7 +11,7 @@
    <obj type="sptnk/looper/pos" uuid="eff984cb-b1e3-4c54-8b10-ad5a55b937e9" name="pos_1" x="364" y="0">
       <params>
          <int32 name="num" value="1"/>
-         <int32 name="den" value="1"/>
+         <int32 name="den" value="32"/>
          <int32 name="mulstart" value="0"/>
       </params>
       <attribs>
@@ -19,55 +19,12 @@
       </attribs>
    </obj>
    <comment type="patch/comment" x="504" y="0" text="table read object"/>
-   <patchobj type="patch/object" uuid="be18b168-d1a0-4c2a-a800-241bf1521382" name="read 8b" x="504" y="14">
+   <obj type="sptnk/looper/play" uuid="71c4f3b4-7351-45b9-bb6f-80fdbba3f9a6" name="play_1" x="504" y="14">
       <params/>
       <attribs>
          <objref attributeName="table" obj="alloc_1"/>
       </attribs>
-      <object id="patch/object" uuid="be18b168-d1a0-4c2a-a800-241bf1521382">
-         <sDescription>Read from 4x8bit table (32bit)</sDescription>
-         <author>Sputnki</author>
-         <license>BSD</license>
-         <helpPatch>table.axh</helpPatch>
-         <inlets>
-            <frac32buffer.positive name="pos" description="use looper/pos to drive this input"/>
-         </inlets>
-         <outlets>
-            <frac32buffer name="o1" description="track 1 output"/>
-            <frac32buffer name="o2" description="track 2 output"/>
-            <frac32buffer name="o3" description="track 3 output"/>
-            <frac32buffer name="o4" description="track 4 output"/>
-         </outlets>
-         <displays/>
-         <params/>
-         <attribs>
-            <objref name="table" description="32bit table in which 4 tracks are stored"/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[uint32_t bitmask1 = 0b11111111000000000000000000000000;
-uint32_t bitmask2 = 0b00000000111111110000000000000000;
-uint32_t bitmask3 = 0b00000000000000001111111100000000;
-uint32_t bitmask4 = 0b00000000000000000000000011111111;
-
-
-
-
-uint32_t var = 0;]]></code.declaration>
-         <code.srate><![CDATA[uint32_t pos = __USAT(inlet_pos, 28);
-if (pos>attr_table.LENGTH)
-pos = attr_table.LENGTH;
-
-int8_t temp1= (bitmask1&attr_table.array[pos])>>24;
-int8_t temp2= (bitmask2&attr_table.array[pos])>>16;
-int8_t temp3= (bitmask3&attr_table.array[pos])>>8;
-int8_t temp4= (bitmask4&attr_table.array[pos]);
-
-outlet_o1 = ((int32_t) temp1)<<20;
-outlet_o2 = ((int32_t) temp2)<<20;
-outlet_o3 = ((int32_t) temp3)<<20;
-outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
-      </object>
-   </patchobj>
+   </obj>
    <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="startpos" x="182" y="28">
       <params>
          <int32 name="value" value="0"/>
@@ -137,7 +94,7 @@ outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="238">
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_3" x="14" y="238">
       <params/>
       <attribs/>
    </obj>
@@ -147,10 +104,6 @@ outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
          <objref attributeName="table" obj="alloc_1"/>
       </attribs>
    </obj>
-   <obj type="audio/in right" uuid="5f35c9f87b3f291a8120a10db71935bebd186469" name="in_2" x="14" y="294">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="ctrl/i radio 8 v" uuid="577436e6982cb8ac1f816144195641eeb6846f79" name="record mode" x="14" y="350">
       <params>
          <int32.vradio name="value" value="0"/>
@@ -158,7 +111,7 @@ outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
       <attribs/>
    </obj>
    <comment type="patch/comment" x="99" y="389" text="&lt; idle"/>
-   <obj type="sptnk/looper/protect" uuid="f1d3e7a3-544d-4d1a-aa3e-fd7f0941c196" name="protect_2" x="210" y="392">
+   <obj type="sptnk/looper/protect" uuid="f1d3e7a3-544d-4d1a-aa3e-fd7f0941c196" name="protect_1" x="210" y="392">
       <params/>
       <attribs/>
    </obj>
@@ -172,32 +125,32 @@ outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
    </obj>
    <nets>
       <net>
-         <source obj="read 8b" outlet="o2"/>
+         <source obj="play_1" outlet="o2"/>
          <dest obj="mix" inlet="r1"/>
       </net>
       <net>
-         <source obj="read 8b" outlet="o1"/>
+         <source obj="play_1" outlet="o1"/>
          <dest obj="mix" inlet="l1"/>
       </net>
       <net>
-         <source obj="in_2" outlet="wave"/>
+         <source obj="in_3" outlet="right"/>
          <dest obj="mix" inlet="r2"/>
          <dest obj="record_1" inlet="w2"/>
       </net>
       <net>
-         <source obj="in_1" outlet="wave"/>
+         <source obj="in_3" outlet="left"/>
          <dest obj="mix" inlet="l2"/>
          <dest obj="record_1" inlet="w1"/>
       </net>
       <net>
          <source obj="pos_1" outlet="pos"/>
+         <dest obj="play_1" inlet="pos"/>
          <dest obj="record_1" inlet="pos"/>
-         <dest obj="read 8b" inlet="pos"/>
       </net>
       <net>
          <source obj="play/stop" outlet="o"/>
-         <dest obj="mux_1" inlet="s"/>
          <dest obj="pos_1" inlet="play"/>
+         <dest obj="mux_1" inlet="s"/>
       </net>
       <net>
          <source obj="pause" outlet="o"/>
@@ -213,22 +166,22 @@ outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
       </net>
       <net>
          <source obj="protect track 4" outlet="o"/>
-         <dest obj="protect_2" inlet="i4"/>
+         <dest obj="protect_1" inlet="i4"/>
       </net>
       <net>
          <source obj="protect track 3" outlet="o"/>
-         <dest obj="protect_2" inlet="i3"/>
+         <dest obj="protect_1" inlet="i3"/>
       </net>
       <net>
          <source obj="protect track 2" outlet="o"/>
-         <dest obj="protect_2" inlet="i2"/>
+         <dest obj="protect_1" inlet="i2"/>
       </net>
       <net>
          <source obj="protect track 1" outlet="o"/>
-         <dest obj="protect_2" inlet="i1"/>
+         <dest obj="protect_1" inlet="i1"/>
       </net>
       <net>
-         <source obj="protect_2" outlet="protect"/>
+         <source obj="protect_1" outlet="protect"/>
          <dest obj="record_1" inlet="protect"/>
       </net>
       <net>
