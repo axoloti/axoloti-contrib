@@ -93,25 +93,25 @@
    <comment type="patch/comment" x="98" y="290" text="&lt; overwrite"/>
    <comment type="patch/comment" x="98" y="304" text="&lt; overdub"/>
    <comment type="patch/comment" x="98" y="318" text="&lt; halving overdub"/>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 1" x="378" y="350">
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 1" x="378" y="364">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 2" x="448" y="350">
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 2" x="448" y="364">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 3" x="518" y="350">
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 3" x="518" y="364">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 4" x="588" y="350">
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="protect track 4" x="588" y="364">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
@@ -121,6 +121,43 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="sptnk/looper/pos2phase" uuid="e03d1cc5-fc14-4a32-8375-dbf570f3fcc7" name="pos2phase_1" x="574" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="728" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="14" y="532" text="work in progress, gotta go to sleep"/>
+   <patchobj type="patch/object" uuid="6ebb12e3-3399-4c6e-8925-e03b7dc6bbc4" name="pos2ppq" x="14" y="546">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="6ebb12e3-3399-4c6e-8925-e03b7dc6bbc4">
+         <sDescription>Converts a position input to a phase (percent) output. Useful for visual indication of the loop position.</sDescription>
+         <author>Sputnki</author>
+         <license>BSD</license>
+         <helpPatch>4x8bit looper.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="pos" description="position input"/>
+            <int32.positive name="startpos" description="start position"/>
+            <int32.positive name="endpos" description="end position"/>
+            <int32.positive name="quarters" description="number of quarters for the loop"/>
+         </inlets>
+         <outlets>
+            <int32.positive name="pos4ppq"/>
+            <int32.positive name="pos24ppq"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.krate><![CDATA[/*float num = inlet_pos[0]-inlet_startpos;
+float den = inlet_endpos-inlet_startpos;
+float frac = num/den;
+outlet_percent = (1<<27) *frac;*/]]></code.krate>
+      </object>
+   </patchobj>
    <nets>
       <net>
          <source obj="play_1" outlet="o2"/>
@@ -144,6 +181,7 @@
          <source obj="pos_1" outlet="pos"/>
          <dest obj="play_1" inlet="pos"/>
          <dest obj="record_1" inlet="pos"/>
+         <dest obj="pos2phase_1" inlet="pos"/>
       </net>
       <net>
          <source obj="play/stop" outlet="o"/>
@@ -193,6 +231,11 @@
       <net>
          <source obj="endpos_1" outlet="endpos"/>
          <dest obj="pos_1" inlet="endpos"/>
+         <dest obj="pos2phase_1" inlet="endpos"/>
+      </net>
+      <net>
+         <source obj="pos2phase_1" outlet="percent"/>
+         <dest obj="dial_1" inlet="in"/>
       </net>
    </nets>
    <settings>
