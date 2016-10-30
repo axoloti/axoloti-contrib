@@ -6,7 +6,7 @@
       <inlets>
          <bool32 name="play" description="set the object to play mode. When released, the phasor resets to 0"/>
          <bool32 name="hold" description="set the object to pause mode"/>
-         <int32 name="length" description="last value of the table to read"/>
+         <int32 name="endpos" description="last value of the table to read"/>
          <int32 name="startpos" description="first value of the table to read"/>
       </inlets>
       <outlets>
@@ -35,7 +35,7 @@ uint32_t maxlength = attr_table.LENGTH;
 
 bool play;
 bool hold;]]></code.declaration>
-      <code.krate><![CDATA[uint32_t	maxlength = inlet_length?inlet_length:attr_table.LENGTHMASK;
+      <code.krate><![CDATA[uint32_t	maxlength = inlet_endpos?inlet_endpos:attr_table.LENGTHMASK;
 uint32_t	startpos = (inlet_startpos<maxlength)?inlet_startpos:maxlength;
 
 uint32_t base = (param_num*(maxlength-startpos))/param_den;

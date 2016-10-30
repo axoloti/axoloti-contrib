@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="play" uuid="71c4f3b4-7351-45b9-bb6f-80fdbba3f9a6">
+      <sDescription>Read from 4x8bit table (32bit)</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="pos" description="use looper/pos to drive this input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1" description="track 1 output"/>
+         <frac32buffer name="o2" description="track 2 output"/>
+         <frac32buffer name="o3" description="track 3 output"/>
+         <frac32buffer name="o4" description="track 4 output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table" description="32bit table in which 4 tracks are stored"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t bitmask1 = 0b11111111000000000000000000000000;
+uint32_t bitmask2 = 0b00000000111111110000000000000000;
+uint32_t bitmask3 = 0b00000000000000001111111100000000;
+uint32_t bitmask4 = 0b00000000000000000000000011111111;
+
+
+
+
+uint32_t var = 0;]]></code.declaration>
+      <code.srate><![CDATA[uint32_t pos = __USAT(inlet_pos, 28);
+if (pos>attr_table.LENGTH)
+pos = attr_table.LENGTH;
+
+int8_t temp1= (bitmask1&attr_table.array[pos])>>24;
+int8_t temp2= (bitmask2&attr_table.array[pos])>>16;
+int8_t temp3= (bitmask3&attr_table.array[pos])>>8;
+int8_t temp4= (bitmask4&attr_table.array[pos]);
+
+outlet_o1 = ((int32_t) temp1)<<20;
+outlet_o2 = ((int32_t) temp2)<<20;
+outlet_o3 = ((int32_t) temp3)<<20;
+outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
+   </obj.normal>
+</objdefs>
