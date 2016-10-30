@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="endpos bpm" uuid="c2556fbe-60a8-41f1-b280-90d645d4fb5c">
+      <sDescription>This object provides a length for the looper/pos object. Allows to use the looper in a kaoss pad / kaossilator fashion.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>4x8bit looper.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32 name="endpos" description="provides an endpos value for looper/pos object"/>
+      </outlets>
+      <displays>
+         <int32.label name="length" description="displays the length in seconds of the specified loop"/>
+         <bool32 name="warning" description="endpos exceeds the size of the table"/>
+      </displays>
+      <params>
+         <int32 name="quarters" description="length in quarters of the loop">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <int32 name="bpm" description="speed in bpm (coarse)">
+            <MinValue i="30"/>
+            <MaxValue i="300"/>
+         </int32>
+         <int32.mini name="fine" description="fine adjustement for bpm speed">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+      </params>
+      <attribs>
+         <objref name="table" description="32b table in which the 4 tracks are stored"/>
+      </attribs>
+      <code.krate><![CDATA[float endpos=288000000.0f*param_quarters/(100*param_bpm + param_fine); // f(bpm v, fcamp ^, nbeats ^)
+disp_length = endpos/48000.0f;
+if (endpos>attr_table.LENGTHMASK)
+disp_warning = 1;
+else
+disp_warning = 0;
+outlet_endpos = endpos;]]></code.krate>
+   </obj.normal>
+</objdefs>
