@@ -1,0 +1,365 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="28" y="14" text="POTs &amp; CV INs"/>
+   <comment type="patch/comment" x="28" y="28" text="spi config is included"/>
+   <obj type="euxo/1-0/potcv" uuid="e6798a45-31db-4671-b8c3-a41e09ac0afa" name="potcv_1" x="28" y="56">
+      <params/>
+      <attribs>
+         <text attributeName="script">
+            <sText><![CDATA[uint8_t *txbuf;
+uint8_t *rxbuf;
+int32_t *potBuf;
+int32_t *potBufOld;
+int32_t *cvBuf;
+int32_t *cvBufOld;
+
+int ptrig1 = 0;
+int ptrig2 = 0;
+
+uint8_t pin = 0;
+
+void setup(void){
+	static uint8_t _txbuf[6] __attribute__ ((section (".sram2")));
+	static uint8_t _rxbuf[6] __attribute__ ((section (".sram2")));
+	static int32_t _potBuf[8] __attribute__ ((section (".sram2")));
+	static int32_t _potBufOld[8] __attribute__ ((section (".sram2")));
+	static int32_t _cvBuf[8] __attribute__ ((section (".sram2")));
+	static int32_t _cvBufOld[8] __attribute__ ((section (".sram2")));
+	txbuf = _txbuf;
+	rxbuf = _rxbuf;
+	potBuf = _potBuf;
+	potBufOld = _potBufOld;
+	cvBuf = _cvBuf;
+	cvBufOld = _cvBufOld;
+
+	palSetPadMode(GPIOA,2,PAL_MODE_OUTPUT_PUSHPULL);
+	palWritePad(GPIOA,2,1);
+	palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
+	palWritePad(GPIOA,3,1);
+
+	// setup the pins
+	palSetPadMode(GPIOA, 4, PAL_MODE_OUTPUT_PUSHPULL);// NSS
+	palSetPadMode(GPIOA, 5, PAL_MODE_OUTPUT_PUSHPULL);// SCK
+	palSetPadMode(GPIOA, 7, PAL_MODE_OUTPUT_PUSHPULL);// MOSI
+	//palSetPadMode(GPIOA, 4, PAL_MODE_ALTERNATE(5));// NSS
+	palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(5));// SCK
+	palSetPadMode(GPIOA, 6, PAL_MODE_ALTERNATE(5));// MISO
+	palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5));// MOSI
+	static const SPIConfig spicfg = {NULL, GPIOA, 4, 0 | 0 | 0 | 6<<3 | SPI_CR1_LSBFIRST};
+	spiStart(&SPID1, &spicfg);
+}
+
+void loop(void){
+
+	// POT SECTION
+	txbuf[2] = 0b00000000;
+	txbuf[3] = 0b00000000;
+	txbuf[4] = 0b00000000;
+ 	txbuf[5] = 0b00000000;
+ 	
+    	for(int pin=0; pin<8; pin++){
+ 
+	        txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
+	 
+	        if (pin % 4 == 0) { // pin == 0 || pin == 4
+	            txbuf[1] = 0b00000000;
+	        } else if (pin % 4 == 1) { // pin == 1 || pin == 5
+	            txbuf[1] = 0b00000010;
+	        } else if (pin % 4 == 2) { // pin == 2 || pin == 6
+	            txbuf[1] = 0b00000001;
+	        } else {
+	            txbuf[1] = 0b00000011;
+	        }
+					
+		palWritePad(GPIOA,3,0); // enable pot read
+		spiSelect(&SPID1);		// START SPI
+		spiExchange(&SPID1,6,txbuf,rxbuf); // write/read at the same time
+		spiUnselect(&SPID1);	// SPI STOP
+		palWritePad(GPIOA,3,1); // disable pot read
+		
+		potBuf[pin] = (rxbuf[4]<<16 | rxbuf[3]<<8 | rxbuf[2]) << 8;
+	
+		if ((potBufOld[pin] != potBuf[pin])&(!ptrig1)) { 		
+			pot1 = potBuf[1];
+			pot2 = potBuf[0];
+			pot3 = potBuf[2];
+			pot4 = potBuf[3];
+			pot5 = potBuf[5];
+			pot6 = potBuf[7];
+			pot7 = potBuf[6];
+			pot8 = potBuf[4];
+
+			potBufOld[pin] = potBuf[pin];
+  			ptrig1 = 1;
+		}
+		else {
+  			ptrig1 = 0;
+		}
+		//chThdSleepMilliseconds(1);
+
+		//pot section
+		palWritePad(GPIOA,2,0); // enable cv read
+		spiSelect(&SPID1);		// START SPI
+		spiExchange(&SPID1,6,txbuf,rxbuf); // write/read at the same time
+		spiUnselect(&SPID1);	// SPI STOP
+		palWritePad(GPIOA,2,1); // disable cv read
+		
+		cvBuf[pin] = ((rxbuf[4]<<16 | rxbuf[3]<<8 | rxbuf[2]) << 8);
+
+		if ((cvBufOld[pin] != cvBuf[pin])&(!ptrig2)) { 		
+			cvin1 = 0x07FFFFFF -cvBuf[1];
+			cvin2 = cvBuf[0]-(1<<26)<<1;
+			cvin3 = cvBuf[2]-(1<<26)<<1;
+			cvin4 = cvBuf[3]-(1<<26)<<1;
+			cvin5 = cvBuf[5]-(1<<26)<<1;
+			cvin6 = cvBuf[7]-(1<<26)<<1;
+			cvin7 = cvBuf[6]-(1<<26)<<1;
+			cvin8 = cvBuf[4]-(1<<26)<<1;
+
+			cvBufOld[pin] = cvBuf[pin];
+  			ptrig2 = 1;
+		}
+		else {
+  			ptrig2 = 0;
+		}
+		chThdSleepMilliseconds(5);
+	}
+}]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p1" x="210" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p2" x="280" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p3" x="350" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p4" x="420" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p5" x="210" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p6" x="280" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p7" x="350" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="p8" x="420" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin1" x="210" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin2" x="280" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin3" x="350" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin4" x="420" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin5" x="210" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin6" x="280" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin7" x="350" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="cvin8" x="420" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="28" y="490" text="GATE INs"/>
+   <comment type="patch/comment" x="266" y="490" text="BUTTONs"/>
+   <comment type="patch/comment" x="434" y="490" text="LEDs"/>
+   <obj type="euxo/1-0/gatein1" uuid="e7558a55-31db-4671-b8c3-a41e98ac0afa" name="gatein1_1" x="28" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="126" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/button1" uuid="e7558a56-45db-4671-b343-a41e98ac0afa" name="button1_2" x="266" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="b1" x="364" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/led1" uuid="e6258a56-45db-4671-b143-a41e98ac0afa" name="led1_1" x="434" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/gatein2" uuid="e2558a55-31db-4671-b8c3-a41e09d560afa" name="gatein2_1" x="28" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_2" x="126" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/button2" uuid="e7558a55-45db-4671-b343-a41e98ac0afa" name="button2_2" x="266" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="b2" x="364" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/led2" uuid="e6258a36-45db-4671-b143-a41e98ac0afa" name="led2_1" x="434" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/button3" uuid="e7548a56-45db-4671-b343-a41e98ac0afa" name="button3_1" x="266" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="b3" x="364" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/led3" uuid="e6258a56-41db-4671-b143-a41e98ac0efa" name="led3_1" x="434" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/button4" uuid="e7258a56-45db-4671-b343-a41e98ac0afa" name="button4_1" x="266" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="b4" x="364" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="euxo/1-0/led4" uuid="e6258df6-45db-4671-b143-a41e98ac0afa" name="led4_1" x="434" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="potcv_1" outlet="pot1"/>
+         <dest obj="p1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot8"/>
+         <dest obj="p8" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot2"/>
+         <dest obj="p2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot3"/>
+         <dest obj="p3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot4"/>
+         <dest obj="p4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot5"/>
+         <dest obj="p5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot6"/>
+         <dest obj="p6" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="pot7"/>
+         <dest obj="p7" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gatein1_1" outlet="gate1"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gatein2_1" outlet="gate2"/>
+         <dest obj="bool_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button1_2" outlet="button1"/>
+         <dest obj="b1" inlet="in"/>
+         <dest obj="led1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button2_2" outlet="button2"/>
+         <dest obj="b2" inlet="in"/>
+         <dest obj="led2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button3_1" outlet="button3"/>
+         <dest obj="b3" inlet="in"/>
+         <dest obj="led3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button4_1" outlet="button4"/>
+         <dest obj="b4" inlet="in"/>
+         <dest obj="led4_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin1"/>
+         <dest obj="cvin1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin2"/>
+         <dest obj="cvin2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin3"/>
+         <dest obj="cvin3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin4"/>
+         <dest obj="cvin4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin5"/>
+         <dest obj="cvin5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin6"/>
+         <dest obj="cvin6" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin7"/>
+         <dest obj="cvin7" inlet="in"/>
+      </net>
+      <net>
+         <source obj="potcv_1" outlet="cvin8"/>
+         <dest obj="cvin8" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>967</x>
+      <y>23</y>
+      <width>890</width>
+      <height>871</height>
+   </windowPos>
+</patch-1.0>
