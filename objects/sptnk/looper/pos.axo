@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="pos" uuid="eff984cb-b1e3-4c54-8b10-ad5a55b937e9">
+      <sDescription>Phase generator for the loop recorder object. Essential to avoid horrible noises.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="play" description="set the object to play mode. When released, the phasor resets to 0"/>
+         <bool32 name="hold" description="set the object to pause mode"/>
+         <int32 name="length" description="last value of the table to read"/>
+         <int32 name="startpos" description="first value of the table to read"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="pos" description="pos signal generator for the rec object"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="num" description="numerator for a further subdivision of the loop interval">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="den" description="denominator for a further subdivision of the loop interval">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="mulstart" description="offsets the start position by a factor mulstart*num/den">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table" description="32b table in which the 4 tracks are stored"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t counter = 0;
+uint32_t maxlength = attr_table.LENGTH;
+
+bool play;
+bool hold;]]></code.declaration>
+      <code.krate><![CDATA[uint32_t	maxlength = inlet_length?inlet_length:attr_table.LENGTHMASK;
+uint32_t	startpos = (inlet_startpos<maxlength)?inlet_startpos:maxlength;
+
+uint32_t base = (param_num*(maxlength-startpos))/param_den;
+
+startpos= startpos + base*param_mulstart;
+maxlength = startpos + base;
+
+if (startpos>attr_table.LENGTHMASK)
+startpos =0;
+if (maxlength>attr_table.LENGTHMASK)
+maxlength = attr_table.LENGTHMASK;
+
+play = inlet_play;
+hold = inlet_hold;]]></code.krate>
+      <code.srate><![CDATA[if (play && !hold)
+counter++;
+else if (!play)
+counter = startpos;
+
+if (counter>maxlength)
+	counter = startpos;
+
+
+outlet_pos = counter;]]></code.srate>
+   </obj.normal>
+</objdefs>

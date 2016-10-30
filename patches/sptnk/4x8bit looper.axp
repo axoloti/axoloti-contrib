@@ -1,0 +1,437 @@
+<patch-1.0 appVersion="1.0.11">
+   <patchobj type="patch/object" uuid="de267983-1870-4ce1-8855-72b4e2d42912" name="object_1" x="336" y="0">
+      <params>
+         <int32 name="num" value="1"/>
+         <int32 name="den" value="32"/>
+         <int32 name="mulstart" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="alloc_1"/>
+      </attribs>
+      <object id="patch/object" uuid="de267983-1870-4ce1-8855-72b4e2d42912">
+         <inlets>
+            <bool32 name="play"/>
+            <bool32 name="hold"/>
+            <int32 name="length"/>
+            <int32 name="startpos"/>
+         </inlets>
+         <outlets>
+            <frac32buffer.positive name="pos"/>
+         </outlets>
+         <displays/>
+         <params>
+            <int32 name="num">
+               <MinValue i="1"/>
+               <MaxValue i="32"/>
+            </int32>
+            <int32 name="den">
+               <MinValue i="1"/>
+               <MaxValue i="32"/>
+            </int32>
+            <int32 name="mulstart">
+               <MinValue i="0"/>
+               <MaxValue i="31"/>
+            </int32>
+         </params>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[uint32_t counter = 0;
+uint32_t maxlength = attr_table.LENGTH;
+
+bool play;
+bool hold;]]></code.declaration>
+         <code.krate><![CDATA[uint32_t	maxlength = inlet_length?inlet_length:attr_table.LENGTHMASK;
+uint32_t	startpos = (inlet_startpos<maxlength)?inlet_startpos:maxlength;
+
+uint32_t base = (param_num*(maxlength-startpos))/param_den;
+
+startpos= startpos + base*param_mulstart;
+maxlength = startpos + base;
+
+if (startpos>attr_table.LENGTHMASK)
+startpos =0;
+if (maxlength>attr_table.LENGTHMASK)
+maxlength = attr_table.LENGTHMASK;
+
+play = inlet_play;
+hold = inlet_hold;]]></code.krate>
+         <code.srate><![CDATA[if (play && !hold)
+counter++;
+else if (!play)
+counter = startpos;
+
+if (counter>maxlength)
+	counter = startpos;
+
+
+outlet_pos = counter;]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="252" y="28">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="alloc_1" x="70" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_2" x="252" y="84">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="910" y="224" text="mix between 1 (looper)"/>
+   <comment type="patch/comment" x="910" y="238" text="and 2 (clean input)"/>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="140" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix" x="910" y="266">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1050" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/in right" uuid="5f35c9f87b3f291a8120a10db71935bebd186469" name="in_2" x="126" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="recording mode" x="378" y="322">
+      <params>
+         <int32.hradio name="value" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_3" x="42" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="cd099a21-3a34-424c-b04d-d52d6eb06d1b" name="rec8b__" x="42" y="448">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="alloc_1"/>
+      </attribs>
+      <object id="patch/object" uuid="cd099a21-3a34-424c-b04d-d52d6eb06d1b">
+         <sDescription>record audio into table, starting from position</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="w1"/>
+            <frac32buffer name="w2"/>
+            <frac32buffer name="w3"/>
+            <frac32buffer name="w4"/>
+            <frac32buffer.positive name="pos"/>
+            <int32.positive name="protect" description="protect bits"/>
+            <int32.positive name="mode"/>
+         </inlets>
+         <outlets/>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[uint32_t pos = 0;
+   
+uint32_t bitmask1 = 0b11111111000000000000000000000000;
+uint32_t bitmask2 = 0b00000000111111110000000000000000;
+uint32_t bitmask3 = 0b00000000000000001111111100000000;
+uint32_t bitmask4 = 0b00000000000000000000000011111111;
+
+int state = 0; // 0 = do nothing; 1 = erase;  2 = overwrite; 3 = overdub; 4 = halving overdub;]]></code.declaration>
+         <code.krate><![CDATA[uint32_t protected_bits = inlet_protect;
+
+state = inlet_mode; //0= idle; 1=overwrite; 2=overdub; 3= halving overdub]]></code.krate>
+         <code.srate><![CDATA[uint32_t pos = __USAT(inlet_pos, 28);
+
+if (pos>attr_table.LENGTH)
+pos = attr_table.LENGTH;
+uint32_t table_pos = attr_table.array[pos];
+
+uint32_t input = ((__SSAT(inlet_w1>>1,27)<<5)&bitmask1) | ((__SSAT(inlet_w2>>1,27)>>3)&bitmask2) | ((__SSAT(inlet_w3>>1,27)>>11)&bitmask3) | ((__SSAT(inlet_w4>>1,27)>>19)&bitmask4);
+uint32_t temp_out;
+
+switch (state)
+{
+	case 1: temp_out = 0; break; //erasing table
+	case 2: temp_out = input; break; //overwriting table 
+	case 3: temp_out = __SADD8(table_pos,input); break; //overdubbing table
+	case 4: temp_out = __SHADD8(table_pos,input); break; // halving overdub
+	default: temp_out = table_pos;  break; //idle, do nothing
+}
+
+attr_table.array[pos] = (temp_out & (~protected_bits)) |(table_pos & protected_bits);]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_3" x="350" y="462">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="d0eecf9a-dc3c-4029-a3de-b32b8977943c" name="object_2" x="504" y="476">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="d0eecf9a-dc3c-4029-a3de-b32b8977943c">
+         <sDescription></sDescription>
+         <inlets>
+            <bool32 name="i1"/>
+            <bool32 name="i2"/>
+            <bool32 name="i3"/>
+            <bool32 name="i4"/>
+         </inlets>
+         <outlets>
+            <int32 name="protect"/>
+         </outlets>
+         <displays>
+            <bool32 name="d1"/>
+            <bool32 name="d2"/>
+            <bool32 name="d3"/>
+            <bool32 name="d4"/>
+         </displays>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint32_t bitmask1 = 0b11111111000000000000000000000000;
+uint32_t bitmask2 = 0b00000000111111110000000000000000;
+uint32_t bitmask3 = 0b00000000000000001111111100000000;
+uint32_t bitmask4 = 0b00000000000000000000000011111111;]]></code.declaration>
+         <code.krate><![CDATA[if (inlet_i1)
+disp_d1 = 1;
+else
+disp_d1 = 0; 
+if (inlet_i2)
+disp_d2 = 1;
+else
+disp_d2 = 0; 
+if (inlet_i3)
+disp_d3 = 1;
+else
+disp_d3 = 0; 
+if (inlet_i4)
+disp_d4 = 1;
+else
+disp_d4 = 0; 
+
+outlet_protect = ((inlet_i1)?bitmask1:0)|((inlet_i2)?bitmask2:0)|((inlet_i3)?bitmask3:0)|((inlet_i4)?bitmask4:0);]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_4" x="350" y="518">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="qweqweqweqweqweqweqwe_" x="714" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_5" x="350" y="574">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_4" x="56" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_6" x="350" y="630">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="42" y="686" text="you can see the cpu consumption is somewhat limited"/>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_2" x="42" y="700">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="112" y="700">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="336" y="714">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="336" y="756" text="table read object"/>
+   <patchobj type="patch/object" uuid="be18b168-d1a0-4c2a-a800-241bf1521382" name="read 8b" x="336" y="770">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="alloc_1"/>
+      </attribs>
+      <object id="patch/object" uuid="be18b168-d1a0-4c2a-a800-241bf1521382">
+         <sDescription>read from table as 8 bit packets, nearest neighbour</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="pos" description="index in fraction of table size"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="o1"/>
+            <frac32buffer name="o2"/>
+            <frac32buffer name="o3"/>
+            <frac32buffer name="o4"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[uint32_t bitmask1 = 0b11111111000000000000000000000000;
+uint32_t bitmask2 = 0b00000000111111110000000000000000;
+uint32_t bitmask3 = 0b00000000000000001111111100000000;
+uint32_t bitmask4 = 0b00000000000000000000000011111111;
+
+
+
+
+uint32_t var = 0;]]></code.declaration>
+         <code.srate><![CDATA[uint32_t pos = __USAT(inlet_pos, 28);
+if (pos>attr_table.LENGTH)
+pos = attr_table.LENGTH;
+
+int8_t temp1= (bitmask1&attr_table.array[pos])>>24;
+int8_t temp2= (bitmask2&attr_table.array[pos])>>16;
+int8_t temp3= (bitmask3&attr_table.array[pos])>>8;
+int8_t temp4= (bitmask4&attr_table.array[pos]);
+
+outlet_o1 = ((int32_t) temp1)<<20;
+outlet_o2 = ((int32_t) temp2)<<20;
+outlet_o3 = ((int32_t) temp3)<<20;
+outlet_o4 = ((int32_t) temp4)<<20;]]></code.srate>
+      </object>
+   </patchobj>
+   <comment type="patch/comment" x="560" y="868" text="you can see the cpu consumption is somewhat limited"/>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="560" y="882">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="630" y="882">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="336" y="910">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_1" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="read 8b" outlet="o2"/>
+         <dest obj="mix" inlet="r1"/>
+      </net>
+      <net>
+         <source obj="read 8b" outlet="o1"/>
+         <dest obj="mix" inlet="l1"/>
+      </net>
+      <net>
+         <source obj="in_2" outlet="wave"/>
+         <dest obj="mix" inlet="r2"/>
+         <dest obj="rec8b__" inlet="w2"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="mix" inlet="l2"/>
+         <dest obj="rec8b__" inlet="w1"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="pos"/>
+         <dest obj="read 8b" inlet="pos"/>
+         <dest obj="rec8b__" inlet="pos"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="object_1" inlet="play"/>
+      </net>
+      <net>
+         <source obj="toggle_2" outlet="o"/>
+         <dest obj="object_1" inlet="hold"/>
+      </net>
+      <net>
+         <source obj="mix" outlet="L"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="mix" outlet="R"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="recording mode" outlet="out"/>
+         <dest obj="rec8b__" inlet="mode"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_4" outlet="t"/>
+         <dest obj="-_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_3" outlet="t"/>
+         <dest obj="-_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_2" outlet="out"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="toggle_6" outlet="o"/>
+         <dest obj="object_2" inlet="i4"/>
+      </net>
+      <net>
+         <source obj="toggle_5" outlet="o"/>
+         <dest obj="object_2" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="toggle_4" outlet="o"/>
+         <dest obj="object_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="toggle_3" outlet="o"/>
+         <dest obj="object_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="object_2" outlet="protect"/>
+         <dest obj="rec8b__" inlet="protect"/>
+         <dest obj="qweqweqweqweqweqweqwe_" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>0</y>
+      <width>1378</width>
+      <height>780</height>
+   </windowPos>
+</patch-1.0>
