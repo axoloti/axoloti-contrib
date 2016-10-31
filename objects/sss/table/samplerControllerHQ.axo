@@ -1,0 +1,257 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="samplerControllerHQ" uuid="336977de-fad8-4ab5-ad14-e56bd9366dc9">
+      <sDescription>controller for the samplePlayerHQ.
+-Use a table-allocation and tablesave module to save your settings!! You&apos;ll need a tablesize of 4096!!
+-set the samplelength to the same size as you&apos;ve set in the &quot;tablecreator&quot; patch when creating the table! 
+
+-the first two presets cannot be randomised, these should be seen as your &quot;fixed&quot; settings. I&apos;m using these for bassdrum (preset 0) and snare (preset 1). This way you can randomise the settings, while making sure the basic beat won&apos;t be changed too much.
+
+-connect the &quot;preset&quot; input to:
+	-midi2cv module
+	-sequencer
+	-pattern generator
+	-random generator
+
+-to manually edit a preset:
+-press &quot;intExt&quot; to use the selected preset and be able to hear it play (otherwise it will use the preset-input)
+-set the parameters for this preset and then go over to the next one</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="preset"/>
+         <bool32 name="rndAll"/>
+      </inlets>
+      <outlets>
+         <int32 name="startsample"/>
+         <frac32 name="startpitch"/>
+         <frac32 name="startStrt"/>
+         <frac32 name="startEnd"/>
+         <frac32 name="SLpitch"/>
+         <int32 name="loopsample"/>
+         <frac32 name="looppitch"/>
+         <frac32 name="loopStrt"/>
+         <frac32 name="loopEnd"/>
+         <int32 name="loopmode"/>
+         <frac32 name="LEpitch"/>
+         <int32 name="endsample"/>
+         <frac32 name="endpitch"/>
+         <frac32 name="endStrt"/>
+         <frac32 name="endEnd"/>
+         <int32 name="samplelength"/>
+      </outlets>
+      <displays>
+         <int8array128.vbar name="sample" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="128"/>
+         </int32>
+         <bool32.tgl name="intExt"/>
+         <int32 name="startsample">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <frac32.s.map name="startpitch"/>
+         <frac32.u.map name="startStrt"/>
+         <frac32.u.map name="startEnd"/>
+         <frac32.s.map name="SLpitch"/>
+         <int32 name="loopsample">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <frac32.s.map name="looppitch"/>
+         <frac32.u.map name="loopStrt"/>
+         <frac32.u.map name="loopEnd"/>
+         <int32.hradio name="loopmode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.s.map name="LEpitch"/>
+         <int32 name="endsample">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <frac32.s.map name="endpitch"/>
+         <frac32.u.map name="endStrt"/>
+         <frac32.u.map name="endEnd"/>
+         <int32 name="samplelength">
+            <MinValue i="12"/>
+            <MaxValue i="20"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="settings"/>
+         <objref name="samples"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int j;
+int32_t sum[128];
+int gtrig;
+int generate;
+int32_t prevSS;
+int32_t prevLS;
+int32_t prevES;
+int prevpreset;
+int sample;
+int pos1;
+int pos2;
+int rtrig;]]></code.declaration>
+      <code.krate><![CDATA[int32_t preset;
+preset=param_preset<<4;
+
+if(!(prevpreset==preset)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startsample],attr_settings.array[preset],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startpitch],attr_settings.array[preset+1],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startStrt],attr_settings.array[preset+2],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startEnd],attr_settings.array[preset+3],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_loopsample],attr_settings.array[preset+4],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_looppitch],attr_settings.array[preset+5],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_loopStrt],attr_settings.array[preset+6],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_loopEnd],attr_settings.array[preset+7],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_loopmode],attr_settings.array[preset+8],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_samplelength],attr_settings.array[preset+9],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endsample],attr_settings.array[preset+10],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endpitch],attr_settings.array[preset+11],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endStrt],attr_settings.array[preset+12],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endEnd],attr_settings.array[preset+13],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_SLpitch],attr_settings.array[preset+14],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_LEpitch],attr_settings.array[preset+15],0xFFFD);
+}
+
+if(!(attr_settings.array[0]==param_startsample)){
+attr_settings.array[preset]=param_startsample;}
+if(!(attr_settings.array[1+preset]==param_startpitch)){
+attr_settings.array[1+preset]=param_startpitch;}
+if(!(attr_settings.array[2+preset]==param_startStrt)){
+attr_settings.array[2+preset]=param_startStrt;}
+if(!(attr_settings.array[3+preset]==param_startEnd)){
+attr_settings.array[3+preset]=param_startEnd;}
+if(!(attr_settings.array[4+preset]==param_loopsample)){
+attr_settings.array[4+preset]=param_loopsample;}
+if(!(attr_settings.array[5+preset]==param_looppitch)){
+attr_settings.array[5+preset]=param_looppitch;}
+if(!(attr_settings.array[6+preset]==param_loopStrt)){
+attr_settings.array[6+preset]=param_loopStrt;}
+if(!(attr_settings.array[7+preset]==param_loopEnd)){
+attr_settings.array[7+preset]=param_loopEnd;}
+if(!(attr_settings.array[8+preset]==param_loopmode)){
+attr_settings.array[8+preset]=param_loopmode;}
+if(!(attr_settings.array[9+preset]==param_samplelength)){
+attr_settings.array[9+preset]=param_samplelength;}
+if(!(attr_settings.array[10+preset]==param_endsample)){
+attr_settings.array[10+preset]=param_endsample;}
+if(!(attr_settings.array[11+preset]==param_endpitch)){
+attr_settings.array[11+preset]=param_endpitch;}
+if(!(attr_settings.array[12+preset]==param_endStrt)){
+attr_settings.array[12+preset]=param_endStrt;}
+if(!(attr_settings.array[13+preset]==param_endEnd)){
+attr_settings.array[13+preset]=param_endEnd;}
+if(!(attr_settings.array[14+preset]==param_SLpitch)){
+attr_settings.array[14+preset]=param_SLpitch;}
+if(!(attr_settings.array[15+preset]==param_LEpitch)){
+attr_settings.array[15+preset]=param_LEpitch;}
+int Preset;
+if(param_intExt==0)
+{Preset=inlet_preset<<4;}
+else {Preset=param_preset<<4;}
+
+
+if((inlet_rndAll>0)&&!rtrig){
+	rtrig=1;
+	for(i=2;i<128;i++){
+		int j=i<<4;
+attr_settings.array[j] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),127);
+attr_settings.array[j+1] = ___SMMUL((int32_t)(GenerateRandomNumber()),1<<27);
+attr_settings.array[j+2] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+3] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+4] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),127);
+attr_settings.array[j+5] = ___SMMUL((int32_t)(GenerateRandomNumber()),1<<27);
+attr_settings.array[j+6] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+7] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+8] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),8);
+attr_settings.array[j+9] = param_samplelength;
+attr_settings.array[j+10] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),127);
+attr_settings.array[j+11] = ___SMMUL((int32_t)(GenerateRandomNumber()),1<<27);
+attr_settings.array[j+12] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+13] = ___SMMUL((uint32_t)(GenerateRandomNumber()>>1),1<<27);
+attr_settings.array[j+14] = ___SMMUL((int32_t)(GenerateRandomNumber()),1<<27);
+attr_settings.array[j+15] = ___SMMUL((int32_t)(GenerateRandomNumber()),1<<27);
+}}
+else if(inlet_rndAll==0){rtrig=0;}
+
+
+
+outlet_startsample=attr_settings.array[Preset];
+outlet_startpitch=attr_settings.array[1+Preset];
+outlet_startStrt=attr_settings.array[2+Preset];
+outlet_startEnd=attr_settings.array[3+Preset];
+outlet_loopsample=attr_settings.array[4+Preset];
+outlet_looppitch=attr_settings.array[5+Preset];
+outlet_loopStrt=attr_settings.array[6+Preset];
+outlet_loopEnd=attr_settings.array[7+Preset];
+outlet_loopmode=attr_settings.array[8+Preset];
+outlet_samplelength=attr_settings.array[9+Preset];
+outlet_endsample=attr_settings.array[10+Preset];
+outlet_endpitch=attr_settings.array[11+Preset];
+outlet_endStrt=attr_settings.array[12+Preset];
+outlet_endEnd=attr_settings.array[13+Preset];
+outlet_SLpitch=attr_settings.array[14+Preset];
+outlet_LEpitch=attr_settings.array[15+Preset];
+
+
+int32_t samplelength=1<<param_samplelength;
+int32_t samplemask=1<<(param_samplelength-7);
+int32_t totalcount=128;
+int32_t start=___SMMUL(param_startStrt<<2,totalcount<<3);
+int32_t stend=___SMMUL(param_startEnd<<2,totalcount<<3);
+int32_t enstart=___SMMUL(param_endStrt<<2,totalcount<<3);
+int32_t end=___SMMUL(param_endEnd<<2,totalcount<<3);
+int32_t loopstart=___SMMUL(param_loopStrt<<2,totalcount<<3);
+int32_t loopend=___SMMUL(param_loopEnd<<2,totalcount<<3);
+generate=0;
+if(!(param_startsample+start+stend==prevSS)){
+	sample=param_startsample;
+	generate=1;
+	pos1=start;
+	pos2=stend;
+}
+if(!(param_loopsample+loopstart+loopend==prevLS)){
+	sample=param_loopsample;
+	generate=1;
+	pos1=loopstart;
+	pos2=loopend;
+}
+if(!(param_endsample+enstart+end==prevES)){
+	sample=param_endsample;
+	generate=1;
+	pos1=enstart;
+	pos2=end;
+}
+
+if((generate>0)&&!gtrig){
+gtrig=1;	
+for(i=0;i<128;i++){
+	sum[i]=0;}
+
+for(i=0;i<128;i++){
+	int32_t Sum=0;
+for(j=0;j<samplemask;j++){	
+	int32_t temp=((attr_samples.array[(j+i*samplemask)+sample*samplelength])<<attr_samples.GAIN)>>12;
+	int32_t tamp=temp;
+	temp=temp>0?temp:-temp;
+	sum[i]=temp>Sum?tamp:sum[i];
+	Sum=temp>Sum?temp:Sum;
+}}
+sum[pos1]=((1<<27)-1)>>8;
+sum[pos2]=-((1<<27)-1)>>8;
+}
+else if(generate==0){gtrig=0;}
+for(i=0;i<128;i++){
+disp_sample[i]=sum[i]>>13;}
+
+prevSS=param_startsample+start+stend;
+prevLS=param_loopsample+loopstart+loopend;
+prevES=param_endsample+enstart+end;
+prevpreset=preset;]]></code.krate>
+   </obj.normal>
+</objdefs>
