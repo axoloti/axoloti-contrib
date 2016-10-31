@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.10">
-   <obj.normal id="rndPatt" uuid="8139b931-84bc-46b3-9f19-790c0016121e">
+   <obj.normal id="rndPatt" uuid="0b4b247e-7f3f-4cfc-856f-5ab01a4515c0">
       <sDescription>random generated pattern
 each time a trigger is received, positions of the pattern will be randomised or not, depending on the change parameter (in percentage, so 100 is randomising the whole pattern when triggered).
 
@@ -14,14 +14,15 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
-         <bool32.rising name="rnd" description="trigger"/>
+         <bool32.rising name="rndi" description="trigger"/>
          <int32 name="count"/>
          <int32 name="length"/>
          <int32 name="chance"/>
+         <frac32 name="part"/>
       </inlets>
       <outlets>
          <int32.positive name="v"/>
-         <bool32.pulse name="rnd"/>
+         <bool32.pulse name="rndo"/>
       </outlets>
       <displays/>
       <params>
@@ -29,7 +30,7 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
             <MinValue i="0"/>
             <MaxValue i="65536"/>
          </int32>
-         <frac32.u.map name="length"/>
+         <frac32.u.map name="part"/>
          <bool32.mom name="rnd"/>
          <int32 name="chance">
             <MinValue i="0"/>
@@ -51,10 +52,10 @@ ntrig = 0;
       <code.krate><![CDATA[int chance=param_chance+inlet_chance;
 chance=chance<0?0:chance;
 chance=chance>100?100:chance;
-int trig=inlet_rnd+param_rnd;
+int trig=inlet_rndi+param_rnd;
 if(inlet_length>0){
-length=___SMMUL(param_length<<3,inlet_length<<2);}
-else length=param_length>>21;
+length=___SMMUL((param_part+inlet_part)<<3,inlet_length<<2);}
+else length=param_part>>21;
 int TRIG=0;
    if ((trig>0) && !ntrig) {
    	TRIG=1;
@@ -73,6 +74,6 @@ if(on>0){
 }
 
 on=0;
-outlet_rnd=TRIG;]]></code.krate>
+outlet_rndo=TRIG;]]></code.krate>
    </obj.normal>
 </objdefs>

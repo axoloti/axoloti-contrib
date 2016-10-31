@@ -151,7 +151,7 @@ prev=update;
    </obj>
    <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="868" y="294">
       <params>
-         <frac32.u.map name="gain1" value="0.13999999999999996"/>
+         <frac32.u.map name="gain1" value="0.1399998664855957"/>
       </params>
       <attribs/>
    </obj>
