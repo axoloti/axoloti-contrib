@@ -1,0 +1,160 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="DR1" uuid="8002cb5c-df61-4ec8-9aad-5aec307ffed4">
+      <sDescription>drum synthesizer with an extra wavetable shaper to add higher harmonics to the sine-base.
+Uses wavetables made with the wavetable creator &quot;Creator&quot; (1024 waves of 1024 samples long each)
+Seperate envelopes for pitch, volume and noise levels.
+Volume envelope can be fed to the end-LP filter (E2C knob)
+Noise part has it&apos;s own SVF filter with cutoff, resonance and selectable mode(LP,HP,BP,NOTCH)
+Best to trigger this with a trigger instead of a gate.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+         <frac32 name="env"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="hold">
+            <MinValue i="1"/>
+            <MaxValue i="500"/>
+         </int32>
+         <frac32.s.map.kdecaytime.exp name="Vdec"/>
+         <frac32.s.map.kdecaytime.exp name="Pdec"/>
+         <frac32.s.map.kdecaytime.exp name="Ndec"/>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Pamt"/>
+         <frac32.s.map name="E2C"/>
+         <frac32.u.map name="sineLvl"/>
+         <frac32.s.map name="waveLvl"/>
+         <frac32.u.map name="noiseLvl"/>
+         <frac32.s.map.pitch name="cut"/>
+         <frac32.u.map.filterq name="reso"/>
+         <int32.hradio name="mode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="wave">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="octave">
+            <MinValue i="-4"/>
+            <MaxValue i="4"/>
+         </int32>
+         <frac32.s.map name="start"/>
+         <frac32.u.map name="gain"/>
+         <frac32.s.map.pitch name="LP"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+int32_t sine;
+int32_t read;
+uint32_t Penv;
+uint32_t Venv;
+uint32_t Nenv;
+int gtrig;
+int Gtrig;
+int32_t noise;
+int32_t val;
+int32_t table;
+int32_t preset;
+int32_t count;
+
+int32_t low;
+int32_t band;]]></code.declaration>
+      <code.init><![CDATA[low = 0;
+band = 0;
+]]></code.init>
+      <code.krate><![CDATA[if(count>=param_hold){
+Penv=___SMMUL(Penv,param_Pdec)<<1;
+Venv=___SMMUL(Venv,param_Vdec)<<1;
+Nenv=___SMMUL(Nenv,param_Ndec)<<1;}
+
+if((inlet_trig>0)&&!gtrig){
+	
+	gtrig=1;
+	Penv=(1<<27);
+	Venv=(1<<27);
+	Nenv=(1<<27);
+	count=0;
+}
+else if(inlet_trig==0){gtrig=0;}
+
+count+=1;
+count=count>param_hold?param_hold:count;
+
+
+
+int32_t PENV=Penv;
+//___SMMUL(Penv<<3,Penv<<2);
+PENV=___SMMUL(PENV<<3,PENV<<2);
+
+int32_t VENV=Venv;
+VENV=___SMMUL(VENV<<3,VENV<<2);
+VENV+=___SMMUL(param_gain<<2,VENV<<3)*3;
+
+
+int32_t NENV=___SMMUL(Nenv<<3,Nenv<<2);
+NENV=___SMMUL(NENV<<3,NENV<<2);
+NENV=___SMMUL(NENV<<3,param_noiseLvl<<2);
+
+int32_t freq;
+MTOFEXTENDED(param_pitch+___SMMUL(param_Pamt<<3,PENV<<2),freq)
+
+int32_t damp = (0x80<<24) - (param_reso<<4);
+damp = ___SMMUL(damp,damp);
+int32_t alpha;
+int32_t fraq;
+MTOFEXTENDED(param_cut,alpha);
+SINE2TINTERP(alpha,fraq);
+
+
+
+int32_t cut;
+MTOF(param_LP+___SMMUL(param_E2C<<3,VENV<<2),cut)
+preset=param_wave<<10;
+outlet_env=Penv;]]></code.krate>
+      <code.srate><![CDATA[if((inlet_trig>0)&&!Gtrig){
+	Gtrig=1;
+	phase=0;
+}
+else if(inlet_trig==0){Gtrig=0;}
+
+noise=(int32_t)(GenerateRandomNumber())>>5;
+
+
+
+int32_t notch = (noise) - (___SMMUL(damp,band)<<1);
+low = low + (___SMMUL(fraq,band)<<1);
+int32_t high  = notch - low;
+band = (___SMMUL(fraq,high)<<1) + band;
+int32_t out;
+   switch(param_mode>0?param_mode:0){
+      case 0: out=low;break;
+      case 1: out=high;break;
+      case 2: out=band;break;
+      case 3: out=notch;break;
+      default: out=low;break;
+}
+
+noise = out<<4;
+
+
+phase+=freq;
+
+table=___SMMUL(attr_table.array[((((phase+(param_start<<5))>>22-param_octave)&1023)+preset)&attr_table.LENGTHMASK]<<3,param_waveLvl<<2);
+SINE2TINTERP(phase,sine)
+
+int32_t wave;
+wave= __SSAT(___SMMUL(___SMMUL(sine>>2,param_sineLvl<<2)+(___SMMUL(noise>>2,NENV<<2)+table)<<2,VENV<<2)<<1,27);
+
+val=___SMMLA((wave-val)<<1,cut,val);
+
+outlet_out=val;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
