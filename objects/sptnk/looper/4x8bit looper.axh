@@ -39,8 +39,8 @@
    </obj>
    <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix" x="980" y="56">
       <params>
-         <frac32.u.map name="gain1" value="0.0"/>
-         <frac32.u.map name="gain2" value="64.0"/>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -75,7 +75,7 @@
    <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix_" x="980" y="224">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="23.5"/>
+         <frac32.u.map name="gain2" value="37.5"/>
       </params>
       <attribs/>
    </obj>
@@ -128,81 +128,11 @@
       <params/>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="9da20af5-779f-4669-bc6f-30d43c9ea90e" name="object_1" x="910" y="420">
-      <params>
-         <bool32.tgl name="use4ppq" value="0"/>
-         <frac32.u.map name="decay" value="13.5"/>
-         <frac32.u.map name="pitch1" value="7.5"/>
-         <frac32.u.map name="pitch2" value="6.5"/>
-      </params>
+   <comment type="patch/comment" x="980" y="378" text="mix with the click track"/>
+   <obj type="sptnk/sequencer/24ppq2click" uuid="4d377328-a4b6-4296-8994-9fb0bd32cf8a" name="24ppq2click_1" x="952" y="406">
+      <params/>
       <attribs/>
-      <object id="patch/object" uuid="9da20af5-779f-4669-bc6f-30d43c9ea90e">
-         <sDescription>Metronome</sDescription>
-         <author>Sputnki</author>
-         <license>BSD</license>
-         <inlets>
-            <int32 name="4ppq"/>
-            <int32 name="24ppq"/>
-         </inlets>
-         <outlets>
-            <frac32buffer name="o"/>
-         </outlets>
-         <displays/>
-         <params>
-            <bool32.tgl name="use4ppq" description="choose between 24ppq and 4ppq inlet"/>
-            <frac32.u.map name="decay"/>
-            <frac32.u.map name="pitch1"/>
-            <frac32.u.map name="pitch2"/>
-         </params>
-         <attribs/>
-         <includes/>
-         <code.declaration><![CDATA[bool ptrig = 0;
-
-int32_t phasor1=0;
-int32_t phasor2=0;
-int32_t ramp = 0;
-int stage = 0 ;]]></code.declaration>
-         <code.krate><![CDATA[int factor = 24;
-int ppq = inlet_24ppq;
-
-if (param_use4ppq)
-{
-	factor = 4;
-	ppq = inlet_4ppq;
-}
-
-int32_t factor4 = factor<<2;
-
-if (factor4*(ppq/(factor4)) == ppq && !ptrig)
-{
-	ptrig = 1;
-	stage = 1;
-	ramp = 1<<27;
-}
-else if (factor*(ppq/factor) == ppq && !ptrig)
-{
-	ptrig = 1;
-	stage = 2;
-	ramp = 1<<27;
-}
-else if (!      ((factor*(ppq/factor))== ppq)      )
-	ptrig = 0;
-
-
-if (stage);
-	ramp-=(1<<21)-(param_decay>>6);
-
-if (ramp<0)
-{
-	ramp = 0;
-	stage = 0;
-}]]></code.krate>
-         <code.srate><![CDATA[phasor1+= param_pitch1+(1<<25);
-phasor2+= param_pitch2+(1<<24);
-
-outlet_o = ___SMMUL(ramp,stage==0?0:(stage==1?phasor1:phasor2));]]></code.srate>
-      </object>
-   </patchobj>
+   </obj>
    <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="840" y="476">
       <params/>
       <attribs/>
@@ -311,17 +241,11 @@ outlet_o = ___SMMUL(ramp,stage==0?0:(stage==1?phasor1:phasor2));]]></code.srate>
       <net>
          <source obj="pos2ppq_1" outlet="pos24ppq"/>
          <dest obj="i_2" inlet="in"/>
-         <dest obj="object_1" inlet="24ppq"/>
+         <dest obj="24ppq2click_1" inlet="24ppq"/>
       </net>
       <net>
          <source obj="pos2ppq_1" outlet="pos4ppq"/>
          <dest obj="i_1" inlet="in"/>
-         <dest obj="object_1" inlet="4ppq"/>
-      </net>
-      <net>
-         <source obj="object_1" outlet="o"/>
-         <dest obj="mix_" inlet="l2"/>
-         <dest obj="mix_" inlet="r2"/>
       </net>
       <net>
          <source obj="mix_" outlet="L"/>
@@ -330,6 +254,11 @@ outlet_o = ___SMMUL(ramp,stage==0?0:(stage==1?phasor1:phasor2));]]></code.srate>
       <net>
          <source obj="mix_" outlet="R"/>
          <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="24ppq2click_1" outlet="o"/>
+         <dest obj="mix_" inlet="l2"/>
+         <dest obj="mix_" inlet="r2"/>
       </net>
    </nets>
    <settings>
