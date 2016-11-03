@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="guitarTable" uuid="604ffd3d-6c37-46b2-be43-00dc7350f69e">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="guitarTable" uuid="b60b01b3-ce35-4b52-9152-f12bf0cb8ec5">
       <sDescription>this module is used to create a monophonic table for the guitarOscillator, so it can be used in a polyphonic setting (each oscillator reads from the same table, so the table itself doesn&apos;t have to be polyphonic). This was needed as otherwise each voice would create it&apos;s own table, filling up the available memory really quickly!
 
 &quot;fixed&quot; controls, even though you could change them live, this will create a harsh bleep as it has to recalculate the waveform.
@@ -17,6 +17,10 @@
       <displays/>
       <params>
          <int32 name="damp">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="minDiv">
             <MinValue i="1"/>
             <MaxValue i="16"/>
          </int32>
@@ -35,15 +39,10 @@
          <frac32.u.map name="position"/>
          <frac32.u.map name="strike"/>
       </params>
-      <attribs/>
-      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 11;
-static const uint32_t LENGTH = 2048;
-static const uint32_t LENGTHMASK = 2047;
-static const uint32_t BITS = 32;
-static const uint32_t GAIN = 0;
-int32_t *array;
-
-
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[
 uint32_t phase;
 int i;
 int j;
@@ -60,31 +59,21 @@ int32_t start;
 float32_t A;
 float32_t B;
 uint32_t PM;]]></code.declaration>
-      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
-array = &_array[0];
-
-{ 
-
-}
-
-	phase=0;
-
-for(i;i<2048;i++){array[i]=0;}]]></code.init>
-      <code.krate><![CDATA[int32_t update=param_position+param_strike+param_damp+param_harmonics+param_jump+param_max;
+      <code.krate><![CDATA[int32_t update=param_position+param_strike+param_damp+param_harmonics+param_jump+param_max+param_minDiv;
 
 
 if((!(prev==(update)))&&!create)
 	{create=1;
 	Pos=param_position;
 	start=param_strike;
-	for(i=0;i<2048;i++){array[i]=0;}
+	for(i=0;i<attr_table.LENGTH;i++){attr_table.array[i]=0;}
 	for(j=0;j<param_harmonics;j++){
 		k=(j*param_jump-(j*param_jump/param_max)*param_max);
 		position=((j+1)*Pos<<4);
 		SINE2TINTERP(position,posWidth)
-		for(i=0;i<2048;i++){
-			SINE2TINTERP((i<<21)*(k+1)-(start<<3)*(k+1),r)
-			array[i]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
+		for(i=0;i<attr_table.LENGTH;i++){
+			SINE2TINTERP((i<<32-attr_table.LENGTHPOW)/param_minDiv*(k+param_minDiv)-(start<<3)*(k+param_minDiv),r)
+			attr_table.array[i]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
 			}
 		}
 	}
