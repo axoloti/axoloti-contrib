@@ -71,7 +71,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mux/mux 12 i" uuid="6e403950911f9b2d8087ef46ad752d52ff1b8ce1" name="mux_2" x="532" y="224">
+   <obj type="drj/mux/mux 12" uuid="f548c23eb95fa96cfa963baaadac300608530430" name="mux_2" x="532" y="224">
       <params/>
       <attribs/>
    </obj>

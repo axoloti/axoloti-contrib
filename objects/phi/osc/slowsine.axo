@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="slowsine" uuid="56ee923d-906e-4f10-bfc3-b87930a7317d">
+      <sDescription>sine wave oscillator</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+         <int32.positive name="oct"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32.hradio name="oct">
+            <MaxValue i="8"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);]]></code.krate>
+      <code.srate><![CDATA[Phase += (freq + inlet_freq)>> (param_oct+inlet_oct);
+int32_t r;
+int32_t p2 = Phase + (inlet_phase<<param_oct);
+SINE2TINTERP(p2,r)
+outlet_wave= (r>>4);]]></code.srate>
+   </obj.normal>
+</objdefs>
