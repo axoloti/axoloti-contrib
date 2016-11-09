@@ -98,7 +98,7 @@ int32_t sine[4];
 int32_t M[4];
 int32_t D[4];
 float32_t O[4];
-int32_t P[4];
+int32_t p[4];
 int S[4];
 int ttrig;
 int32_t count;
@@ -129,10 +129,10 @@ O[1]=param_o2+inlet_o2>0?(1<<param_o2+inlet_o2):((float32_t)(1))/((float32_t)(1<
 O[2]=param_o3+inlet_o3>0?(1<<param_o3+inlet_o3):((float32_t)(1))/((float32_t)(1<<-(param_o3+inlet_o3)));
 O[3]=param_o4+inlet_o4>0?(1<<param_o4+inlet_o4):((float32_t)(1))/((float32_t)(1<<-(param_o4+inlet_o4)));
 
-P[0]=inlet_p1+param_p1;
-P[1]=inlet_p2+param_p2;
-P[2]=inlet_p3+param_p3;
-P[3]=inlet_p4+param_p4;
+p[0]=inlet_p1+param_p1;
+p[1]=inlet_p2+param_p2;
+p[2]=inlet_p3+param_p3;
+p[3]=inlet_p4+param_p4;
 
 S[0]=param_s1;
 S[1]=param_s2;
@@ -141,8 +141,8 @@ S[3]=param_s4;
 for(i=0;i<4;i++){
 Phase[i] += (((int32_t)((rate*M[i]/D[i])*O[i])));
 if(S[i]>0){
-SINE2TINTERP(Phase[i]+(P[i]<<4),sine[i])}
-else {tri(Phase[i],i);}
+SINE2TINTERP(Phase[i]+(p[i]<<4),sine[i])}
+else {tri(Phase[i]+(p[i]<<4),i);}
 }
 
 if(param_bip1>0){
