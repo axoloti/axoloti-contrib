@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="guitarTable" uuid="b60b01b3-ce35-4b52-9152-f12bf0cb8ec5">
+   <obj.normal id="guitarTable" uuid="3d635174-804e-49af-bbb5-611737145f3f">
       <sDescription>this module is used to create a monophonic table for the guitarOscillator, so it can be used in a polyphonic setting (each oscillator reads from the same table, so the table itself doesn&apos;t have to be polyphonic). This was needed as otherwise each voice would create it&apos;s own table, filling up the available memory really quickly!
 
 &quot;fixed&quot; controls, even though you could change them live, this will create a harsh bleep as it has to recalculate the waveform.
@@ -38,6 +38,10 @@
          </int32>
          <frac32.u.map name="position"/>
          <frac32.u.map name="strike"/>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
       </params>
       <attribs>
          <objref name="table"/>
@@ -72,7 +76,7 @@ if((!(prev==(update)))&&!create)
 		SINE2TINTERP(position,posWidth)
 		for(i=0;i<attr_table.LENGTH;i++){
 			SINE2TINTERP((i<<32-attr_table.LENGTHPOW)/param_minDiv*(k+param_minDiv)-(start<<3)*(k+param_minDiv),r)
-			attr_table.array[i]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
+			attr_table.array[i+param_preset*attr_table.LENGTH]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
 			}
 		}
 	}

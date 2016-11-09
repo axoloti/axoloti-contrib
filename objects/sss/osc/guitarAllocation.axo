@@ -1,0 +1,78 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="guitarAllocation" uuid="623061f1-0bb6-4e7d-af31-cbfff4d43c57">
+      <sDescription>allocation module to use with the guitarTableOsc and guitarTable modules. The table is saved monophonically, so in a polyphonic patch, the table won&apos;t be copied for each extra voice. They all just read from the same table!
+
+The &quot;size&quot; sets the size of the waveforms that are created (8192 is a nice very-low-distortion size)
+The &quot;preset&quot; control sets how many waveforms can be created</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <spinner name="presets" MinValue="1" MaxValue="32" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t *array;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH*attr_presets] __attribute__ ((section (".sdram")));
+array = &_array[0];
+{ 
+  int i;
+  for(i=0;i<LENGTH*attr_presets;i++) array[i]=0;
+}]]></code.init>
+   </obj.normal>
+</objdefs>

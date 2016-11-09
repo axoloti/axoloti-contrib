@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="guitarTableOsc" uuid="5ec444b9-5f52-4378-bfa7-305cef8d1d37">
+   <obj.normal id="guitarDualOsc" uuid="0ffdcad9-b082-448c-b51b-7cb8d2479648">
       <sDescription>this is the module to use with the guitarTable module in a polyphonic synthesizer.
 The guitarTable module will create a complex waveform and this module is able to play that waveform. This was needed, otherwise, in a polyphonic setting, each module would create it&apos;s own table, filling up the available memory really quickly.
 
@@ -12,6 +12,9 @@ The guitarTable module will create a complex waveform and this module is able to
          <frac32 name="pwm"/>
          <frac32 name="mod"/>
          <frac32 name="start"/>
+         <frac32 name="sync"/>
+         <int32 name="rateM"/>
+         <int32 name="rateD"/>
          <int32 name="preset"/>
       </inlets>
       <outlets>
@@ -20,12 +23,24 @@ The guitarTable module will create a complex waveform and this module is able to
       <displays/>
       <params>
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32 name="harm2nd">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="rateM">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="rateD">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
          <frac32.u.map name="pwm"/>
          <frac32.u.map name="mod"/>
          <frac32.u.map name="start"/>
          <int32 name="preset">
             <MinValue i="0"/>
-            <MaxValue i="128"/>
+            <MaxValue i="31"/>
          </int32>
       </params>
       <attribs>
@@ -33,7 +48,8 @@ The guitarTable module will create a complex waveform and this module is able to
       </attribs>
       <code.declaration><![CDATA[uint32_t phase;
 int i;
-
+uint32_t LFO;
+int32_t rate;
 
 float32_t A;
 float32_t B;
@@ -49,7 +65,9 @@ uint32_t Pm;
    int32_t step3;
    float32_t step4;
    float32_t step5;
-   int preset;]]></code.declaration>
+   int strig;
+   uint32_t count;
+   uint32_t timer;]]></code.declaration>
       <code.init><![CDATA[phase=0;]]></code.init>
       <code.krate><![CDATA[int32_t freq;
 MTOFEXTENDED(param_pitch + inlet_pitch,freq)
@@ -88,21 +106,29 @@ Start=Start>(1<<27)?(2<<27)-Start:Start;
 
    step4 = (A - prev4)/(float32_t)16;
    float32_t i4 = prev4;
-
-   
    prev4 = A;
 
    step5 = (B - prev5)/(float32_t)16;
    float32_t i5 = prev5;
    prev5 = B;
 
-   preset=param_preset+inlet_preset;
+   int rateM=param_rateM+inlet_rateM;
+   int rateD=param_rateD+inlet_rateD;
+   int preset=param_preset+inlet_preset;
    preset=preset-(preset/attr_table.presets)*attr_table.presets;
    preset=preset<0?preset+attr_table.presets:preset;
    preset=preset*attr_table.LENGTH;]]></code.krate>
-      <code.srate><![CDATA[uint32_t Phase;
-phase += freq;
+      <code.srate><![CDATA[if((inlet_sync>0)&&!strig){
+	timer=((1<<31)/count)<<1;
+	count=0;
+	strig=1;
+}
+else if(inlet_sync<=0){strig=0;}
+count+=1;
 
+uint32_t Phase;
+phase += freq;
+LFO+=timer*rateM/rateD;
 uint32_t PHase=phase;
 if(phase<(1<<31)){
 PHase=___SMMUL(phase,i3<<4)<<2;
@@ -116,7 +142,7 @@ Phase=(1<<31)+((int32_t)(PHase*i4))+i2;}
 if(PHase>=Pm){Phase=((uint32_t)((PHase-Pm)*i5-(1<<31)))+i2+(1<<31);}
 
 outlet_wave=attr_table.array[((Phase>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset];
-
+outlet_wave+=attr_table.array[((((Phase*param_harm2nd)+LFO)>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset]/(1+(param_harm2nd-1)/2);
 
    i1 += step1;
    i2 += step2;
