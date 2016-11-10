@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="endBand" uuid="8bf352d0-cee7-4010-84a8-b199a8c00b0d">
+      <sDescription>stereo dual filter for end-applications (eg. before output)
+HP-frequency for removing low frequencies/DC-offset, lowshelf for volume of removed frequencies by highpass filter
+LP-frequency for limiting high frequencies, highshelf for volume of removed frequencies by lowpass filter</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="inL" description="input"/>
+         <frac32buffer name="inR"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL" description="output"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="highshelf"/>
+         <frac32.s.map.pitch name="LP"/>
+         <frac32.s.map.pitch name="HP"/>
+         <frac32.u.map name="lowshelf"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val1;
+int32_t val2;
+int32_t val3;
+int32_t val4;
+int32_t pLP;
+int32_t pHP;]]></code.declaration>
+      <code.init><![CDATA[val1 = 0;
+val2 = 0;
+val3 = 0;
+val4 = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_HP,f);
+   int32_t g;
+   MTOF(param_LP,g);
+
+if(param_LP<param_HP){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_HP],param_LP,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_LP],param_HP,0xFFFD);}]]></code.krate>
+      <code.srate><![CDATA[val3 = ___SMMLA((inlet_inL-val3)<<1,g,val3);
+   val4 = ___SMMLA((inlet_inR-val4)<<1,g,val4);
+   int32_t temp=___SMMUL(inlet_inL-val3<<3,param_highshelf<<2)+val3;
+   val1 = ___SMMLA((temp-val1)<<1,f,val1);
+   int32_t tamp;
+   tamp=___SMMUL(inlet_inR-val4<<3,param_highshelf<<2)+val4;
+   val2 = ___SMMLA((tamp-val2)<<1,f,val2);
+   outlet_outL= temp-val1+___SMMUL(val1<<3,param_lowshelf<<2);
+   outlet_outR= tamp-val2+___SMMUL(val2<<3,param_lowshelf<<2);]]></code.srate>
+   </obj.normal>
+</objdefs>
