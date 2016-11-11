@@ -1,0 +1,95 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="microscaler fb 2" uuid="4a1c53b6-0262-4482-9b6c-8e4440df1d73">
+      <sDescription>microscaler fb</sDescription>
+      <author>philoop mayengo</author>
+      <license>BSD</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <int32.positive name="note"/>
+         <int32.positive name="gate"/>
+         <bool32 name="on"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.mapvsl name="C" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="Cis" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="D" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="Dis" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="E" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="F" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="Fis" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="G" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="Gis" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="A" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="Ais" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="B" noLabel="true">
+            <MinValue v="-0.5"/>
+            <MaxValue v="0.5"/>
+         </frac32.s.mapvsl>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int o;
+int ntrig;  
+int latch;]]></code.declaration>
+      <code.init><![CDATA[o = 0;]]></code.init>
+      <code.krate><![CDATA[switch(inlet_note>0?inlet_note:0){
+      case 0: o= (param_C >>7);break;
+      case 1: o= (param_Cis >>7);break;
+      case 2: o= (param_D >>7);break;
+      case 3: o= (param_Dis >>7);break;
+      case 4: o= (param_E >>7);break;
+      case 5: o= (param_F >>7);break;
+      case 6: o= (param_Fis >>7);break;
+      case 7: o= (param_G >>7);break;
+      case 8: o= (param_Gis >>7);break;
+      case 9: o= (param_A >>7);break;
+      case 10: o= (param_Ais >>7);break;
+      case 11: o= (param_B >>7);break;
+      default: o= (param_C >>7);break;
+}
+
+
+   o= (inlet_on)?(inlet_pitch+o):inlet_pitch;
+
+  if ((inlet_gate>0) && !ntrig) {latch = o; ntrig=1;}
+if (!(inlet_gate>0)) ntrig=0;
+outlet_out= latch;]]></code.krate>
+   </obj.normal>
+</objdefs>
