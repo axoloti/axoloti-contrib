@@ -7,9 +7,9 @@ The 24ppq signal automatically resets when position goes back to 0 (so it won&ap
       <helpPatch>4x8bit looper.axh</helpPatch>
       <inlets>
          <frac32buffer name="pos" description="position input"/>
-         <int32.positive name="startpos" description="start position"/>
-         <int32.positive name="endpos" description="end position"/>
+         <int32.positive name="length"/>
          <int32.positive name="quarters" description="number of quarters for the loop"/>
+         <int32.positive name="startpos" description="start position"/>
       </inlets>
       <outlets>
          <int32.positive name="pos4ppq" description=""/>
@@ -20,22 +20,16 @@ The 24ppq signal automatically resets when position goes back to 0 (so it won&ap
       <attribs/>
       <code.declaration><![CDATA[uint32_t count4 = 0;
 uint32_t count24 = 0;]]></code.declaration>
-      <code.krate><![CDATA[outlet_pos4ppq = count4;
-outlet_pos24ppq = count24;
+      <code.krate><![CDATA[uint32_t startpos = inlet_startpos;
+uint32_t length24 = inlet_length/(inlet_quarters*24); 
+uint32_t length4 = inlet_length/(inlet_quarters*4);
 
-uint32_t startpos = inlet_startpos;
-uint32_t length24 = (inlet_endpos-inlet_startpos)/(inlet_quarters*24); 
-uint32_t length4 = (inlet_endpos-inlet_startpos)/(inlet_quarters*4);]]></code.krate>
-      <code.srate><![CDATA[if (length24*(inlet_pos/length24) == inlet_pos)
-count24++;
+uint32_t diff = inlet_pos[0]-startpos;
 
-if (length4*(inlet_pos/length4) == inlet_pos)
-count4++;
+count24 = diff/length24;
+count4 = diff/length4;
 
-if (inlet_pos == startpos)
-{
-	count24 = 0;
-	count4 = 0;
-}]]></code.srate>
+outlet_pos4ppq = count4;
+outlet_pos24ppq = count24;]]></code.krate>
    </obj.normal>
 </objdefs>

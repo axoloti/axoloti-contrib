@@ -7,11 +7,12 @@
       <inlets>
          <bool32 name="play" description="set the object to play mode. When released, the phasor resets to 0"/>
          <bool32 name="hold" description="set the object to pause mode"/>
-         <int32 name="startpos" description="first value of the table to read"/>
-         <int32 name="endpos" description="last value of the table to read"/>
+         <int32 name="length" description="last value of the table to read"/>
       </inlets>
       <outlets>
          <frac32buffer.positive name="pos" description="pos signal generator for the rec object"/>
+         <int32 name="startpos"/>
+         <int32 name="endpos"/>
       </outlets>
       <displays/>
       <params>
@@ -36,12 +37,12 @@ uint32_t maxlength = attr_table.LENGTH;
 
 bool play;
 bool hold;]]></code.declaration>
-      <code.krate><![CDATA[uint32_t	maxlength = inlet_endpos?inlet_endpos:attr_table.LENGTHMASK;
-uint32_t	startpos = (inlet_startpos<maxlength)?inlet_startpos:maxlength;
+      <code.krate><![CDATA[uint32_t	maxlength = inlet_length?inlet_length:attr_table.LENGTHMASK;
+uint32_t	startpos = 0;
 
-uint32_t base = (param_num*(maxlength-startpos))/param_den;
+uint32_t base = (param_num*maxlength)/param_den;
 
-startpos= startpos + (param_mulstart*(maxlength-startpos))/param_den;
+startpos= (param_mulstart*maxlength)/param_den;
 maxlength = startpos + base;
 
 if (startpos>attr_table.LENGTHMASK)
@@ -50,7 +51,10 @@ if (maxlength>attr_table.LENGTHMASK)
 maxlength = attr_table.LENGTHMASK;
 
 play = inlet_play;
-hold = inlet_hold;]]></code.krate>
+hold = inlet_hold;
+
+outlet_startpos = startpos;
+outlet_endpos = maxlength;]]></code.krate>
       <code.srate><![CDATA[if (play && !hold)
 counter++;
 else if (!play)
