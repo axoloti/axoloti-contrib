@@ -1,0 +1,194 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="qtsLFO4" uuid="2fe43c1b-c900-4e01-8b43-a677748a2e8f">
+      <sDescription>quad tempo synced sine wave LFO with inputs for multiplying, dividing and octaving the tempo and a phase-offset control.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="HS" description="feed a LFO trigger/continuous signal to clock-sync the LFO."/>
+         <bool32 name="r"/>
+         <int32 name="m1" description="mutliply tempo"/>
+         <int32 name="d1" description="divide tempo"/>
+         <int32 name="o1" description="tempo octave down/up"/>
+         <frac32 name="p1" description="phase offset"/>
+         <int32 name="m2"/>
+         <int32 name="d2"/>
+         <int32 name="o2"/>
+         <frac32 name="p2"/>
+         <int32 name="m3"/>
+         <int32 name="d3"/>
+         <int32 name="o3"/>
+         <frac32 name="p3"/>
+         <int32 name="m4"/>
+         <int32 name="d4"/>
+         <int32 name="o4"/>
+         <frac32 name="p4"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="w1" description="sine wave"/>
+         <frac32.bipolar name="w2"/>
+         <frac32.bipolar name="w3"/>
+         <frac32.bipolar name="w4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="bip1"/>
+         <int32.hradio name="s1">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <int32 name="m1">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="d1">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="o1">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.s.map name="p1"/>
+         <bool32.tgl name="bip2"/>
+         <int32.hradio name="s2">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <int32 name="m2">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="d2">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="o2">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.s.map name="p2"/>
+         <bool32.tgl name="bip3"/>
+         <int32.hradio name="s3">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <int32 name="m3">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="d3">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="o3">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.s.map name="p3"/>
+         <bool32.tgl name="bip4"/>
+         <int32.hradio name="s4">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <int32 name="m4">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="d4">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="o4">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.s.map name="p4"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase[4];
+int32_t sine[4];
+int32_t M[4];
+int32_t D[4];
+float32_t O[4];
+int32_t p[4];
+int S[4];
+int ttrig;
+int32_t count;
+int32_t timer;
+float32_t rate;
+int i;
+int rtrig;
+
+int32_t tri(uint32_t P1,int instance){
+int32_t temp=P1+(1<<30);
+temp=temp>0?temp:-temp;
+sine[instance]=(temp-(1<<30))<<1;
+}]]></code.declaration>
+      <code.krate><![CDATA[if((inlet_r>0)&& !rtrig){
+	rtrig=1;
+	for(i=0;i<4;i++){
+		Phase[i]=0;}
+	}
+
+else if(inlet_r<=0){rtrig=0;}
+rate=((float32_t)(timer))/((float32_t)(48000));
+rate=(((1<<31)/1500)/rate);
+
+M[0]=param_m1+inlet_m1;
+M[1]=param_m2+inlet_m2;
+M[2]=param_m3+inlet_m3;
+M[3]=param_m4+inlet_m4;
+
+D[0]=param_d1+inlet_d1;
+D[1]=param_d2+inlet_d2;
+D[2]=param_d3+inlet_d3;
+D[3]=param_d4+inlet_d4;
+
+O[0]=param_o1+inlet_o1>0?(1<<param_o1+inlet_o1):((float32_t)(1))/((float32_t)(1<<-(param_o1+inlet_o1)));
+O[1]=param_o2+inlet_o2>0?(1<<param_o2+inlet_o2):((float32_t)(1))/((float32_t)(1<<-(param_o2+inlet_o2)));
+O[2]=param_o3+inlet_o3>0?(1<<param_o3+inlet_o3):((float32_t)(1))/((float32_t)(1<<-(param_o3+inlet_o3)));
+O[3]=param_o4+inlet_o4>0?(1<<param_o4+inlet_o4):((float32_t)(1))/((float32_t)(1<<-(param_o4+inlet_o4)));
+
+p[0]=inlet_p1+param_p1;
+p[1]=inlet_p2+param_p2;
+p[2]=inlet_p3+param_p3;
+p[3]=inlet_p4+param_p4;
+
+S[0]=param_s1;
+S[1]=param_s2;
+S[2]=param_s3;
+S[3]=param_s4;
+for(i=0;i<4;i++){
+Phase[i] += (((int32_t)((rate*M[i]/D[i])*O[i])));
+if(S[i]==0){
+SINE2TINTERP(Phase[i]+(p[i]<<4),sine[i])}
+if(S[i]==1){tri(Phase[i]+(p[i]<<4),i);}
+if(S[i]==2){sine[i]=Phase[i];}
+if(S[i]==3){sine[i]=-Phase[i];}
+if(S[i]==4){sine[i]=Phase[i]>(1<<31)?((1<<31)-1):-(1<<31)+1;}
+}
+
+if(param_bip1>0){
+outlet_w1=(sine[0]>>4);}
+else{
+outlet_w1=(sine[0]>>5)+(1<<26);}
+
+if(param_bip2>0){
+outlet_w2=(sine[1]>>4);}
+else{
+outlet_w2=(sine[1]>>5)+(1<<26);}
+
+if(param_bip3>0){
+outlet_w3=(sine[2]>>4);}
+else{
+outlet_w3=(sine[2]>>5)+(1<<26);}
+
+if(param_bip4>0){
+outlet_w4=(sine[3]>>4);}
+else{
+outlet_w4=(sine[3]>>5)+(1<<26);}]]></code.krate>
+      <code.srate><![CDATA[if((inlet_HS>0)&&(!(ttrig)))
+{ttrig=1;
+timer=count;
+count=0;}
+else if (!(inlet_HS>0)){ttrig=0;}
+count+=1;]]></code.srate>
+   </obj.normal>
+</objdefs>

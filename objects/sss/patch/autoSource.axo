@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="autoSource" uuid="87744452-2d42-48fb-9ab4-1b63e8add320">
+      <sDescription>generic modulation source
+updates automatically when input changes</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <providesModulationSource>true</providesModulationSource>
+      <inlets>
+         <frac32 name="v" description="value"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+
+char A[3]=("A");]]></code.declaration>
+      <code.krate><![CDATA[int32_t temp=inlet_v;
+if(!(prev==temp))
+{
+  PExModulationSourceChange(
+    &parent->GetModulationTable()[parent->MODULATOR_attr_name*NMODULATIONTARGETS],
+    NMODULATIONTARGETS,
+    &parent->PExch[0],
+    &parent->PExModulationPrevVal[parent->polyIndex][parent->MODULATOR_attr_name],
+    temp);
+}
+prev=temp;]]></code.krate>
+   </obj.normal>
+</objdefs>
