@@ -1,11 +1,12 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="expCurveA" uuid="a7e55b7f-617e-415d-85b7-205f79ee7e7a">
+   <obj.normal id="Ssquare" uuid="3c7c0c9f-1782-4a0a-892d-bba776c25ab8">
       <sDescription>description</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
-         <frac32buffer name="in"/>
+         <frac32buffer.positive name="in"/>
          <frac32 name="exp"/>
+         <frac32 name="mod"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -17,19 +18,41 @@
             <MinValue i="0"/>
             <MaxValue i="32"/>
          </int32>
+         <frac32.s.map name="mod"/>
+         <frac32.s.map name="lvl"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int i;
 int32_t expo[32];
-int dir;]]></code.declaration>
-      <code.krate><![CDATA[int32_t inexpo=__SSAT(param_exp+inlet_exp,27);
+int dir;
+int32_t pEXP;
+int32_t sEXP;
+int32_t pMOD;
+int32_t sMOD;]]></code.declaration>
+      <code.krate><![CDATA[int32_t EXP=param_exp+inlet_exp;
+int32_t MOD=param_mod+inlet_mod;
+
+   sEXP = (EXP - pEXP)>>4;
+   int32_t S1 = pEXP;
+   pEXP = EXP;
+   
+   sMOD = (MOD - pMOD)>>4;
+   int32_t S2 = pMOD;
+   pMOD = MOD;]]></code.krate>
+      <code.srate><![CDATA[S1 += sEXP;
+   S2 += sMOD;
+
+
+int32_t IN=__SSAT(inlet_in,28);
+int32_t inexpo=__SSAT(S1+___SMMUL((IN-(1<<26))<<3,S2<<3),28);
 dir=inexpo>0?1:-1;
 inexpo=inexpo>0?inexpo:-inexpo;
 int32_t inv=(1<<27)-inexpo;
-]]></code.krate>
-      <code.srate><![CDATA[int dar;
+
+
+int dar;
 dar=inlet_in>0?1:-1;
-int32_t pos=__SSAT(inlet_in,28);
+int32_t pos=IN;
 pos=pos>0?pos:-pos;
 if(dir>0)
 {expo[0]=___SMMUL(pos<<3,(inv+___SMMUL(inexpo<<3,pos<<2))<<2);}
@@ -38,8 +61,8 @@ if(dir<0)
 for(i=1;i<=param_stack;i++)
 expo[i]=___SMMUL(expo[i-1]<<3,(inv+___SMMUL(inexpo<<3,expo[i-1]<<2))<<2);
 if(dir>0)
-{outlet_out=expo[param_stack]*dar;}
+{outlet_out=___SMMUL((expo[param_stack]*dar)<<3,param_lvl<<2);}
 if(dir<0)
-{outlet_out=((1<<27)-expo[param_stack])*dar;}]]></code.srate>
+{outlet_out=___SMMUL((((1<<27)-expo[param_stack])*dar)<<3,param_lvl<<2);}]]></code.srate>
    </obj.normal>
 </objdefs>

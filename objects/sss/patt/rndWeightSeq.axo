@@ -1,0 +1,382 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="rndWeightSeq" uuid="a7edd57b-b282-4dbb-bc8d-fb3a9a33cd71">
+      <sDescription>weighted random gate generator with 4 channels
+each channel has 4 sequences:
+-rnd chance per step (when slider is at max, it will always generate a trigger on that step)
+-play length per step (gatelength-&gt;also max length for fill)
+-retrigger per step (for fills)
+-delay per step (for swing)
+
+-rnd chance for any gate anywhere
+-rnd chance for changing the current gatelength
+-width for random gatelength-&gt;adds to step gatelength value
+-rnd chance for random retrigger
+-width for random retrigger-&gt;adds to step retrigger value
+-rnd chance for random delay
+-width for rnd chance random delay-&gt;adds to step delay
+
+-maximum count length for the 4 sequencers (wraps back to step 0 when reaching maximum count)
+-maximum &quot;main&quot; count length for the internal counter.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <bool32 name="trig"/>
+         <frac32 name="def" description="default value"/>
+         <charptr32 name="filename"/>
+      </inlets>
+      <outlets>
+         <bool32 name="o1"/>
+         <bool32 name="o2"/>
+         <bool32 name="o3"/>
+         <bool32 name="o4"/>
+         <int32 name="cnt"/>
+      </outlets>
+      <displays>
+         <bool32 name="chance"/>
+         <bool32 name="gatelength"/>
+         <bool32 name="retrigger"/>
+         <bool32 name="delay"/>
+      </displays>
+      <params>
+         <frac32.u.mapvsl name="b0" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b1" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b2" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b3" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b4" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b5" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b6" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b7" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b8" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b9" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b10" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b11" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b12" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b13" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b14" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="b15" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <bool32.mom name="rnd"/>
+         <bool32.mom name="clear"/>
+         <int32.vradio name="output">
+            <MaxValue i="4"/>
+         </int32.vradio>
+         <int32.vradio name="parameter">
+            <MaxValue i="4"/>
+         </int32.vradio>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+         <frac32.u.map name="Gchance"/>
+         <frac32.u.map name="Pchance"/>
+         <frac32.u.map name="Pwidth"/>
+         <frac32.u.map name="Rchance"/>
+         <frac32.u.map name="Rwidth"/>
+         <frac32.u.map name="Dchance"/>
+         <frac32.u.map name="Dwidth"/>
+         <int32 name="length1">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="length2">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="length3">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="length4">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="mainlength">
+            <MinValue i="1"/>
+            <MaxValue i="512"/>
+         </int32>
+      </params>
+      <attribs/>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (10);
+static const uint32_t LENGTH = (1024);
+static const uint32_t LENGTHMASK = (1023);
+int8_t *array;
+int count;
+int ttrig;
+int strig;
+int ltrig;
+int rtrig;
+int ctrig;
+int i;
+int gate[4];
+int32_t val[4];
+int32_t CNT[4];
+int32_t repeat[4];
+int32_t pulsewidth[4];
+int32_t delay[4];
+int rGate[4];
+int32_t Array[256];
+uint32_t cnt;
+int32_t Time;
+int32_t Count1;
+int32_t Count2;
+int32_t Count3;
+int32_t Count4;
+uint32_t write;
+
+uint32_t writepos;
+int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[static int8_t _array[1<<(LENGTHPOW<<2)]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<(LENGTH<<2);i++) array[i] = 0;
+  strig = 0;
+  ltrig = 0;
+  rtrig=0;
+  ctrig=0;]]></code.init>
+      <code.krate><![CDATA[write+=1;
+write=write&1023;
+cnt+=1;
+  if((param_save>0)&&!strig){
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*Array)*(256);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&Array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&Array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if(!(param_save>0)){strig=0;}
+
+  if((param_load>0)&&!ltrig){
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*Array)*(256);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&Array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&Array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if(!(param_load>0)){ltrig=0;}
+
+if(!(prev==(param_output+param_parameter+param_load))){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],Array[0+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],Array[1+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b2],Array[2+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b3],Array[3+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b4],Array[4+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b5],Array[5+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b6],Array[6+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b7],Array[7+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b8],Array[8+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b9],Array[9+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b10],Array[10+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b11],Array[11+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b12],Array[12+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b13],Array[13+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b14],Array[14+param_parameter*16+param_output*64],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b15],Array[15+param_parameter*16+param_output*64],0xFFFD);
+}
+
+disp_chance=0;
+disp_gatelength=0;
+disp_retrigger=0;
+disp_delay=0;
+
+if(param_parameter==0)
+{disp_chance=1;}
+if(param_parameter==1)
+{disp_gatelength=1;}
+if(param_parameter==2)
+{disp_retrigger=1;}
+if(param_parameter==3)
+{disp_delay=1;}
+if((ltrig==0)&&(strig==0)){
+Array[0+param_parameter*16+param_output*64]=param_b0;
+Array[1+param_parameter*16+param_output*64]=param_b1;
+Array[2+param_parameter*16+param_output*64]=param_b2;
+Array[3+param_parameter*16+param_output*64]=param_b3;
+Array[4+param_parameter*16+param_output*64]=param_b4;
+Array[5+param_parameter*16+param_output*64]=param_b5;
+Array[6+param_parameter*16+param_output*64]=param_b6;
+Array[7+param_parameter*16+param_output*64]=param_b7;
+Array[8+param_parameter*16+param_output*64]=param_b8;
+Array[9+param_parameter*16+param_output*64]=param_b9;
+Array[10+param_parameter*16+param_output*64]=param_b10;
+Array[11+param_parameter*16+param_output*64]=param_b11;
+Array[12+param_parameter*16+param_output*64]=param_b12;
+Array[13+param_parameter*16+param_output*64]=param_b13;
+Array[14+param_parameter*16+param_output*64]=param_b14;
+Array[15+param_parameter*16+param_output*64]=param_b15;
+}
+
+if((inlet_trig>0)&&!ttrig){
+	Time=cnt;
+	cnt=0;
+	ttrig=1;
+	count+=1;
+	count=count-(count/param_mainlength)*param_mainlength;
+	for(i=0;i<4;i++){
+	val[i]=(int32_t)((GenerateRandomNumber()>>5));
+     gate[i]=Array[count+i*64]>val[i]?1:0;
+     repeat[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Rchance)?1:0;
+     if(repeat[i]>0){repeat[i]=___SMMUL(((uint32_t)((GenerateRandomNumber()))>>24),param_Rwidth);}
+     delay[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Dchance)?1:0;
+     if(delay[i]>0){delay[i]=___SMMUL(((uint32_t)((GenerateRandomNumber()))>>5),param_Dwidth<<4);}
+     pulsewidth[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Pchance)?1:0;
+     if(pulsewidth[i]>0){pulsewidth[i]=___SMMUL(___SMMUL(((uint32_t)((GenerateRandomNumber()))>>5),Time<<5)<<3,param_Pwidth<<2);}
+     rGate[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Gchance)?1:0;
+	}
+}
+else if(inlet_trig<=0){ttrig=0;}
+
+Count1=count-(count/param_length1)*param_length1;
+Count2=count-(count/param_length2)*param_length2;
+Count3=count-(count/param_length3)*param_length3;
+Count4=count-(count/param_length4)*param_length4;
+
+array[(write+___SMMUL(delay[0]<<3,Time<<2)+___SMMUL(Array[Count1+48]<<3,Time<<2))&1023]            =(gate[0]+rGate[0])&&((___SMMUL(Array[Count1+16]<<3,Time<<2)+pulsewidth[0])>=cnt-5?1:0)&&(CNT[0]);
+array[((write+___SMMUL(delay[1]<<3,Time<<2)+___SMMUL(Array[Count2+48+64]<<3,Time<<2))&1023)+1024]  =(gate[1]+rGate[1])&&((___SMMUL(Array[Count2+16+64]<<3,Time<<2)+pulsewidth[1])>=cnt-5?1:0)&&(CNT[1]);
+array[((write+___SMMUL(delay[2]<<3,Time<<2)+___SMMUL(Array[Count3+48+128]<<3,Time<<2))&1023)+2048] =(gate[2]+rGate[2])&&((___SMMUL(Array[Count3+16+128]<<3,Time<<2)+pulsewidth[2])>=cnt-5?1:0)&&(CNT[2]);
+array[((write+___SMMUL(delay[3]<<3,Time<<2)+___SMMUL(Array[Count4+48+192]<<3,Time<<2))&1023)+3072] =(gate[3]+rGate[3])&&((___SMMUL(Array[Count4+16+192]<<3,Time<<2)+pulsewidth[3])>=cnt-5?1:0)&&(CNT[3]);
+
+outlet_o1=array[write];
+outlet_o2=array[write+1024];
+outlet_o3=array[write+2048];
+outlet_o4=array[write+3072];
+outlet_cnt=cnt;
+prev=param_output+param_parameter+param_load;
+
+
+CNT[0]=(cnt-(cnt/(Time/(1+repeat[0]+___SMMUL(Array[Count1+32],7<<5))))*(Time/(1+repeat[0]+___SMMUL(Array[Count1+32],7<<5))))<Time/8?1:0;
+CNT[1]=(cnt-(cnt/(Time/(1+repeat[1]+___SMMUL(Array[Count2+32+64],7<<5))))*(Time/(1+repeat[1]+___SMMUL(Array[Count2+32+64],7<<5))))<Time/8?1:0;
+CNT[2]=(cnt-(cnt/(Time/(1+repeat[2]+___SMMUL(Array[Count3+32+128],7<<5))))*(Time/(1+repeat[2]+___SMMUL(Array[Count3+32+128],7<<5))))<Time/8?1:0;
+CNT[3]=(cnt-(cnt/(Time/(1+repeat[3]+___SMMUL(Array[Count4+32+192],7<<5))))*(Time/(1+repeat[3]+___SMMUL(Array[Count4+32+192],7<<5))))<Time/8?1:0;
+
+
+
+
+
+  if((param_rnd>0)&&!rtrig){
+	rtrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b2],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b3],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b4],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b5],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b6],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b7],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b8],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b9],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b10],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b11],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b12],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b13],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b14],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b15],(((uint32_t)((GenerateRandomNumber())))>>5),0xFFFD);
+}
+else if(param_rnd<=0){rtrig=0;}
+
+  if((param_clear>0)&&!ctrig){
+	ctrig=1;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b2],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b3],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b4],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b5],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b6],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b7],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b8],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b9],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b10],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b11],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b12],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b13],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b14],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b15],0,0xFFFD);
+}
+else if(param_clear<=0){ctrig=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>
