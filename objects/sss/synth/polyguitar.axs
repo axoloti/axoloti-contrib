@@ -1,131 +1,47 @@
-<patch-1.0 appVersion="1.0.10">
-   <patchobj type="patch/object" uuid="7749b97f-e8f4-4d45-be81-b39e5a643b15" name="guitar" x="280" y="42">
+<patch-1.0 appVersion="1.0.11">
+   <obj type="sss/osc/guitarAllocation" uuid="623061f1-0bb6-4e7d-af31-cbfff4d43c57" name="guitarAllocation_1" x="546" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8192"/>
+         <spinner attributeName="presets" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="sss/osc/guitarTable" uuid="3d635174-804e-49af-bbb5-611737145f3f" name="guitarTable_1" x="168" y="42">
       <params>
-         <int32 name="damp" onParent="true" value="4"/>
-         <int32 name="harmonics" onParent="true" value="35"/>
-         <int32 name="jump" onParent="true" value="1"/>
-         <int32 name="max" onParent="true" value="52"/>
-         <frac32.u.map name="position" onParent="true" value="44.0"/>
-         <frac32.u.map name="strike" onParent="true" value="53.5"/>
+         <int32 name="damp" onParent="true" value="1"/>
+         <int32 name="minDiv" onParent="true" value="2"/>
+         <int32 name="harmonics" onParent="true" value="24"/>
+         <int32 name="jump" onParent="true" value="27"/>
+         <int32 name="max" onParent="true" value="63"/>
+         <frac32.u.map name="position" onParent="true" value="38.5"/>
+         <frac32.u.map name="strike" onParent="true" value="52.5"/>
+         <int32 name="preset" value="0"/>
       </params>
-      <attribs/>
-      <object id="patch/object" uuid="7749b97f-e8f4-4d45-be81-b39e5a643b15">
-         <sDescription>&quot;guitarOsc&quot;
--features pulsewidth, start-shift (start) and pick-up (mod) modulation, all extern controllable. (though these are all only approximations, reshaping the wavetable)
-
-below the continuous controls, we got &quot;fixed&quot; controls, even though you could change them live, this will create a bleep as it has to recalculate the waveform.
--damp: dampening-factor for each next added harmonic corresponding to harmonic number.
--harmonics: how many harmonics will be generated for the wavetable (low numbers reduce recalculation time!)
--jump: &quot;jump&quot; size for next added harmonic, skipping harmonics in-between
--max: sets maximum harmonic number that can be added, wraps when above the max.
--position: sets the read-out position of the guitar-element
--strike: sets the position where the string is struck</sDescription>
-         <author>Remco van der Most</author>
-         <license>BSD</license>
-         <helpPatch>osc.axh</helpPatch>
-         <inlets/>
-         <outlets/>
-         <displays/>
-         <params>
-            <int32 name="damp">
-               <MinValue i="1"/>
-               <MaxValue i="16"/>
-            </int32>
-            <int32 name="harmonics">
-               <MinValue i="1"/>
-               <MaxValue i="256"/>
-            </int32>
-            <int32 name="jump">
-               <MinValue i="1"/>
-               <MaxValue i="256"/>
-            </int32>
-            <int32 name="max">
-               <MinValue i="1"/>
-               <MaxValue i="256"/>
-            </int32>
-            <frac32.u.map name="position"/>
-            <frac32.u.map name="strike"/>
-         </params>
-         <attribs/>
-         <includes/>
-         <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 11;
-static const uint32_t LENGTH = 2048;
-static const uint32_t LENGTHMASK = 2047;
-static const uint32_t BITS = 32;
-static const uint32_t GAIN = 0;
-int32_t *array;
-
-
-uint32_t phase;
-int i;
-int j;
-int32_t sum;
-int32_t r;
-int32_t posWidth;
-int32_t position;
-int32_t prev;
-int ctrig;
-int create;
-int32_t Pos;
-int k;
-int32_t start;
-float32_t A;
-float32_t B;
-uint32_t PM;]]></code.declaration>
-         <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
-array = &_array[0];
-
-{ 
-
-}
-
-	phase=0;
-
-for(i;i<2048;i++){array[i]=0;}]]></code.init>
-         <code.krate><![CDATA[int32_t update=param_position+param_strike+param_damp+param_harmonics+param_jump+param_max;
-
-
-if((!(prev==(update)))&&!create)
-	{create=1;
-	Pos=param_position;
-	start=param_strike;
-	for(i=0;i<2048;i++){array[i]=0;}
-	for(j=0;j<param_harmonics;j++){
-		k=(j*param_jump-(j*param_jump/param_max)*param_max);
-		position=((j+1)*Pos<<4);
-		SINE2TINTERP(position,posWidth)
-		for(i=0;i<2048;i++){
-			SINE2TINTERP((i<<21)*(k+1)-(start<<3)*(k+1),r)
-			array[i]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
-			}
-		}
-	}
-else if(prev==(update)){create=0;}
-
-prev=update;
-
-
-
-
-
-
-
-]]></code.krate>
-      </object>
-   </patchobj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="PWM" x="420" y="168">
+      <attribs>
+         <objref attributeName="table" obj="guitarAllocation_1"/>
+      </attribs>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="PWM" x="364" y="126">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="MOD" x="420" y="210">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="MOD" x="364" y="168">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="START" x="420" y="252">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="START" x="364" y="210">
       <params/>
       <attribs/>
    </obj>
-   <obj type="midi/in/keyb mod" uuid="abcd509d15e7d13d5381203fd2b4d0ac6fe57bb3" name="keyb_1" x="490" y="294">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="sync" x="364" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="cut" x="364" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="476" y="294">
       <params/>
       <attribs/>
    </obj>
@@ -141,129 +57,118 @@ prev=update;
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="700" y="294">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="756" y="294">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="868" y="294">
+   <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="smooth touch" x="714" y="294">
       <params>
-         <frac32.u.map name="gain1" value="0.1399998664855957"/>
+         <frac32.s.map name="freq" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="ff4cf96f-138d-40c1-b318-c6aad03c0c1c" name="guitarOsc_2" x="952" y="294">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="touch2filter" x="812" y="294">
+      <params>
+         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="vel/touch" x="924" y="294">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_1" x="994" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1064" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="1148" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/math/bipAmp" uuid="054d3d1f-4bbf-4622-b310-c2f4d89cb965" name="touch2PWM" x="1260" y="294">
+      <params>
+         <frac32.s.map name="amp" onParent="true" value="23.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="1358" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/math/bipAmp" uuid="054d3d1f-4bbf-4622-b310-c2f4d89cb965" name="touch2MOD" x="1260" y="378">
+      <params>
+         <frac32.s.map name="amp" onParent="true" value="-28.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="1358" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/math/bipAmp" uuid="054d3d1f-4bbf-4622-b310-c2f4d89cb965" name="touch2START" x="1260" y="462">
+      <params>
+         <frac32.s.map name="amp" onParent="true" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_3" x="1358" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/math/bipAmp" uuid="054d3d1f-4bbf-4622-b310-c2f4d89cb965" name="touch2cutoff" x="1260" y="546">
+      <params>
+         <frac32.s.map name="amp" onParent="true" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="1358" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_5" x="1428" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="490" y="686">
+      <params>
+         <frac32.u.map name="gain1" value="0.0899998664855957"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/osc/guitarDualOsc" uuid="0ffdcad9-b082-448c-b51b-7cb8d2479648" name="guitarDualOsc_1" x="574" y="686">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
-         <frac32.u.map name="pwm" onParent="true" value="32.0"/>
-         <frac32.u.map name="mod" onParent="true" value="32.0"/>
-         <frac32.u.map name="start" onParent="true" value="32.0"/>
+         <int32 name="harm2nd" onParent="true" value="1"/>
+         <int32 name="rateM" onParent="true" value="1"/>
+         <int32 name="rateD" onParent="true" value="6"/>
+         <frac32.u.map name="pwm" onParent="true" value="31.5"/>
+         <frac32.u.map name="mod" onParent="true" value="46.5"/>
+         <frac32.u.map name="start" onParent="true" value="20.0"/>
+         <int32 name="preset" value="0"/>
       </params>
       <attribs>
-         <objref attributeName="table" obj="guitar"/>
+         <objref attributeName="table" obj="guitarAllocation_1"/>
       </attribs>
-      <object id="patch/object" uuid="ff4cf96f-138d-40c1-b318-c6aad03c0c1c">
-         <sDescription>&quot;guitarOsc&quot;
--features pulsewidth, start-shift (start) and pick-up (mod) modulation, all extern controllable. (though these are all only approximations, reshaping the wavetable)
-
-below the continuous controls, we got &quot;fixed&quot; controls, even though you could change them live, this will create a bleep as it has to recalculate the waveform.
--damp: dampening-factor for each next added harmonic corresponding to harmonic number.
--harmonics: how many harmonics will be generated for the wavetable (low numbers reduce recalculation time!)
--jump: &quot;jump&quot; size for next added harmonic, skipping harmonics in-between
--max: sets maximum harmonic number that can be added, wraps when above the max.
--position: sets the read-out position of the guitar-element
--strike: sets the position where the string is struck</sDescription>
-         <author>Remco van der Most</author>
-         <license>BSD</license>
-         <helpPatch>osc.axh</helpPatch>
-         <inlets>
-            <frac32.bipolar name="pitch" description="pitch"/>
-            <frac32 name="pwm"/>
-            <frac32 name="mod"/>
-            <frac32 name="start"/>
-         </inlets>
-         <outlets>
-            <frac32buffer.bipolar name="wave" description="sine wave"/>
-         </outlets>
-         <displays/>
-         <params>
-            <frac32.s.map.pitch name="pitch" noLabel="true"/>
-            <frac32.u.map name="pwm"/>
-            <frac32.u.map name="mod"/>
-            <frac32.u.map name="start"/>
-         </params>
-         <attribs>
-            <objref name="table"/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[uint32_t phase;
-int i;
-
-
-float32_t A;
-float32_t B;
-uint32_t PM;]]></code.declaration>
-         <code.init><![CDATA[
-	phase=0;
-]]></code.init>
-         <code.krate><![CDATA[
-
-int32_t freq;
-MTOFEXTENDED(param_pitch + inlet_pitch,freq)
-PM=param_pwm+inlet_pwm;
-PM=PM>0?PM:-PM;
-PM=PM&((1<<28)-1);
-PM=PM>(1<<27)?(2<<27)-PM:PM;
-PM=__USAT(PM+1,27)<<4;
-A=((float32_t)(1<<31))/((float32_t)(PM<<1));
-B=((float32_t)(1<<31))/((float32_t)(((1<<31)-PM)<<1));
-PM=PM<<1;
-int32_t mod1=param_mod+inlet_mod;
-mod1=mod1>0?mod1:-mod1;
-mod1=mod1&((1<<28)-1);
-mod1=mod1>(1<<27)?(2<<27)-mod1:mod1;
-mod1=mod1<<4;
-int32_t mod2;
-mod2=mod1*3;
-
-int32_t Start=param_start+inlet_start;
-Start=Start>0?Start:-Start;
-Start=Start&((1<<28)-1);
-Start=Start>(1<<27)?(2<<27)-Start:Start;
-]]></code.krate>
-         <code.srate><![CDATA[
-
-uint32_t Phase;
-phase += freq;
-
-uint32_t PHase=phase;
-if(phase<(1<<31)){
-PHase=___SMMUL(phase,Start<<4)<<2;
-}
-else{
-PHase=(___SMMUL(phase,((1<<27)-Start)<<4)<<2);
-}
-
-if(PHase<PM){
-Phase=(1<<31)+((int32_t)(PHase*A))+mod1;}
-if(PHase>=PM){Phase=((uint32_t)((PHase-PM)*B-(1<<31)))+mod1+(1<<31);}
-
-outlet_wave=attr_table.array[(Phase>>21)&2047];
-]]></code.srate>
-      </object>
-   </patchobj>
-   <obj type="sss/gain/expLPG" uuid="cd53740f-3538-46e5-b8f8-a4b6c06a3b6b" name="expLPG_1" x="1078" y="294">
+   </obj>
+   <obj type="sss/gain/expLPG" uuid="cd53740f-3538-46e5-b8f8-a4b6c06a3b6b" name="expLPG_1" x="700" y="686">
       <params>
          <frac32.s.map name="expVCA" onParent="true" value="0.0"/>
          <frac32.s.map name="expLPG" onParent="true" value="0.0"/>
-         <frac32.u.map name="cutoff" onParent="true" value="64.0"/>
+         <frac32.u.map name="cutoff" onParent="true" value="2.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1176" y="294">
+   <obj type="sss/filter/LPos" uuid="82f8e740-c072-45ff-af2c-57f176c0eadd" name="LPos_1" x="798" y="686">
+      <params>
+         <frac32.s.map name="cut" onParent="true" value="0.0"/>
+         <frac32.s.map name="res" onParent="true" value="0.0"/>
+         <bool32.tgl name="mode" onParent="true" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="896" y="686">
       <params/>
       <attribs/>
    </obj>
@@ -271,10 +176,6 @@ outlet_wave=attr_table.array[(Phase>>21)&2047];
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="mix_1" inlet="bus_in"/>
-      </net>
-      <net>
-         <source obj="guitarOsc_2" outlet="wave"/>
-         <dest obj="expLPG_1" inlet="a"/>
       </net>
       <net>
          <source obj="ADSRcrv_1" outlet="out"/>
@@ -286,28 +187,24 @@ outlet_wave=attr_table.array[(Phase>>21)&2047];
          <dest obj="uniform_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="velocity"/>
-         <dest obj="*_1" inlet="b"/>
-      </net>
-      <net>
          <source obj="*_1" outlet="result"/>
          <dest obj="expLPG_1" inlet="env"/>
       </net>
       <net>
          <source obj="expLPG_1" outlet="o"/>
-         <dest obj="outlet_1" inlet="outlet"/>
+         <dest obj="LPos_1" inlet="in"/>
       </net>
       <net>
          <source obj="PWM" outlet="inlet"/>
-         <dest obj="guitarOsc_2" inlet="pwm"/>
+         <dest obj="+_1" inlet="in1"/>
       </net>
       <net>
          <source obj="MOD" outlet="inlet"/>
-         <dest obj="guitarOsc_2" inlet="mod"/>
+         <dest obj="+_2" inlet="in1"/>
       </net>
       <net>
          <source obj="START" outlet="inlet"/>
-         <dest obj="guitarOsc_2" inlet="start"/>
+         <dest obj="+_3" inlet="in1"/>
       </net>
       <net>
          <source obj="uniform_1" outlet="rand"/>
@@ -315,7 +212,89 @@ outlet_wave=attr_table.array[(Phase>>21)&2047];
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
-         <dest obj="guitarOsc_2" inlet="pitch"/>
+         <dest obj="guitarDualOsc_1" inlet="pitch"/>
+         <dest obj="+_4" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="guitarDualOsc_1" inlet="pwm"/>
+      </net>
+      <net>
+         <source obj="smooth touch" outlet="out"/>
+         <dest obj="touch2PWM" inlet="in"/>
+         <dest obj="touch2MOD" inlet="in"/>
+         <dest obj="touch2START" inlet="in"/>
+         <dest obj="touch2filter" inlet="in"/>
+         <dest obj="touch2cutoff" inlet="in"/>
+         <dest obj="xfade_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="touch"/>
+         <dest obj="smooth touch" inlet="in"/>
+      </net>
+      <net>
+         <source obj="guitarDualOsc_1" outlet="wave"/>
+         <dest obj="expLPG_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="sync" outlet="inlet"/>
+         <dest obj="guitarDualOsc_1" inlet="sync"/>
+      </net>
+      <net>
+         <source obj="touch2filter" outlet="out"/>
+         <dest obj="expLPG_1" inlet="cutoff"/>
+      </net>
+      <net>
+         <source obj="touch2PWM" outlet="out"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="touch2MOD" outlet="out"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="touch2START" outlet="out"/>
+         <dest obj="+_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="guitarDualOsc_1" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="+_3" outlet="out"/>
+         <dest obj="guitarDualOsc_1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="LPos_1" outlet="out"/>
+         <dest obj="outlet_1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="touch2cutoff" outlet="out"/>
+         <dest obj="+_4" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_4" outlet="out"/>
+         <dest obj="+_5" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="velocity"/>
+         <dest obj="xfade_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="xfade_1" outlet="o"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="vel/touch" outlet="out"/>
+         <dest obj="xfade_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="+_5" outlet="out"/>
+         <dest obj="LPos_1" inlet="cut"/>
+      </net>
+      <net>
+         <source obj="cut" outlet="inlet"/>
+         <dest obj="+_5" inlet="in2"/>
       </net>
    </nets>
    <settings>
