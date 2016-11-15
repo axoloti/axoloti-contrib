@@ -128,7 +128,8 @@ int mtrig;
 int lastnote[8];
 int fast;
 int note;
-int find;]]></code.declaration>
+int find;
+int gtrig;]]></code.declaration>
       <code.init><![CDATA[static int8_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -204,7 +205,7 @@ else if(param_clear==0){ctrig=0;}
   if((_gate>0)&&!mtrig){
   count=(count+1)&7;
   find=8;
-  for(i=0;i<8;i++){if(array[cntSlow+(i*attr_size)]==0){find=i;}}
+  for(i=0;i<8;i++){if(array[cntSlow+((7-i)*attr_size)]==0){find=7-i;}}
   find=find==8?((int32_t)(GenerateRandomNumber()))&7:find;
   mtrig=1;}
   else if(_gate==0){mtrig=0;}
@@ -240,11 +241,17 @@ if(!(pchannel==midichannelIn)){
 	}
 }
 
-if((param_rec>0)&&G[index]){
+if(param_rec>0){
+if(G[index]){
+	gtrig=1;
 	array[cntSlow+(index)*attr_size]=G[index];
 	array[cntSlow+(index+8)*attr_size]=N[index];
 	array[cntSlow+(index+16)*attr_size]=V[index];
-	array[cntFast+(index*6+24)*attr_size]=T[index];
+	array[cntFast+(index*6+24)*attr_size]=T[index];}
+else if((G[index]==0)&&(gtrig)){
+	array[cntSlow+(index)*attr_size]=G[index];
+	gtrig=0;
+}
 }
 
 

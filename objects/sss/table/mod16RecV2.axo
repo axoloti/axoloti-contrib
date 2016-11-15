@@ -1,0 +1,185 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="mod16RecV2" uuid="c12b5c65-b336-46a9-a47b-9ec762133c9c">
+      <sDescription>16 output modulation recorder
+uses single inputs for:
+-counting position for all 16 recorders/readers
+-value record and modulation select
+
+when rectrig is high, it records the value on input_v into the selected modulation sequencer.
+to randomise the selected channel, press &quot;rndChnl&quot;
+to randomise all the channels together, press &quot;rndAll&quot;
+
+recorded patterns can be saved an later recalled, just connect a string/indexed, provide a name and hit &quot;save&quot; to save your patterns.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32.positive name="pos" description="index (integer, not fraction)"/>
+         <frac32 name="v" description="value"/>
+         <int32 name="sel"/>
+         <bool32.rising name="rectrig" description="trigger"/>
+         <bool32 name="clear"/>
+         <bool32 name="rndChnl"/>
+         <bool32 name="rndAll"/>
+         <charptr32 name="filename"/>
+         <bool32 name="load"/>
+      </inlets>
+      <outlets>
+         <frac32 name="01"/>
+         <frac32 name="02"/>
+         <frac32 name="03"/>
+         <frac32 name="04"/>
+         <frac32 name="05"/>
+         <frac32 name="06"/>
+         <frac32 name="07"/>
+         <frac32 name="08"/>
+         <frac32 name="09"/>
+         <frac32 name="10"/>
+         <frac32 name="11"/>
+         <frac32 name="12"/>
+         <frac32 name="13"/>
+         <frac32 name="14"/>
+         <frac32 name="15"/>
+         <frac32 name="16"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="load"/>
+         <bool32.mom name="save"/>
+         <bool32.tgl name="SaveOn"/>
+      </params>
+      <attribs>
+         <spinner name="size" MinValue="1" MaxValue="4096" DefaultValue="0"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = attr_size;
+
+int32_t *array;
+   int i;
+   int ntrig;
+   int ctrig;
+   int rtrig;
+   int Rtrig;
+   int mtrig;
+   int ltrig;
+   int strig;
+   int load;]]></code.declaration>
+      <code.init><![CDATA[int ntrig = 0;
+static int32_t _array[LENGTH<<4] __attribute__ ((section (".sdram")));
+array = &_array[0];]]></code.init>
+      <code.krate><![CDATA[int load=param_load+inlet_load;
+if((param_save>0)&&!strig&&param_SaveOn){
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*(LENGTH<<4);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if(!(param_save>0)){strig=0;}
+
+  if((load>0)&&!ltrig){
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*(LENGTH<<4);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if(!(load>0)){ltrig=0;}
+
+
+
+
+int32_t write;
+      write=inlet_pos;
+      write=write-(write/LENGTH)*LENGTH;
+      int32_t sel=inlet_sel&15;
+      if ((inlet_rectrig>0) && !ntrig) {
+      ntrig=1;
+      array[write+sel*LENGTH]=__SSAT(inlet_v,29);
+      }
+      if (!(inlet_rectrig>0)) ntrig=0;
+if((inlet_clear>0)&& !ctrig){
+	ctrig=1;
+	for(i=0;i<(LENGTH<<4);i++){
+		array[i]=0;
+	}
+}
+else if(inlet_clear<=0){ctrig=0;}
+
+if((inlet_rndAll>0)&& !rtrig){
+	rtrig=1;
+	for(i=0;i<(LENGTH<<4);i++){
+		array[i]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(inlet_rndAll<=0){rtrig=0;}
+
+if((inlet_rndChnl>0)&& !Rtrig){
+	Rtrig=1;
+	for(i=0;i<LENGTH;i++){
+		array[i+sel*LENGTH]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(inlet_rndChnl<=0){Rtrig=0;}
+
+
+
+
+
+
+
+   outlet_01= array[write];
+   outlet_02= array[write+LENGTH];
+   outlet_03= array[write+LENGTH*2];
+   outlet_04= array[write+LENGTH*3];
+   outlet_05= array[write+LENGTH*4];
+   outlet_06= array[write+LENGTH*5];
+   outlet_07= array[write+LENGTH*6];
+   outlet_08= array[write+LENGTH*7];
+   outlet_09= array[write+LENGTH*8];
+   outlet_10= array[write+LENGTH*9];
+   outlet_11= array[write+LENGTH*10];
+   outlet_12= array[write+LENGTH*11];
+   outlet_13= array[write+LENGTH*12];
+   outlet_14= array[write+LENGTH*13];
+   outlet_15= array[write+LENGTH*14];
+   outlet_16= array[write+LENGTH*15];]]></code.krate>
+   </obj.normal>
+</objdefs>
