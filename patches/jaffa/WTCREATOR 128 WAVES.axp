@@ -18,7 +18,7 @@
          </text>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="f60e7262-4c68-4d81-b528-e1d3429c298c" name="Saw add" x="168" y="42">
+   <patcher type="patch/patcher" uuid="838c3c08-8485-4d0f-a52d-561eb3813816" name="Saw add" x="168" y="42">
       <params>
          <bool32.tgl name="All On/Off" value="1"/>
          <frac32.u.map name="1" value="0.0"/>
@@ -305,7 +305,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="5083a3c0-9c09-41fe-8bb3-e0711ba97fb6" name="Saw Add Mod 1" x="266" y="42">
+   <patcher type="patch/patcher" uuid="d0b476c0-f42a-416e-bc7c-08084fa13d9d" name="Saw Add Mod 1" x="266" y="42">
       <params>
          <int32 name="1-8" value="2"/>
          <bool32.tgl name="On/Off" value="0"/>
@@ -619,7 +619,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="ef914e81-1a4e-4598-8502-065450554a6a" name="Sin add" x="378" y="42">
+   <patcher type="patch/patcher" uuid="e0803f4b-27d4-4d7a-9607-3da33469ae51" name="Sin add" x="378" y="42">
       <params>
          <bool32.tgl name="All On/Off" value="1"/>
          <frac32.u.map name="1" value="0.0"/>
@@ -906,7 +906,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="5f82b08b-c307-4564-b3be-23c713ee7135" name="Sin Add Mod 1" x="476" y="42">
+   <patcher type="patch/patcher" uuid="9ab008c1-803f-480c-a934-2aec3b5085a6" name="Sin Add Mod 1" x="476" y="42">
       <params>
          <int32 name="1-8" value="3"/>
          <bool32.tgl name="On/Off" value="0"/>
@@ -1220,7 +1220,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="d0a10028-e1b0-4c2a-b1a0-6ae71e4e03cd" name="Saw/Sin career" x="658" y="42">
+   <patcher type="patch/patcher" uuid="8536bac8-a8c7-43c5-9ed5-a59efcb0dba0" name="Saw/Sin career" x="658" y="42">
       <params>
          <frac32.u.map name="Vol" value="64.0"/>
          <frac32.u.map name="Mix" value="0.0"/>
@@ -1239,7 +1239,7 @@
             <params/>
             <attribs/>
          </obj>
-         <patcher type="patch/patcher" uuid="576528a3-bbd5-4d2e-adad-350982d1de2a" name="Math Tune" x="294" y="42">
+         <patcher type="patch/patcher" uuid="a2b90a24-3fb2-421b-a8c4-c1a04eb70b40" name="Math Tune" x="294" y="42">
             <params/>
             <attribs/>
             <subpatch appVersion="1.0.11">
@@ -1350,12 +1350,60 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="drj/osc/phasor_pm_s_b" uuid="1111a16237bb5aac6e462984c5decba17b1862d85" name="phasor_pm_s_b_1" x="672" y="42">
+         <patchobj type="patch/object" uuid="18915ac4-2117-49b7-94fe-481a441048ca" name="phasor_pm_s_b_1" x="672" y="42">
             <params>
                <frac32.s.map name="pitch" value="2.2300000190734863"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="18915ac4-2117-49b7-94fe-481a441048ca">
+               <sDescription>Phasor with phase and sync inputs, bipolar, s-rate</sDescription>
+               <author>Are Leistad</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch" description="Pitch input"/>
+                  <frac32buffer.bipolar name="phase" description="Phase input"/>
+                  <frac32buffer.bipolar name="sync" description="Phase reset input"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="Phasor output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+
+      uint32_t Phase;
+      int32_t old_sync;
+      int32_t freq;
+
+    ]]></code.declaration>
+               <code.init><![CDATA[Phase = 0;
+
+      Phase = 0;
+      old_sync = 0;
+
+    ]]></code.init>
+               <code.krate><![CDATA[
+
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+    ]]></code.krate>
+               <code.srate><![CDATA[
+
+      if( inlet_sync > 0 && old_sync <= 0 )
+        Phase = 0;
+      else
+        Phase += freq;
+      old_sync = inlet_sync;
+
+      outlet_out = ((Phase + (inlet_phase<<4))>>4) - (1<<27);
+
+    ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_5" x="798" y="42">
             <params/>
             <attribs/>
@@ -1364,12 +1412,64 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="drj/osc/sin_pm_s_b" uuid="6e0087345c122da9dbf7ebfa72e44e4700d2b3ba" name="sin_pm_s_b_1" x="980" y="42">
+         <patchobj type="patch/object" uuid="7033b3cc-0c98-40f6-b44c-580eaf104ed0" name="sin_pm_s_b_1" x="980" y="42">
             <params>
                <frac32.s.map name="pitch" value="2.2300000190734863"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="7033b3cc-0c98-40f6-b44c-580eaf104ed0">
+               <sDescription>Sine oscillator with phase and sync inputs, bipolar, s-rate</sDescription>
+               <author>Are Leistad</author>
+               <license>BSD</license>
+               <helpPatch>osc.axh</helpPatch>
+               <inlets>
+                  <frac32.bipolar name="pitch" description="Pitch input"/>
+                  <frac32buffer.bipolar name="phase" description="Phase input"/>
+                  <frac32buffer.bipolar name="sync" description="Phase reset input"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="Sine output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+
+      uint32_t Phase;
+      int32_t old_sync;
+      int32_t freq;
+
+    ]]></code.declaration>
+               <code.init><![CDATA[
+
+      Phase = 0;
+      old_sync = 0;
+
+    ]]></code.init>
+               <code.krate><![CDATA[
+
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+    ]]></code.krate>
+               <code.srate><![CDATA[
+
+      if( inlet_sync > 0 && old_sync <= 0 )
+        Phase = 0;
+      else
+        Phase += freq;
+      old_sync = inlet_sync;
+
+      int32_t r;
+      int32_t p2 = Phase + (inlet_phase<<4);
+      SINE2TINTERP(p2,r)
+      outlet_out = (r>>4);
+
+    ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Mix " x="14" y="98">
             <params/>
             <attribs/>
@@ -1527,7 +1627,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="b48f5aad-05e0-4c83-89ab-bf3c6c080699" name="Saver" x="770" y="42">
+   <patcher type="patch/patcher" uuid="aacdcb83-faaa-4c68-b040-ad389adbff5d" name="Saver" x="770" y="42">
       <params>
          <bool32.mom name="Create Wavetable" value="0"/>
          <int32 name="Save To" value="286"/>
@@ -1666,7 +1766,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="d18c4e8e-ab8f-438f-8d46-6c0b9547c9e8" name="Player (P=-57.77)" x="882" y="42">
+   <patcher type="patch/patcher" uuid="3564b5a2-d072-4de0-ad2f-a6b7abe53e79" name="Player (P=-57.77)" x="882" y="42">
       <params>
          <int32 name="LOAD" value="286"/>
          <int32.hradio name="Oct" value="1"/>
@@ -2041,7 +2141,7 @@
    <comment type="patch/comment" x="770" y="266" text="WT NAME HERE ^"/>
    <comment type="patch/comment" x="882" y="266" text="^(Leave pitch at -57.77000045776367 to fit perfectly in scope)"/>
    <comment type="patch/comment" x="770" y="280" text="IN SAVER OBJECT"/>
-   <patcher type="patch/patcher" uuid="9d85ec76-89e6-45d7-b868-10a4d48c1c10" name="Saw Add Mod 2" x="266" y="308">
+   <patcher type="patch/patcher" uuid="3d7a7d15-7ce0-48b6-897a-0d907931855c" name="Saw Add Mod 2" x="266" y="308">
       <params>
          <int32 name="1-8" value="2"/>
          <bool32.tgl name="On/Off" value="0"/>
@@ -2355,7 +2455,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="ca2c5c5a-88f8-4092-b3fe-d7a350f9ce5a" name="Sine Add Mod 2" x="476" y="308">
+   <patcher type="patch/patcher" uuid="8451088f-7c7d-4057-939f-f5911acd6a6b" name="Sine Add Mod 2" x="476" y="308">
       <params>
          <int32 name="1-8" value="1"/>
          <bool32.tgl name="On/Off" value="0"/>
@@ -2674,7 +2774,7 @@
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="8ca69ae4-a968-440f-8ebb-ee3918cbda2a" name="Saw/Sin Sweep Lfo" x="658" y="336">
+   <patcher type="patch/patcher" uuid="05799684-e5a6-4de8-b0d5-5368fd481c1a" name="Saw/Sin Sweep Lfo" x="658" y="336">
       <params>
          <bool32.tgl name="On/Off" value="1"/>
          <bool32.tgl name="Sin/Saw" value="1"/>
@@ -2955,7 +3055,7 @@
    <comment type="patch/comment" x="224" y="588" text="Sin 2               "/>
    <comment type="patch/comment" x="336" y="588" text="Sin 1               "/>
    <comment type="patch/comment" x="1148" y="588" text="Saw/Sin ADD Osc&apos;s"/>
-   <patcher type="patch/patcher" uuid="4a09bdd4-8328-43ac-939f-347588ff5f7b" name="Morph 2 Saw_" x="14" y="602">
+   <patcher type="patch/patcher" uuid="ee03488c-7407-4ebb-b7f3-e116a2f346ee" name="Morph 2 Saw_" x="14" y="602">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
@@ -3190,7 +3290,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="7efa993f-3815-43bd-930c-fad231c51577" name="Morph 1 Saw" x="126" y="602">
+   <patcher type="patch/patcher" uuid="6b3108eb-de01-40a6-a52e-aca030a74782" name="Morph 1 Saw" x="126" y="602">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
@@ -3425,7 +3525,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="d7afa0ef-d4b0-4ef6-b3ac-4cea98a1bbf4" name="Morph 1 Sin_" x="224" y="602">
+   <patcher type="patch/patcher" uuid="24b404a7-00ab-4b5f-b882-e980585a5434" name="Morph 1 Sin_" x="224" y="602">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
@@ -3660,7 +3760,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="88ac5daf-4322-4217-996d-da8848ad038a" name="Morph 2 Sin" x="336" y="602">
+   <patcher type="patch/patcher" uuid="f65a7bb1-437f-47b0-8113-05dde9833a97" name="Morph 2 Sin" x="336" y="602">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
@@ -3895,7 +3995,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="6844e1c7-7978-4b8a-859f-87acf250d51e" name="Saw add 1" x="1148" y="602">
+   <patcher type="patch/patcher" uuid="8d3f5229-e291-4fd9-ab28-136732234088" name="Saw add 1" x="1148" y="602">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
