@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="rndPatt" uuid="0b4b247e-7f3f-4cfc-856f-5ab01a4515c0">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="rndPatt" uuid="68c53b32-9c88-49c3-b557-24af6653cde1">
       <sDescription>random generated pattern
 each time a trigger is received, positions of the pattern will be randomised or not, depending on the change parameter (in percentage, so 100 is randomising the whole pattern when triggered).
 
@@ -14,15 +14,16 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
-         <bool32.rising name="rndi" description="trigger"/>
+         <bool32.rising name="rnd" description="trigger"/>
          <int32 name="count"/>
          <int32 name="length"/>
-         <int32 name="chance"/>
-         <frac32 name="part"/>
+         <int32 name="maxi"/>
+         <int32 name="cha"/>
+         <int32.bipolar name="off"/>
       </inlets>
       <outlets>
          <int32.positive name="v"/>
-         <bool32.pulse name="rndo"/>
+         <bool32.pulse name="rnd"/>
       </outlets>
       <displays/>
       <params>
@@ -30,12 +31,16 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
             <MinValue i="0"/>
             <MaxValue i="65536"/>
          </int32>
-         <frac32.u.map name="part"/>
-         <bool32.mom name="rnd"/>
+         <int32 name="offset">
+            <MinValue i="-64"/>
+            <MaxValue i="64"/>
+         </int32>
          <int32 name="chance">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
+         <frac32.u.map name="length"/>
+         <bool32.mom name="rnd"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int get[64];
@@ -44,36 +49,31 @@ int ntrig;
 int count;
 int32_t length;
 int i;
-int on;
-]]></code.declaration>
-      <code.init><![CDATA[      on=1;
-ntrig = 0;
-]]></code.init>
-      <code.krate><![CDATA[int chance=param_chance+inlet_chance;
-chance=chance<0?0:chance;
-chance=chance>100?100:chance;
-int trig=inlet_rndi+param_rnd;
+int on;]]></code.declaration>
+      <code.init><![CDATA[on=1;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[int trig=inlet_rnd+param_rnd;
 if(inlet_length>0){
-length=___SMMUL((param_part+inlet_part)<<3,inlet_length<<2);}
-else length=param_part>>21;
+length=___SMMUL(param_length<<3,inlet_length<<2);}
+else length=param_length>>21;
 int TRIG=0;
    if ((trig>0) && !ntrig) {
    	TRIG=1;
       for(i=0;i<64;i++){
          get[i] = (int32_t)(GenerateRandomNumber()% (100));
-         if(get[i]<=chance){
-         val[i] = (int32_t)(GenerateRandomNumber()% (param_max));}}
+         if(get[i]<=param_chance+inlet_cha){
+         val[i] = (int32_t)(GenerateRandomNumber()% (param_max+inlet_maxi));}}
       ntrig=1;
    }
    else if (!(trig>0)) ntrig=0;
    count=inlet_count-(inlet_count/length)*length;
-   outlet_v = val[count];
+   outlet_v = param_offset+inlet_off+val[count];
 if(on>0){
 	for(i=0;i<64;i++){
-         val[i] = (int32_t)(GenerateRandomNumber()% (param_max));}
+         val[i] = (int32_t)(GenerateRandomNumber()% (param_max+inlet_maxi));}
 }
 
 on=0;
-outlet_rndo=TRIG;]]></code.krate>
+outlet_rnd=TRIG;]]></code.krate>
    </obj.normal>
 </objdefs>
