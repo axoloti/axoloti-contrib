@@ -55,6 +55,9 @@
       <spinner name="savecc" MinValue="-1" MaxValue="127" DefaultValue="-1"/>
       <spinner name="autoload" MinValue="-1" MaxValue="999" DefaultValue="-1"/>
     </attribs>
+    <includes>
+       <include>codec.h</include>
+    </includes>
     <depends>
       <depend>fatfs</depend>
     </depends>
@@ -113,7 +116,7 @@
        *    0:/my_patch/foo001.pst
        *
        *  This means there are 1000 preset slots, although only the first 128
-       *  can be accessed via MID (for now).
+       *  can be accessed via MIDI (for now).
        *
        *  If a patch has multiple preset managers throughout its sub patches,
        *  each preset manager needs a unique string for the prefix. This allows
@@ -135,8 +138,9 @@
        *    word N   =>  last parameter name hash
        *    word N+1 =>  last parameter value
        *
-       *  When using a patch parent table (in an SD card file if it has to be so, using the preset slave),
-       *  the parameters will be grouped by patch:
+       *  Possible workaround for global parameter access (see macro USE_PATCHES_FILE):
+       *  When using a patch parent table (in an SD card file if it has to be so, using a preset_manager master
+       *  with preset_slave modules in the sub patches), the parameters will be grouped by sub patch:
        *
        *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
        *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode, 2 = patch-parent-table?
@@ -151,6 +155,15 @@
        *    word N+2 =>  second patch header, patch id
        *    word N+3 =>  second patch header, number of parameters for this patch
        *    ...
+       *
+       *  Possible TBIs:
+       *
+       *   - Avoiding audio glitches by calling codec_clearbuffer() before save/load operations
+       *   - Avoiding audio glitches by providing a gain coefficiant outlet with fade in/out
+       *     before and after save/load operations
+       *   - Much faster loading by scannign the directory and pre-loading all presets into RAM
+       *     on module startup and preset save operations. Challenges: memory mamangement, sparse preset sets.
+       *
        */
 
       //#define DEBUGF LogTextMessage
@@ -299,6 +312,8 @@
         FIL           FileObject;
         char          filename[64];
 
+        codec_clearbuffer();
+
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS );
         if( err != FR_OK )
@@ -417,10 +432,6 @@
                     /*
                      *  At this point we can save parent->PExch[patch_i] since it has a name
                      *  in ObjectKvps[global_i] that we can take a hash of and store.
-                     *  This is kludgy, but with what we have to go on, it's the best
-                     *  we can do for parameter file integrity until we get at least
-                     *  a subpatch root pointer table in xpatch.cpp
-                     *
                      *  On loading, we need to do this again, I.e. ensure thar the named parameters
                      *  PEx has an address that's a match in both the global ObjectKvps[] and the sub patch parent->PExch[]
                      */
@@ -498,6 +509,8 @@
         unsigned int      bytes_read;
         char              filename[64];
 
+        codec_clearbuffer();
+
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_READ | FA_OPEN_EXISTING );
         if( err != FR_OK )
@@ -509,7 +522,7 @@
         if( err != FR_OK )
           return file_error( &FileObject, err, filename );
 
-        // Check id and version word, determine version.
+        // Check id and version, call the right loader.
         for( int i = 0; i < 3; i++ )
           {
             if( header.magic[i] != magic_v2[i] )
@@ -884,7 +897,9 @@
 #ifdef USE_PATCHES_FILE
           else if( start_sequence == 2 )
             {
-              // This is just for diagnostics - we'll pick up the file when save/load is triggered.
+              // The master preset_manager can pick up the patches file here.
+              // This is just for diagnostics - we'll pick up the file when save/load is triggered
+              // the appropriate loader will be called by preset_load().
               preset_dump_patches_file();
             }
 #endif
@@ -953,8 +968,10 @@
 
           if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
             {
-              // 12.04.2016 17:02 - No save pulse on globals saves?
-              //                    One more savemode = "GobalNoTrig" for this or just skip the pulse?
+              // 12.04.2016 17:02 - No save pulse on global saves?
+              //                    One more savemode = "GobalNoTrig" for this
+              //                    or just skip the pulse?
+              //                    or let users do "responsible patching" to avoid trigger loops and such.
               save_pulse = 1;
               preset_no  = preset_candidate;
             }
