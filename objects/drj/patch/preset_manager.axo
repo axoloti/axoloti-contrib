@@ -28,16 +28,18 @@
       <bool32.mom name="save" description="Click to save preset"/>
     </params>
     <attribs>
-      <combo name="antiglitch">
+      <combo name="volfade">
          <MenuEntries>
-            <string>None</string>
-            <string>Silence</string>
-            <string>Volume</string>
+            <string>Fade 0.50s</string>
+            <string>Fade 0.10s</string>
+            <string>Fade 0.02s</string>
+            <string>Immediate</string>
          </MenuEntries>
          <CEntries>
-            <string>0</string>
-            <string>1</string>
-            <string>2</string>
+            <string>((0x08000000)/1500)</string>
+            <string>((0x08000000)/300)</string>
+            <string>((0x08000000)/60)</string>
+            <string>(0x08000000)</string>
          </CEntries>
       </combo>
       <combo name="savemode">
@@ -182,12 +184,6 @@
       //#define DEBUGF LogTextMessage
       #define DEBUGF(...) {}
 
-      //#define USE_CLEAR_BUFFER
-      //#define USE_GAIN_RAMP
-      #define  PRESET_MANAGER_ANTIGLITCH_none    0
-      #define  PRESET_MANAGER_ANTIGLITCH_silence 1
-      #define  PRESET_MANAGER_ANTIGLITCH_volume  2
-
       //#define USE_PATCHES_FILE
 
       int32_t     start_sequence;
@@ -204,12 +200,11 @@
       const char  *suffix;
       const char  *prefix_copy;
       int32_t     gain_coeff;
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-      int32_t     gain_rate;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
       int32_t     save_load_state;
-      #define     PRESET_MANAGER_gain_rate ((1<<27)/1500)
 #endif
+
 #ifdef USE_PATCHES_FILE
       const char  *patches_filename;
 #endif
@@ -230,12 +225,6 @@
 
       #define PRESET_MANAGER_PE_SIGNAL_MASK 0xFFFD
 
-
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-      /*
-       *  Gain ramping up/down before/after  save and load
-       */
       enum
       {
         PRESET_MANAGER_SAVE_LOAD_STATE_idle = 0,
@@ -243,28 +232,6 @@
         PRESET_MANAGER_SAVE_LOAD_STATE_load
       } PRESET_MANAGER_SAVE_LOAD_STATE;
 
-      int poll_gain_ramp( void )
-      {
-        if( gain_rate != 0 )
-          {
-            gain_coeff += gain_rate;
-            if( gain_rate > 0 && gain_coeff >= 1<<27 )
-              {
-                gain_coeff     = 1<<27;
-                gain_rate      = 0;
-              }
-            else if( gain_coeff <= 0 )
-              {
-                gain_coeff     = 0;
-                gain_rate      = 0;
-              }
-          }
-        else
-          {
-            gain_coeff  = (1<<27);
-          }
-      }
-#endif
 
       /*
        *  Constructs a filename to use
@@ -901,10 +868,9 @@
       magic_v2        = "PRS2";         // The file header magic word, version 2
       suffix          = ".prs";         // The file extension
       prefix_copy     = "";             // Need the inlet_prefix pointer in the MIDI handler
-      gain_coeff      = (1<<27);
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-      gain_rate       = 0;
+      gain_coeff      = (1<<27);        // Current volume output, used for fade out/in on save/load
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
       save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
 #endif
 #ifdef USE_PATCHES_FILE
@@ -997,7 +963,6 @@
            *  Load triggered
            */
           DEBUGF("preset_manager::krate(): load_triggered");
-          //int32_t preset_candidate;
           if( old_param_load != param_load && param_load == 0 )
             {
               preset_candidate = param_preset;
@@ -1007,11 +972,13 @@
               preset_candidate = inlet_preset;
             }
 
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-           gain_rate       = -PRESET_MANAGER_gain_rate;
-           save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_load;
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_load;
 #else
+          // Use immediate switching
+          codec_clearbuffer();
           if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
             {
               load_pulse = 1;
@@ -1027,7 +994,6 @@
            *  Save triggered
            */
           DEBUGF("preset_manager::krate(): save_triggered" );
-          //int32_t preset_candidate;
           if( old_param_save != param_save && param_save == 0 )
             {
               preset_candidate = param_preset;
@@ -1037,11 +1003,13 @@
               preset_candidate = inlet_preset;
             }
 
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-           gain_rate       = -PRESET_MANAGER_gain_rate;
-           save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_save;
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_save;
 #else
+          // Use immediate switching
+          codec_clearbuffer();
           if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
             {
               // 12.04.2016 17:02 - No save pulse on global saves?
@@ -1054,18 +1022,20 @@
 #endif
         }
 
-
-//#ifdef USE_GAIN_RAMP
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+#if attr_volfade < (1<<27)
       /*
-       *  Waits for the volume to ramp down before saving or loading
+       *  Waits for the volume to ramp down before performing deferred saving or loading
        *  then ramps the volume back up when save or load is done.
+       *  We save this codespace if immedate presetc switching is used.
        */
-      if( gain_rate < 0 )
+      if( fade_rate < 0 )
         {
-          poll_gain_ramp();
-          if( gain_rate == 0 )
+          // Fading out before save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
             {
+              gain_coeff     = 0;
+              fade_rate      = 0;
               codec_clearbuffer();
               if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_load )
                 {
@@ -1074,7 +1044,6 @@
                       load_pulse = 1;
                       preset_no  = preset_candidate;
                     }
-                  gain_rate = PRESET_MANAGER_gain_rate;
                 }
               else if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_save )
                 {
@@ -1083,14 +1052,21 @@
                       save_pulse = 1;
                       preset_no  = preset_candidate;
                     }
-                  gain_rate = PRESET_MANAGER_gain_rate;
                 }
+              // Start fade in after save/load
+              fade_rate = attr_volfade;
               save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
             }
         }
-      else if( gain_rate > 0 )
+      else if( fade_rate > 0 )
         {
-          poll_gain_ramp();
+          // Fading in after save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff     = 1<<27;
+              fade_rate      = 0;
+            }
         }
 #endif
 
