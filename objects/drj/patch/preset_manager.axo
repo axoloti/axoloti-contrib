@@ -14,6 +14,7 @@
       <int32 name="preset" description="The current preset number"/>
       <bool32.pulse name="load" description="Pulse signals loading"/>
       <bool32.pulse name="save" description="Pulse signals saving"/>
+      <frac32.positive name="volume" description="Volume for avoiding glitches on save/load"/>
     </outlets>
     <displays>
       <int32.label name="current  "/>
@@ -27,6 +28,18 @@
       <bool32.mom name="save" description="Click to save preset"/>
     </params>
     <attribs>
+      <combo name="antiglitch">
+         <MenuEntries>
+            <string>None</string>
+            <string>Silence</string>
+            <string>Volume</string>
+         </MenuEntries>
+         <CEntries>
+            <string>0</string>
+            <string>1</string>
+            <string>2</string>
+         </CEntries>
+      </combo>
       <combo name="savemode">
          <MenuEntries>
             <string>Global</string>
@@ -169,10 +182,17 @@
       //#define DEBUGF LogTextMessage
       #define DEBUGF(...) {}
 
+      //#define USE_CLEAR_BUFFER
+      //#define USE_GAIN_RAMP
+      #define  PRESET_MANAGER_ANTIGLITCH_none    0
+      #define  PRESET_MANAGER_ANTIGLITCH_silence 1
+      #define  PRESET_MANAGER_ANTIGLITCH_volume  2
+
       //#define USE_PATCHES_FILE
 
       int32_t     start_sequence;
       int32_t     preset_no;
+      int32_t     preset_candidate;
       int32_t     midi_preset_no;
       int32_t     old_inlet_save;
       int32_t     old_param_save;
@@ -183,6 +203,13 @@
       const char  *magic_v2;
       const char  *suffix;
       const char  *prefix_copy;
+      int32_t     gain_coeff;
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+      int32_t     gain_rate;
+      int32_t     save_load_state;
+      #define     PRESET_MANAGER_gain_rate ((1<<27)/1500)
+#endif
 #ifdef USE_PATCHES_FILE
       const char  *patches_filename;
 #endif
@@ -202,6 +229,42 @@
       } PRESET_MANAGER_SAVE_MODE;
 
       #define PRESET_MANAGER_PE_SIGNAL_MASK 0xFFFD
+
+
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+      /*
+       *  Gain ramping up/down before/after  save and load
+       */
+      enum
+      {
+        PRESET_MANAGER_SAVE_LOAD_STATE_idle = 0,
+        PRESET_MANAGER_SAVE_LOAD_STATE_save,
+        PRESET_MANAGER_SAVE_LOAD_STATE_load
+      } PRESET_MANAGER_SAVE_LOAD_STATE;
+
+      int poll_gain_ramp( void )
+      {
+        if( gain_rate != 0 )
+          {
+            gain_coeff += gain_rate;
+            if( gain_rate > 0 && gain_coeff >= 1<<27 )
+              {
+                gain_coeff     = 1<<27;
+                gain_rate      = 0;
+              }
+            else if( gain_coeff <= 0 )
+              {
+                gain_coeff     = 0;
+                gain_rate      = 0;
+              }
+          }
+        else
+          {
+            gain_coeff  = (1<<27);
+          }
+      }
+#endif
 
       /*
        *  Constructs a filename to use
@@ -312,7 +375,10 @@
         FIL           FileObject;
         char          filename[64];
 
+//#ifdef USE_CLEAR_BUFFER
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_silence
         codec_clearbuffer();
+#endif
 
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS );
@@ -509,7 +575,10 @@
         unsigned int      bytes_read;
         char              filename[64];
 
+//#ifdef USE_CLEAR_BUFFER
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
         codec_clearbuffer();
+#endif
 
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_READ | FA_OPEN_EXISTING );
@@ -842,6 +911,12 @@
       magic_v2        = "PRS2";         // The file header magic word, version 2
       suffix          = ".prs";         // The file extension
       prefix_copy     = "";             // Need the inlet_prefix pointer in the MIDI handler
+      gain_coeff      = (1<<27);
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+      gain_rate       = 0;
+      save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+#endif
 #ifdef USE_PATCHES_FILE
       patches_filename= "patches.ppr";  // The "Patch Preset Registry" file
 #endif
@@ -932,7 +1007,7 @@
            *  Load triggered
            */
           DEBUGF("preset_manager::krate(): load_triggered");
-          int32_t preset_candidate;
+          //int32_t preset_candidate;
           if( old_param_load != param_load && param_load == 0 )
             {
               preset_candidate = param_preset;
@@ -942,11 +1017,17 @@
               preset_candidate = inlet_preset;
             }
 
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+           gain_rate       = -PRESET_MANAGER_gain_rate;
+           save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_load;
+#else
           if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
             {
               load_pulse = 1;
               preset_no  = preset_candidate;
             }
+#endif
         }
       else if(   (old_inlet_save != inlet_save && inlet_save != 0)
               || (old_param_save != param_save && param_save == 0)
@@ -956,7 +1037,7 @@
            *  Save triggered
            */
           DEBUGF("preset_manager::krate(): save_triggered" );
-          int32_t preset_candidate;
+          //int32_t preset_candidate;
           if( old_param_save != param_save && param_save == 0 )
             {
               preset_candidate = param_preset;
@@ -966,6 +1047,11 @@
               preset_candidate = inlet_preset;
             }
 
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+           gain_rate       = -PRESET_MANAGER_gain_rate;
+           save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_save;
+#else
           if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
             {
               // 12.04.2016 17:02 - No save pulse on global saves?
@@ -975,8 +1061,49 @@
               save_pulse = 1;
               preset_no  = preset_candidate;
             }
+#endif
         }
 
+
+//#ifdef USE_GAIN_RAMP
+#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
+      /*
+       *  Waits for the volume to ramp down before saving or loading
+       *  then ramps the volume back up when save or load is done.
+       */
+      if( gain_rate < 0 )
+        {
+          poll_gain_ramp();
+          if( gain_rate == 0 )
+            {
+              if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_load )
+                {
+                  if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      load_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                  gain_rate = PRESET_MANAGER_gain_rate;
+                }
+              else if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_save )
+                {
+                  if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      save_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                  gain_rate = PRESET_MANAGER_gain_rate;
+                }
+              save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+            }
+        }
+      else if( gain_rate > 0 )
+        {
+          poll_gain_ramp();
+        }
+#endif
+
+      outlet_volume   = gain_coeff;
       disp_current    = preset_no;
       outlet_preset   = preset_no;
       outlet_load     = load_pulse;
@@ -1020,4 +1147,27 @@
 
     ]]></code.midihandler>
   </obj.normal>
+
+  <obj.normal id="stereo_volume" uuid="awc88e561967f018927f535acc6a1829101d1054">
+    <sDescription>Stereo volume control</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="left" description="Left input"/>
+      <frac32buffer.bipolar name="right" description="Right input"/>
+      <frac32.positive      name="volume" description="Volume"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="left" description="Left output"/>
+      <frac32buffer.bipolar name="right" description="Right output"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs/>
+    <code.srate><![CDATA[
+      outlet_left  = __SSAT( ___SMMUL( inlet_volume<<3, inlet_left<<2)  ,28 );
+      outlet_right = __SSAT( ___SMMUL( inlet_volume<<3, inlet_right<<2) ,28 );
+    ]]></code.srate>
+  </obj.normal>
+
 </objdefs>
