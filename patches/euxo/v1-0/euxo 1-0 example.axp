@@ -5,17 +5,16 @@
       <params/>
       <attribs>
          <text attributeName="script">
-            <sText><![CDATA[uint8_t *txbuf;
+            <sText><![CDATA[/* test version 1.0 
+ * for Reinhard
+ * Euxo 1.0
+ */
+uint8_t *txbuf;
 uint8_t *rxbuf;
 int32_t *potBuf;
 int32_t *potBufOld;
 int32_t *cvBuf;
 int32_t *cvBufOld;
-
-int ptrig1 = 0;
-int ptrig2 = 0;
-
-uint8_t pin = 0;
 
 void setup(void){
 	static uint8_t _txbuf[6] __attribute__ ((section (".sram2")));
@@ -36,16 +35,7 @@ void setup(void){
 	palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
 	palWritePad(GPIOA,3,1);
 
-	// setup the pins
-	palSetPadMode(GPIOA, 4, PAL_MODE_OUTPUT_PUSHPULL);// NSS
-	palSetPadMode(GPIOA, 5, PAL_MODE_OUTPUT_PUSHPULL);// SCK
-	palSetPadMode(GPIOA, 7, PAL_MODE_OUTPUT_PUSHPULL);// MOSI
-	//palSetPadMode(GPIOA, 4, PAL_MODE_ALTERNATE(5));// NSS
-	palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(5));// SCK
-	palSetPadMode(GPIOA, 6, PAL_MODE_ALTERNATE(5));// MISO
-	palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5));// MOSI
-	static const SPIConfig spicfg = {NULL, GPIOA, 4, 0 | 0 | 0 | 6<<3 | SPI_CR1_LSBFIRST};
-	spiStart(&SPID1, &spicfg);
+
 }
 
 void loop(void){
@@ -57,7 +47,12 @@ void loop(void){
  	txbuf[5] = 0b00000000;
  	
     	for(int pin=0; pin<8; pin++){
- 
+		// the following code counts through the bit code to read each single ADC channel.
+		// example ro read ADC channel 1
+		// txbuf[0] = 0b01100000;
+		// txbuf[1] = 0b00000000;
+		// txbuf[2| = 0b00000000;
+ 		
 	        txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
 	 
 	        if (pin % 4 == 0) { // pin == 0 || pin == 4
@@ -77,8 +72,7 @@ void loop(void){
 		palWritePad(GPIOA,3,1); // disable pot read
 		
 		potBuf[pin] = (rxbuf[4]<<16 | rxbuf[3]<<8 | rxbuf[2]) << 8;
-	
-		if ((potBufOld[pin] != potBuf[pin])&(!ptrig1)) { 		
+
 			pot1 = potBuf[1];
 			pot2 = potBuf[0];
 			pot3 = potBuf[2];
@@ -88,15 +82,29 @@ void loop(void){
 			pot7 = potBuf[6];
 			pot8 = potBuf[4];
 
-			potBufOld[pin] = potBuf[pin];
-  			ptrig1 = 1;
-		}
-		else {
-  			ptrig1 = 0;
-		}
-		//chThdSleepMilliseconds(1);
+		chThdSleepMilliseconds(5);
+    	}
+    	
+	// cv section
+	txbuf[2] = 0b00000000;
+	txbuf[3] = 0b00000000;
+	txbuf[4] = 0b00000000;
+ 	txbuf[5] = 0b00000000;
+ 	
+    	for(int pin=0; pin<8; pin++){
+    		txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
+	 
+	        if (pin % 4 == 0) { // pin == 0 || pin == 4
+	            txbuf[1] = 0b00000000;
+	        } else if (pin % 4 == 1) { // pin == 1 || pin == 5
+	            txbuf[1] = 0b00000010;
+	        } else if (pin % 4 == 2) { // pin == 2 || pin == 6
+	            txbuf[1] = 0b00000001;
+	        } else {
+	            txbuf[1] = 0b00000011;
+	        }
 
-		//pot section
+				
 		palWritePad(GPIOA,2,0); // enable cv read
 		spiSelect(&SPID1);		// START SPI
 		spiExchange(&SPID1,6,txbuf,rxbuf); // write/read at the same time
@@ -104,23 +112,16 @@ void loop(void){
 		palWritePad(GPIOA,2,1); // disable cv read
 		
 		cvBuf[pin] = ((rxbuf[4]<<16 | rxbuf[3]<<8 | rxbuf[2]) << 8);
+			//if (pin < 7){ cvBuf[pin] = (cvBuf[pin]-(1<<26))<<1;}
+			cvin1 = 0x07FFFFFF - cvBuf[7];
+			cvin2 = 0x07FFFFFF - cvBuf[3];
+			cvin3 = 0x07FFFFFF - cvBuf[2];
+			cvin4 = 0x07FFFFFF - cvBuf[6];
+			cvin5 = 0x07FFFFFF - cvBuf[1];
+			cvin6 = 0x07FFFFFF - cvBuf[4];
+			cvin7 = 0x07FFFFFF - cvBuf[0];
+			cvin8 = 0x07FFFFFF - cvBuf[5];
 
-		if ((cvBufOld[pin] != cvBuf[pin])&(!ptrig2)) { 		
-			cvin1 = 0x07FFFFFF -cvBuf[1];
-			cvin2 = cvBuf[0]-(1<<26)<<1;
-			cvin3 = cvBuf[2]-(1<<26)<<1;
-			cvin4 = cvBuf[3]-(1<<26)<<1;
-			cvin5 = cvBuf[5]-(1<<26)<<1;
-			cvin6 = cvBuf[7]-(1<<26)<<1;
-			cvin7 = cvBuf[6]-(1<<26)<<1;
-			cvin8 = cvBuf[4]-(1<<26)<<1;
-
-			cvBufOld[pin] = cvBuf[pin];
-  			ptrig2 = 1;
-		}
-		else {
-  			ptrig2 = 0;
-		}
 		chThdSleepMilliseconds(5);
 	}
 }]]></sText>
