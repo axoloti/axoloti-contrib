@@ -375,11 +375,6 @@
         FIL           FileObject;
         char          filename[64];
 
-//#ifdef USE_CLEAR_BUFFER
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_silence
-        codec_clearbuffer();
-#endif
-
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS );
         if( err != FR_OK )
@@ -574,11 +569,6 @@
         PresetFileHeader  header;
         unsigned int      bytes_read;
         char              filename[64];
-
-//#ifdef USE_CLEAR_BUFFER
-#if attr_antiglitch == PRESET_MANAGER_ANTIGLITCH_volume
-        codec_clearbuffer();
-#endif
 
         prepare_filename( filename, 64, prefix, preset_no );
         err = f_open( &FileObject, filename, FA_READ | FA_OPEN_EXISTING );
@@ -1076,6 +1066,7 @@
           poll_gain_ramp();
           if( gain_rate == 0 )
             {
+              codec_clearbuffer();
               if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_load )
                 {
                   if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
