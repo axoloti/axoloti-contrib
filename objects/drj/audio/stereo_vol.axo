@@ -1,0 +1,45 @@
+<objdefs>
+  <obj.normal id="stereo_volume" uuid="awc88e561967f018927f535acc6a1829101d1054">
+    <sDescription>Stereo volume control, control inlet</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="left" description="Left input"/>
+      <frac32buffer.bipolar name="right" description="Right input"/>
+      <frac32.positive      name="volume" description="Volume"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="left" description="Left output"/>
+      <frac32buffer.bipolar name="right" description="Right output"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs/>
+    <code.srate><![CDATA[
+      outlet_left  = __SSAT( ___SMMUL( inlet_volume<<3, inlet_left<<2)  ,28 );
+      outlet_right = __SSAT( ___SMMUL( inlet_volume<<3, inlet_right<<2) ,28 );
+    ]]></code.srate>
+  </obj.normal>
+  <obj.normal id="stereo_volume" uuid="awc8867f01982911058927f531cc6a1e565a1054">
+    <sDescription>Stereo volume control, built in knob</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="left" description="Left input"/>
+      <frac32buffer.bipolar name="right" description="Right input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="left" description="Left output"/>
+      <frac32buffer.bipolar name="right" description="Right output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.u.map.squaregain name="volume"/>
+    </params>
+    <attribs/>
+    <code.srate><![CDATA[
+      outlet_left  = __SSAT( ___SMMUL( param_volume, inlet_left)  ,28 );
+      outlet_right = __SSAT( ___SMMUL( param_volume, inlet_right) ,28 );
+    ]]></code.srate>
+  </obj.normal>
+</objdefs>
