@@ -186,6 +186,8 @@
 
       //#define USE_PATCHES_FILE
 
+      //#define USE_NOOF_PARAMS_TEST
+
       int32_t     start_sequence;
       int32_t     preset_no;
       int32_t     preset_candidate;
@@ -662,12 +664,14 @@
         DEBUGF("preset_manager::preset_load_global(): loading file saved with global mode" );
 
         n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
         int n_global_IPVP_params = get_noof_global_IPVP_params();
         if( n_params != n_global_IPVP_params )
           {
             DEBUGF("preset_manager::preset_load_global(): noof params mismatch %d vs %d", n_params, n_global_IPVP_params );
             return FR_DENIED;
           }
+#endif
 
         /*
          *  Read each parameter (hash,value) pair from the file and find a matching ObjectKvps[] entry
@@ -707,12 +711,14 @@
         DEBUGF("preset_manager::preset_load_subpatch(): loading file saved with sub patch mode" );
 
         n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
         int n_patch_IPVP_params = get_noof_patch_IPVP_params();
         if( n_params != n_patch_IPVP_params )
           {
             DEBUGF("preset_manager::preset_load_subpatch(): noof params mismatch" );
             return FR_DENIED;
           }
+#endif
 
         /*
          *  Read each parameter (hash,value) pair from the file and search for a matching
