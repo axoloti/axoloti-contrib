@@ -7,14 +7,22 @@
       <frac32 name="time" description="Delay time bias"/>
       <frac32 name="tmod" description="Delay time modulation"/>
       <int32 name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
+      <int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/>
       <int32 name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
       <bool32.rising name="24ppq" description="Clock input"/>
     </inlets>
     <outlets>
-      <frac32buffer name="out" description="Delay output"/>
+      <frac32buffer name="out"  description="Delay output"/>
+      <frac32       name="time" description="Delay time, fraction of the referenced delay writer's time"/>
     </outlets>
-    <displays/>
+    <!--displays>
+      <bool32 name="bounds"/>
+    </displays-->
     <params>
+      <int32 name="clockmul" noLabel="false">
+        <MinValue i="1"/>
+        <MaxValue i="128"/>
+      </int32>
       <int32 name="clockdiv" noLabel="false">
         <MinValue i="1"/>
         <MaxValue i="128"/>
@@ -64,6 +72,9 @@
 
       #define USE_CLOCK_SMOOTHING
 
+      #define USE_NEW_SYNC_CODE
+      #define USE_CLOCK_MULTIPLIER
+
       enum
       {
         CLOCK_SOURCE_internal = 0,
@@ -72,13 +83,19 @@
         CLOCK_SOURCE_midi_omni= 3
       } CLOCK_SOURCE;
 
+      uint32_t  sync_count;
       uint32_t  ktimer;           // 3kHz timer
       uint32_t  old_24ppq;
       int32_t   clock_source;
+#ifdef USE_CLOCK_MULTIPLIER
+      int32_t   clock_multiplier;
+#endif
       int32_t   clock_divider;
       float     delay_length_cpl; // cache result of  1.0 / lenght of delay line
       uint32_t  midi_sync_time;   // Synced time expressed in fractional delay length
+#ifndef USE_NEW_SYNC_CODE
       uint32_t  midi_period;      // Last measued sync period in samples
+#endif
       uint32_t  midi_last_ktime;  // MIDI/24PPQ clock capture
       int32_t   midi_clock_count;
 #ifdef USE_CLOCK_SMOOTHING
@@ -94,6 +111,51 @@
         return 0;
       }
 
+#ifdef USE_NEW_SYNC_CODE
+      void on_sync_clock( void )
+      {
+        midi_clock_count++;
+
+        // Find noof sample periods since last time;
+        float period;
+#ifdef USE_CLOCK_MULTIPLIER
+        period  = (ktimer - midi_last_ktime) * 16 * clock_divider;
+        period  = period / clock_multiplier;
+#else
+        period  = (ktimer - midi_last_ktime) * 16 * clock_divider;
+#endif
+
+#ifdef USE_CLOCK_SMOOTHING
+        // Leaky integrator to minimize glitches on tempo changes
+        period = period + 0.1f * (midi_last_period - period);
+        midi_last_period = period;
+#endif
+        if( period < 1.0f )
+          {
+            period = 1.0f;
+          }
+
+        if( midi_clock_count >= clock_divider )
+          {
+            midi_clock_count = 0;
+          }
+
+        midi_last_ktime = ktimer;
+
+        if( sync_count < 1 )
+          {
+            sync_count++;
+          }
+        else // if( sync_count >= 2 )
+          {
+            //midi_period     = (uint32_t) period;
+            //float frac_time = midi_period * delay_length_cpl;
+            float frac_time = period * delay_length_cpl;
+            midi_sync_time  = (uint32_t) (frac_time * (1<<27));
+          }
+      }
+
+#else
       void on_sync_clock( void )
       {
         midi_clock_count++;
@@ -110,6 +172,7 @@
               {
                 period = 1.0f;
               }
+
             midi_period      = (uint32_t) period;
             midi_clock_count = 0;
             midi_last_ktime  = ktimer;
@@ -117,18 +180,26 @@
             midi_sync_time  = (uint32_t) (frac_time * (1<<27));
           }
       }
+#endif
+
 
     ]]></code.declaration>
     <code.init><![CDATA[
 
+      sync_count       = 0;
       ktimer           = 0;
       old_24ppq        = 0;
       clock_source     = CLOCK_SOURCE_internal;
+#ifdef USE_CLOCK_MULTIPLIER
+      clock_multiplier = 1;
+#endif
       clock_divider    = 12;
       delay_length_cpl = 1.0f/attr_delayname.LENGTH;
-      midi_sync_time  = 0;
+      midi_sync_time   = 0;
       midi_last_ktime  = 0;
+#ifndef USE_NEW_SYNC_CODE
       midi_period      = 0;
+#endif
       midi_clock_count = 0;
 #ifdef USE_CLOCK_SMOOTHING
       midi_last_period = 0.0f;
@@ -170,24 +241,46 @@
           clock_divider = param_clockdiv;
         }
 
+#ifdef USE_CLOCK_MULTIPLIER
+      if( inlet_muloverride > 0 )
+        {
+          clock_multiplier = inlet_muloverride;
+          if( clock_multiplier < 1 )
+            {
+              clock_multiplier = 1;
+            }
+        }
+      else
+        {
+          clock_multiplier = param_clockmul;
+        }
+#endif
+
       // 24 PPQ sync input
       if( clock_source == CLOCK_SOURCE_external && inlet_24ppq && !old_24ppq )
         {
           on_sync_clock();
         }
 
+      int32_t  total_time;
       uint32_t length;
       if( clock_source != CLOCK_SOURCE_internal )
         {
           // tmod is scaled to cover the delay range
           int32_t  time_mod  = ___SMMUL( (midi_sync_time + inlet_time)<<3, inlet_tmod<<2 );
-          length = __USAT(midi_sync_time + inlet_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
+          total_time = __USAT( midi_sync_time + inlet_time + time_mod, 28 );
+          length = total_time >> (27-attr_delayname.LENGTHPOW);
+          //length = __USAT(midi_sync_time + inlet_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
         }
       else
         {
           int32_t time_mod = ___SMMUL( (param_time + inlet_time)<<3, inlet_tmod<<2 );
-          length = __USAT(param_time + inlet_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
+          total_time = __USAT( param_time + inlet_time + time_mod, 28 );
+          length = total_time >> (27-attr_delayname.LENGTHPOW);
+          //length = __USAT(param_time + inlet_time + time_mod, 27) >> (27-attr_delayname.LENGTHPOW);
         }
+
+      outlet_time = total_time;
 
       if( length > attr_delayname.LENGTHMASK - BUFSIZE )
         {

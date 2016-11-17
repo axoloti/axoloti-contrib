@@ -1,0 +1,235 @@
+<objdefs appVersion="1.0.11">
+  <obj.normal id="deglitcher" uuid="awc5a13491088d3ee7569635a12227f536981946">
+    <sDescription>Deglitcher, fade out -> trig (blocking operation) -> fade in
+    </sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <bool32.rising name="trig" description="Trigger input"/>
+    </inlets>
+    <outlets>
+      <bool32.pulse    name="trig"   description="Trigger output"/>
+      <frac32.positive name="volume" description="Volume fade out/in"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs>
+      <combo name="volfade">
+         <MenuEntries>
+            <string>Immediate</string>
+            <string>Fade 0.02s</string>
+            <string>Fade 0.10s</string>
+            <string>Fade 0.50s</string>
+         </MenuEntries>
+         <CEntries>
+            <string>((0x08000000)/2)</string>
+            <string>((0x08000000)/60)</string>
+            <string>((0x08000000)/300)</string>
+            <string>((0x08000000)/1500)</string>
+         </CEntries>
+      </combo>
+    </attribs>
+    <includes>
+       <include>codec.h</include>
+    </includes>
+    <depends/>
+    <code.declaration><![CDATA[
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      int32_t     old_inlet_trig;
+      int32_t     trig_pulse;
+      int32_t     gain_coeff;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
+#endif
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      old_inlet_trig  = 0;
+      trig_pulse      = 0;
+      gain_coeff      = (1<<27);
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
+#endif
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_trig && !old_inlet_trig )
+        {
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          DEBUGF("deglitcher::krate(): initiate trigger");
+#else
+          // Use immediate trigger
+          codec_clearbuffer();
+          trig_pulse = 1;
+          DEBUGF("deglitcher::krate(): immediate trigger");
+#endif
+        }
+
+#if attr_volfade < (1<<27)
+      /*
+       *  Waits for the volume to ramp down before performing deferred triggering
+       *  then ramps the volume back up when the potentially blocking operation is done
+       *  We save this codespace if immedate preset switching is used.
+       */
+      if( fade_rate < 0 )
+        {
+          // Fading out before trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
+            {
+              gain_coeff = 0;
+              fade_rate  = 0;
+              fade_rate  = attr_volfade; // Start fade out
+              trig_pulse = 1;            // Trick potentially blocking operation
+              codec_clearbuffer();
+              DEBUGF("deglitcher::krate(): deferred trigger");
+            }
+        }
+      else if( fade_rate > 0 )
+        {
+          // Fading in after trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff = 1<<27;
+              fade_rate  = 0;
+            }
+        }
+#endif
+
+      outlet_volume  = gain_coeff;
+      outlet_trig    = trig_pulse;
+      old_inlet_trig = inlet_trig;
+      trig_pulse     = 0;
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="deglitcher" uuid="awc5a1339635a12227a54aed3f2756f536981946">
+    <sDescription>Deglitcher, fade out -> trig (blocking operation) -> fade in
+    </sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <bool32.rising        name="trig" description="Trigger input"/>
+      <frac32buffer.bipolar name="left" description="Left input"/>
+      <frac32buffer.bipolar name="right" description="Right input"/>
+    </inlets>
+    <outlets>
+      <bool32.pulse         name="trig"   description="Trigger output"/>
+      <frac32buffer.bipolar name="left" description="Left output"/>
+      <frac32buffer.bipolar name="right" description="Right output"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs>
+      <combo name="volfade">
+         <MenuEntries>
+            <string>Immediate</string>
+            <string>Fade 0.02s</string>
+            <string>Fade 0.10s</string>
+            <string>Fade 0.50s</string>
+         </MenuEntries>
+         <CEntries>
+            <string>((0x08000000)/2)</string>
+            <string>((0x08000000)/60)</string>
+            <string>((0x08000000)/300)</string>
+            <string>((0x08000000)/1500)</string>
+         </CEntries>
+      </combo>
+    </attribs>
+    <includes>
+       <include>codec.h</include>
+    </includes>
+    <depends/>
+    <code.declaration><![CDATA[
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      int32_t     old_inlet_trig;
+      int32_t     trig_pulse;
+      int32_t     gain_coeff;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
+#endif
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      old_inlet_trig  = 0;
+      trig_pulse      = 0;
+      gain_coeff      = (1<<27);
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
+#endif
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_trig && !old_inlet_trig )
+        {
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          DEBUGF("deglitcher::krate(): initiate trigger");
+#else
+          // Use immediate trigger
+          codec_clearbuffer();
+          trig_pulse = 1;
+          DEBUGF("deglitcher::krate(): immediate trigger");
+#endif
+        }
+
+#if attr_volfade < (1<<27)
+      /*
+       *  Waits for the volume to ramp down before performing deferred triggering
+       *  then ramps the volume back up when the potentially blocking operation is done
+       *  We save this codespace if immedate preset switching is used.
+       */
+      if( fade_rate < 0 )
+        {
+          // Fading out before trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
+            {
+              gain_coeff = 0;
+              fade_rate  = 0;
+              fade_rate  = attr_volfade; // Start fade out
+              trig_pulse = 1;            // Trick potentially blocking operation
+              codec_clearbuffer();
+              DEBUGF("deglitcher::krate(): deferred trigger");
+            }
+        }
+      else if( fade_rate > 0 )
+        {
+          // Fading in after trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff = 1<<27;
+              fade_rate  = 0;
+            }
+        }
+#endif
+
+      outlet_trig    = trig_pulse;
+      old_inlet_trig = inlet_trig;
+      trig_pulse     = 0;
+
+      for( int i = 0; i < BUFSIZE; ++i )
+        {
+          outlet_left[i]  = __SSAT( ___SMMUL( gain_coeff, inlet_left[i])  ,28 );
+          outlet_right[i] = __SSAT( ___SMMUL( gain_coeff, inlet_right[i]) ,28 );
+        }
+
+    ]]></code.krate>
+  </obj.normal>
+
+</objdefs>

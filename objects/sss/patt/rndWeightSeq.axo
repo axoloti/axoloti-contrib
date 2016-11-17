@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="rndWeightSeq" uuid="a7edd57b-b282-4dbb-bc8d-fb3a9a33cd71">
+   <obj.normal id="rndWeightSeq" uuid="841febe7-a312-481f-9ed9-520bbf4f266d">
       <sDescription>weighted random gate generator with 4 channels
 each channel has 4 sequences:
 -rnd chance per step (when slider is at max, it will always generate a trigger on that step)
@@ -166,10 +166,7 @@ int rGate[4];
 int32_t Array[256];
 uint32_t cnt;
 int32_t Time;
-int32_t Count1;
-int32_t Count2;
-int32_t Count3;
-int32_t Count4;
+int32_t Count[4];
 uint32_t write;
 
 uint32_t writepos;
@@ -296,9 +293,14 @@ if((inlet_trig>0)&&!ttrig){
 	ttrig=1;
 	count+=1;
 	count=count-(count/param_mainlength)*param_mainlength;
+	
+Count[0]=count-(count/param_length1)*param_length1;
+Count[1]=count-(count/param_length2)*param_length2;
+Count[2]=count-(count/param_length3)*param_length3;
+Count[3]=count-(count/param_length4)*param_length4;
 	for(i=0;i<4;i++){
 	val[i]=(int32_t)((GenerateRandomNumber()>>5));
-     gate[i]=Array[count+i*64]>val[i]?1:0;
+     gate[i]=Array[Count[i]+i*64]>val[i]?1:0;
      repeat[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Rchance)?1:0;
      if(repeat[i]>0){repeat[i]=___SMMUL(((uint32_t)((GenerateRandomNumber()))>>24),param_Rwidth);}
      delay[i]=(((uint32_t)((GenerateRandomNumber())))>>5)<(param_Dchance)?1:0;
@@ -310,15 +312,11 @@ if((inlet_trig>0)&&!ttrig){
 }
 else if(inlet_trig<=0){ttrig=0;}
 
-Count1=count-(count/param_length1)*param_length1;
-Count2=count-(count/param_length2)*param_length2;
-Count3=count-(count/param_length3)*param_length3;
-Count4=count-(count/param_length4)*param_length4;
 
-array[(write+___SMMUL(delay[0]<<3,Time<<2)+___SMMUL(Array[Count1+48]<<3,Time<<2))&1023]            =(gate[0]+rGate[0])&&((___SMMUL(Array[Count1+16]<<3,Time<<2)+pulsewidth[0])>=cnt-5?1:0)&&(CNT[0]);
-array[((write+___SMMUL(delay[1]<<3,Time<<2)+___SMMUL(Array[Count2+48+64]<<3,Time<<2))&1023)+1024]  =(gate[1]+rGate[1])&&((___SMMUL(Array[Count2+16+64]<<3,Time<<2)+pulsewidth[1])>=cnt-5?1:0)&&(CNT[1]);
-array[((write+___SMMUL(delay[2]<<3,Time<<2)+___SMMUL(Array[Count3+48+128]<<3,Time<<2))&1023)+2048] =(gate[2]+rGate[2])&&((___SMMUL(Array[Count3+16+128]<<3,Time<<2)+pulsewidth[2])>=cnt-5?1:0)&&(CNT[2]);
-array[((write+___SMMUL(delay[3]<<3,Time<<2)+___SMMUL(Array[Count4+48+192]<<3,Time<<2))&1023)+3072] =(gate[3]+rGate[3])&&((___SMMUL(Array[Count4+16+192]<<3,Time<<2)+pulsewidth[3])>=cnt-5?1:0)&&(CNT[3]);
+array[(write+___SMMUL(delay[0]<<3,Time<<2)+___SMMUL(Array[Count[0]+48]<<3,Time<<2))&1023]            =(gate[0]+rGate[0])&&((___SMMUL(Array[Count[0]+16]<<3,Time<<2)+pulsewidth[0])>=cnt-5?1:0)&&(CNT[0]);
+array[((write+___SMMUL(delay[1]<<3,Time<<2)+___SMMUL(Array[Count[1]+48+64]<<3,Time<<2))&1023)+1024]  =(gate[1]+rGate[1])&&((___SMMUL(Array[Count[1]+16+64]<<3,Time<<2)+pulsewidth[1])>=cnt-5?1:0)&&(CNT[1]);
+array[((write+___SMMUL(delay[2]<<3,Time<<2)+___SMMUL(Array[Count[2]+48+128]<<3,Time<<2))&1023)+2048] =(gate[2]+rGate[2])&&((___SMMUL(Array[Count[2]+16+128]<<3,Time<<2)+pulsewidth[2])>=cnt-5?1:0)&&(CNT[2]);
+array[((write+___SMMUL(delay[3]<<3,Time<<2)+___SMMUL(Array[Count[3]+48+192]<<3,Time<<2))&1023)+3072] =(gate[3]+rGate[3])&&((___SMMUL(Array[Count[3]+16+192]<<3,Time<<2)+pulsewidth[3])>=cnt-5?1:0)&&(CNT[3]);
 
 outlet_o1=array[write];
 outlet_o2=array[write+1024];
@@ -328,10 +326,10 @@ outlet_cnt=cnt;
 prev=param_output+param_parameter+param_load;
 
 
-CNT[0]=(cnt-(cnt/(Time/(1+repeat[0]+___SMMUL(Array[Count1+32],7<<5))))*(Time/(1+repeat[0]+___SMMUL(Array[Count1+32],7<<5))))<Time/8?1:0;
-CNT[1]=(cnt-(cnt/(Time/(1+repeat[1]+___SMMUL(Array[Count2+32+64],7<<5))))*(Time/(1+repeat[1]+___SMMUL(Array[Count2+32+64],7<<5))))<Time/8?1:0;
-CNT[2]=(cnt-(cnt/(Time/(1+repeat[2]+___SMMUL(Array[Count3+32+128],7<<5))))*(Time/(1+repeat[2]+___SMMUL(Array[Count3+32+128],7<<5))))<Time/8?1:0;
-CNT[3]=(cnt-(cnt/(Time/(1+repeat[3]+___SMMUL(Array[Count4+32+192],7<<5))))*(Time/(1+repeat[3]+___SMMUL(Array[Count4+32+192],7<<5))))<Time/8?1:0;
+CNT[0]=(cnt-(cnt/(Time/(1+repeat[0]+___SMMUL(Array[Count[0]+32],7<<5))))*(Time/(1+repeat[0]+___SMMUL(Array[Count[0]+32],7<<5))))<Time/8?1:0;
+CNT[1]=(cnt-(cnt/(Time/(1+repeat[1]+___SMMUL(Array[Count[1]+32+64],7<<5))))*(Time/(1+repeat[1]+___SMMUL(Array[Count[1]+32+64],7<<5))))<Time/8?1:0;
+CNT[2]=(cnt-(cnt/(Time/(1+repeat[2]+___SMMUL(Array[Count[2]+32+128],7<<5))))*(Time/(1+repeat[2]+___SMMUL(Array[Count[2]+32+128],7<<5))))<Time/8?1:0;
+CNT[3]=(cnt-(cnt/(Time/(1+repeat[3]+___SMMUL(Array[Count[3]+32+192],7<<5))))*(Time/(1+repeat[3]+___SMMUL(Array[Count[3]+32+192],7<<5))))<Time/8?1:0;
 
 
 

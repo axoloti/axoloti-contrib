@@ -527,6 +527,7 @@
     <code.midihandler><![CDATA[
 
       // http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/seq.htm
+      // http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_real.htm
 
       if(  clock_source == CLOCK_SOURCE_midi_omni
         || (clock_source == CLOCK_SOURCE_midi && midi_device_test( dev, port, attr_device ) == 1)
@@ -540,7 +541,8 @@
             {
               if( status == MIDI_START )
                 {
-                  // 25.04.2016 00:24 - Start is not bang on. Resync clock?
+                  // Start on the first incoming clock.
+                  // 25.04.2016 00:24 - Start is not bang on? Resync clock?
                   midi_clock_run   = 1;
                   midi_clock_count = clock_divider; // Start on first midi clock to arrive!
                   step_count       = first_step;

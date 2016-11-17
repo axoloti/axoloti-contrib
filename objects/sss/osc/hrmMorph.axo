@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="hrmMorph" uuid="031eac82-bef6-4a9c-96d0-3f9490268ef8">
+   <obj.normal id="hrmMorph" uuid="38764ee8-d548-455b-a721-273722ef1c08">
       <sDescription>quad morphing sine oscillator
 morphs both through a scaled pitch (use scaleBank module from my harmony folder) as well as harmonic overtones.
 -use a triangle LFO or smoothed-out LFO to control the mix-inputs-&gt;morphs through the notes/harmonics.
@@ -13,22 +13,31 @@ morphs both through a scaled pitch (use scaleBank module from my harmony folder)
       <helpPatch>osc.axh</helpPatch>
       <inlets>
          <int32 name="pitch"/>
-         <frac32 name="freq"/>
+         <frac32buffer name="freq"/>
          <int32 name="key"/>
          <int32 name="scale"/>
+         <int32 name="noteStep1"/>
+         <int32 name="noteStep2"/>
+         <int32 name="noteJump1"/>
+         <int32 name="noteJump2"/>
+         <frac32 name="noteMix"/>
          <int32 name="hrmStep"/>
          <frac32 name="hrmMix"/>
-         <int32 name="noteStep"/>
-         <frac32 name="noteMix"/>
+         <int32 name="wavestart"/>
+         <int32 name="wavestep1"/>
+         <int32 name="wavestep2"/>
+         <int32 name="wavestep3"/>
+         <int32 name="wavestep4"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
-         <int32.bipolar name="d1"/>
-         <int32.bipolar name="d2"/>
+         <int32.bipolar name="nDiv"/>
+         <int32.bipolar name="hDiv"/>
       </outlets>
       <displays/>
       <params>
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="detune"/>
          <int32 name="noteStep1">
             <MinValue i="0"/>
             <MaxValue i="128"/>
@@ -75,17 +84,40 @@ morphs both through a scaled pitch (use scaleBank module from my harmony folder)
             <MaxValue i="128"/>
          </int32>
          <frac32.u.map name="hrmMix"/>
+         <int32 name="wavestart">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="wavestep1">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="wavestep2">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="wavestep3">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="wavestep4">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
       </params>
       <attribs>
          <objref name="scale"/>
+         <objref name="table"/>
       </attribs>
       <code.declaration><![CDATA[uint32_t Phase1;
 uint32_t Phase2;
 int32_t P[6];
 int32_t J[4];
+int32_t T[4];
 int64_t MIX1;
 int64_t MIX2;
 int32_t mix[3];
+
 int32_t sinemix(int32_t inst,int32_t WaveA,int32_t WaveB,int32_t Mix){
 	mix[inst]=___SMMUL(((1<<27)-Mix)<<3,WaveA<<2)+___SMMUL(Mix<<3,WaveB<<2);}
 int32_t F;
@@ -110,6 +142,7 @@ MIX1=F;
 MIX2=param_noteMix+inlet_noteMix;
 MX(MIX2);
 MIX2=F;
+
 int64_t hrmQuant=param_hrmQuant;
 int64_t noteQuant=param_noteQuant;
 
@@ -117,41 +150,51 @@ P[0]=((((MIX1*hrmQuant)>>27)+1)>>1)<<1;
 P[1]=(((MIX1*hrmQuant)>>28)<<1)+1;
 MIX1=(MIX1-(((MIX1*hrmQuant)>>28)<<28)/hrmQuant)*hrmQuant;
 MIX1=MIX1>(1<<27)?((1<<28)-MIX1):MIX1;
+T[0]=P[0];
+T[1]=P[1];
 P[0]=P[0]*(param_hrmStep+inlet_hrmStep);
 P[1]=P[1]*(param_hrmStep+inlet_hrmStep);
 P[0]=P[0]-(P[0]/param_hrmRange)*param_hrmRange+1;
 P[1]=P[1]-(P[1]/param_hrmRange)*param_hrmRange+1;
 
 
+
+
 P[2]=((((MIX2*noteQuant)>>27)+1)>>1)<<1;
 P[3]=(((MIX2*noteQuant)>>28)<<1)+1;
 MIX2=(MIX2-(((MIX2*noteQuant)>>28)<<28)/noteQuant)*noteQuant;
 MIX2=MIX2>(1<<27)?((1<<28)-MIX2):MIX2;
-P[4]=P[2]*(param_noteStep2+inlet_noteStep);
-P[5]=P[3]*(param_noteStep2+inlet_noteStep);
-P[2]=P[2]*(param_noteStep1+inlet_noteStep);
-P[3]=P[3]*(param_noteStep1+inlet_noteStep);
+P[4]=P[2];
+P[5]=P[3];
+T[2]=P[2];
+T[3]=P[3];
+J[0]=P[2]/param_noteRepeat1;
+J[1]=P[3]/param_noteRepeat1;
+J[2]=P[4]/param_noteRepeat2;
+J[3]=P[5]/param_noteRepeat2;
+P[4]=P[4]*(param_noteStep2+inlet_noteStep2);
+P[5]=P[5]*(param_noteStep2+inlet_noteStep2);
+P[2]=P[2]*(param_noteStep1+inlet_noteStep1);
+P[3]=P[3]*(param_noteStep1+inlet_noteStep1);
 
-J[0]=P[2]/param_noteRange;
-J[1]=P[3]/param_noteRange;
-J[2]=P[4]/param_noteRange;
-J[3]=P[5]/param_noteRange;
 P[2]=P[2]-(P[2]/param_noteRepeat1)*param_noteRepeat1;
 P[3]=P[3]-(P[3]/param_noteRepeat1)*param_noteRepeat1;
 P[4]=P[4]-(P[4]/param_noteRepeat2)*param_noteRepeat2;
 P[5]=P[5]-(P[5]/param_noteRepeat2)*param_noteRepeat2;
 
-P[2]+=J[0]*param_jump1+P[4]+J[2]*param_jump2;
-P[3]+=J[1]*param_jump1+P[5]+J[3]*param_jump2;
-
-
+P[2]+=J[0]*(param_jump1+inlet_noteJump1)+P[4]+J[2]*(param_jump2+inlet_noteJump2);
+P[3]+=J[1]*(param_jump1+inlet_noteJump1)+P[5]+J[3]*(param_jump2+inlet_noteJump2);
 
 P[2]=P[2]-(P[2]/param_noteRange)*param_noteRange;
 P[3]=P[3]-(P[3]/param_noteRange)*param_noteRange;
 
+T[0]=T[0]*(param_wavestep1+inlet_wavestep1);
+T[1]=T[1]*(param_wavestep2+inlet_wavestep2);
+T[2]=T[2]*(param_wavestep3+inlet_wavestep3);
+T[3]=T[3]*(param_wavestep4+inlet_wavestep4);
 
-outlet_d1=param_noteQuant;
-outlet_d2=param_hrmQuant;
+outlet_nDiv=param_noteQuant;
+outlet_hDiv=param_hrmQuant;
 
 
 int32_t pitch1=inlet_pitch+P[2];
@@ -165,19 +208,26 @@ int32_t semitone2=pitch2-octave2*12;
 int32_t note2=(attr_scale.note[semitone2+Scale*12]+octave2*12+key)<<21;
 
    MTOFEXTENDED(note1+param_pitch,freq1);
-   MTOFEXTENDED(note2+param_pitch,freq2);]]></code.krate>
+   MTOFEXTENDED(note2+param_pitch,freq2);
+  int32_t preset=(param_wavestart+inlet_wavestart)*1024;]]></code.krate>
       <code.srate><![CDATA[Phase1 += freq1+___SMMUL(freq1<<3,inlet_freq<<2);
-Phase2 += freq2+___SMMUL(freq2<<3,inlet_freq<<2);
+Phase2 += freq2+___SMMUL(freq2<<3,inlet_freq<<2)+(param_detune>>10);
 int32_t r1a;
 int32_t r2a;
 int32_t r1b;
 int32_t r2b;
-SINE2TINTERP(Phase1*P[0],r1a)
-SINE2TINTERP(Phase1*P[1],r1b)
-SINE2TINTERP(Phase2*P[0],r2a)
-SINE2TINTERP(Phase2*P[1],r2b)
-sinemix(0,(r1a/P[0])>>5,(r1b/P[1])>>5,MIX1);
-sinemix(1,(r2a/P[0])>>5,(r2b/P[1])>>5,MIX1);
+//SINE2TINTERP(Phase1*P[0],r1a)
+//SINE2TINTERP(Phase1*P[1],r1b)
+//SINE2TINTERP(Phase2*P[0],r2a)
+//SINE2TINTERP(Phase2*P[1],r2b)
+r1a=attr_table.array[(((Phase1*P[0]>>22)&1023)+preset+(T[0]+T[2]<<10))&attr_table.LENGTHMASK];
+r1b=attr_table.array[(((Phase1*P[1]>>22)&1023)+preset+(T[1]+T[2]<<10))&attr_table.LENGTHMASK];
+r2a=attr_table.array[(((Phase2*P[0]>>22)&1023)+preset+(T[0]+T[3]<<10))&attr_table.LENGTHMASK];
+r2b=attr_table.array[(((Phase2*P[1]>>22)&1023)+preset+(T[1]+T[3]<<10))&attr_table.LENGTHMASK];
+//sinemix(0,(r1a/P[0]),(r1b/P[1]),MIX1);
+//sinemix(1,(r2a/P[0]),(r2b/P[1]),MIX1);
+sinemix(0,(r1a),(r1b),MIX1);
+sinemix(1,(r2a),(r2b),MIX1);
 sinemix(2,mix[0],mix[1],MIX2);
 outlet_wave= mix[2]*3>>2;]]></code.srate>
    </obj.normal>

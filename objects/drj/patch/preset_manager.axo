@@ -14,6 +14,7 @@
       <int32 name="preset" description="The current preset number"/>
       <bool32.pulse name="load" description="Pulse signals loading"/>
       <bool32.pulse name="save" description="Pulse signals saving"/>
+      <frac32.positive name="volume" description="Volume for avoiding glitches on save/load"/>
     </outlets>
     <displays>
       <int32.label name="current  "/>
@@ -27,6 +28,20 @@
       <bool32.mom name="save" description="Click to save preset"/>
     </params>
     <attribs>
+      <combo name="volfade">
+         <MenuEntries>
+            <string>Immediate</string>
+            <string>Fade 0.02s</string>
+            <string>Fade 0.10s</string>
+            <string>Fade 0.50s</string>
+         </MenuEntries>
+         <CEntries>
+            <string>(0x08000000)</string>
+            <string>((0x08000000)/60)</string>
+            <string>((0x08000000)/300)</string>
+            <string>((0x08000000)/1500)</string>
+         </CEntries>
+      </combo>
       <combo name="savemode">
          <MenuEntries>
             <string>Global</string>
@@ -55,6 +70,9 @@
       <spinner name="savecc" MinValue="-1" MaxValue="127" DefaultValue="-1"/>
       <spinner name="autoload" MinValue="-1" MaxValue="999" DefaultValue="-1"/>
     </attribs>
+    <includes>
+       <include>codec.h</include>
+    </includes>
     <depends>
       <depend>fatfs</depend>
     </depends>
@@ -113,7 +131,7 @@
        *    0:/my_patch/foo001.pst
        *
        *  This means there are 1000 preset slots, although only the first 128
-       *  can be accessed via MID (for now).
+       *  can be accessed via MIDI (for now).
        *
        *  If a patch has multiple preset managers throughout its sub patches,
        *  each preset manager needs a unique string for the prefix. This allows
@@ -135,8 +153,9 @@
        *    word N   =>  last parameter name hash
        *    word N+1 =>  last parameter value
        *
-       *  When using a patch parent table (in an SD card file if it has to be so, using the preset slave),
-       *  the parameters will be grouped by patch:
+       *  Possible workaround for global parameter access (see macro USE_PATCHES_FILE):
+       *  When using a patch parent table (in an SD card file if it has to be so, using a preset_manager master
+       *  with preset_slave modules in the sub patches), the parameters will be grouped by sub patch:
        *
        *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
        *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode, 2 = patch-parent-table?
@@ -151,6 +170,15 @@
        *    word N+2 =>  second patch header, patch id
        *    word N+3 =>  second patch header, number of parameters for this patch
        *    ...
+       *
+       *  Possible TBIs:
+       *
+       *   - Avoiding audio glitches by calling codec_clearbuffer() before save/load operations
+       *   - Avoiding audio glitches by providing a gain coefficiant outlet with fade in/out
+       *     before and after save/load operations
+       *   - Much faster loading by scannign the directory and pre-loading all presets into RAM
+       *     on module startup and preset save operations. Challenges: memory mamangement, sparse preset sets.
+       *
        */
 
       //#define DEBUGF LogTextMessage
@@ -158,8 +186,11 @@
 
       //#define USE_PATCHES_FILE
 
+      //#define USE_NOOF_PARAMS_TEST
+
       int32_t     start_sequence;
       int32_t     preset_no;
+      int32_t     preset_candidate;
       int32_t     midi_preset_no;
       int32_t     old_inlet_save;
       int32_t     old_param_save;
@@ -170,6 +201,12 @@
       const char  *magic_v2;
       const char  *suffix;
       const char  *prefix_copy;
+      int32_t     gain_coeff;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
+      int32_t     save_load_state;
+#endif
+
 #ifdef USE_PATCHES_FILE
       const char  *patches_filename;
 #endif
@@ -189,6 +226,14 @@
       } PRESET_MANAGER_SAVE_MODE;
 
       #define PRESET_MANAGER_PE_SIGNAL_MASK 0xFFFD
+
+      enum
+      {
+        PRESET_MANAGER_SAVE_LOAD_STATE_idle = 0,
+        PRESET_MANAGER_SAVE_LOAD_STATE_save,
+        PRESET_MANAGER_SAVE_LOAD_STATE_load
+      } PRESET_MANAGER_SAVE_LOAD_STATE;
+
 
       /*
        *  Constructs a filename to use
@@ -417,10 +462,6 @@
                     /*
                      *  At this point we can save parent->PExch[patch_i] since it has a name
                      *  in ObjectKvps[global_i] that we can take a hash of and store.
-                     *  This is kludgy, but with what we have to go on, it's the best
-                     *  we can do for parameter file integrity until we get at least
-                     *  a subpatch root pointer table in xpatch.cpp
-                     *
                      *  On loading, we need to do this again, I.e. ensure thar the named parameters
                      *  PEx has an address that's a match in both the global ObjectKvps[] and the sub patch parent->PExch[]
                      */
@@ -509,7 +550,7 @@
         if( err != FR_OK )
           return file_error( &FileObject, err, filename );
 
-        // Check id and version word, determine version.
+        // Check id and version, call the right loader.
         for( int i = 0; i < 3; i++ )
           {
             if( header.magic[i] != magic_v2[i] )
@@ -623,12 +664,14 @@
         DEBUGF("preset_manager::preset_load_global(): loading file saved with global mode" );
 
         n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
         int n_global_IPVP_params = get_noof_global_IPVP_params();
         if( n_params != n_global_IPVP_params )
           {
             DEBUGF("preset_manager::preset_load_global(): noof params mismatch %d vs %d", n_params, n_global_IPVP_params );
             return FR_DENIED;
           }
+#endif
 
         /*
          *  Read each parameter (hash,value) pair from the file and find a matching ObjectKvps[] entry
@@ -668,12 +711,14 @@
         DEBUGF("preset_manager::preset_load_subpatch(): loading file saved with sub patch mode" );
 
         n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
         int n_patch_IPVP_params = get_noof_patch_IPVP_params();
         if( n_params != n_patch_IPVP_params )
           {
             DEBUGF("preset_manager::preset_load_subpatch(): noof params mismatch" );
             return FR_DENIED;
           }
+#endif
 
         /*
          *  Read each parameter (hash,value) pair from the file and search for a matching
@@ -829,6 +874,11 @@
       magic_v2        = "PRS2";         // The file header magic word, version 2
       suffix          = ".prs";         // The file extension
       prefix_copy     = "";             // Need the inlet_prefix pointer in the MIDI handler
+      gain_coeff      = (1<<27);        // Current volume output, used for fade out/in on save/load
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
+      save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+#endif
 #ifdef USE_PATCHES_FILE
       patches_filename= "patches.ppr";  // The "Patch Preset Registry" file
 #endif
@@ -884,7 +934,9 @@
 #ifdef USE_PATCHES_FILE
           else if( start_sequence == 2 )
             {
-              // This is just for diagnostics - we'll pick up the file when save/load is triggered.
+              // The master preset_manager can pick up the patches file here.
+              // This is just for diagnostics - we'll pick up the file when save/load is triggered
+              // the appropriate loader will be called by preset_load().
               preset_dump_patches_file();
             }
 #endif
@@ -917,7 +969,6 @@
            *  Load triggered
            */
           DEBUGF("preset_manager::krate(): load_triggered");
-          int32_t preset_candidate;
           if( old_param_load != param_load && param_load == 0 )
             {
               preset_candidate = param_preset;
@@ -927,11 +978,19 @@
               preset_candidate = inlet_preset;
             }
 
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_load;
+#else
+          // Use immediate switching
+          codec_clearbuffer();
           if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
             {
               load_pulse = 1;
               preset_no  = preset_candidate;
             }
+#endif
         }
       else if(   (old_inlet_save != inlet_save && inlet_save != 0)
               || (old_param_save != param_save && param_save == 0)
@@ -941,7 +1000,6 @@
            *  Save triggered
            */
           DEBUGF("preset_manager::krate(): save_triggered" );
-          int32_t preset_candidate;
           if( old_param_save != param_save && param_save == 0 )
             {
               preset_candidate = param_preset;
@@ -951,15 +1009,74 @@
               preset_candidate = inlet_preset;
             }
 
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_save;
+#else
+          // Use immediate switching
+          codec_clearbuffer();
           if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
             {
-              // 12.04.2016 17:02 - No save pulse on globals saves?
-              //                    One more savemode = "GobalNoTrig" for this or just skip the pulse?
+              // 12.04.2016 17:02 - No save pulse on global saves?
+              //                    One more savemode = "GobalNoTrig" for this
+              //                    or just skip the pulse?
+              //                    or let users do "responsible patching" to avoid trigger loops and such.
               save_pulse = 1;
               preset_no  = preset_candidate;
             }
+#endif
         }
 
+#if attr_volfade < (1<<27)
+      /*
+       *  Waits for the volume to ramp down before performing deferred saving or loading
+       *  then ramps the volume back up when save or load is done.
+       *  We save this codespace if immedate presetc switching is used.
+       */
+      if( fade_rate < 0 )
+        {
+          // Fading out before save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
+            {
+              gain_coeff     = 0;
+              fade_rate      = 0;
+              codec_clearbuffer();
+              if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_load )
+                {
+                  if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      load_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                }
+              else if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_save )
+                {
+                  if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      save_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                }
+              // Start fade in after save/load
+              fade_rate = attr_volfade;
+              save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+            }
+        }
+      else if( fade_rate > 0 )
+        {
+          // Fading in after save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff     = 1<<27;
+              fade_rate      = 0;
+            }
+        }
+#endif
+
+      outlet_volume   = gain_coeff;
       disp_current    = preset_no;
       outlet_preset   = preset_no;
       outlet_load     = load_pulse;

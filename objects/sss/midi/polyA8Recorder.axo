@@ -28,9 +28,10 @@ This module pairs very well with the arturia beatstep pro. Finally an aftertouch
       <license>BSD</license>
       <helpPatch>midi_in.axh</helpPatch>
       <inlets>
+         <bool32 name="active"/>
          <int32 name="count"/>
          <charptr32 name="filename"/>
-         <bool32 name="active"/>
+         <bool32 name="load"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -128,7 +129,8 @@ int mtrig;
 int lastnote[8];
 int fast;
 int note;
-int find;]]></code.declaration>
+int find;
+int gtrig;]]></code.declaration>
       <code.init><![CDATA[static int8_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -138,7 +140,8 @@ count=0;
 _gate = 0;
 _note = 0;
 _touch = 0;]]></code.init>
-      <code.krate><![CDATA[if((param_save>0)&&!strig){
+      <code.krate><![CDATA[int load=param_load+inlet_load;
+if((param_save>0)&&!strig){
     strig=1;
     FIL FileObject;
     FRESULT err;
@@ -164,7 +167,7 @@ _touch = 0;]]></code.init>
   }
   else if(!(param_save>0)){strig=0;}
 
-  if((param_load>0)&&!ltrig){
+  if((load>0)&&!ltrig){
     ltrig=1;
     FIL FileObject;
     FRESULT err;
@@ -189,7 +192,7 @@ _touch = 0;]]></code.init>
     err = f_close(&FileObject);
     if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
   }
-  else if(!(param_load>0)){ltrig=0;}
+  else if(!(load>0)){ltrig=0;}
 
 
 
@@ -204,7 +207,7 @@ else if(param_clear==0){ctrig=0;}
   if((_gate>0)&&!mtrig){
   count=(count+1)&7;
   find=8;
-  for(i=0;i<8;i++){if(array[cntSlow+(i*attr_size)]==0){find=i;}}
+  for(i=0;i<8;i++){if(array[cntSlow+((7-i)*attr_size)]==0){find=7-i;}}
   find=find==8?((int32_t)(GenerateRandomNumber()))&7:find;
   mtrig=1;}
   else if(_gate==0){mtrig=0;}
@@ -240,11 +243,17 @@ if(!(pchannel==midichannelIn)){
 	}
 }
 
-if((param_rec>0)&&G[index]){
+if(param_rec>0){
+if(G[index]){
+	gtrig=1;
 	array[cntSlow+(index)*attr_size]=G[index];
 	array[cntSlow+(index+8)*attr_size]=N[index];
 	array[cntSlow+(index+16)*attr_size]=V[index];
-	array[cntFast+(index*6+24)*attr_size]=T[index];
+	array[cntFast+(index*6+24)*attr_size]=T[index];}
+else if((G[index]==0)&&(gtrig)){
+	array[cntSlow+(index)*attr_size]=G[index];
+	gtrig=0;
+}
 }
 
 
