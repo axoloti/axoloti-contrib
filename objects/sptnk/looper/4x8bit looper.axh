@@ -59,9 +59,9 @@
    </obj>
    <obj type="sptnk/looper/pos" uuid="eff984cb-b1e3-4c54-8b10-ad5a55b937e9" name="pos_1" x="630" y="196">
       <params>
-         <int32 name="num" value="8"/>
-         <int32 name="den" value="8"/>
-         <int32 name="mulstart" value="0"/>
+         <int32 name="num" value="1"/>
+         <int32 name="den" value="1"/>
+         <int32 name="mulstart" value="9"/>
       </params>
       <attribs>
          <objref attributeName="table" obj="alloc_1"/>
@@ -80,7 +80,7 @@
    <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix_" x="1120" y="196">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="39.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -114,7 +114,7 @@
    <obj type="phi/mix/mix st2 sq" uuid="58ca1c18-45fa-449e-b0d2-01f7d5032d97" name="mix" x="1120" y="350">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="64.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -160,7 +160,19 @@
    <comment type="patch/comment" x="434" y="630" text="&lt; overwrite"/>
    <comment type="patch/comment" x="434" y="644" text="&lt; overdub"/>
    <comment type="patch/comment" x="434" y="658" text="&lt; halving overdub"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="126" y="868">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
    <comment type="patch/comment" x="28" y="938" text="data table"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="224" y="938">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="alloc_2" x="28" y="952">
       <params/>
       <attribs>
@@ -322,8 +334,8 @@ attr_tdata.array[0] = ((numpoints <<16) & bitmask12) | ((flag<<8)&bitmask3) | bi
    </patchobj>
    <patchobj type="patch/object" uuid="535a42f5-d0f2-48fb-8cb6-42e04f51bdf1" name="play quantized" x="322" y="1064">
       <params>
-         <frac32.u.map name="preserve" value="3.5"/>
-         <frac32.u.map name="window" value="39.5"/>
+         <frac32.u.map name="preserve" value="57.0"/>
+         <frac32.u.map name="window" value="64.0"/>
          <int32.hradio name="track" value="0"/>
       </params>
       <attribs>
@@ -357,16 +369,23 @@ attr_tdata.array[0] = ((numpoints <<16) & bitmask12) | ((flag<<8)&bitmask3) | bi
 uint32_t numpoints = 0; //number of chop points inside the data table
 uint32_t bitshift = 0; //the position extracted from the data table must be bitshifted by this amount
 
+uint32_t wrap_index;
+uint32_t qwrapB=0;
+uint32_t twrapB=0;
+
 uint32_t qposA = 0;
 uint32_t qposB = 0;
 uint32_t tposA = 0;
 uint32_t tposB = 0;
 
+uint32_t qdiff = 0;
+uint32_t tdiff = 0;
+
 //data relative to envelopes
 uint32_t envstage[2] = {0,0}; //0 = stop; 1 = ramp up; 2 = ramp down; 3 = declick in; 4 = hold.
 						// 1 -> 2 -> 0 (ad window) ...  3 -> 4 -> 2 -> 0 (ahd window)
 int32_t envamt[2] = {0,0};
-int32_t envpos[2] = {0,0};
+float envpos[2] = {0,0};
 
 //bitmasks, useful to unpack tables
 uint32_t bitmask4  = 0b00000000000000000000000011111111;
@@ -375,28 +394,58 @@ uint32_t bitmask34 = 0b00000000000000001111111111111111;]]></code.declaration>
 bitshift = attr_tdata.array[0] & bitmask4;
 
 
-
-
 qposA = attr_tdata.array[1+chop_counter] & bitmask34 <<bitshift; 
 tposA = (attr_tdata.array[1+chop_counter] >>16) & bitmask34 <<bitshift;
-if (chop_counter<numpoints)
+qwrapB = attr_tdata.array[1+wrap_index] & bitmask34 <<bitshift;
+twrapB = (attr_tdata.array[1+wrap_index] >>16) & bitmask34 <<bitshift;
+
+if (qposA>=inlet_startpos && (qposA<=qwrapB || qwrapB<inlet_startpos) )
+{
+	qwrapB = qposA;
+	twrapB = tposA;
+	wrap_index = chop_counter;
+}
+
+if (chop_counter < numpoints)
 {
 	qposB = attr_tdata.array[2+chop_counter] & bitmask34 <<bitshift;
 	tposB = (attr_tdata.array[2+chop_counter] >>16) & bitmask34 <<bitshift;
 }
 else
 {
-	qposB = inlet_endpos;
-	tposB = inlet_endpos;
+	qposB = qwrapB;
+	tposB = twrapB;
+}
+if (qposB>inlet_endpos )
+{
+	qposB =  qwrapB;
+	tposB =  twrapB;
 }
 
-if (inlet_pos[0] > qposB)
-	chop_counter++;
-else if (inlet_pos[0] < qposA)
-	chop_counter--;
 
+if (qposB != qwrapB) //non-patologic case
+{
+	if (inlet_pos[0] > qposB)
+		chop_counter++;
+	else if (inlet_pos[0] < qposA)
+		chop_counter--;
+	if (!chop_counter< numpoints)
+	chop_counter = wrap_index;
+	qdiff = qposB-qposA;
+	tdiff = tposB-tposA;	
+}
+else //patologic case
+{
+	if (inlet_pos[0] > qposB && inlet_pos[0] < qposA)
+		chop_counter=wrap_index;
+	qdiff = qposB-inlet_startpos + inlet_endpos -qposA;
+	tdiff = tposB-inlet_startpos + inlet_endpos -tposA;
+}
+
+
+uint32_t holdramp = (1<<26)/___SMMUL(param_preserve,qdiff); 	
 uint32_t envramp = (1<<30) / (2 + (param_window>>19));
-uint32_t holdramp = (1<<26)/___SMMUL(param_preserve,qposB-qposA); 
+float posramp = ((float) tdiff )/ ((float) qdiff );
 
 
 /*
@@ -421,6 +470,11 @@ for(int i=0;i<2;i++)
 			{
 				envamt[i] = (1<<30);
 				envstage[i]=2; // go to decay stage
+				
+				if (envamt[i]< 1<<30 && envstage[1-i] == 0 && (qposB-inlet_pos[0]>64)) /// fare partire il grano successivo, ricordarsi di mettere questa roba pure al termine di hold.
+				{
+					envstage[1-i] = 1;
+				}
 			}
 			break;
 		}
@@ -432,11 +486,6 @@ for(int i=0;i<2;i++)
 				envstage[i]=0; // go to idle stage
 			}
 			else envamt[i]-=envramp;
-			
-			if (envamt[i]< 1<<30 && envstage[1-i] == 0 && 1)//qui ci andrebbe un'altra condizione)
-			{
-				
-			}
 			break;
 		}
 		case 3: //declick in (128 smp) -> 42 ms window 
@@ -449,22 +498,47 @@ for(int i=0;i<2;i++)
 			}
 			break;
 		}
-		case 4: //hold stage
+		case 4: //hold stage //VA COMPLETATO
 		{
 			envamt[i]+=holdramp;
 			if (envamt[i]>(1<<30))
 			{
 				envamt[i] = (1<<30);
 				envstage[i]=2; // go to decay stage
+				envstage[1-i] = 1;
 			}
 			break;
 		}
 		default: break; //default
 	}
 }]]></code.krate>
-         <code.srate><![CDATA[//ricorda che se sei in fase di hold devi fare SMMUL tra 1<<30 e il campione, e non tra envamt e il campione]]></code.srate>
+         <code.srate><![CDATA[//ricorda che se sei in fase di hold devi fare SMMUL tra 1<<30 e il campione, e non tra envamt e il campione
+
+
+if (inlet_pos == qposA)
+{
+	envstage[0] = 3;
+	envpos[0] = (float) inlet_pos;
+}
+
+int32_t accum = 0;
+for (int i=0;i<2;i++) 
+{
+	int8_t input = (attr_table.array[(uint32_t) envpos[i]/**/]>>(param_track<<3) & bitmask4); //ho dovuto mettere quel commento per evitare un errore di parse
+	accum =___SMMLA(((int32_t)(input))<<20,envstage[i]==4?(1<<30):envamt[i],accum) ;
+	
+envpos[i]+=posramp;
+if (envpos[i]>inlet_endpos)
+envpos[i] = inlet_startpos;
+}
+
+outlet_o = accum;]]></code.srate>
       </object>
    </patchobj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="504" y="1064">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_3" x="924" y="1064">
       <params>
          <int32 name="value" value="0"/>
@@ -502,6 +576,8 @@ for(int i=0;i<2;i++)
          <dest obj="record_1" inlet="pos"/>
          <dest obj="pos2ppq_1" inlet="pos"/>
          <dest obj="pos2phase_1" inlet="pos"/>
+         <dest obj="transient mapper" inlet="pos"/>
+         <dest obj="play quantized" inlet="pos"/>
       </net>
       <net>
          <source obj="play/stop" outlet="o"/>
@@ -599,11 +675,13 @@ for(int i=0;i<2;i++)
       <net>
          <source obj="pos_1" outlet="endpos"/>
          <dest obj="pos2phase_1" inlet="endpos"/>
+         <dest obj="play quantized" inlet="endpos"/>
       </net>
       <net>
          <source obj="pos_1" outlet="startpos"/>
          <dest obj="pos2ppq_1" inlet="startpos"/>
          <dest obj="pos2phase_1" inlet="startpos"/>
+         <dest obj="play quantized" inlet="startpos"/>
       </net>
       <net>
          <source obj="i_3" outlet="out"/>
@@ -616,6 +694,18 @@ for(int i=0;i<2;i++)
       <net>
          <source obj="endpos_1" outlet="quarters"/>
          <dest obj="pos2ppq_1" inlet="quarters"/>
+      </net>
+      <net>
+         <source obj="play quantized" outlet="o"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="transient mapper" inlet="add"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="transient mapper" inlet="clear"/>
       </net>
    </nets>
    <settings>
