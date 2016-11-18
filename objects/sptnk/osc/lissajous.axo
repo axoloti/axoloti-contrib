@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="lissajous" uuid="322d4e54-97a7-423c-a95b-a2dbf2ed126e">
+      <sDescription>Lissajous oscillator: generates a pair of x/y coordinates based on sinusoidal signals.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="the pitch of the oscillator"/>
+         <frac32buffer name="freq" description="fm input"/>
+         <frac32 name="x" description="x offset for the figure"/>
+         <frac32 name="y" description="y offset for the figure"/>
+         <frac32 name="radius" description="radius of the figure"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="x" description="x coordinate output"/>
+         <frac32buffer name="y" description="y coordinate output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="pitch of the oscillator" noLabel="true"/>
+         <frac32.s.map name="x" description="x offset of the figure"/>
+         <frac32.s.map name="y" description="y offset of the figure"/>
+         <frac32.u.map name="radius" description="radius of the figure">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+         <int32 name="xmul" description="multiplier for the x coordinate oscillator">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="ymul" description="multiplier for the y coordinate oscillator">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="phase" description="phase difference between oscs. By default 0 corresponds to a 90 degree difference ">
+            <MinValue i="-90"/>
+            <MaxValue i="90"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t x = inlet_x + param_x;
+int32_t y = inlet_y + param_y;
+
+int32_t angle = (1<<30)-param_phase*((1<<30)/90);]]></code.krate>
+      <code.srate><![CDATA[Phase += (freq>>0) + inlet_freq;
+
+   int32_t rx;
+   int32_t ry;
+   
+   SINE2TINTERP((param_xmul*Phase)+angle,rx);
+   SINE2TINTERP((param_ymul*Phase),ry);
+   outlet_x = ___SMMLA(rx>>2,param_radius<<3,x);
+   outlet_y = ___SMMLA(ry>>2,param_radius<<3,y);]]></code.srate>
+   </obj.normal>
+</objdefs>
