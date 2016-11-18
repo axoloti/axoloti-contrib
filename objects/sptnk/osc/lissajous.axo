@@ -37,23 +37,37 @@
          </int32>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.declaration><![CDATA[uint32_t Phase;
+
+int32_t x = 0;
+int32_t y = 0;
+int32_t radius = 0;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;]]></code.init>
       <code.krate><![CDATA[uint32_t freq;
    MTOFEXTENDED(param_pitch + inlet_pitch,freq);
 
-int32_t x = inlet_x + param_x;
-int32_t y = inlet_y + param_y;
+int32_t increment_x = inlet_x + param_x - x >>4;
+int32_t increment_y = inlet_y + param_y - y >>4;
+int32_t increment_radius = param_radius + inlet_radius - radius >>4;
 
-int32_t angle = (1<<30)-param_phase*((1<<30)/90);]]></code.krate>
-      <code.srate><![CDATA[Phase += (freq>>0) + inlet_freq;
+int32_t angle = (1<<30)-param_phase*((1<<30)/90);
+
+
+for (int i=0;i<BUFSIZE;i++)
+{
+	Phase += (freq>>0) + inlet_freq[i];
 
    int32_t rx;
    int32_t ry;
    
    SINE2TINTERP((param_xmul*Phase)+angle,rx);
    SINE2TINTERP((param_ymul*Phase),ry);
-   outlet_x = ___SMMLA(rx>>2,param_radius<<3,x);
-   outlet_y = ___SMMLA(ry>>2,param_radius<<3,y);]]></code.srate>
+   outlet_x[i] = ___SMMLA(rx>>2,radius<<3,x);
+   outlet_y[i] = ___SMMLA(ry>>2,radius<<3,y);
+
+   x+=increment_x;
+   y+=increment_y;
+   radius+=increment_radius;
+}]]></code.krate>
    </obj.normal>
 </objdefs>
