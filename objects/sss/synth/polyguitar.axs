@@ -299,7 +299,7 @@
          <dest obj="+_5" inlet="in2"/>
       </net>
       <net>
-         <source obj="vca_1" outlet="o"/>
+         <source obj="LPos_1" outlet="out"/>
          <dest obj="outlet_1" inlet="outlet"/>
       </net>
    </nets>
