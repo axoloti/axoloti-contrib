@@ -13,12 +13,13 @@
       <displays/>
       <params>
          <frac32.s.map name="a" description="a coefficient, see formula">
-			<DefaultValue v="64.0"/>
-		 </frac32.s.map>
+            <DefaultValue v="64.0"/>
+         </frac32.s.map>
          <frac32.s.map name="b" description="b coefficient, see formula">
-			<DefaultValue v="64.0"/>
-		 </frac32.s.map>
+            <DefaultValue v="64.0"/>
+         </frac32.s.map>
          <frac32.s.map name="c" description="c coefficient, see formula"/>
+         <bool32.tgl name="sat" description="saturate input to normal range"/>
       </params>
       <attribs>
          <combo name="function">
@@ -86,6 +87,8 @@
 	
 	return z;
 }]]></code.declaration>
-      <code.srate><![CDATA[outlet_z = map(inlet_x,inlet_y,param_a,param_b,param_c);]]></code.srate>
+      <code.srate><![CDATA[int32_t inX = __SSAT(inlet_x,28);
+int32_t inY = __SSAT(inlet_y,28);
+outlet_z = map(param_sat?inX:inlet_x,param_sat?inY:inlet_y,param_a,param_b,param_c);]]></code.srate>
    </obj.normal>
 </objdefs>
