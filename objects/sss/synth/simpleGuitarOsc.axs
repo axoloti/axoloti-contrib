@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.10">
+<patch-1.0 appVersion="1.0.11">
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="A" x="406" y="280">
       <params/>
       <attribs/>
@@ -12,6 +12,10 @@
       <attribs/>
    </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="R" x="406" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="PWM" x="406" y="462">
       <params/>
       <attribs/>
    </obj>
@@ -50,7 +54,27 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="sss/osc/guitarOsc" uuid="c4bbe004-2df0-4f89-af60-ad7d3f3d31e2" name="GUITAR" x="1134" y="476">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="MOD" x="406" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="START" x="406" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="840" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="938" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_3" x="1036" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/osc/guitarOsc" uuid="c4bbe004-2df0-4f89-af60-ad7d3f3d31e2" name="GUITAR" x="854" y="658">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
          <frac32.u.map name="pwm" onParent="true" value="23.0"/>
@@ -65,17 +89,17 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1246" y="476">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="966" y="658">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="VOLUME" x="1302" y="476">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="VOLUME" x="1022" y="658">
       <params>
          <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1400" y="476">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1120" y="658">
       <params/>
       <attribs/>
    </obj>
@@ -108,22 +132,6 @@
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="note"/>
-         <dest obj="GUITAR" inlet="pitch"/>
-      </net>
-      <net>
-         <source obj="ENV2PWM" outlet="out"/>
-         <dest obj="GUITAR" inlet="pwm"/>
-      </net>
-      <net>
-         <source obj="ENV2MOD" outlet="out"/>
-         <dest obj="GUITAR" inlet="mod"/>
-      </net>
-      <net>
-         <source obj="ENV2START" outlet="out"/>
-         <dest obj="GUITAR" inlet="start"/>
-      </net>
-      <net>
          <source obj="keyb_1" outlet="gate2"/>
          <dest obj="adsr_1" inlet="gate"/>
       </net>
@@ -142,6 +150,46 @@
       <net>
          <source obj="R" outlet="inlet"/>
          <dest obj="adsr_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="GUITAR" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="GUITAR" inlet="pwm"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="GUITAR" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="+_3" outlet="out"/>
+         <dest obj="GUITAR" inlet="start"/>
+      </net>
+      <net>
+         <source obj="ENV2PWM" outlet="out"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="ENV2MOD" outlet="out"/>
+         <dest obj="+_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="ENV2START" outlet="out"/>
+         <dest obj="+_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="PWM" outlet="inlet"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="MOD" outlet="inlet"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="START" outlet="inlet"/>
+         <dest obj="+_3" inlet="in2"/>
       </net>
    </nets>
    <settings>
