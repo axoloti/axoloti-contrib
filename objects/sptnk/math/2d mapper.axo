@@ -1,0 +1,94 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="2d mapper" uuid="a75e2b8e-3b06-42c1-9d1a-e169847c20fe">
+      <sDescription>A 2-variable scalar function, with several algorithms. Output is z = f(x,y). Q27 format is used for powers, while sine functions are mapped from 0 to 2^27</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="x" description="x coordinate input"/>
+         <frac32buffer name="y" description="y coordinate input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="z" description="z output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="a" description="a coefficient, see formula">
+            <DefaultValue v="64.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="b" description="b coefficient, see formula">
+            <DefaultValue v="64.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="c" description="c coefficient, see formula"/>
+         <bool32.tgl name="sat" description="saturate input to normal range"/>
+      </params>
+      <attribs>
+         <combo name="function">
+            <MenuEntries>
+               <string>linear z = ax +bx +c</string>
+               <string>quadratic z = ax^2+bx^2+cxy</string>
+               <string>cubic1 z = ax^3 + by^3 +c</string>
+               <string>cubic2 z = axy^2 + byx^2 +cxy</string>
+               <string>sine1  z = sin(ax + by +c)</string>
+               <string>sine2 z = sin(ax^2+by^2+cxy)</string>
+               <string>sine3 z = sin(ax^3+by^3+c)</string>
+               <string>sine4 z = sin(axy^2+byx^2 +c)</string>
+               <string>complex1 z = sin((ax^2+by^2)/(xy+4c))</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t map(int32_t x, int32_t y, int32_t a, int32_t b, int32_t c)
+{
+	int32_t z = 0;
+	#if (attr_function == 0)//linerar
+	z = ___SMMLA(a<<3,x<<2,___SMMLA(b<<3,y<<2,c));
+	#elif (attr_function == 1)//quadratic
+	z = ___SMMLA(___SMMUL(a<<3,x<<2)<<2,x<<3,___SMMLA(___SMMUL(b<<3,y<<2)<<2,y<<3,___SMMUL(___SMMUL(c<<3,x<<2)<<2,y<<3)));
+	#elif (attr_function == 2)//cubic1
+	int32_t x3 = ___SMMUL(x<<2,___SMMUL(x<<2,x<<3)<<3);
+	int32_t y3 = ___SMMUL(y<<2,___SMMUL(y<<2,y<<3)<<3);
+	z = ___SMMLA(a<<3,x3<<2,___SMMLA(b<<3,y3<<2,c));
+	#elif (attr_function == 3)//cubic2
+	int32_t x3 = ___SMMUL(x<<2,___SMMUL(y<<2,y<<3)<<3);
+	int32_t y3 = ___SMMUL(y<<2,___SMMUL(x<<2,x<<3)<<3);
+	z = ___SMMLA(a<<3,x3<<2,___SMMLA(b<<3,y3<<2,c));
+	#elif (attr_function ==4)//sine1
+	SINE2TINTERP(___SMMUL(a<<3,x<<2)+___SMMUL(b<<3,y<<2)+c<<5,z);
+	z=z>>4;
+	#elif (attr_function ==5)//sine2
+	SINE2TINTERP(___SMMUL(a<<3,___SMMUL(x<<3,x<<2)<<2)+___SMMUL(b<<3,___SMMUL(y<<3,y<<2)<<2)+___SMMUL(c<<3,___SMMUL(x<<3,y<<2)<<2),z);
+	z=z>>4;
+	#elif (attr_function ==6)//sine3
+	int32_t x3 = ___SMMUL(x<<2,___SMMUL(x<<2,x<<3)<<3);
+	int32_t y3 = ___SMMUL(y<<2,___SMMUL(y<<2,y<<3)<<3);
+	SINE2TINTERP(___SMMLA(a<<3,x3<<2,___SMMLA(b<<3,y3<<2,c))<<5,z);
+	z=z>>4;
+	#elif (attr_function ==7)//sine4
+	int32_t x3 = ___SMMUL(x<<2,___SMMUL(y<<2,y<<3)<<3);
+	int32_t y3 = ___SMMUL(y<<2,___SMMUL(x<<2,x<<3)<<3);
+	SINE2TINTERP(___SMMLA(a<<3,x3<<2,___SMMLA(b<<3,y3<<2,c))<<5,z);
+	z=z>>4;
+	#elif (attr_function ==8)//complex1
+	float num = ___SMMUL(a<<2,___SMMUL(x<<2,x<<3)<<3)+___SMMUL(b<<2,___SMMUL(y<<2,y<<3)<<3);
+	float den = ___SMMLA(x<<2,y<<3,(c<<2));
+	SINE2TINTERP((int32_t)(134217728.0f*num/den)<<5,z);
+	z=z>>4;
+	#endif
+	
+	return z;
+}]]></code.declaration>
+      <code.srate><![CDATA[int32_t inX = __SSAT(inlet_x,28);
+int32_t inY = __SSAT(inlet_y,28);
+outlet_z = map(param_sat?inX:inlet_x,param_sat?inY:inlet_y,param_a,param_b,param_c);]]></code.srate>
+   </obj.normal>
+</objdefs>

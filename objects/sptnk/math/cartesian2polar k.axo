@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="cartesian2polar k" uuid="41963228-e9ef-455f-8bdc-3c26d5c1a35a">
+      <sDescription>Converts a pair of cartesian coordinates into polar, K-rate
+Angles are mapped from 0,360 to 0,64.
+The arctan function is an approximation taken from http://www.embedded.com/design/other/4216719/Performing-efficient-arctangent-approximation , with a slightly modified coefficient.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="x"/>
+         <frac32 name="y"/>
+      </inlets>
+      <outlets>
+         <frac32 name="phase"/>
+         <frac32 name="modulus"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float angle = 0;
+float param = 0.849;]]></code.declaration>
+      <code.krate><![CDATA[float x = inlet_x;
+float y = inlet_y;
+float x2 = x*x;
+float y2 = y*y;
+float xy = x*y;
+
+
+int32_t region =0;
+
+bool sign_x = inlet_x>0?1:0;
+bool sign_y = inlet_y>0?1:0;
+bool yGx = ((sign_y?inlet_y:-inlet_y)>(sign_x?inlet_x:-inlet_x)); // |Y|>|X|
+
+if (yGx)
+{
+	if (sign_y)
+	region = 2;
+	else
+	region = 4;
+}
+else
+{
+	if (sign_x)
+		if (sign_y)
+			region = 1;
+		else
+			region = 5;
+	else
+		region = 3;
+}
+
+if (!inlet_x  && !inlet_y)
+region = 0;
+
+switch (region){
+	case 0: break;
+	case 1: angle = xy/(y2 + param*x2); break; //0<theta<45
+	case 2: angle = 1.571f - xy/(x2 + param*y2); break; //45<theta<135
+	case 3: angle = 3.142f + xy/(y2 + param*x2); break; //135<theta<225
+	case 4: angle = 4.712f - xy/(x2 + param*y2); break; //225<theta<315
+	case 5: angle = 6.283f + xy/(y2 + param*x2); break; //315<theta<360
+}
+
+
+
+
+
+outlet_modulus= (int32_t) _VSQRTF((x2 + y2));
+outlet_phase = (int32_t) (angle*21361415.0f); //2^28 / 3.1415]]></code.krate>
+   </obj.normal>
+</objdefs>

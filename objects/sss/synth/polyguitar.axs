@@ -65,13 +65,13 @@
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="touch2filter" x="812" y="294">
       <params>
-         <frac32.u.map name="amp" onParent="true" value="0.0"/>
+         <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="vel/touch" x="924" y="294">
       <params>
-         <frac32.u.map name="value" onParent="true" value="0.0"/>
+         <frac32.u.map name="value" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -133,7 +133,7 @@
    </obj>
    <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="490" y="686">
       <params>
-         <frac32.u.map name="gain1" value="0.0899998664855957"/>
+         <frac32.u.map name="gain1" value="0.08999967575073242"/>
       </params>
       <attribs/>
    </obj>
@@ -142,8 +142,8 @@
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
          <int32 name="harm2nd" onParent="true" value="1"/>
          <int32 name="rateM" onParent="true" value="1"/>
-         <int32 name="rateD" onParent="true" value="6"/>
-         <frac32.u.map name="pwm" onParent="true" value="31.5"/>
+         <int32 name="rateD" onParent="true" value="10"/>
+         <frac32.u.map name="pwm" onParent="true" value="39.5"/>
          <frac32.u.map name="mod" onParent="true" value="46.5"/>
          <frac32.u.map name="start" onParent="true" value="20.0"/>
          <int32 name="preset" value="0"/>
@@ -168,7 +168,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="896" y="686">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="966" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1022" y="686">
       <params/>
       <attribs/>
    </obj>
@@ -180,6 +184,7 @@
       <net>
          <source obj="ADSRcrv_1" outlet="out"/>
          <dest obj="*_1" inlet="a"/>
+         <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate2"/>
@@ -235,6 +240,7 @@
       <net>
          <source obj="guitarDualOsc_1" outlet="wave"/>
          <dest obj="expLPG_1" inlet="a"/>
+         <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
          <source obj="sync" outlet="inlet"/>
@@ -265,10 +271,6 @@
          <dest obj="guitarDualOsc_1" inlet="start"/>
       </net>
       <net>
-         <source obj="LPos_1" outlet="out"/>
-         <dest obj="outlet_1" inlet="outlet"/>
-      </net>
-      <net>
          <source obj="touch2cutoff" outlet="out"/>
          <dest obj="+_4" inlet="in2"/>
       </net>
@@ -295,6 +297,10 @@
       <net>
          <source obj="cut" outlet="inlet"/>
          <dest obj="+_5" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="LPos_1" outlet="out"/>
+         <dest obj="outlet_1" inlet="outlet"/>
       </net>
    </nets>
    <settings>
