@@ -10,6 +10,8 @@
          <frac32 name="x" description="x offset for the figure"/>
          <frac32 name="y" description="y offset for the figure"/>
          <frac32 name="radius" description="radius of the figure"/>
+         <int32.positive name="xmul" description="multiplier for the x coordinate (override param)"/>
+         <int32.positive name="ymul" description="multiplier for the y coordinate (override param)"/>
       </inlets>
       <outlets>
          <frac32buffer name="x" description="x coordinate output"/>
@@ -52,6 +54,8 @@ int32_t increment_radius = param_radius + inlet_radius - radius >>4;
 
 int32_t angle = (1<<30)-param_phase*((1<<30)/90);
 
+int32_t xmul = inlet_xmul?inlet_xmul:param_xmul;
+int32_t ymul = inlet_ymul?inlet_ymul:param_ymul;
 
 for (int i=0;i<BUFSIZE;i++)
 {
@@ -60,8 +64,8 @@ for (int i=0;i<BUFSIZE;i++)
    int32_t rx;
    int32_t ry;
    
-   SINE2TINTERP((param_xmul*Phase)+angle,rx);
-   SINE2TINTERP((param_ymul*Phase),ry);
+   SINE2TINTERP((xmul*Phase)+angle,rx);
+   SINE2TINTERP((ymul*Phase),ry);
    outlet_x[i] = ___SMMLA(rx>>2,radius<<3,x);
    outlet_y[i] = ___SMMLA(ry>>2,radius<<3,y);
 

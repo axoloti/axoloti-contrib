@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="read lissajous" uuid="21dc034d-0420-4226-8343-ea1be9d05f2c">
+      <sDescription>Reads a table and &quot;wraps it around a circle&quot;. Basically it draws the table content along a circular path. Can be useful for some lissajous experiments.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch" description="pitch mod input"/>
+         <frac32buffer name="fm" description="frequency modulation input"/>
+         <frac32 name="phase" description="phase mod input (beginning of the table)"/>
+         <frac32 name="gain" description="gain mod input (radial gain of the table)"/>
+         <frac32 name="offset" description="offset mod input (radial offset of the table)"/>
+         <frac32 name="x" description="x mod input (x offset of the figure)"/>
+         <frac32 name="y" description="y mod input (y offset of the figure)"/>
+         <int32 name="tmul" description="table read multiplier (how many times the table is read in one full rotation, overrides the parameter)"/>
+         <int32 name="xmul" description="x coordinate multiplier (overrides parameter)"/>
+         <int32 name="ymul" description="y coordinate multiplier (overrides parameter)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="x" description="output of the x coordinate"/>
+         <frac32buffer name="y" description="output of the y coordinate"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" description="pitch of the oscillator"/>
+         <frac32.u.map name="phase" description="initial read position of the table. This rotates the figure."/>
+         <frac32.u.map name="gain" description="radial gain of the table">
+		 <DefaultValue v="64.0"/>
+		 </frac32.u.map>
+         <frac32.s.map name="offset" description="radial offset of the table"/>
+         <frac32.s.map name="x" description="x offset of the figure"/>
+         <frac32.s.map name="y" description="y offset of the figure"/>
+         <int32 name="tmul" description="table read multiplier (how many times the table is read in one full rotation)">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="xmul" description="x coordinate multiplier">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="ymul" description="y coordinate multiplier">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table" description="table to read"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t counter = 0;
+
+
+
+int32_t phase;
+int32_t gain;
+int32_t offset;
+int32_t x;
+int32_t y;
+int32_t tmul;
+int32_t xmul;
+int32_t ymul;]]></code.declaration>
+      <code.krate><![CDATA[uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+
+int32_t phase_inc = param_phase+inlet_phase - phase>>4;	//this stuff is needed for interpolation
+int32_t gain_inc = param_gain+inlet_gain - gain>>4;
+int32_t offset_inc = param_offset+inlet_offset - offset>>4;
+int32_t x_inc = param_x+inlet_x - x>>4;
+int32_t y_inc = param_y+inlet_y - y>>4;
+tmul = inlet_tmul?inlet_tmul:param_tmul;
+xmul = inlet_xmul?inlet_xmul:param_xmul;
+ymul = inlet_ymul?inlet_ymul:param_ymul;
+
+
+for (int i=0;i<BUFSIZE;i++)
+{
+	counter += (freq>>0) + inlet_fm[i]; //taken from osc/phasor.
+
+	int32_t rx;
+	int32_t ry;
+   
+	SINE2TINTERP((counter*xmul)+(1<<30),rx);	//this generates a couple of quadrature sines
+	SINE2TINTERP((counter*ymul),ry);	
+
+		// this section of code is copied from table/read interp
+	uint32_t asat = ((phase<<5)+counter*tmul>>5);
+	int index = asat>>(27-attr_table.LENGTHPOW);
+	int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+	int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+	int frac = (asat - (index<<(27-attr_table.LENGTHPOW)))<<(attr_table.LENGTHPOW+3);
+	int32_t rr;
+	rr = ___SMMUL(y1,(1<<30)-frac);
+	rr = ___SMMLA(___SMMLA(y2,frac,rr)<<4,gain<<2,offset); //multiplying the table_read output by radial gain and offsetting radially
+	
+	outlet_x[i] = ___SMMLA(rx>>2,rr<<3,x);	//outputting off-set coordinates
+	outlet_y[i] = ___SMMLA(ry>>2,rr<<3,y);	
+
+	phase+=phase_inc; 	//interpolating inlets
+	gain+=gain_inc;
+	offset+=offset_inc;
+	x+=x_inc;
+	y+=y_inc;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
