@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="spherical2cartesian s" uuid="3ac35884-6ab3-4694-9354-09cccab90ea5">
+      <sDescription>Converts a set of spherical coordinates into cartesian. S-rate</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="radius" description="radius"/>
+         <frac32buffer name="theta" description="inclination: angle with the z axis (0 = 0 degrees; 64 = 180 degrees)"/>
+         <frac32buffer name="phi" description="azimuth: angle with the x axis on the xy projection (0 = 0 degrees; 64 = 360 degrees)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="x" description="x coordinate output"/>
+         <frac32buffer name="y" description="y coordinate output"/>
+         <frac32buffer name="z" description="z coordinate output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[int32_t sintheta;
+int32_t costheta;
+int32_t sinphi;
+int32_t cosphi;
+
+
+SINE2TINTERP((inlet_theta<<4)+(1<<30),costheta);
+SINE2TINTERP(inlet_theta<<4,sintheta);
+SINE2TINTERP((inlet_phi<<5)+(1<<30),cosphi);
+SINE2TINTERP(inlet_phi<<5,sinphi);
+
+outlet_x = ___SMMUL(inlet_radius<<2,___SMMUL(sintheta,cosphi));
+outlet_y = ___SMMUL(inlet_radius<<2,___SMMUL(sintheta,sinphi));
+outlet_z = ___SMMUL(inlet_radius<<1,costheta);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,91 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="projection" uuid="69c17791-9fe5-45ba-8acb-6e366cf6813f">
+      <sDescription>Projects a 3D coordinate in a 2D system. Plane attribute allows to select which coordinate to project (the remaining coordinate corresponds to the eye coordinate).</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="x" description="input x coordinate"/>
+         <frac32 name="y" description="input y coordinate"/>
+         <frac32 name="z" description="input z coordinate"/>
+         <frac32 name="scale" description="mod input for the scale parameter (bitshifted left by 4 bits)"/>
+         <frac32 name="eye" description="mod input for the eye parameter"/>
+      </inlets>
+      <outlets>
+         <frac32 name="Px" description="projected x"/>
+         <frac32 name="Py" description="projected y"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="scale" description="scaling of the projected coordinate">
+		 <DefaultValue v="64.0"/>
+		 </frac32.u.map>
+         <frac32.s.map name="eye" description="coordinate of the eye along the camera axis">
+		 <DefaultValue v="64.0"/>
+		 </frac32.s.map>
+      </params>
+      <attribs>
+         <combo name="plane" description="plane of projection">
+            <MenuEntries>
+               <string>xy</string>
+               <string>yz</string>
+               <string>zx</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t calc_Px(int32_t x,int32_t y,int32_t z,int32_t scale,int32_t eye)
+{
+	float num;
+	float den;
+	#if (attr_plane == 1)   //plane xy, depth z
+	{
+		num = x;
+		den = (eye) - z;
+	}
+	#elif (attr_plane == 2) //plane yz, depth x
+	{<<1
+		num = y;
+		den = (eye) - x;
+	}
+	#elif (attr_plane == 3) //plane zx, depth y
+	{
+		num = z;
+		den = (eye) - y;
+	}
+	#endif
+
+	return (int32_t) scale*num/den;
+}
+int32_t calc_Py(int32_t x,int32_t y,int32_t z,int32_t scale, int32_t eye)
+{
+	float num;
+	float den;
+	#if (attr_plane == 1)   //plane xy, depth z
+	{
+		num = y;
+		den = (eye) - z;
+	}
+	#elif (attr_plane == 2) //plane yz, depth x
+	{
+		num = z;
+		den = (eye) - x;
+	}
+	#elif (attr_plane == 3) //plane zx, depth y
+	{
+		num = x;
+		den = (eye) - y;
+	}
+	#endif
+
+	return ((int32_t) scale*num/den);
+}]]></code.declaration>
+      <code.krate><![CDATA[int32_t eye = param_eye + inlet_eye;
+int32_t scale = param_scale + (inlet_scale);
+outlet_Px = calc_Px(inlet_x,inlet_y,inlet_z,scale,eye);
+outlet_Py = calc_Py(inlet_x,inlet_y,inlet_z,scale,eye);]]></code.krate>
+   </obj.normal>
+</objdefs>
