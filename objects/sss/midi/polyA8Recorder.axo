@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="polyA8Recorder" uuid="5b951bdc-ae16-439b-b1b3-24a5fd18ea18">
+   <obj.normal id="polyA8Recorder" uuid="42c1d39e-083f-4dfc-858c-bba128044c2e">
       <sDescription>Midi 8-voice input recorder with polyphonic aftertouch record.
 Aftertouch is recorded at the same rate of the count input.
 Notes are recorded 1/6 of the rate of the count input.
@@ -78,7 +78,7 @@ This module pairs very well with the arturia beatstep pro. Finally an aftertouch
             <MaxValue i="512"/>
          </int32>
          <int32.hradio name="poly">
-            <MaxValue i="4"/>
+            <MaxValue i="3"/>
          </int32.hradio>
          <int32.hradio name="selectHi">
             <MaxValue i="8"/>
@@ -118,6 +118,7 @@ int channel[8];
 int count;
 int cntFast;
 int cntSlow;
+int32_t slowlength;
 int rec;
 uint32_t pN[8];
 int index;
@@ -133,10 +134,17 @@ int ntrig[8];
 int mtrig;
 int lastnote[8];
 int fast;
+int slow;
 int note;
 int find;
 int gtrig[8];
-int POLYINDEX;]]></code.declaration>
+int POLYINDEX;
+int Mtrig;
+int atrig;
+int btrig;
+int Lastnote;
+int prev;
+int pnote;]]></code.declaration>
       <code.init><![CDATA[static int8_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -219,17 +227,10 @@ SelHi=param_selectHi+1;
 
 
 
-//if(poly==3){index=parent->polyIndex;}
-//if(poly==2){index=find;}
-//if(poly==1){index=count;}
-//if(poly==0){index=select;}
-//index=index-select;
-//index=index-(index/Select)*Select;
-//index=index<0?index+Select:index;
-//index=index+select;
 
 rec=param_rec;
 int32_t fastlength=param_length*6;
+slowlength=param_length;
 cntFast=inlet_count-(inlet_count/(fastlength))*fastlength;
 cntSlow=inlet_count/6;
 cntSlow=cntSlow-(cntSlow/param_length)*param_length;
@@ -250,18 +251,6 @@ if(!(pchannel==midichannelIn)){
 	}
 }
 
-if(param_rec>0){
-if(G[index]){
-	gtrig[index]=1;
-	array[cntSlow+(index)*attr_size]=G[index];
-	array[cntSlow+(index+8)*attr_size]=N[index];
-	array[cntSlow+(index+16)*attr_size]=V[index];
-	array[cntFast+(index*6+24)*attr_size]=T[index];}
-//else if((G[index]==0)&&(gtrig[index])){
-//	array[cntSlow+(index)*attr_size]=G[index];
-//	gtrig[index]=0;
-//}
-}
 
 
 	G[0]=array[cntSlow];
@@ -310,9 +299,10 @@ if(inlet_active==0){
 for(i=0;i<8;i++){
 if ((G[i]-pN[i]>0) && !ntrig[i]) {
 lastnote[i] = (N[i])&0x7F;
+if(!(lastnote[i]==_note+_gate*128-128))
 PatchMidiInHandler(MIDI_DEVICE_INTERNAL,0,MIDI_NOTE_ON + (channel[i]-1),lastnote[i],V[i]);  ntrig[i]=1;
 }
-if (!(G[i]-pN[i]>0) && ntrig[i]) {PatchMidiInHandler((midi_device_t) 0,0,MIDI_NOTE_OFF + (channel[i]-1),lastnote[i],__USAT(V[i],7)); ntrig[i]=0;}
+if (!(G[i]-pN[i]>0) && ntrig[i]) {if(!(lastnote[i]==_note+_gate*128-128))PatchMidiInHandler((midi_device_t) 0,0,MIDI_NOTE_OFF + (channel[i]-1),lastnote[i],__USAT(V[i],7)); ntrig[i]=0;}
 }
 
 
@@ -320,6 +310,7 @@ for(i=0;i<8;i++){
 if (G[i]>0){
 if(!(fast==cntFast)){
 note = (N[i])&0x7F;
+if(!(lastnote[i]==_note+_gate*128-128))
 PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0,MIDI_POLY_PRESSURE + (channel[i]-1),note,T[i]);
 }
 }
@@ -330,24 +321,55 @@ for(i=0;i<8;i++){
 }
 
 pchannel=midichannelIn;
-fast=cntFast;]]></code.krate>
+fast=cntFast;
+
+
+//midi thru
+if ((_gate>0) && !atrig) {
+Lastnote = _note;
+PatchMidiInHandler(MIDI_DEVICE_INTERNAL,0,MIDI_NOTE_ON + (channel[index]-1),Lastnote,_velo);  atrig=1;
+}
+if (((!(_gate>0))||(!(pnote==_note))) && atrig) {PatchMidiInHandler((midi_device_t) 0,0,MIDI_NOTE_OFF + (channel[index]-1),Lastnote,_velo); atrig=0;}
+
+
+if (((_gate>0)&&(!(prev==_touch))) && !btrig) {
+PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0,MIDI_POLY_PRESSURE + (channel[index]-1),_note,_touch);  btrig=1;
+}
+if ((!((_gate>0)&&(!(prev==_touch)))) && btrig) {btrig=0;}
+prev=_touch;
+pnote=_note;]]></code.krate>
       <code.midihandler><![CDATA[if(rec>0){
 if ((status == MIDI_NOTE_ON + midichannelIn) && (data2)) {
+  _gate = 1;
   _velo = data2;
   _note = data1;
-  _gate = 1;
+}
+else if (((status == MIDI_NOTE_ON + midichannelIn) && (!data2))||(status == MIDI_NOTE_OFF + midichannelIn)) {
+  if (_note == data1) {
+    _gate = 0;
+  }
+} else if ((status == midichannelIn + MIDI_POLY_PRESSURE)&&(data1 == _note)) {
+  _touch = data2;
 
+} else if ((status == midichannelIn + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  _gate = 0;
+}
 
-if((_gate>0)&&!mtrig){
-  count=(count+1)&7;
+if((_gate>0)&&!mtrig)
+{
+  if(poly==1){
+  count=(count+1)&7;}
+  if(poly==2)
+  {
   find=8;
-//  for(i=0;i<(8);i++){if(array[cntSlow+((7-i)*attr_size)]==0){find=7-i;}}
   for(i=select;i<(SelHi);i++){if(array[cntSlow+((7-i)*attr_size)]==0){find=7-i;}}
   find=find==8?(int32_t)(GenerateRandomNumber())&7:find;
-  mtrig=1;}
-  else if(_gate==0){mtrig=0;}
-    
-if(poly==3){index=parent->polyIndex;}
+  }
+mtrig=1;
+}
+else if(!(_gate>0)){mtrig=0;}
+
+
 if(poly==2){index=find;}
 if(poly==1){index=count;}
 if(poly==0){index=select;}
@@ -356,34 +378,14 @@ index=index-(index/Select)*Select;
 index=index<0?index+Select:index;
 index=index+select;
 
-  
-N[index]= _note;
-G[index]= _gate;
-V[index]= _velo;
-T[index]= ___SMMUL(_touch<<23,_touch<<22)>>20;
-} else if (((status == MIDI_NOTE_ON + midichannelIn) && (!data2))||
-          (status == MIDI_NOTE_OFF + midichannelIn)) {
-  if (_note == data1) {
-    _gate = 0;
-    G[index]= _gate;
-
-  }
-} else if ((status == midichannelIn + MIDI_POLY_PRESSURE)&&(data1 == _note)) {
-  _touch = data2;
-  T[index]= _touch;
-} else if ((status == midichannelIn + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
-  _gate = 0;
-  G[index]= _gate;
-
-}
+if(_gate>0)
+{
+	array[cntSlow+(index)*attr_size]=_gate;
+	array[cntSlow+(index+8)*attr_size]=_note;
+	array[cntSlow+(index+16)*attr_size]=_velo;
+	array[cntFast+(index*6+24)*attr_size]=___SMMUL(_touch<<23,_touch<<22)>>20;
 }
 
-  if((_gate>0)&&!mtrig){
-  count=(count+1)&7;
-  find=8;
-  for(i=select;i<(SelHi);i++){if(array[cntSlow+((7-i)*attr_size)]==0){find=7-i;}}
-  find=find==8?(int32_t)(GenerateRandomNumber())&7:find;
-  mtrig=1;}
-  else if(_gate==0){mtrig=0;}]]></code.midihandler>
+}]]></code.midihandler>
    </obj.normal>
 </objdefs>
