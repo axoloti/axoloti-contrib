@@ -1,0 +1,213 @@
+<patch-1.0 appVersion="1.0.11">
+   <patcher type="patch/patcher" uuid="428f7c79-7290-43ff-a77a-855715d21d53" name="patcher_1" x="532" y="252">
+      <params/>
+      <attribs>
+         <combo attributeName="poly" selection="5"/>
+         <combo attributeName="midichannel" selection="inherit"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.11">
+         <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_2" x="84" y="70">
+            <params>
+               <frac32.u.map name="gain1" value="2.0"/>
+               <frac32.u.map name="gain2" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/supersaw" uuid="ece83feb36cfaee7dc3964b75c485774ea0309cf" name="supersaw_1" x="210" y="70">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="detune" value="9.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_3" x="350" y="84">
+            <params>
+               <frac32.u.map name="gain1" value="31.5"/>
+               <frac32.u.map name="gain2" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="jt/filter/vcf4pole2x" uuid="f0ea35e9-a9c5-445e-8868-79b556d5d5c3" name="vcf4pole2x_1" x="476" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="15.0"/>
+               <frac32.u.map name="reso" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="602" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="84" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1050" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="882" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="308" y="224">
+            <params>
+               <frac32.u.map name="gain1" value="2.0"/>
+               <frac32.u.map name="gain2" value="0.39999961853027344"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/supersaw" uuid="ece83feb36cfaee7dc3964b75c485774ea0309cf" name="supersaw_2" x="434" y="224">
+            <params>
+               <frac32.s.map name="pitch" value="0.09999942779541016"/>
+               <frac32.u.map name="detune" value="8.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="714" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="98" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="812" y="266">
+            <params>
+               <frac32.s.map name="a" value="-54.0"/>
+               <frac32.s.map name="d" value="44.0"/>
+               <frac32.u.map name="s" value="34.5"/>
+               <frac32.s.map name="r" value="-37.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="658" y="322">
+            <params>
+               <frac32.s.map name="a" value="-12.0"/>
+               <frac32.s.map name="d" value="21.0"/>
+               <frac32.u.map name="s" value="25.0"/>
+               <frac32.s.map name="r" value="38.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="308" y="378">
+            <params>
+               <frac32.s.map name="a" value="-9.0"/>
+               <frac32.s.map name="d" value="-10.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="mix_2" inlet="bus_in"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="bend_1" outlet="bend"/>
+               <dest obj="mix_1" inlet="in1"/>
+               <dest obj="mix_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="ad_1" inlet="trig"/>
+               <dest obj="adsr_1" inlet="gate"/>
+               <dest obj="adsr_2" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="ad_1" outlet="env"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="supersaw_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mix_2" outlet="out"/>
+               <dest obj="supersaw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="supersaw_2" outlet="wave"/>
+               <dest obj="mix_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="supersaw_1" outlet="wave"/>
+               <dest obj="mix_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+               <dest obj="*_2" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vcf4pole2x_1" outlet="out"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="mix_3" outlet="out"/>
+               <dest obj="vcf4pole2x_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="adsr_2" outlet="env"/>
+               <dest obj="*_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_2" outlet="result"/>
+               <dest obj="vcf4pole2x_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>400</width>
+            <height>400</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="826" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>549</x>
+      <y>187</y>
+      <width>1300</width>
+      <height>777</height>
+   </windowPos>
+</patch-1.0>
