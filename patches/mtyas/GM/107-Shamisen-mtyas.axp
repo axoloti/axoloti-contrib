@@ -9,7 +9,7 @@
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="8062f226-13e5-4845-a046-cb85f1f9fbdd" name="patcher_1" x="364" y="182">
+   <patcher type="patch/patcher" uuid="73c04ce4-f956-4f6c-af7f-d1d57e30ff29" name="patcher_1" x="364" y="182">
       <params>
          <frac32.s.map name="lp_2:pitch" value="-6.0">
             <presets>
@@ -25,7 +25,7 @@
                </preset>
             </presets>
          </frac32.u.map>
-         <frac32.s.map name="envd1" MidiCC="1" value="-17.0">
+         <frac32.s.map name="envd1" MidiCC="1" value="-31.0">
             <presets>
                <preset index="1">
                   <f v="-29.0"/>
@@ -231,7 +231,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="bdb8f36e-a994-4498-9c1c-f57bcdbcea34" name="patcher_2" x="476" y="182">
+   <patcher type="patch/patcher" uuid="84527743-40fc-48ea-b2d1-60a3be61ef7c" name="patcher_2" x="476" y="182">
       <params>
          <frac32.s.map name="ad_1:a" value="-64.0">
             <presets>
@@ -240,7 +240,7 @@
                </preset>
             </presets>
          </frac32.s.map>
-         <frac32.s.map name="ad_1:d" MidiCC="1" value="-17.0">
+         <frac32.s.map name="ad_1:d" MidiCC="1" value="-31.0">
             <presets>
                <preset index="1">
                   <f v="-29.0"/>
@@ -422,12 +422,12 @@
    </obj>
    <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="1596" y="252">
       <params>
-         <frac32.s.map name="pitch" value="-18.0"/>
+         <frac32.s.map name="pitch" value="2.0"/>
          <frac32.u.map name="reso" value="51.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="cpwitz/delay/tape-delay" uuid="69161569-d7bb-4941-a195-d071743bac6a" name="obj_3" x="938" y="280">
+   <patcher type="patch/patcher" uuid="a93889c2-180d-4ac1-b751-a34e0181e248" name="obj_3" x="938" y="280">
       <params>
          <frac32.u.map name="rate" value="60.0">
             <presets>
@@ -461,7 +461,226 @@
          </frac32.u.map>
       </params>
       <attribs/>
-   </obj>
+      <subpatch appVersion="1.0.11">
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="rate" x="14" y="14">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="50.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="table" x="868" y="14">
+            <params/>
+            <attribs>
+               <combo attributeName="size" selection="2048"/>
+               <text attributeName="init">
+                  <sText><![CDATA[]]></sText>
+               </text>
+            </attribs>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="98" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="saturation on" x="280" y="112">
+            <params>
+               <bool32.tgl name="b" onParent="true" value="1"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="filter on" x="616" y="112">
+            <params>
+               <bool32.tgl name="b" onParent="true" value="1"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="in" x="98" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/phasor lin" uuid="ee34c4d34eba2cbd849b9e5631e60ce1651faf4c" name="phasor_1" x="182" y="224">
+            <params>
+               <frac32.u.map name="freq" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="294" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_2" x="364" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <patchobj type="patch/object" uuid="be0eae3f-c616-4cb5-8a8c-c02516adfa04" name="feedback-buffer" x="476" y="224">
+            <params>
+               <frac32.u.map name="feedback" onParent="true" value="16.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="table"/>
+            </attribs>
+            <object id="patch/object" uuid="be0eae3f-c616-4cb5-8a8c-c02516adfa04">
+               <sDescription>A circular sample buffer referencing a 32b table. Each time trigger input rises above zero a new sample is taken from in and the oldest sample from the buffer is on out. Good for building pitch shifting tape delays. Includes parameter and inlet for the buffer&apos;sfeedback level.</sDescription>
+               <author>Peter Witzel</author>
+               <license>CC0</license>
+               <inlets>
+                  <frac32buffer name="in" description="audio input"/>
+                  <frac32buffer name="trigger" description="triggered on rising above 0"/>
+                  <frac32.positive name="feedback" description="feedback mod"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer name="out" description="oldest sample output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <frac32.u.map name="feedback"/>
+               </params>
+               <attribs>
+                  <objref name="table"/>
+               </attribs>
+               <includes/>
+               <code.declaration><![CDATA[
+        uint32_t pos;
+        int32_t last_input; 
+        int32_t val_out; 
+        int32_t val_target; 
+        int32_t accu;
+        int32_t sampleno;
+        int32_t fdb_level;]]></code.declaration>
+               <code.init><![CDATA[
+        last_input = 0;
+        pos = 0;
+        val_out = 0;
+        val_target = 0;
+        accu = 0;
+        sampleno = 0;
+        fdb_level = 0;]]></code.init>
+               <code.krate><![CDATA[fdb_level = __SSAT((param_feedback + inlet_feedback),28);]]></code.krate>
+               <code.srate><![CDATA[
+      if (inlet_trigger>0 && last_input<=0) {
+        pos = (pos+1) & attr_table.LENGTHMASK;
+        val_target = attr_table.array[(pos+1)&attr_table.LENGTHMASK];
+        int32_t val = attr_table.array[pos];
+        attr_table.array[pos]=__SSAT(accu/sampleno + (___SMMUL(fdb_level, val)<<5), 28);
+        accu = 0;
+        sampleno = 0;
+      }
+      last_input = inlet_trigger;
+      accu += inlet_in;
+      sampleno++;
+      val_out = (val_out + val_out + val_out + val_target)>>2;
+      outlet_out = val_out;
+]]></code.srate>
+            </object>
+         </patchobj>
+         <obj type="filter/vcf2" uuid="67c9424e51d449a210e1697a6c965c821522de8e" name="filter" x="714" y="224">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="34.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="812" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="896" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="980" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="ratemod" x="14" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dry/wet" x="812" y="378">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="filter" outlet="out"/>
+               <dest obj="mux_1" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="sat_1" outlet="out"/>
+               <dest obj="mux_2" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="phasor_1" outlet="phasor"/>
+               <dest obj="feedback-buffer" inlet="trigger"/>
+            </net>
+            <net>
+               <source obj="rate" outlet="out"/>
+               <dest obj="filter" inlet="pitch"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="feedback-buffer" outlet="out"/>
+               <dest obj="filter" inlet="in"/>
+               <dest obj="mux_1" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="mux_1" outlet="o"/>
+               <dest obj="xfade_1" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="filter on" outlet="o"/>
+               <dest obj="mux_1" inlet="s"/>
+            </net>
+            <net>
+               <source obj="saturation on" outlet="o"/>
+               <dest obj="mux_2" inlet="s"/>
+            </net>
+            <net>
+               <source obj="in" outlet="inlet"/>
+               <dest obj="xfade_1" inlet="i1"/>
+               <dest obj="mux_2" inlet="i1"/>
+               <dest obj="sat_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="xfade_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="dry/wet" outlet="out"/>
+               <dest obj="xfade_1" inlet="c"/>
+            </net>
+            <net>
+               <source obj="ratemod" outlet="inlet"/>
+               <dest obj="+_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="phasor_1" inlet="freq"/>
+            </net>
+            <net>
+               <source obj="mux_2" outlet="o"/>
+               <dest obj="feedback-buffer" inlet="in"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>0</NPresets>
+            <NPresetEntries>0</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Author>Peter Witzel</Author>
+            <License>CC0</License>
+         </settings>
+         <notes><![CDATA[A pitch-shifting tape delay effect with saturation. Sounds like cheap bbd delays.]]></notes>
+         <windowPos>
+            <x>448</x>
+            <y>395</y>
+            <width>1231</width>
+            <height>642</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
    <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="1134" y="294">
       <params>
          <frac32.s.map name="pitch" value="-55.0">
@@ -493,12 +712,46 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="jt/dist/class a" uuid="2e434261-5101-486e-8685-800ec8406675" name="class_2" x="1358" y="294">
+   <patchobj type="patch/object" uuid="d923242b-519c-4d3f-b079-efea448f295a" name="class_2" x="1358" y="294">
       <params>
-         <frac32.u.map name="drive" value="0.0"/>
+         <frac32.u.map name="drive" value="5.0"/>
       </params>
       <attribs/>
-   </obj>
+      <object id="patch/object" uuid="d923242b-519c-4d3f-b079-efea448f295a">
+         <sDescription>&quot;Class A&quot; distortion. Class A refers to an amplifier topology, with asymetrical overdrive properties. This object adds variable DC offset, a subtle highpass filter can be useful before further processing.</sDescription>
+         <author>Johannes Taelman</author>
+         <license>GPL</license>
+         <helpPatch>class a.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="in" description="input"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out" description="output"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="drive" description="overdrivel level" noLabel="true"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int32_t prev=0;
+int32_t prev2=0;
+int32_t prev_in=0;]]></code.declaration>
+         <code.krate><![CDATA[int i;
+
+int32_t drive_complement = (1<<27)-param_drive;
+int32_t drive_complement_square = ___SMMUL(drive_complement,drive_complement)<<2;
+drive_complement = drive_complement>>1;
+for(i=0;i<BUFSIZE;i++) {
+	int32_t mul1 = ___SMMUL((inlet_in[i]+prev_in),prev+prev2);
+     int32_t biased1 = __SSAT(___SMMLA(param_drive<<4,mul1 + 0x00800000 + drive_complement, drive_complement_square),26)<<5;
+     prev2 = prev;
+     prev = biased1;
+     outlet_out[i] = mul1;
+     prev_in = inlet_in[i];
+}]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_4" x="1456" y="308">
       <params>
          <frac32.u.map name="amp" value="54.5">
@@ -546,12 +799,46 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="jt/dist/class a" uuid="2e434261-5101-486e-8685-800ec8406675" name="class_1" x="1358" y="406">
+   <patchobj type="patch/object" uuid="d287cd49-516e-4038-8d16-c465f3818719" name="class_1" x="1358" y="406">
       <params>
-         <frac32.u.map name="drive" value="0.0"/>
+         <frac32.u.map name="drive" value="7.5"/>
       </params>
       <attribs/>
-   </obj>
+      <object id="patch/object" uuid="d287cd49-516e-4038-8d16-c465f3818719">
+         <sDescription>&quot;Class A&quot; distortion. Class A refers to an amplifier topology, with asymetrical overdrive properties. This object adds variable DC offset, a subtle highpass filter can be useful before further processing.</sDescription>
+         <author>Johannes Taelman</author>
+         <license>GPL</license>
+         <helpPatch>class a.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="in" description="input"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out" description="output"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="drive" description="overdrivel level" noLabel="true"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int32_t prev=0;
+int32_t prev2=0;
+int32_t prev_in=0;]]></code.declaration>
+         <code.krate><![CDATA[int i;
+
+int32_t drive_complement = (1<<27)-param_drive;
+int32_t drive_complement_square = ___SMMUL(drive_complement,drive_complement)<<2;
+drive_complement = drive_complement>>1;
+for(i=0;i<BUFSIZE;i++) {
+	int32_t mul1 = ___SMMUL((inlet_in[i]+prev_in),prev+prev2);
+     int32_t biased1 = __SSAT(___SMMLA(param_drive<<4,mul1 + 0x00800000 + drive_complement, drive_complement_square),26)<<5;
+     prev2 = prev;
+     prev = biased1;
+     outlet_out[i] = mul1;
+     prev_in = inlet_in[i];
+}]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_3" x="1456" y="420">
       <params>
          <frac32.u.map name="amp" value="54.5">
@@ -651,8 +938,8 @@
       </net>
       <net>
          <source obj="gain_2" outlet="out"/>
-         <dest obj="class_1" inlet="in"/>
          <dest obj="follower_1" inlet="in"/>
+         <dest obj="class_1" inlet="in"/>
       </net>
       <net>
          <source obj="class_1" outlet="out"/>
@@ -697,8 +984,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>155</x>
-      <y>136</y>
+      <x>148</x>
+      <y>77</y>
       <width>1855</width>
       <height>1069</height>
    </windowPos>

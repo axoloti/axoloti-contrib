@@ -314,7 +314,7 @@
          <spinner attributeName="note" value="46"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="3b4b0451-ef7e-4330-b0ba-b3b57e4431c0" name="patcher_3" x="266" y="798">
+   <patcher type="patch/patcher" uuid="26788a44-ef67-4fb7-ab38-ed57c3a938c3" name="patcher_3" x="266" y="798">
       <params>
          <frac32.s.map name="multiWave_1:pitch" value="31.899999618530273"/>
          <frac32.u.map name="multiWave_1:shape" value="47.0"/>
@@ -341,7 +341,7 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_1" x="140" y="98">
+         <patchobj type="patch/object" uuid="89646837-5cc2-48d0-b362-9bf4d0158963" name="multiWave_1" x="140" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="20.0"/>
@@ -349,8 +349,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_2" x="266" y="98">
+            <object id="patch/object" uuid="89646837-5cc2-48d0-b362-9bf4d0158963">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="33da4d36-d681-419e-9028-5c1432771e03" name="multiWave_2" x="266" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.0"/>
@@ -358,8 +468,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_3" x="392" y="98">
+            <object id="patch/object" uuid="33da4d36-d681-419e-9028-5c1432771e03">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="56a9480f-0775-4697-9672-5eeeaeb2c20d" name="multiWave_3" x="392" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="21.0"/>
@@ -367,8 +587,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_4" x="518" y="98">
+            <object id="patch/object" uuid="56a9480f-0775-4697-9672-5eeeaeb2c20d">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="ff6f8122-3a80-419a-ab5a-947ca38b8888" name="multiWave_4" x="518" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.09999990463257"/>
@@ -376,8 +706,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_5" x="644" y="98">
+            <object id="patch/object" uuid="ff6f8122-3a80-419a-ab5a-947ca38b8888">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="b1fd34d1-831b-446d-bac9-27dfc9ed5ca5" name="multiWave_5" x="644" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="22.0"/>
@@ -385,8 +825,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_6" x="770" y="98">
+            <object id="patch/object" uuid="b1fd34d1-831b-446d-bac9-27dfc9ed5ca5">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="2fb43f94-e66b-4e82-bf90-90f16246d2c5" name="multiWave_6" x="770" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.0"/>
@@ -394,7 +944,117 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="2fb43f94-e66b-4e82-bf90-90f16246d2c5">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="vel1" x="42" y="140">
             <params/>
             <attribs/>
@@ -454,7 +1114,7 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="518" y="504">
+         <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="518" y="518">
             <params/>
             <attribs/>
          </obj>
@@ -538,10 +1198,6 @@
             <net>
                <source obj="multiWave_5" outlet="out"/>
                <dest obj="multiWave_6" inlet="freq"/>
-            </net>
-            <net>
-               <source obj="multiWave_4" outlet="out"/>
-               <dest obj="mix_1" inlet="in2"/>
             </net>
             <net>
                <source obj="multiWave_6" outlet="out"/>
@@ -647,6 +1303,10 @@
                <source obj="vel1" outlet="inlet"/>
                <dest obj="mix_4" inlet="bus_in"/>
             </net>
+            <net>
+               <source obj="multiWave_4" outlet="out"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>no</subpatchmode>
@@ -660,7 +1320,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="98fbfd76-b6e3-4e51-9200-403872997620" name="patcher_2" x="448" y="798">
+   <patcher type="patch/patcher" uuid="1ab128e9-a223-4583-a121-3aaa098467a0" name="patcher_2" x="448" y="798">
       <params>
          <frac32.s.map name="multiWave_1:pitch" value="28.699999809265137"/>
          <frac32.u.map name="multiWave_1:shape" value="0.0"/>
@@ -687,7 +1347,7 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_1" x="140" y="98">
+         <patchobj type="patch/object" uuid="1a456027-a535-4513-a547-6e2c8fb49879" name="multiWave_1" x="140" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="20.0"/>
@@ -695,8 +1355,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_2" x="266" y="98">
+            <object id="patch/object" uuid="1a456027-a535-4513-a547-6e2c8fb49879">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="e6961d02-c793-4689-bd5d-6ac69d884ed6" name="multiWave_2" x="266" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.0"/>
@@ -704,8 +1474,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_3" x="392" y="98">
+            <object id="patch/object" uuid="e6961d02-c793-4689-bd5d-6ac69d884ed6">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="978f5136-7954-45db-b874-49432dada9de" name="multiWave_3" x="392" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="21.0"/>
@@ -713,8 +1593,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_4" x="518" y="98">
+            <object id="patch/object" uuid="978f5136-7954-45db-b874-49432dada9de">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="bdc8bb26-4ea6-4e9c-8dd4-2bd1889ecf63" name="multiWave_4" x="518" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.09999990463257"/>
@@ -722,8 +1712,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_5" x="644" y="98">
+            <object id="patch/object" uuid="bdc8bb26-4ea6-4e9c-8dd4-2bd1889ecf63">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="1e8fc2f7-5b19-4211-96d9-70ae70334883" name="multiWave_5" x="644" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="22.0"/>
@@ -731,8 +1831,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_6" x="770" y="98">
+            <object id="patch/object" uuid="1e8fc2f7-5b19-4211-96d9-70ae70334883">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="184f724f-b068-48fb-8089-dae7580c5ca0" name="multiWave_6" x="770" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" onParent="true" value="26.0"/>
@@ -740,7 +1950,117 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="184f724f-b068-48fb-8089-dae7580c5ca0">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="vel1" x="42" y="140">
             <params/>
             <attribs/>
@@ -1006,7 +2326,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="184d2630-cff1-4507-b9c6-4a266ae4d59c" name="patcher_1" x="602" y="798">
+   <patcher type="patch/patcher" uuid="556e969d-5d82-4f4e-8ce6-9320fe3aa375" name="patcher_1" x="602" y="798">
       <params>
          <frac32.s.map name="d_2" value="-29.0"/>
          <frac32.s.map name="d_3" value="-9.0"/>
@@ -1014,16 +2334,7 @@
       </params>
       <attribs/>
       <subpatch appVersion="1.0.11">
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_3" x="266" y="84">
-            <params>
-               <int32.vradio name="waveform" value="3"/>
-               <frac32.s.map name="pitch" value="21.0"/>
-               <frac32.u.map name="shape" value="0.0"/>
-               <frac32.u.map name="amount" value="0.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_5" x="420" y="84">
+         <patchobj type="patch/object" uuid="9e7456f1-8bf0-493c-bcfa-043b5de95ada" name="multiWave_5" x="420" y="56">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" value="22.0"/>
@@ -1031,12 +2342,241 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="9e7456f1-8bf0-493c-bcfa-043b5de95ada">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="25465092-6d29-4f86-a7d4-2cf6b57c6be5" name="multiWave_3" x="266" y="84">
+            <params>
+               <int32.vradio name="waveform" value="3"/>
+               <frac32.s.map name="pitch" value="21.0"/>
+               <frac32.u.map name="shape" value="0.0"/>
+               <frac32.u.map name="amount" value="0.0"/>
+            </params>
+            <attribs/>
+            <object id="patch/object" uuid="25465092-6d29-4f86-a7d4-2cf6b57c6be5">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="closed" x="28" y="98">
             <params/>
             <attribs/>
          </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_1" x="140" y="98">
+         <patchobj type="patch/object" uuid="8f75ea7b-d8f8-492a-aa85-a6e9514295a0" name="multiWave_1" x="140" y="98">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" value="20.0"/>
@@ -1044,7 +2584,117 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="8f75ea7b-d8f8-492a-aa85-a6e9514295a0">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="924" y="112">
             <params>
                <frac32.s.map name="a" value="-23.0"/>
@@ -1131,16 +2781,7 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_2" x="266" y="350">
-            <params>
-               <int32.vradio name="waveform" value="3"/>
-               <frac32.s.map name="pitch" value="26.0"/>
-               <frac32.u.map name="shape" value="0.0"/>
-               <frac32.u.map name="amount" value="0.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_4" x="406" y="350">
+         <patchobj type="patch/object" uuid="9557a99d-1486-4e6f-85e4-2ccc81e74e2e" name="multiWave_4" x="406" y="350">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" value="26.09999990463257"/>
@@ -1148,8 +2789,118 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
-         <obj type="beat/osc/multiWave" uuid="50bff098-b6e0-43ff-bf4d-7f946501a55b" name="multiWave_6" x="560" y="350">
+            <object id="patch/object" uuid="9557a99d-1486-4e6f-85e4-2ccc81e74e2e">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
+         <patchobj type="patch/object" uuid="f783a036-fe1e-43ba-b85f-475bcebc11b8" name="multiWave_6" x="560" y="350">
             <params>
                <int32.vradio name="waveform" value="3"/>
                <frac32.s.map name="pitch" value="26.0"/>
@@ -1157,7 +2908,117 @@
                <frac32.u.map name="amount" value="0.0"/>
             </params>
             <attribs/>
-         </obj>
+            <object id="patch/object" uuid="f783a036-fe1e-43ba-b85f-475bcebc11b8">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="open" x="28" y="364">
             <params/>
             <attribs/>
@@ -1166,6 +3027,125 @@
             <params/>
             <attribs/>
          </obj>
+         <patchobj type="patch/object" uuid="ffb4d6f9-4fe9-4d9d-9f30-5873e1bb6baa" name="multiWave_2" x="266" y="392">
+            <params>
+               <int32.vradio name="waveform" value="3"/>
+               <frac32.s.map name="pitch" value="26.0"/>
+               <frac32.u.map name="shape" value="0.0"/>
+               <frac32.u.map name="amount" value="0.0"/>
+            </params>
+            <attribs/>
+            <object id="patch/object" uuid="ffb4d6f9-4fe9-4d9d-9f30-5873e1bb6baa">
+               <sDescription>multi waveform oscilator: sine, triangle, saw, square
+each waveform (except sine) is able to change its shape (e.g. square = pwm).</sDescription>
+               <author>Beat Rossmy</author>
+               <license>BSD</license>
+               <inlets>
+                  <frac32.bipolar name="pitch"/>
+                  <frac32buffer name="freq" description="phase increment"/>
+                  <bool32.rising name="reset" description="reset phase"/>
+                  <frac32.bipolar name="shape" description="wave shaper"/>
+                  <int32.positive name="wave" description="wave select"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.bipolar name="out" description="output"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <int32.vradio name="waveform" description="sine, triangle, saw, square" noLabel="false">
+                     <MaxValue i="4"/>
+                  </int32.vradio>
+                  <frac32.s.map.pitch name="pitch" noLabel="true"/>
+                  <frac32.u.map name="shape" description="changes shape of the selected waveform" noLabel="false"/>
+                  <frac32.u.map name="amount" description="amount of shape"/>
+               </params>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[
+static uint8_t const sin = 0;
+static uint8_t const tri = 1;
+static uint8_t const saw = 2;
+static uint8_t const pwm = 3;
+
+uint32_t phase;
+int32_t phasor;
+int32_t phaseCounter;
+uint32_t r;
+int32_t a;
+int32_t b;
+		  ]]></code.declaration>
+               <code.init><![CDATA[
+phase = 0;
+phasor = 0;
+phaseCounter = 0;
+
+r = 1;
+a = 0;
+b = 0;
+]]></code.init>
+               <code.krate><![CDATA[
+uint32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+
+int32_t shape;
+shape = __USAT(param_shape + (___SMMUL(param_amount,inlet_shape)<<1), 27);
+
+int32_t waveform;
+waveform = (param_waveform + (inlet_wave>>4))%4;]]></code.krate>
+               <code.srate><![CDATA[
+/* reset phase if retriggered */
+if (inlet_reset && r) {
+	phase = 0;
+	phaseCounter = 0;
+	r = 0;
+} else { 
+	if (!inlet_reset) r = 1;
+	phase += (freq>>0) + inlet_freq;
+	/* if new phasor value is smaller then last one -> increment phaseCounter */
+	a = phase>>5;
+	/* first or second phase cycle */
+	if (a < phasor) {
+		phaseCounter++;
+		if (phaseCounter == 2) phaseCounter = 0;
+	}
+	/* set new phasor value */
+	phasor = a;
+}
+
+/* calculate waveforms based on phasor value */
+switch (waveform) {
+	case sin:
+		/* phasor to sine */
+		SINE2TINTERP(phasor<<5,a) /* calculate sine wave via function */
+		outlet_out= (a>>4);
+		break;
+
+	case tri:
+		/* phasor to triangle */
+		b = (phasor>0x07FFFFFF/4)? phasor-0x07FFFFFF/4:phasor+0x07FFFFFF/4*3; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) -> -a = sawDown (bipolar) */
+		a = (a>0)? a:-a; /* merge sawUp and sawDown to triangle -> unipolar */
+		a = (a-(1<<26))<<1; /* unipolar to bipolar */
+		b = 0x07FFFFFF-(shape/10*8);
+		a = (a>b || a<-b)? -a+((a>0)?2:-2)*b:a; /* param_shape threshold for wavefolding */
+		outlet_out = a;
+		break;
+
+	case saw:
+		/* phasor to saw */
+		b = (phasor>0x07FFFFFF/2)? phasor-0x07FFFFFF/2:phasor+0x07FFFFFF/2; /* phase shift to correct wave startpoint*/
+		a = (b-(1<<26))<<1; /* phasor to sawUp (bipolar) */
+		outlet_out = (phaseCounter==1 && (phasor>0x07FFFFFF/2-shape/2 && phasor<0x07FFFFFF/2+shape/2))? -a:a;
+		break;
+
+	case pwm:
+		/* phasor to pulse width */
+		outlet_out = (phasor>=0x07FFFFFF/2+shape/2)? -0x08000000:0x07FFFFFF; /* pulse width depending on shape value*/
+		break;
+}
+	  ]]></code.srate>
+            </object>
+         </patchobj>
          <obj type="filter/hp m" uuid="fdba806c3cfd2b7aca3256c733379a06e5811e66" name="hp_1" x="1064" y="392">
             <params>
                <frac32.s.map name="pitch" value="34.0"/>
