@@ -102,15 +102,11 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="56" y="252" text="recording a MASTER-loop will set and start the global transport"/>
-   <obj type="rbrt/patching/i2k" uuid="618c2ae8-c0af-48ff-a35a-4a4f869617d4" name="i2k_1" x="392" y="266">
+   <obj type="rbrt/math/s2f" uuid="7c22ff76-ce0f-4e67-ab3b-d7cff44b6566" name="s2f_1" x="406" y="266">
       <params/>
       <attribs/>
    </obj>
    <obj type="rbrt/control/demux_sh 2" uuid="b0c4311c-7ad6-48f2-9e08-1af5d4d6946e" name="demux_sh_5" x="504" y="266">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/patching/k2i" uuid="51210bea-af35-4e1d-a565-89f582299b04" name="k2i_1" x="658" y="266">
       <params/>
       <attribs/>
    </obj>
@@ -120,10 +116,12 @@
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="336" y="322" text="convert integer to &apos;krate float&apos;"/>
-   <comment type="patch/comment" x="658" y="322" text="convert &apos;krate float&apos; to integer"/>
    <comment type="patch/comment" x="56" y="350" text="record multiple bars in sync with the global transport"/>
    <comment type="patch/comment" x="56" y="364" text="when recording a slave-loop"/>
+   <obj type="rbrt/osc/phasor" uuid="8015d52c-de35-43b7-af2c-e01f5e6d9128" name="phasor_1" x="546" y="364">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_4" x="798" y="364">
       <params/>
       <attribs/>
@@ -148,10 +146,6 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="672" y="406" text="playback logic"/>
-   <obj type="rbrt/osc/sphasor" uuid="f30e08a7-f10c-4a04-bc56-aa6750ecb145" name="sphasor_1" x="546" y="420">
-      <params/>
-      <attribs/>
-   </obj>
    <comment type="patch/comment" x="924" y="420" text="sync the slots"/>
    <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="SLAVE" x="1358" y="420">
       <params/>
@@ -320,7 +314,7 @@
       <net>
          <source obj="inv_1" outlet="o"/>
          <dest obj="flipflop_4" inlet="set"/>
-         <dest obj="sphasor_1" inlet="reset"/>
+         <dest obj="phasor_1" inlet="reset"/>
       </net>
       <net>
          <source obj="flipflop_3" outlet="o"/>
@@ -402,10 +396,6 @@
          <dest obj="&gt;&gt;_2" inlet="shift"/>
       </net>
       <net>
-         <source obj="sphasor_1" outlet="wave"/>
-         <dest obj="wrappo_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="&gt;&gt;_2" outlet="out"/>
          <dest obj="i_1" inlet="in"/>
          <dest obj="wrappo_1" inlet="bits"/>
@@ -440,19 +430,11 @@
       </net>
       <net>
          <source obj="lrec_1" outlet="smps"/>
-         <dest obj="i2k_1" inlet="i"/>
+         <dest obj="s2f_1" inlet="smps"/>
       </net>
       <net>
          <source obj="demux_sh_5" outlet="o0"/>
-         <dest obj="k2i_1" inlet="i"/>
-      </net>
-      <net>
-         <source obj="i2k_1" outlet="o"/>
-         <dest obj="demux_sh_5" inlet="in"/>
-      </net>
-      <net>
-         <source obj="k2i_1" outlet="o"/>
-         <dest obj="sphasor_1" inlet="smps"/>
+         <dest obj="phasor_1" inlet="freq"/>
       </net>
       <net>
          <source obj="loopstart master" outlet="out"/>
@@ -469,6 +451,14 @@
       <net>
          <source obj="ldrive_1" outlet="smps"/>
          <dest obj="i_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="s2f_1" outlet="freq"/>
+         <dest obj="demux_sh_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="phasor_1" outlet="wave"/>
+         <dest obj="wrappo_1" inlet="in"/>
       </net>
    </nets>
    <settings>
