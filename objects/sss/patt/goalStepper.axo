@@ -1,0 +1,72 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="goalStepper" uuid="0993f65e-a347-412e-92f0-f893999910da">
+      <sDescription>pattern generator that steps from a former value to a new value in a set amount of steps.
+INPUTS:
+&quot;next&quot; sets the next goal that the pattern will go to.
+at each trigger at the &quot;trig&quot; input, it will advance 1 step.
+&quot;steps&quot; sets the pattern length, after which the goal (new value) is reached.
+&quot;stepsize&quot; sets the count-size for the pattern, skipping intermediate steps and repeating steps, but making sure the last step will always be the goal.
+OUTPUTS:
+&quot;out&quot; outputs the pattern-value
+&quot;count&quot; outputs the count-position-&gt;maximum is set by the &quot;steps&quot; input
+&quot;next&quot; outputs a trigger when the maximum count is reached.
+
+By making a loop between this module and a counter and LFO (qtsLFO4), interesting patterns can be made:
+-connect &quot;steps&quot; output to the multiply input on the qtsLFO4, this way each stage takes the same time, but with a different measure (7/8, 9/8 15/8 etc etc) Don&apos;t forget to set the multiply parameter to 0, as it would otherwise offset the count-rate from host position!
+-connect the LFO output to the &quot;trig&quot; input and set the waveform to square (switch-position to 5)
+-connect the &quot;next&quot; output to a counter
+-connect counter output to 3 &quot;sel/sel dial8&quot; modules.
+-connect one sel/dial8 module to the &quot;next&quot; input, feeding the &quot;goal-values&quot;
+-connect one to the &quot;steps&quot; input, setting how many steps it will take to reach the next value
+-connect the last one to the &quot;stepsize&quot; input, enabling different patterns for each stage.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="next"/>
+         <bool32 name="trig"/>
+         <int32 name="steps"/>
+         <frac32 name="stepsize"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+         <int32 name="count"/>
+         <int32 name="steps"/>
+         <bool32 name="next"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t count;
+int32_t former;
+int32_t next;
+int ctrig;
+int ttrig;
+int32_t tcount;
+int32_t steps;
+int32_t Stepsize;]]></code.declaration>
+      <code.init><![CDATA[count=0;]]></code.init>
+      <code.krate><![CDATA[if((count==0)&&!ctrig)
+{
+	steps=inlet_steps;
+	ctrig=1;
+	former=next;
+	next=inlet_next;
+	outlet_next=1;
+}
+else if(!(count==0)){ctrig=0;outlet_next=0;}
+if((inlet_trig>0)&&!ttrig){
+ttrig=1;
+count+=1;
+count=count-(count/steps)*steps;
+Stepsize=inlet_stepsize;}
+else if(inlet_trig==0){ttrig=0;}
+
+
+
+tcount=count*___SMMUL(Stepsize<<3,steps<<2);
+tcount=tcount-(tcount/steps)*steps;
+outlet_out=former+((next-former)/steps)*tcount;
+outlet_count=count;
+outlet_steps=steps;]]></code.krate>
+   </obj.normal>
+</objdefs>

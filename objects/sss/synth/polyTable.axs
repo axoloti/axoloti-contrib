@@ -122,7 +122,19 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1260" y="84">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="audio out" x="1260" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="divide1" x="1260" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="divide2" x="1260" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="divide3" x="1260" y="210">
       <params/>
       <attribs/>
    </obj>
@@ -145,7 +157,7 @@
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
-         <dest obj="outlet_1" inlet="outlet"/>
+         <dest obj="audio out" inlet="outlet"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="velocity"/>
@@ -214,6 +226,18 @@
          <source obj="mix3" outlet="inlet"/>
          <dest obj="+_4" inlet="in2"/>
       </net>
+      <net>
+         <source obj="OSC" outlet="divide1"/>
+         <dest obj="divide1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="OSC" outlet="divide2"/>
+         <dest obj="divide2" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="OSC" outlet="divide3"/>
+         <dest obj="divide3" inlet="outlet"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>polyphonic</subpatchmode>
@@ -223,7 +247,6 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
