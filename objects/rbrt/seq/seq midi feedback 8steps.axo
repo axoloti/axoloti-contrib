@@ -1,16 +1,14 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="seq midi feedback 8" uuid="269c9d9b-770c-4970-93c2-4bdb35631a4f">
-      <sDescription>visual feedback of table data for bidirectional midi-controllers (f.i. novation launchpad,livid base).
-8 elements of a table are mapped to midi - notes.</sDescription>
+   <obj.normal id="seq midi feedback 8steps" uuid="d6ec0b97-dfd4-44d4-9f6e-6782f3faac92">
+      <sDescription>visual feedback of step-sequencer position for bidirectional midi-controllers (f.i. novation launchpad,livid base).
+the value at inlet &apos;step&apos; are mapped to 8 midi-notes.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>step_seq.axh</helpPatch>
       <rotatedParams>true</rotatedParams>
       <inlets>
-         <int32 name="offset" description="offset in the table"/>
          <int32 name="step" description="current step"/>
          <frac32.bipolar name="delay" description="delay time for step position display"/>
-         <int32 name="velon" description="velocity on modulation"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -47,16 +45,7 @@
             <MinValue i="0"/>
             <MaxValue i="127"/>
          </int32.mini>
-         <int32 name="on" description="note velocity if step &gt; 0">
-            <MinValue i="0"/>
-            <MaxValue i="127"/>
-         </int32>
-         <int32 name="off" description="note velocity if step &lt;= 0">
-            <MinValue i="0"/>
-            <MaxValue i="127"/>
-         </int32>
-         <bool32.tgl name="clock" description="display the current step"/>
-         <int32 name="step" description="velocity for current step">
+         <int32 name="step" description="note velocity if step &gt; 0">
             <MinValue i="0"/>
             <MaxValue i="127"/>
          </int32>
@@ -88,21 +77,10 @@
          <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
       </attribs>
       <code.declaration><![CDATA[int ntrig;
-int rtrig;
-int prev;
-int prevon;
 int32_t val;
-
+int prev;
 int32_t map[8];
-
-int v;
-int i;
-int vt;
-int trigt;
-int prevt[16];]]></code.declaration>
-      <code.init><![CDATA[{ 
-  int i;
-  for(i=0;i<8;i++) prevt[i]= -666 ;}]]></code.init>
+int i;]]></code.declaration>
       <code.krate><![CDATA[map[0] = param_i0;
 map[1] = param_i1;
 map[2] = param_i2;
@@ -112,33 +90,7 @@ map[5] = param_i5;
 map[6] = param_i6;
 map[7] = param_i7;
 
-//re-init
-
-if (inlet_velon != prevon)
-{ 
-  int i;
-  for(i=0;i<8;i++) prevt[i]= -666 ;prevon = inlet_velon;}
-
-
-
-//display steps
-{ 
-  i += 1;
-  if (i == 8) i = 0; 
-  vt = attr_table.array[__USAT((inlet_offset + i),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-if (prevt[i] != vt ) trigt = 0;
-prevt[i] = vt;
-if (vt && (!trigt)) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_on);  trigt=1;
-}
-if ((!vt) && (!trigt)){
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_off);  trigt=1;
-}
- }
-
 //paint step index
-if (param_clock) {
-v = attr_table.array[__USAT((inlet_offset + inlet_step),attr_table.LENGTHPOW)]<<attr_table.GAIN ;
 if ((inlet_step  != prev) && !ntrig) {
   val = 1 << 30;
   ntrig = 1;
@@ -152,13 +104,11 @@ else {
     MTOF(-((1<<12 )- inlet_delay),t);
      val -= t>>3;
      if (val<=0) {
-          if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_on);
-     	else
-     	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_off);
+          MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],0);
+     	
      	  	     }
   } 
 }
-prev = inlet_step;
-}]]></code.krate>
+prev = inlet_step;]]></code.krate>
    </obj.normal>
 </objdefs>

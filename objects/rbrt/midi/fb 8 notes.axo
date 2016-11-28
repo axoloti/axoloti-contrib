@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="seq midi feedback 8" uuid="269c9d9b-770c-4970-93c2-4bdb35631a4f">
+   <obj.normal id="fb 8 notes" uuid="f3d0153a-6eff-40a9-8e0a-56c9c23281dc">
       <sDescription>visual feedback of table data for bidirectional midi-controllers (f.i. novation launchpad,livid base).
 8 elements of a table are mapped to midi - notes.</sDescription>
       <author>Robert Schirmer</author>
@@ -8,8 +8,6 @@
       <rotatedParams>true</rotatedParams>
       <inlets>
          <int32 name="offset" description="offset in the table"/>
-         <int32 name="step" description="current step"/>
-         <frac32.bipolar name="delay" description="delay time for step position display"/>
          <int32 name="velon" description="velocity on modulation"/>
       </inlets>
       <outlets/>
@@ -55,11 +53,6 @@
             <MinValue i="0"/>
             <MaxValue i="127"/>
          </int32>
-         <bool32.tgl name="clock" description="display the current step"/>
-         <int32 name="step" description="velocity for current step">
-            <MinValue i="0"/>
-            <MaxValue i="127"/>
-         </int32>
       </params>
       <attribs>
          <objref name="table"/>
@@ -99,7 +92,7 @@ int v;
 int i;
 int vt;
 int trigt;
-int prevt[16];]]></code.declaration>
+int prevt[8];]]></code.declaration>
       <code.init><![CDATA[{ 
   int i;
   for(i=0;i<8;i++) prevt[i]= -666 ;}]]></code.init>
@@ -134,31 +127,6 @@ MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],pa
 if ((!vt) && (!trigt)){
 MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_off);  trigt=1;
 }
- }
-
-//paint step index
-if (param_clock) {
-v = attr_table.array[__USAT((inlet_offset + inlet_step),attr_table.LENGTHPOW)]<<attr_table.GAIN ;
-if ((inlet_step  != prev) && !ntrig) {
-  val = 1 << 30;
-  ntrig = 1;
-  MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_step);
-}
-else {
-  if (!(inlet_step != prev))
-    ntrig = 0;
-  if (val>0) {
-    int32_t t;
-    MTOF(-((1<<12 )- inlet_delay),t);
-     val -= t>>3;
-     if (val<=0) {
-          if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_on);
-     	else
-     	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_off);
-     	  	     }
-  } 
-}
-prev = inlet_step;
-}]]></code.krate>
+ }]]></code.krate>
    </obj.normal>
 </objdefs>

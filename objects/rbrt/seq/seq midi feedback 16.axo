@@ -1,6 +1,7 @@
 <objdefs appVersion="1.0.11">
    <obj.normal id="seq midi feedback 16" uuid="8d1a061d-0c5b-41a9-8caa-bae0bd593b67">
-      <sDescription>visual feedback of step-sequencer patterns for bidirectional midi-controllers (f.i. novation launchpad,livid base)</sDescription>
+      <sDescription>visual feedback of table data for bidirectional midi-controllers (f.i. novation launchpad,livid base).
+16 elements of a table are mapped to midi - notes.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>step_seq.axh</helpPatch>
@@ -9,6 +10,7 @@
          <int32 name="offset" description="offset in the table"/>
          <int32 name="step" description="current step"/>
          <frac32.bipolar name="delay" description="delay time for step position display"/>
+         <int32 name="velon" description="velocity on modulation"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -120,6 +122,7 @@
       <code.declaration><![CDATA[int ntrig;
 int rtrig;
 int prev;
+int prevon;
 int32_t val;
 
 int32_t map[16];
@@ -129,6 +132,9 @@ int i;
 int vt;
 int trigt;
 int prevt[16];]]></code.declaration>
+      <code.init><![CDATA[{ 
+  int i;
+  for(i=0;i<16;i++) prevt[i]= -666 ;}]]></code.init>
       <code.krate><![CDATA[map[0] = param_i0;
 map[1] = param_i1;
 map[2] = param_i2;
@@ -146,6 +152,14 @@ map[13] = param_i13;
 map[14] = param_i14;
 map[15] = param_i15;
 
+
+//re-init
+
+if (inlet_velon != prevon)
+{ 
+  int i;
+  for(i=0;i<16;i++) prevt[i]= -666 ;prevon = inlet_velon;}
+
 //display steps
 { 
   i += 1;
@@ -154,7 +168,7 @@ map[15] = param_i15;
 if (prevt[i] != vt ) trigt = 0;
 prevt[i] = vt;
 if (vt && (!trigt)) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_on);  trigt=1;
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],(param_on + inlet_velon));  trigt=1;
 }
 if ((!vt) && (!trigt)){
 MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_off);  trigt=1;
@@ -177,7 +191,7 @@ else {
     MTOF(-((1<<12 )- inlet_delay),t);
      val -= t>>3;
      if (val<=0) {
-          if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_on);
+          if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],(param_on + inlet_velon));
      	else
      	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[inlet_step],param_off);
      	  	     }
