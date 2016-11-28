@@ -95,6 +95,7 @@
 
       uint32_t  start_sequence;
       uint32_t  first_run;        // To catch first iteration for startup conditions
+      uint32_t  sync_count;
       uint32_t  ktimer;           // 3kHz timer
       uint32_t  phase;
       uint32_t  old_phase;
@@ -137,32 +138,35 @@
         if( midi_clock_run == 1  )
           {
             midi_clock_count++;
-            midi_clock_24 = 1;
 
-            if( midi_clock_count >= clock_divider )
-              {
-                // Find noof sample periods since last time;
-                float period  = (ktimer - midi_last_ktime) * 16;  // * BUFFER_SIZE ?
+            // Find noof sample periods since last time;
+            float period    = (ktimer - midi_last_ktime) * 16 * clock_divider;
+            midi_last_ktime = ktimer;
 #ifdef USE_CLOCK_SMOOTHING
-                // Leaky integrator to avoid spiky clock on tempo changes
-                period = period + 0.1f * (midi_last_period - period);
-                midi_last_period = period;
+            // Leaky integrator to avoid spiky clock on tempo changes
+            period = period + 0.5f * (midi_last_period - period);
+            midi_last_period = period;
 #endif
+            if( sync_count < 2 )
+              {
+                sync_count++;
+              }
+            else
+              {
                 if( period < 1.0f )
                   {
                     period = 1.0f;
                   }
-
-                // Using slightly lower frequency (63.9 vs 64.0) so we avoid leading edge spikes from late phase resets.
+                // Using slightly lower frequency (63.99 vs 64.0) so we avoid leading edge spikes from late phase resets.
                 float f_clock = SAMPLERATE / period;
-                double phi = 63.99 * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0);
-
-                midi_clock_freq  = (uint32_t)phi;
-                phase            = 0;
-                midi_clock_count = 0;
-                midi_last_ktime  = ktimer;
-
-                DEBUGF("%d : CLOCK f*100 = %d,  pinc = 0x%08x, count = %d", ktimer, (int32_t)(f_clock * 100.0), midi_clock_freq, step_count );
+                double freq = 63.99 * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0);
+                midi_clock_freq  = (uint32_t)freq;
+                midi_clock_24    = 1;
+                if( midi_clock_count >= clock_divider )
+                  {
+                    phase            = 0;
+                    midi_clock_count = 0;
+                  }
               }
           }
       }
@@ -172,6 +176,7 @@
 
       start_sequence   = 0;
       first_run        = 1;
+      sync_count       = 0;
       ktimer           = 0;
       phase            = 0;
       old_phase        = 0;

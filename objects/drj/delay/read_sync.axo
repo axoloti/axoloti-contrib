@@ -7,7 +7,7 @@
       <frac32 name="time" description="Delay time bias"/>
       <frac32 name="tmod" description="Delay time modulation"/>
       <int32 name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
-      <int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/>
+      <!--int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/-->
       <int32 name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
       <bool32.rising name="24ppq" description="Clock input"/>
     </inlets>
@@ -15,14 +15,12 @@
       <frac32buffer name="out"  description="Delay output"/>
       <frac32       name="time" description="Delay time, fraction of the referenced delay writer's time"/>
     </outlets>
-    <!--displays>
-      <bool32 name="bounds"/>
-    </displays-->
+    <displays/>
     <params>
-      <int32 name="clockmul" noLabel="false">
+      <!--int32 name="clockmul" noLabel="false">
         <MinValue i="1"/>
         <MaxValue i="128"/>
-      </int32>
+      </int32-->
       <int32 name="clockdiv" noLabel="false">
         <MinValue i="1"/>
         <MaxValue i="128"/>
@@ -71,9 +69,8 @@
     <code.declaration><![CDATA[
 
       #define USE_CLOCK_SMOOTHING
-
-      #define USE_NEW_SYNC_CODE
-      #define USE_CLOCK_MULTIPLIER
+      //#define USE_NEW_SYNC_CODE
+      //#define USE_CLOCK_MULTIPLIER
 
       enum
       {
@@ -127,7 +124,7 @@
 
 #ifdef USE_CLOCK_SMOOTHING
         // Leaky integrator to minimize glitches on tempo changes
-        period = period + 0.1f * (midi_last_period - period);
+        period = period + 0.99f * (midi_last_period - period);
         midi_last_period = period;
 #endif
         if( period < 1.0f )
@@ -154,7 +151,6 @@
             midi_sync_time  = (uint32_t) (frac_time * (1<<27));
           }
       }
-
 #else
       void on_sync_clock( void )
       {
@@ -181,7 +177,6 @@
           }
       }
 #endif
-
 
     ]]></code.declaration>
     <code.init><![CDATA[

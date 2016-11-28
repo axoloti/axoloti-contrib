@@ -7,7 +7,7 @@
       <frac32buffer name="time" description="Delay time bias"/>
       <frac32buffer name="tmod" description="Delay time modulation"/>
       <int32 name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
-      <int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/>
+      <!--int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/-->
       <int32 name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
       <bool32.rising name="24ppq" description="Clock input"/>
     </inlets>
@@ -16,10 +16,10 @@
     </outlets>
     <displays/>
     <params>
-      <int32 name="clockmul" noLabel="false">
+      <!--int32 name="clockmul" noLabel="false">
         <MinValue i="1"/>
         <MaxValue i="128"/>
-      </int32>
+      </int32-->
       <int32 name="clockdiv" noLabel="false">
         <MinValue i="1"/>
         <MaxValue i="128"/>
@@ -68,9 +68,8 @@
     <code.declaration><![CDATA[
 
       #define USE_CLOCK_SMOOTHING
-
-      #define USE_NEW_SYNC_CODE
-      #define USE_CLOCK_MULTIPLIER
+      //#define USE_NEW_SYNC_CODE
+      //#define USE_CLOCK_MULTIPLIER
 
       enum
       {
@@ -80,9 +79,7 @@
         CLOCK_SOURCE_midi_omni= 3
       } CLOCK_SOURCE;
 
-#ifdef USE_NEW_SYNC_CODE
       uint32_t  sync_count;
-#endif
       uint32_t  ktimer;           // 3kHz timer
       uint32_t  old_24ppq;
       int32_t   clock_source;
@@ -116,7 +113,6 @@
         midi_clock_count++;
 
         // Find noof sample periods since last time;
-        //float period  = (ktimer - midi_last_ktime) * 16 * clock_divider;
         float period;
 #ifdef USE_CLOCK_MULTIPLIER
         period  = (ktimer - midi_last_ktime) * 16 * clock_divider;
@@ -127,7 +123,7 @@
 
 #ifdef USE_CLOCK_SMOOTHING
         // Leaky integrator to minimize glitches on tempo changes
-        period = period + 0.1f * (midi_last_period - period);
+        period = period + 0.99f * (midi_last_period - period);
         midi_last_period = period;
 #endif
         if( period < 1.0f )
@@ -154,7 +150,6 @@
             midi_sync_time  = (uint32_t) (frac_time * (1<<27));
           }
       }
-
 #else
       void on_sync_clock( void )
       {
@@ -172,6 +167,7 @@
               {
                 period = 1.0f;
               }
+
             midi_period      = (uint32_t) period;
             midi_clock_count = 0;
             midi_last_ktime  = ktimer;
@@ -184,9 +180,7 @@
     ]]></code.declaration>
     <code.init><![CDATA[
 
-#ifdef USE_NEW_SYNC_CODE
       sync_count       = 0;
-#endif
       ktimer           = 0;
       old_24ppq        = 0;
       clock_source     = CLOCK_SOURCE_internal;
@@ -197,9 +191,6 @@
       delay_length_cpl = 1.0f/attr_delayname.LENGTH;
       midi_sync_time   = 0;
       midi_last_ktime  = 0;
-#ifndef USE_NEW_SYNC_CODE
-      midi_period      = 0;
-#endif
       midi_clock_count = 0;
 #ifdef USE_CLOCK_SMOOTHING
       midi_last_period = 0.0f;

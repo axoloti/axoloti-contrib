@@ -70,7 +70,7 @@
     </attribs>
     <code.declaration><![CDATA[
 
-      //#define USE_CLOCK_SMOOTHING
+      #define USE_CLOCK_SMOOTHING
 
       enum
       {
@@ -136,10 +136,10 @@
               }
 
             // Using slightly lower frequency (63.99 vs 64.0) so we avoid leading edge spikes from late phase resets.
+            // 26.11.2016 18:01 - may get slight glitch on very high frequencies - can use f_clock to scale freq
             float f_clock = SAMPLERATE / period;
-            double freq = 63.99 * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0);
-
-            midi_clock_freq  = (uint32_t)freq;
+            double freq   = 63.99f * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0f);
+            midi_clock_freq = (uint32_t)freq;
 
             if( sync_count < 2 )
               {
