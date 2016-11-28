@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="step set" uuid="b50b30d1-3247-46fc-9ceb-0f9502dfaea5">
+      <sDescription>set an element inside a table to &apos;value&apos;.if parameter &apos;ifon&apos; is high,the element will only be set to &apos;value&apos; if it&apos;s &gt; 0.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset" description="offset in the table"/>
+         <int32.positive name="index" description="write index"/>
+         <bool32.rising name="trig" description="set the table&apos;s content at &apos;index&apos; to &apos;value&apos;"/>
+         <frac32 name="value" description="value to write"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.tgl name="ifon" description="if enabled,the element at index n will only be changed if it&apos;s already &gt; 0" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;
+int op;]]></code.declaration>
+      <code.krate><![CDATA[if (!(inlet_trig>0)) ntrig=0;
+
+        if ((inlet_trig>0) && !ntrig) {
+      ntrig=1;
+      op = attr_table.array[inlet_index + inlet_offset];
+      if (param_ifon && op)
+         attr_table.array[inlet_index + inlet_offset]=__SSAT(inlet_value,28)>>attr_table.GAIN;
+         if (!param_ifon) attr_table.array[inlet_index + inlet_offset]=__SSAT(inlet_value,28)>>attr_table.GAIN;
+   }
+   if (!(inlet_trig>0)) ntrig=0;]]></code.krate>
+   </obj.normal>
+</objdefs>

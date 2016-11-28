@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tclear" uuid="2d0e0e86-4746-4008-b821-5637e854c7fd">
+      <sDescription>re-set the elements of a table starting at &apos;offset&apos;.
+the length of the area to re-set is defined by &apos;range&apos;.
+brutally working at audio-rate.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="offset" description="offset inside the table"/>
+         <int32 name="range" description="length of the area inside the table to re-set"/>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="offset" description="offset inside the table">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <int32 name="range" description="length of the area inside the table to re-set">
+            <MinValue i="0"/>
+            <MaxValue i="10000000"/>
+         </int32>
+         <frac32.s.map name="value" description="value to re-set to"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int ntrig;]]></code.declaration>
+      <code.srate><![CDATA[if ((inlet_trig > 0 )&& (!ntrig)){ ntrig = 1;i = 0; }
+
+
+if (ntrig && (i < (param_range + inlet_range))){ 
+  attr_table.array[(i + inlet_offset + param_offset)]= (__SSAT(param_value,28)>>attr_table.GAIN);
+   i += 1;
+ }
+ else ntrig = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

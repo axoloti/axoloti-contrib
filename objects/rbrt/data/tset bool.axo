@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tset bool" uuid="e7f8879b-47ec-493c-a710-ca5dbdc4064c">
+      <sDescription>set 16 elements of a table to 0 or max,starting from &apos;offset&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="offset" description="offset inside the table"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bin16 name="p1" noLabel="true"/>
+         <int32 name="offset" description="offset insde the table">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+bool v;]]></code.declaration>
+      <code.krate><![CDATA[{ 
+
+  if (i == 16) i = 0; 
+  if (bool (param_p1 &( 1 << i))) attr_table.array[(i + inlet_offset + param_offset)]= (__SSAT((1<<27),28)>>attr_table.GAIN);
+   else attr_table.array[(i + inlet_offset+ param_offset)]=  0;
+  i += 1;
+
+ }]]></code.krate>
+   </obj.normal>
+</objdefs>
