@@ -1,4 +1,56 @@
 <patch-1.0 appVersion="1.0.11">
+   <obj type="sss/osc/guitarAllocation" uuid="623061f1-0bb6-4e7d-af31-cbfff4d43c57" name="guitarAllocation_1" x="616" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8192"/>
+         <spinner attributeName="presets" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="sss/osc/guitarTable" uuid="3d635174-804e-49af-bbb5-611737145f3f" name="guitarTable_1" x="798" y="196">
+      <params>
+         <int32 name="damp" onParent="true" value="1">
+            <presets>
+               <preset index="1">
+                  <i i="1"/>
+               </preset>
+            </presets>
+         </int32>
+         <int32 name="minDiv" onParent="true" value="2">
+            <presets>
+               <preset index="1">
+                  <i i="2"/>
+               </preset>
+            </presets>
+         </int32>
+         <int32 name="harmonics" onParent="true" value="14">
+            <presets>
+               <preset index="1">
+                  <i i="14"/>
+               </preset>
+            </presets>
+         </int32>
+         <int32 name="jump" onParent="true" value="5">
+            <presets>
+               <preset index="1">
+                  <i i="5"/>
+               </preset>
+            </presets>
+         </int32>
+         <int32 name="max" onParent="true" value="95">
+            <presets>
+               <preset index="1">
+                  <i i="95"/>
+               </preset>
+            </presets>
+         </int32>
+         <frac32.u.map name="position" onParent="true" value="50.0"/>
+         <frac32.u.map name="strike" onParent="true" value="41.0"/>
+         <int32 name="preset" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="guitarAllocation_1"/>
+      </attribs>
+   </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="A" x="406" y="280">
       <params/>
       <attribs/>
@@ -74,20 +126,31 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="sss/osc/guitarOsc" uuid="c4bbe004-2df0-4f89-af60-ad7d3f3d31e2" name="GUITAR" x="854" y="658">
+   <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="546" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/math/bipAmp" uuid="054d3d1f-4bbf-4622-b310-c2f4d89cb965" name="random freq" x="560" y="644">
+      <params>
+         <frac32.s.map name="amp" value="0.10000000149011612"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="770" y="658">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/osc/guitarTableOsc" uuid="5ec444b9-5f52-4378-bfa7-305cef8d1d37" name="guitarTableOsc_1" x="840" y="658">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
          <frac32.u.map name="pwm" onParent="true" value="23.0"/>
          <frac32.u.map name="mod" onParent="true" value="41.0"/>
          <frac32.u.map name="start" onParent="true" value="28.5"/>
-         <int32 name="damp" onParent="true" value="1"/>
-         <int32 name="harmonics" onParent="true" value="94"/>
-         <int32 name="jump" onParent="true" value="1"/>
-         <int32 name="max" onParent="true" value="145"/>
-         <frac32.u.map name="position" onParent="true" value="47.5"/>
-         <frac32.u.map name="strike" onParent="true" value="50.0"/>
+         <int32 name="preset" value="0"/>
       </params>
-      <attribs/>
+      <attribs>
+         <objref attributeName="table" obj="guitarAllocation_1"/>
+      </attribs>
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="966" y="658">
       <params/>
@@ -128,12 +191,13 @@
          <dest obj="ENV2START" inlet="in"/>
       </net>
       <net>
-         <source obj="GUITAR" outlet="wave"/>
+         <source obj="guitarTableOsc_1" outlet="wave"/>
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate2"/>
          <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="uniform_1" inlet="trig"/>
       </net>
       <net>
          <source obj="A" outlet="inlet"/>
@@ -152,20 +216,16 @@
          <dest obj="adsr_1" inlet="r"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="note"/>
-         <dest obj="GUITAR" inlet="pitch"/>
-      </net>
-      <net>
          <source obj="+_1" outlet="out"/>
-         <dest obj="GUITAR" inlet="pwm"/>
+         <dest obj="guitarTableOsc_1" inlet="pwm"/>
       </net>
       <net>
          <source obj="+_2" outlet="out"/>
-         <dest obj="GUITAR" inlet="mod"/>
+         <dest obj="guitarTableOsc_1" inlet="mod"/>
       </net>
       <net>
          <source obj="+_3" outlet="out"/>
-         <dest obj="GUITAR" inlet="start"/>
+         <dest obj="guitarTableOsc_1" inlet="start"/>
       </net>
       <net>
          <source obj="ENV2PWM" outlet="out"/>
@@ -190,6 +250,22 @@
       <net>
          <source obj="START" outlet="inlet"/>
          <dest obj="+_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_4" outlet="out"/>
+         <dest obj="guitarTableOsc_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="+_4" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="rand"/>
+         <dest obj="random freq" inlet="in"/>
+      </net>
+      <net>
+         <source obj="random freq" outlet="out"/>
+         <dest obj="+_4" inlet="in2"/>
       </net>
    </nets>
    <settings>
