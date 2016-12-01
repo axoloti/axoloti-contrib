@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="BD2" uuid="c9816334-296a-4806-8f9b-80e22e654c98">
       <sDescription>sine bass kick</sDescription>
       <author>Remco van der Most</author>
@@ -40,8 +40,11 @@ decay2=(1<<27)-decay2;
 ]]></code.krate>
       <code.srate><![CDATA[if((inlet_gate>0)&&(!(ttrig)))
 {Phase=0;
-	ad1=(1<<27);
+ttrig=1;
+ad1=(1<<27);
 ad2=(1<<27);}
+else if (inlet_gate==0){ttrig=0;}
+
 ad1=___SMMUL(ad1<<3,decay1<<2);
 ad2=___SMMUL(ad2<<3,decay2<<2);
 MTOFEXTENDED(param_pitch + inlet_pitch+___SMMUL(ad1<<3,param_Penv<<2),freq);
@@ -49,7 +52,6 @@ Phase += freq + inlet_freq;
 int32_t r;
 int32_t p2 = Phase + (inlet_phase<<4);
 SINE2TINTERP(p2,r)
-outlet_wave= ___SMMUL(ad2<<3,(r>>3));
-]]></code.srate>
+outlet_wave= ___SMMUL(ad2<<3,(r>>3));]]></code.srate>
    </obj.normal>
 </objdefs>
