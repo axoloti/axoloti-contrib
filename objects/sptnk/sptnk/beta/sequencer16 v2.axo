@@ -1,0 +1,168 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="sequencer16 v2" uuid="993ebdae-d0e3-4df2-a045-6f82f4ec2dce">
+      <author>Sptnk</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="clock"/>
+         <bool32.rising name="reset"/>
+         <bool32 name="pause"/>
+         <int32 name="params"/>
+      </inlets>
+      <outlets>
+         <frac32 name="val1"/>
+         <int32.positive name="val2"/>
+         <bool32 name="gate"/>
+         <int32.positive name="params"/>
+         <int32.positive name="stepcount"/>
+         <int32.positive name="clockcount"/>
+         <int32.positive name="repcount"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.mini name="num" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32.mini>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int p_counter = 0;
+
+int32_t val1[16];
+int32_t val2[16];
+int32_t gate[16];
+int32_t len[16];
+int32_t rep[16];
+int32_t glide[16];
+int32_t mode[16];
+
+int32_t bitmask2=0b00000000000000000000000000000011;
+int32_t bitmask3=0b00000000000000000000000000000111;
+int32_t bitmask4=0b00000000000000000000000000001111;
+int32_t bitmask7=0b00000000000000000000000001111111;
+
+bool ctrig = 1;
+bool rtrig = 1;
+
+int nextstep = 0;
+
+uint32_t k_rate_counter = 0; //this one is used to determine the length of a step
+uint32_t countlen_4 = 0;
+
+uint32_t lincoefs =0;
+uint32_t expcoefs =0;
+uint32_t phase = 0;
+
+uint32_t clockcount = 0;
+uint32_t repcount = 0;
+uint32_t stepcount = 0;
+
+int32_t val_old = 0;
+int32_t val_new = 0;
+
+uint32_t calculate_nextstep(uint32_t stepcnt, uint32_t num)
+{
+	uint32_t step = stepcnt+1;
+				if (step >= num)
+				{
+					step = 0;
+				}
+	return step;				
+}]]></code.declaration>
+      <code.krate><![CDATA[{//gathering data
+uint32_t temp = inlet_params;
+p_counter++;
+if (p_counter>=param_num)
+p_counter = 0;
+outlet_params = p_counter;
+}
+
+{//unpacking data
+int id = inlet_params & bitmask4;
+val1[id] = ((inlet_params>>4) & bitmask7) -64 <<21;
+val2[id] = ((inlet_params>>11) & bitmask3);
+gate[id] = ((inlet_params>>14) & bitmask3);
+len[id] = ((inlet_params>>17) & bitmask7);
+rep[id] = ((inlet_params>>24) & bitmask4);
+glide[id] = ((inlet_params>>28) & bitmask2);
+mode[id] = ((inlet_params>>30) & bitmask2);
+}
+
+if (!inlet_pause)
+{
+	k_rate_counter++;
+	if (phase<(1<<27))
+	{
+		switch (glide[stepcount])
+		{
+		case 0:  phase =  (1<<27); break;
+		case 1:  phase += lincoefs/(mode[stepcount]+1); break;
+		case 2:  phase =  ___SMMLA((1<<27)-phase<<3,expcoefs/(mode[stepcount]+1)<<2,phase); break;
+		default: phase =  (1<<27); break;
+		}	
+	}
+	else
+	phase = (1<<27);
+	
+	if (inlet_clock && ctrig)
+	{
+		ctrig = 0;
+		countlen_4 = k_rate_counter*len[stepcount]>>2;
+		lincoefs = ((1<<27)/countlen_4);
+		expcoefs = ((1<<30)/countlen_4);	
+		k_rate_counter = 0;
+		clockcount++;
+		if (clockcount>len[stepcount])
+		{
+			clockcount = 0;
+			repcount++;
+			if (repcount>rep[stepcount])
+			{
+				repcount = 0;
+				stepcount = nextstep;
+				val_old = val_new;
+				phase = 0;
+				nextstep = calculate_nextstep(stepcount,param_num);
+			}
+		}
+	}
+	
+}
+if (!inlet_clock)
+{
+	ctrig = 1;
+}
+
+if (inlet_reset && rtrig) //reset has priority over clock
+{
+	rtrig = 0;
+	ctrig = 0; 
+	phase = 0;
+	stepcount = 0;
+	repcount = 0;
+	clockcount = 0;
+	k_rate_counter = 0;
+}
+else if (!inlet_reset)
+{
+	rtrig = 1;
+}
+
+val_new = val1[stepcount];
+outlet_val1 = ___SMMLA(phase<<3,val_new-val_old<<2,val_old);
+outlet_val2 = val2[stepcount];
+switch (gate[stepcount])
+{
+	case 0:  outlet_gate = 0; break;
+	case 1:  outlet_gate = clockcount>(1*len[stepcount]>>2)?0:1; break;
+	case 2:  outlet_gate = clockcount>(len[stepcount]>>1)?0:1; break;
+	case 3:  outlet_gate = clockcount>(3*len[stepcount]>>2)?0:1; break;
+	case 4:  outlet_gate = 1; break;
+	default: outlet_gate = 0; break;
+}
+
+
+outlet_stepcount = stepcount;
+outlet_clockcount = clockcount;
+outlet_repcount = repcount;]]></code.krate>
+   </obj.normal>
+</objdefs>
