@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="step toggle" uuid="df00b2a7-9bf0-4bd4-bf50-52312290f046">
+   <obj.normal id="step toggle" uuid="864cad38-2192-455c-96cb-821f3c756943">
       <sDescription>toggles an element of a table : if the element at index == 0,the element is set to the dial &apos;value&apos;.
 if the element &gt; 0 ,the element is set to 0.</sDescription>
       <author>Robert Schirmer</author>
@@ -11,7 +11,9 @@ if the element &gt; 0 ,the element is set to 0.</sDescription>
          <bool32.rising name="toggle" description="toggle the table&apos;s content at &apos;index&apos; "/>
          <frac32.positive name="value" description="value if index is set to &apos;high&apos;"/>
       </inlets>
-      <outlets/>
+      <outlets>
+         <bool32 name="state" description="state of the step at index"/>
+      </outlets>
       <displays/>
       <params>
          <frac32.u.map name="value" description="value if index is set to &apos;high&apos;" noLabel="true"/>
@@ -26,9 +28,12 @@ bool op;]]></code.declaration>
       op = attr_table.array[(inlet_index + inlet_offset)];
       op = !op ;
          attr_table.array[(inlet_index + inlet_offset)]= (op * (__SSAT(((param_value+inlet_value)),28)>>attr_table.GAIN));
+         
    }
    if (!(inlet_toggle>0)) {
    	ntrig=0;
-   }]]></code.krate>
+   }
+
+   outlet_state = attr_table.array[(inlet_index + inlet_offset)] ;]]></code.krate>
    </obj.normal>
 </objdefs>

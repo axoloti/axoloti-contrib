@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="tclear" uuid="2d0e0e86-4746-4008-b821-5637e854c7fd">
+   <obj.normal id="tclear" uuid="fddb8120-1ca7-4945-9fe0-3b48ab3cc36c">
       <sDescription>re-set the elements of a table starting at &apos;offset&apos;.
 the length of the area to re-set is defined by &apos;range&apos;.
 brutally working at audio-rate.</sDescription>
@@ -10,7 +10,9 @@ brutally working at audio-rate.</sDescription>
          <int32 name="range" description="length of the area inside the table to re-set"/>
          <bool32.rising name="trig" description="trigger"/>
       </inlets>
-      <outlets/>
+      <outlets>
+         <bool32.pulse name="done" description="operation done."/>
+      </outlets>
       <displays/>
       <params>
          <int32 name="offset" description="offset inside the table">
@@ -35,6 +37,9 @@ if (ntrig && (i < (param_range + inlet_range))){
   attr_table.array[(i + inlet_offset + param_offset)]= (__SSAT(param_value,28)>>attr_table.GAIN);
    i += 1;
  }
- else ntrig = 0;]]></code.srate>
+ else if (!inlet_trig) ntrig = 0;
+
+  if ((i == (param_range + inlet_range)) && ntrig) outlet_done = 1;
+ else outlet_done = 0;]]></code.srate>
    </obj.normal>
 </objdefs>

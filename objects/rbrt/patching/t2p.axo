@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="t2p" uuid="84c16211-7b9f-4b75-968f-d57b9d76931c">
+      <sDescription>Generates a single pulse after a rising edge on trigger input</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>patching.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="trig"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="pulse"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig > 0) && !ntrig) {
+  ntrig = 1;
+  outlet_pulse = 1;
+}
+else {
+  if (!(inlet_trig > 0))
+    ntrig = 0;
+ outlet_pulse = 0;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

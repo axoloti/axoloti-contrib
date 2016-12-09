@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="bang" uuid="cb65a7d4-538d-4471-a0bc-ea1cf1f67f4c">
+      <sDescription>Generates a single pulse when the button is pressed
+similar to PD / Max/Msp &apos;bang&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>patching.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <bool32.pulse name="pulse"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="bang" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((param_bang > 0) && !ntrig) {
+  ntrig = 1;
+  outlet_pulse = 1;
+}
+else {
+  if (!(param_bang > 0))
+    ntrig = 0;
+ outlet_pulse = 0;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
