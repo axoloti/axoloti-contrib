@@ -89,7 +89,9 @@ int32_t *array;
 int ctrig;
 int i;
 int dtrig;
-int32_t CV;]]></code.declaration>
+int32_t CV;
+int get;
+int32_t temp;]]></code.declaration>
       <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];]]></code.init>
       <code.krate><![CDATA[int32_t position;
@@ -120,18 +122,20 @@ else if (inlet_clear==0){ctrig=0;}
 
 if((rec>0)&&!(Delete))
 {
-	array[inlet_position&LENGTHMASK]=inlet_CV;
+	array[position&LENGTHMASK]=inlet_CV;
 	
 }
 if(rec==0)
 {
 	
-	outlet_gate=array[inlet_position&LENGTHMASK]>0?1:0;
+	outlet_gate=array[position&LENGTHMASK]>0?1:0;
 	if(outlet_gate>0){
-		CV=outlet_CV=array[(inlet_position-1)&LENGTHMASK];
+		outlet_CV=array[(position)&LENGTHMASK];
+		CV=array[(position-5)&LENGTHMASK];
 	}
-	outlet_CV=CV;
+     else{outlet_CV=CV;}
 }
+
 if((inlet_gate>0)&&!(Delete)){
 outlet_CV=inlet_CV;
 CV=inlet_CV;
