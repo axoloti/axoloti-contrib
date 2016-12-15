@@ -1,0 +1,134 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="matrix disp" uuid="19c5185b-b1c3-468d-9100-4a355b274e42">
+      <sDescription>visual feedback of table data for the novation launchpad (NOT working with a LP mark I)</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>launchpad.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset" description="offset in the table to read from"/>
+         <int32 name="start" description="display start modulation"/>
+         <int32 name="length" description="display length modulation"/>
+         <int32 name="onC" description="color on modulation"/>
+         <int32 name="offC" description="color off modulation"/>
+         <bool32.risingfalling name="active" description="active??"/>
+      </inlets>
+      <outlets>
+         <int32 name="offset" description="offset through"/>
+         <int32 name="start" description="start through"/>
+         <int32 name="onC" description="color on through"/>
+         <int32 name="offC" description="color off through"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="active" description="active??"/>
+         <int32 name="onC" description="color on">
+            <MinValue i="0"/>
+            <MaxValue i="14"/>
+         </int32>
+         <int32 name="offC" description="color off">
+            <MinValue i="0"/>
+            <MaxValue i="14"/>
+         </int32>
+         <int32 name="length" description="length of the area to display">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="start" description="display start on the LP">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table" description="name of the table to display"/>
+         <combo name="device">
+            <MenuEntries>
+               <string>usb host port / LP</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;
+int rtrig;
+uint8_t map[64];
+uint8_t cmap[15];
+int i;
+int c;
+int prevc;
+int a;
+int preva;
+int vt;
+int trigt;
+int prevt[64];
+int length;
+int plength;]]></code.declaration>
+      <code.init><![CDATA[{ 
+  int i;
+  for(i=0;i<16;i++) prevt[i]= -666 ;}
+
+  { 
+  int i;
+  for(i=0;i<64;i++) 
+
+  map[i] = (((i >> 3)<< 3) + i);
+
+}
+
+cmap[0] = 0;
+cmap[1] = 1;
+cmap[2] = 2;
+cmap[3] = 3;
+cmap[4] = 18;
+cmap[5] = 35;
+cmap[6] = 16;
+cmap[7] = 32;
+cmap[8] = 48;
+cmap[9] = 33;
+cmap[10] = 50;
+cmap[11] = 49;
+cmap[12] = 17;
+cmap[13] = 34;
+cmap[14] = 51;]]></code.init>
+      <code.krate><![CDATA[c = (inlet_onC + inlet_offC + param_onC + param_offC);
+a = (inlet_active || param_active);
+
+//redraw
+if ((c != prevc) || (a != preva)) {
+	prevc = c;
+	preva = a;
+{ 
+  int i;
+  for(i=0;i<64;i++) prevt[i]= -666 ;}
+  }
+
+
+
+length = ((inlet_length +param_length + inlet_start +param_start) > 64) ?  64 : (inlet_length + param_length);
+plength = length;
+if (plength != length ) i = 0;
+    
+//display steps
+  if (a) { 
+{ 
+  i += 1;
+  if (i == (length)) i = 0; 
+  vt = attr_table.array[__USAT((inlet_offset + i),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+if (prevt[i] != vt ) trigt = 0;
+prevt[i] = vt;
+if (vt && (!trigt)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON  ,map[(i + (inlet_start+ param_start))],cmap[(inlet_onC + param_onC)]);  trigt=1;
+}
+if ((!vt) && (!trigt)){
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(i + (inlet_start+ param_start))],cmap[(inlet_offC + param_offC)]);  trigt=1;
+}
+ }
+}
+
+outlet_onC = (inlet_onC + param_onC);
+outlet_offC = (inlet_offC + param_offC);
+outlet_offset = inlet_offset;
+outlet_start = (inlet_start + param_start);]]></code.krate>
+   </obj.normal>
+</objdefs>
