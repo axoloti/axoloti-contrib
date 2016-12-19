@@ -11,6 +11,7 @@
          <frac32.positive name="velocity" description="note-on velocity"/>
          <frac32.positive name="touch" description="polyphonic aftertouch"/>
          <int32 name="index"/>
+         <int32 name="count"/>
       </outlets>
       <displays/>
       <params/>
@@ -38,7 +39,10 @@ for(i=0;i<8;i++){
 	velocity[i]=0;
 	touch[i]=0;
 	pos[i]=0;
-}]]></code.init>
+}
+int32_t _pos=0;
+int32_t _pos_shadow=0;
+int32_t count=0;]]></code.init>
       <code.krate><![CDATA[int32_t sum=0;
 int32_t tmp;
 for(i=0;i<8;i++){
@@ -47,30 +51,33 @@ pos[sum]=i;
 sum+=1;
 sum=sum>8?8:sum;
 }}
-int a=_gate;
+int a=1;
 while(a>0){
-for(i=0;i<(sum-1>0?sum-1:0);i++){
 a=0;
-if(note[i]>note[i+1>=sum?sum-1:i+1]){
+for(i=0;i<(sum-1>0?sum-1:0);i++){
+int j=pos[i+1>=sum?sum:i+1];
+if(note[pos[i]]>note[j]){
 a=1;
 tmp=note[i];
-note[i]=note[i+1];
-note[i+1]=tmp;
-tmp=velocity[i];
-velocity[i]=velocity[i+1];
-velocity[i+1]=tmp;
-tmp=touch[i];
-touch[i]=touch[i+1];
-touch[i+1]=tmp;
+note[pos[i]]=note[i+1];
+note[j]=tmp;
+tmp=velocity[pos[i]];
+velocity[pos[i]]=velocity[j];
+velocity[j]=tmp;
+tmp=touch[pos[i]];
+touch[pos[i]]=touch[j];
+touch[j]=tmp;
 }
 }
 }
-//count=_pos/6;
-//count=count-(count/sum)*sum;
-//outlet_note=note[count];
-//outlet_gate=gate[count];
-//outlet_velocity=velocity[count];
-//outlet_touch=touch[count];]]></code.krate>
+int rng=sum-1<1?1:sum-1;
+count=_pos/6;
+count=count-(count/rng)*rng;
+outlet_note=note[pos[count]];
+outlet_gate=gate[pos[count]];
+outlet_velocity=velocity[pos[count]];
+outlet_touch=touch[pos[count]];
+outlet_count=count;]]></code.krate>
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
   velocity[parent->polyIndex] = data2;
   note[parent->polyIndex] = data1;
