@@ -1,45 +1,4 @@
 <patch-1.0 appVersion="1.0.11">
-   <patchobj type="patch/object" uuid="56549d91-9d44-4cf0-8a60-226a57d0541f" name="sel_1" x="742" y="14">
-      <params>
-         <int32.small name="i0" value="0"/>
-         <int32.small name="i1" value="0"/>
-      </params>
-      <attribs/>
-      <object id="patch/object" uuid="56549d91-9d44-4cf0-8a60-226a57d0541f">
-         <sDescription>select one out of 16 integers, with chain i/o</sDescription>
-         <author>Johannes Taelman</author>
-         <license>BSD</license>
-         <rotatedParams>true</rotatedParams>
-         <inlets>
-            <int32 name="in" description="in"/>
-            <int32 name="def" description="default value"/>
-         </inlets>
-         <outlets>
-            <int32 name="chain" description="chain out (in-16)"/>
-            <int32 name="o" description="output"/>
-         </outlets>
-         <displays/>
-         <params>
-            <int32.mini name="i0" noLabel="true">
-               <MinValue i="0"/>
-               <MaxValue i="99"/>
-            </int32.mini>
-            <int32.mini name="i1" noLabel="true">
-               <MinValue i="0"/>
-               <MaxValue i="99"/>
-            </int32.mini>
-         </params>
-         <attribs/>
-         <includes/>
-         <code.krate><![CDATA[switch(inlet_in){
-case 0: outlet_o = param_i0; break;
-case 1: outlet_o = param_i1; break;
-
-default: outlet_o = inlet_def;
-}
-outlet_chain = inlet_in-16;]]></code.krate>
-      </object>
-   </patchobj>
    <patchobj type="patch/object" uuid="7f4c175e-1aa5-4205-959d-a04b37ea366b" name="pattLength" x="938" y="126">
       <params>
          <int32 name="value" onParent="true" value="16"/>
@@ -143,8 +102,8 @@ outlet_chain = inlet_in-16;]]></code.krate>
       <params/>
       <attribs>
          <combo attributeName="poly" selection="8"/>
-         <combo attributeName="midichannel" selection="1"/>
-         <combo attributeName="mididevice" selection="din"/>
+         <combo attributeName="midichannel" selection="2"/>
+         <combo attributeName="mididevice" selection="internal"/>
          <combo attributeName="midiport" selection="omni"/>
       </attribs>
    </obj>
@@ -341,18 +300,18 @@ outlet_Vo08=_velocity[7];]]></code.krate>
    </obj>
    <obj type="sss/patt/rndWeightNote" uuid="b749a200-6f22-40f8-a0a8-aa506b0766b1" name="rndWeightNote_1" x="1064" y="210">
       <params>
-         <frac32.u.mapvsl name="C" onParent="true" value="64.0"/>
-         <frac32.u.mapvsl name="cis" onParent="true" value="49.5"/>
-         <frac32.u.mapvsl name="D" onParent="true" value="43.0"/>
-         <frac32.u.mapvsl name="dis" onParent="true" value="38.0"/>
-         <frac32.u.mapvsl name="E" onParent="true" value="32.5"/>
-         <frac32.u.mapvsl name="F" onParent="true" value="24.5"/>
-         <frac32.u.mapvsl name="fis" onParent="true" value="20.5"/>
-         <frac32.u.mapvsl name="G" onParent="true" value="13.0"/>
-         <frac32.u.mapvsl name="gis" onParent="true" value="9.0"/>
-         <frac32.u.mapvsl name="A" onParent="true" value="0.0"/>
-         <frac32.u.mapvsl name="ais" onParent="true" value="0.0"/>
-         <frac32.u.mapvsl name="B" onParent="true" value="0.0"/>
+         <frac32.u.mapvsl name="C" onParent="true" value="58.5"/>
+         <frac32.u.mapvsl name="cis" onParent="true" value="56.0"/>
+         <frac32.u.mapvsl name="D" onParent="true" value="51.0"/>
+         <frac32.u.mapvsl name="dis" onParent="true" value="44.0"/>
+         <frac32.u.mapvsl name="E" onParent="true" value="41.0"/>
+         <frac32.u.mapvsl name="F" onParent="true" value="35.5"/>
+         <frac32.u.mapvsl name="fis" onParent="true" value="28.0"/>
+         <frac32.u.mapvsl name="G" onParent="true" value="22.5"/>
+         <frac32.u.mapvsl name="gis" onParent="true" value="18.0"/>
+         <frac32.u.mapvsl name="A" onParent="true" value="11.5"/>
+         <frac32.u.mapvsl name="ais" onParent="true" value="6.0"/>
+         <frac32.u.mapvsl name="B" onParent="true" value="4.0"/>
       </params>
       <attribs>
          <spinner attributeName="maxlength" value="16"/>
@@ -715,7 +674,6 @@ outlet_Vo08=_velocity[7];]]></code.krate>
    <settings>
       <subpatchmode>normal</subpatchmode>
       <MidiChannel>1</MidiChannel>
-      <HasMidiChannelSelector>true</HasMidiChannelSelector>
       <NPresets>8</NPresets>
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
