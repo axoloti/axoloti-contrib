@@ -1,0 +1,198 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="2DmorphLFO" uuid="0eb1d311-73aa-49a9-938c-39c46367f9a3">
+      <sDescription>2D morph LFO
+lfo version of the 2Dmorphtable</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32 name="Tsync"/>
+         <bool32 name="reset"/>
+         <int32 name="M"/>
+         <int32 name="D"/>
+         <int32 name="O"/>
+         <frac32 name="mix1"/>
+         <frac32 name="mix2"/>
+         <frac32 name="FM"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+         <int32 name="divide1"/>
+         <int32 name="divide2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="M">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="D">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="O">
+            <MinValue i="-10"/>
+            <MaxValue i="10"/>
+         </int32>
+         <frac32.s.map name="FMW"/>
+         <int32 name="waveform">
+            <MinValue i="0"/>
+            <MaxValue i="2048"/>
+         </int32>
+         <frac32.u.map name="mix1"/>
+         <int32 name="quant1">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="start1">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="step1">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.u.map name="mix2"/>
+         <int32 name="quant2">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="start2">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="step2">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t i;
+int ttrig;
+uint32_t count;
+uint32_t timer;
+float32_t rate;
+int rtrig;
+uint32_t phase;
+int trig;
+
+int32_t MIX1a;
+int32_t MIX1b;
+int32_t MIX2a;
+int32_t MIX2b;
+int32_t smooth1;
+int32_t smooth2;
+uint32_t W[4];
+uint32_t w[4];
+int32_t F;
+int32_t mix[2];
+int32_t MX(int32_t T){
+	T=T>0?T:-T;
+	T=T&((1<<28)-1);
+	F=T>(1<<27)?(1<<28)-T:T;
+}
+
+int32_t tablemix(int32_t inst,int32_t WaveA,int32_t WaveB,int32_t Mix){
+	mix[inst]=___SMMUL(((1<<27)-Mix)<<3,WaveA<<2)+___SMMUL(Mix<<3,WaveB<<2);
+}
+int32_t M1step;
+int32_t M1prv;
+int32_t M2step;
+int32_t M2prv;
+int32_t out;]]></code.declaration>
+      <code.krate><![CDATA[if((inlet_reset>0)&&!rtrig){
+	rtrig=1;
+	phase=0;
+}
+else if(inlet_reset<=0){rtrig=0;}
+int M=inlet_M+param_M;
+int D=inlet_D+param_D;
+D=D<1?1:D;
+int O=inlet_O+param_O;
+rate=((float32_t)(timer))/((float32_t)(48000));
+rate=(((1<<31)/1500)/rate);
+
+uint32_t freq;
+if(O>=0){freq=((int32_t)(rate*M/D))<<O;}
+if(O<0) {freq=((int32_t)(rate*M/D))>>-O;}
+int32_t FMW=___SMMUL(freq<<7,param_FMW<<4);
+int32_t MiX1=param_mix1+inlet_mix1;
+MX(MiX1);
+MiX1=F;
+int32_t MiX2=param_mix2+inlet_mix2;
+MX(MiX2);
+MiX2=F;
+smooth1+=(MiX1-smooth1)>>4;
+MiX1=smooth1;
+smooth2+=(MiX2-smooth2)>>4;
+MiX2=smooth2;
+M1step=(MiX1-M1prv)>>4;
+int32_t MIX1b=M1prv;
+M1prv=MiX1;
+M2step=(MiX2-M2prv)>>4;
+int32_t MIX2b=M2prv;
+M2prv=MiX2;
+
+
+outlet_divide1=param_quant1;
+outlet_divide2=param_quant2;
+
+MIX1b+=M1step;
+MIX1a=MIX1b;
+MIX2b+=M2step;
+MIX2a=MIX2b;
+
+W[0]=((MIX1a>>4)*param_quant1)>>23;
+MIX1a=(MIX1a-(W[0]<<27)/param_quant1)*param_quant1;
+W[0]+=param_start1;
+W[0]=W[0]*param_step1;
+W[1]=W[0]+param_step1;
+
+W[2]=((MIX2a>>4)*param_quant2)>>23;
+MIX2a=(MIX2a-(W[2]<<27)/param_quant2)*param_quant2;
+W[2]+=param_start2;
+W[2]=W[2]*param_step2;
+W[3]=W[2]+param_step2;
+
+for(i=0;i<4;i++){
+W[i]=(W[i]-(W[i]/attr_table.Waveforms)*attr_table.Waveforms);
+W[i]=W[i]<0?W[i]+attr_table.Waveforms:W[i];
+}
+
+w[0]=W[0]+W[2];
+w[1]=W[1]+W[2];
+w[2]=W[0]+W[3];
+w[3]=W[1]+W[3];
+
+for(i=0;i<4;i++){
+w[i]=(w[i]-(w[i]/attr_table.Waveforms)*attr_table.Waveforms);
+w[i]=w[i]<0?w[i]+attr_table.Waveforms:w[i];
+w[i]=w[i]*attr_table.LENGTH;
+}
+
+
+
+phase+=freq+___SMMUL(FMW<<3,inlet_FM<<2);
+uint32_t p1=(phase>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK;
+int32_t out1;
+int32_t out2;
+int32_t out3;
+int32_t out4;
+out1=attr_table.array[p1+w[0]];
+out2=attr_table.array[p1+w[1]];
+out3=attr_table.array[p1+w[2]];
+out4=attr_table.array[p1+w[3]];
+tablemix(0,out1,out2,MIX1a);
+tablemix(1,out3,out4,MIX1a);
+tablemix(0,mix[0],mix[1],MIX2a);
+outlet_out=mix[0];]]></code.krate>
+      <code.srate><![CDATA[if((inlet_Tsync>0)&&(!(ttrig)))
+{ttrig=1;
+timer=count;
+count=0;}
+else if (!(inlet_Tsync>0)){ttrig=0;}
+count+=1;]]></code.srate>
+   </obj.normal>
+</objdefs>

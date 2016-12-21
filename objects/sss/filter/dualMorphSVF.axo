@@ -1,0 +1,119 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="dualMorphSVF" uuid="eff06229-59ad-4c4e-a808-0296dfe3be30">
+      <sDescription>Dual Mode-morphing state-variable-filter.
+-Using a saw-wave LFO as input for the ModeX(1/2/A) creates a quadrature reading through:
+LP-&gt;BP-&gt;HP-&gt;Notch-&gt;LP
+ModeX1 and ModeX2 will control the modes of filters 1 and 2 respectively.
+ModeXA controls both modes at the same time.
+-depending in which input you send your audio, it will respond differently:
+	-in1-&gt;normal response
+	-in2-&gt;inversed filter response at filter 1, normal for filter 2
+	-in3-&gt;only send to filter 2 as inverse filter response
+-modeY1 controls the offset from the center, this control has an inversed response, meaning, a high input will force the mix to a centered mix of all filter modes. When above 64, it will inverse the filter responses, turning LP to HP, HP to LP, BP to Notch and Notch to BP.
+-SerialSel controls the amount of each audio input to be send to filter2 input when serial mode is mixed in.
+-SerPar mixes between serial and parallel mode for filter 1 and 2.
+-drive controls the drive over the resonance (BP filter part that influences the other filters)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="filter input"/>
+         <frac32buffer name="in2"/>
+         <frac32buffer name="in3"/>
+         <frac32 name="pitch1"/>
+         <frac32 name="pitch2"/>
+         <frac32 name="reso1"/>
+         <frac32 name="reso2"/>
+         <frac32 name="modeXA"/>
+         <frac32 name="modeX1"/>
+         <frac32 name="modeX2"/>
+         <frac32 name="modeY1"/>
+         <frac32 name="modeY2"/>
+         <frac32 name="SerialSel"/>
+         <frac32 name="SerPar"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch1"/>
+         <frac32.s.map.pitch name="pitch2"/>
+         <frac32.u.map.filterq name="reso1"/>
+         <frac32.u.map.filterq name="reso2"/>
+         <frac32.u.map name="mode1"/>
+         <frac32.u.map name="mode2"/>
+         <frac32.u.map name="SerialSel"/>
+         <frac32.u.map name="SerPar"/>
+         <frac32.u.map name="drive1"/>
+         <frac32.u.map name="drive2"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t low[2];
+int32_t band[2];
+int32_t OUT[2];
+int32_t ModeA[2];
+int32_t ModeB[2];
+int32_t freq[2];
+int32_t Damp[2];
+int i;
+int32_t config(int32_t pitch,int32_t reso,int32_t ModeX,int32_t ModeY,int Inst){
+int32_t damp = (0x80<<24) - (reso<<4);
+damp = ___SMMUL(damp,damp);
+Damp[Inst]=damp;
+int32_t alpha;
+MTOFEXTENDED(pitch,alpha);
+SINE2TINTERP(alpha,freq[Inst]);
+int32_t modeA=(ModeX)<<2;
+modeA=modeA&((1<<29)-1);
+modeA=modeA>(1<<28)?(1<<29)-modeA:modeA;
+modeA=__USAT(modeA-(1<<26),27);
+int32_t modeB=(ModeX+(1<<25))<<2;
+modeB=modeB&((1<<29)-1);
+modeB=modeB>(1<<28)?(1<<29)-modeB:modeB;
+modeB=__USAT(modeB-(1<<26),27);
+
+int32_t modeY=ModeY;
+modeY=modeY<0?-modeY:modeY;
+int dir=modeY>(1<<27)?-1:1;
+modeY=modeY>(1<<27)?(1<<28)-modeY:modeY;
+int32_t modeX=((1<<27)-modeY)*dir;
+
+ModeA[Inst]=___SMMUL(modeX<<3,modeA<<2)+___SMMUL(modeY<<3,(1<<28));
+ModeB[Inst]=___SMMUL(modeX<<3,modeB<<2)+___SMMUL(modeY<<3,(1<<28));	
+}
+
+
+int32_t SVF(int32_t in1,int32_t in2,int32_t Freq,int32_t damp,int32_t modeA,int32_t modeB,int32_t drive,int32_t Inst){
+int32_t temp=__SSAT(___SMMUL(band[Inst]<<2,drive<<2),28);
+band[Inst]=__SSAT(band[Inst]-(___SMMUL(___SMMUL(temp<<3,temp<<2)<<3,temp<<2)<<2),28);
+band[Inst]+=___SMMUL(band[Inst]<<1,drive<<1);
+int32_t notch = in1+in2 - __SSAT((___SMMUL(damp,band[Inst])<<1),27);
+low[Inst] = low[Inst] + __SSAT((___SMMUL(Freq,band[Inst])<<1),27);
+int32_t high  = notch - low[Inst];
+
+band[Inst] = (___SMMUL(Freq,high)<<1) + __SSAT(band[Inst],27);
+int32_t out1;
+out1=___SMMUL(modeA<<3,___SMMUL(modeB<<3,low[Inst]<<2)<<2);
+out1+=___SMMUL((1<<27)-modeA<<3,___SMMUL(modeB<<3,band[Inst]<<2)<<2);
+out1+=___SMMUL(modeA<<3,___SMMUL((1<<27)-modeB<<3,high<<2)<<2);
+out1+=___SMMUL((1<<27)-modeA<<3,___SMMUL((1<<27)-modeB<<3,notch<<2)<<2);
+OUT[Inst]=out1-in2;}]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<2;i++){
+low[i] = 0;
+band[i] = 0;}]]></code.init>
+      <code.krate><![CDATA[config(inlet_pitch1+param_pitch1,__USAT(param_reso1+inlet_reso1,27),param_mode1+inlet_modeX1+(1<<25)+inlet_modeXA,inlet_modeY1,0);
+config(inlet_pitch2+param_pitch2,__USAT(param_reso2+inlet_reso2,27),param_mode2+inlet_modeX2+(1<<25)+inlet_modeXA,inlet_modeY2,1);
+int32_t SerPar1=(param_SerialSel+inlet_SerialSel)&((1<<28)-1);
+SerPar1=SerPar1>(1<<27)?(1<<28)-SerPar1:SerPar1;
+int32_t SerPar2=(param_SerPar+inlet_SerPar)&((1<<28)-1);
+SerPar2=SerPar2>(1<<27)?(1<<28)-SerPar2:SerPar2;]]></code.krate>
+      <code.srate><![CDATA[int32_t IN1=inlet_in1;
+int32_t IN2=inlet_in2;
+SVF(IN1,IN2,freq[0],Damp[0],ModeA[0],ModeB[0],param_drive1,0);
+int32_t mix1=___SMMUL(SerPar1<<3,IN2<<2)+___SMMUL((1<<27)-SerPar1<<3,IN1<<2);
+mix1=___SMMUL(SerPar2<<3,mix1<<2)+___SMMUL((1<<27)-SerPar2<<3,OUT[0]<<2);
+SVF(mix1,inlet_in3,freq[1],Damp[1],ModeA[1],ModeB[1],param_drive2,1);
+outlet_out=(OUT[1]>>1)+___SMMUL(SerPar2<<3,OUT[0]<<1)+___SMMUL((1<<27)-SerPar2<<3,OUT[1]<<1);;]]></code.srate>
+   </obj.normal>
+</objdefs>
