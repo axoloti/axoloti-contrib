@@ -1,0 +1,84 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="arpMidi" uuid="7e4b91ba-0f64-40fa-bac1-71937e1119e7">
+      <sDescription>Monophonic MIDI keyboard note input, gate, velocity and release velocity. Polyphonic touch output.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+         <bool32 name="gate"/>
+      </inlets>
+      <outlets>
+         <bool32 name="gate" description="key pressed, no retrigger legato"/>
+         <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+         <frac32.positive name="velocity" description="note-on velocity"/>
+         <int32 name="sum"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t _note;
+int32_t _gate;
+uint8_t _velo;
+uint8_t _poly;
+int32_t temp;
+int gate[8];
+int note[8];
+int velo[8];
+int i;
+int pos[8];
+int32_t N[8];
+int32_t V[8];
+int32_t notE;
+int32_t velO;
+uint32_t cnt;
+int gtrig;
+int ttrig;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<8;i++){
+gate[i] = 0;
+note[i] = 0;
+velo[i] = 0;}]]></code.init>
+      <code.krate><![CDATA[if((inlet_gate>0)&&!gtrig){
+	gtrig=1;
+	cnt=cnt&7;
+}
+else if(inlet_gate<=0){gtrig=0;}
+
+if(_gate>0){if(!ttrig){cnt=0;ttrig=1;}}
+if(_gate==0){ttrig=0;}
+
+
+
+//int32_t sum=0;
+//for(i=0;i<8;i++){
+//if((i==parent->polyIndex)&&_gate>0)
+//}
+
+
+
+if(_gate>0){
+outlet_gate= cnt==0?1:0;
+notE= _note-64);
+velO= _velo;
+}
+else{outlet_gate=0;}
+outlet_note= notE<<21;
+outlet_velocity= velO<<20;
+outlet_sum=sum;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  _velo = data2;
+  _note = data1;
+  _gate = 1;
+  _poly=parent->polyIndex;
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note == data1) {
+    _gate = 0;
+  }
+} else if ((status == attr_midichannel + MIDI_POLY_PRESSURE)&&(data1 == _note)) {
+  _velo = data2;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  _gate = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

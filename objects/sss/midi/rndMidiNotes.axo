@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="rndMidiNotes" uuid="280506eb-60ec-455c-8b62-4ed4d5edd546">
+      <sDescription>This module generates random internal midi-notes.
+-touch controls the polyphonic midi aftertouch that&apos;s being send with the random generated notes
+-generate controls the amount of random notes that are being generated (max=16)
+-offset controls the aftertouch-offset of each new extra generated random note.
+
+this module is a complement to the glitchBeast module, so effects can be triggered randomly while the timing of the random fx can be recorded using the &quot;touchrec&quot; module.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <frac32.positive name="touch" description="velocity"/>
+         <frac32 name="generate"/>
+         <frac32 name="offset"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="maxNote">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="minNote">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig[16];
+int lastnote[16];
+int32_t velo[16];
+int i;
+int32_t prev;
+int32_t generate;
+int32_t random;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<16;i++){
+ntrig[i]=0;}]]></code.init>
+      <code.krate><![CDATA[generate=(((inlet_generate>>13)*15/16)>>10)+1;
+for(i=0;i<16;i++){
+if ((inlet_trig>0)&&(i<(generate))) {
+if(ntrig==0){
+random=((int32_t)GenerateRandomNumber());
+}
+velo[i]=(inlet_touch+i*inlet_offset+random)>>20;
+velo[i]=velo[i]&255;
+velo[i]=velo[i]>127?256-velo[i]:velo[i];
+if(ntrig[i]==0){
+lastnote[i] = ___SMMUL((((uint32_t)(GenerateRandomNumber()))>>2),param_maxNote-param_minNote<<2)+param_minNote;
+PatchMidiInHandler(MIDI_DEVICE_INTERNAL,0,MIDI_NOTE_ON + (attr_channel-1),lastnote[i],velo[i]);
+ntrig[i]=1;
+}
+if (!(prev==inlet_touch+inlet_offset)) {PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0,MIDI_POLY_PRESSURE + (attr_channel-1),lastnote[i],velo[i]);}
+}
+if ((!((inlet_trig>0)&&(i<generate))) && ntrig[i]) {PatchMidiInHandler((midi_device_t) 0,0,MIDI_NOTE_OFF + (attr_channel-1),lastnote[i],velo[i]); ntrig[i]=0;}}
+
+prev=inlet_touch+inlet_offset;]]></code.krate>
+   </obj.normal>
+</objdefs>
