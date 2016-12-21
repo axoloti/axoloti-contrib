@@ -1,0 +1,151 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="table2" uuid="c9f8a5ee-2b41-4ce8-9517-85fedacb518f">
+      <sDescription>A combination of 3 objects:
+table/alloc 16b sdram
+table/load
+string/indexed
+
+IMPORTANT:
+Se help file about how to connect!</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table2h.axh</helpPatch>
+      <inlets>
+         <charptr32 name="filename" description="file name"/>
+         <bool32.rising name="trig" description="trigger"/>
+         <int32 name="index"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+               <string>4194304</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+               <string>22</string>
+            </CEntries>
+         </combo>
+         <text name="init"/>
+         <objref name="table"/>
+         <table name="prefix"/>
+         <table name="suffix"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[//Table allocation
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t BITS = 16;
+static const uint32_t GAIN = 12;
+int16_t *array;
+
+//String/index
+int ntrig;
+char c[64];
+int offset;
+int pval;]]></code.declaration>
+      <code.init><![CDATA[//Table allocation
+static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}
+attr_init
+
+//String/index
+ntrig = 0;
+strcpy(&c[0],"attr_prefix000attr_suffix");
+offset = strlen("attr_prefix");
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*attr_table.array)*attr_table.LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(inlet_trig>0)) ntrig=0;
+
+
+
+  if (inlet_index != pval){   pval = inlet_index;
+   int i = inlet_index;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+}
+outlet_out = &c[0];]]></code.krate>
+   </obj.normal>
+</objdefs>
