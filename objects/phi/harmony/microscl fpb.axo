@@ -1,75 +1,78 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="microscaler fb 2" uuid="4a1c53b6-0262-4482-9b6c-8e4440df1d73">
-      <sDescription>microscaler fb</sDescription>
-      <author>philoop mayengo</author>
-      <license>BSD</license>
-      <rotatedParams>true</rotatedParams>
+   <obj.normal id="microscl fpb" uuid="e84837d8-703b-4aed-bc19-c875f9679fe5">
+      <sDescription>microscaler with on off switch Fader version</sDescription>
+      <author>philoop</author>
+      <license>GPL</license>
+	  <rotatedParams>true</rotatedParams>
       <inlets>
          <frac32.bipolar name="pitch"/>
-         <int32.positive name="note"/>
-         <int32.positive name="gate"/>
-         <bool32 name="on"/>
       </inlets>
       <outlets>
          <frac32.bipolar name="out"/>
       </outlets>
       <displays/>
       <params>
+         <bool32.tgl name="on"/>
          <frac32.s.mapvsl name="C" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="Cis" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="D" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="Dis" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="E" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="F" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="Fis" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="G" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="Gis" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="A" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="Ais" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="B" noLabel="true">
-            <MinValue v="-0.5"/>
-            <MaxValue v="0.5"/>
+            <MinValue v="-64.0"/>
+            <MaxValue v="64.0"/>
          </frac32.s.mapvsl>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int o;
-int ntrig;  
-int latch;]]></code.declaration>
+int ntrig;  int latch;
+int8_t octave;
+int8_t semitone;]]></code.declaration>
       <code.init><![CDATA[o = 0;]]></code.init>
-      <code.krate><![CDATA[switch(inlet_note>0?inlet_note:0){
+      <code.krate><![CDATA[int32_t pitch=(inlet_pitch>>21)+48;
+octave=pitch/12;
+semitone=pitch-octave*12;
+
+switch(semitone>0?semitone:0){
       case 0: o= (param_C >>7);break;
       case 1: o= (param_Cis >>7);break;
       case 2: o= (param_D >>7);break;
@@ -86,10 +89,7 @@ int latch;]]></code.declaration>
 }
 
 
-   o= (inlet_on)?(inlet_pitch+o):inlet_pitch;
-
-  if ((inlet_gate>0) && !ntrig) {latch = o; ntrig=1;}
-if (!(inlet_gate>0)) ntrig=0;
-outlet_out= latch;]]></code.krate>
+   o= (param_on)?(inlet_pitch+o):inlet_pitch;
+outlet_out= o;]]></code.krate>
    </obj.normal>
 </objdefs>

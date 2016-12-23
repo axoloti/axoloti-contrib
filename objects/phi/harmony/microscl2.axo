@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="microscl2" uuid="7a9247a3-7e6d-4b97-a879-aff2311f419c">
+      <sDescription>microscaler with on off switch</sDescription>
+      <author>philoop</author>
+      <license>GPL</license>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <frac32.s.map name="C"/>
+         <frac32.s.map name="Cis"/>
+         <frac32.s.map name="D"/>
+         <frac32.s.map name="Dis"/>
+         <frac32.s.map name="E"/>
+         <frac32.s.map name="F"/>
+         <frac32.s.map name="Fis"/>
+         <frac32.s.map name="G"/>
+         <frac32.s.map name="Gis"/>
+         <frac32.s.map name="A"/>
+         <frac32.s.map name="Ais"/>
+         <frac32.s.map name="B"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int o;
+int ntrig;  int latch;
+int8_t octave;
+int8_t semitone;]]></code.declaration>
+      <code.init><![CDATA[o = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=(inlet_pitch>>21)+48;
+octave=pitch/12;
+semitone=pitch-octave*12;
+
+switch(semitone>0?semitone:0){
+      case 0: o= (param_C >>7);break;
+      case 1: o= (param_Cis >>7);break;
+      case 2: o= (param_D >>7);break;
+      case 3: o= (param_Dis >>7);break;
+      case 4: o= (param_E >>7);break;
+      case 5: o= (param_F >>7);break;
+      case 6: o= (param_Fis >>7);break;
+      case 7: o= (param_G >>7);break;
+      case 8: o= (param_Gis >>7);break;
+      case 9: o= (param_A >>7);break;
+      case 10: o= (param_Ais >>7);break;
+      case 11: o= (param_B >>7);break;
+      default: o= (param_C >>7);break;
+}
+
+
+   o= (param_on)?(inlet_pitch+o):inlet_pitch;
+outlet_out= o;]]></code.krate>
+   </obj.normal>
+</objdefs>
