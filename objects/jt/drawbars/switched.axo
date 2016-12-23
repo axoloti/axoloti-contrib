@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="switched" uuid="6b06b1dd-7e6d-40e5-8dc6-4c1e5ebf94e0">
       <sDescription>Switching drawbars at hammond intervals.
 Note that the key switches do not open/close at exactly the same moment, but are spread over maximum 2.666 milliseconds.</sDescription>
@@ -30,6 +30,8 @@ Note that the key switches do not open/close at exactly the same moment, but are
 static const int nkeys = 128+48;
 int16_t keys[nkeys];
 int32_t *array;
+uint32_t sustain_notes[4];
+bool sustain_pedal;
 static const uint32_t LENGTHPOW = 7;
 static const uint32_t LENGTH = 1<<LENGTHPOW;
 static const uint32_t LENGTHMASK = (1<<LENGTHPOW)-1;
@@ -140,11 +142,44 @@ for(i=offset<<1;i<nkeys;i+=16){
 	array[i+1]= a2;
 }]]></code.krate>
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
-	if ((data1>=attr_startNote)&&(data1<=attr_endNote))
+	if ((data1>=attr_startNote)&&(data1<=attr_endNote)) {
 		keys[data1+keyoffset]=__SMMLA(velosense,data2<<24,0x1FFFFFFF-(velosense>>1))>>16;
+   	     int j = data1>>5;
+   	     int k = data1&0x01F;
+	     sustain_notes[j] |= 1<<k;
+	}
 } else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel)) {
-	if ((data1>=attr_startNote)&&(data1<=attr_endNote))
-		keys[data1+keyoffset]=0;
+	if ((data1>=attr_startNote)&&(data1<=attr_endNote)) {
+   	     int j = data1>>5;
+   	     int k = data1&0x01F;
+   	     sustain_notes[j] &= ~(1<<k);
+   	     if (!sustain_pedal){
+   	     	keys[data1+keyoffset]=0;
+   	     }
+	}
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == 64)) {
+	if (data2&0x40) {
+		sustain_pedal = 1;
+		int16_t *p = &keys[0*keyoffset];
+	} else {
+		sustain_pedal = 0;
+		int j;
+		uint32_t *ps = sustain_notes;
+		uint32_t s = *ps;
+		int16_t *p = &keys[keyoffset];
+		for(j=0;j<ntw;) {
+			if (!(s&1)) {
+				*p = 0;
+			}
+			p++;
+			s>>=1;
+			j++;
+			if (!(j&0x1F)){
+				ps++;
+				s = *ps;
+			}
+		}
+	}
 }]]></code.midihandler>
    </obj.normal>
 </objdefs>
