@@ -12,10 +12,16 @@
          <bool32 name="gate" description="key pressed, no retrigger legato"/>
          <frac32.bipolar name="note" description="midi note number (-64..63)"/>
          <frac32.positive name="velocity" description="note-on velocity"/>
-         <int32 name="sum"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <bin16 name="S" noLabel="true"/>
+         <int32 name="length">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <bool32.tgl name="sustain"/>
+      </params>
       <attribs/>
       <code.declaration><![CDATA[int8_t _note;
 int32_t _gate;
@@ -33,38 +39,37 @@ int32_t notE;
 int32_t velO;
 uint32_t cnt;
 int gtrig;
-int ttrig;]]></code.declaration>
+int ttrig;
+int sustain;]]></code.declaration>
       <code.init><![CDATA[for(i=0;i<8;i++){
 gate[i] = 0;
 note[i] = 0;
 velo[i] = 0;}]]></code.init>
       <code.krate><![CDATA[if((inlet_gate>0)&&!gtrig){
 	gtrig=1;
-	cnt=cnt&7;
+	cnt=cnt+1;
+	cnt=cnt-(cnt/param_length)*param_length;
 }
 else if(inlet_gate<=0){gtrig=0;}
 
-if(_gate>0){if(!ttrig){cnt=0;ttrig=1;}}
-if(_gate==0){ttrig=0;}
+if((_gate>0)&&!ttrig){
+	ttrig=1;
+	cnt=0;
+}
+else if(gate==0){ttrig=0;}
 
-
-
-//int32_t sum=0;
-//for(i=0;i<8;i++){
-//if((i==parent->polyIndex)&&_gate>0)
-//}
 
 
 
 if(_gate>0){
-outlet_gate= cnt==0?1:0;
-notE= _note-64);
+outlet_gate= ((param_S>>(cnt&15))&1)&&inlet_gate;
+notE= _note-64;
 velO= _velo;
 }
 else{outlet_gate=0;}
 outlet_note= notE<<21;
 outlet_velocity= velO<<20;
-outlet_sum=sum;]]></code.krate>
+sustain=param_sustain;]]></code.krate>
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
   _velo = data2;
   _note = data1;
@@ -72,11 +77,9 @@ outlet_sum=sum;]]></code.krate>
   _poly=parent->polyIndex;
 } else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
           (status == MIDI_NOTE_OFF + attr_midichannel)) {
-  if (_note == data1) {
+  if ((_note == data1)&&(sustain==0)) {
     _gate = 0;
   }
-} else if ((status == attr_midichannel + MIDI_POLY_PRESSURE)&&(data1 == _note)) {
-  _velo = data2;
 } else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
   _gate = 0;
 }]]></code.midihandler>
