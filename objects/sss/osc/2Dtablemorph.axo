@@ -18,6 +18,7 @@ When using saw/ramp, set it to bipolar, as the input is wrapped up/back down aga
          <frac32 name="mix2"/>
          <frac32buffer name="FM"/>
          <frac32buffer name="sync"/>
+         <int32 name="step"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -114,7 +115,9 @@ M2prv=MiX2;
 
 
 outlet_divide1=param_quant1;
-outlet_divide2=param_quant2;]]></code.krate>
+outlet_divide2=param_quant2;
+int32_t step1=inlet_step+param_step1;
+int32_t step2=inlet_step+param_step2;]]></code.krate>
       <code.srate><![CDATA[if((inlet_sync>0)&&!strig){
 	strig=1;
 	phase=0;
@@ -128,14 +131,14 @@ MIX2a=MIX2b;
 W[0]=((MIX1a>>4)*param_quant1)>>23;
 MIX1a=(MIX1a-(W[0]<<27)/param_quant1)*param_quant1;
 W[0]+=param_start1;
-W[0]=W[0]*param_step1;
-W[1]=W[0]+param_step1;
+W[0]=W[0]*step1;
+W[1]=W[0]+step1;
 
 W[2]=((MIX2a>>4)*param_quant2)>>23;
 MIX2a=(MIX2a-(W[2]<<27)/param_quant2)*param_quant2;
 W[2]+=param_start2;
-W[2]=W[2]*param_step2;
-W[3]=W[2]+param_step2;
+W[2]=W[2]*step2;
+W[3]=W[2]+step2;
 
 for(i=0;i<4;i++){
 W[i]=(W[i]-(W[i]/attr_table.Waveforms)*attr_table.Waveforms);
