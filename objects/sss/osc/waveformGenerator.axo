@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="waveformGenerator" uuid="c41a0dda-9ef6-48fc-a5d1-abae650e1563">
+   <obj.normal id="waveformGenerator" uuid="38134d65-c7f2-4fa0-9e5f-7b1ed8f862b2">
       <sDescription>Generates waveforms to be used with table-oscillators/LFO&apos;s.
 First 9 waveforms are &apos;standardised&quot; waveforms
 sine,triangle,saw,square,peak etc.
@@ -16,10 +16,17 @@ As my axoloti already starts clipping around 40, I often put this to 32 to save 
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>table.axh</helpPatch>
-      <inlets/>
+      <inlets>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
+      </inlets>
       <outlets/>
       <displays/>
-      <params/>
+      <params>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+      </params>
       <attribs>
          <combo name="size">
             <MenuEntries>
@@ -77,6 +84,9 @@ As my axoloti already starts clipping around 40, I often put this to 32 to save 
          <spinner name="maxharm" MinValue="1" MaxValue="128" DefaultValue="0"/>
          <spinner name="maxLvl" MinValue="1" MaxValue="64" DefaultValue="0"/>
       </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
 static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
@@ -91,7 +101,9 @@ uint32_t phase;
 int trig;
 int32_t Waveforms=attr_waveforms;
 int32_t harmonics=attr_harmonics>attr_maxharm?attr_maxharm:attr_harmonics;
-int32_t maxLvl=attr_maxLvl;]]></code.declaration>
+int32_t maxLvl=attr_maxLvl;
+int strig;
+int ltrig;]]></code.declaration>
       <code.init><![CDATA[static int32_t _array[LENGTH*attr_waveforms] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -217,5 +229,61 @@ for(i=0;i<LENGTH;i++){
 array[i+j*LENGTH]=array[i+j*LENGTH]*ratio;
 }
 }]]></code.init>
+      <code.krate><![CDATA[int save=param_save+inlet_save;
+int load=param_load+inlet_load;
+
+if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*(attr_waveforms<<attr_size);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*(attr_waveforms<<attr_size);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(load>0)) ltrig=0;]]></code.krate>
    </obj.normal>
 </objdefs>
