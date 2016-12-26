@@ -1,0 +1,50 @@
+<patch-1.0 appVersion="1.0.11">
+   <patchobj type="patch/object" uuid="fd3f1d59-9f14-4cb3-a601-6dc153b00bd1" name="kscope_1" x="490" y="210">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="fd3f1d59-9f14-4cb3-a601-6dc153b00bd1">
+         <sDescription>bipolar control rate signal oscilloscope (time domain), showing 128 consecutive samples</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>kscope.axh</helpPatch>
+         <rotatedParams>true</rotatedParams>
+         <inlets>
+            <frac32.bipolar name="in" description="input"/>
+            <bool32 name="hold" description="hold"/>
+         </inlets>
+         <outlets/>
+         <displays>
+            <int8array128.vbar name="scope" noLabel="true"/>
+         </displays>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int8_t t[128];
+int index;
+]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<128;i++) t[i]=0;
+index = 0;
+]]></code.init>
+         <code.krate><![CDATA[int32_t r;
+    for(int i=0;i<128;i++)
+    {
+    	
+    
+    SINE2TINTERP(i<<25,r)
+      disp_scope[i]=r>>25;
+}]]></code.krate>
+      </object>
+   </patchobj>
+   <nets/>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1382</width>
+      <height>784</height>
+   </windowPos>
+</patch-1.0>
