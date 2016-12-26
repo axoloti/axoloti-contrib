@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="compressor2" uuid="10600323-a472-4512-add4-d889d8cbaa4f">
+   <obj.normal id="compressor2" uuid="49c126f5-55ad-4cbb-a8c2-974234b943f8">
       <sDescription>Dynamic range compressor with soft-treshold function, ratio, attack/release and gain.</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -10,7 +10,12 @@
       <outlets>
          <frac32buffer name="out"/>
       </outlets>
-      <displays/>
+      <displays>
+         <frac32.vu name="in"/>
+         <frac32.vu name="comp"/>
+         <frac32.vu name="out"/>
+         <bool32 name="tresh"/>
+      </displays>
       <params>
          <frac32.u.map name="tresh"/>
          <frac32.u.map name="soft"/>
@@ -40,19 +45,43 @@ int32_t frac_exp(int32_t a) {
 int32_t accu;
 int32_t prev;
 int32_t IN;
-int32_t val;]]></code.declaration>
+int32_t val;
+int i;
+int32_t over1;
+int32_t over2;]]></code.declaration>
       <code.init><![CDATA[accu = 0;]]></code.init>
       <code.krate><![CDATA[int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
 int32_t treshlog = frac_log(param_tresh-soft);
 int32_t Tresh=frac_log(param_tresh);
+int32_t makeup=___SMMUL(Tresh,param_gain>>1);
 Tresh=Tresh-treshlog;
 float32_t ratio=(float32_t)(1<<27)/Tresh;
 int32_t attack;
 int32_t decay;
 MTOF((1<<27)-(param_attack<<1),attack)
 MTOF((1<<27)-(param_decay<<1),decay)
-float32_t Ratio=(float32_t)(1<<27)/param_tresh;
-int32_t makeup=___SMMUL((int32_t)(Ratio*(1<<27)),param_gain>>1);]]></code.krate>
+
+int32_t In;
+int32_t OUT;
+int32_t OVER;
+int32_t tmp;
+
+for(i=0;i<BUFSIZE;i++){
+	tmp=inlet_in[i];
+	tmp=tmp>0?tmp:-tmp;
+	In=tmp>In?tmp:In;
+	tmp=outlet_out[i];
+	tmp=tmp>0?tmp:-tmp;
+	OUT=tmp>OUT?tmp:OUT;
+	tmp=___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5;
+	tmp=tmp>0?tmp:-tmp;
+	OVER=tmp>OVER?tmp:OVER;
+}
+
+disp_in=In;
+disp_out=OUT;
+disp_comp=OVER;
+disp_tresh=over1>0?1:0;]]></code.krate>
       <code.srate><![CDATA[IN=inlet_in;
 IN=IN>0?IN:-IN;
 if(IN>val){
@@ -63,15 +92,17 @@ val=___SMMLA((IN-val)<<1,decay,val);
 }
 
 int32_t inlog = frac_log(val);
-int32_t over1 = inlog-treshlog;
-int32_t over2 = __USAT((over1>>1)*ratio,27);
+over1 = inlog-treshlog;
+over2 = __USAT((over1>>1)*ratio,27);
+over1=over1-over2/ratio;
 int32_t gain;
 if (over1<0){
-	gain = 0x80000;
+	//gain = 0x80000;
+	gain = frac_exp(makeup);
 } else {
-	gain = frac_exp(-___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5);
+	gain = frac_exp(makeup-(___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5));
 }
 int32_t out = ___SMMUL(inlet_in<<3,gain<<10);
-outlet_out=out+___SMMUL(out<<3,makeup<<2)*ratio;]]></code.srate>
+outlet_out=out;]]></code.srate>
    </obj.normal>
 </objdefs>
