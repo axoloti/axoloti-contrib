@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="DPHardClip" uuid="0b95bc90-042b-4d8e-b10a-3750d645adbe">
+      <sDescription>HardClip with Differentiated Polynomial Anti aliasing.
+Low CPU (~620 cycles) and acceptable aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="InGain"/>
+         <frac32.u.map name="OutGain"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x0,x1,I0,I1,out,inGain,outGain;
+int32_t old_in;
+int32_t outMax, outMin;]]></code.declaration>
+      <code.init><![CDATA[x0=x1=I0=I1=out=0;
+old_in = 0;]]></code.init>
+      <code.krate><![CDATA[inGain = param_InGain*(1.0f/(1<<25))*(1.0f/(1<<27));
+outGain = 2.0f*param_OutGain;
+outMax = (int32_t)(outGain);
+outMin = -outMax;]]></code.krate>
+      <code.srate><![CDATA[// precedent value of input
+x1 = x0;
+// current input value (float)
+x0 = inlet_in * inGain;
+// precedent value of Integral
+I1 = I0;
+// calc of current Integral
+// sat(x) = x  for |x| <  1
+// sat(x) = 1  for  x >=  1
+// sat(x) = -1 for  x <= -1
+// Int(sat(x))=
+// 0.5*x^2 for |x|<1
+// 0.5+x   for |x|>=1
+I0 = fabs(x0);
+if(I0 <= 1){
+  I0 = 0.5f * I0*I0;
+} else {
+  I0 = I0 + 0.5f;  
+}
+// if the precendent and current input are different enough
+// we use the differenciation trick (ie mean on the x1 x0 interval
+if(inlet_in & 0xFFFFF000 != old_in & 0xFFFFF000){
+  outlet_out = (int32_t)(outGain*(I0 - I1) / (x0 - x1));
+}else{
+// if the precedent and current values are close, no antialiasing
+// is necessary and we avoid a division by a small x0-x1:
+// we simply calculate the value of the saturation
+	outlet_out = x0 >= 1  ? outMax 
+	           : x0 <= -1 ? outMin 
+	           : (int32_t)(outGain * x0);
+}
+old_in = inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>
