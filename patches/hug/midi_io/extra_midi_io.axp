@@ -1,8 +1,8 @@
-<patch-1.0 appVersion="1.0.9">
+<patch-1.0 appVersion="1.0.11">
    <comment type="patch/comment" x="14" y="14" text="Shows how to receive MIDI on pin PA3 (3.3V logic) "/>
    <comment type="patch/comment" x="294" y="14" text="send some midi on PA2"/>
    <comment type="patch/comment" x="14" y="28" text="and channel to Internal MIDI"/>
-   <obj type="script/script2" sha="1478c410b77725959c034de4a2456dd1198e9080" name="script2_2" x="294" y="42">
+   <obj type="script/script2" uuid="d39e743cf47c9221f4e99c133430148cf74c68c5" name="script2_2" x="294" y="42">
       <params/>
       <attribs>
          <text attributeName="script">
@@ -35,13 +35,13 @@ void loop(){
          </text>
       </attribs>
    </obj>
-   <obj type="gpio/serial/config" sha="f0df278a5fd5140e32239828049a8e062059f391" name="serial.begin_1" x="28" y="56">
+   <obj type="gpio/serial/config" uuid="8ec617bbe7b552a58656442e87513d8b4c69833a" name="serial.begin_1" x="28" y="56">
       <params/>
       <attribs>
          <combo attributeName="baudrate" selection="31250"/>
       </attribs>
    </obj>
-   <obj type="script/script2" sha="1478c410b77725959c034de4a2456dd1198e9080" name="script2_1" x="28" y="112">
+   <obj type="script/script2" uuid="d39e743cf47c9221f4e99c133430148cf74c68c5" name="script2_1" x="28" y="112">
       <params/>
       <attribs>
          <text attributeName="script">
@@ -163,8 +163,11 @@ void MidiInByteHandler(uint8_t data) {
   }
 }
 void loop(){
-    char ch = sdGet(&SD2);
-    MidiInByteHandler(ch);	
+	while(!sdGetWouldBlock(&SD2))
+	{
+    		char ch = sdGet(&SD2);
+    		MidiInByteHandler(ch);
+    	}	
 }]]></sText>
          </text>
       </attribs>
@@ -184,11 +187,11 @@ void loop(){
    </obj>
    <comment type="patch/comment" x="14" y="294" text="show any incoming midi continuous controller message"/>
    <comment type="patch/comment" x="294" y="294" text="show incoming MIDI notes and trigger"/>
-   <obj type="midi/in/cc i any" sha="125bd0e830dd1600ee82080af5ca074ec2cd8fce" name="ctlini_any_1" x="14" y="322">
+   <obj type="midi/in/cc i any" uuid="a5a8957c081888a8175ecd4630479533958e488b" name="ctlini_any_1" x="14" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/i" sha="f181c855026fdce66f3c38cd8c5438343d6f0869" name="dispI_1" x="112" y="322">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="dispI_1" x="112" y="322">
       <params/>
       <attribs/>
    </obj>
@@ -200,11 +203,11 @@ void loop(){
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/i" sha="f181c855026fdce66f3c38cd8c5438343d6f0869" name="dispI_2" x="112" y="378">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="dispI_2" x="112" y="378">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/i" sha="f181c855026fdce66f3c38cd8c5438343d6f0869" name="dispI_3" x="112" y="434">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="dispI_3" x="112" y="434">
       <params/>
       <attribs/>
    </obj>
