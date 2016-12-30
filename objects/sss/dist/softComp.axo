@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="softComp" uuid="91ba6d4b-4e05-41d4-ac92-57d44be3151e">
+   <obj.normal id="softComp" uuid="062a4db6-b35d-4638-a0fd-f3668746b611">
       <sDescription>Dynamic range compressor with soft-treshold function.
 It does direction compression, that means, no attack/release or envelope functioning inside!</sDescription>
       <author>Remco van der Most</author>
@@ -16,6 +16,7 @@ It does direction compression, that means, no attack/release or envelope functio
          <frac32.u.map name="tresh"/>
          <frac32.u.map name="soft"/>
          <frac32.u.map name="ratio"/>
+         <frac32.u.map name="out"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t frac_log(int32_t a) {
@@ -38,7 +39,9 @@ int32_t frac_exp(int32_t a) {
 int32_t treshlog = frac_log(param_tresh-soft);
 int32_t Tresh=frac_log(param_tresh);
 Tresh=Tresh-treshlog;
-float32_t ratio=(float32_t)(1<<27)/Tresh;]]></code.krate>
+float32_t ratio=(float32_t)(1<<27)/Tresh;
+int32_t makeup=frac_log(param_out)-(treshlog);
+makeup=frac_exp(makeup);]]></code.krate>
       <code.srate><![CDATA[int32_t IN=inlet_in;
 IN=IN>0?IN:-IN;
 int32_t inlog = frac_log(IN);
@@ -50,6 +53,6 @@ if (over1<0){
 } else {
 	gain = frac_exp(-___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5);
 }
-outlet_out = ___SMMUL(inlet_in<<3,gain<<10);]]></code.srate>
+outlet_out = ___SMMUL(___SMMUL(inlet_in<<3,gain<<10)<<3,makeup<<10);]]></code.srate>
    </obj.normal>
 </objdefs>

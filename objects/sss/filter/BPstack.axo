@@ -1,0 +1,102 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="BPstack" uuid="627b57a0-1b9e-43d3-9518-6ac8ff05e2e3">
+      <sDescription>Up 16x stackable BP-filter
+-pitch controls the center frequency of all filters
+-Pspread spreads the frequencies of all the filters over the entire spectrum
+-reso sets the resonance amount
+-rate sets the frequency modulation rate
+-spread sets adds a phase-offset of each next filter-LFO
+-depth sets the modulation depth
+-stack sets the amount of filters that will be stacked (max=16)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="filter input"/>
+         <frac32 name="pitch1"/>
+         <frac32 name="Pspread"/>
+         <frac32 name="reso1"/>
+         <frac32 name="rate"/>
+         <frac32 name="spread"/>
+         <frac32 name="depth"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch1"/>
+         <frac32.s.map name="Pspread"/>
+         <frac32.u.map.filterq name="reso1"/>
+         <frac32.s.map name="rate"/>
+         <frac32.s.map name="spread"/>
+         <frac32.s.map name="depth"/>
+         <int32.hradio name="mode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="stack">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t low[16];
+int32_t band[16];
+int32_t OUT[16];
+int32_t freq[16];
+int32_t Damp[16];
+int32_t IN[17];
+int32_t LFO;
+int32_t sym;
+int i;
+int mode;
+int32_t config(int32_t pitch,int32_t reso,int Inst){
+int32_t damp = (0x80<<24) - (reso<<4);
+damp = ___SMMUL(damp,damp);
+Damp[Inst]=damp;
+int32_t alpha;
+MTOFEXTENDED(pitch,alpha);
+SINE2TINTERP(alpha,freq[Inst]);
+}
+
+
+int32_t SVF(int32_t in1,int32_t Freq,int32_t damp,int32_t Inst,int32_t stack){
+if(mode>1){in1=IN[0];}
+int32_t notch = in1 - __SSAT((___SMMUL(damp,band[Inst])<<1),27);
+low[Inst] = low[Inst] + __SSAT((___SMMUL(Freq,band[Inst])<<1),27);
+int32_t high  = notch - low[Inst];
+band[Inst] = (___SMMUL(Freq,high)<<1) + __SSAT(band[Inst],27);
+if(mode==0){IN[Inst+1]=in1-band[Inst];}
+if(mode==1){IN[Inst+1]=in1+band[Inst]/5*3;}
+if(mode==2){IN[Inst+1]=in1-band[Inst];}
+if(mode==3){IN[Inst+1]=in1+band[Inst]/5*3;}
+
+}]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<2;i++){
+low[i] = 0;
+band[i] = 0;}]]></code.init>
+      <code.krate><![CDATA[int32_t rate;
+MTOFEXTENDED(param_rate+inlet_rate,rate)
+
+mode=param_mode;
+LFO+=rate>>6;
+for(i=0;i<param_stack;i++){
+int32_t lfo=LFO+(((param_spread+inlet_spread)<<4)/(param_stack)*i<<2)>>4;
+lfo=lfo>0?lfo:-lfo;
+lfo=___SMMUL((param_depth+inlet_depth)<<3,lfo<<2);
+int32_t PITCH=inlet_pitch1+param_pitch1+lfo+(((param_Pspread+inlet_Pspread))/(param_stack)*i);
+PITCH=PITCH>(1<<27)?(1<<28)-PITCH:PITCH;
+PITCH=PITCH<(-1<<27)?(-1<<28)+PITCH:PITCH;
+config(PITCH,__USAT(param_reso1+inlet_reso1,27),i);
+}]]></code.krate>
+      <code.srate><![CDATA[IN[0]=inlet_in1;
+for(i=0;i<param_stack;i++){
+SVF(IN[i],freq[i],Damp[i],i,param_stack);}
+sym=IN[param_stack];
+if(mode>1){
+sym=0;
+for(i=0;i<param_stack;i++){sym+=IN[i+1];}
+}
+outlet_out=(sym>>1);]]></code.srate>
+   </obj.normal>
+</objdefs>
