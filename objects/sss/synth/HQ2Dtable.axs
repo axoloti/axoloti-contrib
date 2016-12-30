@@ -10,8 +10,8 @@
       </params>
       <attribs>
          <combo attributeName="size" selection="8192"/>
-         <spinner attributeName="harmonics" value="20"/>
-         <spinner attributeName="waveforms" value="30"/>
+         <spinner attributeName="harmonics" value="34"/>
+         <spinner attributeName="waveforms" value="64"/>
          <spinner attributeName="minharm" value="4"/>
          <spinner attributeName="maxharm" value="35"/>
          <spinner attributeName="maxLvl" value="32"/>
@@ -179,7 +179,6 @@
          <source obj="keyb_1" outlet="touch"/>
          <dest obj="+_1" inlet="in2"/>
          <dest obj="+_2" inlet="in2"/>
-         <dest obj="2DHQtable_1" inlet="sinemix"/>
       </net>
       <net>
          <source obj="*_1" outlet="result"/>
@@ -193,6 +192,10 @@
          <source obj="keyb_1" outlet="velocity"/>
          <dest obj="*_1" inlet="b"/>
       </net>
+      <net>
+         <source obj="harmonics" outlet="env"/>
+         <dest obj="2DHQtable_1" inlet="sinemix"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>polyphonic</subpatchmode>
@@ -202,7 +205,6 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
