@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="waveformGenerator" uuid="38134d65-c7f2-4fa0-9e5f-7b1ed8f862b2">
+   <obj.normal id="waveformGenerator" uuid="06edbff4-77ed-44b8-b122-be707604b1d6">
       <sDescription>Generates waveforms to be used with table-oscillators/LFO&apos;s.
 First 9 waveforms are &apos;standardised&quot; waveforms
 sine,triangle,saw,square,peak etc.
@@ -103,7 +103,9 @@ int32_t Waveforms=attr_waveforms;
 int32_t harmonics=attr_harmonics>attr_maxharm?attr_maxharm:attr_harmonics;
 int32_t maxLvl=attr_maxLvl;
 int strig;
-int ltrig;]]></code.declaration>
+int ltrig;
+int Do;
+int dtrig;]]></code.declaration>
       <code.init><![CDATA[static int32_t _array[LENGTH*attr_waveforms] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -284,6 +286,24 @@ if ((save>0) && !strig) {
     err = f_close(&FileObject);
     if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
   }
-  else if (!(load>0)) ltrig=0;]]></code.krate>
+  else if (!(load>0)) ltrig=0;
+
+if((Do>0)&&!dtrig){
+	dtrig=1;
+for(j=0;j<attr_waveforms;j++){
+int32_t sum=0;
+float32_t ratio;
+for(i=0;i<LENGTH;i++){
+int32_t temp=array[i+j*LENGTH];
+temp=temp>0?temp:-temp;
+sum=temp>sum?temp:sum;
+}
+ratio=(float32_t)(attr_maxLvl<<21)/(float32_t)(sum);
+for(i=0;i<LENGTH;i++){
+array[i+j*LENGTH]=array[i+j*LENGTH]*ratio;
+}
+}
+}
+else if((Do==0)&&dtrig){dtrig=0;}]]></code.krate>
    </obj.normal>
 </objdefs>
