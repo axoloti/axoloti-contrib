@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="subSine" uuid="91b7b02b-c98f-4f1a-9f4d-90ece030b1cc">
+   <obj.normal id="subSine" uuid="70fe7740-2d08-464f-a418-519af310021b">
       <sDescription>sub-sine wave oscillator
 Generates 2 sines that can be overdriven into square-waves.</sDescription>
       <author>Remco van der Most</author>
@@ -37,16 +37,19 @@ r= __SSAT(ts + (ts>>1) - (tsq31p3),28);
 ts = __SSAT(r+___SMMUL(r<<3,param_drive1<<3),28);
 tsq31 = ts<<3;
 tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
-outlet_wave = __SSAT(ts + (ts>>1) - (tsq31p3),28)>>2;
+int32_t wave;
+outlet_wave = __SSAT(ts + (ts>>1) - (tsq31p3)>>2,26);
+
 SINE2TINTERP(p2<<1,r)
 r=(r>>5);
-ts = __SSAT(r+___SMMUL(r<<3,param_drive2<<3),28);
-tsq31 = ts<<3;
-tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
-r= __SSAT(ts + (ts>>1) - (tsq31p3),28);
-ts = __SSAT(r+___SMMUL(r<<3,param_drive2<<3),28);
-tsq31 = ts<<3;
-tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
-outlet_wave += __SSAT(ts + (ts>>1) - (tsq31p3),28)>>2;]]></code.srate>
+int32_t Ts = __SSAT(r+___SMMUL(r<<3,param_drive2<<3),28);
+int32_t Tsq31 = Ts<<3;
+int32_t Tsq31p3 = ___SMMUL(Tsq31,___SMMUL(Tsq31,Tsq31));
+r= __SSAT(Ts + (Ts>>1) - (Tsq31p3),28);
+Ts = __SSAT(r+___SMMUL(r<<3,param_drive2<<3),28);
+Tsq31 = Ts<<3;
+Tsq31p3 = ___SMMUL(Tsq31,___SMMUL(Tsq31,Tsq31));
+
+outlet_wave += __SSAT(Ts + (Ts>>1) - (Tsq31p3)>>2,26);]]></code.srate>
    </obj.normal>
 </objdefs>
