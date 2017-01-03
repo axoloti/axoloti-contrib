@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="triplePeak" uuid="92974283-3176-43dd-87c6-bcfa547f0cef">
+      <sDescription>3 BP filters in parallel with the original input to make a 3-band parametric resonating EQ
+C=cutoff
+R=resonance
+G=gain</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="filter input"/>
+         <frac32 name="C1"/>
+         <frac32 name="B1"/>
+         <frac32 name="G1"/>
+         <frac32 name="C2"/>
+         <frac32 name="B2"/>
+         <frac32 name="G2"/>
+         <frac32 name="C3"/>
+         <frac32 name="B3"/>
+         <frac32 name="G3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="C1"/>
+         <frac32.u.map.filterq name="B1"/>
+         <frac32.s.map name="G1"/>
+         <frac32.s.map.pitch name="C2"/>
+         <frac32.u.map.filterq name="B2"/>
+         <frac32.s.map name="G2"/>
+         <frac32.s.map.pitch name="C3"/>
+         <frac32.u.map.filterq name="B3"/>
+         <frac32.s.map name="G3"/>
+         <frac32.s.map name="gain"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t low[3];
+int32_t band[3];
+int32_t OUT[3];
+int32_t freq[3];
+int32_t Damp[3];
+int32_t G[3];
+int i;
+int32_t config(int32_t pitch,int32_t reso,int32_t Gain,int Inst){
+int32_t damp = (0x80<<24) - (reso<<4);
+damp = ___SMMUL(damp,damp);
+Damp[Inst]=damp;
+int32_t alpha;
+MTOFEXTENDED(pitch,alpha);
+SINE2TINTERP(alpha,freq[Inst]);
+G[Inst]=Gain>0?Gain<<2:Gain;
+}
+
+
+int32_t SVF(int32_t in1,int32_t Freq,int32_t damp,int32_t gain,int32_t Inst){
+int32_t notch = in1 - __SSAT((___SMMUL(damp,band[Inst])<<1),29);
+low[Inst] = low[Inst] + __SSAT((___SMMUL(Freq,band[Inst])<<1),29);
+int32_t high  = notch - low[Inst];
+band[Inst] = (___SMMUL(Freq,high)<<1) + __SSAT(band[Inst],27);
+OUT[Inst]=___SMMUL(band[Inst]<<3,gain<<2);}]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<3;i++){
+low[i] = 0;
+band[i] = 0;}]]></code.init>
+      <code.krate><![CDATA[config(inlet_C1+param_C1,__USAT(param_B1+inlet_B1,27),inlet_G1+param_G1,0);
+config(inlet_C2+param_C2,__USAT(param_B2+inlet_B2,27),inlet_G2+param_G2,1);
+config(inlet_C3+param_C3,__USAT(param_B3+inlet_B3,27),inlet_G3+param_G3,2);]]></code.krate>
+      <code.srate><![CDATA[int32_t IN1=inlet_in1+___SMMUL(param_gain<<4,inlet_in1<<1);
+int32_t out;
+SVF(IN1,freq[0],Damp[0],G[0],0);
+SVF(IN1,freq[1],Damp[1],G[1],1);
+SVF(IN1,freq[2],Damp[2],G[2],2);
+out=OUT[0]+OUT[1]+OUT[2]+IN1;
+outlet_out=out;]]></code.srate>
+   </obj.normal>
+</objdefs>
