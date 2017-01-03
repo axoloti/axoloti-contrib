@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="DR1" uuid="8002cb5c-df61-4ec8-9aad-5aec307ffed4">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="DR1" uuid="06aa0c48-6c65-4555-846e-52a5abd06994">
       <sDescription>drum synthesizer with an extra wavetable shaper to add higher harmonics to the sine-base.
 Uses wavetables made with the wavetable creator &quot;Creator&quot; (1024 waves of 1024 samples long each)
 Seperate envelopes for pitch, volume and noise levels.
@@ -24,6 +24,7 @@ Best to trigger this with a trigger instead of a gate.</sDescription>
          <frac32.s.map.kdecaytime.exp name="Vdec"/>
          <frac32.s.map.kdecaytime.exp name="Pdec"/>
          <frac32.s.map.kdecaytime.exp name="Ndec"/>
+         <frac32.s.map.kdecaytime.exp name="Watt"/>
          <frac32.s.map.pitch name="pitch"/>
          <frac32.u.map name="Pamt"/>
          <frac32.s.map name="E2C"/>
@@ -56,6 +57,7 @@ int32_t read;
 uint32_t Penv;
 uint32_t Venv;
 uint32_t Nenv;
+uint32_t Wenv;
 int gtrig;
 int Gtrig;
 int32_t noise;
@@ -67,19 +69,19 @@ int32_t count;
 int32_t low;
 int32_t band;]]></code.declaration>
       <code.init><![CDATA[low = 0;
-band = 0;
-]]></code.init>
+band = 0;]]></code.init>
       <code.krate><![CDATA[if(count>=param_hold){
 Penv=___SMMUL(Penv,param_Pdec)<<1;
 Venv=___SMMUL(Venv,param_Vdec)<<1;
-Nenv=___SMMUL(Nenv,param_Ndec)<<1;}
-
+Nenv=___SMMUL(Nenv,param_Ndec)<<1;
+Wenv=___SMMUL(Wenv,param_Watt)<<1;}
 if((inlet_trig>0)&&!gtrig){
 	
 	gtrig=1;
 	Penv=(1<<27);
 	Venv=(1<<27);
 	Nenv=(1<<27);
+	Wenv=(1<<27);
 	count=0;
 }
 else if(inlet_trig==0){gtrig=0;}
@@ -101,6 +103,9 @@ VENV+=___SMMUL(param_gain<<2,VENV<<3)*3;
 int32_t NENV=___SMMUL(Nenv<<3,Nenv<<2);
 NENV=___SMMUL(NENV<<3,NENV<<2);
 NENV=___SMMUL(NENV<<3,param_noiseLvl<<2);
+
+int32_t WENV=___SMMUL((1<<27)-Wenv<<4,param_waveLvl<<4);
+
 
 int32_t freq;
 MTOFEXTENDED(param_pitch+___SMMUL(param_Pamt<<3,PENV<<2),freq)
@@ -146,7 +151,7 @@ noise = out<<4;
 
 phase+=freq;
 
-table=___SMMUL(attr_table.array[((((phase+(param_start<<5))>>22-param_octave)&1023)+preset)&attr_table.LENGTHMASK]<<3,param_waveLvl<<2);
+table=___SMMUL(attr_table.array[((((phase+(param_start<<5))>>22-param_octave)&1023)+preset)&attr_table.LENGTHMASK]<<4,WENV);
 SINE2TINTERP(phase,sine)
 
 int32_t wave;
@@ -154,7 +159,6 @@ wave= __SSAT(___SMMUL(___SMMUL(sine>>2,param_sineLvl<<2)+(___SMMUL(noise>>2,NENV
 
 val=___SMMLA((wave-val)<<1,cut,val);
 
-outlet_out=val;
-]]></code.srate>
+outlet_out=val;]]></code.srate>
    </obj.normal>
 </objdefs>
