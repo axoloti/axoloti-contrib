@@ -37,16 +37,16 @@ I1 = I0;
 // sat(x) = -1 for  x <= -1
 // Int(sat(x))=
 // 0.5*x^2 for |x|<1
-// 0.5+x   for |x|>=1
+// -0.5+x   for |x|>=1
 I0 = fabs(x0);
 if(I0 <= 1){
   I0 = 0.5f * I0*I0;
 } else {
-  I0 = I0 + 0.5f;  
+  I0 = I0 - 0.5f;  
 }
 // if the precendent and current input are different enough
 // we use the differenciation trick (ie mean on the x1 x0 interval
-if(inlet_in & 0xFFFFF000 != old_in & 0xFFFFF000){
+if((inlet_in & 0xFFFFF000) != (old_in & 0xFFFFF000)){
   outlet_out = (int32_t)(outGain*(I0 - I1) / (x0 - x1));
 }else{
 // if the precedent and current values are close, no antialiasing
