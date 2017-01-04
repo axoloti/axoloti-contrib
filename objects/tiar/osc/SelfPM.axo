@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="SelfPM" uuid="4c69df16-7b2a-40bd-9058-ec85890055db">
+      <sDescription>Self PM oscillator (Very low cost)
+Generates a band controlled sawtooth like wave form.
+A square like wave form is obtained with negative kFb (negative kFb triggers
+kFb by squared signal).
+fb0 and fb1 controls the range of the feedback depth.
+fbMod modulates the feedback in the range [fb0 fb1]</sDescription>
+      <author>T. Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>SelfPM.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.positive name="fbMod" description="Feedback mod : [0 64] -&gt; [fb0 fb1]"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="selfPM wave"/>
+      </outlets>
+      <displays>
+         <frac32.s.dial name="fb" description="Modulated feedback" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.s.map name="fb1" description="Feedback Range [fb0 fb1]"/>
+         <frac32.s.map name="fb0" description="Feedback Range [fb0 fb1]"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+// _____________________________________________________________________
+uint32_t p;  // phase
+int32_t kFb;  // feedback coefficient
+int32_t aFb, dFb;       // interp Fb
+int32_t y;   // raw (modulated)sine
+int32_t fy;  // filtered output
+// _____________________________________________________________________
+]]></code.declaration>
+      <code.init><![CDATA[
+// _____________________________________________________________________
+p = 0;
+y = 0;
+fy = 0;
+aFb = dFb = 0;
+// _____________________________________________________________________
+]]></code.init>
+      <code.krate><![CDATA[// _____________________________________________________________________
+int32_t dp; // delta phase aka freq
+MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+// mapping:
+// fbMod [0 64] -> [fb0 fb1] with scaling
+kFb = ___SMMUL(param_fb1*3,                inlet_fbMod <<4    );
+kFb = ___SMMLA(param_fb0*3, (((1<<27)-1) - inlet_fbMod)<<4, kFb);
+disp_fb = kFb>>1;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                             kRate -> aRate FB interp
+dFb = (kFb - aFb) >> 4;
+// _____________________________________________________________________
+//                                                     Audio rate loops
+if(kFb > 0){
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                      Simple feedback
+  int j; for(j = 0; j < BUFSIZE; j++){
+    // phase increment
+    p += dp;
+    // raw sine access with feedback (with low passed output "fy")
+    y = sine2t[ ((uint32_t)(p + (___SMMUL(fy, aFb)<<4) )) >> 20 ];
+    // we can tolerate raw access to the sine table thanks to
+    // this "anti hunting" low pass filter
+    fy = (fy>>1) + (y>>1);
+    outlet_wave[j] = fy >> 4;
+    aFb += dFb;
+  }
+} else {
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                             Squared feedback variant
+  int j; for(j = 0; j < BUFSIZE; j++){
+    // phase increment
+    p += dp;
+    // raw sine access with squared lp feedback
+    y = sine2t[ ((uint32_t)(p + (___SMMUL(___SMMUL(fy, fy), aFb)<<5) )) >> 20 ];
+    // "anti hunting" low pass filter
+    fy = (fy>>1) + (y>>1);
+    outlet_wave[j] = fy >> 4;
+    aFb += dFb;
+  }
+}
+// _____________________________________________________________________]]></code.krate>
+   </obj.normal>
+</objdefs>
