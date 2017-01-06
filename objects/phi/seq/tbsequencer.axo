@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tbsequencer" uuid="5b660d75-4a43-40f1-a4a5-80f0d1608574">
+      <sDescription>TB303 type sequencer oct gate slide</sDescription>
+      <author>Philoop</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="gateext"/>
+         <int32 name="in" description="in"/>
+         <int32 name="o"/>
+         <int32 name="g"/>
+         <bool32 name="s"/>
+      </inlets>
+      <outlets>
+         <int32 name="chain" description="chain out (in-16)"/>
+         <bool32 name="g"/>
+         <int32 name="oct" description="output"/>
+         <int32 name="gate"/>
+         <bool32 name="slide"/>
+      </outlets>
+      <displays>
+         <int32.bar16 name="in" noLabel="true"/>
+      </displays>
+      <params>
+         <int2x16 name="o"/>
+         <int2x16 name="g"/>
+         <bin16 name="s"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+int latch;
+int gate;
+int slide;]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;
+latch = 0;
+gate = 0;
+slide = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_chain = inlet_in - 16;
+   disp_in=inlet_in;
+
+   if ((inlet_in>=0)&&(inlet_in<16))
+   outlet_oct=((param_o>>(inlet_in*2))&3)*12;
+   else outlet_oct = inlet_o;
+   
+   if ((inlet_in>=0)&&(inlet_in<16))  
+   gate=((param_g>>(inlet_in*2))&3)*21;
+   else gate = inlet_g;  
+   
+   
+   if ((inlet_in>=0)&&(inlet_in<16))  
+   slide=param_s&(1<<inlet_in);
+   else slide = inlet_s;
+   
+   outlet_chain = inlet_in-16;
+   
+   //when slide is on keep accent and sustaian gate when accent on
+   outlet_g = slide?(slide&&gate):gate&&inlet_gateext;	
+   //latch
+if ((slide>0) && !ntrig) {latch = gate; ntrig=1;}
+if (!(slide>0)) ntrig=0;
+outlet_gate= (slide)?latch:gate;
+
+outlet_slide = slide;]]></code.krate>
+   </obj.normal>
+</objdefs>
