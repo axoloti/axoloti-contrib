@@ -10,8 +10,8 @@
          <frac32.u.map name="d135" value="0.0"/>
          <frac32.u.map name="d113" value="0.0"/>
          <frac32.u.map name="d1" value="0.0"/>
-         <frac32.u.map name="keyclick" value="0.0"/>
-         <frac32.u.map name="percvolume" value="64.0"/>
+         <frac32.u.map name="keyclick" value="27.5"/>
+         <frac32.u.map name="percvolume" value="0.0"/>
          <frac32.u.map name="percdecay" value="0.0"/>
          <bool32.tgl name="perc2nd3rd" value="0"/>
       </params>
@@ -62,17 +62,30 @@ int32_t multiplier[tonewheels]={
 	1414,1497,1587,1681,1780,1887,1999,2117,2243,2376,
 	2519,2668,2827,2994,3173,3361,3560,3773,3996,4232,
 	4484,4750,5034,5332,5648,5981,6338,6714,7109,7533,
-	7977,8447,8947,9475,10038,10628,11254,11912,12617,13357,
+	7977,8447,8947,9474,10038,10628,11254,11912,12617,13357,
 	14133,14965,15835,16754,17744,18778,19860,20991,22200,23458,
 	24780};
+	
+//tone generator calibration curve for organs from 1935-1940 based on Kon's data
+int32_t oscillator_y[tonewheels]={
+	16384,15728,14417,13107,11796,10485,9830,9175,8847,8519,
+	8192,8060,7864,7733,7602,7471,7340,7208,7077,6946,
+	6815,6684,6619,6553,6553,6553,6553,6553,6553,6553,
+	6553,6553,6553,6553,6553,6553,6619,6684,6750,6815,
+	6881,6946,7077,7208,7340,7471,7602,7733,7864,8060,
+	8323,8519,8716,8978,9175,9371,9633,9830,10027,10289,
+	10485,10682,10878,11141,11337,11599,11796,11993,12255,12451,
+	12648,12910,13107,13107,13107,13107,13107,13107,13107,13107,
+	13107,13107,13107,13107,13107,13107,13107,13107,13107,13107,
+	13107};
+
 int32_t oscillator_x[tonewheels];
-int32_t oscillator_y[tonewheels];
 int32_t percussion_oscillator_x=0;
 int32_t percussion_oscillator_y=0;]]></code.declaration>
          <code.init><![CDATA[int i;
 for(i=0;i<tonewheels;i++) {
 	oscillator_x[i]=0;
-	oscillator_y[i]=16384;
+//	oscillator_y[i]=16384;
 	gain [i]=0;
 	current_gain[i]=0;
 }
@@ -237,12 +250,12 @@ if(keyclick_gain>0){
 for(i=0;i<tonewheels;i++) {
 //	if ((gain[i]>0)||(current_gain[i]>0)){
 		for(j=0;j<BUFSIZE;j++) {
-			outlet_out[j] = __SMMLA(oscillator_x[i]<<12,current_gain[i],outlet_out[j]);
+			outlet_out[j] = __SMMLA(oscillator_x[i]<<12,gain[i],outlet_out[j]);
 			int32_t temp = (oscillator_y[i] * multiplier[i])>>15;
 			oscillator_x[i] -= temp;
 			temp = (oscillator_x[i] * multiplier[i])>>15;
 			oscillator_y[i] += temp;
-			current_gain[i] = 255*(current_gain[i]>>8)+(gain[i]>>8);
+//			current_gain[i] = 255*(current_gain[i]>>8)+(gain[i]>>8);
 //			if (current_gain[i]<gain[i])
 //			{
 //				current_gain[i]=gain[i];
@@ -266,6 +279,13 @@ for(i=0;i<tonewheels;i++) {
 }]]></code.midihandler>
       </object>
    </patchobj>
+   <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="140" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="28.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="266" y="14">
       <params>
          <frac32.u.map name="amp" value="8.0"/>
@@ -305,8 +325,12 @@ for(i=0;i<tonewheels;i++) {
          <dest obj="soft_1" inlet="in"/>
       </net>
       <net>
-         <source obj="object_1" outlet="out"/>
+         <source obj="lp_1" outlet="out"/>
          <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="out"/>
+         <dest obj="lp_1" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -314,8 +338,8 @@ for(i=0;i<tonewheels;i++) {
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>620</x>
-      <y>52</y>
+      <x>624</x>
+      <y>63</y>
       <width>713</width>
       <height>715</height>
    </windowPos>
