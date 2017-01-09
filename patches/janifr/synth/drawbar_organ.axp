@@ -3,7 +3,7 @@
       <params>
          <frac32.u.map name="d16" value="64.0"/>
          <frac32.u.map name="d513" value="64.0"/>
-         <frac32.u.map name="d8" value="0.0"/>
+         <frac32.u.map name="d8" value="64.0"/>
          <frac32.u.map name="d4" value="0.0"/>
          <frac32.u.map name="d223" value="0.0"/>
          <frac32.u.map name="d2" value="0.0"/>
@@ -12,8 +12,8 @@
          <frac32.u.map name="d1" value="0.0"/>
          <frac32.u.map name="keyclick" value="27.5"/>
          <frac32.u.map name="percvolume" value="64.0"/>
-         <frac32.u.map name="percdecay" value="12.5"/>
-         <bool32.tgl name="perc2nd3rd" value="1"/>
+         <frac32.u.map name="percdecay" value="26.0"/>
+         <bool32.tgl name="perc2nd3rd" value="0"/>
       </params>
       <attribs/>
       <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-abcad2174dcf">
@@ -49,14 +49,15 @@ int32_t keys=0;
 int32_t trigger_percussion=0;
 int32_t percussion_tonewheels=0;
 int32_t percussion_tonewheel[max_percussion_tonewheels];
+
 int32_t percussion_gain=0;
-int32_t percussion_current_gain=0;
-//int32_t percussion_key=0;
+
+
 int32_t new_note=0;
 int32_t keyclick_gain=0;
 int32_t rnd=22222;
 int32_t gain[tonewheels];
-//int32_t current_gain[tonewheels];
+
 int32_t multiplier[tonewheels]={
 	140,149,157,167,177,187,198,210,223,236,
 	250,265,280,297,315,334,353,374,397,420,
@@ -86,33 +87,30 @@ int32_t oscillator_x[tonewheels];]]></code.declaration>
          <code.init><![CDATA[int i;
 for(i=0;i<tonewheels;i++) {
 	oscillator_x[i]=0;
-	gain [i]=0;
+//	gain [i]=0;
 }
 
 for (i=0;i<128;i++)
-	key[i]=0;]]></code.init>
+	key[i]=0;
+
+//for (i=0;i<BUFSIZE;i++)
+//	percussion_gain[i]=0;]]></code.init>
          <code.krate><![CDATA[int i,j;
 for(i=0;i<tonewheels;i++){
 	gain[i]=0;
 }
 
-//if (!key[percussion_key])
-//	percussion_gain=0;
+int32_t percvolume=param_percvolume;
 
 if(trigger_percussion)
 {
-	percussion_gain=param_percvolume;
+	percussion_gain=percvolume;
 	trigger_percussion=0;
 }
 
-/* percussion and key click*/
-if(new_note){
-	/*percussion*/
-//	if (keys==1)
-//		percussion_gain=param_percvolume;
-		
+/* key click*/
+if(new_note){	
 	keyclick_gain=param_keyclick;
-	/*key click*/
 	new_note=0;
 }
 
@@ -131,21 +129,41 @@ for (i=0;i<tonewheels;i++){
 	}
 }
 
+int32_t d16 = param_d16;
+int32_t d513 = param_d513;
+int32_t d8 = param_d8;
+int32_t d4 = param_d4;
+int32_t d223 = param_d223;
+int32_t d2 = param_d2;
+int32_t d135 = param_d135;
+int32_t d113 = param_d113;
+int32_t d1 = param_d1;
+
+d16 -= (d16>>14)*(percvolume>>14);
+d513 -= (d513>>14)*(percvolume>>14);
+d8 -= (d8>>14)*(percvolume>>14);
+d4 -= (d4>>14)*(percvolume>>14);
+d223 -= (d223>>14)*(percvolume>>14);
+d2 -= (d2>>14)*(percvolume>>14);
+d135 -= (d135>>14)*(percvolume>>14);
+d113 -= (d113>>14)*(percvolume>>14);
+d1 -= (d1>>14)*(percvolume>>14);
+
 /*total 61 keys*/
 
 /*no foldback*/
 
 for(i=0;i<43;i++){
 	if (key[i+24]) {
-		gain[i] += param_d16;
-		gain[i+19] += param_d513;
-		gain[i+12] += param_d8;
-		gain[i+24] += param_d4;
-		gain[i+31] += param_d223;
-		gain[i+36] += param_d2;
-		gain[i+40] += param_d135;
-		gain[i+43] += param_d113;
-		gain[i+48] += param_d1;
+		gain[i] += d16;
+		gain[i+19] += d513;
+		gain[i+12] += d8;
+		gain[i+24] += d4;
+		gain[i+31] += d223;
+		gain[i+36] += d2;
+		gain[i+40] += d135;
+		gain[i+43] += d113;
+		gain[i+48] += d1;
 	}
 }
 
@@ -153,15 +171,15 @@ for(i=0;i<43;i++){
  
 for(i=43;i<48;i++){
 	if (key[i+24]) {
-		gain[i] += param_d16;
-		gain[i+19] += param_d513;
-		gain[i+12] += param_d8;
-		gain[i+24] += param_d4;
-		gain[i+31] += param_d223;
-		gain[i+36] += param_d2;
-		gain[i+40] += param_d135;
-		gain[i+43] += param_d113;
-		gain[i+36] += 3*(param_d1>>2);
+		gain[i] += d16;
+		gain[i+19] += d513;
+		gain[i+12] += d8;
+		gain[i+24] += d4;
+		gain[i+31] += d223;
+		gain[i+36] += d2;
+		gain[i+40] += d135;
+		gain[i+43] += d113;
+		gain[i+36] += 3*(d1>>2);
 	}
 }
 
@@ -169,76 +187,71 @@ for(i=43;i<48;i++){
 
 for(i=48;i<51;i++){
 	if (key[i+24]) {
-		gain[i] += param_d16;
-		gain[i+19] += param_d513;
-		gain[i+12] += param_d8;
-		gain[i+24] += param_d4;
-		gain[i+31] += param_d223;
-		gain[i+36] += param_d2;
-		gain[i+40] += param_d135;
-		gain[i+31] += 3*(param_d113>>2);
-		gain[i+36] += 3*(param_d1>>2);
+		gain[i] += d16;
+		gain[i+19] += d513;
+		gain[i+12] += d8;
+		gain[i+24] += d4;
+		gain[i+31] += d223;
+		gain[i+36] += d2;
+		gain[i+40] += d135;
+		gain[i+31] += 3*(d113>>2);
+		gain[i+36] += 3*(d1>>2);
 	}
 }
 
 /*foldback drawbars 7,8,9*/
 for(i=51;i<55;i++){
 	if (key[i+24]) {
-		gain[i] += param_d16;
-		gain[i+19] += param_d513;
-		gain[i+12] += param_d8;
-		gain[i+24] += param_d4;
-		gain[i+31] += param_d223;
-		gain[i+36] += param_d2;
-		gain[i+28] += 3*(param_d135>>2);
-		gain[i+31] += 3*(param_d113>>2);
-		gain[i+36] += 3*(param_d1>>2);
+		gain[i] += d16;
+		gain[i+19] += d513;
+		gain[i+12] += d8;
+		gain[i+24] += d4;
+		gain[i+31] += d223;
+		gain[i+36] += d2;
+		gain[i+28] += 3*(d135>>2);
+		gain[i+31] += 3*(d113>>2);
+		gain[i+36] += 3*(d1>>2);
 	}
 }
 
 /*foldback drawbars 6,7,8,2x9*/
 for(i=55;i<60;i++){
 	if (key[i+24]) {
-		gain[i] += param_d16;
-		gain[i+19] += param_d513;
-		gain[i+12] += param_d8;
-		gain[i+24] += param_d4;
-		gain[i+31] += param_d223;
-		gain[i+24] += 3*(param_d2>>2);
-		gain[i+28] += 3*(param_d135>>2);
-		gain[i+31] += 3*(param_d113>>2);
-		gain[i+24] += 9*(param_d1>>4);
+		gain[i] += d16;
+		gain[i+19] += d513;
+		gain[i+12] += d8;
+		gain[i+24] += d4;
+		gain[i+31] += d223;
+		gain[i+24] += 3*(d2>>2);
+		gain[i+28] += 3*(d135>>2);
+		gain[i+31] += 3*(d113>>2);
+		gain[i+24] += 9*(d1>>4);
 	}
 }
 
 /*foldback drawbars 5,6,7,2x8,2x9*/
 if (key[84]) {
-	gain[60] += param_d16;
-	gain[60+19] += param_d513;
-	gain[60+12] += param_d8;
-	gain[60+24] += param_d4;
-	gain[60+19] += 3*(param_d223>>2);
-	gain[60+24] += 3*(param_d2>>2);
-	gain[60+28] += 3*(param_d135>>2);
-	gain[60+19] += 9*(param_d113>>4);
-	gain[60+24] += 9*(param_d1>>4);
+	gain[60] += d16;
+	gain[60+19] += d513;
+	gain[60+12] += d8;
+	gain[60+24] += d4;
+	gain[60+19] += 3*(d223>>2);
+	gain[60+24] += 3*(d2>>2);
+	gain[60+28] += 3*(d135>>2);
+	gain[60+19] += 9*(d113>>4);
+	gain[60+24] += 9*(d1>>4);
 }
 
-/*for (i=0;i<tonewheels;i++){
-	if (gain[i]>current_gain[i])
-		current_gain[i]=gain[i];
-}*/
+
 for(i=0;i<BUFSIZE;i++)
 	outlet_out[i]=0;
 
-//int32_t stored_percussion_current_gain=percussion_current_gain;
 int32_t stored_percussion_gain=percussion_gain;
 
 for(i=0;i<percussion_tonewheels;i++) {
 	int32_t osc_x=oscillator_x[percussion_tonewheel[i]];
 	int32_t osc_y=oscillator_y[percussion_tonewheel[i]];
 	int32_t mult=multiplier[percussion_tonewheel[i]];
-//	percussion_current_gain=stored_percussion_current_gain;
 	percussion_gain=stored_percussion_gain;
 	for(j=0;j<BUFSIZE;j++) {
 		outlet_out[j]=__SMMLA(osc_x<<12,percussion_gain,outlet_out[j]);
@@ -247,10 +260,7 @@ for(i=0;i<percussion_tonewheels;i++) {
 		temp = (osc_x * mult)>>15;
 		osc_y += temp;
 		percussion_gain -=(((percussion_gain>>12)*(param_percdecay>>12))>>15);
-//		percussion_gain -= 1000+(param_percdecay>>13);
-//		if(percussion_gain<0)
-//			percussion_gain=0;
-//		percussion_current_gain = 255*(percussion_current_gain>>8)+(percussion_gain>>8);
+
 	}
 }
 
@@ -270,7 +280,7 @@ for(i=0;i<tonewheels;i++) {
 		int32_t temp = (oscillator_y[i] * multiplier[i])>>15;
 		oscillator_x[i] -= temp;
 		temp = (oscillator_x[i] * multiplier[i])>>15;
-		oscillator_y[i] += temp;
+		oscillator_y[i] += temp;	
 	}
 }]]></code.krate>
          <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
@@ -293,7 +303,7 @@ for(i=0;i<tonewheels;i++) {
    </patchobj>
    <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="140" y="14">
       <params>
-         <frac32.s.map name="pitch" value="28.0"/>
+         <frac32.s.map name="pitch" value="30.0"/>
          <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
@@ -350,7 +360,7 @@ for(i=0;i<tonewheels;i++) {
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>626</x>
+      <x>627</x>
       <y>52</y>
       <width>713</width>
       <height>715</height>
