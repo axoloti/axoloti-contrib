@@ -140,7 +140,7 @@ phaswidth=(inlet_PM+param_PM)<<3;
  }]]></code.krate>
       <code.srate><![CDATA[if(inlet_active>0){
 phsw=___SMMUL(inlet_phase<<3,phaswidth<<2);
-//put inlet_syncsource into "sync"
+
 sync=inlet_syncsource;
 
 if(step>0)
@@ -187,7 +187,9 @@ async=sync;
 
   switch(waveform>0?1:0){
       case 0:
-      phasU=___SMMUL(inlet_PWM<<3,(SINE2TINTERP((phrase+phsw)<<5,phasU))>>3);
+      int32_t temp;
+      SINE2TINTERP((phrase+phsw)<<5,temp)
+      phasU=___SMMUL(inlet_PWM<<3,temp>>3);
       SINE2TINTERP((phasU+phrase)<<5,phasu);
       phasu=(phasu>>5)+(1<<26);
       break;
@@ -208,6 +210,7 @@ async=sync;
 AM=___SMMUL(inlet_am<<3,phasu<<2);
 outlet_out=___SMMUL((phasu-(1<<26))<<3,InvAM<<2)+___SMMUL(PosAM<<3,AM<<2);
 
-}]]></code.srate>
+}
+else{outlet_out=0;}]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,0 +1,186 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="env2lfo" uuid="c94094b9-8918-4918-9baf-7dbdf33cb88b">
+      <sDescription>Combination of a 3 mode envelope and an internally modulated LFO.
+
+envelopes:
+0=attack/release envelope.
+1=attack/decay/sustain/release envelope
+2=attack/hold high/release
+
+waveforms:
+0=sine
+1=tri
+2=saw
+3=ramp
+4=square
+(all non-alliased)
+
+combo-modes:
+0=select envelope, AM controls maximum level
+1=select LFO, AM controls maximum level
+2=AM morphs between envelope and LFO with middle position being an amplitude modulation of envelope and LFO.
+3=AM morphs between envelope and LFO
+4=envelope, AM sums/subtracts amplitude modulated LFO
+
+invAM inverts the envelope (high-&gt;low,low-&gt;high) before doing AM with the LFO.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>adsr.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="gate" description="gate"/>
+         <frac32 name="rate"/>
+         <frac32 name="AM"/>
+         <int32 name="combo"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env" description="envelope output"/>
+         <frac32.positive name="wave"/>
+         <frac32.positive name="combo"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.klineartime.exp2 name="a"/>
+         <frac32.s.map.kdecaytime.exp name="d"/>
+         <frac32.u.map name="s"/>
+         <frac32.s.map.kdecaytime.exp name="r"/>
+         <int32.hradio name="envMODE">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <int32.hradio name="wave">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <frac32.s.map.kpitch name="rate"/>
+         <bool32.tgl name="sync"/>
+         <frac32.u.map name="startphase"/>
+         <frac32.s.map name="LFM"/>
+         <frac32.s.map name="EFM"/>
+         <bool32.tgl name="invFM"/>
+         <frac32.s.map name="PM"/>
+         <frac32.s.map name="AM"/>
+         <bool32.tgl name="invAM"/>
+         <int32.hradio name="combo">
+            <MaxValue i="5"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t stage;
+int ntrig;
+int32_t val;
+uint32_t Phase;
+int r;
+int32_t sine;
+int32_t wave;
+int32_t env;
+int32_t tmp;]]></code.declaration>
+      <code.init><![CDATA[stage = 0;
+ntrig = 0;
+val = 0;
+Phase = 0;
+r = 1;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_gate>0) && !ntrig) {
+   stage = 1;
+   ntrig = 1;
+}
+if (!(inlet_gate>0) && ntrig) {
+   stage = 0;
+   ntrig=0;
+}
+if (stage == 0){
+   val = ___SMMUL(val,param_r)<<1;
+} else if (stage == 1){
+   val = val + param_a;
+   if (val<0) {
+      val =0x7FFFFFFF;
+   if(param_envMODE==1){stage = 2;}
+   if(param_envMODE==0){stage = 0;}
+   }
+} else if (stage == 2) {
+   val = (param_s<<4) + (___SMMUL(val - (param_s<<4),param_d)<<1);
+}
+env = val>>4;
+outlet_env=env;
+if(param_invFM>0){
+tmp=(1<<27)-env;}
+else{tmp=env;}
+      if (inlet_gate && r && param_sync) {
+         Phase = param_startphase << 5;
+         r = 0;
+      } else {
+         if (!inlet_gate) r = 1;
+     }   
+     int32_t freq;
+      MTOFEXTENDED(param_rate + inlet_rate+___SMMUL(param_EFM<<3,tmp<<2),freq);
+      freq+=___SMMUL(param_LFM<<3,___SMMUL(freq<<5,tmp<<4)<<2);
+      Phase += freq>>2;
+      uint32_t P1=Phase+(___SMMUL(env<<3,param_PM<<2)<<5);
+      switch(param_wave){
+      case 0:
+      	SINE2TINTERP(P1,sine);
+      	break;
+      case 1:
+      	sine=P1-(1<<31);
+      	sine=sine>0?sine:-sine;
+      	sine=sine-(1<<30)<<1;
+      
+      	break;
+	 case 2:
+      	sine=P1-(1<<31);
+      	break;
+      case 3:
+      	sine=-P1+(1<<31);
+      	break;
+	 case 4:
+      	sine=P1>(1<<31)?(1<<31)-1:-(1<<31)+1;
+      	break;
+      	
+      }
+      outlet_wave=wave= (sine>>4);
+
+int32_t out;
+int32_t AM;
+int32_t am=param_AM+inlet_AM;
+am=am+(1<<27);
+am=am>(1<<28)?(1<<29)-am:am;
+am=am-(1<<27);
+int combo=inlet_combo+param_combo;
+combo=combo-(combo/5)*5;
+switch(combo){
+	case 0: 
+	if(param_invAM>0){env=(1<<27)-env;}
+	out=___SMMUL(am<<3,env<<2);break;
+	case 1: 
+	if(param_invAM>0){
+	if(wave>0){wave=(1<<27)-wave;}
+	else{wave=(-1<<27)-wave;}
+		}
+	out=___SMMUL(wave<<3,am<<2);break;
+	case 2: 
+	AM=am>0?am:-am;
+	if(param_invAM>0){
+		env=(1<<27)-env;
+	}
+	out=___SMMUL(___SMMUL(env<<3,wave<<2)<<3,(1<<27)-AM<<2);
+	if(am>0){
+	out+=___SMMUL(AM<<3,wave<<2);
+	}
+	else{
+	out+=___SMMUL(AM<<3,env<<2);
+	}
+	break;
+	case 3:
+	tmp=(am>>1)+(1<<26);
+	if(param_invAM>0){env=(1<<27)-env;}
+	out=___SMMUL((1<<27)-tmp<<3,env<<2)+___SMMUL(tmp<<3,wave<<2);
+	break;
+	case 4: 
+	if(param_invAM>0){tmp=(1<<27)-env;}
+	else{tmp=env;}
+	out=__SSAT(env+___SMMUL(am<<3,___SMMUL(tmp<<3,wave<<2)<<2),28);
+	break;
+}
+
+
+
+outlet_combo=out;]]></code.krate>
+   </obj.normal>
+</objdefs>

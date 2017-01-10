@@ -17,6 +17,7 @@ When using saw/ramp, set it to bipolar, as the input is wrapped up/back down aga
          <frac32 name="pitch2"/>
          <frac32 name="mix1"/>
          <frac32 name="mix2"/>
+         <int32 name="waveform"/>
          <int32 name="step"/>
          <frac32 name="sinemix1"/>
          <frac32 name="sinemix2"/>
@@ -154,10 +155,10 @@ M2step=(MiX2-M2prv)>>4;
 int32_t MIX2b=M2prv;
 M2prv=MiX2;
 
-int32_t Q1=param_W1+param_waveform;
+int32_t Q1=param_W1+param_waveform+inlet_waveform;
 Q1-=(Q1/attr_table.Waveforms)*attr_table.Waveforms;
 Q1=Q1*attr_table.LENGTH;
-int32_t Q2=param_W2+param_waveform;
+int32_t Q2=param_W2+param_waveform+inlet_waveform;
 Q2-=(Q2/attr_table.Waveforms)*attr_table.Waveforms;
 Q2=Q2*attr_table.LENGTH;
 outlet_divide1=param_quant1;
@@ -182,12 +183,12 @@ MIX2a=MiX2;
 
 W[0]=((MIX1a>>4)*param_quant1)>>23;
 MIX1a=(MIX1a-(W[0]<<27)/param_quant1)*param_quant1;
-W[0]=W[0]*step1+param_start1+param_waveform;
+W[0]=W[0]*step1+param_start1+param_waveform+inlet_waveform;
 W[1]=W[0]+step1;
 
 W[2]=((MIX2a>>4)*param_quant2)>>23;
 MIX2a=(MIX2a-(W[2]<<27)/param_quant2)*param_quant2;
-W[2]=W[2]*step2+param_start2+param_waveform;
+W[2]=W[2]*step2+param_start2+param_waveform+inlet_waveform;
 W[3]=W[2]+step2;
 
 for(i=0;i<4;i++){
