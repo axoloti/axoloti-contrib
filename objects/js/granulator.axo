@@ -1,0 +1,254 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="granulator" uuid="0cdd11bd-4de7-464b-af33-16654ea6aa82">
+      <sDescription>A Granulator that plays samples from a table using grains. It allows pitch shifting and time stretching. Uses 5 grains and linear interpolation. Works well together with sptnk/table/slicer.</sDescription>
+      <author>Joren Six</author>
+      <license>BSD</license>
+      <helpPatch>js_granulator_demo.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="start" description="Start the granulator"/>
+         <bool32.rising name="stop" description="Stop the granulator"/>
+         <frac32.bipolar name="time" description="Time stretch factor (-64 = -2x, 64=2x)"/>
+         <frac32.bipolar name="pitch" description="Pitch shift factor (-64 = -2x, 64=2x)"/>
+         <frac32.positive name="position" description="Position in the table"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description=""/>
+         <frac32.positive name="position" description="The current playback position expressed in fractional samples"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table" description="The table with sound information to granulate"/>
+         <spinner name="size" description="The size of grains in ms" MinValue="0" MaxValue="1000" DefaultValue="100"/>
+         <spinner name="interval" description="The time interval in ms between the start of grains" MinValue="0" MaxValue="1000" DefaultValue="20"/>
+         <spinner name="rand" description="Defines how much is added to the size of each grain randomly (percentage)" MinValue="0" MaxValue="200" DefaultValue="20"/>
+      </attribs>
+      <code.declaration><![CDATA[// The definition of an audio grain
+struct Grain {
+	/* Position within the delay line (in fractional samples) */
+	float position;
+	/*  The age (in samples) */
+	int age;
+	/* The size of a grain (in samples) */
+	int size;
+	/* Is the grain currently active? */
+	bool active;
+};
+
+//start-stop status
+int pstart=0;
+int pstop=1;
+
+//  The array of grains
+Grain grains[5];
+
+// The position in the audio buffer in fractional samples
+float position_in_samples = 0.0f;
+
+float prev_position_in_samples = 0.0f;;
+
+// default grain size (in samples)
+int default_grain_size = (float) 100 * 48; //100*10^-3s * 48*10^3samples/s
+
+//default interval between start of grains (in samples)
+int grain_interval = (float) 20 * 48;
+
+// time since last grain was started (in fractional samples)
+int time_since_last_grain = 0;
+
+// Hanning window of 512 elements
+int32_t hanning_window [512];
+
+// In percentage, defines how much is randomly __added__ to the length of a grain
+float randomness_factor = 0.1f;
+
+// Defines how much pitch is changed
+// 2.0 means one octave higher (double), 0.5 one octave lower.
+float pitch_shift_factor = 1.0f;
+
+// Defines how much faster or slower audio is played
+// 2.0 means double tempo, 0.5 half.
+float time_stretch_factor = 1.0f;
+
+
+int current_index = 0;
+
+int sample_count = 0;
+]]></code.declaration>
+      <code.init><![CDATA[//ramp up with hanning
+for(int i=0;i<128;i++){
+	hanning_window[i] = (int32_t)(0.5f*2147483647.0f*(1.0f-cosf(2.0f*PI*i/256.0f)));
+}
+
+//stable state
+for(int i=128;i<384;i++){
+	hanning_window[i] = 2147483647;
+}
+
+//ramp down with hanning
+for(int i=384;i<512;i++){
+	float multiplier = 0.5f * (1.0f - cosf(2.0f*PI*(i-256)/256.0f));
+     hanning_window[i] = multiplier;
+     hanning_window[i] = (int32_t)(0.5f*2147483647.0f*(1.0f-cosf(2.0f*PI*(i-256)/256.0f)));
+}
+
+//results in a window similar to this:
+//     _____________       1.0
+//    /             \ 
+//  _/               \_    0.0
+
+
+default_grain_size = (float) attr_size * 48; //100*10^-3s * 48*10^3samples/s
+
+//default interval between start of grains (in samples)
+grain_interval = (float) attr_interval * 48;
+
+// In percentage, defines how much is randomly __added__ to the length of a grain
+randomness_factor = attr_rand/100.0f;]]></code.init>
+      <code.krate><![CDATA[
+if((inlet_start>0) && !pstart){
+	pstart = 1;
+	pstop = 0;
+}else if(!(inlet_start>0)){
+	pstart = 0;
+}
+if((inlet_stop>0)&&!pstop){
+	pstop=1;
+	pstart=0;
+	position_in_samples=0;
+}
+
+
+int direction = 1;
+if(inlet_time == 0){
+	time_stretch_factor = 1.0f;
+}else{
+	//maps axoloti int to -2,2
+	time_stretch_factor = ( (float) inlet_time )  / (float) (2<<26) * 2.0f;
+	direction = time_stretch_factor >= 0 ? 1 : -1;
+}
+if(inlet_pitch == 0 && inlet_position == 0){
+	pitch_shift_factor = 1.0f;
+}else{
+	//maps axoloti int to -2,2
+	pitch_shift_factor = ( (float) inlet_pitch )  / (float) (2<<26) * 2.0f;
+	if(direction == -1 && pitch_shift_factor > 0){
+		pitch_shift_factor = pitch_shift_factor * direction;	
+	}
+}
+
+if(inlet_position != 0){
+	//the table (sample) index from the inlet
+	int table_index = __USAT(inlet_position,27)>>(27-attr_table.LENGTHPOW);
+	position_in_samples = (float) table_index;
+	time_stretch_factor = 0.0f;
+	if(prev_position_in_samples > position_in_samples){
+		direction = -1;
+	}
+}
+
+if(!pstop){
+
+	for(int j = 0;j<BUFSIZE;j++){
+		outlet_out[j] = 0;
+		
+		// Is a new grain needed?
+		if (time_since_last_grain > grain_interval) {
+			// Find the first inactive (free) grain
+		     for(int i = 0 ; i < 5 ; i++){
+		         if(!grains[i].active){
+		         	  float grain_size = (default_grain_size + GenerateRandomNumber()/2147483647.0f * default_grain_size * randomness_factor);
+		         	  grains[i].size = (int) grain_size;
+		            grains[i].position = position_in_samples - grain_size / pitch_shift_factor;
+		            grains[i].age = 0;
+		            grains[i].active = true;
+		            break;
+		         }
+		      }
+	      	// We just enabled a new grain, so the time since last grain is zero 
+	      	time_since_last_grain = 0;
+		}
+	
+		// gather the output from each grain	
+		for(int i = 0 ; i < 5 ; i++){
+			if(grains[i].active){
+				int window_index = (int) (grains[i].age/ (float) grains[i].size * 512.0f);
+	         		int32_t window_multiplier = hanning_window[window_index];
+	         		
+				//uint32_t asat = (uint32_t) (grains[i].position / time_for_one_audio_sample);
+	    			int table_index = (int) (grains[i].position);
+	    			float fraction = grains[i].position - table_index;
+	    			
+				//read linearly interpolated value from table
+				// see code from the table/readinterp patch
+				int32_t y1 = attr_table.array[table_index&attr_table.LENGTHMASK]<<attr_table.GAIN;
+	   			int32_t y2 = attr_table.array[(table_index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+	
+	   			int32_t frac = ___SMMUL(y2,fraction * (2 << 27));
+	  			int32_t sample = y1 + frac;
+	  			//int32_t sample = attr_table.array[(table_index)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+				
+				// apply window multiplier
+				sample = ___SMMUL(sample,window_multiplier);
+				outlet_out[j] = outlet_out[j] + sample;
+			}
+	      }
+
+		// Hack: this prevents clipping (the output is amplified by some small factor)
+	     outlet_out[j] = ___SMMUL(outlet_out[j] ,hanning_window[64]);
+	
+		// increment time in the audio buffer, can be negative!
+		position_in_samples  = position_in_samples + time_stretch_factor;
+
+		// increment the time since last grain counter
+		time_since_last_grain++;
+
+	     // age each active grain	
+		for(int i = 0 ; i < 5 ; i++){
+			if(grains[i].active){
+				grains[i].age++;
+				grains[i].position = grains[i].position + ((float) direction * pitch_shift_factor);
+	
+				// finally, see if the grain should be deativated
+				if(grains[i].age >= grains[i].size){
+					grains[i].active = false;
+				}
+			}
+		}
+	}
+
+     /*
+      * Debug messages
+	sample_count++;
+	if(sample_count == 1000 ){
+		LogTextMessage("position: %d ", (int) (position_in_samples));
+		int actives = 0;
+		for(int i = 0 ; i < 5 ; i++){
+			if(grains[i].active){
+				actives++;
+		    	}
+		}
+		LogTextMessage("Active grains: %d ", actives);
+		LogTextMessage("Ts factor: %d ",  (int) (time_stretch_factor*100));
+	
+		sample_count = 0;
+	}
+	*/
+}else{
+	//If the granulator is disabled output zeroes (not sure if needed..)
+	for(int j = 0;j<BUFSIZE;j++){
+		outlet_out[j] = 0;
+	}
+}
+
+prev_position_in_samples = position_in_samples;
+
+int32_t val = __USAT(position_in_samples,27);
+outlet_position = val;]]></code.krate>
+      <code.srate><![CDATA[// The S-rate code can be found in the K-rate code block: 
+// Subersive! Rebellion! Anarchy! CHaoS!!111
+//
+// It seemed more readable to me since there is 
+// a mix of K and S rate]]></code.srate>
+   </obj.normal>
+</objdefs>
