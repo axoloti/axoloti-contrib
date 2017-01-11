@@ -12,10 +12,10 @@
          <frac32.u.map name="d1" value="0.0"/>
          <frac32.u.map name="keyclick" value="22.0"/>
          <frac32.u.map name="percvolume" value="44.5"/>
-         <frac32.u.map name="percdecay" value="45.5"/>
+         <frac32.u.map name="percdecay" value="37.0"/>
          <bool32.tgl name="perc2nd3rd" value="1"/>
          <bool32.tgl name="taper" value="1"/>
-         <frac32.u.map name="vibrato" value="57.0"/>
+         <frac32.u.map name="vibrato" value="64.0"/>
          <bool32.tgl name="vibronoff" value="1"/>
          <bool32.tgl name="chorus" value="1"/>
       </params>
@@ -686,7 +686,7 @@ if(param_vibronoff){
 	if(param_chorus){
 		for (i=0;i<BUFSIZE;i++){
 			int32_t pos= i+delay_position;
-			int32_t depth=lfo_phase>>(4-(param_vibrato>>25));
+			int32_t depth=lfo_phase>>(3-(param_vibrato>>25));
 			delay_line[(pos)&0x1f]=tg_out[i];
 			int32_t delayed_sample=(depth&0x7f)*(delay_line[(pos+5+(depth>>7))&0x1f]>>7)+
 						(0x7f-(depth&0x7f))*(delay_line[(pos+4+(depth>>7))&0x1f]>>7);
@@ -698,9 +698,10 @@ if(param_vibronoff){
 	{
 		for (i=0;i<BUFSIZE;i++){
 			int32_t pos=i+delay_position;
+			int32_t depth=lfo_phase>>(3-(param_vibrato>>25));
 			delay_line[(pos)&0x1f]=tg_out[i];
-			int32_t delayed_sample=(lfo_phase&0x7f)*(delay_line[(pos+5+(lfo_phase>>7))&0x1f]>>7)+
-						(0x7f-(lfo_phase&0x7f))*(delay_line[(pos+4+(lfo_phase>>7))&0x1f]>>7);
+			int32_t delayed_sample=(depth&0x7f)*(delay_line[(pos+5+(depth>>7))&0x1f]>>7)+
+						(0x7f-(depth&0x7f))*(delay_line[(pos+4+(depth>>7))&0x1f]>>7);
 			
 			outlet_out[i]=delayed_sample;
 			lfo_phase += lfo_increment;
@@ -741,7 +742,7 @@ else
    </patchobj>
    <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="140" y="14">
       <params>
-         <frac32.s.map name="pitch" value="26.0"/>
+         <frac32.s.map name="pitch" value="35.0"/>
          <frac32.u.map name="reso" value="0.0"/>
       </params>
       <attribs/>
