@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="cf1 4" uuid="67c17755-f85b-4dad-9d92-ccddce9e7e55">
+      <sDescription>1 in to 4 out Attenuverters</sDescription>
+      <author>Philoop</author>
+      <license>BSD</license>
+      <helpPatch>inverted mixer.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="i1"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="o1"/>
+         <frac32.bipolar name="o2"/>
+         <frac32.bipolar name="o3"/>
+         <frac32.bipolar name="o4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="inv1"/>
+         <frac32.s.map name="inv2"/>
+         <frac32.s.map name="inv3"/>
+         <frac32.s.map name="inv4"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[{ 
+      int64_t a1 = (int64_t)(inlet_i1)*(param_inv1 -(1<<21));
+      a1 -= inlet_i1 * (128<<20)-(param_inv1 -(1<<21));
+      outlet_o1 = (a1>>27);	  
+   }    
+    
+ { 
+      int64_t a2 = (int64_t)(inlet_i1)*(param_inv2 -(1<<21));
+      a2 -= inlet_i1 * (128<<20)-(param_inv2 -(1<<21));
+      outlet_o2 = (a2>>27);	  
+   }    
+
+     { 
+      int64_t a3 = (int64_t)(inlet_i1)*(param_inv3 -(1<<21));
+      a3 -= inlet_i1 * (128<<20)-(param_inv3 -(1<<21));
+      outlet_o3 = (a3>>27);	  
+   }    
+
+     { 
+      int64_t a4 = (int64_t)(inlet_i1)*(param_inv4 -(1<<21));
+      a4 -= inlet_i1 * (128<<20)-(param_inv4 -(1<<21));
+      outlet_o4 = (a4>>27);	  
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>
