@@ -11,9 +11,10 @@
          <frac32.u.map name="d113" value="0.0"/>
          <frac32.u.map name="d1" value="0.0"/>
          <frac32.u.map name="keyclick" value="22.0"/>
-         <frac32.u.map name="percvolume" value="44.0"/>
+         <frac32.u.map name="percvolume" value="37.0"/>
          <frac32.u.map name="percdecay" value="45.5"/>
          <bool32.tgl name="perc2nd3rd" value="1"/>
+         <bool32.tgl name="taper" value="0"/>
       </params>
       <attribs/>
       <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-abcad2174dcf">
@@ -39,6 +40,7 @@
             <frac32.u.map name="percvolume"/>
             <frac32.u.map name="percdecay"/>
             <bool32.tgl name="perc2nd3rd"/>
+            <bool32.tgl name="taper"/>
          </params>
          <attribs/>
          <includes/>
@@ -156,6 +158,7 @@ d135 -= 3*(d135>>14)*(percvolume>>15);
 d113 -= 3*(d113>>14)*(percvolume>>15);
 d1 -= 3*(d1>>14)*(percvolume>>15);
 
+if(param_taper){
 //manual tapering and foldback
 for(i=0;i<11;i++){
 	if (key[i]) {
@@ -526,14 +529,15 @@ if (key[60]) {
 	gain[i+19] += 7*(d113>>4);
 	gain[i+24] += 7*(d1>>4);
 }
-
+}
+else{
 /*old code w/o tapering*/
 /*total 61 keys*/
 
 /*no foldback*/
 
-/*for(i=0;i<43;i++){
-	if (key[i+24]) {
+for(i=0;i<43;i++){
+	if (key[i]) {
 		gain[i] += d16;
 		gain[i+19] += d513;
 		gain[i+12] += d8;
@@ -544,12 +548,12 @@ if (key[60]) {
 		gain[i+43] += d113;
 		gain[i+48] += d1;
 	}
-}*/
+}
 
 /*foldback drawbar 9*/
  
-/*for(i=43;i<48;i++){
-	if (key[i+24]) {
+for(i=43;i<48;i++){
+	if (key[i]) {
 		gain[i] += d16;
 		gain[i+19] += d513;
 		gain[i+12] += d8;
@@ -558,14 +562,14 @@ if (key[60]) {
 		gain[i+36] += d2;
 		gain[i+40] += d135;
 		gain[i+43] += d113;
-		gain[i+36] += 3*(d1>>2);
+		gain[i+36] += 7*(d1>>4);
 	}
-}*/
+}
 
 /*foldback drawbars 8,9*/
 
-/*for(i=48;i<51;i++){
-	if (key[i+24]) {
+for(i=48;i<51;i++){
+	if (key[i]) {
 		gain[i] += d16;
 		gain[i+19] += d513;
 		gain[i+12] += d8;
@@ -573,54 +577,54 @@ if (key[60]) {
 		gain[i+31] += d223;
 		gain[i+36] += d2;
 		gain[i+40] += d135;
-		gain[i+31] += 3*(d113>>2);
-		gain[i+36] += 3*(d1>>2);
+		gain[i+31] += 7*(d113>>4);
+		gain[i+36] += 7*(d1>>4);
 	}
-}*/
+}
 
 /*foldback drawbars 7,8,9*/
-/*for(i=51;i<55;i++){
-	if (key[i+24]) {
+for(i=51;i<55;i++){
+	if (key[i]) {
 		gain[i] += d16;
 		gain[i+19] += d513;
 		gain[i+12] += d8;
 		gain[i+24] += d4;
 		gain[i+31] += d223;
 		gain[i+36] += d2;
-		gain[i+28] += 3*(d135>>2);
-		gain[i+31] += 3*(d113>>2);
-		gain[i+36] += 3*(d1>>2);
+		gain[i+28] += 7*(d135>>4);
+		gain[i+31] += 7*(d113>>4);
+		gain[i+36] += 7*(d1>>4);
 	}
-}*/
+}
 
 /*foldback drawbars 6,7,8,2x9*/
-/*for(i=55;i<60;i++){
-	if (key[i+24]) {
+for(i=55;i<60;i++){
+	if (key[i]) {
 		gain[i] += d16;
 		gain[i+19] += d513;
 		gain[i+12] += d8;
 		gain[i+24] += d4;
 		gain[i+31] += d223;
-		gain[i+24] += 3*(d2>>2);
-		gain[i+28] += 3*(d135>>2);
-		gain[i+31] += 3*(d113>>2);
-		gain[i+24] += 9*(d1>>4);
+		gain[i+24] += 7*(d2>>4);
+		gain[i+28] += 7*(d135>>4);
+		gain[i+31] += 7*(d113>>4);
+		gain[i+24] += 7*(d1>>4);
 	}
-}*/
+}
 
 /*foldback drawbars 5,6,7,2x8,2x9*/
-/*if (key[84]) {
+if (key[60]) {
 	gain[60] += d16;
 	gain[60+19] += d513;
 	gain[60+12] += d8;
 	gain[60+24] += d4;
-	gain[60+19] += 3*(d223>>2);
-	gain[60+24] += 3*(d2>>2);
-	gain[60+28] += 3*(d135>>2);
-	gain[60+19] += 9*(d113>>4);
-	gain[60+24] += 9*(d1>>4);
-}*/
-
+	gain[60+19] += 7*(d223>>4);
+	gain[60+24] += 7*(d2>>4);
+	gain[60+28] += 7*(d135>>4);
+	gain[60+19] += 7*(d113>>4);
+	gain[60+24] += 7*(d1>>4);
+}
+}
 
 for(i=0;i<BUFSIZE;i++)
 	outlet_out[i]=0;
@@ -743,7 +747,7 @@ for(i=0;i<tonewheels;i++) {
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>523</x>
+      <x>524</x>
       <y>52</y>
       <width>713</width>
       <height>715</height>
