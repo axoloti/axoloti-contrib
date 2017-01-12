@@ -8,7 +8,12 @@ With the mix-inputs/knobs, you morph through the different waveforms.
 -step sets the step-size through the table, skipping in-between waveforms (wrapping back to 0 when above maximum available waveforms)
 
 For easy use, use my qtsLFO4 for controlling the mix. Connect the divide-output to the D-input (divide) of the qtsLFO4.
-When using saw/ramp, set it to bipolar, as the input is wrapped up/back down again when the input is below 0 or above 64 (turning it into a triangle-shape)</sDescription>
+When using saw/ramp, set it to bipolar, as the input is wrapped up/back down again when the input is below 0 or above 64 (turning it into a triangle-shape)
+Or use my qSmRnd to randonly and smoothly step through the waveforms set by the quantizer.
+
+Both the internal oscillators can also choose between sine-wave or a wave from the table as their &quot;base&quot;, non-morphing, waveform. This waveform is mixed out/in by the sinemix1/2 inlet&apos;s and knobs. The mix goes from 0 to 64 and is clipped to these values. The knobs can thus be used to offset a modulating signal.
+
+An &quot;unlink&quot; is provided between pitch1 and pitch2 to be able to send each oscillator its own (scaled) pitch-sequence</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>table.axh</helpPatch>
@@ -39,6 +44,7 @@ When using saw/ramp, set it to bipolar, as the input is wrapped up/back down aga
          </int32>
          <bool32.tgl name="SS"/>
          <frac32.s.map.pitch name="pitch2"/>
+         <bool32.tgl name="unlink"/>
          <frac32.s.map name="FMW1"/>
          <frac32.s.map name="FMW2"/>
          <int32 name="waveform">
@@ -136,7 +142,7 @@ dir=1;]]></code.init>
 MTOFEXTENDED(param_pitch1+inlet_pitch1,freq1)
 int32_t FMW1=___SMMUL(freq1<<5,param_FMW1<<3);
 int32_t freq2;
-MTOFEXTENDED(param_pitch1+param_pitch2+inlet_pitch1+inlet_pitch2,freq2)
+MTOFEXTENDED((param_unlink>0?0:param_pitch1+inlet_pitch1)+param_pitch2+inlet_pitch2,freq2)
 
 int32_t FMW2=___SMMUL(freq2<<5,param_FMW2<<3);
 int32_t MiX1=param_mix1+inlet_mix1;
