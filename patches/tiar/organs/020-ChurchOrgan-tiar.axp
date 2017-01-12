@@ -17,7 +17,7 @@
       </params>
       <attribs/>
       <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc">
-         <sDescription>Chrch Organ</sDescription>
+         <sDescription>Church Organ</sDescription>
          <license>BSD</license>
          <inlets/>
          <outlets>
@@ -68,7 +68,7 @@ for (i=0;i<128;i++)
 for(i = 0; i < NB_OSCS; i++){
 	g[i] = 0;
 }
-for(i = -19; i < 12; i++){
+for(i = -19; i < -12; i++){
 	if (gates[i+24] != 0) {
 		g[i+19] += param_H3 + (param_H1>>2);
 		g[i+24] += param_H4 + (param_H1>>2);
@@ -266,6 +266,8 @@ for(i = NB_OSCS-5; i < NB_OSCS; i++) {
   gates[data1 & 0x7F] = data2;
 } else if(status == MIDI_NOTE_OFF + attr_midichannel) {
   gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
 }]]></code.midihandler>
       </object>
    </patchobj>
@@ -276,7 +278,7 @@ for(i = NB_OSCS-5; i < NB_OSCS; i++) {
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="9cc12aa2-0554-4234-9a42-c7cd5addd167" name="Reverb" x="224" y="70">
+   <patcher type="patch/patcher" uuid="cccc4923-08f6-4b94-a8af-cd6311f82c09" name="Reverb" x="224" y="70">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.11">
