@@ -1,0 +1,179 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="physical_model_bar" uuid="91bc57c6-5a6e-4597-81d0-c5f6477509a0">
+      <sDescription>Award winning physical modelling engine of a clamped bar. Be aware that the system may get unstable for  abrupt parameter changes and wide ranges so test the applied parameter range well. The &quot;wood&quot; attribute scales approximately linear with the CPU requirement.</sDescription>
+      <author>Johannes Taelman &amp; Hugo &amp; others</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.positive name="mu"/>
+         <bool32 name="trig"/>
+         <frac32.positive name="offset"/>
+         <frac32.positive name="decay"/>
+         <frac32.positive name="velo"/>
+         <frac32buffer name="i1"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="wood" MinValue="8" MaxValue="80" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const int16_t iN = attr_wood; 
+
+int32_t au[iN];
+int32_t au1[iN];
+int32_t au2[iN]; 
+int32_t rc[iN];
+int32_t rcFull[iN];
+
+int32_t* u;
+int32_t* u1;
+int32_t* u2;
+
+int32_t s0; 
+int32_t s1;
+int32_t s2;
+
+int32_t iu0 = 0.5* 0x7FFFFFFF;
+
+int32_t irp_int;
+
+bool trigged;
+
+int32_t decay;
+
+int32_t ran[44] = {2,5,16,8,5,8,21,14,16,27,32,3,7,13,25,7,28,3,30,12,13,14,2,5,16,8,5,8,21,14,16,27,32,3,7,13,25,7,28,3,30,12,13,14};
+
+int32_t k;]]></code.declaration>
+      <code.init><![CDATA[int32_t SR = 48000;                                     // sample rate (Hz)
+
+float K =1;
+
+float muu = 0.5;                                       //% scheme free parameter
+float rp = 0.5;                                      //% position of readout (0-1)
+
+//%%%%%% end global parameters
+
+//%%%%%% begin derived parameters
+
+float kk = 1.f/SR;                                //       % time step
+float hh = sqrtf(K*kk/muu);
+int32_t h = (1.f/iN)*0x7FFFFFFF;                                        
+int32_t mu = muu* 0x7FFFFFFF; 
+
+int32_t ctr = 1<<26;                                      // center location of excitation (0-1)
+
+int32_t wid = 1<<24;                                      // width of excitation 
+
+int32_t iv0 = 0;                                         // maximum initial velocity
+
+k = kk *0x7FFFFFFF;                                  
+irp_int = (rp *iN);
+
+u = au;
+u1 = au1;
+u2 = au2;
+
+trigged=0;
+
+decay=12;
+
+//LogTextMessage("%.f, %.f, %.f",float(s0)/0x7FFFFFF, float(s1)/0x7FFFFFF, float(s2)/0x7FFFFFF);				                        	// rounded grid index for readout
+
+
+//%%%%%% create raised cosine
+
+for(int i=0; i<iN; i++)
+{
+    int32_t pos = i*(h>>4); 
+    int32_t dist = ctr-pos; 
+    int32_t absdist;
+    dist>0?absdist=dist:absdist=-dist;
+    if(absdist<=wid>>1)
+    {
+    	   int32_t arg = dist<<8;
+    	   int32_t r;
+    	   SINE2TINTERP(arg+(1<<30),r);
+        rc[i] = 0x40000000+(r>>1);
+        //LogTextMessage("%.2f",(float)rc[i]/float(0x7FFFFFFF));
+    }
+   //LogTextMessage("%.10f",float(dist)/float(1<<27));
+   //LogTextMessage("%d %d\n",i,pos);
+}
+wid = 0x3FFFFFF;
+for(int i=0; i<iN; i++)
+{
+    int32_t pos = i*(h>>4); 
+    int32_t dist = ctr-pos; 
+    int32_t absdist;
+    dist>0?absdist=dist:absdist=-dist;
+    if(absdist<=wid>>1)
+    {
+    	   int32_t arg = dist<<8;
+    	   int32_t r;
+    	   SINE2TINTERP(arg+(1<<30),r);
+        rcFull[i] = 0x40000000+(r>>1);
+        //LogTextMessage("%.2f",(float)rc[i]/float(0x7FFFFFFF));
+    }
+   //LogTextMessage("%.10f",float(dist)/float(1<<27));
+   //LogTextMessage("%d %d\n",i,pos);
+}]]></code.init>
+      <code.krate><![CDATA[int32_t mu = inlet_mu<<4;
+
+s0 = (2<<27)-3*(___SMMUL(mu,mu)>>2); 
+s1 = ___SMMUL(mu,mu)>>7;
+s2 = -___SMMUL(mu,mu)>>3;
+
+
+int32_t offset = ((inlet_offset-0x3FFFFFF)*iN)/0x7FFFFFF;
+
+if(inlet_trig==1 && trigged ==0)
+{
+	
+
+	//int32_t v = ___SMMUL(inlet_velo,k)<<5;
+	//LogTextMessage("%08x",v);
+	//offset=0;
+	//iu0=0;
+	for(int i=0; i<iN; i++)
+	{
+		if(i+offset>-1 && i+offset < iN)
+		{
+			u2[i] = ___SMMUL(iu0,rc[i+offset]); 
+			u1[i] = ___SMMUL(iu0,rc[i+offset]); 
+					
+			//[i] = ___SMMUL(iu0,___SMMUL(rcFull[i+offset],ran[i+2]<<22)); 
+			//u1[i] = ___SMMUL(iu0,___SMMUL(rcFull[i+offset],ran[i+2]<<22)); 
+		}
+		
+		else
+		{
+			u2[i] = 0;
+			u1[i] = 0;
+		}
+			
+	}
+	trigged=1;
+	decay = inlet_decay>>23;
+}
+if(inlet_trig==0)
+{
+	trigged=0;
+}]]></code.krate>
+      <code.srate><![CDATA[for(int i=2; i<iN; i++)
+{
+	u[i] = -u2[i]+((___SMMLA(s0,u1[i],___SMMLA(s1,u1[i-1]+u1[i+1],___SMMUL(s2,u1[i-2]+u1[i+2]))))<<5);
+	u[i]	-= u[i]>>decay;
+}
+
+outlet_o1 = u[irp_int]>>4;
+
+u1[irp_int]+=inlet_input<<1;
+u2 = u1; 
+u1 = u;
+u=u2;s0 = (2<<27)-3*(___SMMUL(mu,mu)>>2); 
+s1 = ___SMMUL(mu,mu)>>7;
+s2 = -___SMMUL(mu,mu)>>3;]]></code.srate>
+   </obj.normal>
+</objdefs>
