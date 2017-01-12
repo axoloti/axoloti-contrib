@@ -1,0 +1,302 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="14" y="14" text="Paraphonic Dark Strings Patch by T.Rochebois (aka Smashed Transistors/TiaR)"/>
+   <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc" name="object_1" x="14" y="42">
+      <params>
+         <frac32.u.map name="H1" value="64.0"/>
+         <frac32.u.map name="H2" MidiCC="1" value="0.0"/>
+         <frac32.u.map name="fb" value="32.5">
+            <modulators/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc">
+         <sDescription>String</sDescription>
+         <license>BSD</license>
+         <inlets/>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="H1" description="Harm.1"/>
+            <frac32.u.map name="H2" description="Harm.2"/>
+            <frac32.u.map name="fb"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[static const int NB_OSCS = 85;
+int32_t g[NB_OSCS];  // k rate
+int32_t fg[NB_OSCS]; // k rate filtered g
+int32_t ag[NB_OSCS]; // audio rate linear interp of fg
+int32_t dp[NB_OSCS]; // delta phase
+uint32_t p[NB_OSCS]; // phase
+int32_t fy[NB_OSCS]; // filtered outputs
+int32_t rate[NB_OSCS]; // attack/decay rate
+uint8_t gates[128];
+int32_t rnd=137137137;]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<NB_OSCS;i++) {
+  rnd = rnd * 196314165 + 907633515;
+  int32_t detune = 0;  // rnd>>12 for circus organ
+  MTOFEXTENDED((((i - 40) << 21) + detune), dp[i]);
+	p[i] = rnd = rnd * 196314165 + 907633515;;
+	fy[i]=fg[i]=ag[i]=g[i]=0;
+	
+	rate[i]=3 + ((i*i)/(4*NB_OSCS));
+	
+}
+
+for (i=0;i<128;i++)
+	gates[i]=0;]]></code.init>
+         <code.krate><![CDATA[int i,j;
+for(i = 0; i < NB_OSCS; i++){
+	g[i] = 0;
+}
+for(i = 0; i < NB_OSCS-12; i++){
+	if (gates[i+24] != 0) {
+		g[i] += param_H1;
+		g[i+12] += param_H2;
+	}
+}
+for(i=NB_OSCS-12;i<NB_OSCS;i++){
+	if (gates[i+24] != 0) {
+		g[i] += param_H1+(param_H2>>1);
+	}
+}
+
+int32_t fb = param_fb;
+for(j = 0; j < BUFSIZE; j++) {
+	outlet_out[j] = 0;
+}
+
+for(i = 0; i < NB_OSCS; i++) {
+  fg[i] = (4096-rate[i])*(fg[i] >> 12) + rate[i]*(g[i] >> 14);
+  int32_t dg = (fg[i] - ag[i]) >> 4;
+  for(j = 0; j < BUFSIZE; j++) {
+    p[i] += dp[i];
+    int32_t y = sine2t[ ((uint32_t)(p[i] + (___SMMUL(fy[i], fb) << 4) )) >> 20 ];
+    fy[i] = (fy[i] >> 1) + (y >> 1);
+    ag[i] += dg;
+    int32_t out2 = ___SMMUL(fy[i],fy[i]) - 0x20000000;
+    outlet_out[j] = __SMMLA(out2, ag[i], outlet_out[j]);
+  }
+}
+for(j = 0; j < BUFSIZE; j++) {
+    outlet_out[j] <<= 2;
+  }]]></code.krate>
+         <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
+  gates[data1 & 0x7F] = data2;
+} else if(status == MIDI_NOTE_OFF + attr_midichannel) {
+  gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="84" y="42">
+      <params>
+         <frac32.s.map name="freq" value="-24.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="182" y="42">
+      <params>
+         <frac32.u.map name="InGain" value="14.0"/>
+         <frac32.u.map name="OutGain" value="18.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_3" x="322" y="42">
+      <params>
+         <frac32.u.map name="depth" value="0.5999999046325684"/>
+         <frac32.s.map name="speed" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_1" x="448" y="42">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="4738"/>
+      </attribs>
+   </obj>
+   <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_1" x="560" y="42">
+      <params>
+         <frac32.u.map name="depth" value="10.5"/>
+         <frac32.s.map name="speed" value="-58.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_3" x="448" y="182">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="2018"/>
+      </attribs>
+   </obj>
+   <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_2" x="560" y="182">
+      <params>
+         <frac32.u.map name="depth" value="33.5"/>
+         <frac32.s.map name="speed" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="700" y="182">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_5" x="336" y="392">
+      <params>
+         <frac32.u.map name="depth" value="0.20000000000000007"/>
+         <frac32.s.map name="speed" value="5.899999618530273">
+            <modulators>
+               <modulation sourceName="AftTch" modName="" value="-11.0"/>
+            </modulators>
+         </frac32.s.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_2" x="448" y="392">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="789"/>
+      </attribs>
+   </obj>
+   <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_4" x="560" y="392">
+      <params>
+         <frac32.u.map name="depth" value="26.0"/>
+         <frac32.s.map name="speed" value="-62.89999961853027"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="700" y="392">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="826" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="hp1_1" outlet="out"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="out"/>
+         <dest obj="hp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="obj_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="allpass_1" outlet="out"/>
+         <dest obj="obj_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="allpass_3" outlet="out"/>
+         <dest obj="obj_2" inlet="in"/>
+         <dest obj="obj_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="L"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="obj_3" outlet="L"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="obj_2" outlet="L"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="R"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="obj_3" outlet="R"/>
+         <dest obj="mix_2" inlet="in2"/>
+         <dest obj="allpass_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_2" outlet="R"/>
+         <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="allpass_2" outlet="out"/>
+         <dest obj="obj_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_4" outlet="L"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="obj_4" outlet="R"/>
+         <dest obj="mix_2" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="obj_5" outlet="L"/>
+         <dest obj="allpass_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_5" outlet="R"/>
+         <dest obj="allpass_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+      <Author>SmashedTransistors (T.Rochebois)</Author>
+      <License>LGPL</License>
+   </settings>
+   <notes><![CDATA[Paraphonic Church Organ Patch by T.Rochebois (aka Smashed Transistors/TiaR)
+
+It is totally polyphonic (from MIDI note 5 (F) to MIDI note 114 (F#))
+
+It is based on 91 oscillators.
+Some oscillators are pure sine.
+Some are self phase modulated sine oscs (they generate even and odd harmonics).
+Others are self square phase modulated (they only have odd harmonics).
+These generators roughly simulates the different organ pipes.
+
+When a key is played, multiple "pipes" are triggered.
+
+H1 to H16 control the mixture : what relative pipes will be triggered by a key.
+(D5 and D10 are rather Detuned harmonics.)
+
+fb controls the pipes brilliance.
+0 is dull
+45 is optimal.]]></notes>
+   <windowPos>
+      <x>814</x>
+      <y>164</y>
+      <width>1044</width>
+      <height>779</height>
+   </windowPos>
+</patch-1.0>
