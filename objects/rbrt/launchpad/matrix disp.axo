@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="matrix disp" uuid="19c5185b-b1c3-468d-9100-4a355b274e42">
+   <obj.normal id="matrix disp" uuid="d31f39e3-a22d-4bc2-8fa8-c86c460d7751">
       <sDescription>visual feedback of table data for the novation launchpad (NOT working with a LP mark I)</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -9,34 +9,32 @@
          <int32 name="offset" description="offset in the table to read from"/>
          <int32 name="start" description="display start modulation"/>
          <int32 name="length" description="display length modulation"/>
-         <int32 name="onC" description="color on modulation"/>
-         <int32 name="offC" description="color off modulation"/>
+         <int32 name="coloron" description="color on modulation"/>
+         <int32 name="coloroff" description="color off modulation"/>
          <bool32.risingfalling name="active" description="active??"/>
+         <bool32.rising name="redraw"/>
       </inlets>
       <outlets>
          <int32 name="offset" description="offset through"/>
          <int32 name="start" description="start through"/>
-         <int32 name="onC" description="color on through"/>
-         <int32 name="offC" description="color off through"/>
+         <int32 name="coloron" description="color on through"/>
+         <int32 name="coloroff" description="color off through"/>
+         <int32 name="blocksize"/>
       </outlets>
       <displays/>
       <params>
          <bool32.tgl name="active" description="active??"/>
-         <int32 name="onC" description="color on">
-            <MinValue i="0"/>
-            <MaxValue i="14"/>
-         </int32>
-         <int32 name="offC" description="color off">
-            <MinValue i="0"/>
-            <MaxValue i="14"/>
-         </int32>
          <int32 name="length" description="length of the area to display">
             <MinValue i="1"/>
             <MaxValue i="64"/>
          </int32>
          <int32 name="start" description="display start on the LP">
             <MinValue i="0"/>
-            <MaxValue i="64"/>
+            <MaxValue i="63"/>
+         </int32>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="10000000"/>
          </int32>
       </params>
       <attribs>
@@ -49,86 +47,160 @@
                <string>MIDI_DEVICE_USB_HOST, 1</string>
             </CEntries>
          </combo>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+         <combo name="coloron">
+            <MenuEntries>
+               <string>off</string>
+               <string>red W</string>
+               <string>red M</string>
+               <string>red S</string>
+               <string>orange W</string>
+               <string>orange S</string>
+               <string>green W</string>
+               <string>green M</string>
+               <string>green S</string>
+               <string>lime 1 W</string>
+               <string>lime 1 S</string>
+               <string>lime 2</string>
+               <string>yellow W</string>
+               <string>yellow M</string>
+               <string>yellow S</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>18</string>
+               <string>35</string>
+               <string>16</string>
+               <string>32</string>
+               <string>48</string>
+               <string>33</string>
+               <string>50</string>
+               <string>49</string>
+               <string>17</string>
+               <string>34</string>
+               <string>51</string>
+            </CEntries>
+         </combo>
+         <combo name="coloroff">
+            <MenuEntries>
+               <string>off</string>
+               <string>red W</string>
+               <string>red M</string>
+               <string>red S</string>
+               <string>orange W</string>
+               <string>orange S</string>
+               <string>green W</string>
+               <string>green M</string>
+               <string>green S</string>
+               <string>lime 1 W</string>
+               <string>lime 1 S</string>
+               <string>lime 2</string>
+               <string>yellow W</string>
+               <string>yellow M</string>
+               <string>yellow S</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>18</string>
+               <string>35</string>
+               <string>16</string>
+               <string>32</string>
+               <string>48</string>
+               <string>33</string>
+               <string>50</string>
+               <string>49</string>
+               <string>17</string>
+               <string>34</string>
+               <string>51</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[int ntrig;
 int rtrig;
 uint8_t map[64];
-uint8_t cmap[15];
 int i;
-int c;
-int prevc;
-int a;
-int preva;
 int vt;
 int trigt;
 int prevt[64];
 int length;
-int plength;]]></code.declaration>
+int plength;
+
+uint8_t coloron;
+uint8_t start;
+uint8_t coloroff;
+uint32_t offset;]]></code.declaration>
       <code.init><![CDATA[{ 
   int i;
-  for(i=0;i<16;i++) prevt[i]= -666 ;}
+  for(i=0;i<64;i++) prevt[i]= -666 ;}
 
   { 
   int i;
   for(i=0;i<64;i++) 
 
   map[i] = (((i >> 3)<< 3) + i);
-
-}
-
-cmap[0] = 0;
-cmap[1] = 1;
-cmap[2] = 2;
-cmap[3] = 3;
-cmap[4] = 18;
-cmap[5] = 35;
-cmap[6] = 16;
-cmap[7] = 32;
-cmap[8] = 48;
-cmap[9] = 33;
-cmap[10] = 50;
-cmap[11] = 49;
-cmap[12] = 17;
-cmap[13] = 34;
-cmap[14] = 51;]]></code.init>
-      <code.krate><![CDATA[c = (inlet_onC + inlet_offC + param_onC + param_offC);
-a = (inlet_active || param_active);
+}]]></code.init>
+      <code.krate><![CDATA[coloron = (inlet_coloron + attr_coloron);
+coloroff = (inlet_coloroff + attr_coloroff);
+offset = (param_offset + inlet_offset);
+start = (inlet_start+ param_start);
 
 //redraw
-if ((c != prevc) || (a != preva)) {
-	prevc = c;
-	preva = a;
+if ((inlet_redraw > 0) && !ntrig){
+	ntrig = 1;
 { 
   int ii;
   for(ii=0;ii<64;ii++) prevt[ii]= -666 ;}
   }
-
-
+if (!(inlet_redraw > 0 )) ntrig = 0;
 
 length = ((inlet_length +param_length + inlet_start +param_start) > 64) ?  64 : (inlet_length + param_length);
-plength = length;
-if (plength != length ) i = 0;
+if (plength != length ){ i = 0;plength = length;}
     
 //display steps
-  if (a) { 
+  if (inlet_active || param_active) { 
 { 
   i += 1;
   if (i == (length)) i = 0; 
-  vt = attr_table.array[__USAT((inlet_offset + i),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+  vt = attr_table.array[__USAT((offset + (i << attr_blocksize)),attr_table.LENGTHPOW)]<<attr_table.GAIN;
 if (prevt[i] != vt ) trigt = 0;
 prevt[i] = vt;
 if (vt && (!trigt)) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON  ,map[(i + (inlet_start+ param_start))],cmap[(inlet_onC + param_onC)]);  trigt=1;
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON  ,map[(i + start)],(coloron));  trigt=1;
 }
 if ((!vt) && (!trigt)){
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(i + (inlet_start+ param_start))],cmap[(inlet_offC + param_offC)]);  trigt=1;
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(i + start)],(coloroff));  trigt=1;
 }
  }
 }
 
-outlet_onC = (inlet_onC + param_onC);
-outlet_offC = (inlet_offC + param_offC);
-outlet_offset = inlet_offset;
-outlet_start = (inlet_start + param_start);]]></code.krate>
+outlet_coloron = coloron;
+outlet_coloroff = coloroff;
+outlet_offset = offset;
+outlet_start = start;
+outlet_blocksize = attr_blocksize;]]></code.krate>
    </obj.normal>
 </objdefs>

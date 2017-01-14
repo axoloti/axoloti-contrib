@@ -9,6 +9,7 @@
       <inlets>
          <int32 name="offset" description="offset in the table"/>
          <int32 name="velon" description="velocity on modulation"/>
+         <bool32.rising name="redraw"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -88,11 +89,13 @@ map[3] = param_i3;
 
 //re-init
 
-if (inlet_velon != prevon)
+if ((inlet_redraw > 0) && !ntrig){
+	ntrig = 1;
 { 
-  int i;
-  for(i=0;i<4;i++) prevt[i]= -666 ;prevon = inlet_velon;}
-
+  int ii;
+  for(ii=0;ii<4;ii++) prevt[ii]= -666 ;}
+  }
+if (!(inlet_redraw > 0 )) ntrig = 0;
 
 
 //display steps

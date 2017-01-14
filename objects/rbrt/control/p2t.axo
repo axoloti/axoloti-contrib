@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="p2t" uuid="5051eb28-2556-42e9-a7e5-2aef68b09781">
+      <sDescription>toggle driven by pulses.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets>
+         <bool32 name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[   int ntrig;
+   int p_set;
+   int p_reset;
+   int op;
+]]></code.declaration>
+      <code.init><![CDATA[p_set = 0;
+p_reset = 0;
+op = 0;
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {op = !op; ntrig=1;}
+if (!(inlet_trig>0)) ntrig=0;
+
+outlet_o= (op<<27);]]></code.krate>
+   </obj.normal>
+</objdefs>

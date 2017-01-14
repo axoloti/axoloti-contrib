@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="step disp" uuid="fdc567ec-904b-46ff-a12c-effb063c63fd">
+   <obj.normal id="step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb">
       <sDescription>display a step counter on a novation launchpad</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -8,21 +8,18 @@
       <inlets>
          <int32 name="offset" description="offset in the table to read from"/>
          <int32 name="start" description="display start on the LP"/>
-         <int32 name="onC" description="color on"/>
-         <int32 name="offC" description="color off"/>
-         <int32 name="stepC" description="step color modulation"/>
+         <int32 name="coloron" description="color on"/>
+         <int32 name="coloroff" description="color off"/>
+         <int32 name="blocksize"/>
+         <int32 name="color" description="step color modulation"/>
          <int32 name="step" description="current step"/>
-         <frac32.bipolar name="delay" description="delay time for step position display"/>
          <bool32 name="active" description="active??"/>
+         <bool32.rising name="redraw"/>
       </inlets>
       <outlets/>
       <displays/>
       <params>
-         <int32 name="stepC" description="step color">
-            <MinValue i="0"/>
-            <MaxValue i="14"/>
-         </int32>
-         <bool32.tgl name="active" description="active?"/>
+         <bool32.tgl name="active" noLabel="true"/>
       </params>
       <attribs>
          <objref name="table" description="table to display"/>
@@ -34,59 +31,83 @@
                <string>MIDI_DEVICE_USB_HOST, 1</string>
             </CEntries>
          </combo>
+         <combo name="color">
+            <MenuEntries>
+               <string>off</string>
+               <string>red W</string>
+               <string>red M</string>
+               <string>red S</string>
+               <string>orange W</string>
+               <string>orange S</string>
+               <string>green W</string>
+               <string>green M</string>
+               <string>green S</string>
+               <string>lime 1 W</string>
+               <string>lime 1 S</string>
+               <string>lime 2</string>
+               <string>yellow W</string>
+               <string>yellow M</string>
+               <string>yellow S</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>18</string>
+               <string>35</string>
+               <string>16</string>
+               <string>32</string>
+               <string>48</string>
+               <string>33</string>
+               <string>50</string>
+               <string>49</string>
+               <string>17</string>
+               <string>34</string>
+               <string>51</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[int ntrig;
+int rtrig;
 int prev;
-int32_t val;
 int32_t map[64];
-uint8_t cmap[15];
-int v;
-int i;]]></code.declaration>
+int32_t v;]]></code.declaration>
       <code.init><![CDATA[{ 
   int i;
   for(i=0;i<64;i++) 
 
   map[i] = (((i >> 3)<< 3) + i);
 
+}]]></code.init>
+      <code.krate><![CDATA[if (param_active || inlet_active) { 
+	rtrig = 0;
+
+if ((inlet_redraw > 0) && !ntrig){
+	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[inlet_step + inlet_start],(attr_color + inlet_color));
+	ntrig = 1;
+}
+	
+if (!(inlet_redraw > 0 )) ntrig = 0;
+
+if (inlet_step  != prev) {
+  MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step  + inlet_start)],(attr_color + inlet_color));
+  
+  v = attr_table.array[__USAT((inlet_offset + (prev << inlet_blocksize)),attr_table.LENGTHPOW)]<<attr_table.GAIN ;
+  if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(prev  + inlet_start)],inlet_coloron);
+     	else
+     	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(prev + inlet_start)],inlet_coloroff);
+prev = inlet_step;
 }
 
-cmap[0] = 0;
-cmap[1] = 1;
-cmap[2] = 2;
-cmap[3] = 3;
-cmap[4] = 18;
-cmap[5] = 35;
-cmap[6] = 16;
-cmap[7] = 32;
-cmap[8] = 48;
-cmap[9] = 33;
-cmap[10] = 50;
-cmap[11] = 49;
-cmap[12] = 17;
-cmap[13] = 34;
-cmap[14] = 51;]]></code.init>
-      <code.krate><![CDATA[if (param_active || inlet_active) { 
-v = attr_table.array[__USAT((inlet_offset + inlet_step),attr_table.LENGTHPOW)]<<attr_table.GAIN ;
-if ((inlet_step  != prev) && !ntrig) {
-  val = 1 << 30;
-  ntrig = 1;
-  MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step + inlet_start)],cmap[(param_stepC + inlet_stepC)]);
 }
-else {
-  if (!(inlet_step != prev))
-    ntrig = 0;
-  if (val>0) {
-    int32_t t;
-    MTOF(-((1<<12 )- inlet_delay),t);
-     val -= t>>3;
-     if (val<=0) {
-          if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step + inlet_start)],cmap[inlet_onC]);
+
+else if (!rtrig){
+v = attr_table.array[__USAT((inlet_offset + (inlet_step << inlet_blocksize)),attr_table.LENGTHPOW)]<<attr_table.GAIN ;
+  if (v) MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step  + inlet_start)],inlet_coloron);
      	else
-     	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step + inlet_start)],cmap[inlet_offC]);
-     	  	     }
-  } 
-}
-prev = inlet_step;
+     	MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON ,map[(inlet_step + inlet_start)],inlet_coloroff);
+rtrig = 1;
 }]]></code.krate>
    </obj.normal>
 </objdefs>

@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="sat" uuid="c3a0d24c-0395-484d-8398-210f944454fa">
+      <sDescription>mod of a mod.
+A saturator distortion based on dist/soft and filter/lp1 - hp1 by Johannes Taelman,modded by sptnk,modded by me.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32.positive name="drive"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t f;
+int32_t feed;
+int32_t satout = 0;]]></code.declaration>
+      <code.srate><![CDATA[int32_t ts = __SSAT(___SMMLA(satout,inlet_drive<<4,inlet_in),27);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+satout = ts + (ts>>1) - (tsq31p3);
+
+outlet_out = satout;]]></code.srate>
+   </obj.normal>
+</objdefs>

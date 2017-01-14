@@ -1,8 +1,8 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c">
-      <sDescription>reads a block of 8 elements from a table ,starting at &apos;step&apos;.
+   <obj.normal id="step read H 4" uuid="0223c895-8944-4e0e-8e30-a37392a6d241">
+      <sDescription>reads a block of 4 elements from a table ,starting at &apos;step&apos;.
 &apos;trig&apos; = puts out a pulse if the first element of the block is greater than 0.
-&apos;h0&apos; - &apos;h7&apos; = the 8 values at index &apos;step&apos; + index of the output,
+&apos;h0&apos; - &apos;h3&apos; = the 4 values at index &apos;step&apos; + index of the output,
 IF &apos;trig&apos; is &apos;true&apos;.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -17,10 +17,6 @@ IF &apos;trig&apos; is &apos;true&apos;.</sDescription>
          <frac32 name="h1"/>
          <frac32 name="h2"/>
          <frac32 name="h3"/>
-         <frac32 name="h4"/>
-         <frac32 name="h5"/>
-         <frac32 name="h6"/>
-         <frac32 name="h7"/>
       </outlets>
       <displays/>
       <params>
@@ -37,11 +33,7 @@ int offset;
 int h0;
 int h1;
 int h2;
-int h3;
-int h4;
-int h5;
-int h6;
-int h7;]]></code.declaration>
+int h3;]]></code.declaration>
       <code.krate><![CDATA[offset = (inlet_offset + param_offset);
 
 
@@ -55,24 +47,12 @@ if ((inlet_step != prev ) && ((attr_table.array[__USAT((inlet_step+ offset),attr
 	outlet_h2 = h2;
 	h3 = attr_table.array[__USAT((inlet_step+ offset +3),attr_table.LENGTHPOW)]<<attr_table.GAIN;
 	outlet_h3 = h3;
-	h4 = attr_table.array[__USAT((inlet_step+ offset +4),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-	outlet_h4 = h4;
-	h5 = attr_table.array[__USAT((inlet_step+ offset +5),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-	outlet_h5 = h5;
-	h6 = attr_table.array[__USAT((inlet_step+ offset +6),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-	outlet_h6 = h6;
-	h7 = attr_table.array[__USAT((inlet_step+ offset +7),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-	outlet_h7 = h7;
 }
 else {outlet_trig = 0;
 outlet_h0 = h0;
 outlet_h1 = h1;
 outlet_h2 = h2;
 outlet_h3 = h3;
-outlet_h4 = h4;
-outlet_h5 = h5;
-outlet_h6 = h6;
-outlet_h7 = h7;
 }
 prev = inlet_step;]]></code.krate>
    </obj.normal>

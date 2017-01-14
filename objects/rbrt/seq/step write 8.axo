@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="step write 8" uuid="a6976a04-0466-412e-8c9a-9bb64e705828">
+      <sDescription>if the value at an inlet changes,it&apos;s written to the table at inlet &apos;step&apos;.
+if &apos;rec&apos; is on,after the values changes for the first time,it will be written to the table at inlet 
+&apos;step&apos; ALL THE TIME (if it changes or not...)
+useful for live-recording of modulation data.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset"/>
+         <int32.positive name="step"/>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+         <frac32 name="v5"/>
+         <frac32 name="v6"/>
+         <frac32 name="v7"/>
+         <bool32.risingfalling name="rec"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="offset" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t prev0;
+      uint32_t prev1;
+      uint32_t prev2;
+      uint32_t prev3;
+      uint32_t prev4;
+      uint32_t prev5;
+      uint32_t prev6;
+      uint32_t prev7;
+
+int ntrig0;
+int ntrig1;
+int ntrig2;
+int ntrig3;
+int ntrig4;
+int ntrig5;
+int ntrig6;
+int ntrig7;]]></code.declaration>
+      <code.init><![CDATA[prev0 = 0;
+prev1 = 0;
+prev2 = 0;
+prev3 = 0;
+prev4 = 0;
+prev5 = 0;
+prev6 = 0;
+prev7 = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_rec > 0 ) && (inlet_v0 != prev0)) ntrig0 = 1;
+if (!(inlet_rec > 0 )) ntrig0 = 0;
+if ((inlet_rec > 0 ) && (inlet_v1 != prev1)) ntrig1 = 1;
+if (!(inlet_rec > 0 )) ntrig1 = 0;
+if ((inlet_rec > 0 ) && (inlet_v2 != prev2)) ntrig2 = 1;
+if (!(inlet_rec > 0 )) ntrig2 = 0;
+if ((inlet_rec > 0 ) && (inlet_v3 != prev3)) ntrig3 = 1;
+if (!(inlet_rec > 0 )) ntrig3 = 0;
+if ((inlet_rec > 0 ) && (inlet_v4 != prev4)) ntrig4 = 1;
+if (!(inlet_rec > 0 )) ntrig4 = 0;
+if ((inlet_rec > 0 ) && (inlet_v5 != prev5)) ntrig5 = 1;
+if (!(inlet_rec > 0 )) ntrig5 = 0;
+if ((inlet_rec > 0 ) && (inlet_v6 != prev6)) ntrig6 = 1;
+if (!(inlet_rec > 0 )) ntrig6 = 0;
+if ((inlet_rec > 0 ) && (inlet_v7 != prev7)) ntrig7 = 1;
+if (!(inlet_rec > 0 )) ntrig7 = 0;
+
+if ((inlet_v0 != prev0)||(ntrig0 > 0 )){
+attr_table.array[inlet_offset + 0 + inlet_step]=__SSAT(inlet_v0,28)>>attr_table.GAIN;
+prev0 = inlet_v0;}
+if ((inlet_v1 != prev1)||(ntrig1 > 0 )){
+attr_table.array[inlet_offset + 1 + inlet_step]=__SSAT(inlet_v1,28)>>attr_table.GAIN;
+prev1 = inlet_v1;}
+if ((inlet_v2 != prev2)||(ntrig2 > 0 )){
+attr_table.array[inlet_offset + 2 + inlet_step]=__SSAT(inlet_v2,28)>>attr_table.GAIN;
+prev2 = inlet_v2;}
+if ((inlet_v3 != prev3)||(ntrig3 > 0 )){
+attr_table.array[inlet_offset + 3 + inlet_step]=__SSAT(inlet_v3,28)>>attr_table.GAIN;
+prev3 = inlet_v3;}
+if ((inlet_v4 != prev4)||(ntrig4 > 0 )){
+attr_table.array[inlet_offset + 4 + inlet_step]=__SSAT(inlet_v4,28)>>attr_table.GAIN;
+prev4 = inlet_v4;}
+if ((inlet_v5 != prev5)||(ntrig5 > 0 )){
+attr_table.array[inlet_offset + 5 + inlet_step]=__SSAT(inlet_v5,28)>>attr_table.GAIN;
+prev5 = inlet_v5;}
+if ((inlet_v6 != prev6)||(ntrig6 > 0 )){
+attr_table.array[inlet_offset + 6 + inlet_step]=__SSAT(inlet_v6,28)>>attr_table.GAIN;
+prev6 = inlet_v6;}
+if ((inlet_v7 != prev7)||(ntrig7 > 0 )){
+attr_table.array[inlet_offset + 7 + inlet_step]=__SSAT(inlet_v7,28)>>attr_table.GAIN;
+prev7 = inlet_v7;}]]></code.krate>
+   </obj.normal>
+</objdefs>
