@@ -202,8 +202,9 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author>jt</Author>
-      <License>viral!</License>
+      <Author>T.Rochebois</Author>
+      <License>LGPL</License>
+      <Attributions>based on jt&apos;s stereo chorus</Attributions>
    </settings>
    <notes><![CDATA[A simple stereo chorus, based on two out-of-phase sine-wave modulated linear interpolating delayline readers.
 ]]></notes>
