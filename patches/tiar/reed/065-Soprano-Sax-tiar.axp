@@ -1,0 +1,449 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="14" y="14" text="Paraphonic 65 Soprano Sax by T.Rochebois (aka Smashed Transistors/TiaR)"/>
+   <obj type="fx/flanger" uuid="cbdf3e86-d62a-4582-ad39-b1a62957b627" name="obj_2" x="896" y="28">
+      <params>
+         <frac32.u.map name="depth" value="4.0"/>
+         <frac32.u.map name="fdbk" value="38.0"/>
+         <frac32.s.map name="speed" value="-48.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="14" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-55.59999990463257"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="112" y="42">
+      <params>
+         <frac32.u.map name="amp" value="4.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="210" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_4" x="364" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-56.59999990463257"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="462" y="42">
+      <params>
+         <frac32.u.map name="amp" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="560" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-38.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/fx/TripleVibrato" uuid="c4d37f4a-38be-438f-8bf8-13b9ba0aaadb" name="obj_1" x="728" y="42">
+      <params>
+         <frac32.u.map name="depth_1" value="0.14999961853027344"/>
+         <frac32.s.map name="sine_1" value="3.0"/>
+         <frac32.u.map name="depth_2" value="0.19999980926513672"/>
+         <frac32.s.map name="sine_2" value="1.0"/>
+         <frac32.u.map name="depth_3" value="0.25"/>
+         <frac32.s.map name="sine_3" value="2.499999523162842"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/flanger" uuid="cbdf3e86-d62a-4582-ad39-b1a62957b627" name="obj_3" x="1078" y="56">
+      <params>
+         <frac32.u.map name="depth" value="4.0"/>
+         <frac32.u.map name="fdbk" value="38.0"/>
+         <frac32.s.map name="speed" value="-54.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/flanger" uuid="cbdf3e86-d62a-4582-ad39-b1a62957b627" name="obj_4" x="1260" y="56">
+      <params>
+         <frac32.u.map name="depth" value="4.0"/>
+         <frac32.u.map name="fdbk" value="38.0"/>
+         <frac32.s.map name="speed" value="-54.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc" name="object_1" x="14" y="126">
+      <params>
+         <frac32.u.map name="fb0" value="11.0"/>
+         <frac32.u.map name="fb1" value="64.0"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc">
+         <sDescription>String</sDescription>
+         <license>BSD</license>
+         <inlets>
+            <frac32.bipolar name="vib"/>
+            <frac32.bipolar name="vib2"/>
+         </inlets>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="fb0"/>
+            <frac32.u.map name="fb1"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[static const int NB_OSCS = 85;
+int32_t g[NB_OSCS];  // k rate
+int32_t AREnv[NB_OSCS]; // k rate filtered g
+int32_t dp[NB_OSCS]; // delta phase
+uint32_t p[NB_OSCS]; // phase
+int32_t fy[NB_OSCS]; // filtered outputs
+const int32_t attack  =0x04000000;
+const int32_t release =0x04000000;
+uint8_t gates[128];
+int32_t rnd=137137137;]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<NB_OSCS;i++) {
+  rnd = rnd * 196314165 + 907633515;
+  int32_t detune = rnd>>14;  // rnd>>12 for circus organ
+  MTOFEXTENDED((((i - 40) << 21) + detune), dp[i]);
+	p[i] = rnd = rnd * 196314165 + 907633515;;
+	fy[i]=AREnv[i]=g[i]=0;
+}
+
+for (i=0;i<128;i++)
+	gates[i]=0;]]></code.init>
+         <code.krate><![CDATA[int i,j;
+for(i = 0; i < NB_OSCS; i++){
+	g[i] = 0;
+}
+for(i = 0; i < NB_OSCS; i++){
+	if (gates[i+24] != 0) {
+		g[i] = ((int32_t)gates[i+24])<<17;
+	}
+}
+
+
+for(j = 0; j < BUFSIZE; j++) {
+	outlet_out[j] = 0;
+}
+for(i = 12; i < NB_OSCS-12; i++) {
+int32_t lfo;
+if((i%4)==0)          lfo = inlet_vib >>4;
+else if((i%4)==1)     lfo = -inlet_vib >>4;
+else if((i%4)==2)     lfo = inlet_vib2 >>4;
+else                  lfo = -inlet_vib2 >>4;
+
+
+// ________________________________________________________________________________
+//                                                                          AR env
+  int32_t interpEnv = AREnv[i];      // audio rate interpolated env start point
+  AREnv[i] = __SMMLA(g[i] > AREnv[i] ? attack : release ,
+  g[i] - AREnv[i], AREnv[i]);
+  int32_t deltaEnv = (AREnv[i] - interpEnv) >> 4;  // delta for linear interp on 16 samples
+//int32_t fb = param_fb<<4;
+int32_t fb = ___SMMUL(param_fb1,                AREnv[i]<<7    );
+        fb = ___SMMLA(param_fb0, (((1<<27)-1) - (AREnv[i]<<3))<<4, fb);
+fb <<= 5;
+// ________________________________________________________________________________
+  int32_t _fy = fy[i];
+  int32_t _dp = __SMMLA(lfo, dp[i], dp[i]);
+// ________________________________________________________________________________
+  for(j = 0; j < BUFSIZE; j++) {
+    p[i] += _dp;
+    int32_t y = sine2t[ ((uint32_t)(p[i] + (___SMMUL(_fy, fb)) )) >> 20 ];
+    _fy = (_fy >> 1) + (y >> 1);
+    interpEnv += deltaEnv;
+    outlet_out[j] = __SMMLA(_fy, interpEnv, outlet_out[j]);
+  }
+// ________________________________________________________________________________
+  fy[i] = _fy;
+// ________________________________________________________________________________
+}]]></code.krate>
+         <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
+  gates[data1 & 0x7F] = data2;
+} else if(status == MIDI_NOTE_OFF + attr_midichannel) {
+  gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_2" x="84" y="126">
+      <params>
+         <frac32.s.map name="freq" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_5" x="280" y="126">
+      <params>
+         <frac32.u.map name="InGain" value="24.5"/>
+         <frac32.u.map name="OutGain" value="26.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="420" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_1" x="742" y="336">
+      <params>
+         <frac32.u.map name="time" value="54.5">
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <objref attributeName="delayname" obj="write_1"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_3" x="896" y="336">
+      <params>
+         <frac32.u.map name="gain1" value="45.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_7" x="980" y="336">
+      <params>
+         <frac32.s.map name="freq" value="41.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="1078" y="336">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="32768 (682ms)"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="1190" y="336">
+      <params>
+         <frac32.u.map name="gain1" value="49.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+         <frac32.u.map name="gain3" value="48.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1274" y="364">
+      <params>
+         <frac32.u.map name="InGain" value="25.5"/>
+         <frac32.u.map name="OutGain" value="30.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_2" x="742" y="448">
+      <params>
+         <frac32.u.map name="time" value="30.5">
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <objref attributeName="delayname" obj="write_2"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_4" x="896" y="448">
+      <params>
+         <frac32.u.map name="gain1" value="39.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_8" x="980" y="448">
+      <params>
+         <frac32.s.map name="freq" value="57.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_2" x="1078" y="448">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="32768 (682ms)"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1414" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="1190" y="518">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="42.5"/>
+         <frac32.u.map name="gain3" value="44.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_3" x="1274" y="518">
+      <params>
+         <frac32.u.map name="InGain" value="23.5"/>
+         <frac32.u.map name="OutGain" value="30.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_3" x="742" y="560">
+      <params>
+         <frac32.u.map name="time" value="43.5">
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <objref attributeName="delayname" obj="write_3"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_5" x="896" y="560">
+      <params>
+         <frac32.u.map name="gain1" value="39.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_9" x="980" y="560">
+      <params>
+         <frac32.s.map name="freq" value="49.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_3" x="1078" y="560">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="32768 (682ms)"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="object_1" outlet="out"/>
+         <dest obj="hp1_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="object_1" inlet="vib"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="sine_3" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="sine_4" outlet="wave"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="object_1" inlet="vib2"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_1"/>
+         <dest obj="obj_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp1_7" outlet="out"/>
+         <dest obj="write_1" inlet="in"/>
+         <dest obj="mix_1" inlet="in2"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="out"/>
+         <dest obj="mix_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="DPSoftClip_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp1_8" outlet="out"/>
+         <dest obj="write_2" inlet="in"/>
+         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="read_2" outlet="out"/>
+         <dest obj="mix_4" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_5" outlet="out"/>
+         <dest obj="obj_1" inlet="in"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="mix_2" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="mix_3" outlet="out"/>
+         <dest obj="lp1_7" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_4" outlet="out"/>
+         <dest obj="lp1_8" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_2"/>
+         <dest obj="obj_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp1_9" outlet="out"/>
+         <dest obj="write_3" inlet="in"/>
+         <dest obj="mix_1" inlet="in3"/>
+         <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="read_3" outlet="out"/>
+         <dest obj="mix_5" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_5" outlet="out"/>
+         <dest obj="lp1_9" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_3"/>
+         <dest obj="obj_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="hp1_2" outlet="out"/>
+         <dest obj="DPSoftClip_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_2" outlet="out"/>
+         <dest obj="mix_3" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="obj_3" outlet="out"/>
+         <dest obj="mix_4" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="obj_4" outlet="out"/>
+         <dest obj="mix_5" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_3" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+      <Author>SmashedTransistors (T.Rochebois)</Author>
+      <License>LGPL</License>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>12</x>
+      <y>58</y>
+      <width>1886</width>
+      <height>976</height>
+   </windowPos>
+</patch-1.0>
