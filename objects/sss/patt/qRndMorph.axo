@@ -1,23 +1,38 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="qRndMorph" uuid="9d63ddd7-e7ac-434d-bf6f-b4700f98d4eb">
-      <sDescription>Interpolated wavetable shaper.
-Turns a phase (phazor oscillator, positive non-bandlimited saw-wave) into a wave using a morphable wavetable.
+   <obj.normal id="qRndMorph" uuid="97fdc6dc-06f4-48a5-acdf-dafd7b97c6c0">
+      <sDescription>&quot;qRndMorph&quot;
+
+Interpolated random shaper.
+Turns a phase (phazor oscillator/LFO/positive knob) into an multi-channel animation using a morphable random table.
+Usable for fast one-modulation/knob animation of 8 different channels.
 
 &quot;mix&quot; morphs through the available waveforms in the wavetable
 &quot;start&quot; is the &quot;base&quot; waveform, where it will start when &quot;mix&quot; is at minimum or maximum.
-&quot;step&quot; is the stepsize for selecting from the waveforms while morphing with the &quot;mix&quot;. Last step is always the same as the first step, so you could use a saw to morph through the waveforms continuously in one direction.
+&quot;step&quot; is the stepsize for selecting from the random table while morphing with the &quot;mix&quot;. Last step is always the same as the first step, so you could use a saw to morph through the random values continuously in one direction.
 
-&quot;harmonic&quot; multiplies the incoming phase to generate higher harmonic waveforms based on root phase.
 &quot;quant&quot; sets the amount of waveforms that the mix will morph through. At 64, it will morph back to the &quot;base&quot; waveform.
 
-This module pairs very VERY well with the other shape modules for lots of tonal control!</sDescription>
-      <author>Johannes Taelman</author>
+&quot;rnd&quot; only randomises the table positions that aren&apos;t currently read out (which is always 2 positions). So when you press &quot;rnd&quot;, it won&apos;t suddenly jump to another random value.
+&quot;new&quot; only randomises the table positions that are currently read out (which is always 2 positions). So when you press &quot;new&quot;, the outputs suddenly jump to new random values, while leaving the unused positions the same.
+
+The current &quot;mostly&quot; selected table position can also be altered manually.
+&quot;channel&quot; selects which output you alter.
+Whenever the CV-parameter changes, it updates the value of the current channel at the current table-position.
+For easy stepping through all positions, set &quot;mix&quot; to zero and use the &quot;next&quot; button to step through the mix-positions. Note though, that this will follow the &quot;quant&quot; and &quot;step&quot; settings!
+
+Each output has it&apos;s own dedicated min/max settings, available as knobs, so these could be altered by midi.</sDescription>
+      <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>delay.axh</helpPatch>
       <inlets>
          <frac32 name="mix"/>
+         <frac32 name="start"/>
          <frac32 name="step"/>
          <bool32 name="rnd"/>
+         <bool32 name="new"/>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
       </inlets>
       <outlets>
          <frac32 name="1"/>
@@ -30,18 +45,17 @@ This module pairs very VERY well with the other shape modules for lots of tonal 
          <frac32 name="8"/>
          <int32 name="div"/>
       </outlets>
-      <displays/>
+      <displays>
+         <bool32 name="update" noLabel="true"/>
+      </displays>
       <params>
          <frac32.u.map name="mix"/>
-         <int32 name="quant">
-            <MinValue i="1"/>
-            <MaxValue i="64"/>
-         </int32>
-         <int32 name="step">
-            <MinValue i="0"/>
-            <MaxValue i="64"/>
-         </int32>
+         <bool32.tgl name="next"/>
+         <frac32.u.map name="quant"/>
+         <frac32.u.map name="start"/>
+         <frac32.s.map name="step"/>
          <bool32.tgl name="rnd"/>
+         <bool32.tgl name="new"/>
          <frac32.s.map name="CV"/>
          <int32 name="channel">
             <MinValue i="0"/>
@@ -67,6 +81,9 @@ This module pairs very VERY well with the other shape modules for lots of tonal 
       <attribs>
          <spinner name="presets" MinValue="1" MaxValue="128" DefaultValue="0"/>
       </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
       <code.declaration><![CDATA[static const uint32_t LENGTH = (attr_presets<<3);
 int16_t *array;
 int rtrig;
@@ -92,14 +109,82 @@ int32_t M1prv;
 int i;
 int j;
 
-int32_t prev;]]></code.declaration>
+int32_t prev;
+int ntrig;
+int strig;
+int ltrig;
+int Ntrig;]]></code.declaration>
       <code.init><![CDATA[static int16_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
 for(i=0;i<LENGTH;i++){
 	array[i]=((int32_t)GenerateRandomNumber())>>16;
 }]]></code.init>
-      <code.krate><![CDATA[int rnd=param_rnd+inlet_rnd;
+      <code.krate><![CDATA[if ((inlet_save>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(inlet_save>0)) ntrig=0;
+
+
+  if ((inlet_load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(inlet_load>0)) ltrig=0;
+
+
+
+int32_t quant1=(param_quant>>21)+1;
+if((param_next>0)&&!ntrig){
+	ntrig=1;
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_mix],param_mix+(1<<27)/quant1,0xFFFD);
+}
+else if(param_next==0){ntrig=0;}
+
+
+int rnd=param_rnd+inlet_rnd;
 if((rnd>0)&&!rtrig){
 	rtrig=1;
 	for(i=0;i<attr_presets;i++){
@@ -110,25 +195,42 @@ if((rnd>0)&&!rtrig){
 }
 else if (rnd==0){rtrig=0;}
 
+int New=param_new+inlet_new;
+if((New>0)&&!Ntrig){
+	Ntrig=1;
+	for(j=0;j<8;j++){
+	array[j+(W[0]<<3)]=((int32_t)GenerateRandomNumber())>>16;
+	array[j+(W[1]<<3)]=((int32_t)GenerateRandomNumber())>>16;}
+	}
+else if (New==0){Ntrig=0;}
+
 if(!(prev==param_CV)){
 	if(MIX1a>(1<<29)){
-		array[param_channel+(W[1]<<3)]=param_CV>>11;
+		array[param_channel+(W[1]<<3)]=param_CV>>12;
+		
 	}
+	else if(MIX1a<(1<<29)){
+		array[param_channel+(W[0]<<3)]=param_CV>>12;
+	}
+	
 }
 
+disp_update=0;
 
+if(MIX1a>(56<<21)){disp_update=1;}
+if(MIX1a<(8<<21)){disp_update=1;}
 int max;
 MIX1a=inlet_mix+param_mix;
 MIX1a=MIX1a&((1<<27)-1);
 
-int32_t quant1=param_quant+1;
-float32_t step=((float32_t)(1<<26))/(quant1)*(inlet_step+param_step);
-outlet_div=quant1;
 
+float32_t step=((float32_t)(attr_presets))/(quant1)*((inlet_step+param_step)/(1<<21));
+outlet_div=quant1;
+int start=___SMMUL(param_start+inlet_start<<3,attr_presets<<2);
 W[0]=((MIX1a>>4)*quant1)>>23;
 MIX1a=(MIX1a-(W[0]<<27)/quant1)*quant1;
-W[1]=W[0]*step+step;
-W[0]=W[0]*step;
+W[1]=W[0]*step+start+step;
+W[0]=W[0]*step+start;
 
 for(i=0;i<2;i++){
 W[i]=W[i]-(W[i]/attr_presets)*attr_presets;
