@@ -1,11 +1,11 @@
 <patch-1.0 appVersion="1.0.11">
-   <obj type="rbrt/loopv2/lrec" uuid="df8e9c48-c526-4158-b8d1-3e5aa744579d" name="lrec_2" x="238" y="28">
+   <obj type="rbrt/looper/lrec" uuid="17446d15-5184-47ca-8852-0035a44e79a9" name="lrec_1" x="238" y="28">
       <params/>
       <attribs>
          <objref attributeName="table" obj="master"/>
       </attribs>
    </obj>
-   <obj type="rbrt/loopv2/ldrive" uuid="e7fd16bd-b096-4616-a10f-60dc5ad9a183" name="ldrive_1" x="490" y="28">
+   <obj type="rbrt/looper/ldrive" uuid="e7fd16bd-b096-4616-a10f-60dc5ad9a183" name="ldrive_1" x="490" y="28">
       <params>
          <frac32.s.map name="speed" value="64.0"/>
       </params>
@@ -68,7 +68,7 @@
    <comment type="patch/comment" x="42" y="196" text="first,record into the master-slot"/>
    <comment type="patch/comment" x="574" y="196" text="playback SPEED"/>
    <comment type="patch/comment" x="1204" y="224" text="overdub with FEEDBACK!"/>
-   <obj type="rbrt/loopv2/ldub" uuid="1f2dfd57-1d7f-4000-b54b-4d4e2f81ae39" name="ldub_1" x="1400" y="224">
+   <obj type="rbrt/looper/ldub" uuid="1f2dfd57-1d7f-4000-b54b-4d4e2f81ae39" name="ldub_1" x="1400" y="224">
       <params>
          <frac32.u.map name="feedback" value="32.0"/>
       </params>
@@ -87,7 +87,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/looper/loop_slave_1" uuid="c806ea58-00d0-49b7-855b-e76f24bd9cf6" name="loop_slave_1_1" x="728" y="266">
+   <obj type="rbrt/old/loop_slave_1" uuid="c806ea58-00d0-49b7-855b-e76f24bd9cf6" name="loop_slave_1_1" x="728" y="266">
       <params/>
       <attribs>
          <objref attributeName="table" obj="slave"/>
@@ -133,7 +133,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/loopv2/ldub" uuid="1f2dfd57-1d7f-4000-b54b-4d4e2f81ae39" name="ldub_2" x="1400" y="378">
+   <obj type="rbrt/looper/ldub" uuid="1f2dfd57-1d7f-4000-b54b-4d4e2f81ae39" name="ldub_2" x="1400" y="378">
       <params>
          <frac32.u.map name="feedback" value="32.0"/>
       </params>
@@ -172,16 +172,16 @@
       <net>
          <source obj="in_1" outlet="wave"/>
          <dest obj="loop_slave_1_1" inlet="wave"/>
-         <dest obj="lrec_2" inlet="wave"/>
          <dest obj="ldub_1" inlet="wave"/>
          <dest obj="ldub_2" inlet="wave"/>
          <dest obj="+_1" inlet="in1"/>
+         <dest obj="lrec_1" inlet="wave"/>
       </net>
       <net>
          <source obj="REC master" outlet="o"/>
          <dest obj="inv_1" inlet="i"/>
          <dest obj="flipflop_1" inlet="reset"/>
-         <dest obj="lrec_2" inlet="rec"/>
+         <dest obj="lrec_1" inlet="rec"/>
       </net>
       <net>
          <source obj="+_2" outlet="out"/>
@@ -250,7 +250,7 @@
          <dest obj="and_2" inlet="i2"/>
       </net>
       <net>
-         <source obj="lrec_2" outlet="range"/>
+         <source obj="lrec_1" outlet="range"/>
          <dest obj="ldrive_1" inlet="range"/>
       </net>
       <net>
@@ -271,7 +271,7 @@
          <dest obj="ldub_2" inlet="overdub"/>
       </net>
       <net>
-         <source obj="lrec_2" outlet="smps"/>
+         <source obj="lrec_1" outlet="smps"/>
          <dest obj="sphasor_1" inlet="smps"/>
       </net>
       <net>
