@@ -1,22 +1,18 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="matrix toggle" uuid="e4cfb313-6d47-487f-9f28-def89e6d6dc6">
-      <sDescription>toggles the elements of a table with the 8x8 matrix of a &apos;launchpad&apos;.
-&apos;offset&apos; sets the table index to start at,
-&apos;startpad&apos; sets the first pad of the launchpad&apos;s active area,
-&apos;length&apos; sets the length of the area.
-&apos;blocksize&apos; sets the size of the data-block.</sDescription>
+   <obj.normal id="table toggle" uuid="c50727e4-5379-4f56-bce7-8d7601e0ef56">
+      <sDescription>toggle elements of a table with midi-notes.set the range of the notes to use as toggles with &apos;startnote&apos;,the length of the range with &apos;length&apos;.the start of the area of the table to work on is set with &apos;offset&apos;.</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
       <helpPatch>launchpad.axh</helpPatch>
       <inlets>
          <int32 name="offset"/>
-         <int32 name="start"/>
+         <int32 name="startnote"/>
          <int32 name="length"/>
          <bool32.risingfalling name="active"/>
       </inlets>
       <outlets>
-         <bool32.pulse name="trig" description="pulse if an element is set to ON"/>
-         <int32 name="matrix" description="pad index if inside range"/>
+         <bool32.pulse name="trig" description="pulse if an element of the table is set to ON"/>
+         <int32 name="note" description="note index if inside range"/>
       </outlets>
       <displays/>
       <params>
@@ -24,9 +20,9 @@
             <MinValue i="0"/>
             <MaxValue i="1000000"/>
          </int32>
-         <int32 name="start">
+         <int32 name="startnote">
             <MinValue i="0"/>
-            <MaxValue i="1000000"/>
+            <MaxValue i="127"/>
          </int32>
          <int32 name="length">
             <MinValue i="0"/>
@@ -58,56 +54,50 @@
       </attribs>
       <code.declaration><![CDATA[int8_t _note1;
 uint8_t _gate1;
-uint8_t matrix;
-uint8_t prevmatrix;
-uint8_t lastmatrix;
+uint8_t _velo1;
+uint8_t prevnote;
+uint8_t lastnote;
 
 
 uint8_t start;
 uint8_t end;
 
-uint8_t bitmask1 = 0b10001110;
-
-int32_t _value;
-int32_t _cc;
-
-int rtrig;
+int trig;
 int ntrig;
-bool op;]]></code.declaration>
-      <code.krate><![CDATA[start = inlet_start + param_start;
+bool op;
+
+uint32_t offset;]]></code.declaration>
+      <code.krate><![CDATA[start = inlet_startnote + param_startnote;
 end = (start + ( inlet_length + param_length));
+offset = (inlet_offset + param_offset);
 
-matrix = (_note1 -((_note1 >> 4) << 3));
+if ((_note1 >= start) && (_note1 < end)) {
+	outlet_note = _note1;lastnote = _note1;
 
-	
-if ((matrix >= start) && (matrix < end)) {
-	outlet_matrix = matrix;lastmatrix = matrix;
-
-if (inlet_active || param_active){
-if (((_gate1>0) && !ntrig) ||(matrix != prevmatrix))  {
+if 	(inlet_active || param_active) {
+if (((_gate1>0) && !ntrig) ||(_note1 != prevnote))  {
       ntrig=1;
-      op = attr_table.array[(matrix << attr_blocksize)];
+      op = attr_table.array[((_note1 -start) << attr_blocksize) + offset];
       op = !op ;
-         attr_table.array[(matrix << attr_blocksize)]= (op * ((1 << 27)- 1 >>attr_table.GAIN));
-         if (op) rtrig = 1;
+         attr_table.array[((_note1 -start) << attr_blocksize)+offset]= (op * ((1 << 27)- 1 >>attr_table.GAIN));
+    if (op) trig = 1;
    }
-   if (!(_gate1>0)) ntrig=0;
+   if (!(_gate1>0)) ntrig=0;   
+}
+}
+else {if (!lastnote) lastnote = start;
+outlet_note = lastnote;
 }
 
-}
-else {
-	if (!lastmatrix) lastmatrix = start;
-outlet_matrix = lastmatrix;
-}
-
-prevmatrix = matrix;
-outlet_trig = rtrig;
-rtrig = 0;]]></code.krate>
+prevnote = _note1;
+outlet_trig = trig;
+   trig = 0;]]></code.krate>
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {	
-  if ((data1 -8) & bitmask1) {
+  
     _note1 = data1;
     _gate1 = 1;
-  }
+    _velo1 = data2;
+  
 } else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||          (status == MIDI_NOTE_OFF + attr_midichannel)) {
   if (_note1 == data1) {
     _gate1 = 0;

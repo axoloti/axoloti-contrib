@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="matrix disp" uuid="d31f39e3-a22d-4bc2-8fa8-c86c460d7751">
+   <obj.normal id="matrix disp" uuid="9074be26-db88-4259-9643-756ee5e1e261">
       <sDescription>visual feedback of table data for the novation launchpad (NOT working with a LP mark I)</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -163,10 +163,11 @@ uint32_t offset;]]></code.declaration>
 
   map[i] = (((i >> 3)<< 3) + i);
 }]]></code.init>
-      <code.krate><![CDATA[coloron = (inlet_coloron + attr_coloron);
-coloroff = (inlet_coloroff + attr_coloroff);
-offset = (param_offset + inlet_offset);
-start = (inlet_start+ param_start);
+      <code.krate><![CDATA[coloron = inlet_coloron + attr_coloron;
+coloroff = inlet_coloroff + attr_coloroff;
+offset = param_offset + inlet_offset;
+start = inlet_start+ param_start;
+length = inlet_length +param_length;
 
 //redraw
 if ((inlet_redraw > 0) && !ntrig){
@@ -177,7 +178,7 @@ if ((inlet_redraw > 0) && !ntrig){
   }
 if (!(inlet_redraw > 0 )) ntrig = 0;
 
-length = ((inlet_length +param_length + inlet_start +param_start) > 64) ?  64 : (inlet_length + param_length);
+
 if (plength != length ){ i = 0;plength = length;}
     
 //display steps

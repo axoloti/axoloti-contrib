@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="note send 2" uuid="c00f33ec-1732-4a1b-99c9-26bdffd26069">
+      <sDescription>sends 2 notes with velocities defined by &apos;velon&apos; and &apos;veloff&apos;,starting frim &apos;startnote&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="g0"/>
+         <bool32.risingfalling name="g1"/>
+         <frac32.positive name="velon"/>
+         <frac32.positive name="veloff"/>
+         <int32 name="startnote"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="startnote" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="velon" MinValue="0" MaxValue="127" DefaultValue="127"/>
+         <spinner name="veloff" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t prev0;
+uint8_t prev1;
+uint8_t prev2;
+uint8_t prev3;
+
+uint8_t vel;
+uint8_t velon;
+uint8_t veloff;
+
+uint8_t startnote;]]></code.declaration>
+      <code.krate><![CDATA[velon = attr_velon + (inlet_velon>>20);
+veloff = attr_veloff +(inlet_veloff>>20);
+startnote = param_startnote + inlet_startnote;
+
+
+if (inlet_g0 != prev0) {
+	vel = inlet_g0 ? velon : veloff;
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote,vel);  prev0 = inlet_g0;
+}
+
+if (inlet_g1 != prev1) {
+	vel = inlet_g1 ? velon : veloff;
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote +1,vel);  prev1 = inlet_g1;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
