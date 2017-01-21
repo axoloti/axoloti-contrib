@@ -23,6 +23,7 @@ each channel has 4 sequences:
       <inlets>
          <bool32 name="trig"/>
          <charptr32 name="filename"/>
+         <bool32 name="load"/>
       </inlets>
       <outlets>
          <bool32 name="o1"/>
@@ -207,8 +208,8 @@ cnt+=1;
     if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
   }
   else if(!(param_save>0)){strig=0;}
-
-  if((param_load>0)&&!ltrig){
+int load=param_load+inlet_load;
+  if((load>0)&&!ltrig){
     ltrig=1;
     FIL FileObject;
     FRESULT err;
@@ -233,7 +234,7 @@ cnt+=1;
     err = f_close(&FileObject);
     if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
   }
-  else if(!(param_load>0)){ltrig=0;}
+  else if(!(load>0)){ltrig=0;}
 
 if(!(prev==(param_output+param_parameter+param_load))){
 PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],Array[0+param_parameter*16+param_output*64],0xFFFD);
