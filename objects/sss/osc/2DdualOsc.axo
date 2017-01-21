@@ -20,6 +20,8 @@ An &quot;unlink&quot; is provided between pitch1 and pitch2 to be able to send e
       <inlets>
          <frac32 name="pitch1"/>
          <frac32 name="pitch2"/>
+         <frac32 name="FMW1"/>
+         <frac32 name="FMW2"/>
          <frac32 name="mix1"/>
          <frac32 name="mix2"/>
          <int32 name="waveform"/>
@@ -140,11 +142,11 @@ prev2=0;
 dir=1;]]></code.init>
       <code.krate><![CDATA[int32_t freq1;
 MTOFEXTENDED(param_pitch1+inlet_pitch1,freq1)
-int32_t FMW1=___SMMUL(freq1<<5,param_FMW1<<3);
+int32_t FMW1=___SMMUL(freq1<<5,param_FMW1+inlet_FMW1<<3);
 int32_t freq2;
 MTOFEXTENDED((param_unlink>0?0:param_pitch1+inlet_pitch1)+param_pitch2+inlet_pitch2,freq2)
 
-int32_t FMW2=___SMMUL(freq2<<5,param_FMW2<<3);
+int32_t FMW2=___SMMUL(freq2<<5,param_FMW2+inlet_FMW2<<3);
 int32_t MiX1=param_mix1+inlet_mix1;
 MX(MiX1);
 MiX1=F;
