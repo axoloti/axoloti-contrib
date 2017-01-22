@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="lrec" uuid="17446d15-5184-47ca-8852-0035a44e79a9">
+   <obj.normal id="lrec" uuid="df8e9c48-c526-4158-b8d1-3e5aa744579d">
       <sDescription>records audio to a table.after recording is done,the length of the recording in samples is sent out,
 as well as the length of the recording (in fraction of the table&apos;s size)</sDescription>
       <author>Robert Schirmer</author>
@@ -19,8 +19,8 @@ as well as the length of the recording (in fraction of the table&apos;s size)</s
          <objref name="table"/>
       </attribs>
       <code.declaration><![CDATA[bool rec;
-uint32_t recpos;
-uint8_t shift;]]></code.declaration>
+int recpos;
+int shift;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 
@@ -37,7 +37,7 @@ rec = 0;
     if (attr_table.LENGTH == 1048576 ){shift = 7;}
     if (attr_table.LENGTH == 2097152 ){shift = 6;}
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.krate><![CDATA[if ((inlet_rec) && !rec) {
+      <code.srate><![CDATA[if ((inlet_rec) && !rec) {
       rec = 1;
       recpos = 0;
  } 
@@ -45,14 +45,13 @@ rec = 0;
       rec = 0;
       outlet_range = (recpos << shift);
       outlet_smps = recpos;
-        }]]></code.krate>
-      <code.srate><![CDATA[//record
-if (rec){
-   	if (recpos < attr_table.LENGTH){
+        }
+ 
+
+ //record
+   if (rec)  {
               recpos ++;
               attr_table.array[recpos] = __SSAT(inlet_wave,28 )>>attr_table.GAIN;
-   	}
-   	else recpos = 0;
-}]]></code.srate>
+   }]]></code.srate>
    </obj.normal>
 </objdefs>
