@@ -22,6 +22,7 @@ each channel has 4 sequences:
       <rotatedParams>true</rotatedParams>
       <inlets>
          <bool32 name="trig"/>
+         <bool32 name="rst"/>
          <charptr32 name="filename"/>
          <bool32 name="load"/>
       </inlets>
@@ -170,7 +171,8 @@ int32_t Count[4];
 uint32_t write;
 
 uint32_t writepos;
-int32_t prev;]]></code.declaration>
+int32_t prev;
+int Rtrig;]]></code.declaration>
       <code.init><![CDATA[static int8_t _array[1<<(LENGTHPOW<<2)]  __attribute__ ((section (".sdram")));
 array = &_array[0];
    int i;
@@ -255,6 +257,11 @@ PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b14],Array[14+para
 PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b15],Array[15+param_parameter*16+param_output*64],0xFFFD);
 }
 
+if((inlet_rst)&&!Rtrig){
+	Rtrig=1;
+	count=-1;
+}
+else if(inlet_rst==0){Rtrig=0;}
 disp_chance=0;
 disp_gatelength=0;
 disp_retrigger=0;
