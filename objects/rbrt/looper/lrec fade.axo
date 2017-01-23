@@ -1,11 +1,7 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="lrec fade" uuid="e6259082-1a92-4852-b93d-ad721a779956">
-      <sDescription>records audio to a table with fadein and fadeout to avoid clicks.
-after recording is done,the length of the recording in samples is sent out,
-as well as the length of the recording (in fraction of the table&apos;s size).
-at the same time,the input signal is overdubbed and faded out ,so NO CLICKS!
-set the length of the fade-out/overdub period with &apos;release&apos;,
-the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
+   <obj.normal id="lrec fade" uuid="859a06b8-ee98-46fb-a5d3-c8d63c323ae5">
+      <sDescription>records audio to a table.after recording is done,the length of the recording in samples is sent out,
+as well as the length of the recording (in fraction of the table&apos;s size)</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>loop_simple.axh</helpPatch>
@@ -16,13 +12,13 @@ the length of the fade-in of the recording with &apos;attack&apos;.</sDescriptio
       <outlets>
          <frac32.positive name="range" description="length of recording in fraction of the table"/>
          <int32 name="smps" description="length in samples"/>
-         <bool32 name="state" description="recording state:zero if fadeout is finished."/>
+         <bool32 name="state"/>
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map.klineartime.exp name="attack" description="sets the fadein-time of the recording"/>
-         <bool32.tgl name="hard" description="if &apos;hard&apos; is on,there will be NO fade-in"/>
-         <frac32.s.map.kdecaytime.exp name="release" description="sets the fadeout-time of the overdub"/>
+         <frac32.s.map.klineartime.exp name="attack"/>
+         <frac32.s.map.kdecaytime.exp name="release"/>
+         <bool32.tgl name="hard"/>
       </params>
       <attribs>
          <objref name="table"/>
@@ -39,7 +35,6 @@ int32_t val;
 int32_t env;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
-val = 0;
 
 //set 'shift factor' for storing the recording length/the sync output
     if (attr_table.LENGTH == 2048){shift = 16; }
@@ -54,23 +49,7 @@ val = 0;
     if (attr_table.LENGTH == 1048576 ){shift = 7;}
     if (attr_table.LENGTH == 2097152 ){shift = 6;}
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.krate><![CDATA[if ((inlet_rec) && !rec)  {
-      rec = 1;
-      recstate = 1;
-      recpos = 0;
-         
- } 
-if ((!inlet_rec)&& rec) {
-      rhold = (recpos << shift);
-      shold = recpos;
-      rec = 0;
-      recpos = 0;
-      }
-
-outlet_range = rhold;
-outlet_smps = shold;
-
-stage = rec;
+      <code.krate><![CDATA[stage = rec;
 if (stage == 0){
    val = ___SMMUL(val,param_release)<<1;
 } else {
@@ -84,13 +63,28 @@ if (stage == 0){
 }
 env = val>>4;
 if (env == 0) recstate = 0;
-outlet_state = recstate;]]></code.krate>
-      <code.srate><![CDATA[//record
+outlet_state = recstate;
+outlet_range = rhold;
+outlet_smps = shold;]]></code.krate>
+      <code.srate><![CDATA[if ((inlet_rec) && !rec)  {
+      rec = 1;
+      recstate = 1;
+      recpos = 0;
+         
+ } 
+if ((!inlet_rec)&& rec) {
+      rhold = (recpos << shift);
+      shold = recpos;
+      rec = 0;
+      recpos = 0;
+      }
+
+ //record
    if (recstate)  {
    	if (recpos < attr_table.LENGTH){
       recpos ++;
      if (rec) attr_table.array[recpos] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
-     else attr_table.array[recpos] = __SSAT((attr_table.array [recpos] + (___SMMUL((inlet_wave),env)<<5)),28 )>>attr_table.GAIN;
+     if (!rec) attr_table.array[recpos] = (__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos] << attr_table.GAIN) )>>attr_table.GAIN;
    	}
    	else recpos = 0;
 }]]></code.srate>
