@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="lrec multi fade" uuid="9908639e-b3cb-44ab-9f7d-77e3910c7b6f">
+   <obj.normal id="lrec multi fade" uuid="cbb3cf44-0241-42dd-bb3d-278379fe81cc">
       <sDescription>records audio to a table with nice fade-ins and -outs.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
@@ -66,17 +66,14 @@ uint32_t start;
 bool mode;
 
 bool recstate;
-int8_t stage;
 uint32_t shold;
 uint32_t rhold;
-int32_t val;
 int32_t env;
 
 int rtrig;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 start = 0;
-val = 0;
       rec_max = attr_table.LENGTH >> attr_slots;
 
 //set 'shift factor' for storing the recording length/the sync output
@@ -92,19 +89,9 @@ val = 0;
     if (attr_table.LENGTH == 1048576 ){shift = 7;}
     if (attr_table.LENGTH == 2097152 ){shift = 6;}
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
-      <code.krate><![CDATA[stage = rec;
-if (stage == 0){
-   val = ___SMMUL(val,param_release)<<1;
-} else {
-   int32_t t;
-   MTOF(-param_attack,t);
-   val = (param_hard) ?  (-(1<<27)):val + (t>>3) ;
-   if (val<0) {
-      val =0x7FFFFFFF;
-      stage = 0;
-   }
-}
-env = val>>4;
+      <code.krate><![CDATA[if (rec) env = (param_hard) ? -(1<<27) : (1<<27) - (___SMMUL((1<<27)-env, param_attack)<<1);
+   else env = ___SMMUL(env, param_release)<<1;
+
 if (env == 0) recstate = 0;]]></code.krate>
       <code.srate><![CDATA[csample = (inlet_pos >> 7);
 
@@ -133,8 +120,8 @@ if ((!inlet_rec) && rec) {
    if (recstate)  {
               recpos ++;
               if (recpos >= rec_max) recpos = 0;
-              if (rec) attr_table.array[recpos+rec_offset] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
-     else attr_table.array[recpos +rec_offset] = __SSAT((attr_table.array [recpos + rec_offset] + (___SMMUL((inlet_wave),env)<<5)),28 )>>attr_table.GAIN;   
+              if (rec) attr_table.array[recpos] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
+     else attr_table.array[recpos] = (__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos] << attr_table.GAIN) )>>attr_table.GAIN;
 }
 
    //rec done
