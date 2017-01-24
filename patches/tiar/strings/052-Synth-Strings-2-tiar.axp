@@ -51,10 +51,32 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="28" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_5" x="112" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="5.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="210" y="154">
+      <params>
+         <frac32.u.map name="amp" value="0.39999961853027344"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_4" x="308" y="154">
+      <params>
+         <frac32.u.map name="gain1" MidiCC="1" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc" name="object_1" x="28" y="308">
       <params>
          <frac32.u.map name="H1" value="64.0"/>
-         <frac32.u.map name="H2" MidiCC="1" value="63.99999952316284"/>
+         <frac32.u.map name="H2" MidiCC="1" value="0.0"/>
          <frac32.u.map name="fb1" value="47.0"/>
          <frac32.u.map name="fb0" value="32.5"/>
       </params>
@@ -64,6 +86,7 @@
          <license>BSD</license>
          <inlets>
             <frac32.positive name="fbMod" description="fbMod"/>
+            <frac32.bipolar name="bend" description="+- 12 semitones"/>
          </inlets>
          <outlets>
             <frac32buffer.bipolar name="out"/>
@@ -102,7 +125,15 @@ for(i=0;i<NB_OSCS;i++) {
 
 for (i=0;i<128;i++)
 	gates[i]=0;]]></code.init>
-         <code.krate><![CDATA[int i,j;
+         <code.krate><![CDATA[// Pitch bend by SMMUL of freq:
+// MTOFEXTENDED gives us:
+// 0x04C747D1            -> 0x10000000  i.e. 1.0q28
+// 0x04C747D1 + (12<<21) -> 0x20000002  i.e. 2.0q28
+// 0x04C747D1 - (12<<21) -> 0x08000004  i.e. 0.5q28
+// so the 0x04C747D1 gives us a q28 bendFactor
+int32_t bendFactor;
+MTOFEXTENDED(0x04C747D1 + (inlet_bend*12)/64,bendFactor);
+int i,j;
 for(i = 0; i < NB_OSCS; i++){
 	g[i] = 0;
 }
@@ -133,9 +164,11 @@ for(i = 0; i < NB_OSCS; i++) {
   int32_t deltaEnv = (AREnv[i] - interpEnv) >> 4;  // delta for linear interp on 16 samples
 // ________________________________________________________________________________
   int32_t _fy = fy[i];
+  //                     q31     q28
+  int32_t _dp= ___SMMUL(dp[i], bendFactor)<<4;
 // ________________________________________________________________________________
   for(j = 0; j < BUFSIZE; j++) {
-    p[i] += dp[i];
+    p[i] += _dp;
     int32_t y = sine2t[ ((uint32_t)(p[i] + (___SMMUL(_fy, fb)) )) >> 20 ];
     int32_t out2 = ___SMMLS(_fy, _fy, 0x20000000);
     _fy = (_fy >> 1) + (y >> 1);
@@ -180,7 +213,7 @@ for(i = 0; i < NB_OSCS; i++) {
          <frac32.s.map name="g" value="40.0"/>
       </params>
       <attribs>
-         <spinner attributeName="delay" value="4697"/>
+         <spinner attributeName="delay" value="4051"/>
       </attribs>
    </obj>
    <obj type="fx/chorus" uuid="57166909-092c-47d4-9cdd-f90ff51e3ed6" name="obj_1" x="574" y="308">
@@ -391,6 +424,22 @@ for(i = 0; i < NB_OSCS; i++) {
       <net>
          <source obj="allpass_4" outlet="out"/>
          <dest obj="obj_6" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bend_1" outlet="bend"/>
+         <dest obj="mix_4" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="mix_4" outlet="out"/>
+         <dest obj="object_1" inlet="bend"/>
+      </net>
+      <net>
+         <source obj="sine_5" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="mix_4" inlet="in1"/>
       </net>
    </nets>
    <settings>
