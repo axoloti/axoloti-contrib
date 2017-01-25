@@ -43,14 +43,25 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
          <bool32.mom name="rnd"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[int get[64];
-int32_t val[64];
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = 64;
+uint8_t *get;
+int32_t *val;
+
 int ntrig;
 int count;
 int32_t length;
 int i;
 int on;]]></code.declaration>
-      <code.init><![CDATA[on=1;
+      <code.init><![CDATA[static uint8_t _get[LENGTH] __attribute__ ((section (".sdram")));
+get = &_get[0];
+static int32_t _val[LENGTH] __attribute__ ((section (".sdram")));
+val = &_val[0];
+
+
+on=1;
 ntrig = 0;]]></code.init>
       <code.krate><![CDATA[int trig=inlet_rnd+param_rnd;
 if(inlet_length>0){

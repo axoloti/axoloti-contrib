@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="clock" uuid="660f62c5-2850-483b-b57b-bec2e5c5ce4d">
+      <sDescription>Midi clock slave
+-also outputs a 4ppq and 24ppq clock
+-time output gives the sample-time for a 4ppq clock.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <bool32 name="active" description="Song is playing"/>
+         <int32 name="pos4ppq" description="Position in 4 counts per quarter"/>
+         <int32 name="pos24ppq" description="Position in 24 counts per quarter"/>
+         <bool32 name="trig4ppq"/>
+         <bool32 name="trig24ppq"/>
+         <int32 name="time"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _active;
+int32_t _pos;
+int32_t _pos_shadow;
+int trg4;
+int trg24;
+int count;
+int32_t cnt;
+int32_t TIME;
+int32_t val1;
+int32_t val2;
+int32_t Time;]]></code.declaration>
+      <code.init><![CDATA[_active = 0;
+_pos = 0;
+_pos_shadow = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_active = _active;
+outlet_pos4ppq = _pos/6;
+outlet_pos24ppq = _pos;
+outlet_trig4ppq=trg4;
+outlet_trig24ppq=trg24;
+trg24=0;
+trg4=0;
+
+
+val1+=((TIME<<8)-val1)>>8;
+val2+=(val1-val2)>>8;
+if((val2>Time+2000)||(val2<Time-2000)){
+	Time=val2;
+}
+outlet_time=Time>>12;]]></code.krate>
+      <code.srate><![CDATA[cnt+=1;]]></code.srate>
+      <code.midihandler><![CDATA[if (status == MIDI_TIMING_CLOCK) {
+  _pos_shadow++;
+  _pos = _pos_shadow;
+  count+=1;
+  count=count-count/6*6;
+  
+  if(count==0)
+  {trg4=1;TIME=cnt;
+  cnt=0;}
+  trg24=1;
+} else if (status == MIDI_START) {
+  _active = 1;
+  _pos = 0;
+  _pos_shadow = -1;
+} else if (status == MIDI_STOP) {
+  _active = 0;
+  _pos = -1;
+} else if (status == MIDI_CONTINUE) {
+  _active = 1;
+} else if (status == MIDI_SONG_POSITION) {
+  _pos_shadow = 6*((data2<<7)+data1)-1;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

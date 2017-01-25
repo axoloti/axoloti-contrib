@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="4chanceSeq" uuid="6d0f0a9a-fc3e-47b7-b201-41a8df0fdb7a">
+      <sDescription>quad randomisable trigger sequencer
+Each color has it&apos;s own chance.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+         <bool32 name="gate"/>
+      </inlets>
+      <outlets>
+         <bool32 name="1"/>
+         <bool32 name="2"/>
+         <bool32 name="3"/>
+         <bool32 name="4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int2x16 name="1"/>
+         <int2x16 name="2"/>
+         <int2x16 name="3"/>
+         <int2x16 name="4"/>
+         <frac32.u.map name="white"/>
+         <frac32.u.map name="light"/>
+         <frac32.u.map name="dark"/>
+         <frac32.u.map name="black"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int select[4];
+int gate[4];
+int prev;]]></code.declaration>
+      <code.krate><![CDATA[select[0]=param_white;
+select[1]=param_light;
+select[2]=param_dark;
+select[3]=param_black;
+
+int count=inlet_count;
+if(!(count==prev)){
+gate[0]=select[param_1>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
+gate[1]=select[param_2>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
+gate[2]=select[param_3>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
+gate[3]=select[param_4>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
+}
+
+ 
+
+outlet_1=gate[0]&&inlet_gate;
+outlet_2=gate[1]&&inlet_gate;
+outlet_3=gate[2]&&inlet_gate;
+outlet_4=gate[3]&&inlet_gate;
+
+prev=count;]]></code.krate>
+   </obj.normal>
+</objdefs>
