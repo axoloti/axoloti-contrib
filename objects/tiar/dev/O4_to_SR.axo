@@ -1,0 +1,69 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="O4_to_SR" uuid="eedd0c6a-8c21-42a2-a643-3829fec34ae0">
+      <sDescription>/4 decimator (downsampler)</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="x3"/>
+         <frac32buffer.bipolar name="x2"/>
+         <frac32buffer.bipolar name="x1" description=""/>
+         <frac32buffer.bipolar name="x0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, 
+R16, R17, R18, R19, R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R30;
+
+float _R1, _R2, _R3, _R4, _R5, _R6, _R7, _R8, _R9, _R10;]]></code.declaration>
+      <code.init><![CDATA[R1=R2=R3=R4=R5=R6=R7=R8=R9=R10=R11=R12=R13=R14=R15=
+R16=R17=R18=R19=R20=R21=R22=R23=R24=R25=R26=R27=R28=R29=R30=0;
+
+_R1=_R2=_R3=_R4=_R5=_R6=_R7=_R8=_R9=_R10=0;]]></code.init>
+      <code.srate><![CDATA[float x3 = (float)inlet_x3;
+float h9x3 = 0.0008092627249032843f * x3; float h7x3 = -0.005912439782581228f * x3; 
+float h5x3 = 0.023933434769768926f * x3;  float h3x3 = -0.07551735475276798f * x3; 
+float h1x3 = 0.30669288913406306f * x3;
+_R10=_R9+h9x3;
+_R9=_R8+h7x3; _R8=_R7+h5x3; _R7=_R6+h3x3; _R6=_R5+h1x3; _R5=_R4+h1x3+0.5000155859774268f*inlet_x2;
+_R4=_R3+h3x3; _R3=_R2+h5x3; _R2=_R1+h7x3; _R1=h9x3;
+float _x1 = _R10;  
+
+float x1 = (float)inlet_x1;
+float h9x1 = 0.0008092627249032843f * x1; float h7x1 = -0.005912439782581228f * x1; 
+float h5x1 = 0.023933434769768926f * x1;  float h3x1 = -0.07551735475276798f * x1; 
+float h1x1 = 0.30669288913406306f * x1;
+_R10=_R9+h9x1;
+_R9=_R8+h7x1; _R8=_R7+h5x1; _R7=_R6+h3x1; _R6=_R5+h1x1; _R5=_R4+h1x1+0.5000155859774268f*inlet_x0;
+_R4=_R3+h3x1; _R3=_R2+h5x1; _R2=_R1+h7x1; _R1=h9x1;
+float _x0 = _R10;  
+
+
+
+h1x1  = _x1*0.3167967114236291f;     h3x1  = _x1*-0.10164126581474016f;
+h5x1  = _x1*0.056472878314649574f;   h7x1  = _x1*-0.03590356425550024f;
+h9x1  = _x1*0.023854182328325296f;   float h11x1 = _x1*-0.015966909428751137f;
+float h13x1 = _x1*0.010553528578562761f;   float h15x1 = _x1*-0.006794829937625732f; 
+float h17x1 = _x1*0.004212042043030732f;   float h19x1 = _x1*-0.002484841082005066f;
+float h21x1 = _x1*0.0013753503068182293f;  float h23x1 = _x1*-0.0007008749315804081f;
+float h25x1 = _x1*0.00031898286827647583f; float h27x1 = _x1*-0.00012279053509672562f;
+float h29x1 = _x1*0.000035881628440564505f;
+
+R30 = R29 + h29x1;  R29 = R28 + h27x1;
+R28 = R27 + h25x1;  R27 = R26 + h23x1;  R26 = R25 + h21x1;
+R25 = R24 + h19x1;  R24 = R23 + h17x1;  R23 = R22 + h15x1;
+R22 = R21 + h13x1;  R21 = R20 + h11x1;  R20 = R19 +  h9x1;
+R19 = R18 +  h7x1;  R18 = R17 +  h5x1;  R17 = R16 +  h3x1;
+R16 = R15 +  h1x1;
+R15 = R14 + h1x1 + 0.50000063464071f * _x0;
+R14 = R13 +  h3x1;  R13 = R12 +  h5x1;  R12 = R11 +  h7x1;
+R11 = R10 +  h9x1;  R10 = R9  + h11x1;  R9  = R8  + h13x1;  
+R8  = R7  + h15x1;  R7  = R6  + h17x1;  R6  = R5  + h19x1;
+R5  = R4  + h21x1;  R4  = R3  + h23x1;  R3  = R2  + h25x1;
+R2  = R1  + h27x1;  R1 = h29x1;
+outlet_out = (int32_t)R30;]]></code.srate>
+   </obj.normal>
+</objdefs>

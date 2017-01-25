@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="SR to O2 6" uuid="07389550-3387-4543-b866-653cbc352e01">
+      <sDescription>6 tap x2 interpolator (upsampler)</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="y1" description="older"/>
+         <frac32buffer.bipolar name="y0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t x0, x1, x2, x3, x4, x5;]]></code.declaration>
+      <code.init><![CDATA[x0=x1=x2=x3=x4=x5=0;]]></code.init>
+      <code.srate><![CDATA[x0 = x1; x1 = x2; x2 = x3; x3 = x4; x4 = x5; x5 = inlet_in;
+outlet_y1 = x2;
+outlet_y0 = (
+	 ___SMMLA(x5 + x0, (int32_t)(0.025665914601895386f*(1<<27)),
+     ___SMMLA(x4 + x1, (int32_t)(-0.04277652433649233f*(1<<27)),
+     ___SMMUL(x3 + x2, (int32_t)(0.517110609734597f*(1<<27)))))
+     )<<5;]]></code.srate>
+   </obj.normal>
+</objdefs>

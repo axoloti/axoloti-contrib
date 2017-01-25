@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="SR to O4 6" uuid="3555e31f-4376-481b-a957-effa576811da">
+      <sDescription>x4 interpolator (upsampler)</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="y3" description="older"/>
+         <frac32buffer.bipolar name="y2"/>
+         <frac32buffer.bipolar name="y1" description=""/>
+         <frac32buffer.bipolar name="y0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x0, x1, x2, x3, x4, x5;
+int32_t y4;]]></code.declaration>
+      <code.init><![CDATA[x0=x1=x2=x3=x4=x5=y4=0;]]></code.init>
+      <code.srate><![CDATA[x0 = x1; x1 = x2; x2 = x3; x3 = x4; x4 = x5; x5 = (float)inlet_in;
+// First stage interpolator
+outlet_y2 = (int32_t)x2;
+outlet_y3 = (outlet_y2 + y4)>>1;
+
+y4 = outlet_y0 = (int32_t)(
+	 (x5 + x0) * 0.025665914601895386f
+     + (x4 + x1) * -0.04277652433649233f
+     + (x3 + x2) * 0.517110609734597f
+     );
+// second stage interpolator
+outlet_y1 = (outlet_y0 + outlet_y2)>>1;]]></code.srate>
+   </obj.normal>
+</objdefs>

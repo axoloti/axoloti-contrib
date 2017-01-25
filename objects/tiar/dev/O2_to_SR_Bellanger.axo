@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="O2 to SR Bellanger" uuid="98131c96-7dc8-4ba7-bc2a-ae28cc4cbca3">
+      <sDescription>19 tap /2 decimator (downsampler)</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="x1" description="older"/>
+         <frac32buffer.bipolar name="x0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float R1, R2, R3, R4, R5, R6, R7, R8, R9, R10;]]></code.declaration>
+      <code.init><![CDATA[R1=R2=R3=R4=R5=R6=R7=R8=R9=R10=0;]]></code.init>
+      <code.srate><![CDATA[float x1 = (float)inlet_x1;
+float h1x1  = x1*(5042/16384.0f);  float h3x1  = x1*(-1277/16384.0f);
+float h5x1  = x1*(429/16384.0f);   float h7x1  = x1*(-116/16384.0f);
+float h9x1  = x1*(18/16384.0f);
+
+R10=R9+h9x1;
+R9=R8+h7x1;
+R8=R7+h5x1;
+R7=R6+h3x1;
+R6=R5+h1x1;
+R5=R4+h1x1+ 0.5f * inlet_x0;
+R4=R3+h3x1;
+R3=R2+h5x1;
+R2=R1+h7x1;
+R1=h9x1;
+outlet_out = (int32_t)R10;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,155 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="4 self PM oscs" uuid="3c69df16-7b2a-40bd-9058-ec85890055db">
+      <sDescription>Self PM oscillator (Very low cost)
+Generates a band controlled sawtooth like wave form.
+A square like wave form is obtained with negative kFb (negative kFb triggers
+kFb by squared signal).
+fb0 and fb1 controls the range of the feedback depth.
+fbMod modulates the feedback in the range [fb0 fb1]</sDescription>
+      <author>T. Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>SelfPM.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.positive name="fbMod" description="Feedback mod : [0 64] -&gt; [fb0 fb1]"/>
+         <frac32.positive name="gain" description="Gain"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave0" description="selfPM wave0"/>
+         <frac32buffer.bipolar name="wave1" description="selfPM wave1"/>
+         <frac32buffer.bipolar name="wave2" description="selfPM wave2"/>
+         <frac32buffer.bipolar name="wave3" description="selfPM wave3"/>
+      </outlets>
+      <displays>
+         <frac32.s.dial name="fb" description="Modulated feedback" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.s.map name="fb1" description="Feedback Range [fb0 fb1]"/>
+         <frac32.s.map name="fb0" description="Feedback Range [fb0 fb1]"/>
+         <int32 name="detune">
+            <MinValue i="1"/>
+            <MaxValue i="6"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[// _____________________________________________________________________
+uint32_t p0,p1,p2,p3;  // phase
+int32_t kFb;  // feedback coefficient
+int32_t y0,y1,y2,y3;   // raw (modulated)sine
+int32_t fy0,fy1,fy2,fy3;  // filtered output
+int32_t of0,of1,of2,of3;  // pitch offsets
+int32_t aGain, dGain;   // interp gain
+int32_t aFb, dFb;       // interp Fb
+// _____________________________________________________________________]]></code.declaration>
+      <code.init><![CDATA[// _____________________________________________________________________
+p0 = p1 = p2 = p3 = 0;
+y0 = y1 = y2 = y3 = 0;
+fy0 = fy1 = fy2 = fy3 = 0;
+of0 = 0;
+aGain = dGain = 0;
+aFb = dFb = 0;
+// _____________________________________________________________________]]></code.init>
+      <code.krate><![CDATA[if(param_detune == 1){
+  of0 = (int32_t)(-0.0023f * (1<<(27-6)));
+  of1 = (int32_t)( 0.0016f * (1<<(27-6)));
+  of2 = (int32_t)(-0.0007f * (1<<(27-6)));
+  of3 = (int32_t)( 0.0020f * (1<<(27-6)));
+} else if(param_detune == 2){
+  of0 = (int32_t)(-0.023f * (1<<(27-6)));
+  of1 = (int32_t)( 0.015f * (1<<(27-6)));
+  of2 = (int32_t)(-0.007f * (1<<(27-6)));
+  of3 = (int32_t)(-0.005f * (1<<(27-6)));
+} else if(param_detune == 3){
+  of0 = (int32_t)(-0.0023f * (1<<(27-6)));
+  of1 = (int32_t)( 0.0015f * (1<<(27-6)));
+  of2 = (int32_t)( 12.007f * (1<<(27-6)));
+  of3 = (int32_t)( 11.995f * (1<<(27-6)));
+} else  if(param_detune == 4){
+  of0 = (int32_t)(-0.023f * (1<<(27-6)));
+  of1 = (int32_t)( 0.015f * (1<<(27-6)));
+  of2 = (int32_t)( 12.013f * (1<<(27-6)));
+  of3 = (int32_t)( 11.981f * (1<<(27-6)));
+} else if(param_detune == 5){
+  of0 = (int32_t)(-0.0023f * (1<<(27-6)));
+  of1 = (int32_t)( 7.0015f * (1<<(27-6)));
+  of2 = (int32_t)( 19.007f * (1<<(27-6)));
+  of3 = (int32_t)( 11.995f * (1<<(27-6)));
+} else {
+  of0 = (int32_t)(-0.023f * (1<<(27-6)));
+  of1 = (int32_t)( 7.015f * (1<<(27-6)));
+  of2 = (int32_t)( 19.013f * (1<<(27-6)));
+  of3 = (int32_t)( 11.981f * (1<<(27-6)));
+} 
+
+// _____________________________________________________________________
+int32_t dp0,dp1,dp2,dp3; // delta phase aka freq
+MTOFEXTENDED(param_pitch + inlet_pitch + of0, dp0);
+MTOFEXTENDED(param_pitch + inlet_pitch + of1, dp1);
+MTOFEXTENDED(param_pitch + inlet_pitch + of2, dp2);
+MTOFEXTENDED(param_pitch + inlet_pitch + of3, dp3);
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                           kRate -> aRate gain interp
+dGain = (inlet_gain - aGain) >> 4;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// mapping:
+// fbMod [0 64] -> [fb0 fb1] with scaling
+kFb = ___SMMUL(param_fb1*3,                inlet_fbMod <<4    );
+kFb = ___SMMLA(param_fb0*3, (((1<<27)-1) - inlet_fbMod)<<4, kFb);
+disp_fb = kFb>>1;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                             kRate -> aRate FB interp
+dFb = (kFb - aFb) >> 4;
+// _____________________________________________________________________
+//                                                     Audio rate loops
+if(kFb > 0){
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                      Simple feedback
+  int j; for(j = 0; j < BUFSIZE; j++){
+    // phase increment
+    p0 += dp0; p1 += dp1; p2 += dp2; p3 += dp3;
+    // raw sine access with feedback (with low passed output "fy")
+    y0 = sine2t[ ((uint32_t)(p0 + (___SMMUL(fy0, aFb)<<4) )) >> 20 ];
+    y1 = sine2t[ ((uint32_t)(p1 + (___SMMUL(fy1, aFb)<<4) )) >> 20 ];
+    y2 = sine2t[ ((uint32_t)(p2 + (___SMMUL(fy2, aFb)<<4) )) >> 20 ];
+    y3 = sine2t[ ((uint32_t)(p3 + (___SMMUL(fy3, aFb)<<4) )) >> 20 ];
+    // we can tolerate raw access to the sine table thanks to
+    // this "anti hunting" low pass filter
+    fy0 = (fy0>>1) + (y0>>1);
+    fy1 = (fy1>>1) + (y1>>1);
+    fy2 = (fy2>>1) + (y2>>1);
+    fy3 = (fy3>>1) + (y3>>1);
+    outlet_wave0[j] = ___SMMUL(aGain, fy0);
+    outlet_wave1[j] = ___SMMUL(aGain, fy1);
+    outlet_wave2[j] = ___SMMUL(aGain, fy2);
+    outlet_wave3[j] = ___SMMUL(aGain, fy3);
+    aGain += dGain;
+    aFb += dFb;
+  }
+} else {
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                             Squared feedback variant
+  int j; for(j = 0; j < BUFSIZE; j++){
+    // phase increment
+    p0 += dp0; p1 += dp1; p2 += dp2; p3 += dp3;
+    // raw sine access with squared lp feedback
+    y0 = sine2t[ ((uint32_t)(p0 + (___SMMUL(___SMMUL(fy0, fy0), aFb)<<5) )) >> 20 ];
+    y1 = sine2t[ ((uint32_t)(p1 + (___SMMUL(___SMMUL(fy1, fy1), aFb)<<5) )) >> 20 ];
+    y2 = sine2t[ ((uint32_t)(p2 + (___SMMUL(___SMMUL(fy2, fy2), aFb)<<5) )) >> 20 ];
+    y3 = sine2t[ ((uint32_t)(p3 + (___SMMUL(___SMMUL(fy3, fy3), aFb)<<5) )) >> 20 ];
+    // "anti hunting" low pass filter
+    fy0 = (fy0>>1) + (y0>>1);
+    fy1 = (fy1>>1) + (y1>>1);
+    fy2 = (fy2>>1) + (y2>>1);
+    fy3 = (fy3>>1) + (y3>>1);
+    outlet_wave0[j] = ___SMMUL(aGain, fy0);
+    outlet_wave1[j] = ___SMMUL(aGain, fy1);
+    outlet_wave2[j] = ___SMMUL(aGain, fy2);
+    outlet_wave3[j] = ___SMMUL(aGain, fy3);
+    aGain += dGain;
+    aFb += dFb;
+  }
+}
+// _____________________________________________________________________]]></code.krate>
+   </obj.normal>
+</objdefs>
