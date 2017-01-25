@@ -19,16 +19,14 @@
       <attribs/>
       <code.declaration><![CDATA[int32_t val;
 int ntrig;
-int rnd;
-int bang;
+
 int latch;
 int mtrig;
 int ptrig;
 int pval;]]></code.declaration>
       <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
       ntrig = 0;
-      rnd = 0;
-      bang = 1;
+     
       latch = 0;
       ptrig = 0;
 	  pval = 0;
@@ -43,13 +41,10 @@ if ((pval != inlet_i)&(!ptrig)) {
      //prob
 if ((ptrig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
       else if (!(ptrig>0)) ntrig=0;
-      rnd=val;
-      rnd = param_prob>val ;
-      bang =rnd>0?1:0;
+
       //latch
-      if ((bang>0) && !mtrig) {latch = inlet_i; mtrig=1;}
-      if (!(bang>0)) mtrig=0; 
-outlet_o= (rnd>0)?latch:inlet_i;
-disp_on = outlet_o;]]></code.krate>
+      if (((param_prob>val)>0) && !mtrig) {latch = inlet_i; mtrig=1;}
+      if (!((param_prob>val)>0)) mtrig=0; 
+outlet_o= ((param_prob>val)>0)?latch:inlet_i;]]></code.krate>
    </obj.normal>
 </objdefs>
