@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="KarplusStrong" uuid="0bca8485-fbc7-496f-ad9c-98c88773b5f4">
       <sDescription>Karplus-strong synthesis delay
 -pitch tuned to the same pitch of a normal oscillator. (5=440hz)
@@ -12,7 +12,6 @@
       <inlets>
          <frac32buffer name="in" description="delay time (fraction of total delayline size)"/>
          <frac32 name="pitch"/>
-         <frac32 name="position"/>
          <frac32 name="damp"/>
          <frac32 name="strength"/>
          <frac32 name="influence"/>
@@ -43,8 +42,7 @@ int32_t T1ime;]]></code.declaration>
 array = &_array[parent->polyIndex][0];
    int i;
    writepos = 0;
-   for(i=0;i<LENGTH;i++) array[i] = 0;
-]]></code.init>
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
       <code.krate><![CDATA[int32_t pitch=inlet_pitch+95860818+param_pitch;
 int32_t damp;
 MTOF(param_damp+___SMMUL(pitch<<3,(__USAT(param_influence+inlet_influence,27))<<2)+inlet_damp,damp)
@@ -58,11 +56,7 @@ float32_t dB=(float32_t)(-10)*ratio;
 dB=powf(2,dB);
 int32_t TIME=(int32_t)((1<<25)*fratio);
 uint32_t tmp_w1 = (TIME<<(LENGTHPOW+3)) & 0x3FFFFFFF;
-uint32_t tmp_w2 = (1<<30) - tmp_w1;
-
-
-
-]]></code.krate>
+uint32_t tmp_w2 = (1<<30) - tmp_w1;]]></code.krate>
       <code.srate><![CDATA[writepos = (writepos + 1)&LENGTHMASK;          
 uint32_t tmp_di1 = writepos - (Time) -1;
 int32_t tmp_a1 = array[tmp_di1&LENGTHMASK];
