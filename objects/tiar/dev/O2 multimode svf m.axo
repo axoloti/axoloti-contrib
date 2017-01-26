@@ -1,0 +1,56 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="O2 multimode svf m" uuid="bfb0d405-5f20-468d-b727-48c7cf0160c3">
+      <sDescription>multimode filter, state-variable type, modulation inputs</sDescription>
+      <author>T.Rochebois based on code by Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="x1"/>
+         <frac32buffer.bipolar name="x0"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="hp1" description="highpass filter output"/>
+         <frac32buffer name="hp0"/>
+         <frac32buffer name="bp1" description="bandpass filter output"/>
+         <frac32buffer name="bp0"/>
+         <frac32buffer name="lp1" description="lowpass filter output"/>
+         <frac32buffer name="lp0"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t low;
+int32_t band;]]></code.declaration>
+      <code.init><![CDATA[low = 0;
+band = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t damp = (0x80<<24) - (__USAT(inlet_reso + param_reso,27)<<4);
+damp = ___SMMUL(damp,damp);
+int32_t alpha;
+int32_t freq;
+int32_t pitch = __SSAT(param_pitch+inlet_pitch,28);
+MTOFEXTENDED(pitch,alpha);
+SINE2TINTERP(alpha>>1,freq);]]></code.krate>
+      <code.srate><![CDATA[int32_t in1 = inlet_x1;
+int32_t notch = inlet_x1 - (___SMMUL(damp,band)<<1);
+low = low + (___SMMUL(freq,band)<<1);
+int32_t high  = notch - low;
+band = (___SMMUL(freq,high)<<1) + band;// - drive*band*band*band;
+outlet_lp1 = low;
+outlet_hp1 = high;
+outlet_bp1 = band;
+
+in1 = inlet_x0;
+notch = inlet_x0 - (___SMMUL(damp,band)<<1);
+low = low + (___SMMUL(freq,band)<<1);
+high  = notch - low;
+band = (___SMMUL(freq,high)<<1) + band;// - drive*band*band*band;
+outlet_lp0 = low;
+outlet_hp0 = high;
+outlet_bp0 = band;]]></code.srate>
+   </obj.normal>
+</objdefs>
