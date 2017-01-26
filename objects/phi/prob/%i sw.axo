@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.11">
-   <obj.normal id="%i sw" uuid="dfe55b8c-0df3-49a6-a7dc-85915b749c6b">
+<objdefs appVersion="1.0.9">
+   <obj.normal id="%i sw" uuid="66fb1ad7-4879-4eaf-7caa-0810a49443f0">
       <sDescription>probabiltiy random i</sDescription>
       <author>Philoop</author>
       <license>GPL</license>
@@ -26,15 +26,19 @@
       <code.declaration><![CDATA[int32_t val;
 int32_t val1;
 int ntrig;
+int rnd;
 int rtrig;]]></code.declaration>
       <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
 val1 = (int32_t)(GenerateRandomNumber())>>4;
       ntrig = 0;
+      rnd = 0;
       rtrig = 0;]]></code.init>
-      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
+      <code.krate><![CDATA[ if ((inlet_trig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
       else if (!(inlet_trig>0)) ntrig=0;
+      rnd = val;
+      rnd = param_prob>val ;
      
-     if (((param_prob>val)&&(inlet_trig)>0) && !rtrig) {
+     if (((rnd)&&(inlet_trig)>0) && !rtrig) {
       if (param_value) 
          val1 = (int32_t)(GenerateRandomNumber()% (param_value));
       else val1 = 0;
@@ -42,6 +46,7 @@ val1 = (int32_t)(GenerateRandomNumber())>>4;
    }
    else if (!(inlet_trig>0)) rtrig=0;
    outlet_o = (param_on)?(val1+inlet_reso):(inlet_reso);
-   disp_v=outlet_o;]]></code.krate>
+   disp_v=outlet_o;
+]]></code.krate>
    </obj.normal>
 </objdefs>
