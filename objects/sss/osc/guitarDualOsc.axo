@@ -15,7 +15,8 @@ The guitarTable module will create a complex waveform and this module is able to
          <frac32 name="sync"/>
          <int32 name="rateM"/>
          <int32 name="rateD"/>
-         <int32 name="preset"/>
+         <int32 name="preset1"/>
+         <int32 name="preset2"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -38,10 +39,15 @@ The guitarTable module will create a complex waveform and this module is able to
          <frac32.u.map name="pwm"/>
          <frac32.u.map name="mod"/>
          <frac32.u.map name="start"/>
-         <int32 name="preset">
+         <int32 name="preset1">
             <MinValue i="0"/>
-            <MaxValue i="31"/>
+            <MaxValue i="1024"/>
          </int32>
+         <int32 name="preset2">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.tgl name="link"/>
       </params>
       <attribs>
          <objref name="table"/>
@@ -114,10 +120,17 @@ Start=Start>(1<<27)?(2<<27)-Start:Start;
 
    int rateM=param_rateM+inlet_rateM;
    int rateD=param_rateD+inlet_rateD;
-   int preset=param_preset+inlet_preset;
-   preset=preset-(preset/attr_table.presets)*attr_table.presets;
-   preset=preset<0?preset+attr_table.presets:preset;
-   preset=preset*attr_table.LENGTH;]]></code.krate>
+   int preset1=param_preset1+inlet_preset1;
+
+
+   int preset2=param_preset2+inlet_preset2+preset1*param_link;
+   preset2=preset2-(preset2/attr_table.presets)*attr_table.presets;
+   preset2=preset2<0?preset2+attr_table.presets:preset2;
+   preset2=preset2*attr_table.LENGTH;
+   
+   preset1=preset1-(preset1/attr_table.presets)*attr_table.presets;
+   preset1=preset1<0?preset1+attr_table.presets:preset1;
+   preset1=preset1*attr_table.LENGTH;]]></code.krate>
       <code.srate><![CDATA[if((inlet_sync>0)&&!strig){
 	timer=((1<<31)/count)<<1;
 	count=0;
@@ -141,8 +154,8 @@ if(PHase<Pm){
 Phase=(1<<31)+((int32_t)(PHase*i4))+i2;}
 if(PHase>=Pm){Phase=((uint32_t)((PHase-Pm)*i5-(1<<31)))+i2+(1<<31);}
 
-outlet_wave=attr_table.array[((Phase>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset];
-outlet_wave+=attr_table.array[((((Phase*param_harm2nd)+LFO)>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset]/(1+(param_harm2nd-1)/2);
+outlet_wave=attr_table.array[((Phase>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset1];
+outlet_wave+=attr_table.array[((((Phase*param_harm2nd)+LFO)>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset2]/(1+(param_harm2nd-1)/2);
 
    i1 += step1;
    i2 += step2;

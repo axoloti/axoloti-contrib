@@ -24,6 +24,7 @@ It also has an S-curve control, this dials in S-curves for all stages. Negative 
       </inlets>
       <outlets>
          <frac32 name="out"/>
+         <frac32 name="attack"/>
          <int32 name="stage"/>
          <bool32 name="nxtStg"/>
       </outlets>
@@ -56,6 +57,8 @@ int32_t out;
 int32_t enva1;
 int32_t enva2;
 int32_t remain;
+int32_t Attack;
+int32_t REM;
 int32_t curving(int32_t in,int32_t Exp){
 	
 	in=in>>3;
@@ -99,7 +102,7 @@ rel=rel>>3;
 if((inlet_gate>0)&&!trig){
 	stage=1;
 	trig=1;}
-else if((!(inlet_gate>0))&&trig){trig=0;stage=0;remain=out;enva1=0;enva2=0;env1=0;env3=0;}
+else if((!(inlet_gate>0))&&trig){trig=0;stage=0;remain=out;REM=Attack;enva1=0;enva2=0;env1=0;env3=0;}
 
 if(stage==1){
 env1+=att;
@@ -114,18 +117,20 @@ enva1=enva1*ratio1;}
 
 curving(env3,-CrvR);
 Cenv3=curved;
-Cenv3=___SMMUL((1<<27)-Cenv3<<3,remain<<2),
+Cenv3=(1<<27)-Cenv3,
 
 
 
 curving(enva1,CrvA);
 Cenv1=curved;
 curving(enva2,-CrvD);
+Attack=Cenv1-curved;
+outlet_attack=__USAT(Attack+___SMMUL(Cenv3<<3,REM<<2),27);
 Cenv2=___SMMUL(curved<<2,sus<<3);
 
 
 
-out=__USAT(Cenv1-Cenv2+Cenv3,27);
+out=__USAT(Cenv1-Cenv2+___SMMUL(Cenv3<<3,remain<<2),27);
 outlet_out=out;
 outlet_nxtStg=prev==stage?0:1;
 outlet_stage=stage;
