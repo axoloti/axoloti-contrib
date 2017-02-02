@@ -1,0 +1,23 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="DP *" uuid="1bcf3bba-8651-4c5f-a59c-97b4caec8b1e">
+      <sDescription>DP AA ring modulator</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="input"/>
+         <frac32buffer name="b" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x0,x1,y0,y1;]]></code.declaration>
+      <code.init><![CDATA[x0=x1=y0=y1=0;]]></code.init>
+      <code.srate><![CDATA[x1 = x0; x0 = inlet_a * (1.0f/(1<<27));
+y1 = y0; y0 = inlet_b * (1.0f/(1<<27));
+outlet_result= (int32_t) ((1<<27) * (1/6.0f)*(x0*(2*y0+y1)+x1*(y0+2*y1)   ) );]]></code.srate>
+   </obj.normal>
+</objdefs>
