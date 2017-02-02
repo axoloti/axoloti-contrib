@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="glideMultiExt" uuid="b0be6350-d9b7-4407-b6b5-70011ed760de">
       <sDescription>glide module for control signals with 3 different glide modes:
 1-exponential (continous calculation of difference between current output value and input value, adding a part of the difference to the output at each sample calculation)
@@ -32,16 +32,14 @@ glide=glide>(1<<27)?(1<<27):glide;
 glide=glide<0?0:glide;
 rate=___SMMUL(glide<<3,glide<<2);
 rate=rate<<8;
+if(inlet_glideOFF==0)
+{
 if(param_mode==0)
 {
-if(inlet_glideOFF==0)
-{diff=inlet_in-follow;
+diff=inlet_in-follow;
 diff=(diff<<21)/((1<<21)+rate);
 follow += diff;
 outlet_out=follow;
-}
-else
-{outlet_out=inlet_in;}
 }
 if (param_mode==1)
 {
@@ -82,6 +80,8 @@ follow+=(diff<<21)/((1<<21)+rate);
 outlet_out=follow;
 prev=inlet_in;
 }
-]]></code.krate>
+}
+else
+{outlet_out=inlet_in;}]]></code.krate>
    </obj.normal>
 </objdefs>
