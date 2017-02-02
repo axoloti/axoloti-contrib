@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="DP2PWM" uuid="fdbc80e7-0b26-4cad-8e79-6a609c01caa5">
+      <sDescription>Low CPU Anti Aliased Pulse Width Modulated Osc (Second order differentiated polynomial).</sDescription>
+      <author>T. Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>DP2PWM.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="pw"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="selfPM wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" description="Pitch" noLabel="true"/>
+         <frac32.u.map name="pw" description="Pulse Width"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float pa, pb, dp, _dp2, y0, y1, y2;
+float I2(float p){
+  return p * (1/6.0f + p * (-0.5f + p * (1/3.0f)));
+}]]></code.declaration>
+      <code.init><![CDATA[pa = pb = y0 = y1 = y2 = 0.0f;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(1.0f/(1<<31));
+_dp2 = (1 << 27) / (dp * dp);
+
+float pw = param_pw * (1.0f / (1 << 27)) + inlet_pw * (1.0f / (1 << 27));
+if(pw<0.05f) {pw = 0.05f;}
+if(pw>0.95f) {pw = 0.95f;}
+pb = pa + pw;
+pb -= (pb>1);
+// change of dp => update state variables y1 y2
+pa -= dp; pa += (pa < 0); pb -= dp; pb += (pb < 0);
+y2 = I2(pa) - I2(pb);
+
+pa += dp; pa -= (pa > 1); pb += dp; pb -= (pb > 1);
+y1 = I2(pa) - I2(pb);]]></code.krate>
+      <code.srate><![CDATA[pa += dp; pa -= (pa > 1); pb += dp; pb -= (pb > 1);
+y0 = I2(pa) - I2(pb);
+outlet_wave = (int32_t)((y0 + y2 - 2 * y1) * _dp2);
+y2 = y1;
+y1 = y0;]]></code.srate>
+   </obj.normal>
+</objdefs>

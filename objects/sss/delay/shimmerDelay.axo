@@ -126,7 +126,7 @@ spread+=step2;
 
 
 writepos = (writepos + 1)&LENGTHMASK;
-in[0]=__SSAT((inlet_in+___SMMUL(-(param_feed<<1)*3,in[1]<<2))>>14,16);
+in[0]=__SSAT(((inlet_in>>1)+___SMMUL(-(param_feed<<1)*3,in[1]<<2))>>14,16);
 sum=0;
 int32_t sine;
 int32_t outL=0;
@@ -154,7 +154,7 @@ sine=(sine>>5)+(1<<26);
      outL+=___SMMUL(___SMMUL((damp[i]+tmp_r>>1)<<3,slope<<2)<<3,sine<<2);
      outR+=___SMMUL(___SMMUL((damp[i]+tmp_r>>1)<<3,slope<<2)<<3,(1<<27)-sine<<2);
 }
-outlet_outL=outL+inlet_in;
-outlet_outR=outR+inlet_in;]]></code.srate>
+outlet_outL=(outL<<1)+inlet_in;
+outlet_outR=(outR<<1)+inlet_in;]]></code.srate>
    </obj.normal>
 </objdefs>

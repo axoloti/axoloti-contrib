@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b">
+      <sDescription>Low CPU Anti Aliased Sawtooth (Second order differentiated polynomial).</sDescription>
+      <author>T. Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>DP2Saw.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="selfPM wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, dp, _dp2, y0, y1, y2;
+float I2(float p){
+  return p * (1/6.0f + p * (-0.5f + p * (1/3.0f)));
+}]]></code.declaration>
+      <code.init><![CDATA[p = y0 = y1 = y2 = 0.0f;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(1.0f/(1<<31));
+_dp2 = (1 << 27) / (dp * dp);
+// change of dp => update state variables y1 y2
+p -= dp; p += (p < 0);
+y2 = I2(p);
+p += dp; p -= (p > 1);
+y1 = I2(p);]]></code.krate>
+      <code.srate><![CDATA[p += dp; p -= (p > 1);
+y0 = I2(p);
+outlet_wave = (int32_t) ((y0 + y2 - 2 * y1) * _dp2);
+y2 = y1;
+y1 = y0;]]></code.srate>
+   </obj.normal>
+</objdefs>
