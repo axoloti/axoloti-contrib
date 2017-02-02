@@ -8,47 +8,53 @@
          <frac32.s.map name="a" value="-63.0"/>
          <frac32.s.map name="d" value="42.0"/>
          <frac32.u.map name="s" value="1.0"/>
-         <frac32.s.map name="r" value="9.0"/>
+         <frac32.s.map name="r" value="8.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_2" x="392" y="42">
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_2" x="210" y="0">
       <params>
          <frac32.u.map name="gain1" value="42.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/multimode svf m" uuid="71d5f8b2131b691d591a9a9ee28771309f8938d" name="multimode_1" x="490" y="70">
+   <obj type="tiar/osc/DP2Pulsaw" uuid="eb80782d-4336-4a6d-a24d-eaf20e2e6bc6" name="DP2Pulsaw_1" x="14" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/math/DP2_star" uuid="1bcf3bba-8651-4c5f-a59c-97b4caec8b1e" name="DP2_star_1" x="168" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="280" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="378" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/multimode svf m" uuid="71d5f8b2131b691d591a9a9ee28771309f8938d" name="multimode_1" x="434" y="210">
       <params>
          <frac32.s.map name="pitch" value="16.0"/>
-         <frac32.u.map name="reso" value="31.0"/>
+         <frac32.u.map name="reso" value="30.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/osc/DP2Pulsaw" uuid="eb80782d-4336-4a6d-a24d-eaf20e2e6bc6" name="DP2Pulsaw_1" x="182" y="196">
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="560" y="210">
       <params>
-         <frac32.s.map name="pitch" value="-13.0"/>
+         <frac32.u.map name="InGain" value="27.0"/>
+         <frac32.u.map name="OutGain" value="31.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="294" y="196">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="434" y="196">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="644" y="196">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="672" y="210">
       <params/>
       <attribs/>
    </obj>
    <nets>
-      <net>
-         <source obj="DP2Pulsaw_1" outlet="wave"/>
-         <dest obj="scope_2" inlet="in"/>
-         <dest obj="vca_1" inlet="a"/>
-      </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
@@ -73,8 +79,22 @@
       </net>
       <net>
          <source obj="multimode_1" outlet="lp"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="DP2_star_1" outlet="result"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DP2Pulsaw_1" outlet="wave"/>
+         <dest obj="DP2_star_1" inlet="a"/>
+         <dest obj="DP2_star_1" inlet="b"/>
       </net>
    </nets>
    <settings>
@@ -90,9 +110,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>963</x>
-      <y>28</y>
-      <width>825</width>
+      <x>753</x>
+      <y>1</y>
+      <width>1098</width>
       <height>518</height>
    </windowPos>
 </patch-1.0>
