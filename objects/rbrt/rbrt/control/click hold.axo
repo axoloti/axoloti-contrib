@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="click hold" uuid="18efd892-468b-4395-a455-47ea981ad016">
+      <sDescription>detect how long a momentary button is held down;
+3 stages,no hold,short hold,long hold.
+outputs a pulse at the respective outlet on release of the button and the current stage (1 - short hold , 2 - long hold , 0 - no hold or cancel) out of  &apos;stage&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.risingfalling name="gate"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="no" description="on release = no hold"/>
+         <bool32.pulse name="short" description="short hold"/>
+         <bool32.pulse name="long" description="long hold"/>
+         <int32 name="stage" description="current stage"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="short" description="short hold start,k-ticks" MinValue="1" MaxValue="65355" DefaultValue="1"/>
+         <spinner name="long" description="long hold start and short hold end,k-ticks" MinValue="1" MaxValue="65355" DefaultValue="1"/>
+         <spinner name="cancel" description="cancel and long hold end,k-ticks" MinValue="1" MaxValue="65536" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t trigstart;
+int tc;
+
+
+uint32_t timer;
+uint32_t clocker;
+
+bool no;
+bool sh;
+bool lg;]]></code.declaration>
+      <code.init><![CDATA[tc = 0;
+trigstart = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_gate) {
+	tc +=1;
+	if (tc < attr_short) outlet_stage = 0;
+	if ((tc >= attr_short) && (tc < attr_long)) outlet_stage= 1;
+	if ((tc >= attr_long) && (tc < attr_cancel)) outlet_stage = 2;
+}
+if (!inlet_gate ){
+if ((tc > 0) && (tc < attr_short)) no = 1;
+if ((tc >= attr_short) && (tc < attr_long)) sh= 1;
+if ((tc >= attr_long) && (tc < attr_cancel)) lg= 1;
+tc = 0;
+outlet_stage = 0;
+}
+
+
+outlet_no = no;
+no = 0;
+
+outlet_short = sh;
+sh =  0;
+
+outlet_long = lg;
+lg =  0;]]></code.krate>
+   </obj.normal>
+</objdefs>
