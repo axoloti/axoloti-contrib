@@ -8,10 +8,6 @@
       </attribs>
    </obj>
    <comment type="patch/comment" x="252" y="28" text="&apos;loop_multi&apos; divides a table into up to 8 &apos;slots&apos;."/>
-   <obj type="rbrt/math/div iif" uuid="fe89a2c7-e258-4e26-9a5f-172ad2538a2a" name="div_3" x="686" y="28">
-      <params/>
-      <attribs/>
-   </obj>
    <comment type="patch/comment" x="252" y="42" text="you can set &apos;loop_multi&apos; to record in any of these."/>
    <comment type="patch/comment" x="504" y="42" text="demux slot parameters "/>
    <comment type="patch/comment" x="1218" y="42" text="rollover count since reset"/>
@@ -108,11 +104,19 @@
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="56" y="350" text="record multiple bars in sync with the global transport"/>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_6" x="560" y="350">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_6" x="504" y="336">
       <params/>
       <attribs/>
    </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_2" x="1288" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_1" x="1456" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="56" y="350" text="record multiple bars in sync with the global transport"/>
    <comment type="patch/comment" x="56" y="364" text="when recording a slave-loop"/>
    <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_4" x="798" y="364">
       <params/>
@@ -162,7 +166,7 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="56" y="462" text="record 1 bar when recording a slave-loop"/>
-   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t1" x="56" y="532">
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t1" x="56" y="504">
       <params/>
       <attribs>
          <combo attributeName="size" selection="1048576"/>
@@ -171,14 +175,6 @@
          </text>
       </attribs>
    </obj>
-   <obj type="rbrt/control/timer" uuid="d4a352fc-5acf-466d-b462-079a1b5a2b41" name="timer_1" x="238" y="532">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/math/&gt;&gt; i" uuid="db4dadc2-c37b-462b-9d67-38ef33a4db38" name="&gt;&gt;_2" x="364" y="532">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_2" x="798" y="546">
       <params/>
       <attribs/>
@@ -186,26 +182,6 @@
    <comment type="patch/comment" x="938" y="546" text="when the slot is playing,it will STOP immediately"/>
    <comment type="patch/comment" x="938" y="560" text="when the slot is NOT playing,it will start playing in sync with the global transport "/>
    <comment type="patch/comment" x="938" y="574" text="once the transport reaches the starting point of the slot"/>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="280" y="588">
-      <params>
-         <int32 name="value" value="13"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_3" x="364" y="602">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="406" y="602">
-      <params/>
-      <attribs/>
-   </obj>
-   <comment type="patch/comment" x="490" y="602" text="GLOBAL TRANSPORT"/>
-   <comment type="patch/comment" x="140" y="630" text="whats a LOONG loop ? &gt;&gt;"/>
-   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="global transport_" x="476" y="630">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="toggle SLAVE" x="672" y="630">
       <params>
          <bool32.mom name="b" value="0"/>
@@ -224,8 +200,6 @@
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="168" y="658" text="when recording LOONG master-loops,"/>
-   <comment type="patch/comment" x="28" y="672" text="the global transport will be set to 1/2 , 1/4 , 1/8 the length of the loop"/>
    <nets>
       <net>
          <source obj="in_1" outlet="wave"/>
@@ -330,7 +304,6 @@
          <source obj="demux_1" outlet="o0"/>
          <dest obj="inv_1" inlet="i"/>
          <dest obj="flipflop_4" inlet="reset"/>
-         <dest obj="timer_1" inlet="toggle"/>
       </net>
       <net>
          <source obj="flipflop_5" outlet="o"/>
@@ -365,19 +338,6 @@
       <net>
          <source obj="demux_sh_4" outlet="o0"/>
          <dest obj="ldrive_1" inlet="offset"/>
-      </net>
-      <net>
-         <source obj="timer_1" outlet="t"/>
-         <dest obj="&gt;&gt;_2" inlet="in"/>
-         <dest obj="i_3" inlet="in"/>
-      </net>
-      <net>
-         <source obj="i_2" outlet="out"/>
-         <dest obj="&gt;&gt;_2" inlet="shift"/>
-      </net>
-      <net>
-         <source obj="&gt;&gt;_2" outlet="out"/>
-         <dest obj="i_1" inlet="in"/>
       </net>
       <net>
          <source obj="demux_sh_4" outlet="o1"/>
@@ -421,6 +381,11 @@
          <dest obj="lsync_1" inlet="pos"/>
          <dest obj="lsync_2" inlet="pos"/>
          <dest obj="lrec_1" inlet="pos"/>
+         <dest obj="kscope_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="ldrive_2" outlet="phase"/>
+         <dest obj="kscope_1" inlet="in"/>
       </net>
    </nets>
    <settings>
