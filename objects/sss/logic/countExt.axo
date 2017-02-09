@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="countExt" uuid="44ed9668-63af-48f8-a018-99db931c5e37">
       <sDescription>cyclic up counter with external count-up control</sDescription>
       <author>Johannes Taelman edit by Remco van der Most</author>
@@ -24,15 +24,14 @@
    ntrig = 0;
    rtrig = 0;
 ]]></code.init>
-      <code.krate><![CDATA[outlet_c=0;
-if ((inlet_trig>0) && !ntrig) {
-   count += 1; if (count>=inlet_MaxCount) {count = 0; outlet_c = 1;}
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+   count += 1; if (count>=inlet_MaxCount) {count = 0; }
    ntrig=1;
 }
 else if (!(inlet_trig>0)) ntrig=0;
 if ((inlet_r>0) && !rtrig) {count=0; rtrig = 1;}
 else if (!(inlet_r>0)) rtrig=0;
 outlet_o= count;
-]]></code.krate>
+outlet_c = (count==0)&&inlet_trig;]]></code.krate>
    </obj.normal>
 </objdefs>
