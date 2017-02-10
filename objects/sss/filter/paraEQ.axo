@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="paraEQ" uuid="cfb73bea-316d-40a4-b622-a572273a25f9">
+   <obj.normal id="paraEQ" uuid="d7026ba6-245f-47a7-92a3-66d19d1ee676">
       <sDescription>2-pole resonant multimode filter (biquad)
 
 0=lowpass
@@ -62,8 +62,7 @@ int mode;
 int i;
 int j;
 int32_t out[BUFSIZE];
-int32_t TMP[BUFSIZE];
-
+int32_t TMP1[BUFSIZE];
 //0=mode
 //1=freq
 //2=reso
@@ -178,7 +177,7 @@ array[stage+2]=param_reso;
 array[stage+3]=param_gain;
 }
 for(i=0;i<BUFSIZE;i++){
-	 TMP[i]=0;
+	 TMP1[i]=inlet_in[i];
 	 }
 for(j=0;j<attr_stages;j++){
 	 mode=array[j<<2];
@@ -186,14 +185,14 @@ for(j=0;j<attr_stages;j++){
       MTOF(array[(j<<2)+1],freq);
       reso=array[(j<<2)+2];
       filter(freq,reso,mode,j);
-      biquad_dsp(&bs[j],&bc[j],inlet_in,outlet_out);
+      biquad_dsp(&bs[j],&bc[j],TMP1,outlet_out);
       gain=array[(j<<2)+3]*(1-(param_STorMS<<1));
       gain=gain>0?gain:gain;
       for(i=0;i<BUFSIZE;i++){
-	 TMP[i]+=___SMMUL(outlet_out[i]<<2,gain<<3);
+	 TMP1[i]+=___SMMUL(outlet_out[i]<<2,gain<<3);
 	 }}}
 for(i=0;i<BUFSIZE;i++){
-outlet_out[i]=TMP[i]+inlet_in[i];
+outlet_out[i]=TMP1[i];
 }
 
 prev=stage+load;]]></code.krate>
