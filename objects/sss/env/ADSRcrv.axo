@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.11">
    <obj.normal id="ADSRcrv" uuid="3eed0831-c77a-4251-8abe-5019a165602d">
       <sDescription>ADSR module with exp/inverse exp controls for attack, decay and release stages. Also outputs stage number and a gate high when it changes from stage (eg selecting different waveforms for my wavetable oscillators for each stage. you could use the autoCurve (patt-folder) to morph between settings at the different stages of the envelope.)
 
@@ -78,9 +78,9 @@ int32_t CrvD=__SSAT(param_crvD+inlet_crvD,28);
 int32_t CrvR=__SSAT((param_crvR<<1)+inlet_crvR,28);
 sus=__USAT((1<<27)-5-param_S-inlet_S,27);
 int32_t rel;
-MTOF(-param_A-inlet_A,att)
-MTOF(-param_D-inlet_D,dec)
-MTOF(-param_R-inlet_R,rel)
+MTOF(__SSAT(-param_A-inlet_A,28),att)
+MTOF(__SSAT(-param_D-inlet_D,28),dec)
+MTOF(__SSAT(-param_R-inlet_R,28),rel)
 int32_t choke;
 MTOF(32<<21,choke)
 att=att>>3;
