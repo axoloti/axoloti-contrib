@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="gateFiller" uuid="2df2d4bb-431e-498b-b113-7195c55435aa">
+<objdefs appVersion="1.0.11">
+   <obj.normal id="gateFiller" uuid="02cfaffd-1bf7-4dfa-ab10-3afb7f0e4405">
       <sDescription>Euclidian gate generator and random &quot;trigger-filler&quot;.
 Randomly fills up the array with gates until the desired amount of gates is reached.
 When  the &quot;filled&quot; control is dailed up, it randomly adds more and more gates to the remaining positions.
@@ -36,6 +36,7 @@ Next to the random gates, there&apos;s also an euclidian pattern generator.
             <MinValue i="0"/>
             <MaxValue i="8"/>
          </int32>
+         <bool32.tgl name="gate"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int val[64];
@@ -46,8 +47,7 @@ int32_t filled;
 int32_t total;]]></code.declaration>
       <code.init><![CDATA[for(i=0;i<64;i++){
 val[i] = 0;}
-ntrig = 0;
-]]></code.init>
+ntrig = 0;]]></code.init>
       <code.krate><![CDATA[total=inlet_max;
 filled=___SMMUL(total<<3,__USAT(___SMMUL(param_filled+inlet_filled<<3,((1<<27)-param_fit)<<2)+param_fit,27)<<2);
 int32_t fit=___SMMUL(total<<3,param_fit<<2);
@@ -69,7 +69,6 @@ if(used>filled)
 {val[(int32_t)(GenerateRandomNumber()% (total))]=0;}
 
 
-outlet_v = val[inlet_count]&inlet_trig;
-]]></code.krate>
+outlet_v = val[inlet_count]&(inlet_trig||(param_gate));]]></code.krate>
    </obj.normal>
 </objdefs>

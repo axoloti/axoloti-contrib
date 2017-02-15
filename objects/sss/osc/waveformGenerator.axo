@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.11">
-   <obj.normal id="waveformGenerator" uuid="06edbff4-77ed-44b8-b122-be707604b1d6">
+   <obj.normal id="waveformGenerator" uuid="d5c727e2-d089-48a7-a388-c613fd7eac55">
       <sDescription>Generates waveforms to be used with table-oscillators/LFO&apos;s.
 First 9 waveforms are &apos;standardised&quot; waveforms
 sine,triangle,saw,square,peak etc.
@@ -106,7 +106,16 @@ int32_t presets=attr_waveforms;
 int strig;
 int ltrig;
 int Do;
-int dtrig;]]></code.declaration>
+int dtrig;
+int32_t R;
+int32_t sine;
+int H[2];
+int S[attr_waveforms];
+int A[attr_waveforms];
+int E[attr_waveforms];
+int P[attr_waveforms];
+int Q;
+int32_t sum;]]></code.declaration>
       <code.init><![CDATA[static int32_t _array[LENGTH*attr_waveforms] __attribute__ ((section (".sdram")));
 array = &_array[0];
 
@@ -115,12 +124,7 @@ for(i=0;i<(LENGTH*attr_waveforms);i++)
 array[i]=0;
 }
 
-int H[2];
-int S[attr_waveforms];
-int A[attr_waveforms];
-int E[attr_waveforms];
-int P[attr_waveforms];
-int Q;
+
 H[0]=1;
 H[1]=harmonics;
 S[0]=0;
@@ -159,8 +163,7 @@ P[5]=0;
 P[6]=0;
 P[7]=1;
 P[8]=1;
-int32_t R;
-int32_t sine;
+
 //S=harmonic stepsize
 //A=linear volume decay
 //E=exponential volume decay on/off
@@ -180,7 +183,7 @@ int32_t sine;
 //}
 
 if(!trig){
-for(i=9;i<attr_waveforms;i++){
+for(i=0;i<attr_waveforms;i++){
 S[i]=(((int32_t)(GenerateRandomNumber()))&63)+1;
 A[i]=(((int32_t)(GenerateRandomNumber()))&1)+1;
 E[i]=((int32_t)(GenerateRandomNumber()))&1;
@@ -292,7 +295,7 @@ if ((save>0) && !strig) {
 if((Do>0)&&!dtrig){
 	dtrig=1;
 for(j=0;j<attr_waveforms;j++){
-int32_t sum=0;
+sum=0;
 float32_t ratio;
 for(i=0;i<LENGTH;i++){
 int32_t temp=array[i+j*LENGTH];
@@ -304,9 +307,8 @@ for(i=0;i<LENGTH;i++){
 array[i+j*LENGTH]=array[i+j*LENGTH]*ratio;
 }
 }
-
+Do=0;
 }
-else if((Do==0)&&dtrig){dtrig=0;}
-Do=0;]]></code.krate>
+else if((Do==0)&&dtrig){dtrig=0;}]]></code.krate>
    </obj.normal>
 </objdefs>
