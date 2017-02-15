@@ -1,0 +1,290 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="paraMorph" uuid="921b465c-26b9-4f79-8038-992b733c0f10">
+      <sDescription>morphing parametric EQ
+pitch inputs shifts the frequencies of all the filters in parallel.
+morph input morphs through the frequency settings of all the presets.
+transform input morphs through the presets for filter-modes, resonance/bandwidth and gain.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <int32 name="preset"/>
+         <frac32 name="pitch"/>
+         <frac32 name="morph"/>
+         <frac32 name="transform"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+         <int32 name="div1"/>
+         <int32 name="div2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="STorMS"/>
+         <int32 name="slot">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="stage">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <bool32.mom name="rnd"/>
+         <int32.mini name="from">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32.mini>
+         <int32.mini name="till">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32.mini>
+         <int32.hradio name="mode">
+            <MaxValue i="7"/>
+         </int32.hradio>
+         <frac32.s.map.pitch name="freq"/>
+         <frac32.u.map.filterq name="reso"/>
+         <frac32.s.map name="gain"/>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="999"/>
+         </int32>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+         <frac32.u.map name="stepM"/>
+         <frac32.u.map name="stepT"/>
+         <int32 name="quantM">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="quantT">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <spinner name="slots" MinValue="1" MaxValue="64" DefaultValue="1"/>
+         <spinner name="stages" MinValue="1" MaxValue="8" DefaultValue="1"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = (attr_stages<<2)*(attr_slots);
+int32_t *array;
+biquad_state bs[attr_stages*2];biquad_coefficients bc[attr_stages*2];
+int32_t freq;
+int32_t f1;
+int32_t f2;
+int32_t reso;
+int stages=attr_stages;
+int mode;
+int i;
+int j;
+int k;
+int32_t TMP1[2][BUFSIZE];
+
+//0=mode
+//1=freq
+//2=reso
+//3=gain
+int32_t gain;
+int32_t filter(int32_t FREQ,int32_t RESO,int32_t MODE, int G){
+switch(MODE>0?MODE:0){
+	case 0:	biquad_bp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 1:	biquad_bp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 2:	biquad_lp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 3:	biquad_hp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 4:	biquad_bp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 5:	biquad_lp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+	case 6:	biquad_hp_coefs(&bc[G],FREQ,INT_MAX - (__USAT(RESO,27)<<4));break;
+}
+};
+int prev;
+int prv;
+int OFS;
+char c[64];
+int offset;
+int pval;
+int strig;
+int ltrig;
+int rtrig;
+uint32_t W[4];
+int32_t F;
+int32_t MX(int32_t T){
+	T=T>0?T:-T;
+	T=T&((1<<28)-1);
+	F=T>(1<<27)?(1<<28)-T:T;
+}]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+for(i=0;i<attr_stages;i++){
+biquad_clearstate(&bs[i]);
+array[i<<2]=1;
+}
+
+strcpy(&c[0],"0:/para000.tab");
+offset = strlen("para");
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[int16_t preset=param_preset+inlet_preset;
+if (preset != pval){   pval = preset;
+   int i = preset;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+}
+int save=inlet_save+param_save;
+int load=inlet_load+param_load;
+  if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, &c[0], FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,&c[0]); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,&c[0]);
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,&c[0]);
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, &c[0], FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+  }
+  else if (!(load>0)) ltrig=0;
+
+
+int64_t MIX1=inlet_morph&((1<<27)-1);
+int64_t MIX2=inlet_transform&((1<<27)-1);
+
+outlet_div1=param_quantM;
+outlet_div2=param_quantT;
+int32_t quantM=param_quantM;
+int32_t quantT=param_quantT;
+float32_t step1=((float32_t)(attr_slots))/(quantM)*((param_stepM)/(1<<21));
+float32_t step2=((float32_t)(attr_slots))/(quantT)*((param_stepT)/(1<<21));
+
+
+
+W[0]=((MIX1>>4)*quantM)>>23;
+MIX1=(MIX1-(W[0]<<27)/quantM)*quantM;
+W[1]=(float32_t)(W[0])*step1+step1;
+W[0]=W[0]*step1;
+
+
+W[2]=((MIX2>>4)*quantT)>>23;
+MIX2=(MIX2-(W[2]<<27)/quantT)*quantT;
+if(!(prv==W[2])){
+OFS=(OFS+1)&1;
+}
+prv=W[2];
+W[3]=(float32_t)(W[2])*step2+step2;
+W[2]=W[2]*step2;
+
+for(i=0;i<4;i++){
+W[i]=W[i]<0?-W[i]:W[i];
+W[i]=(W[i]-(W[i]/attr_slots)*attr_slots);
+W[i]=W[i]*(attr_stages<<2);
+}
+
+
+preset=(attr_stages<<2)*(param_slot-1);
+
+if((param_rnd>0)&&!rtrig){
+	for(j=param_from;j<param_till;j++){
+	k=j*attr_stages<<2;
+	int P1=preset+k;
+	P1=P1-P1/LENGTH*LENGTH;
+	for(i=0;i<attr_stages;i++){
+	int32_t tmp=(uint32_t)(GenerateRandomNumber());
+	tmp=tmp-tmp/7*7;
+	tmp=tmp<0?tmp+7:tmp;
+	tmp=tmp-1;
+	tmp=tmp<1?1:tmp+1;
+	array[(i<<2)+P1]=tmp;
+	array[(i<<2)+P1+1]=(int32_t)(GenerateRandomNumber()>>4)-(1<<27);
+	array[(i<<2)+P1+2]=(int32_t)(GenerateRandomNumber()>>6)+(1<<26);
+	array[(i<<2)+P1+3]=(int32_t)(GenerateRandomNumber()>>4)-(1<<27);
+	}}
+}
+else if(param_rnd==0){rtrig=0;}
+
+int stage=(param_stage-1)<<2;
+if(param_stage<=attr_stages){
+if(!(stage+load+param_slot+param_rnd==prev)){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_mode],array[stage+preset],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_freq],array[stage+1+preset],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_reso],array[stage+2+preset],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_gain],array[stage+3+preset],0xFFFD);
+}
+
+array[stage+preset]=param_mode;
+array[stage+1+preset]=param_freq;
+array[stage+2+preset]=param_reso;
+array[stage+3+preset]=param_gain;
+}
+for(i=0;i<BUFSIZE;i++){
+	 TMP1[0][i]=inlet_in[i];
+	 TMP1[1][i]=inlet_in[i];
+	 }
+for(k=0;k<2;k++){
+for(j=0;j<attr_stages;j++){
+	 mode=array[(j<<2)+W[k+2]];
+	 if(mode>0){
+	 freq=___SMMUL(MIX1<<3,array[(j<<2)+1+W[1]]<<2)+___SMMUL((1<<27)-MIX1<<3,array[(j<<2)+1+W[0]]<<2);
+      MTOF(__SSAT(freq+inlet_pitch,27),freq);
+      reso=array[(j<<2)+2+W[k+2]];
+      filter(freq,reso,mode,j+attr_stages*((k+OFS)&1));
+      biquad_dsp(&bs[j+attr_stages*((k+OFS)&1)],&bc[j+attr_stages*((k+OFS)&1)],mode>3?inlet_in:TMP1[k],outlet_out);
+      gain=array[(j<<2)+3+W[k+2]]*(1-(param_STorMS<<1));
+      gain=gain>0?gain:gain;
+      for(i=0;i<BUFSIZE;i++){
+	 TMP1[k][i]=__SSAT(TMP1[k][i]+___SMMUL(outlet_out[i]<<2,gain<<3),28);
+	 }}}}
+for(i=0;i<BUFSIZE;i++){
+outlet_out[i]=___SMMUL(TMP1[0][i]<<2,(1<<27)-MIX2<<3)+___SMMUL(TMP1[1][i]<<2,MIX2<<3);
+}
+
+prev=stage+load+param_slot+param_rnd;]]></code.krate>
+   </obj.normal>
+</objdefs>
