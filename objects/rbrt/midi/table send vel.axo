@@ -1,0 +1,129 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="table send vel" uuid="b6dd71dd-a600-409e-8128-ece9758f6673">
+      <sDescription>send data of a table as midi velocity messages.contents of a table will be scaled to range of 0-127.
+set the start of the range of the notes to send with &apos;startnote&apos;,the length of the range with &apos;length&apos;.
+useful for controllers capable of bi-directional midi,like &apos;livid base&apos; or &apos;novation launchpad&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset"/>
+         <int32 name="startnote"/>
+         <int32 name="length"/>
+         <bool32.risingfalling name="active"/>
+         <bool32.rising name="redraw"/>
+      </inlets>
+      <outlets>
+         <int32 name="offset"/>
+         <int32 name="startnote"/>
+         <int32 name="blocksize"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="active"/>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <int32 name="startnote">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="length">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;
+int v;
+int i;
+int vt;
+int trigt;
+int prevt[128];
+
+
+uint8_t start;
+uint8_t length;
+uint8_t plength;
+
+uint32_t offset;]]></code.declaration>
+      <code.init><![CDATA[{ 
+  int i;
+  for(i=0;i<128;i++) prevt[i]= -666 ;}]]></code.init>
+      <code.krate><![CDATA[offset = inlet_offset + param_offset;
+length = inlet_length + param_length;
+start = inlet_startnote + param_startnote;
+
+outlet_offset = offset;
+outlet_startnote = start;
+outlet_blocksize = attr_blocksize;
+
+if (plength != length ){ i = 0;plength = length;}
+
+//re-init
+
+if ((inlet_redraw > 0) && !ntrig){
+	ntrig = 1;
+{ 
+  int ii;
+  for(ii=0;ii<length;ii++) prevt[ii]= -666 ;}
+  }
+if (!(inlet_redraw > 0 )) ntrig = 0;
+
+//display steps
+ if (inlet_active || param_active) { 
+{ 
+  i += 1;
+  if (i == length) i = 0; 
+  vt = attr_table.array[__USAT((offset + (i << attr_blocksize)),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+if (prevt[i] != vt ) {MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),start + i,(vt >> 20));prevt[i] = vt;}
+ }
+ }]]></code.krate>
+   </obj.normal>
+</objdefs>
