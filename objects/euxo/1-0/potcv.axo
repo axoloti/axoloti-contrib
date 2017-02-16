@@ -1,32 +1,13 @@
 <objdefs>
-<obj.normal id="pot_cv_gat8" uuid="1ad4dab6-e93c-44ea-9fef-192c80093c5">
+<obj.normal id="potcv" uuid="1ad4dbb7-e93c-44ea-9fef-192c80093c5">
    <sDescription>
    This Object is only for Euxoloti 1.0 (first beta versions).
    It reads each Pot and CV In. SPI Config is included.
-   Go* inlets are used to toggle each Gat8 output (HIGH/LOW).
-   For a better visual flow, reduce pollinterval at patcher preferences.
    
-   Connect Euxo/AXO to Gat8 pins:
-  
-   PA4 = CS
-   PA5 = SCK
-   PA7 = DIN
-   GND = GND
-
-   more coming soon at www.irieelectronics.de
    </sDescription>
    <author>Paul</author>
    <license>BSD</license>
-   <inlets>
-      <bool32 name="Go1"/>
-      <bool32 name="Go2"/>
-      <bool32 name="Go3"/>
-      <bool32 name="Go4"/>
-      <bool32 name="Go5"/>
-      <bool32 name="Go6"/>
-      <bool32 name="Go7"/>
-      <bool32 name="Go8"/>
-   </inlets>
+ 	<inlets/>
    <outlets>
       <frac32.positive name="pot1" description="pot1"/>
       <frac32.positive name="pot2" description="pot2"/>
@@ -53,7 +34,7 @@
    <code.declaration><![CDATA[
    	int32_t pot1,pot2,pot3,pot4,pot5,pot6,pot7,pot8;
 	int32_t cvin1,cvin2,cvin3,cvin4,cvin5,cvin6,cvin7,cvin8;
-	int32_t Go1,Go2,Go3,Go4,Go5,Go6,Go7,Go8;
+	//int32_t Go1,Go2,Go3,Go4,Go5,Go6,Go7,Go8;
 	
 	uint8_t *txbuf;
 	uint8_t *rxbuf;
@@ -82,6 +63,7 @@ msg_t ThreadX2(){
 
 
   while(!chThdShouldTerminate()){
+  /*
      // gat8
 	// gat8 message is attached at the end of each SPI transaction.
 	// check each input state 
@@ -96,13 +78,13 @@ msg_t ThreadX2(){
 
 	// join each bit state to one byte
 	 txbuf[5]=(Go1|Go2|Go3|Go4|Go5|Go6|Go7|Go8);
-	
+*/	
 	
 	// POT SECTION
 	txbuf[2] = 0b00000000;
 	txbuf[3] = 0b00000000;
 	txbuf[4] = 0b00000000;
- 	//txbuf[5] = 0b01010101;
+ 	txbuf[5] = 0b00000000;
  	
     	for(int pin=0; pin<8; pin++){
 		// the following code counts through the bit code to read each single ADC channel.
@@ -147,7 +129,7 @@ msg_t ThreadX2(){
 	txbuf[2] = 0b00000000;
 	txbuf[3] = 0b00000000;
 	txbuf[4] = 0b00000000;
- 	//txbuf[5] = 0b01010101;
+ 	txbuf[5] = 0b00000000;
  	
     	for(int pin=0; pin<8; pin++){
     		txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
@@ -195,7 +177,7 @@ Thread *Thd;]]></code.declaration>
    <code.init><![CDATA[
    	cvin1=0;cvin2=0;cvin3=0;cvin4=0;cvin5=0;cvin6=0;cvin7=0;cvin8=0;
 	pot1=0;pot2=0;pot3=0;pot4=0;pot5=0;pot6=0;pot7=0;pot8=0;
-	Go1=0; Go2=0; Go3=0; Go4=0; Go5=0; Go6=0; Go7=0; Go8=0; 
+	//Go1=0; Go2=0; Go3=0; Go4=0; Go5=0; Go6=0; Go7=0; Go8=0; 
 	
 	palSetPadMode(GPIOA, 4, PAL_MODE_OUTPUT_PUSHPULL);// NSS
 	palSetPadMode(GPIOA, 5, PAL_MODE_OUTPUT_PUSHPULL);// SCK
@@ -246,13 +228,6 @@ outlet_cvin6 = this->cvin6;
 outlet_cvin7 = this->cvin7;
 outlet_cvin8 = this->cvin8;
 
-this->Go1 = inlet_Go1;
-this->Go2 = inlet_Go2;
-this->Go3 = inlet_Go3;
-this->Go4 = inlet_Go4;
-this->Go5 = inlet_Go5;
-this->Go6 = inlet_Go6;
-this->Go7 = inlet_Go7;
-this->Go8 = inlet_Go8;]]></code.krate>
+]]></code.krate>
 </obj.normal>
 </objdefs>

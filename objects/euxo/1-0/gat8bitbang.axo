@@ -1,0 +1,91 @@
+<objdefs >
+   <obj.normal  id="gat8bitbang" uuid="772f4d98-7edd-4f34-baa2-691e58daee90">
+   <sDescription>
+   This object uses bitbang method to emulate and transmit SPI messages to Gat8 extension.
+   CS=PA0, SCLK=PB9, MOSI/DIN=PB8 and GND=GND.
+   
+   LED4 of Euxoloti 1.0 can't be used with this object!  
+   </sDescription>
+   <inlets>
+         <bool32 name="Go1"/>
+      <bool32 name="Go2"/>
+      <bool32 name="Go3"/>
+      <bool32 name="Go4"/>
+      <bool32 name="Go5"/>
+      <bool32 name="Go6"/>
+      <bool32 name="Go7"/>
+      <bool32 name="Go8"/>
+      </inlets>
+   <outlets/>
+   <displays/>
+   <params/>
+   <attribs/>
+   <includes/>
+<code.declaration><![CDATA[int32_t Go1,Go2,Go3,Go4,Go5,Go6,Go7,Go8;
+uint8_t *gat8buf;
+
+msg_t ThreadX2(){
+	static uint8_t _gat8buf[7] __attribute__ ((section (".sram2")));
+	gat8buf = _gat8buf;
+	
+  palWritePad(GPIOA,0,1);
+  
+  while(!chThdShouldTerminate()){
+     	// manual SPI bit bang
+	if (Go1 == 0) {gat8buf[0] = 1;} else {gat8buf[0] = 0;}
+	if (Go2 == 0) {gat8buf[1] = 1;} else {gat8buf[1] = 0;}
+	if (Go3 == 0) {gat8buf[2] = 1;} else {gat8buf[2] = 0;}
+	if (Go4 == 0) {gat8buf[3] = 1;} else {gat8buf[3] = 0;}
+	if (Go5 == 0) {gat8buf[4] = 1;} else {gat8buf[4] = 0;}
+	if (Go6 == 0) {gat8buf[5] = 1;} else {gat8buf[5] = 0;}
+	if (Go7 == 0) {gat8buf[6] = 1;} else {gat8buf[6] = 0;}
+	if (Go8 == 0) {gat8buf[7] = 1;} else {gat8buf[7] = 0;}
+	
+	for (int i=0; i <= 8; i++){
+		palWritePad(GPIOB, 9,1);	// clock pin high (SCK)
+		palWritePad(GPIOB, 8,gat8buf[i]);	// bit state (MOSI)
+		
+		chThdSleepMilliseconds(1);
+		palWritePad(GPIOB, 9,0);	// clock pin low (SCK)
+		//chThdSleepMilliseconds(1);
+	}
+		palWritePad(GPIOA, 0,0); // enable CS
+		chThdSleepMilliseconds(1);
+		palWritePad(GPIOA, 0,1); // disable CS
+		
+     chThdSleepMilliseconds(1);
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;]]></code.declaration>
+   <code.init>
+   <![CDATA[
+   Go1=0; Go2=0; Go3=0; Go4=0; Go5=0; Go6=0; Go7=0; Go8=0; 
+	palSetPadMode(GPIOB, 9, PAL_MODE_OUTPUT_PUSHPULL);// SCK
+	palSetPadMode(GPIOB, 8, PAL_MODE_OUTPUT_PUSHPULL);// MOSI
+	palSetPadMode(GPIOA, 0, PAL_MODE_OUTPUT_PUSHPULL);// CS *595
+	
+	
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);]]>
+                    </code.init>
+   <code.dispose>
+   <![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);]]>
+</code.dispose>
+   <code.krate>
+   <![CDATA[this->Go1 = inlet_Go1;
+this->Go2 = inlet_Go2;
+this->Go3 = inlet_Go3;
+this->Go4 = inlet_Go4;
+this->Go5 = inlet_Go5;
+this->Go6 = inlet_Go6;
+this->Go7 = inlet_Go7;
+this->Go8 = inlet_Go8;]]>
+</code.krate>
+   </obj.normal>
+</objdefs>
