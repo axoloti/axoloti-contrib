@@ -1,11 +1,14 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="lrec multi_new" uuid="af7b4fa2-0707-4548-8118-c7454b4250e7">
-      <sDescription>records audio to a table.
+   <obj.normal id="lrec multi fade_new" uuid="8c29c390-07b8-4c4f-a964-90c1c4e4d782">
+      <sDescription>records audio to a table with nice fade-ins and -outs.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
 and after &apos;rec&apos; is zero,recording will continue until the starting point is reached.
 after recording is done,the length if the recording in samples is sent out,
-as well as the length of the recording (in fraction of the table&apos;s size).</sDescription>
+as well as the length of the recording (in fraction of the table&apos;s size).
+meanwhile,the input signal is overdubbed and faded out ,so NO CLICKS!
+set the length of the fade-out/overdub period with &apos;release&apos;,
+the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>loop_multi.axh</helpPatch>
@@ -22,9 +25,14 @@ as well as the length of the recording (in fraction of the table&apos;s size).</
          <frac32 name="startpoint" description="recording offset when recording in sync"/>
          <int32 name="smps" description="length of recording in samples"/>
          <bool32 name="rec" description="record state"/>
+         <bool32 name="state"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <frac32.s.map.klineartime.exp name="attack" description="sets the fadein-time of the recording"/>
+         <bool32.tgl name="hard" description="if &apos;hard&apos; is on,there will be NO fade-in"/>
+         <frac32.s.map.kdecaytime.exp name="release" description="sets the fadeout-time of the overdub"/>
+      </params>
       <attribs>
          <objref name="table" description="table to record to "/>
          <combo name="slots" description="number of slots in the table">
@@ -47,13 +55,20 @@ as well as the length of the recording (in fraction of the table&apos;s size).</
          </combo>
       </attribs>
       <code.declaration><![CDATA[bool rec;
-int recpos;
-int offset;
-int rec_offset;
-int rec_max;
-int shift;
-int start;
-int mode;
+uint32_t recpos;
+uint32_t offset;
+uint32_t rec_offset;
+uint32_t rec_max;
+uint8_t shift;
+uint32_t start;
+bool mode;
+
+bool recstate;
+uint32_t shold;
+int32_t env;
+
+int rtrig;
+
 int syncshift;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
@@ -77,39 +92,47 @@ start = 0;
     if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
       <code.krate><![CDATA[if ((inlet_rec) && !rec) {
       rec = 1;
+      recstate = 1;
       recpos = 0;
       start = inlet_phase;
-      outlet_range = 0;
-      outlet_smps = 0;
+      shold = 0;
       outlet_startpoint = 0;
       mode = inlet_sync;
       offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
       rec_offset = (__USAT(offset,27)>>(27-attr_table.LENGTHPOW));
-} 
+     } 
+
+   if (rec) env = (param_hard) ? -(1<<27) : (1<<27) - (___SMMUL((1<<27)-env, param_attack)<<1);
+   else env = ___SMMUL(env, param_release)<<1;
+   if (env == 0) recstate = 0;
        
-  //rec stopped-wait for rollover  
- else if (!(inlet_rec)) {
+  //rec stopped-> wait for rollover  
+if ((!inlet_rec) && rec) {
  	if (mode)	{
-        if ((inlet_phase > (start -syncshift)) && (inlet_phase < (start + syncshift)))  rec = 0;
-        } else rec = 0;
+        if ((inlet_phase > (start -syncshift)) && (inlet_phase < (start + syncshift)))  { rec = 0;rtrig = 1;} 
+        } else {rec = 0;rtrig = 1;}
    }
 
-  // rec done 
-      if (!rec) {  
-     outlet_range = (recpos << shift); 
-     outlet_smps = recpos;
-     if (mode)
-     outlet_startpoint = start; 
+      //rec done
+   if (rtrig){
+     shold = recpos;
+     if (mode) outlet_startpoint = start; 
      else outlet_startpoint = 0;
-} 
-
-   outlet_rec = rec;
-   outlet_offset = offset;]]></code.krate>
+   	rtrig = 0;
+   	recpos  = 0;
+   }
+ 
+        outlet_rec = rec;
+        outlet_state = recstate;
+        outlet_offset = offset;
+        outlet_range = shold << shift;
+        outlet_smps = shold;]]></code.krate>
       <code.srate><![CDATA[//record   
-   if (rec)  {
+   if (recstate)  {
               recpos ++;
               if (recpos >= rec_max) recpos = 0;
-              attr_table.array[(recpos+rec_offset)] = __SSAT(inlet_wave,28 )>>attr_table.GAIN;
-   }]]></code.srate>
+              if (rec) attr_table.array[recpos + rec_offset] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
+     else attr_table.array[recpos + rec_offset] = (__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos + rec_offset] << attr_table.GAIN) )>>attr_table.GAIN;
+}]]></code.srate>
    </obj.normal>
 </objdefs>
