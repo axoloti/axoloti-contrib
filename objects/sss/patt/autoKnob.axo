@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="autoKnob" uuid="46ac1a34-a25f-4b4b-a666-c9daac680e6b">
+   <obj.normal id="autoknob" uuid="7ae82cd6-f090-4395-a123-185e12a24d2d">
       <sDescription>knob with an inbuild (randomisable) automator and pattern selector for live use. Doesn&apos;t save it&apos;s patterns! Pattern size and amount of patterns can be set using the attributes.
 you can randomise just the selected pattern or all patterns at the same time.
 Use the max/min knobs to set your desired output scaling</sDescription>
@@ -33,24 +33,32 @@ Use the max/min knobs to set your desired output scaling</sDescription>
          <spinner name="size" MinValue="0" MaxValue="64" DefaultValue="0"/>
          <spinner name="patt" MinValue="1" MaxValue="64" DefaultValue="0"/>
       </attribs>
-      <code.declaration><![CDATA[int32_t LENGTH=(attr_size*attr_patt);
+      <code.declaration><![CDATA[static const int32_t LENGTH=(attr_size*attr_patt);
 int32_t LENGTHMASK=attr_size;
-int32_t array[attr_size*attr_patt];
+int32_t *array;
 int32_t prev;
 int32_t prav;
 int atrig;
 int rtrig;
-int i;]]></code.declaration>
+int i;
+int32_t out;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[0];]]></code.init>
       <code.krate><![CDATA[int32_t pattern=(inlet_pattern-(inlet_pattern/attr_patt)*attr_patt)*attr_size;
 int32_t count=(inlet_count-(inlet_count/LENGTHMASK)*LENGTHMASK)+pattern;
+
 if(!(count==prav)){
 if(!(param_value==array[prav])){
-array[count-1]=__USAT(param_value,27);}
+array[count]=__USAT(param_value,27);}
 else
 {PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],array[count],0xFFFD);}
+out=array[count];
 }
-outlet_out=array[count];
 prav=count;
+if(!(param_value==array[prav])){
+array[count]=__USAT(param_value,27);}
+outlet_out=out;
+
 
 if((param_RndAll||inlet_RndAll)&&!atrig){
 	atrig=1;
