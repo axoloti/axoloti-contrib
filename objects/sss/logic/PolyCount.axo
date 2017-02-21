@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.12">
    <obj.normal id="PolyCount" uuid="5b17b61e-81de-4725-8a01-b49a6c92d43c">
       <sDescription>random measure generator
 Set the maximum &apos;bar&apos;-count with the &quot;total&quot; parameter.
@@ -63,7 +63,7 @@ normax: outputs the maximum of the total-count (for same use as max output)</sDe
          </int32>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[   int ntrig;
+      <code.declaration><![CDATA[int ntrig;
    int rtrig;
    int count;
 
@@ -72,17 +72,18 @@ int i;
 int stage;
 int k;
 int strig;
-int32_t random;]]></code.declaration>
-      <code.init><![CDATA[    count=0;
+int32_t random;
+int RND;]]></code.declaration>
+      <code.init><![CDATA[count=0;
    ntrig = 0;
    rtrig = 0;
-max[0]== (int32_t)(GenerateRandomNumber()% 8)+1;
-for(i=1;i<64;i++){
-	max[i] = (int32_t)(GenerateRandomNumber()% 8)+1+max[i-1];
+//max[0]== (int32_t)(GenerateRandomNumber()% 8)+1;
+//for(i=1;i<64;i++){
+//	max[i] = (int32_t)(GenerateRandomNumber()% 8)+1+max[i-1];
 
-	}
+//	}
 
-]]></code.init>
+RND=1;]]></code.init>
       <code.krate><![CDATA[int32_t width=param_max-param_min;
 outlet_c=0;
 if ((inlet_trig>0) && !ntrig) {
@@ -93,8 +94,9 @@ else if (!(inlet_trig>0)) ntrig=0;
 if ((inlet_r>0) && !rtrig) {count=0; rtrig = 1;}
 else if (!(inlet_r>0)) rtrig=0;
 
-int rnd=inlet_rnd+param_rnd;
+int rnd=inlet_rnd+param_rnd+RND;
 if((rnd>0)&&!strig){
+	RND=0;
 max[0]= ((((int32_t)(GenerateRandomNumber()% (width)))+param_min)>>param_quant)<<param_quant;
 for(i=1;i<64;i++){
 	max[i] = (((((int32_t)(GenerateRandomNumber()% (width)))>>param_quant)<<param_quant)+param_min)+max[i-1];
