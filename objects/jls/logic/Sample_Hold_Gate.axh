@@ -1,0 +1,156 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="audio/outconfig" uuid="eace67e3304afaa1bb695b444e9345f2d8adaf00" name="outconfig_1" x="28" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="headphones" selection="-36dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="182" y="28">
+      <params>
+         <int32 name="maximum" value="4"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="448" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 4" uuid="e6f9a0cc7aadc1b89516143cf1ccb79b3538d05a" name="mix_1" x="574" y="56">
+      <params>
+         <frac32.u.map name="gain1" value="10.0"/>
+         <frac32.u.map name="gain2" value="63.5"/>
+         <frac32.u.map name="gain3" value="13.0"/>
+         <frac32.u.map name="gain4" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_1" x="322" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808hitom"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="42" y="112">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/chart b" uuid="d2bdf496f96ee521628490a038411210fbe29b15" name="chart_1" x="448" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_3" x="182" y="140">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808bd"/>
+      </attribs>
+   </obj>
+   <obj type="jls/lfo/chaotic_lfo" uuid="e945f019-3bcb-4d36-8dfe-ccc6a5f46eb7" name="chaotic_lfo_1" x="182" y="224">
+      <params>
+         <frac32.u.map name="val" value="56.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jls/logic/Sample_Hold_Gate" uuid="62baf4ef-ffa2-4e08-a66b-00d6c610b56a" name="Sample_Hold_Gate_1" x="294" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="42" y="266">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_2" x="448" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="jls/osc/chaotic_osc" uuid="e0b573e8-3b1c-4390-a686-c06fe49126b5" name="chaotic_osc_1" x="448" y="350">
+      <params>
+         <frac32.u.map name="freq" value="0.0"/>
+         <frac32.s.map name="s" value="-51.0"/>
+         <frac32.s.map name="r" value="27.0"/>
+         <bool32.mom name="err" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="658" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_2" x="322" y="392">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808snare"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="chaotic_lfo_1" inlet="active"/>
+         <dest obj="chaotic_osc_1" inlet="active"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="chaotic_osc_1" inlet="reset"/>
+         <dest obj="counter_1" inlet="trig"/>
+         <dest obj="Sample_Hold_Gate_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="chaotic_lfo_1" outlet="x"/>
+         <dest obj="Sample_Hold_Gate_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="flashplay_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="flashplay_2" outlet="out"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="Sample_Hold_Gate_1" outlet="out"/>
+         <dest obj="chart_1" inlet="in"/>
+         <dest obj="chaotic_osc_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="Sample_Hold_Gate_1" outlet="neg"/>
+         <dest obj="flashplay_2" inlet="trig"/>
+         <dest obj="bool_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="Sample_Hold_Gate_1" outlet="pos"/>
+         <dest obj="flashplay_1" inlet="trig"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="flashplay_3" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="c"/>
+         <dest obj="flashplay_3" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="chaotic_osc_1" outlet="x"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>248</x>
+      <y>41</y>
+      <width>1064</width>
+      <height>754</height>
+   </windowPos>
+</patch-1.0>
