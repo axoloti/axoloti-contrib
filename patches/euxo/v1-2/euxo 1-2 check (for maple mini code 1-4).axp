@@ -145,8 +145,11 @@ void MidiInByteHandler(uint8_t data) {
 }
 
 void loop(){
-    char ch = sdGet(&SD2);
-    MidiInByteHandler(ch);
+   while(!sdGetWouldBlock(&SD2) ){
+
+    		char ch = sdGet(&SD2);
+    		MidiInByteHandler(ch);
+	}
 
 	sdPut(&SD2,0xb0);
   	sdPut(&SD2,0);
