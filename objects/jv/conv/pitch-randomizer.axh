@@ -1,0 +1,101 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="140" y="14" text="Inspired by the Ableton Live Random MIDI Effect"/>
+   <comment type="patch/comment" x="140" y="42" text="40% probability of outputting a different note"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="pitch-randomizer" uuid="31276959-2471-4853-a1ee-cd607b20fccc" name="pitch-randomizer_1" x="140" y="70">
+      <params>
+         <int32.hradio name="mode" value="3"/>
+         <int32 name="chance" value="40"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/note" uuid="ce3190ad98b73b468f22221f555b01feee03226a" name="Original Note" x="266" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="364" y="84">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="6.0"/>
+         <frac32.u.map name="s" value="43.5"/>
+         <frac32.s.map name="r" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="476" y="98">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/note" uuid="ce3190ad98b73b468f22221f555b01feee03226a" name="Shifted Note" x="266" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="672" y="126">
+      <params>
+         <frac32.u.map name="amp" value="3.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="140" y="210" text="Radio Buttons"/>
+   <comment type="patch/comment" x="140" y="224" text="1: No change, output is incoming note"/>
+   <comment type="patch/comment" x="140" y="238" text="2: Output can be 1 octave up"/>
+   <comment type="patch/comment" x="140" y="252" text="3: Output can be 1 octave down"/>
+   <comment type="patch/comment" x="140" y="266" text="4: Output can be 1 octave up or down"/>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="pitch-randomizer_1" inlet="in"/>
+         <dest obj="Original Note" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="pitch-randomizer_1" inlet="trigger"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="pitch-randomizer_1" outlet="out"/>
+         <dest obj="Shifted Note" inlet="in"/>
+         <dest obj="saw_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>205</x>
+      <y>83</y>
+      <width>979</width>
+      <height>616</height>
+   </windowPos>
+</patch-1.0>

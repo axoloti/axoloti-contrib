@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pitch-randomizer" uuid="31276959-2471-4853-a1ee-cd607b20fccc">
+      <sDescription>Randomizes the incoming pitch...</sDescription>
+      <author>Jan Vantomme</author>
+      <license>BSD</license>
+      <helpPatch>pitch-randomizer.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="in" description="input"/>
+         <bool32.rising name="trigger" description="" />
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="mode" noLabel="true">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="chance" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="100"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+      
+      	int32_t val;
+		int ntrig;
+	  
+	  ]]></code.declaration>
+      <code.krate><![CDATA[
+
+	    // 25165824 = 12 semitones
+	    	    
+	    if ( (inlet_trigger > 0) && !ntrig ) {
+
+			if ( param_mode == 0 ) {
+
+				// Randomizer is off
+				val = inlet_in;
+
+			} else {
+	
+				// random number between 0 and 100
+				uint8_t rand_chance = rand() % 101;
+
+				if ( rand_chance < param_chance ) {
+
+					if ( param_mode == 1 ) {
+
+						// Randomizer UP
+						val = inlet_in + 25165824;
+				
+					} else if ( param_mode == 2 ) {
+
+						// Randomizer DOWN
+						val = inlet_in - 25165824;
+			
+					} else if ( param_mode == 3 ) {
+
+						// Randomizer UP + DOWN
+						uint8_t rand_updown = rand() % 101;
+					
+						if ( rand_updown < 50 ) {
+
+							// Randomizer UP
+							val = inlet_in + 25165824;
+
+						} else {
+
+							// Randomizer DOWN
+							val = inlet_in - 25165824;
+						}
+
+					}
+				
+				} else {
+			
+					// Not randomized
+					val = inlet_in;
+				}
+		
+			}
+
+			ntrig = 1;
+	    
+	    } else if ( !(inlet_trigger > 0) )  {
+
+			ntrig = 0;
+
+	    }
+	    
+	    outlet_out = val;
+      
+      ]]></code.krate>
+   </obj.normal>
+</objdefs>
