@@ -1,7 +1,8 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="stransport" uuid="aac94a41-163e-4d65-aa93-230bc2a4c889">
+   <obj.normal id="stransport" uuid="c580aa1a-58dc-4b6b-a1f3-48eb4184ba73">
       <sDescription>sort of a transport for sequencing.
-48000 at inlet &apos;smps&apos; will result in a 1hz wave ranging from 0 to 64.also,a position from 0 - 15 for step seqs is put out.
+48000 at inlet &apos;smps&apos; will result in a 1hz wave ranging from 0 to 64.
+also,a position between 0 and the value of &apos;steps&apos; is put out,as well as 24ppq - pulses.
 &apos;factor&apos; sets a multiplikation or divison factor,while &apos;mode&apos; selects whether to multiply or divide the &apos;tempo&apos;.</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
@@ -14,7 +15,8 @@
       </inlets>
       <outlets>
          <frac32 name="phase" description="phase 0. till 64."/>
-         <int32 name="step"/>
+         <int32 name="step" description="step index from 0 to &apos;steps&apos;"/>
+         <bool32.pulse name="24ppq" description="24 ppq pulse"/>
       </outlets>
       <displays/>
       <params>
@@ -24,17 +26,38 @@
          </int32>
          <bool32.tgl name="mode" description="0 = multiply, 1 = divide"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="steps" description="how many steps per bar?">
+            <MenuEntries>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[uint32_t Phase;
 uint32_t r;
 uint64_t freq;
 uint32_t base;
-uint8_t factor;]]></code.declaration>
+uint8_t factor;
+uint8_t steps;
+uint32_t prev;
+uint32_t ppq;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
    r = 1;]]></code.init>
       <code.krate><![CDATA[factor = inlet_factor + param_factor;
 base = (param_mode || inlet_mode) ?  (inlet_smps * factor) : (inlet_smps / factor);
 freq = (int)(281474976710656.f/(base * (128<<3)));
+steps = 29 - attr_steps;
 
 {
       if (inlet_reset && r) {
@@ -45,7 +68,12 @@ freq = (int)(281474976710656.f/(base * (128<<3)));
          Phase += freq>>2;
       }
       outlet_phase = (Phase>>5);
-      outlet_step = (Phase >> 28);
+      outlet_step = (Phase >> steps);
+      
+      ppq = ((Phase >> 25)*3)>>2;
+      if (ppq != prev ) {outlet_24ppq = 1; prev = ppq;}
+      else outlet_24ppq = 0;
+      
    }]]></code.krate>
    </obj.normal>
 </objdefs>
