@@ -1,0 +1,144 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a">
+      <sDescription>A modulatable 32bit schroeder allpass filter with different types of interpolation (for reverbs and diffusers)</sDescription>
+      <author>Johannes Elliesen</author>
+      <license>none yet</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32.positive name="time"/>
+         <frac32.bipolar name="timemod"/>
+         <frac32.positive name="gain"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="buffsizems" MinValue="1" MaxValue="256" DefaultValue="64"/>
+         <combo name="interpol">
+            <MenuEntries>
+               <string>none</string>
+               <string>2pt</string>
+               <string>3pt</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>IntRAM</string>
+               <string>ExtRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[#if attr_location == 0
+	#define LOCATION
+#else
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+
+const int buffsize = attr_buffsizems * 48;
+int32_t* delayline;
+int wptr;
+//int counter;]]></code.declaration>
+      <code.init><![CDATA[static int32_t array_[attr_poly][attr_buffsizems * 48] LOCATION; // time in s / 1000 * 48000
+delayline = &array_[parent->polyIndex][0];
+
+for (int i = 0; i < buffsize; i++)
+	delayline[i] = 0;
+wptr = 0;
+
+//counter = 0;
+//LogTextMessage("buffsize=%d",buffsize);]]></code.init>
+      <code.krate><![CDATA[int32_t g2 = inlet_gain<<3;
+
+int32_t time = ___SMMUL(inlet_time, inlet_timemod) + inlet_time;
+if (time < (1<<21))
+{
+	time = 1<<21;
+} // TODO: Scale to size of the delayline!
+int32_t readOffset_ls8 = (time*3) >> 9; // delay time in samples, left shifted by 8 bits [==(time>>13)*48]
+if (readOffset_ls8 >= ((buffsize - 1) << 8))
+{
+	readOffset_ls8 = ((buffsize - 1) << 8); // clip to buffersize
+}
+
+#if attr_interpol > 0
+	int32_t rint = readOffset_ls8>>8;			// integral part of delay time
+	int32_t rfrac = readOffset_ls8 & 0x000000FF; // fractional part of delay time in Q8 notation
+#endif
+
+// pre-calculate coefficients for 3pt interpolation
+#if attr_interpol == 2
+	// basic formula: y = ax^2 + bx + c
+	// a = 1/2*y3 - y2 + 1/2*y1
+	// b = -1/2*y3 + 2*y2 - 3/1*y1
+	// c = y1
+	// optimized formula (with c1..c3 = const for each block of samples):
+	// y = y1*c1 + y2*c2 + y3*c3
+	// c1 = 1 + 1/2*x^2 - 3/2*x
+	// c2 = -x^2 + 2x
+	// c3 = 1/2*x^2 - 1/2*x
+	int32_t x2 = (rfrac*rfrac); // x^2 in Q16 notation
+	// in Q16 notation
+	int32_t c1 = (1<<16) + (x2>>1) - (rfrac<<7) - (rfrac<<8);
+	int32_t c2 = -x2 + (rfrac<<9);
+	int32_t c3 = (x2>>1) - (rfrac<<7);
+#endif]]></code.krate>
+      <code.srate><![CDATA[// no interpolation
+#if attr_interpol == 0
+	int32_t rptr = wptr - (readOffset_ls8>>8);
+	if (rptr < 0)
+		rptr += buffsize;
+	int32_t dout = delayline[rptr];
+// linear (2pt) interpolation
+#elif attr_interpol == 1
+	int32_t rptr1 = wptr - rint;
+	int32_t rptr2 = wptr - rint + 1;
+	if (rptr1 < 0)
+		rptr1 += buffsize;
+	if (rptr2 < 0)
+		rptr2 += buffsize;
+	if (rptr2 >= buffsize)
+		rptr2 -= buffsize;
+	int32_t dout1 = delayline[rptr2]>>1;
+	int32_t dout2 = delayline[rptr1]>>1;
+	int32_t dout = ___SMMLA(rfrac<<23, (dout2 - dout1)<<1, dout1)<<1;
+// qubic (3pt) interpolation
+#elif attr_interpol == 2
+	int32_t rptr1 = wptr - rint;
+	int32_t rptr2 = wptr - rint + 1;
+	int32_t rptr3 = wptr - rint + 2;
+	if (rptr1 < 0)
+		rptr1 += buffsize;
+	if (rptr2 < 0)
+		rptr2 += buffsize;
+	if (rptr2 >= buffsize)
+		rptr2 -= buffsize;
+	if (rptr3 < 0)
+		rptr3 += buffsize;
+	if (rptr3 >= buffsize)
+		rptr3 -= buffsize;
+	int16_t dout1 = delayline[rptr3]>>16;
+	int16_t dout2 = delayline[rptr2]>>16;
+	int16_t dout3 = delayline[rptr1]>>16;
+	/*int32_t dout = ___SMMUL(dout1,c1<<15);
+	dout = ___SMMLA(dout2, c2<<15, dout);
+	dout = ___SMMLA(dout3, c3<<15, dout)<<1;*/
+	int32_t dout = ((dout1*c1)) + ((dout2*c2)) + ((dout3*c3));
+#endif
+
+int32_t din = ___SMMLA(g2,dout,inlet_in>>2)<<1;
+delayline[wptr++]=din;
+outlet_out = ___SMMLS(g2,din,dout>>1)<<2;
+if (wptr == buffsize) wptr = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

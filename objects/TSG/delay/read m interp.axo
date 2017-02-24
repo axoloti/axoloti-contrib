@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb">
+      <sDescription>delay read, modulateable, linear interpolated</sDescription>
+      <author>Johannes Elliesen</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="time"/>
+         <frac32.bipolar name="mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="time" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.krate><![CDATA[uint32_t tmp_d =  __USAT(param_time + inlet_time,27);
+uint32_t tmp1_d = ___SMMLA(tmp_d, inlet_mod, tmp_d);]]></code.krate>
+      <code.srate><![CDATA[uint32_t tmp1_di = attr_delayname.writepos - (tmp1_d>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + buffer_index -1;
+uint32_t tmp1_w1 = (tmp1_d<<(attr_delayname.LENGTHPOW+3)) & 0x3FFFFFFF;
+uint32_t tmp1_w2 = (1<<30) - tmp1_w1;
+int32_t tmp1_a1 = attr_delayname.array[tmp1_di&attr_delayname.LENGTHMASK]<<16;
+int32_t tmp1_a2 = attr_delayname.array[(tmp1_di+1)&attr_delayname.LENGTHMASK]<<16;
+int32_t tmp1_r = ___SMMUL(tmp1_a1,tmp1_w1);
+outlet_out = ___SMMLA(tmp1_a2,tmp1_w2,tmp1_r);]]></code.srate>
+   </obj.normal>
+</objdefs>
