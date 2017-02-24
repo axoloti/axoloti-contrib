@@ -11,7 +11,8 @@
          <frac32.positive name="loopstart" description="loopstart inside range"/>
          <frac32.bipolar name="speed" description="speed modulation"/>
          <bool32.risingfalling name="play" description="play or dont"/>
-         <bool32.rising name="reset" description="reset to startpoint"/>
+         <bool32.rising name="r2zero"/>
+         <bool32.rising name="r2start" description="reset to startpoint"/>
       </inlets>
       <outlets>
          <frac32buffer.positive name="pos" description="drive table/read"/>
@@ -30,44 +31,40 @@
 uint32_t indexk;
 uint32_t indexm;
 uint32_t indexd;
-uint32_t r;
+bool r;
+bool rzero;
 uint32_t pos;
 uint32_t posm;
 uint32_t posd;
-int shift;
-int range;
-int t_speed;
-int loopstart;
-int reset;
-int count;
+uint8_t shift;
+uint32_t range;
+uint32_t t_speed;
+uint32_t loopstart;
+uint32_t reset;
+uint32_t count;
 bool add;]]></code.declaration>
       <code.init><![CDATA[index = 0;
    r = 1;
 
    //set 'shift factor' for storing the recording length/the sync output
-    if (attr_table.LENGTH == 2048){shift = 16; }
-    if (attr_table.LENGTH == 4096){shift = 15; }
-    if (attr_table.LENGTH == 8192){shift = 14; }
-    if (attr_table.LENGTH == 16384){shift = 13; }
-    if (attr_table.LENGTH == 32768){shift = 12; }
-    if (attr_table.LENGTH == 65536){shift = 11; }
-    if (attr_table.LENGTH == 131072){shift = 10;}
-    if (attr_table.LENGTH == 262144){shift = 9;}
-    if (attr_table.LENGTH == 524288){shift = 8;}
-    if (attr_table.LENGTH == 1048576 ){shift = 7;}
-    if (attr_table.LENGTH == 2097152 ){shift = 6;}
-    if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
       <code.krate><![CDATA[range = (inlet_range >> shift);
 loopstart = (___SMMUL(range,inlet_loopstart)<<5);
 t_speed = (inlet_speed + param_speed);
 
 reset = (___SMMUL(range,inlet_startpoint)<<5);
 
-      if (inlet_reset && r) {
+      if (inlet_r2start && r) {
          index = reset;
          r = 0;
          count = 0;
-      } else if (!inlet_reset) r = 1;
+      } else if (!inlet_r2start) r = 1;
+
+      if (inlet_r2zero && rzero) {
+         index = 0;
+         rzero = 0;
+         count = 0;
+      } else if (!inlet_r2zero) rzero = 1;
 
 outlet_count = count;
 outlet_spos = index;
