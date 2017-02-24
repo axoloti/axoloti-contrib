@@ -75,7 +75,7 @@
          <spinner attributeName="delay" value="67"/>
       </attribs>
    </obj>
-   <obj type="delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="546" y="196">
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="546" y="196">
       <params>
          <frac32.u.map name="time" value="0.0"/>
       </params>
@@ -83,7 +83,7 @@
          <objref attributeName="delayname" obj="delayB"/>
       </attribs>
    </obj>
-   <obj type="delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="784" y="196">
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="784" y="196">
       <params>
          <frac32.u.map name="time" value="0.0"/>
       </params>
@@ -181,7 +181,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_3" x="560" y="504">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_3" x="560" y="504">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="172"/>
@@ -189,13 +189,20 @@
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_7" x="812" y="504">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_7" x="812" y="504">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="223"/>
          <combo attributeName="interpol" selection="3pt"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
+   </obj>
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_3" x="224" y="518">
+      <params>
+         <frac32.u.map name="a" value="1.0"/>
+         <frac32.u.map name="b" value="41.5"/>
+      </params>
+      <attribs/>
    </obj>
    <patchobj type="patch/object" uuid="27089c4f-b896-42e2-bac1-654ac92471c4" name="mod" x="322" y="518">
       <params>
@@ -263,27 +270,20 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/map" uuid="3b91cbf0-ff75-4034-995d-d82d325ad621" name="map_3" x="238" y="532">
-      <params>
-         <frac32.u.map name="a" value="1.0"/>
-         <frac32.u.map name="b" value="47.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="size" x="140" y="644">
       <params>
          <frac32.u.map name="value" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/map" uuid="3b91cbf0-ff75-4034-995d-d82d325ad621" name="map_2" x="238" y="644">
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_2" x="224" y="644">
       <params>
-         <frac32.u.map name="a" value="1.0"/>
-         <frac32.u.map name="b" value="58.5"/>
+         <frac32.u.map name="a" value="0.0"/>
+         <frac32.u.map name="b" value="54.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_4" x="560" y="644">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_4" x="560" y="644">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="162"/>
@@ -291,7 +291,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_8" x="812" y="644">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_8" x="812" y="644">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="193"/>
@@ -311,14 +311,14 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/map" uuid="3b91cbf0-ff75-4034-995d-d82d325ad621" name="map_1" x="238" y="756">
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_1" x="224" y="770">
       <params>
-         <frac32.u.map name="a" value="1.0"/>
-         <frac32.u.map name="b" value="64.0"/>
+         <frac32.u.map name="a" value="0.0"/>
+         <frac32.u.map name="b" value="54.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_5" x="560" y="784">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_5" x="560" y="784">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="200"/>
@@ -326,7 +326,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_9" x="812" y="784">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_9" x="812" y="784">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="242"/>
@@ -352,7 +352,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_6" x="560" y="924">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_6" x="560" y="924">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="225"/>
@@ -360,7 +360,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_10" x="812" y="924">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_10" x="812" y="924">
       <params/>
       <attribs>
          <spinner attributeName="buffsizems" value="247"/>
@@ -533,9 +533,9 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </net>
       <net>
          <source obj="size" outlet="out"/>
-         <dest obj="map_1" inlet="c"/>
-         <dest obj="map_2" inlet="c"/>
          <dest obj="map_3" inlet="c"/>
+         <dest obj="map_2" inlet="c"/>
+         <dest obj="map_1" inlet="c"/>
       </net>
       <net>
          <source obj="map_1" outlet="o"/>
@@ -615,10 +615,6 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <dest obj="&gt;&gt;_1" inlet="a"/>
       </net>
       <net>
-         <source obj="map_3" outlet="o"/>
-         <dest obj="read_1" inlet="time"/>
-      </net>
-      <net>
          <source obj="&gt;&gt;_2" outlet="result"/>
          <dest obj="freq_2" inlet="freq"/>
          <dest obj="hp1_2" inlet="freq"/>
@@ -653,6 +649,10 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       <net>
          <source obj="PreDelay" outlet="out"/>
          <dest obj="read_3" inlet="time"/>
+      </net>
+      <net>
+         <source obj="map_3" outlet="o"/>
+         <dest obj="read_1" inlet="time"/>
       </net>
    </nets>
    <settings>
