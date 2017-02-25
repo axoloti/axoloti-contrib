@@ -1,0 +1,292 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="126" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1176" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1260" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="322" y="70">
+      <params>
+         <frac32.u.map name="value" value="43.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/math/div iif" uuid="fe89a2c7-e258-4e26-9a5f-172ad2538a2a" name="div_3" x="644" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="448" y="84">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="rec" x="70" y="140">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="1048576"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="table/read interp" uuid="42918ec2255011ae3787cc5488c9b29980d796a8" name="read_1" x="854" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/testing/lphasor" uuid="5888498b-0724-46d4-bf5d-85b0a199cfc4" name="lphasor_1" x="1176" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_1" x="1302" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/testing/lrec multi fade_new" uuid="8c29c390-07b8-4c4f-a964-90c1c4e4d782" name="lrec_1" x="294" y="210">
+      <params>
+         <frac32.s.map name="attack" value="0.0"/>
+         <bool32.tgl name="hard" value="0"/>
+         <frac32.s.map name="release" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+         <combo attributeName="slots" selection="1"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="68fcc54d-8c93-4796-9c64-2066c5961b59" name="ldrive_1" x="588" y="210">
+      <params>
+         <frac32.s.map name="speed" value="-64.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+      </attribs>
+      <object id="patch/object" uuid="68fcc54d-8c93-4796-9c64-2066c5961b59">
+         <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+         <author>robert schirmer</author>
+         <license>BSD</license>
+         <helpPatch>loop_multi.axh</helpPatch>
+         <inlets>
+            <frac32.positive name="offset" description="offset inside the table"/>
+            <frac32.positive name="range" description="length of the area to index,or loop end"/>
+            <frac32.positive name="startpoint" description="position inside range on reset"/>
+            <frac32.positive name="loopstart" description="loopstart inside range"/>
+            <frac32.bipolar name="speed" description="speed modulation"/>
+            <bool32 name="play"/>
+            <bool32.rising name="r2zero"/>
+            <bool32.rising name="r2start" description="reset to startpoint"/>
+         </inlets>
+         <outlets>
+            <frac32buffer.positive name="pos" description="drive table/read"/>
+            <int32 name="count" description="loop count since reset"/>
+            <int32 name="spos" description="playhead position in samples"/>
+            <int32 name="srange" description="length of range in samples"/>
+            <int32 name="slength"/>
+            <frac32.bipolar name="speed"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true"/>
+         </params>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[float32_t index;
+
+bool r;
+bool rzero;
+uint8_t shift;
+
+uint32_t range;
+int32_t t_speed;
+uint32_t loopstart;
+uint32_t reset;
+uint32_t count;
+
+bool add;]]></code.declaration>
+         <code.init><![CDATA[index = 0;
+   r = 1;
+
+   //set 'shift factor' for storing the recording length/the sync output
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+         <code.krate><![CDATA[range = (inlet_range >> shift);
+loopstart = (___SMMUL(range,inlet_loopstart)<<5);
+t_speed = (inlet_speed + param_speed);
+add = range;
+
+reset = (___SMMUL(range,inlet_startpoint)<<5);
+
+      if (inlet_r2start && r) {
+         index = reset;
+         r = 0;
+         count = 0;
+      } else if (!inlet_r2start) r = 1;
+
+      if (inlet_r2zero && rzero) {
+         index = 0;
+         rzero = 0;
+         count = 0;
+      } else if (!inlet_r2zero) rzero = 1;
+
+outlet_count = count;
+
+outlet_spos    = index;
+outlet_srange = range;
+outlet_slength = range - loopstart;
+outlet_speed = t_speed;]]></code.krate>
+         <code.srate><![CDATA[index += (t_speed*(float)(1.0f/(1<<27))); 
+
+//set a range
+      if (t_speed > 0){
+      if (index >= range){index = loopstart;count += add; } 
+      } 
+      else{
+      if (index <= loopstart){ index = range;count +=add;}  
+          }    
+
+        
+if (inlet_play) outlet_pos = ((int (index) << shift)+inlet_offset);
+else outlet_pos = 0;]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="490" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="98" y="294">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/testing/loop synced phasor" uuid="2343d60a-71c0-41c9-9b2d-581f500eaf6a" name="loop_2" x="854" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/stransport" uuid="c580aa1a-58dc-4b6b-a1f3-48eb4184ba73" name="stransport_1" x="1050" y="392">
+      <params>
+         <int32 name="factor" value="1"/>
+         <bool32.tgl name="mode" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="8"/>
+      </attribs>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_2" x="1218" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="322" y="490">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="ldrive_1" outlet="pos"/>
+         <dest obj="read_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="o"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="offset"/>
+         <dest obj="ldrive_1" inlet="offset"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="range"/>
+         <dest obj="ldrive_1" inlet="range"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="lrec_1" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="rec"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="ldrive_1" inlet="play"/>
+         <dest obj="ldrive_1" inlet="r2zero"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="spos"/>
+         <dest obj="lphasor_1" inlet="spos"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="srange"/>
+         <dest obj="lphasor_1" inlet="srange"/>
+      </net>
+      <net>
+         <source obj="lphasor_1" outlet="phase"/>
+         <dest obj="kscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="lrec_1" inlet="wave"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="ldrive_1" inlet="r2start"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="ldrive_1" inlet="startpoint"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="ldrive_1" inlet="loopstart"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="speed"/>
+         <dest obj="loop_2" inlet="speed"/>
+      </net>
+      <net>
+         <source obj="stransport_1" outlet="phase"/>
+         <dest obj="kscope_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="slength"/>
+         <dest obj="loop_2" inlet="slength"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="count"/>
+         <dest obj="loop_2" inlet="count"/>
+      </net>
+      <net>
+         <source obj="loop_2" outlet="smps"/>
+         <dest obj="stransport_1" inlet="smps"/>
+      </net>
+      <net>
+         <source obj="loop_2" outlet="reset"/>
+         <dest obj="stransport_1" inlet="reset"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1612</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>
