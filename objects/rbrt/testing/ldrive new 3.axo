@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="ldrive test2" uuid="a4c544e6-a8a6-417e-9991-adc141e2c461">
+   <obj.normal id="ldrive new 3" uuid="80544d26-c962-4b98-afbf-075f4b3784d1">
       <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
@@ -10,7 +10,6 @@
          <frac32.positive name="startpoint" description="position inside range on reset"/>
          <frac32.positive name="loopstart" description="loopstart inside range"/>
          <frac32.bipolar name="speed" description="speed modulation"/>
-         <bool32.risingfalling name="play" description="play or dont"/>
          <bool32.rising name="r2zero"/>
          <bool32.rising name="r2start" description="reset to startpoint"/>
       </inlets>
@@ -31,15 +30,14 @@
 
 bool r;
 bool rzero;
-
-uint32_t pos;
-
 uint8_t shift;
+
 uint32_t range;
-uint32_t t_speed;
+int32_t t_speed;
 uint32_t loopstart;
 uint32_t reset;
 uint32_t count;
+
 bool add;]]></code.declaration>
       <code.init><![CDATA[index = 0;
    r = 1;
@@ -49,6 +47,7 @@ shift =     (27-attr_table.LENGTHPOW);]]></code.init>
       <code.krate><![CDATA[range = (inlet_range >> shift);
 loopstart = (___SMMUL(range,inlet_loopstart)<<5);
 t_speed = (inlet_speed + param_speed);
+add = range;
 
 reset = (___SMMUL(range,inlet_startpoint)<<5);
 
@@ -65,23 +64,20 @@ reset = (___SMMUL(range,inlet_startpoint)<<5);
       } else if (!inlet_r2zero) rzero = 1;
 
 outlet_count = count;
-outlet_spos = pos;
-outlet_slength = range - loopstart;]]></code.krate>
-      <code.srate><![CDATA[index += (t_speed*(float)(1.0f/(1<<27)));
-     pos = (index + loopstart);  
-     add = range;
+
+outlet_spos = index - (loopstart * (bool) count);
+outlet_slength = range - (loopstart * (bool) count);]]></code.krate>
+      <code.srate><![CDATA[index += (t_speed*(float)(1.0f/(1<<27))); 
 
 //set a range
-
       if (t_speed > 0){
-      if (pos >= range){index = 0;count += add; } 
+      if (index >= range){index = loopstart;count += add; } 
       } 
       else{
-      if (pos <= loopstart){ index = (range-loopstart);count +=add;}  
+      if (index <= loopstart){ index = range;count +=add;}  
           }    
-        
 
-if (inlet_play) outlet_pos = ((pos << shift)+inlet_offset);
-      else outlet_pos = 0;]]></code.srate>
+        
+outlet_pos = ((int (index) << shift)+inlet_offset);]]></code.srate>
    </obj.normal>
 </objdefs>
