@@ -1,0 +1,156 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slicer i" uuid="859f9868-25a7-4574-92df-a6bbe518978b">
+      <sDescription>Sample slicer.
+This object is to be used in conjunction with table/read and such objects.
+It produces two ramp signals (phase can be fed inside a window object, pos can go into a conv/interp and then into table/read interp to enable playback), and is easily chainable.
+The object is programmed to play the sample at the correct speed, based on the sized of the sample (hence the size menu).
+You can specify the start position and the (relative) length of the slice.
+Speed allows to tune the sample playback speed (not chromatically, unfortunately), reverse enables reversed playback.
+In case you want to chain several object, you can select the sample to play by feeding an integer (0, 1, 2 ...) inside sel inlet.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>slicer.axh</helpPatch>
+      <inlets>
+         <int32 name="sel"/>
+         <bool32.rising name="trig"/>
+         <frac32.positive name="defphase"/>
+         <frac32.positive name="defpos"/>
+         <frac32.positive name="start"/>
+         <frac32.positive name="len"/>
+         <frac32 name="speed"/>
+         <bool32 name="reverse"/>
+      </inlets>
+      <outlets>
+         <int32 name="sel"/>
+         <bool32.pulse name="trig"/>
+         <frac32.positive name="phase"/>
+         <frac32.positive name="pos"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+               <string>4194304</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+               <string>22</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool ttrig;
+bool env;
+int32_t freq;
+uint32_t phase;
+uint32_t phase_old;
+int32_t pos;
+
+
+
+int32_t sample_len;]]></code.declaration>
+      <code.init><![CDATA[ttrig =0;
+env =0;
+freq =0;
+phase_old=0;
+phase =0;
+pos =0;
+
+sample_len=1<<attr_size;]]></code.init>
+      <code.krate><![CDATA[freq =(4294967296/(___SMMUL(___SMMUL((1<<27)-inlet_start<<3,inlet_len<<3),sample_len<<4)+1))*16;
+freq += ___SMMUL(freq,inlet_speed)<<5;
+
+
+
+if (inlet_trig && !ttrig && !inlet_sel) //se viene premuto il tasto
+{
+	ttrig = 1;
+	env = 1;
+	phase = 0;
+}
+else if (inlet_trig && !ttrig && inlet_sel) //se viene premuto il tasto
+{
+	ttrig = 1;
+	env = 0;
+	phase = 0;
+}
+else if (!inlet_trig ) //se viene rilasciato il tasto
+	ttrig = 0;
+
+
+
+if (!env) //se non siamo in fase di inviluppo
+{
+	outlet_phase=inlet_defphase;
+	outlet_pos=inlet_defpos;
+}
+else
+{
+	phase+=freq; //il contatore avanza di un tot
+	if (phase >= phase_old) //se il contatore non ha resettato
+	{
+		phase_old=phase; //ok, continuiamo a contare
+		if (!inlet_reverse)
+		pos=inlet_start+___SMMUL(phase>>1,___SMMUL((1<<27)-inlet_start<<3,inlet_len<<3)); //calcoliamo la nuova posizione
+		else
+		pos= inlet_start + ___SMMUL((1<<27)-inlet_start<<3,inlet_len<<2) -___SMMUL(phase>>1,___SMMUL((1<<27)-inlet_start<<3,inlet_len<<3));
+	}
+	else	 //se invece il contatore ha resettato
+	{
+		ttrig = 0; //rendiamo di nuovo disponibile il campione
+		env = 0; //non siamo più in fase di inviluppo
+		phase =0;
+		phase_old=0;
+	}
+	
+	outlet_pos=pos;	
+	outlet_phase=phase>>5;
+}
+
+
+
+outlet_trig=inlet_trig;
+outlet_sel = inlet_sel-1;]]></code.krate>
+   </obj.normal>
+</objdefs>
