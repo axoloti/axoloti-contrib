@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="shift register" uuid="a9656303-16ea-4db7-8e60-833dba1f3079">
+      <sDescription>Shift register. It can do SISO and SIPO. Also, it is possible to reset to a default register</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="in" description="input"/>
+         <bool32.rising name="lshift" description="shift the register 1 bit left and add the input to the lsb (far right)"/>
+         <bool32.rising name="rshift" description="shift the register 1 bit right and add the input to the msb (far left)"/>
+         <bool32.rising name="reset" description="reset the shift register to the default value"/>
+         <int32.positive name="default" description="default value used in reset"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="out" description="parallel output of the shift register "/>
+         <bool32 name="msb" description="most significant bit of the shift register"/>
+         <bool32 name="lsb" description="least significant bit of the shift register"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool strig;
+bool rtrig;
+uint32_t reg;
+
+ //these constants are used when shifting
+uint32_t msb = (1<<31);
+uint32_t lsb = 1;]]></code.declaration>
+      <code.init><![CDATA[reg = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_reset && !rtrig)	//resetting to default value
+{
+	reg = inlet_default;
+	rtrig = 1;
+}
+else if (!inlet_reset)
+{
+	rtrig = 0;
+}
+
+if (inlet_lshift && !strig)	//shifting left
+{
+	reg = (reg<<1) | (inlet_in );	
+	strig = 1;
+}
+else if (inlet_rshift && !strig)	//shifting right
+{
+	reg = (reg>>1) | ((inlet_in<<31) );	
+	strig = 1;
+}
+else if (!inlet_lshift && !inlet_rshift)
+{
+	strig = 0;
+}
+
+outlet_out = reg;
+outlet_msb = reg & msb;
+outlet_lsb = reg & lsb;]]></code.krate>
+   </obj.normal>
+</objdefs>
