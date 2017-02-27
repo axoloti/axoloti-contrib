@@ -1,12 +1,14 @@
-<objdefs appVersion="1.0.11">
-   <obj.normal id="tcopy" uuid="51981de7-1e1f-4764-9beb-2f7546724135">
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396">
       <sDescription>copy the elements of a table from table &apos;src&apos; to table &apos;dst&apos;
 the length of the area to copy is defined by &apos;range&apos;,
 the read offset is defined by inlet&apos;src&apos; and the write offset by &apos;dst&apos;
-brutally working at audio-rate.
-if &apos;splat&apos; is enabled,tcopy will prevserve the original contents of the destination table</sDescription>
+&apos;speed&apos; sets the copying speed in terms of audio-rate (16 is really fast!)
+if &apos;splat&apos; is enabled,tcopy will preserve the original contents of the destination table.
+if &apos;clear&apos; is enabled,tcopy will clear the contents of the table.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
+      <helpPatch>data.axh</helpPatch>
       <inlets>
          <int32 name="src" description="source start"/>
          <int32 name="dst" description="destination start"/>
@@ -18,28 +20,64 @@ if &apos;splat&apos; is enabled,tcopy will prevserve the original contents of th
       </outlets>
       <displays/>
       <params>
-         <int32 name="range" description="length of the area to copy" noLabel="true">
+         <int32 name="src">
             <MinValue i="0"/>
-            <MaxValue i="10000000"/>
+            <MaxValue i="2097152"/>
          </int32>
-         <bool32.tgl name="splat"/>
+         <int32 name="dst">
+            <MinValue i="0"/>
+            <MaxValue i="2097152"/>
+         </int32>
+         <int32 name="range">
+            <MinValue i="1"/>
+            <MaxValue i="2097152"/>
+         </int32>
+         <bool32.tgl name="splat" description="add to src contents"/>
+         <bool32.tgl name="clear" description="clear dst"/>
       </params>
       <attribs>
          <objref name="src" description="name of the source -table"/>
          <objref name="dst" description="name of the destination - table"/>
+         <spinner name="speed" MinValue="1" MaxValue="16" DefaultValue="1"/>
       </attribs>
-      <code.declaration><![CDATA[int i;
-int ntrig;]]></code.declaration>
-      <code.init><![CDATA[ntrig = 0;]]></code.init>
-      <code.srate><![CDATA[if ((inlet_trig > 0 )&& (!ntrig)){ ntrig = 1;i = 0;}
+      <code.declaration><![CDATA[uint32_t i;
+uint32_t ii;
+int ntrig;
+int rtrig;
 
-if (ntrig && (i < (param_range + inlet_range))){ 
-  attr_dst.array[(i + inlet_dst)]= ( attr_src.array[(i + inlet_src)] + (attr_dst.array[(i + inlet_dst)] * param_splat));
+int speed;
+uint32_t src;
+uint32_t dst;
+uint32_t range;
+uint32_t block;]]></code.declaration>
+      <code.krate><![CDATA[speed = attr_speed << 4;
+src = param_src + inlet_src;
+dst = param_dst + inlet_dst;
+range = param_range + inlet_range;
+
+block  = (range / speed) * speed;
+
+outlet_done = 0;
+
+if ((inlet_trig)&& (!ntrig)){ ntrig = 1;i = 0;rtrig = 0;}
+if ((i == range) && (!inlet_trig)) {ntrig = 0;outlet_done = 1;i = 0;}
+
+
+//copy n chunks of size 'speed'
+if (ntrig && (i < block)){ 
+	{ 
+  for(ii=0;ii<speed;ii++)
+  attr_dst.array[(i + ii + dst)]= (( attr_src.array[(i + ii + src)] + (attr_dst.array[(i + ii + dst)] * param_splat)) * (!param_clear));
+  }
+  i += speed;	
+}
+
+//copy what's left
+if (i == block) rtrig = 1; 
+
+if ((ntrig && rtrig) && (i < (range))){ 
+	attr_dst.array[(i + dst)]= (( attr_src.array[(i + src)] + (attr_dst.array[(i + dst)] * param_splat)) * (!param_clear));
    i += 1;  
- }
- else  if(!inlet_trig) ntrig = 0; 
-
- if ((i == (param_range + inlet_range)) && ntrig) outlet_done = 1;
- else outlet_done = 0;]]></code.srate>
+ }]]></code.krate>
    </obj.normal>
 </objdefs>
