@@ -79,14 +79,14 @@
       <params/>
       <attribs>
          <objref attributeName="delayname" obj="delayB"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
       </attribs>
    </obj>
    <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="784" y="182">
       <params/>
       <attribs>
          <objref attributeName="delayname" obj="delayA"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
       </attribs>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="decay" x="448" y="322">
@@ -175,7 +175,7 @@
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
@@ -183,7 +183,7 @@
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
@@ -253,7 +253,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_5" x="714" y="518">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="714" y="518">
       <params>
          <frac32.u.map name="amp" value="49.5"/>
       </params>
@@ -276,7 +276,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
@@ -284,7 +284,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
+         <combo attributeName="interpol" selection="2pt"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
@@ -294,7 +294,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_6" x="714" y="658">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_5" x="714" y="658">
       <params>
          <frac32.u.map name="amp" value="44.5"/>
       </params>
@@ -307,79 +307,23 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_5" x="560" y="784">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayA" x="560" y="784">
       <params/>
       <attribs>
-         <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
-         <combo attributeName="location" selection="ExtRAM"/>
+         <combo attributeName="size" selection="4096 (85.33ms)"/>
       </attribs>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_9" x="812" y="784">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayB" x="812" y="784">
       <params/>
       <attribs>
-         <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
-         <combo attributeName="location" selection="ExtRAM"/>
+         <combo attributeName="size" selection="4096 (85.33ms)"/>
       </attribs>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="462" y="798">
-      <params>
-         <frac32.u.map name="amp" value="48.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_7" x="714" y="798">
-      <params>
-         <frac32.u.map name="amp" value="41.5"/>
-      </params>
-      <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="diffusion" x="308" y="910">
       <params>
          <frac32.u.map name="value" onParent="true" value="63.0"/>
       </params>
       <attribs/>
-   </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_6" x="560" y="924">
-      <params/>
-      <attribs>
-         <combo attributeName="buffsize" selection="4096 (85.33ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
-         <combo attributeName="location" selection="ExtRAM"/>
-      </attribs>
-   </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_10" x="812" y="924">
-      <params/>
-      <attribs>
-         <combo attributeName="buffsize" selection="8192 (170ms)"/>
-         <combo attributeName="interpol" selection="3pt"/>
-         <combo attributeName="location" selection="ExtRAM"/>
-      </attribs>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="462" y="938">
-      <params>
-         <frac32.u.map name="amp" value="43.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_8" x="714" y="938">
-      <params>
-         <frac32.u.map name="amp" value="47.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayA" x="560" y="1064">
-      <params/>
-      <attribs>
-         <combo attributeName="size" selection="4096 (85.33ms)"/>
-      </attribs>
-   </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayB" x="812" y="1064">
-      <params/>
-      <attribs>
-         <combo attributeName="size" selection="4096 (85.33ms)"/>
-      </attribs>
    </obj>
    <nets>
       <net>
@@ -390,10 +334,6 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <source obj="diffusion" outlet="out"/>
          <dest obj="allpass_7" inlet="gain"/>
          <dest obj="allpass_8" inlet="gain"/>
-         <dest obj="allpass_5" inlet="gain"/>
-         <dest obj="allpass_9" inlet="gain"/>
-         <dest obj="allpass_6" inlet="gain"/>
-         <dest obj="allpass_10" inlet="gain"/>
          <dest obj="allpass_4" inlet="gain"/>
          <dest obj="allpass_3" inlet="gain"/>
       </net>
@@ -402,24 +342,8 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <dest obj="allpass_4" inlet="in"/>
       </net>
       <net>
-         <source obj="allpass_4" outlet="out"/>
-         <dest obj="allpass_5" inlet="in"/>
-      </net>
-      <net>
-         <source obj="allpass_5" outlet="out"/>
-         <dest obj="allpass_6" inlet="in"/>
-      </net>
-      <net>
          <source obj="allpass_7" outlet="out"/>
          <dest obj="allpass_8" inlet="in"/>
-      </net>
-      <net>
-         <source obj="allpass_8" outlet="out"/>
-         <dest obj="allpass_9" inlet="in"/>
-      </net>
-      <net>
-         <source obj="allpass_9" outlet="out"/>
-         <dest obj="allpass_10" inlet="in"/>
       </net>
       <net>
          <source obj="xfade_1" outlet="o"/>
@@ -435,12 +359,12 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <dest obj="xfade_2" inlet="c"/>
       </net>
       <net>
-         <source obj="allpass_6" outlet="out"/>
-         <dest obj="xfade_1" inlet="i2"/>
+         <source obj="allpass_4" outlet="out"/>
          <dest obj="delayA" inlet="in"/>
+         <dest obj="xfade_1" inlet="i2"/>
       </net>
       <net>
-         <source obj="allpass_10" outlet="out"/>
+         <source obj="allpass_8" outlet="out"/>
          <dest obj="delayB" inlet="in"/>
          <dest obj="xfade_2" inlet="i2"/>
       </net>
@@ -567,13 +491,9 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       <net>
          <source obj="map_1" outlet="o"/>
          <dest obj="*c_1" inlet="in"/>
+         <dest obj="*c_4" inlet="in"/>
          <dest obj="*c_2" inlet="in"/>
          <dest obj="*c_5" inlet="in"/>
-         <dest obj="*c_7" inlet="in"/>
-         <dest obj="*c_6" inlet="in"/>
-         <dest obj="*c_8" inlet="in"/>
-         <dest obj="*c_3" inlet="in"/>
-         <dest obj="*c_4" inlet="in"/>
       </net>
       <net>
          <source obj="mod_" outlet="o1"/>
@@ -584,28 +504,12 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <dest obj="allpass_4" inlet="timemod"/>
       </net>
       <net>
-         <source obj="mod_" outlet="o3"/>
-         <dest obj="allpass_5" inlet="timemod"/>
-      </net>
-      <net>
          <source obj="mod_" outlet="o5"/>
          <dest obj="allpass_7" inlet="timemod"/>
       </net>
       <net>
-         <source obj="mod_" outlet="o4"/>
-         <dest obj="allpass_6" inlet="timemod"/>
-      </net>
-      <net>
          <source obj="mod_" outlet="o6"/>
          <dest obj="allpass_8" inlet="timemod"/>
-      </net>
-      <net>
-         <source obj="mod_" outlet="o7"/>
-         <dest obj="allpass_9" inlet="timemod"/>
-      </net>
-      <net>
-         <source obj="mod_" outlet="o8"/>
-         <dest obj="allpass_10" inlet="timemod"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -616,27 +520,11 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <dest obj="allpass_4" inlet="time"/>
       </net>
       <net>
-         <source obj="*c_3" outlet="out"/>
-         <dest obj="allpass_5" inlet="time"/>
-      </net>
-      <net>
-         <source obj="*c_4" outlet="out"/>
-         <dest obj="allpass_6" inlet="time"/>
-      </net>
-      <net>
-         <source obj="*c_8" outlet="out"/>
-         <dest obj="allpass_10" inlet="time"/>
-      </net>
-      <net>
-         <source obj="*c_7" outlet="out"/>
-         <dest obj="allpass_9" inlet="time"/>
-      </net>
-      <net>
-         <source obj="*c_6" outlet="out"/>
+         <source obj="*c_5" outlet="out"/>
          <dest obj="allpass_8" inlet="time"/>
       </net>
       <net>
-         <source obj="*c_5" outlet="out"/>
+         <source obj="*c_4" outlet="out"/>
          <dest obj="allpass_7" inlet="time"/>
       </net>
    </nets>
@@ -645,8 +533,8 @@ outlet_o8 = -outlet_o4;]]></code.krate>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>173</x>
-      <y>104</y>
+      <x>126</x>
+      <y>23</y>
       <width>1273</width>
       <height>828</height>
    </windowPos>
