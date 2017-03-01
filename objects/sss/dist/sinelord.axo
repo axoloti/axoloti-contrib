@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sinelord" uuid="e7413d5f-6621-4262-8029-111165739d37">
+      <sDescription>neutral shaper.. or something?
+The &quot;clip&quot; value will determine whether the output&apos;s behavior will be linear (below clip value) or sine-shaped. At the &quot;clipping point&quot;, the module will turn from linear to sine-response at a 45degrees position (at that exact point a shift in time ia the same as the shift in amplitude, from there it curves a signal into sine-shape-&gt; the only place a sine is at a 1/1 slope is at 45 degrees, so applying this will always give you a kind-off perfect slope)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain"/>
+         <frac32.u.map name="clipH"/>
+         <frac32.u.map name="clipL"/>
+         <frac32.u.map name="strength"/>
+         <bool32.tgl name="halfout"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t pv1;
+int32_t pv2;]]></code.declaration>
+      <code.krate><![CDATA[float32_t STR=param_strength>>5;
+STR=3+STR/(1<<16);]]></code.krate>
+      <code.srate><![CDATA[int32_t in=inlet_in;
+in+=___SMMUL(in<<3,param_gain<<4);
+int32_t A=in;
+int32_t clipH=param_clipH-(param_gain>>2);
+clipH=___SMMUL(clipH<<3,clipH<<2);
+int32_t clipL=param_clipL-(param_gain>>2);
+clipL=___SMMUL(clipL<<3,clipL<<2);
+A=A>clipH?clipH:A;
+A=A<-clipL?-clipL:A;
+int32_t B=in-A;
+int32_t r1;
+if(B>0){
+SINE2TINTERP(((int32_t)((B>>5)*STR)<<5)+(1<<31),r1)}
+else{SINE2TINTERP(((int32_t)((B>>5)*STR)<<5)-(1<<31),r1)}
+r1=(r1>>2)/STR;
+//r1=___SMMUL(r1>>1,(1<<27)-(param_gain>>2)<<2);
+outlet_out=A-r1>>param_halfout;]]></code.srate>
+   </obj.normal>
+</objdefs>
