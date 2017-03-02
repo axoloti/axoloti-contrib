@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="mostSVFOS" uuid="03efa227-2cea-4dd4-a3fc-d6ee1d4e52e2">
+   <obj.normal id="mostSVFOS" uuid="1bc970a7-0b05-490f-94b0-866b90417edd">
       <sDescription>oversampled multi-mode output filter.
 Use &quot;rotationMix&quot; module to morph through the available outputs easily.
 
@@ -55,13 +55,14 @@ int32_t resLP=___SMMUL(param_resLP<<3,RES);
 int32_t resBR=___SMMUL(param_resBR<<3,RES);
 int32_t f1;
 int32_t BW=__SSAT(inlet_BW+param_BW,28);
+BW=BW>0?BW:(BW>>3)*3;
 int32_t width1;
 int32_t width2;
 if(BW>0){
-width1=param_freq+inlet_freq-BW;
+width1=__SSAT(param_freq+inlet_freq,28)-BW;
 width2=width1+BW;}
 else{
-	width2=param_freq+inlet_freq+BW;
+	width2=__SSAT(param_freq+inlet_freq,28)+BW;
 	width1=width2-BW;
 }
    MTOF(width1,f1);
@@ -70,22 +71,21 @@ else{
    f1=f1/param_OS;
    f2=f2/param_OS;
 
-   int32_t s1=(f1-pv1)>>4;
-   int32_t s2=(f2-pv2)>>4;
+   int32_t s1=(f1-pv1)/param_OS>>4;
+   int32_t s2=(f2-pv2)/param_OS>>4;
    int32_t p1=pv1;
    int32_t p2=pv2;
    pv1=f1;
    pv2=f2;]]></code.krate>
-      <code.srate><![CDATA[p1+=s1;
-p2+=s2;
-
-int32_t in2=inlet_in2>>1;
-int32_t in1=inlet_in1-in2;
+      <code.srate><![CDATA[int32_t in2=__SSAT(inlet_in2,27)>>1;
+int32_t in1=__SSAT(inlet_in1,27)-in2;
 for(i=0;i<param_OS;i++){
-
+p1+=s1;
+p2+=s2;
+BP=__SSAT(BP+__SSAT(___SMMUL(BP,___SMMUL(resBP<<4,(f1>>1)+(f2>>1))),30),31);//2
 BP=___SMMLA((in1-LP-BP)<<1,f2,BP);  //1
-BP=__SSAT(BP+__SSAT(___SMMUL(BP,___SMMUL(-resBP<<4,(f1>>1)+(f2>>1)))<<1,29),28);//2
-BR=__SSAT(in1- BP-(___SMMUL(BP,___SMMUL(resBR<<4,(f1>>1)+(f2>>1)))<<5),31);//3
+
+BR=__SSAT(in1- BP-(___SMMUL(BP,___SMMUL(+resBR<<4,(f1>>1)+(f2>>1)))<<5),31);//3
 //BR=__SSAT(in1-BP,31);////////////
 HP=__SSAT(BR-LP-BP-(___SMMUL(BP<<3,___SMMUL(resHP<<4,f2)<<1)<<4),31);//4
 LP = ___SMMLA((BR-HP+(___SMMUL(BP<<3,___SMMUL(resLP<<4,f1)<<1)<<4)-LP)<<1,f1,LP); //5
