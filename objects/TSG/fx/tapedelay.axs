@@ -1,10 +1,4 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="mix" x="1106" y="0">
-      <params>
-         <frac32.u.map name="value" onParent="true" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="Tape age" x="686" y="28">
       <params>
          <frac32.u.map name="value" onParent="true" value="0.0"/>
@@ -31,14 +25,6 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="1232" y="56">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="Out L" x="1316" y="56">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="Saturation" x="420" y="70">
       <params>
          <frac32.u.map name="value" onParent="true" value="0.0"/>
@@ -50,14 +36,6 @@
          <frac32.u.map name="a" value="0.0"/>
          <frac32.u.map name="b" value="64.0"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="1232" y="126">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="Out R" x="1316" y="126">
-      <params/>
       <attribs/>
    </obj>
    <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="In L" x="112" y="168">
@@ -305,6 +283,28 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="mix" x="1428" y="728">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="1554" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="Out L" x="1638" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="1554" y="826">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="Out R" x="1638" y="826">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="In L" outlet="inlet"/>
@@ -547,8 +547,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>17</x>
-      <y>156</y>
+      <x>0</x>
+      <y>60</y>
       <width>1440</width>
       <height>791</height>
    </windowPos>
