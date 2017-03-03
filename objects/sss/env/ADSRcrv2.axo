@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="ADSRcrv2" uuid="a8db6ba6-8f82-4340-8b13-d497823857b5">
       <sDescription>ADSR module with exp/inverse exp controls for attack, decay and release stages. Also outputs stage number and a gate high when it changes from stage (eg selecting different waveforms for my wavetable oscillators for each stage. you could use the autoCurve (patt-folder) to morph between settings at the different stages of the envelope.)
 
@@ -37,7 +37,9 @@ It also has an S-curve control, this dials in S-curves for all stages. Negative 
          <frac32.s.map name="crvA"/>
          <frac32.s.map name="crvD"/>
          <frac32.s.map name="crvR"/>
-         <frac32.s.map name="Scrv"/>
+         <frac32.s.map name="ScrvA"/>
+         <frac32.s.map name="ScrvD"/>
+         <frac32.s.map name="ScrvR"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t env1;
@@ -83,9 +85,9 @@ int32_t curving(int32_t in,int32_t Exp){
 	}]]></code.declaration>
       <code.krate><![CDATA[int32_t att;
 int32_t sus;
-int32_t CrvA=__SSAT(param_crvA+inlet_crvA+___SMMUL(enva1-(1<<29),inlet_Scrv+param_Scrv<<2),28);
-int32_t CrvD=__SSAT(param_crvD+inlet_crvD-___SMMUL(enva2-(1<<29),inlet_Scrv+param_Scrv<<2),28);
-int32_t CrvR=__SSAT((param_crvR<<1)+inlet_crvR-___SMMUL(env3-(1<<29),param_Scrv<<2),28);
+int32_t CrvA=__SSAT(param_crvA+inlet_crvA+___SMMUL(enva1-(1<<29),inlet_Scrv+param_ScrvA<<2),28);
+int32_t CrvD=__SSAT(param_crvD+inlet_crvD-___SMMUL(enva2-(1<<29),inlet_Scrv+param_ScrvD<<2),28);
+int32_t CrvR=__SSAT((param_crvR<<1)+inlet_crvR-___SMMUL(env3-(1<<29),inlet_Scrv+param_ScrvR<<2),28);
 sus=__USAT((1<<27)-param_S-inlet_S,27);
 int32_t slope;
 int32_t rel;

@@ -36,14 +36,18 @@ int32_t frac_exp(int32_t a) {
 	     return expt[ei]<<s;
 	else return expt[ei]>>(-s);
 }]]></code.declaration>
-      <code.krate><![CDATA[int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
+      <code.krate><![CDATA[if(param_tresh<(param_soft>>1)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_tresh],param_soft>>1,0xFFFD);}
+
+int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
 int32_t treshlog = frac_log(param_tresh-soft);
 int32_t Tresh=frac_log(param_tresh);
 Tresh=Tresh-treshlog;
 float32_t ratio=(float32_t)(1<<27)/Tresh;
 int32_t makeup=frac_log(param_out)-(treshlog);
 makeup=frac_exp(makeup);]]></code.krate>
-      <code.srate><![CDATA[int32_t In=__SSAT(inlet_in+___SMMUL(inlet_in<<3,param_pre<<4),31);
+      <code.srate><![CDATA[int32_t In=inlet_in>>4;
+In=__SSAT(In+___SMMUL(inlet_in,param_pre<<4),29)<<3;
 int32_t IN=In;
 IN=IN>0?IN:-IN;
 int32_t inlog = frac_log(IN);
@@ -55,6 +59,6 @@ if (over1<0){
 } else {
 	gain = frac_exp(-___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5);
 }
-outlet_out = ___SMMUL(___SMMUL(In<<3,gain<<10)<<3,makeup<<10);]]></code.srate>
+outlet_out = ___SMMUL(___SMMUL(In,gain<<10)<<6,makeup<<10);]]></code.srate>
    </obj.normal>
 </objdefs>
