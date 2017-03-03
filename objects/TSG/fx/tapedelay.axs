@@ -92,13 +92,13 @@
          <combo attributeName="size" selection="65536 (1.36s)"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="Time" x="112" y="322">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="Time" x="0" y="294">
       <params>
          <frac32.u.map name="value" onParent="true" value="20.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_4" x="196" y="322">
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_4" x="70" y="294">
       <params>
          <frac32.u.map name="a" value="1.0"/>
          <frac32.u.map name="b" value="64.0"/>
@@ -151,17 +151,21 @@
          <combo attributeName="size" selection="65536 (1.36s)"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="time symmetry" x="294" y="378">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="time symmetry" x="168" y="350">
       <params>
          <frac32.s.map name="value" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_2" x="378" y="378">
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_2" x="252" y="350">
       <params/>
       <attribs>
          <spinner attributeName="shift" value="2"/>
       </attribs>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="378" y="378">
+      <params/>
+      <attribs/>
    </obj>
    <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_5" x="476" y="420">
       <params/>
@@ -402,6 +406,7 @@
       <net>
          <source obj="map_4" outlet="o"/>
          <dest obj="xfade_5" inlet="i1"/>
+         <dest obj="*_1" inlet="b"/>
       </net>
       <net>
          <source obj="xfade_3" outlet="o"/>
@@ -534,12 +539,16 @@
       </net>
       <net>
          <source obj="&gt;&gt;_2" outlet="result"/>
-         <dest obj="+_3" inlet="in2"/>
-         <dest obj="-_1" inlet="in2"/>
+         <dest obj="*_1" inlet="a"/>
       </net>
       <net>
          <source obj="smooth_2" outlet="out"/>
          <dest obj="read_2" inlet="time"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="+_3" inlet="in2"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
    </nets>
    <settings>
