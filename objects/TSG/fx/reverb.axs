@@ -1,35 +1,41 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="InL" x="196" y="56">
+   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="InL" x="280" y="56">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_3" x="280" y="70">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_3" x="364" y="70">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/&gt;&gt;" uuid="5d748ad90476b3ecc3970cde6622af97cf3cf4ac" name="&gt;&gt;_1" x="364" y="70">
+   <obj type="math/&gt;&gt;" uuid="5d748ad90476b3ecc3970cde6622af97cf3cf4ac" name="&gt;&gt;_1" x="448" y="70">
       <params/>
       <attribs>
          <spinner attributeName="shift" value="2"/>
       </attribs>
    </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="PrDly" x="476" y="70">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="PrDly" x="560" y="70">
       <params/>
       <attribs>
          <combo attributeName="size" selection="16384 (341ms)"/>
       </attribs>
    </obj>
-   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="InR" x="196" y="98">
+   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="InR" x="280" y="98">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="PreDelay" x="0" y="182">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="PreDelay" x="14" y="182">
       <params>
          <frac32.u.map name="value" onParent="true" value="17.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_3" x="84" y="182">
+   <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_1" x="84" y="182">
+      <params>
+         <frac32.u.map name="time" value="52.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_3" x="168" y="182">
       <params>
          <frac32.u.map name="time" value="0.0"/>
       </params>
@@ -37,119 +43,119 @@
          <objref attributeName="delayname" obj="PrDly"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_1" x="238" y="182">
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_1" x="322" y="182">
       <params>
          <frac32.s.map name="g" value="32.0"/>
       </params>
       <attribs>
-         <spinner attributeName="delay" value="99"/>
+         <spinner attributeName="delay" value="75"/>
       </attribs>
    </obj>
-   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_2" x="350" y="182">
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_2" x="434" y="182">
       <params>
          <frac32.s.map name="g" value="32.0"/>
       </params>
       <attribs>
-         <spinner attributeName="delay" value="67"/>
+         <spinner attributeName="delay" value="57"/>
       </attribs>
    </obj>
-   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="504" y="196">
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="588" y="196">
       <params/>
       <attribs>
          <objref attributeName="delayname" obj="delayB"/>
          <combo attributeName="interpol" selection="3pt"/>
       </attribs>
    </obj>
-   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="770" y="196">
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="854" y="196">
       <params/>
       <attribs>
          <objref attributeName="delayname" obj="delayA"/>
          <combo attributeName="interpol" selection="3pt"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="decay" x="616" y="322">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="decay" x="700" y="322">
       <params>
          <frac32.u.map name="value" onParent="true" value="36.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="700" y="322">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="784" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="784" y="322">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="868" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="854" y="322">
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="938" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="952" y="322">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="1036" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1036" y="322">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1120" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_2" x="1106" y="322">
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_2" x="1190" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="LowDamp" x="70" y="336">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="LowDamp" x="154" y="336">
       <params>
          <frac32.u.map name="value" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_2" x="154" y="336">
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_2" x="238" y="336">
       <params/>
       <attribs>
          <spinner attributeName="shift" value="1"/>
       </attribs>
    </obj>
-   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_1" x="714" y="392">
+   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_1" x="798" y="392">
       <params>
          <frac32.u.map name="freq" value="20.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_1" x="798" y="392">
+   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_1" x="882" y="392">
       <params>
          <frac32.u.map name="freq" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_2" x="966" y="392">
+   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_2" x="1050" y="392">
       <params>
          <frac32.u.map name="freq" value="20.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_2" x="1050" y="392">
+   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_2" x="1134" y="392">
       <params>
          <frac32.u.map name="freq" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="HighDamp" x="70" y="420">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="HighDamp" x="154" y="420">
       <params>
          <frac32.u.map name="value" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/inv" uuid="565521d3699b36d8095aa1c79b9ad0046fb133ce" name="inv_1" x="154" y="420">
+   <obj type="math/inv" uuid="565521d3699b36d8095aa1c79b9ad0046fb133ce" name="inv_1" x="238" y="420">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="224" y="420">
+   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="308" y="420">
       <params>
          <frac32.u.map name="c" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_3" x="882" y="504">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_3" x="966" y="504">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -157,7 +163,7 @@
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_7" x="1134" y="504">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_7" x="1218" y="504">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -165,14 +171,26 @@
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_3" x="154" y="518">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="size" x="70" y="518">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_2" x="140" y="518">
+      <params>
+         <frac32.u.map name="time" value="52.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_3" x="238" y="518">
       <params>
          <frac32.u.map name="a" value="1.0"/>
          <frac32.u.map name="b" value="15.0"/>
       </params>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="27089c4f-b896-42e2-bac1-654ac92471c4" name="mod_" x="266" y="518">
+   <patchobj type="patch/object" uuid="27089c4f-b896-42e2-bac1-654ac92471c4" name="mod_" x="350" y="518">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="-16.0"/>
          <frac32.u.map name="gain" onParent="true" value="7.5"/>
@@ -225,32 +243,26 @@ outlet_o7 = -outlet_o3;
 outlet_o8 = -outlet_o4;]]></code.krate>
       </object>
    </patchobj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="784" y="518">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="868" y="518">
       <params>
          <frac32.u.map name="amp" value="54.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_5" x="1036" y="518">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_5" x="1120" y="518">
       <params>
          <frac32.u.map name="amp" value="49.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="size" x="70" y="644">
-      <params>
-         <frac32.u.map name="value" onParent="true" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_2" x="154" y="644">
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_2" x="238" y="644">
       <params>
          <frac32.u.map name="a" value="0.0"/>
          <frac32.u.map name="b" value="26.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_4" x="1036" y="644">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_4" x="1120" y="644">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -258,7 +270,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_8" x="1288" y="644">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_8" x="1372" y="644">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -266,26 +278,26 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="938" y="658">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="1022" y="658">
       <params>
          <frac32.u.map name="amp" value="39.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_6" x="1190" y="658">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_6" x="1274" y="658">
       <params>
          <frac32.u.map name="amp" value="44.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_1" x="154" y="770">
+   <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="map_1" x="238" y="770">
       <params>
          <frac32.u.map name="a" value="0.0"/>
          <frac32.u.map name="b" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_5" x="1190" y="784">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_5" x="1274" y="784">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -293,7 +305,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_9" x="1442" y="784">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_9" x="1526" y="784">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -301,25 +313,25 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="1092" y="798">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="1176" y="798">
       <params>
          <frac32.u.map name="amp" value="48.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_7" x="1344" y="798">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_7" x="1428" y="798">
       <params>
          <frac32.u.map name="amp" value="41.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="diffusion" x="238" y="910">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="diffusion" x="322" y="910">
       <params>
          <frac32.u.map name="value" onParent="true" value="63.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_6" x="1344" y="924">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_6" x="1428" y="924">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="4096 (85.33ms)"/>
@@ -327,7 +339,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_10" x="1596" y="924">
+   <obj type="TSG/filter/allpass m" uuid="c913eed1-73f0-4f1a-8c9f-3399a4a9019a" name="allpass_10" x="1680" y="924">
       <params/>
       <attribs>
          <combo attributeName="buffsize" selection="8192 (170ms)"/>
@@ -335,49 +347,49 @@ outlet_o8 = -outlet_o4;]]></code.krate>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="1246" y="938">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="1330" y="938">
       <params>
          <frac32.u.map name="amp" value="43.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_8" x="1498" y="938">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_8" x="1582" y="938">
       <params>
          <frac32.u.map name="amp" value="47.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="mix" x="1862" y="966">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="mix" x="1946" y="966">
       <params>
          <frac32.u.map name="value" onParent="true" value="24.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="1988" y="1036">
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="2072" y="1036">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="l" x="2086" y="1036">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="l" x="2170" y="1036">
       <params/>
       <attribs/>
    </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayA" x="1498" y="1064">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayA" x="1582" y="1064">
       <params/>
       <attribs>
          <combo attributeName="size" selection="4096 (85.33ms)"/>
       </attribs>
    </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayB" x="1750" y="1064">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="delayB" x="1834" y="1064">
       <params/>
       <attribs>
          <combo attributeName="size" selection="4096 (85.33ms)"/>
       </attribs>
    </obj>
-   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="1988" y="1106">
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="2072" y="1106">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="r" x="2086" y="1106">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="r" x="2170" y="1106">
       <params/>
       <attribs/>
    </obj>
@@ -488,9 +500,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </net>
       <net>
          <source obj="size" outlet="out"/>
-         <dest obj="map_3" inlet="c"/>
-         <dest obj="map_2" inlet="c"/>
-         <dest obj="map_1" inlet="c"/>
+         <dest obj="smooth_2" inlet="in"/>
       </net>
       <net>
          <source obj="map_2" outlet="o"/>
@@ -558,7 +568,7 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       </net>
       <net>
          <source obj="PreDelay" outlet="out"/>
-         <dest obj="read_3" inlet="time"/>
+         <dest obj="smooth_1" inlet="in"/>
       </net>
       <net>
          <source obj="map_3" outlet="o"/>
@@ -638,6 +648,16 @@ outlet_o8 = -outlet_o4;]]></code.krate>
       <net>
          <source obj="*c_5" outlet="out"/>
          <dest obj="allpass_7" inlet="time"/>
+      </net>
+      <net>
+         <source obj="smooth_1" outlet="out"/>
+         <dest obj="read_3" inlet="time"/>
+      </net>
+      <net>
+         <source obj="smooth_2" outlet="out"/>
+         <dest obj="map_3" inlet="c"/>
+         <dest obj="map_2" inlet="c"/>
+         <dest obj="map_1" inlet="c"/>
       </net>
    </nets>
    <settings>
