@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.11">
+<patch-1.0 appVersion="1.0.12">
    <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="scale" x="252" y="420">
       <params/>
       <attribs/>
@@ -34,7 +34,9 @@
          <frac32.s.map name="crvA" onParent="true" value="-24.0"/>
          <frac32.s.map name="crvD" onParent="true" value="-32.0"/>
          <frac32.s.map name="crvR" onParent="true" value="1.0"/>
-         <frac32.s.map name="Scrv" onParent="true" value="40.0"/>
+         <frac32.s.map name="ScrvA" value="0.0"/>
+         <frac32.s.map name="ScrvD" value="0.0"/>
+         <frac32.s.map name="ScrvR" value="0.0"/>
       </params>
       <attribs/>
    </obj>

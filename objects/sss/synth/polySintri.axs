@@ -1,9 +1,23 @@
-<patch-1.0 appVersion="1.0.11">
-   <obj type="midi/in/keyb mod" uuid="abcd509d15e7d13d5381203fd2b4d0ac6fe57bb3" name="keyb_1" x="56" y="308">
+<patch-1.0 appVersion="1.0.12">
+   <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="scale" x="84" y="112">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="ENV vol" x="154" y="308">
+   <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="key" x="84" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb mod" uuid="abcd509d15e7d13d5381203fd2b4d0ac6fe57bb3" name="keyb_1" x="0" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/harmony/46Scales" uuid="04beb739-0fb8-4f93-ba92-fc4b22942182" name="46Scales_1" x="98" y="308">
+      <params/>
+      <attribs>
+         <objref attributeName="scale" obj="../scalebank2_1"/>
+      </attribs>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="ENV vol" x="224" y="308">
       <params>
          <frac32.s.map name="a" onParent="true" value="-62.0"/>
          <frac32.s.map name="d" onParent="true" value="26.0"/>
@@ -12,71 +26,71 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ENV sh/pi" x="252" y="308">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ENV sh/pi" x="322" y="308">
       <params>
          <frac32.s.map name="a" onParent="true" value="-64.0"/>
          <frac32.s.map name="d" onParent="true" value="16.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="lfo/sine r" uuid="725d481acbefa181fa5d92f414d317c86b77b789" name="sine_1" x="350" y="308">
+   <obj type="lfo/sine r" uuid="725d481acbefa181fa5d92f414d317c86b77b789" name="sine_1" x="420" y="308">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="sss/math/expCurveK" uuid="bde45a1d-540b-4c33-b7b5-d733d42a1772" name="CurveShape" x="518" y="308">
+   <obj type="sss/math/expCurveK" uuid="bde45a1d-540b-4c33-b7b5-d733d42a1772" name="CurveShape" x="588" y="308">
       <params>
          <frac32.s.map name="exp" onParent="true" value="49.0"/>
          <int32 name="stack" onParent="true" value="5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="MW shape" x="630" y="308">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="MW shape" x="700" y="308">
       <params>
          <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="sss/math/expCurveK" uuid="bde45a1d-540b-4c33-b7b5-d733d42a1772" name="CurvePitch" x="728" y="308">
+   <obj type="sss/math/expCurveK" uuid="bde45a1d-540b-4c33-b7b5-d733d42a1772" name="CurvePitch" x="798" y="308">
       <params>
          <frac32.s.map name="exp" onParent="true" value="64.0"/>
          <int32 name="stack" onParent="true" value="4"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="MW pitch" x="840" y="308">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="MW pitch" x="910" y="308">
       <params>
          <frac32.u.map name="amp" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="938" y="308">
+   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="1008" y="308">
       <params/>
       <attribs/>
    </obj>
-   <obj type="sss/osc/sintri" uuid="32c3619b-d1db-4441-beb0-6594ecca18b3" name="sintri_1" x="1008" y="308">
+   <obj type="sss/osc/sintri" uuid="32c3619b-d1db-4441-beb0-6594ecca18b3" name="sintri_1" x="1078" y="308">
       <params>
          <frac32.s.map name="pitch" onParent="true" value="0.0"/>
          <frac32.u.map name="shape" onParent="true" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 1 g" uuid="2065eeca525a4691f1bc08a7dc5468871de651b7" name="MW tremelo" x="1106" y="308">
+   <obj type="mix/mix 1 g" uuid="2065eeca525a4691f1bc08a7dc5468871de651b7" name="MW tremelo" x="1176" y="308">
       <params>
          <frac32.u.map name="gain1" onParent="true" value="32.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1204" y="308">
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1274" y="308">
       <params/>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1260" y="308">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1330" y="308">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1316" y="308">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1386" y="308">
       <params/>
       <attribs/>
    </obj>
@@ -117,7 +131,7 @@
          <dest obj="sintri_1" inlet="pitch"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="note"/>
+         <source obj="46Scales_1" outlet="note"/>
          <dest obj="+_1" inlet="in1"/>
          <dest obj="sine_1" inlet="phase"/>
       </net>
@@ -145,6 +159,18 @@
          <source obj="MW tremelo" outlet="out"/>
          <dest obj="*_1" inlet="b"/>
       </net>
+      <net>
+         <source obj="scale" outlet="inlet"/>
+         <dest obj="46Scales_1" inlet="scale"/>
+      </net>
+      <net>
+         <source obj="key" outlet="inlet"/>
+         <dest obj="46Scales_1" inlet="key"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="46Scales_1" inlet="pitch"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>polyphonic</subpatchmode>
@@ -159,7 +185,7 @@
    <windowPos>
       <x>-8</x>
       <y>-8</y>
-      <width>1696</width>
+      <width>1300</width>
       <height>1026</height>
    </windowPos>
 </patch-1.0>
