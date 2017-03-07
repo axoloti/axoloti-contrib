@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="shaper 8" uuid="6ece753c-6185-4530-8e39-4d41d4a36004">
+      <sDescription>cheapo waveshaper.based on &apos;table/read/interp&apos;.
+works as wavetable-oscillator as well.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>shaper.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="p1"/>
+         <frac32.s.map name="p2"/>
+         <frac32.s.map name="p3"/>
+         <frac32.s.map name="p4"/>
+         <frac32.s.map name="p5"/>
+         <frac32.s.map name="p6"/>
+         <frac32.s.map name="p7"/>
+         <frac32.s.map name="p8"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t array[8];]]></code.declaration>
+      <code.krate><![CDATA[array[0] = param_p1;
+array[1] = param_p2;
+array[2] = param_p3;
+array[3] = param_p4;
+
+array[4] = param_p5;
+array[5] = param_p6;
+array[6] = param_p7;
+array[7] = param_p8;]]></code.krate>
+      <code.srate><![CDATA[uint32_t asat = __USAT((inlet_in>>1)+(1<<26),27);
+    int index = asat>>24;
+   int32_t y1 = array[index];
+   int32_t y2 = array[(index+1)&7];
+   int frac = (asat - (index<<24))<<6;
+  int32_t rr;
+  rr = ___SMMUL(y1,(1<<30)-frac);
+  rr = ___SMMLA(y2,frac,rr);
+outlet_out= rr<<2;]]></code.srate>
+   </obj.normal>
+</objdefs>
