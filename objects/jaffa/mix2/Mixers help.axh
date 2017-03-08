@@ -1,0 +1,176 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="168" y="0" text="+ master in out"/>
+   <obj type="osc/phasor compl" uuid="11940ece0e29f3fae0d3c8e1fdabd63cacac5b48" name="phasor_1" x="14" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="-36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="220c4387-af16-4041-8d06-4e2ac03f8a2f" name="mix_5" x="168" y="14">
+      <params>
+         <bool32.tgl name="1on" value="0"/>
+         <frac32.u.map name="v1" value="32.0"/>
+         <frac32.u.map name="s1" value="27.5"/>
+         <bool32.tgl name="2on" value="0"/>
+         <frac32.u.map name="v2" value="20.5"/>
+         <frac32.u.map name="s2" value="0.0"/>
+         <bool32.tgl name="3on" value="0"/>
+         <frac32.u.map name="v3" value="17.0"/>
+         <frac32.u.map name="s3" value="0.0"/>
+         <bool32.tgl name="4on" value="0"/>
+         <frac32.u.map name="v4" value="11.5"/>
+         <frac32.u.map name="s4" value="0.0"/>
+         <bool32.tgl name="return" value="0"/>
+         <frac32.u.map name="r" value="32.0"/>
+         <frac32.u.map name="main" value="64.0"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="220c4387-af16-4041-8d06-4e2ac03f8a2f">
+         <sDescription>4 input s-rate mixer</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <inlets>
+            <frac32buffer name="m"/>
+            <frac32buffer name="r" description="return in"/>
+            <frac32buffer name="1" description="input 1"/>
+            <frac32buffer name="2" description="input 2"/>
+            <frac32buffer name="3" description="input 3"/>
+            <frac32buffer name="4" description="input 4"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="m" description="mix out"/>
+            <frac32buffer name="s" description="send out"/>
+            <frac32buffer name="o"/>
+         </outlets>
+         <displays/>
+         <params>
+            <bool32.tgl name="1on"/>
+            <frac32.u.map name="v1">
+               <DefaultValue v="32.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="s1"/>
+            <bool32.tgl name="2on"/>
+            <frac32.u.map name="v2">
+               <DefaultValue v="32.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="s2"/>
+            <bool32.tgl name="3on"/>
+            <frac32.u.map name="v3">
+               <DefaultValue v="32.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="s3"/>
+            <bool32.tgl name="4on"/>
+            <frac32.u.map name="v4">
+               <DefaultValue v="32.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="s4"/>
+            <bool32.tgl name="return"/>
+            <frac32.u.map name="r"/>
+            <frac32.u.map name="main"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.srate><![CDATA[{   
+    // main mix
+    int32_t accum= 0;   
+    if(param_1on){accum = ___SMMUL(inlet_1,param_v1);}	
+    if(param_2on){accum = ___SMMLA(inlet_2,param_v2,accum);}
+    if(param_3on){accum = ___SMMLA(inlet_3,param_v3,accum);}
+    if(param_4on){accum = ___SMMLA(inlet_4,param_v4,accum);}
+    if(param_return){accum = ___SMMLA(inlet_r,param_r,accum);} //Return
+    outlet_m=  __SSAT( (accum<<5),28);
+}
+{   
+    // send
+    int32_t  
+    accum = ___SMMUL(inlet_1,param_s1);
+    accum = ___SMMLA(inlet_2,param_s2,accum);
+    accum = ___SMMLA(inlet_3,param_s3,accum);
+    accum = ___SMMLA(inlet_4,param_s4,accum);
+    outlet_s=  __SSAT((accum<<5),28);
+}
+
+{   
+    // master out
+    int32_t  
+    accum = ___SMMUL(inlet_m,param_main);
+;   outlet_o=  __SSAT((accum<<5),28);
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_1" x="266" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/phasor compl" uuid="11940ece0e29f3fae0d3c8e1fdabd63cacac5b48" name="phasor_2" x="14" y="126">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_2" x="266" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/phasor compl" uuid="11940ece0e29f3fae0d3c8e1fdabd63cacac5b48" name="phasor_3" x="14" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/phasor compl" uuid="11940ece0e29f3fae0d3c8e1fdabd63cacac5b48" name="phasor_4" x="14" y="350">
+      <params>
+         <frac32.s.map name="pitch" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="266" y="434">
+      <params>
+         <frac32.u.map name="volume" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="phasor_1" outlet="phasor0"/>
+         <dest obj="mix_5" inlet="1"/>
+      </net>
+      <net>
+         <source obj="phasor_2" outlet="phasor0"/>
+         <dest obj="mix_5" inlet="2"/>
+      </net>
+      <net>
+         <source obj="phasor_3" outlet="phasor0"/>
+         <dest obj="mix_5" inlet="3"/>
+      </net>
+      <net>
+         <source obj="phasor_4" outlet="phasor0"/>
+         <dest obj="mix_5" inlet="4"/>
+      </net>
+      <net>
+         <source obj="mix_5" outlet="s"/>
+         <dest obj="kscope_2" inlet="in"/>
+         <dest obj="mix_5" inlet="r"/>
+      </net>
+      <net>
+         <source obj="mix_5" outlet="m"/>
+         <dest obj="mix_5" inlet="m"/>
+      </net>
+      <net>
+         <source obj="mix_5" outlet="o"/>
+         <dest obj="kscope_1" inlet="in"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>571</x>
+      <y>23</y>
+      <width>482</width>
+      <height>676</height>
+   </windowPos>
+</patch-1.0>

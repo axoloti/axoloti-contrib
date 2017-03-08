@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mix4sm" uuid="75e69b8b-5d15-4841-b4e8-92ad719e0df2">
+      <sDescription>4 input s-rate mixer</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="m"/>
+         <frac32buffer name="r" description="return in"/>
+         <frac32buffer name="1" description="input 1"/>
+         <frac32buffer name="2" description="input 2"/>
+         <frac32buffer name="3" description="input 3"/>
+         <frac32buffer name="4" description="input 4"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="m" description="mix out"/>
+         <frac32buffer name="s" description="send out"/>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="1on"/>
+         <frac32.u.map name="v1">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s1"/>
+         <bool32.tgl name="2on"/>
+         <frac32.u.map name="v2">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s2"/>
+         <bool32.tgl name="3on"/>
+         <frac32.u.map name="v3">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s3"/>
+         <bool32.tgl name="4on"/>
+         <frac32.u.map name="v4">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s4"/>
+         <bool32.tgl name="return"/>
+         <frac32.u.map name="r"/>
+         <frac32.u.map name="main"/>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[{   
+    // main mix
+    int32_t accum= 0;   
+    if(param_1on){accum = ___SMMUL(inlet_1,param_v1);}	
+    if(param_2on){accum = ___SMMLA(inlet_2,param_v2,accum);}
+    if(param_3on){accum = ___SMMLA(inlet_3,param_v3,accum);}
+    if(param_4on){accum = ___SMMLA(inlet_4,param_v4,accum);}
+    if(param_return){accum = ___SMMLA(inlet_r,param_r,accum);} //Return
+    outlet_m=  __SSAT( (accum<<5),28);
+}
+{   
+    // send
+    int32_t  
+    accum = ___SMMUL(inlet_1,param_s1);
+    accum = ___SMMLA(inlet_2,param_s2,accum);
+    accum = ___SMMLA(inlet_3,param_s3,accum);
+    accum = ___SMMLA(inlet_4,param_s4,accum);
+    outlet_s=  __SSAT((accum<<5),28);
+}
+
+{   
+    // master out
+    int32_t  
+    accum = ___SMMUL(inlet_m,param_main);
+;   outlet_o=  __SSAT((accum<<5),28);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
