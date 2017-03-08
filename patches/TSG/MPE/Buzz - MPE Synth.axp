@@ -1,0 +1,706 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="01ad46d9-6fa1-424b-9935-a98bdafd692c" name="synth" x="182" y="14">
+      <params>
+         <frac32.u.map name="shape" value="0.0"/>
+         <frac32.u.map name="timbre&gt;shape" value="27.5"/>
+         <frac32.u.map name="strike_decay" value="20.5"/>
+         <frac32.u.map name="fm:timbre" value="21.5"/>
+         <frac32.u.map name="velo&gt;strike_decay" value="0.0"/>
+         <frac32.u.map name="strike" value="35.5">
+            <modulators/>
+         </frac32.u.map>
+         <frac32.u.map name="timbre&gt;filter" value="0.0"/>
+         <frac32.u.map name="filter_:reso" value="0.0"/>
+         <frac32.u.map name="cutoff" value="51.5"/>
+         <frac32.u.map name="pressure&gt;filter" value="64.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="9"/>
+         <combo attributeName="midichannel" selection="1"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <patchobj type="patch/object" uuid="97a2b03c-61b7-47b1-b680-5fe62d4e3e48" name="mpe_1" x="14" y="56">
+            <params/>
+            <attribs/>
+            <object id="patch/object" uuid="97a2b03c-61b7-47b1-b680-5fe62d4e3e48">
+               <sDescription>Controller input for MIDI Polyphonic Expression (tailored to Linnstrument)</sDescription>
+               <author>Johannes Elliesen</author>
+               <license>BSD</license>
+               <helpPatch>mpe.axh</helpPatch>
+               <inlets/>
+               <outlets>
+                  <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+                  <bool32 name="gate" description="key pressed, no retrigger legato"/>
+                  <bool32 name="gate2" description="key pressed, retrigger on legato"/>
+                  <frac32.positive name="velocity" description="note-on velocity"/>
+                  <frac32.positive name="releaseVelocity" description="note-off velocity"/>
+                  <frac32.positive name="pressure" description="continuous pressure"/>
+                  <frac32 name="bend" description="continuous pitchbend (-64..63)"/>
+                  <frac32 name="timbre" description="continuous timbre (-64..63)"/>
+                  <frac32 name="pitch" description="pitch including pitchbend"/>
+               </outlets>
+               <displays/>
+               <params/>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[int8_t _note;
+int32_t _gate;
+int32_t _gate2;
+uint32_t _velo;
+uint32_t _rvelo;
+uint32_t _pressure;
+int32_t _bend;
+int32_t _timbre;
+uint8_t _lastRPN_LSB;
+uint8_t _lastRPN_MSB;
+uint8_t _bendRange;
+int32_t _pitch;
+int32_t _xl,_yl,_zl;static const uint8_t xccl = 85;static const uint8_t yccl = 87;static const uint8_t zccl = 86;]]></code.declaration>
+               <code.init><![CDATA[_gate = 0;
+_note = 0;
+_pressure = 0;
+_bend = 0;
+_timbre = 0;
+_bendRange = 48;
+_xl=_yl=_zl=0;]]></code.init>
+               <code.krate><![CDATA[outlet_note= _note<<21;
+outlet_gate= _gate;
+outlet_gate2= _gate2;
+_gate2 = _gate;
+outlet_velocity= _velo;
+outlet_releaseVelocity= _rvelo;
+outlet_pressure = _pressure;
+outlet_bend = _bend;
+outlet_timbre = _timbre;
+outlet_pitch = _pitch;]]></code.krate>
+               <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  _bend = 0;
+  _velo = data2<<20;
+  _note = data1-64;
+  _gate = 1<<27;
+  _gate2 = 0;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note == data1-64) {
+    _rvelo = data2<<20;
+    _gate = 0;
+    _pressure = 0;
+  }
+} else if (status == attr_midichannel + MIDI_CHANNEL_PRESSURE) {
+  _pressure = (data1<<20) + _zl;
+} else if (status == attr_midichannel + MIDI_PITCH_BEND) {
+  _bend = (((int)((data2<<7)+data1)-0x2000)<<14) + _xl;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {
+  if (data1 == MIDI_C_TIMBRE) {
+    _timbre = (((int)(data2<<7)-0x2000)<<14) + _yl;
+  } else if (data1 == zccl) {
+   _zl = data2 << 13;  } else if (data1 == xccl) {
+   _xl = data2 << 7;  } else if (data1 == yccl) {
+   _yl = data2 << 14;  } else if(data1 == MIDI_C_ALL_NOTES_OFF) {
+    _gate = 0;
+  } else if (data1 == MIDI_C_RPN_MSB || data1 == MIDI_C_RPN_LSB || data1 == MIDI_C_DATA_ENTRY) {
+    switch(data1) {
+         case MIDI_C_RPN_LSB: _lastRPN_LSB = data2; break;
+         case MIDI_C_RPN_MSB: _lastRPN_MSB = data2; break;
+         case MIDI_C_DATA_ENTRY: {
+              if (_lastRPN_LSB == 0 && _lastRPN_MSB == 0) {
+                _bendRange = data2;
+              }
+            }
+            break;
+        default: break;
+    }
+  }
+}]]></code.midihandler>
+            </object>
+         </patchobj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="shape" x="658" y="84">
+            <params>
+               <frac32.u.map name="value" onParent="true" MidiCC="19" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_1" x="336" y="140">
+            <params>
+               <frac32.u.map name="time" value="34.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="timbre&gt;shape" x="658" y="168">
+            <params>
+               <frac32.u.map name="value" onParent="true" MidiCC="18" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_4" x="770" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/math/map" uuid="e93b4617-4075-4591-b602-3e1fc252e881" name="env_vel_amt" x="308" y="238">
+            <params>
+               <frac32.u.map name="a" value="5.0"/>
+               <frac32.u.map name="b" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="406" y="238">
+            <params>
+               <frac32.u.map name="amp" value="24.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="532" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="630" y="280">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="strike_decay" x="112" y="308">
+            <params>
+               <frac32.u.map name="value" onParent="true" MidiCC="16" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_5" x="882" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/math/limit" uuid="96549a9d-cf2a-4b5c-b9b1-58b08745c3fe" name="limit_1" x="966" y="308">
+            <params/>
+            <attribs>
+               <spinner attributeName="max" value="64"/>
+               <spinner attributeName="min" value="0"/>
+            </attribs>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_6" x="210" y="378">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="d_2" x="294" y="378">
+            <params>
+               <frac32.s.map name="d" value="-20.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/fm" uuid="b130eca3-e411-45c2-840d-f4358a879175" name="fm" x="630" y="378">
+            <params>
+               <frac32.s.map name="pitch" value="12.0"/>
+               <frac32.u.map name="timbre" onParent="true" value="0.5"/>
+               <frac32.u.map name="color" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="velo&gt;strike_decay" x="84" y="392">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="1078" y="406">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="strike" x="322" y="476">
+            <params>
+               <frac32.u.map name="value" onParent="true" MidiCC="17" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="406" y="476">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="476" y="476">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="timbre&gt;filter" x="784" y="490">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="filter_" x="1148" y="560">
+            <params>
+               <frac32.s.map name="pitch" value="-33.0"/>
+               <frac32.u.map name="reso" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="cutoff" x="602" y="574">
+            <params>
+               <frac32.u.map name="value" onParent="true" MidiCC="15" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="pressure&gt;filter" x="714" y="574">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="62.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/gain" uuid="6b4dd3da49f98e54900f6c20031f38f4624fa364" name="gain_1" x="826" y="574">
+            <params>
+               <frac32.u.map name="amp" value="16.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_3" x="924" y="574">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="994" y="574">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_7" x="1064" y="574">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="700" y="686">
+            <params>
+               <frac32.u.map name="amp" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_3" x="952" y="756">
+            <params/>
+            <attribs>
+               <spinner attributeName="cc" value="7"/>
+               <spinner attributeName="default" value="96"/>
+            </attribs>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="840" y="770">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="1078" y="784">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1260" y="798">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1330" y="798">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="*c_2" outlet="out"/>
+               <dest obj="+_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="xfade_1" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="filter_" outlet="out"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="*c_4" outlet="out"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="*_2" inlet="b"/>
+            </net>
+            <net>
+               <source obj="pressure&gt;filter" outlet="out"/>
+               <dest obj="+_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="*_3" outlet="result"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="fm" inlet="timbre"/>
+               <dest obj="+_2" inlet="in2"/>
+               <dest obj="gain_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="timbre&gt;filter" inlet="in"/>
+               <dest obj="*_4" inlet="b"/>
+            </net>
+            <net>
+               <source obj="+_4" outlet="out"/>
+               <dest obj="+_7" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_3" outlet="out"/>
+               <dest obj="+_4" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="bend"/>
+               <dest obj="*c_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="smooth_1" outlet="out"/>
+               <dest obj="pressure&gt;filter" inlet="in"/>
+               <dest obj="*c_4" inlet="in"/>
+            </net>
+            <net>
+               <source obj="env_vel_amt" outlet="o"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="xfade_1" outlet="o"/>
+               <dest obj="filter_" inlet="in"/>
+            </net>
+            <net>
+               <source obj="d_2" outlet="env"/>
+               <dest obj="*_3" inlet="a"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+               <dest obj="fm" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="velocity"/>
+               <dest obj="env_vel_amt" inlet="c"/>
+               <dest obj="velo&gt;strike_decay" inlet="in"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="note"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="gate"/>
+               <dest obj="d_2" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="smooth_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="+_5" outlet="out"/>
+               <dest obj="limit_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="*_2" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="cc_3" outlet="midiCC"/>
+               <dest obj="*_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="limit_1" outlet="o"/>
+               <dest obj="xfade_1" inlet="c"/>
+            </net>
+            <net>
+               <source obj="+_6" outlet="out"/>
+               <dest obj="d_2" inlet="d"/>
+            </net>
+            <net>
+               <source obj="velo&gt;strike_decay" outlet="out"/>
+               <dest obj="+_6" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="timbre&gt;filter" outlet="out"/>
+               <dest obj="+_4" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="+_7" outlet="out"/>
+               <dest obj="filter_" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="gain_1" outlet="out"/>
+               <dest obj="+_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="*_4" outlet="result"/>
+               <dest obj="+_5" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="shape" outlet="out"/>
+               <dest obj="+_5" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="timbre&gt;shape" outlet="out"/>
+               <dest obj="*_4" inlet="a"/>
+            </net>
+            <net>
+               <source obj="strike" outlet="out"/>
+               <dest obj="*_3" inlet="b"/>
+            </net>
+            <net>
+               <source obj="strike_decay" outlet="out"/>
+               <dest obj="+_6" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="cutoff" outlet="out"/>
+               <dest obj="+_7" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="fm" outlet="wave"/>
+               <dest obj="xfade_1" inlet="i1"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyexpression</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>165</x>
+            <y>23</y>
+            <width>1230</width>
+            <height>808</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <patcher type="patch/patcher" uuid="310579c8-6e57-4916-a906-fe86ab3c4924" name="FX" x="532" y="14">
+      <params/>
+      <attribs/>
+      <subpatch appVersion="1.0.12">
+         <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="In" x="406" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/fx/tapedelay" uuid="df92b555-a47a-495f-82a4-ed7504fbc6cf" name="obj_2" x="504" y="98">
+            <params>
+               <frac32.u.map name="Tape age" value="64.0">
+                  <modulators>
+                     <modulation sourceName="mod_brightness" modName="" value="-64.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.u.map name="Low End" value="64.0"/>
+               <frac32.u.map name="Saturation" value="41.0"/>
+               <frac32.u.map name="Time" value="3.5">
+                  <modulators>
+                     <modulation sourceName="mod_size" modName="" value="33.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.s.map name="time symmetry" value="28.0"/>
+               <bool32.tgl name="sync to external clock" value="0"/>
+               <frac32.u.map name="PingPong" value="64.0"/>
+               <frac32.u.map name="Feedback" value="10.0">
+                  <modulators>
+                     <modulation sourceName="mod_size" modName="" value="35.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.u.map name="Flutter" value="15.0"/>
+               <frac32.u.map name="mix" value="0.0">
+                  <modulators>
+                     <modulation sourceName="mod_mix" modName="" value="39.0"/>
+                  </modulators>
+               </frac32.u.map>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="TSG/fx/reverb" uuid="66298af9-6526-4421-8377-deb0f6dbb4e5" name="obj_1" x="644" y="98">
+            <params>
+               <frac32.u.map name="PreDelay" value="17.5">
+                  <modulators>
+                     <modulation sourceName="mod_size" modName="" value="80.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.u.map name="decay" value="14.0">
+                  <modulators>
+                     <modulation sourceName="mod_size" modName="" value="35.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.u.map name="LowDamp" value="0.0"/>
+               <frac32.u.map name="HighDamp" value="64.0">
+                  <modulators>
+                     <modulation sourceName="mod_brightness" modName="" value="-64.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.u.map name="size" value="0.0">
+                  <modulators>
+                     <modulation sourceName="mod_size" modName="" value="64.0"/>
+                  </modulators>
+               </frac32.u.map>
+               <frac32.s.map name="mod_:pitch" value="-15.0"/>
+               <frac32.u.map name="mod_:gain" value="14.0"/>
+               <frac32.u.map name="diffusion" value="64.0"/>
+               <frac32.u.map name="mix" value="0.0">
+                  <modulators>
+                     <modulation sourceName="mod_mix" modName="" value="64.0"/>
+                  </modulators>
+               </frac32.u.map>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="OutL" x="770" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="mix" x="98" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/patch/modsource auto" uuid="4ab1c80f-6017-44dc-aba7-1b9ad3949c81" name="mod_mix" x="182" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="OutR" x="770" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="size" x="98" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/patch/modsource auto" uuid="4ab1c80f-6017-44dc-aba7-1b9ad3949c81" name="mod_size" x="182" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="brightness" x="98" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="TSG/patch/modsource auto" uuid="4ab1c80f-6017-44dc-aba7-1b9ad3949c81" name="mod_brightness" x="182" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="In" outlet="inlet"/>
+               <dest obj="obj_2" inlet="In L"/>
+               <dest obj="obj_2" inlet="In R"/>
+            </net>
+            <net>
+               <source obj="obj_2" outlet="Out L"/>
+               <dest obj="obj_1" inlet="InL"/>
+            </net>
+            <net>
+               <source obj="obj_2" outlet="Out R"/>
+               <dest obj="obj_1" inlet="InR"/>
+            </net>
+            <net>
+               <source obj="obj_1" outlet="l"/>
+               <dest obj="OutL" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="obj_1" outlet="r"/>
+               <dest obj="OutR" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="mix" outlet="inlet"/>
+               <dest obj="mod_mix" inlet="v"/>
+            </net>
+            <net>
+               <source obj="size" outlet="inlet"/>
+               <dest obj="mod_size" inlet="v"/>
+            </net>
+            <net>
+               <source obj="brightness" outlet="inlet"/>
+               <dest obj="mod_brightness" inlet="v"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>87</x>
+            <y>118</y>
+            <width>1130</width>
+            <height>713</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="672" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_2" x="350" y="28">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="12"/>
+         <spinner attributeName="default" value="30"/>
+      </attribs>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_3" x="350" y="126">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="13"/>
+         <spinner attributeName="default" value="80"/>
+      </attribs>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_4" x="350" y="224">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="14"/>
+         <spinner attributeName="default" value="80"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="420" y="378" text="Assignment (put CC12-19 on the faders):"/>
+   <comment type="patch/comment" x="420" y="392" text="CC19 =&gt; Shape"/>
+   <comment type="patch/comment" x="420" y="406" text="CC18 =&gt; Timbre &gt; Shape"/>
+   <comment type="patch/comment" x="420" y="420" text="CC17 =&gt; Strike"/>
+   <comment type="patch/comment" x="420" y="434" text="CC16 =&gt; Strike Decay"/>
+   <comment type="patch/comment" x="420" y="448" text="CC15 =&gt; Filter Cutoff"/>
+   <comment type="patch/comment" x="420" y="462" text="CC14 =&gt; FX Brightness"/>
+   <comment type="patch/comment" x="420" y="476" text="CC13 =&gt; FX Size"/>
+   <comment type="patch/comment" x="420" y="490" text="CC12 =&gt; FX Mix"/>
+   <comment type="patch/comment" x="420" y="532" text="CC7 =&gt; Volume"/>
+   <nets>
+      <net>
+         <source obj="synth" outlet="outlet_1"/>
+         <dest obj="FX" inlet="In"/>
+      </net>
+      <net>
+         <source obj="FX" outlet="OutL"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="FX" outlet="OutR"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="cc_2" outlet="midiCC"/>
+         <dest obj="FX" inlet="mix"/>
+      </net>
+      <net>
+         <source obj="cc_3" outlet="midiCC"/>
+         <dest obj="FX" inlet="size"/>
+      </net>
+      <net>
+         <source obj="cc_4" outlet="midiCC"/>
+         <dest obj="FX" inlet="brightness"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>16</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>Johannes Elliesen</Author>
+      <License>GPL</License>
+      <Attributions>yes</Attributions>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>434</x>
+      <y>67</y>
+      <width>852</width>
+      <height>714</height>
+   </windowPos>
+</patch-1.0>
