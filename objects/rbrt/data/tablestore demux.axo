@@ -1,8 +1,8 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="tablestore demux" uuid="eb9a7e4c-9c60-4735-8b1f-71eae63debb2">
       <sDescription>writes and outputs values to a table at position &apos;i&apos; + &apos;offset&apos;.</sDescription>
       <author>robert schirmer</author>
-      <license>who cares</license>
+      <license>BSD</license>
       <inlets>
          <frac32 name="in"/>
          <int32 name="i"/>
@@ -18,25 +18,26 @@
       <params/>
       <attribs>
          <objref name="table"/>
+         <spinner name="offset" MinValue="0" MaxValue="1000000" DefaultValue="0"/>
       </attribs>
       <code.declaration><![CDATA[uint32_t prev;]]></code.declaration>
       <code.init><![CDATA[prev = 0;]]></code.init>
       <code.krate><![CDATA[if ((inlet_i == 0) && (inlet_in != prev))
-	attr_table.array[inlet_offset + 0]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+	attr_table.array[inlet_offset + 0 + attr_offset]=__SSAT(inlet_in,28)>>attr_table.GAIN;
 if ((inlet_i == 1) && (inlet_in != prev))
-	attr_table.array[inlet_offset + 1]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+	attr_table.array[inlet_offset + 1 + attr_offset]=__SSAT(inlet_in,28)>>attr_table.GAIN;
 if ((inlet_i == 2) && (inlet_in != prev))
-	attr_table.array[inlet_offset + 2]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+	attr_table.array[inlet_offset + 2 + attr_offset]=__SSAT(inlet_in,28)>>attr_table.GAIN;
 if ((inlet_i == 3) && (inlet_in != prev))
-	attr_table.array[inlet_offset + 3]=__SSAT(inlet_in,28)>>attr_table.GAIN;
+	attr_table.array[inlet_offset + 3 + attr_offset]=__SSAT(inlet_in,28)>>attr_table.GAIN;
 
 	prev=inlet_in;
 
 
 
-outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-outlet_v2= attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN;
-outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;]]></code.krate>
+outlet_v0= attr_table.array[__USAT((inlet_offset + 0 + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+outlet_v1= attr_table.array[__USAT((inlet_offset + 1 + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+outlet_v2= attr_table.array[__USAT((inlet_offset + 2 + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+outlet_v3= attr_table.array[__USAT((inlet_offset + 3 + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;]]></code.krate>
    </obj.normal>
 </objdefs>
