@@ -11,6 +11,10 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="inlet_1" x="252" y="546">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="midi/in/keyb mod" uuid="abcd509d15e7d13d5381203fd2b4d0ac6fe57bb3" name="keyb_1" x="98" y="616">
       <params/>
       <attribs/>
@@ -285,7 +289,6 @@ Pm=(uint32_t)(i1)+(1<<31);]]></code.srate>
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="ADSRcrv2_1" inlet="gate"/>
-         <dest obj="guitarDualOsc_1" inlet="sync"/>
          <dest obj="latch_1" inlet="trig"/>
       </net>
       <net>
@@ -347,6 +350,10 @@ Pm=(uint32_t)(i1)+(1<<31);]]></code.srate>
          <source obj="latch_1" outlet="o"/>
          <dest obj="guitarDualOsc_1" inlet="preset1"/>
          <dest obj="guitarDualOsc_1" inlet="preset2"/>
+      </net>
+      <net>
+         <source obj="inlet_1" outlet="inlet"/>
+         <dest obj="guitarDualOsc_1" inlet="sync"/>
       </net>
    </nets>
    <settings>
