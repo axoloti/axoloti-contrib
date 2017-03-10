@@ -1,7 +1,7 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="sat" uuid="ad8a05e7-1c30-4100-aff9-fcfdd7b7e503">
+   <obj.normal id="sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3">
       <sDescription>mod of a mod.
-A saturator distortion based on dist/soft and filter/lp1 - hp1 by Johannes Taelman,modded by sptnk,modded by me.</sDescription>
+A saturator distortion based on dist/soft and filter/lp1 - hp1 by Johannes Taelman,modded by sptnk,modded by me.modded some more.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>fx.axh</helpPatch>
@@ -14,16 +14,20 @@ A saturator distortion based on dist/soft and filter/lp1 - hp1 by Johannes Taelm
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="drive" noLabel="true"/>
+         <frac32.u.map name="drive"/>
+         <int32.hradio name="fat">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <bool32.tgl name="smooth"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t f;
 int32_t feed;
 int32_t satout = 0;]]></code.declaration>
-      <code.srate><![CDATA[int32_t ts = __SSAT(___SMMLA(satout,(inlet_drive + param_drive)<<4,inlet_in),27);
-int32_t tsq31 = ts<<3;
+      <code.srate><![CDATA[int32_t ts = __SSAT(___SMMLA(satout,(inlet_drive +param_drive)<<4,inlet_in),27);
+int32_t tsq31 = ts<<(4 - param_fat);
 int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
-satout = ts + (ts>>1) - (tsq31p3);
+satout = ts + (ts>>param_smooth) - (tsq31p3);
 
 outlet_out = satout;]]></code.srate>
    </obj.normal>
