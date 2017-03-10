@@ -1,0 +1,76 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="amPulse" uuid="2cf8cd17-05f6-404a-bb7c-c40bfb15df21">
+      <sDescription>Saw/Sine &amp; Sine AM oscillator.
+frequency response of the sine can be made non-linear by adding gain, this simulates as if the signal is spinning into a black-hole, the closer the saw gets to zero. This response can be inverted with the &quot;dir&quot; button.
+&quot;Damp&quot; dampens the signal (1st order LP filter)
+&quot;mix1&quot; mixes from an 1st order exponential response to a next order exponential response-&gt;see &quot;mix2&quot;
+&quot;mix2&quot; sets the &quot;next&quot; response, between 2nd order and 3rd order exponential.
+&quot;mix3&quot; mixes between saw and sine response for the AM part, softening overtones with the sine-variant.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="phase increment"/>
+         <frac32 name="gain"/>
+         <frac32 name="damp"/>
+         <frac32 name="mix1"/>
+         <frac32 name="mix2"/>
+         <frac32 name="mix3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phasor" description="phasor wave"/>
+         <frac32buffer name="phase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="FM"/>
+         <frac32.u.map name="gain"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.u.map name="mix1"/>
+         <frac32.u.map name="mix2"/>
+         <frac32.u.map name="mix3"/>
+         <bool32.tgl name="dir"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t val;
+int i;
+int j;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+   freq=freq>>1;
+   int32_t FM=___SMMUL(freq,param_FM<<3)<<2;
+int32_t f;
+MTOF(param_damp+inlet_damp,f)
+f=f>>1;
+int32_t gain=inlet_gain+param_gain;
+int32_t mix1=__USAT(inlet_mix1+param_mix1,27);
+int32_t mix3=__USAT(inlet_mix2+param_mix2,27);
+int32_t mix2=__USAT(inlet_mix3+param_mix3,27);]]></code.krate>
+      <code.srate><![CDATA[int32_t phase;
+uint32_t phose;
+for(i=0;i<2;i++){
+Phase += (freq>>0) + (___SMMUL(inlet_freq<<4,FM)<<3);
+int32_t sine;
+uint32_t PHASE=Phase>>5;
+if(param_dir>0){
+	PHASE=(1<<27)-PHASE;
+}
+PHASE=___SMMUL(PHASE<<3,PHASE<<2);
+uint32_t PHase=___SMMUL(PHASE<<3,PHASE<<2);
+//PHase=___SMMUL(PHase<<3,PHase<<2);
+PHase=___SMMUL((1<<27)-mix3<<3,PHase<<2)+___SMMUL(mix3<<3,___SMMUL(PHase<<3,PHase<<2)<<2);
+PHase=___SMMUL((1<<27)-mix1<<3,PHASE<<2)+___SMMUL(mix1<<3,PHase<<2);
+SINE2TINTERP((Phase<<0)+(___SMMUL(gain<<3,PHase)<<10),sine)
+phose=(1<<32)-Phase>>5;
+SINE2TINTERP(Phase-(1<<30),phase)
+phase=(phase>>5)+(1<<26);
+phase=___SMMUL((1<<27)-mix2<<3,phose<<2)+___SMMUL(mix2<<3,phase<<2);
+val=___SMMLA((___SMMUL(phase,sine)-val)<<1,f,val);}
+outlet_phasor =  val;
+outlet_phase=phase-(1<<26);]]></code.srate>
+   </obj.normal>
+</objdefs>
