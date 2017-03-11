@@ -32,6 +32,7 @@ the length of the fade-in of the recording with &apos;attack&apos;.</sDescriptio
          <frac32.s.map.klineartime.exp name="attack" description="sets the fadein-time of the recording"/>
          <bool32.tgl name="hard" description="if &apos;hard&apos; is on,there will be NO fade-in"/>
          <frac32.s.map.kdecaytime.exp name="release" description="sets the fadeout-time of the overdub"/>
+         <bool32.tgl name="nofade"/>
       </params>
       <attribs>
          <objref name="table" description="table to record to "/>
@@ -90,10 +91,11 @@ shift =     (27-attr_table.LENGTHPOW);]]></code.init>
       offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
       rec_offset = (__USAT(offset,27)>>(27-attr_table.LENGTHPOW));
      } 
-
+if (!param_nofade){
    if (rec) env = (param_hard) ? -(1<<27) : (1<<27) - (___SMMUL((1<<27)-env, param_attack)<<1);
    else env = ___SMMUL(env, param_release)<<1;
    if (env == 0) recstate = 0;
+}else {recstate = rec;env = 1<<27;}
        
   //rec stopped-> wait for rollover  
 if ((!inlet_rec) && rec) {
