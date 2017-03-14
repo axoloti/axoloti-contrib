@@ -1,0 +1,85 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="hard 2" uuid="18bae97e-dde3-4015-87cb-bfbb3d645deb">
+      <sDescription>Pseudo-tanh (hyperbolic tangent) waveshaper distortion. It can go from soft to hard clipping. Powerful enough signals can leak over. Antialiased.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in" description="Input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="Output, not saturated to normal range. You should attenuate it!"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="gain" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[/*
+ * 
+ * int32_t fast_log2( float number )
+{
+	return (( * ( int32_t * ) &number ) >> 23)-127 ;	///log2 approximation, vaguely based on the fast inverse square root algo (see it on wikipedia! it's A W E S O M E )
+}
+
+float fast_log2_f( float number )	//a little more precise than the previous one.. But still not precise enough
+{
+	int32_t i = ( * ( int32_t * ) &number );
+	float fractional = logt[(i & 0x7FFFFF)>>15]/16384.f;
+	float integer = ( i  >> 23)-127 ;	
+	return (fractional + integer);
+}*/
+
+float log2_f( float number )	
+{
+	int32_t i = ( * ( int32_t * ) &number );
+	int32_t t_i = (i & 0x7FFFFF)>>15;
+	int32_t t_ii = t_i+1;
+	int32_t y1 = logt[t_i];
+	int32_t y2 = t_ii<=0xFF?logt[t_ii]:16384; //i worked my ass hard to get this number.. Like 
+	int32_t percent = (i & 0x7FFF)<<15;
+	float fractional = ((float)___SMMLA(percent,y2-y1<<2,y1))/16384.f;
+	float integer = ( i  >> 23)-127 ;	//log2 approximation, vaguely based on the fast inverse square root algo (see it on wikipedia! it's A W E S O M E )
+	return (fractional + integer);
+}
+
+//remember you can change base of a logarithm. In this case ln(x) = log2(x)/log2(e) = log2(x)/1.4426 = log2(x)*0.6931
+//the hyperbolic tangent is approximated as x*(27 + x^2)/(27 + 9x^2)  -  it's a cheap approximation. therefore it sounds good!
+//the integral of our approximation is equal to 1/18(x^2 + 24ln(x^2+3) )       *  * *  * (see where i need the logarithm?) 
+
+typedef struct {
+	float x_old = 0;
+	float Y_old = 0;
+	float gain = 0;
+} waveshaper_state;
+
+
+float waveshaper_update(float input, waveshaper_state *wss)
+{
+	float x = (wss->gain)*input; //x
+	float x2 = x*x; //x^2
+	
+	float y = x*(27+x2)/(27+9*x2); 
+	float Y = 0.05555f*(x2 + 16.6344f*log2_f(x2 + 3.f));
+
+	float dY = Y-(wss->Y_old);
+	float dx = x-(wss->x_old);
+	float dx_abs = dx>0?dx:-dx;
+	
+
+	float mean = dY/dx;
+	(wss->x_old) = x;
+	(wss->Y_old) = Y;
+	return dx_abs>0.01f?mean:y;
+}
+
+void waveshaper_gain(int32_t param, waveshaper_state *wss)
+{
+	(wss-> gain) = 1.0f + ((float)(param>0?param<<4:param))/134217728.0f;
+}
+
+waveshaper_state satu;
+float out_old = 0;]]></code.declaration>
+      <code.krate><![CDATA[waveshaper_gain(param_gain,&satu);]]></code.krate>
+      <code.srate><![CDATA[outlet_out =  134217728.0f*waveshaper_update((((float) inlet_in))/134217728.0f,&satu);]]></code.srate>
+   </obj.normal>
+</objdefs>
