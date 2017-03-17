@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="knee 2" uuid="5645dcaf-b40d-496b-ac97-76006445f305">
+      <sDescription>3-piece polygonal curve, in the shape of a double knee</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="in"/>
+         <frac32 name="x1" description="x position at which the first knee happens. You should have x1&lt;x2"/>
+         <frac32 name="y1" description="constant output before first knee"/>
+         <frac32 name="x2" description="x position at which the second knee happens. You should have x1&lt;x2"/>
+         <frac32 name="y2" description="costant output after second knee"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="x1" description="x position at which the first knee happens. You should have x1&lt;x2"/>
+         <frac32.s.map name="y1" description="constant output before first knee"/>
+         <frac32.s.map name="x2" description="x position at which the second knee happens. You should have x1&lt;x2"/>
+         <frac32.s.map name="y2" description="constant output after second knee"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t y1 = inlet_y1 + param_y1;
+int32_t x1 = inlet_x1 + param_x1;
+int32_t y2 = inlet_y2 + param_y2;
+int32_t x2 = inlet_x2 + param_x2;
+
+
+int32_t percent_Q27 = 134217728.0f*((float)(inlet_in-x1))/((float)(x2-x1));
+int32_t y = ___SMMLA( y2-y1<<2, percent_Q27<<3, y1);
+
+if (inlet_in<x1)
+outlet_out = y1;
+else if (inlet_in>x2)
+outlet_out = y2;
+else 
+outlet_out= y;]]></code.krate>
+   </obj.normal>
+</objdefs>
