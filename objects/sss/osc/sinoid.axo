@@ -1,13 +1,21 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="sinoid" uuid="6f49dc0a-7397-4961-8136-f124822f7766">
-      <sDescription>sine wave oscillator</sDescription>
-      <author>Johannes Taelman</author>
+   <obj.normal id="sinoid" uuid="4443ffe4-ecf1-4124-9b1b-7f5ab97c34f8">
+      <sDescription>sine wave oscillator with a set of modulations
+fm=internal fm width (filtered output)
+phase=phase offset of &quot;cosine&quot; part of ring modulation
+feed=amount of ring modulation of sine and 2nd sineshape part. Increases feedback loop of output into the 2nd sineshaper.
+LP and HP filters filter the internal FM, ringmodulation and the output signal.
+An internal counter can switch the play-direction after x-amount of zero-crossings of the phase. This rate also updates the position of the internal sine-lfo as a phase-offset.</sDescription>
+      <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>osc.axh</helpPatch>
       <inlets>
          <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="fmw"/>
+         <frac32 name="rate"/>
          <frac32buffer name="freq" description="frequency"/>
          <frac32buffer name="phase" description="phase"/>
+         <bool32 name="rst"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -23,9 +31,9 @@
          <frac32.s.map name="feed"/>
          <int32 name="Scnt">
             <MinValue i="1"/>
-            <MaxValue i="1000000"/>
+            <MaxValue i="32"/>
          </int32>
-         <frac32.s.map name="rate"/>
+         <frac32.s.map.kpitch name="rate"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[uint32_t Phase;
@@ -36,11 +44,15 @@ int32_t cnt;
 uint32_t pv;
 int dir;
 int trig;
-int32_t offset;]]></code.declaration>
+int32_t offset;
+uint32_t LFO;
+int rst;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
 dir=1;]]></code.init>
       <code.krate><![CDATA[int32_t freq;
    MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+   if(param_dir>0){
+   freq=freq*param_Scnt;}
 int32_t F;
 MTOF(param_hp,F)
 int32_t G;
@@ -48,7 +60,16 @@ MTOF(param_lp+inlet_pitch,G)
 int32_t rate=param_rate;
 rate=rate>0?rate:-rate;
 rate=___SMMUL(param_rate<<3,rate<<2);
-int32_t FM=___SMMUL(freq,param_FM<<4)<<1;]]></code.krate>
+int32_t FM=___SMMUL(freq,param_FM+inlet_fmw<<3)<<2;
+int32_t RT;
+MTOFEXTENDED(param_rate+inlet_rate,RT)
+LFO+=RT>>8;
+
+if((inlet_rst>0)&&!rst){
+	rst=1;
+	LFO=0;
+}
+else if(inlet_rst<=0){rst=0;}]]></code.krate>
       <code.srate><![CDATA[int32_t Z=(freq + inlet_freq+(___SMMUL(val2<<2,FM<<3)<<4))*dir;
 Phase += Z;
 
@@ -56,20 +77,17 @@ if(Z>0){
 if(pv>Phase){
 	cnt+=1;
 	cnt=cnt>param_Scnt?0:cnt;
-	if(cnt==0){offset+=rate<<4;if(param_dir==1){dir=dir>0?-1:1;}}
+	if(cnt==0){offset=LFO<<4;if(param_dir==1){dir=dir>0?-1:1;}}
 	
 }}
 if(Z<0){
 if(pv<Phase){
 	cnt+=1;
 	cnt=cnt>param_Scnt?0:cnt;
-	if(cnt==0){offset+=rate<<4;if(param_dir==1){dir=dir>0?-1:1;}}
+	if(cnt==0){offset=LFO<<4;if(param_dir==1){dir=dir>0?-1:1;}}
 	
 }}
-if((feed>0)&&!trig){
-	trig=1;
-//	offset+=rate<<4;
-}
+
 else if(feed<0){trig=0;}
 int32_t r;
 int32_t p2 = Phase + (inlet_phase<<4);
