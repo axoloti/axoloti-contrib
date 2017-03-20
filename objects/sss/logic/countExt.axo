@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="countExt" uuid="44ed9668-63af-48f8-a018-99db931c5e37">
       <sDescription>cyclic up counter with external count-up control</sDescription>
       <author>Johannes Taelman edit by Remco van der Most</author>
@@ -12,20 +12,26 @@
       <outlets>
          <int32 name="o" description="output"/>
          <bool32.pulse name="c" description="carry pulse"/>
+         <int32 name="max"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <int32 name="max" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="64000"/>
+         </int32>
+      </params>
       <attribs/>
-      <code.declaration><![CDATA[   int ntrig;
+      <code.declaration><![CDATA[int ntrig;
    int rtrig;
-   int32_t count;
-]]></code.declaration>
-      <code.init><![CDATA[    count=0;
+   int32_t count;]]></code.declaration>
+      <code.init><![CDATA[count=0;
    ntrig = 0;
-   rtrig = 0;
-]]></code.init>
-      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
-   count += 1; if (count>=inlet_MaxCount) {count = 0; }
+   rtrig = 0;]]></code.init>
+      <code.krate><![CDATA[int max=inlet_MaxCount+param_max;
+outlet_max=max;
+if ((inlet_trig>0) && !ntrig) {
+   count += 1; if (count>=max) {count = 0; }
    ntrig=1;
 }
 else if (!(inlet_trig>0)) ntrig=0;
