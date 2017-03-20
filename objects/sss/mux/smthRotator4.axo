@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.12">
    <obj.normal id="smthRotator4" uuid="6283c7c0-e5ba-49d3-b2b9-121cb71fe63a">
       <sDescription>Smooth input rotator. Smoothly rotates all the inputs along the 8 outputs.
 This new version has a linear and exponential output-jump size, skipping outputs and so generating different patterns</sDescription>
@@ -26,7 +26,7 @@ This new version has a linear and exponential output-jump size, skipping outputs
          </int32>
       </params>
       <attribs/>
-      <code.krate><![CDATA[   int32_t a1;
+      <code.krate><![CDATA[int32_t a1;
    int32_t b1;
    int32_t c1;
    int32_t d1;
@@ -42,7 +42,7 @@ This new version has a linear and exponential output-jump size, skipping outputs
    int32_t selectbase;
    int32_t select1;
    int32_t select2;
-   selectbase=((inlet_s>>24));
+   selectbase=((inlet_s>>25));
    select1=(selectbase*param_jump) &3;
    select2=((selectbase+1)*param_jump) &3;
    
@@ -65,15 +65,12 @@ This new version has a linear and exponential output-jump size, skipping outputs
       default: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3;break;
 }
 
-x= inlet_s-((inlet_s>>24)<<24);
-y=(1<<24)-x;
+x= inlet_s-((inlet_s>>25)<<25);
+y=(1<<25)-x;
 
-outlet_o0= ___SMMUL(y<<4,a1<<4)+___SMMUL(x<<4,a2<<4);
-outlet_o1= ___SMMUL(y<<4,b1<<4)+___SMMUL(x<<4,b2<<4);
-outlet_o2= ___SMMUL(y<<4,c1<<4)+___SMMUL(x<<4,c2<<4);
-outlet_o3= ___SMMUL(y<<4,d1<<4)+___SMMUL(x<<4,d2<<4);
-
-
-]]></code.krate>
+outlet_o0= ___SMMUL(y<<3,a1<<4)+___SMMUL(x<<3,a2<<4);
+outlet_o1= ___SMMUL(y<<3,b1<<4)+___SMMUL(x<<3,b2<<4);
+outlet_o2= ___SMMUL(y<<3,c1<<4)+___SMMUL(x<<3,c2<<4);
+outlet_o3= ___SMMUL(y<<3,d1<<4)+___SMMUL(x<<3,d2<<4);]]></code.krate>
    </obj.normal>
 </objdefs>
