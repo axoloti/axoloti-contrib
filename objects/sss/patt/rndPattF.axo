@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="rndPattF" uuid="51e68084-34f7-4ce7-b29e-6d2fb66a8b71">
       <sDescription>random generated pattern
 each time a trigger is received, positions of the pattern will be randomised or not, depending on the change parameter (in percentage, so 100 is randomising the whole pattern when triggered).
@@ -37,6 +37,7 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
          <frac32.s.map name="max"/>
          <frac32.s.map name="min"/>
          <bool32.mom name="rnd"/>
+         <frac32.u.map name="CV"/>
       </params>
       <attribs>
          <spinner name="maxSteps" MinValue="1" MaxValue="1024" DefaultValue="0"/>
@@ -48,16 +49,16 @@ int count;
 int32_t length;
 int i;
 int on;
-]]></code.declaration>
-      <code.init><![CDATA[      on=1;
-ntrig = 0;
-]]></code.init>
+int prev;]]></code.declaration>
+      <code.init><![CDATA[on=1;
+ntrig = 0;]]></code.init>
       <code.krate><![CDATA[int chance=param_chance+inlet_chance;
 int32_t change=param_change+inlet_change;
 chance=chance<0?0:chance;
 chance=chance>100?100:chance;
 int trig=inlet_rnd+param_rnd;
 int32_t width=param_max+inlet_max-param_min-inlet_min;
+
 if(inlet_length>0){
 length=___SMMUL(param_repeat<<3,inlet_length+1<<2);}
 else length=param_repeat>>21;
@@ -78,6 +79,11 @@ int TRIG=0;
    }
    else if (!(trig>0)) ntrig=0;
    count=inlet_count-(inlet_count/length)*length;
+
+if(!(param_CV==prev)){
+	val[count]=param_CV<<3;
+}
+
    outlet_v = (___SMMUL(val[count]>>1,width)<<3)+param_min+inlet_min;
 if(on>0){
 	for(i=0;i<attr_maxSteps;i++){
@@ -85,6 +91,7 @@ if(on>0){
 }
 
 on=0;
-outlet_rnd=TRIG;]]></code.krate>
+outlet_rnd=TRIG;
+prev=param_CV;]]></code.krate>
    </obj.normal>
 </objdefs>
