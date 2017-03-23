@@ -18,6 +18,10 @@ Level controls the level of the currently selected LFO.</sDescription>
          <bool32 name="save"/>
          <bool32 name="load"/>
          <int32 name="preset"/>
+         <int32 name="div1"/>
+         <int32 name="div2"/>
+         <int32 name="div3"/>
+         <int32 name="div4"/>
       </inlets>
       <outlets>
          <frac32 name="out1"/>
@@ -86,6 +90,7 @@ uint64_t count;
 float32_t A[4];
 int32_t sine[4];
 uint32_t phase[4];
+int Div[4];
 int32_t pr;
 int32_t pv;
 int32_t pw;
@@ -175,6 +180,15 @@ int load=inlet_load+param_load;
   else if (!(load>0)) ltrig=0;
 
 
+Div[0]=inlet_div1;
+Div[1]=inlet_div2;
+Div[2]=inlet_div3;
+Div[3]=inlet_div4;
+for(i=0;i<4;i++){
+	Div[i]=Div[i]>0?Div[i]:1;
+}
+
+
 int sel=param_select>>25;
 if(!(pr==param_rate)){
 	array[sel]=___SMMUL(param_rate<<3,attr_total-1<<2);
@@ -193,8 +207,8 @@ rate=(((float32_t)(1<<31)/1500)/rate);
 
 for(i=0;i<4;i++){
 if(array[i+12]>0){
-phase[i]+=((int32_t)(rate*A[array[i]]))<<array[i+12];}
-else{phase[i]+=((int32_t)(rate*A[array[i]]))>>-array[i+12];}
+phase[i]+=(((int32_t)(rate*A[array[i]]))<<array[i+12])/Div[i];}
+else{phase[i]+=(((int32_t)(rate*A[array[i]]))>>-array[i+12])/Div[i];}
 if(array[i+8]==0){
 SINE2TINTERP(phase[i],sine[i])}
 if(array[i+8]==1){tri(phase[i],i);}
