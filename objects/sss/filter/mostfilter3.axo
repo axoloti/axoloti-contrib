@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mostfilter3" uuid="64b0ecc5-a33b-42c7-b3d5-72f2bd37ba19">
+      <sDescription>1st order lowpass filter</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="cut"/>
+         <frac32 name="spread"/>
+         <frac32 name="res"/>
+         <frac32 name="mode"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="cut" noLabel="true"/>
+         <frac32.s.map name="spread"/>
+         <frac32.u.map name="res"/>
+         <frac32.u.map name="mode"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val1;
+int32_t val2;
+int32_t out1;
+int32_t out2;
+int32_t diff1;
+int32_t diff2;]]></code.declaration>
+      <code.init><![CDATA[val1 = 0;
+val2 = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_cut+inlet_cut,f);
+   int32_t g;
+   MTOF(param_cut+param_spread+inlet_spread+inlet_cut,g);
+int32_t res=__USAT(inlet_res+param_res,27);
+int32_t modeA=inlet_mode+param_mode<<1;
+int32_t mode1=__SSAT(modeA,27);
+int32_t mode2=__USAT(modeA-(1<<27),27);]]></code.krate>
+      <code.srate><![CDATA[int32_t in=__SSAT(inlet_in,28);
+   diff1=___SMMLA((in+(__SSAT(___SMMUL(__SSAT(in-val1,28)<<2,res<<3),28)<<1)-val1-diff1)<<1,f,diff1);
+   val1 = ___SMMLA((diff1)<<1,f,val1);
+   out1= val1-___SMMUL(in<<2,mode1<<3);
+
+   in=__SSAT(out1,28);
+   diff2=___SMMLA((in+(__SSAT(___SMMUL(__SSAT(in-val2,28)<<2,res<<3),28)<<1)-val2-diff2)<<1,g,diff2);
+   val2 = ___SMMLA((diff2)<<1,f,val2);
+   out2= val2-___SMMUL(out1<<2,mode2<<3);
+
+
+   
+   outlet_out=out2;]]></code.srate>
+   </obj.normal>
+</objdefs>
