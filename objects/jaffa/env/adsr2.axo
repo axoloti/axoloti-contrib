@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="adsr1" uuid="8c132eff-2072-413e-84cc-c8bdc90f832b">
+   <obj.normal id="adsr2" uuid="da61ef3c-ec96-40a5-88d7-9c45fbd18094">
       <sDescription>Attack/decay/sustain/release envelope with modulation inputs and build in vca. 
 
 &quot;On&quot; button turn envelope on. When &quot;off&quot; input is passed through with no gate.</sDescription>
@@ -13,7 +13,9 @@
       <outlets>
          <frac32buffer name="o"/>
       </outlets>
-      <displays/>
+      <displays>
+         <bool32 name="on" noLabel="true"/>
+      </displays>
       <params>
          <bool32.tgl name="on"/>
          <frac32.s.map name="a"/>
@@ -32,7 +34,13 @@ int32_t Loopval;]]></code.declaration>
       <code.init><![CDATA[stage = 0;
 ntrig = 0;
 val = 0;]]></code.init>
-      <code.krate><![CDATA[// vca
+      <code.krate><![CDATA[disp_on=0;
+
+// display gate
+if(param_on){
+disp_on=inlet_g;
+  }
+// vca
    step = (Loopval - prev)>>4;
    int32_t i = prev;
    prev = Loopval;
@@ -49,7 +57,7 @@ if (!(inlet_g>0) && ntrig) {
 if (stage == 0){
    int32_t r1;
    int32_t r2;
-   MTOF(- param_r, r1);
+   MTOF(- param_r , r1);
    r1 = 0x7FFFFFFF - (r1 >> 2);
    val = ___SMMUL(val,r1)<<1;
 } else if (stage == 1){
