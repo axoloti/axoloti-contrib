@@ -1,0 +1,139 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="560" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="length" x="224" y="168">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_1" x="1022" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/stimer" uuid="37048fc7-1987-4c80-8c2e-a838c6fb4be5" name="stimer_1" x="392" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/stransport" uuid="22d348d0-6bf2-4f65-97ce-fe774b2989d2" name="stransport_1" x="756" y="182">
+      <params>
+         <int32 name="factor" value="1"/>
+         <bool32.tgl name="mode" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="16"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="224" y="238" text="set tempo"/>
+   <obj type="rbrt/control/timer" uuid="d4a352fc-5acf-466d-b462-079a1b5a2b41" name="timer_1" x="392" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_3" x="560" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="factor" x="224" y="280">
+      <params>
+         <int32 name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/ibar 16" uuid="302bfed4cde8894229679ce81f6b8a5c5212dd98" name="ibar_1" x="1176" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="196" y="350" text="external input factor is ADDED to the parameter &apos;factor&apos; of stransport and ktransport"/>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="630" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="196" y="364" text="so if inlet &apos;factor&apos; is set to &apos;1&apos; , the actual factor is 2."/>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_2" x="1022" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/ibar 16" uuid="302bfed4cde8894229679ce81f6b8a5c5212dd98" name="ibar_2" x="1176" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/ktransport" uuid="eb98575f-a820-4d6d-ab2e-e4232755692a" name="ktransport_1" x="756" y="392">
+      <params>
+         <int32 name="factor" value="1"/>
+         <bool32.tgl name="mode" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="16"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="mul/div" x="224" y="420">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="224" y="490" text="set the mode for stransport and ktransport,"/>
+   <comment type="patch/comment" x="224" y="504" text="&apos;0&apos; = multiply,"/>
+   <comment type="patch/comment" x="224" y="518" text="&apos;1&apos; = divide"/>
+   <nets>
+      <net>
+         <source obj="stimer_1" outlet="t"/>
+         <dest obj="i_2" inlet="in"/>
+         <dest obj="stransport_1" inlet="smps"/>
+      </net>
+      <net>
+         <source obj="stransport_1" outlet="phase"/>
+         <dest obj="kscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="factor" outlet="out"/>
+         <dest obj="ktransport_1" inlet="factor"/>
+         <dest obj="stransport_1" inlet="factor"/>
+      </net>
+      <net>
+         <source obj="ktransport_1" outlet="phase"/>
+         <dest obj="kscope_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="timer_1" outlet="t"/>
+         <dest obj="i_3" inlet="in"/>
+         <dest obj="ktransport_1" inlet="kticks"/>
+      </net>
+      <net>
+         <source obj="mul/div" outlet="o"/>
+         <dest obj="ktransport_1" inlet="mode"/>
+         <dest obj="stransport_1" inlet="mode"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="ktransport_1" inlet="reset"/>
+         <dest obj="stransport_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="stransport_1" outlet="step"/>
+         <dest obj="ibar_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="ktransport_1" outlet="step"/>
+         <dest obj="ibar_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="length" outlet="o"/>
+         <dest obj="stimer_1" inlet="toggle"/>
+         <dest obj="timer_1" inlet="toggle"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>
