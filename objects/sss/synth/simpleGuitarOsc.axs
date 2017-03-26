@@ -1,13 +1,13 @@
-<patch-1.0 appVersion="1.0.11">
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="A" x="406" y="280">
+<patch-1.0 appVersion="1.0.12">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="A" x="406" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="D" x="406" y="322">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="D" x="406" y="336">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="S" x="406" y="364">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="S" x="406" y="378">
       <params/>
       <attribs/>
    </obj>
@@ -46,7 +46,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="R" x="406" y="406">
+   <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="R" x="406" y="420">
       <params/>
       <attribs/>
    </obj>
@@ -88,16 +88,31 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="770" y="658">
+   <patchobj type="patch/object" uuid="76c26af4-4d5a-4a30-8144-343f126262fb" name="note2preset" x="784" y="658">
       <params>
-         <int32 name="value" onParent="true" value="0"/>
+         <frac32.s.map name="amp" onParent="true" value="12.0"/>
       </params>
       <attribs/>
-   </obj>
-   <obj type="math/*" uuid="6a31299e3a491edd8c4df0e809a519a35cc08a3b" name="*_2" x="826" y="658">
-      <params/>
-      <attribs/>
-   </obj>
+      <object id="patch/object" uuid="76c26af4-4d5a-4a30-8144-343f126262fb">
+         <sDescription>Multiply (attenuate) with a constant value</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>math.axh</helpPatch>
+         <inlets>
+            <int32 name="in"/>
+         </inlets>
+         <outlets>
+            <int32 name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map name="amp" noLabel="true"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.krate><![CDATA[outlet_out= ___SMMUL(param_amp<<4,inlet_in<<5);]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="882" y="658">
       <params/>
       <attribs/>
@@ -108,10 +123,10 @@
          <frac32.u.map name="pwm" onParent="true" value="23.0"/>
          <frac32.u.map name="mod" onParent="true" value="41.0"/>
          <frac32.u.map name="start" onParent="true" value="28.5"/>
-         <int32 name="preset" onParent="true" value="0"/>
+         <frac32.u.map name="preset" onParent="true" value="0.0"/>
       </params>
       <attribs>
-         <objref attributeName="table" obj="../waveformGenerator_1"/>
+         <objref attributeName="table" obj="../waveformLoader_1"/>
       </attribs>
    </obj>
    <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_1" x="1078" y="658">
@@ -226,8 +241,8 @@
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
-         <dest obj="+_4" inlet="in1"/>
          <dest obj="to_1" inlet="i"/>
+         <dest obj="+_4" inlet="in1"/>
       </net>
       <net>
          <source obj="uniform_1" outlet="rand"/>
@@ -242,16 +257,12 @@
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="*_2" outlet="result"/>
-         <dest obj="guitarTableOsc_1" inlet="preset"/>
-      </net>
-      <net>
          <source obj="to_1" outlet="o"/>
-         <dest obj="*_2" inlet="b"/>
+         <dest obj="note2preset" inlet="in"/>
       </net>
       <net>
-         <source obj="i_1" outlet="out"/>
-         <dest obj="*_2" inlet="a"/>
+         <source obj="note2preset" outlet="out"/>
+         <dest obj="guitarTableOsc_1" inlet="preset"/>
       </net>
    </nets>
    <settings>
