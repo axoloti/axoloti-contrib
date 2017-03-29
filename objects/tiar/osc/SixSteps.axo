@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SixSteps" uuid="389db1c3-82e5-4d29-b17f-9c96663f66b0">
+      <sDescription>The waveform of the SixSteps oscillator in community/tiar/osc is controlled by six parameters.
+It allows to generate waveforms reminiscent of old pseudo digital synths (such as the RMI and it&apos;s digit harmonics based on Walsh functions).
+
+It is anti aliased with an algorithm that is based on both BLEPs and DPWs... i think it is quite original and efficient with this kind of waveforms. 
+*(the steps goes through a low pass filter, when a transient occurs the state variable of the filter is updated taking account of the subsample time of the transient... at the end the signal is high passed with a differentiator...)*</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="level0"/>
+         <frac32.s.map name="level1"/>
+         <frac32.s.map name="level2"/>
+         <frac32.s.map name="level3"/>
+         <frac32.s.map name="level4"/>
+         <frac32.s.map name="level5"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x, y0, y1, p, dp, _dp;
+const float lpCoef = 0.001f;
+int cpt;
+float seq[6];]]></code.declaration>
+      <code.init><![CDATA[cpt = 0;
+x = y1 = y0 = seq[0];
+p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = 6.0f*(idp*(1.0f/(1<<31)));
+_dp = 1 / dp;
+if(dp>1) dp=1;
+seq[0] = param_level0 * (1.0f/(1<<27));
+seq[1] = param_level1 * (1.0f/(1<<27));
+seq[2] = param_level2 * (1.0f/(1<<27));
+seq[3] = param_level3 * (1.0f/(1<<27));
+seq[4] = param_level4 * (1.0f/(1<<27));
+seq[5] = param_level5 * (1.0f/(1<<27));]]></code.krate>
+      <code.srate><![CDATA[// phase increment
+p += dp;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// transition ?
+if(p > 1){      // phase above 1
+  cpt++;        // next step in sequence
+  if(cpt >= 6)  // above 6 => wrap to 0
+    cpt = 0;
+  p -= 1;       // reset phase
+  float alpha = p * _dp;   // subsample time since the transition
+// _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  // filter evolution before the transition
+  y1 += (1 - alpha) * lpCoef * ( x - y1);
+// _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  // transition
+  x = seq[cpt];
+// _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  // filter evolution after the transition
+  y1 += alpha * lpCoef * ( x - y1);
+} else {
+// _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  // filter evolution without transition
+  y1 += lpCoef * ( x - y1);
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// output by differenciation
+outlet_out = (int32_t)((y1 - y0) * 640.0f*(1<<27));
+y0 = y1;]]></code.srate>
+   </obj.normal>
+</objdefs>
