@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tablewrite" uuid="db04301e-b7ee-428a-a406-7ac4fcdb4ef9">
+      <sDescription>if &apos;write&apos; is ON,writes a value to a table,starting from &apos;offset&apos;</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="v0"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+         <bool32.risingfalling name="write"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="100000000"/>
+         </int32>
+         <bool32.tgl name="write"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int offset;]]></code.declaration>
+      <code.krate><![CDATA[offset = (inlet_offset + param_offset);
+
+if (param_write || inlet_write)
+{
+attr_table.array[offset]=__SSAT(inlet_v0,28)>>attr_table.GAIN;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
