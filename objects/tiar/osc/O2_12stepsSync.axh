@@ -6,7 +6,7 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="126" y="28">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="53.0"/>
+         <frac32.s.map name="d" value="23.0"/>
          <frac32.u.map name="s" value="0.0"/>
          <frac32.s.map name="r" value="-2.0"/>
       </params>
@@ -14,32 +14,32 @@
    </obj>
    <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="238" y="28">
       <params>
-         <frac32.u.map name="gain1" value="26.5"/>
-         <frac32.u.map name="gain2" value="0.0"/>
+         <frac32.u.map name="gain1" value="23.5"/>
+         <frac32.u.map name="gain2" value="13.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/osc/wf_12Steps" uuid="22a7bb32-3349-44c5-a22c-296698ebc5ed" name="wf_12Steps_1" x="350" y="28">
       <params>
-         <frac32.s.mapvsl name="b0" value="-56.0"/>
-         <frac32.s.mapvsl name="b1" value="-64.0"/>
-         <frac32.s.mapvsl name="b2" value="53.0"/>
-         <frac32.s.mapvsl name="b3" value="64.0"/>
-         <frac32.s.mapvsl name="b4" value="-53.0"/>
-         <frac32.s.mapvsl name="b5" value="-64.0"/>
-         <frac32.s.mapvsl name="b6" value="64.0"/>
-         <frac32.s.mapvsl name="b7" value="64.0"/>
-         <frac32.s.mapvsl name="b8" value="22.0"/>
-         <frac32.s.mapvsl name="b9" value="-17.0"/>
-         <frac32.s.mapvsl name="b10" value="-45.0"/>
-         <frac32.s.mapvsl name="b11" value="-57.0"/>
+         <frac32.s.mapvsl name="b0" value="-41.0"/>
+         <frac32.s.mapvsl name="b1" value="-41.0"/>
+         <frac32.s.mapvsl name="b2" value="43.0"/>
+         <frac32.s.mapvsl name="b3" value="44.0"/>
+         <frac32.s.mapvsl name="b4" value="-40.0"/>
+         <frac32.s.mapvsl name="b5" value="-40.0"/>
+         <frac32.s.mapvsl name="b6" value="44.0"/>
+         <frac32.s.mapvsl name="b7" value="44.0"/>
+         <frac32.s.mapvsl name="b8" value="36.0"/>
+         <frac32.s.mapvsl name="b9" value="18.0"/>
+         <frac32.s.mapvsl name="b10" value="-19.0"/>
+         <frac32.s.mapvsl name="b11" value="-32.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/osc/O2_12StepsSync" uuid="6c4da26a-bb80-4317-a883-c67faf8ba172" name="O2_12StepsSync_1" x="504" y="28">
       <params>
-         <frac32.s.map name="pitch slave" value="0.0"/>
-         <frac32.s.map name="pitch master" value="0.0"/>
+         <frac32.s.map name="pitch slave" value="-12.0"/>
+         <frac32.s.map name="pitch master" value="-12.0"/>
       </params>
       <attribs/>
    </obj>
@@ -54,8 +54,8 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="952" y="28">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="0.0"/>
-         <frac32.u.map name="s" value="6.0"/>
+         <frac32.s.map name="d" value="-12.0"/>
+         <frac32.u.map name="s" value="16.0"/>
          <frac32.s.map name="r" value="-64.0"/>
       </params>
       <attribs/>
@@ -68,11 +68,21 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="126" y="252">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
          <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -80,8 +90,8 @@
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
-         <dest obj="mix_1" inlet="bus_in"/>
          <dest obj="O2_12StepsSync_1" inlet="pitch master"/>
+         <dest obj="mix_1" inlet="bus_in"/>
       </net>
       <net>
          <source obj="O2_12StepsSync_1" outlet="y1"/>
@@ -112,6 +122,10 @@
          <source obj="O2_1" outlet="out"/>
          <dest obj="vca_1" inlet="a"/>
          <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="mix_1" inlet="in2"/>
       </net>
    </nets>
    <settings>
