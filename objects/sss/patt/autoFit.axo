@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="autoFit" uuid="881ddfa9-6566-472c-a754-bb7c26a98a3b">
+   <obj.normal id="autoFit" uuid="7b17a16f-0499-4230-a5ab-f329031c7bce">
       <sDescription>allocate 16bit table in SDRAM memory, -128.00 .. 127.99</sDescription>
       <author>Johannes Taelman</author>
       <license>BSD</license>
@@ -9,14 +9,11 @@
          <int32 name="max"/>
       </inlets>
       <outlets>
-         <bool32 name="clock"/>
          <frac32 name="out"/>
-         <int32 name="count"/>
-         <bool32 name="rec"/>
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map name="CV"/>
+         <frac32.u.map name="CV"/>
          <frac32.s.map.lfopitch name="rate"/>
          <int32 name="steps">
             <MinValue i="1"/>
@@ -101,7 +98,7 @@ array = &_array[0];]]></code.init>
       <code.krate><![CDATA[int32_t rate;
 MTOFEXTENDED(param_rate,rate)
 phase+=rate;
-outlet_clock=phase>0?1:0;
+
 if(!(pv==param_CV)){
 		rec=1;
 		cnt2=0;
@@ -113,11 +110,6 @@ if((rec>0)&&!ftrig){
 	cnt1=0;
 }
 else if(rec==0){ftrig=0;}
-
-//if((phase>0)&&!ctrig){
-//	ctrig=1;
-//}
-//else if(phase<=0){ctrig=0;}
 
 int Do=((phase>0)&&rec);
 if((Do)&&(!rtrig)){
@@ -132,7 +124,7 @@ if((Do)&&(!rtrig)){
 else if(Do==0){rtrig=0;}
 
 
-outlet_count=cnt1;
+
 if((!(pc==inlet_count))||(!(pt==inlet_max))){
 int32_t RND=(int32_t)(GenerateRandomNumber());
 int32_t tmp=cnt1-cnt2;
@@ -142,7 +134,6 @@ count=count-count/tmp*tmp;
 TMP=array[count&LENGTHMASK]<<12;
 }
 outlet_out=TMP;
-outlet_rec=rtrig;
 pc=inlet_count;
 pt=inlet_max;]]></code.krate>
    </obj.normal>
