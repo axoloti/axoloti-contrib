@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="note" uuid="fa4dc92e-d774-4269-bc64-4c807522777f">
+      <sDescription>Polyphonic, Polyrythmic, Polymetric sequencer
+outputs notes for given step, used in conjuction with polyseq/notectrl , see help patch</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>polyseq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="trkIdx"/>
+         <int32.positive name="stepIdx"/>
+      </inlets>
+      <outlets>
+         <bool32 name="gate"/>
+         <bool32 name="gate2" description="retrig on legato"/>
+         <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="velocity"/>
+         <frac32.bipolar name="mod1"/>
+         <frac32.bipolar name="mod2"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t step_=-1;
+uint32_t gate_=0;
+uint32_t pitch_=0;
+uint32_t velocity_=0;]]></code.declaration>
+      <code.krate><![CDATA[bool gate=attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][0];
+outlet_gate2 = gate;
+if(step_!=inlet_stepIdx) {
+	step_=inlet_stepIdx;
+	// change step
+	if(gate && gate_) {
+		outlet_gate2 = false;
+	}
+}
+gate_=gate;
+if(gate_) {
+	pitch_=attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][1];
+	velocity_ = attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][2];
+}
+outlet_gate  = gate_;
+outlet_pitch = pitch_;
+outlet_velocity = velocity_;
+
+outlet_mod1 = attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][3];
+outlet_mod2 = attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][4];]]></code.krate>
+   </obj.normal>
+</objdefs>

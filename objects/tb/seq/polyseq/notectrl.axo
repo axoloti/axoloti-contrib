@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="notectrl" uuid="2efbaaf0-2b1c-47a7-bef1-4c5532a21d4e">
+      <sDescription>Polyphonic, Polyrythmic, Polymetric sequencer
+easy way to configure polyseq, used in conjuction with polyseq/note , see help patch</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>polyseq.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays>
+         <bool32 name="valid" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.tgl name="gate"/>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="velocity"/>
+         <frac32.s.map name="mod1"/>
+         <frac32.s.map name="mod2"/>
+      </params>
+      <attribs>
+         <objref name="seq"/>
+         <spinner name="track" MinValue="0" MaxValue="127" DefaultValue="0"/>
+         <spinner name="step" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.init><![CDATA[if(attr_track >= attr_seq.maxTracks_) { LogTextMessage("polyseq ctrl : invalid track %i", attr_track); } 
+if(attr_step >= attr_seq.maxSteps_) { LogTextMessage("polyseq ctrl : invalid step %i", attr_step); } 
+if(attr_seq.numValues_ <5) { LogTextMessage("polyseq ctrl : requires at least 5 values "); }]]></code.init>
+      <code.krate><![CDATA[if(attr_track < attr_seq.maxTracks_ && attr_step < attr_seq.maxSteps_ && attr_seq.numValues_ >= 5) {
+	attr_seq.seqValue_[attr_track][attr_step][0] = param_gate;
+	attr_seq.seqValue_[attr_track][attr_step][1] = param_pitch;
+	attr_seq.seqValue_[attr_track][attr_step][2] = param_velocity;
+	attr_seq.seqValue_[attr_track][attr_step][3] = param_mod1;
+	attr_seq.seqValue_[attr_track][attr_step][4] = param_mod2;
+
+	disp_valid = attr_step < attr_seq.seqSteps_[attr_track];
+} else {
+	disp_valid = false; 
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

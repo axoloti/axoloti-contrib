@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="write" uuid="e6ed3dfd-088d-44c2-928c-6a7c9babf414">
+      <sDescription>Polyphonic, Polyrythmic, Polymetric sequencer
+allows setting of track parameters (number of steps and clock division) which allow polyryhtm and polymeters, 
+also can be used to set sequencer data
+(stepSet , trkSet are used to change values)</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>polyseq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="trkIdx"/>
+         <int32.positive name="trkSteps"/>
+         <int32.positive name="trkClkDiv"/>
+         <bool32.rising name="trkSet"/>
+         <int32.positive name="stepIdx"/>
+         <int32.positive name="valueIdx"/>
+         <frac32 name="stepValue"/>
+         <bool32.rising name="stepSet"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="trkIdx" description="selected track"/>
+         <int32.positive name="trkSteps"/>
+         <int32.positive name="trkClkDiv"/>
+         <int32.positive name="stepIdx" description="selected step"/>
+         <int32.positive name="valueIdx"/>
+         <frac32 name="stepValue" description="current step value"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trkSet_=false;
+bool stepSet_=false;
+int32_t trkIdx_=0;
+int32_t stepIdx_=0;
+int32_t valueIdx_=0;]]></code.declaration>
+      <code.krate><![CDATA[trkIdx_=(inlet_trkIdx < attr_seq.maxTracks_? inlet_trkIdx : attr_seq.maxTracks_ - 1);
+if(inlet_trkSet) {
+	if(!trkSet_) {
+		trkSet_=true;
+		attr_seq.seqSteps_[trkIdx_] = ( inlet_trkSteps < attr_seq.maxSteps_ ? inlet_trkSteps : attr_seq.maxSteps_);
+		attr_seq.seqClkDivs_[trkIdx_] = inlet_trkClkDiv;
+	}
+} else {
+	trkSet_=false;
+}
+
+int32_t trkSteps=attr_seq.seqSteps_[trkIdx_];
+int32_t trkClkDiv=attr_seq.seqClkDivs_[trkIdx_]; 
+
+outlet_trkIdx=trkIdx_;
+outlet_trkSteps=trkSteps;
+outlet_trkClkDiv=trkClkDiv;
+
+stepIdx_= ( inlet_stepIdx < trkSteps ? inlet_stepIdx : trkSteps - 1 );
+valueIdx_= ( inlet_valueIdx < attr_seq.numValues_ ? inlet_valueIdx : attr_seq.numValues_ -1);
+if(inlet_stepSet) {
+	if(!stepSet_) {
+		stepSet_=true;
+		attr_seq.seqValue_[trkIdx_][stepIdx_][valueIdx_] = inlet_stepValue;
+	}
+} else {
+	stepSet_=false;
+}
+
+outlet_stepIdx=stepIdx_;
+outlet_valueIdx=valueIdx_;
+outlet_stepValue=attr_seq.seqValue_[trkIdx_][stepIdx_][valueIdx_];]]></code.krate>
+   </obj.normal>
+</objdefs>
