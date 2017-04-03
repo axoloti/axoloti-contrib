@@ -1,0 +1,161 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="shimmerDelaySt" uuid="ab1d306c-c06f-48c0-8003-078fa9555718">
+      <sDescription>modulated delay
+modulation depth is recalculated for each buffer size for easy chorusing/phasing effects.
+-rate: speed of modulation
+-feed: amount of feedback for each stage
+-slope: volume drop-off for each next stage (softening the effect)-&gt; volume at max will let everything through to the next stage at original volume
+-depth: sets the modulation amount of the internal lfo (controlled by the rate parameter and scaled to small modulation width according to buffer size).
+-spread: sets a delay different for each next stage. Set delay-time is maximum time of all stages together, so each stage is a part of the time set by this control, divided by the number of stages.
+-damp: sets the cutoff frequency of a 3dB LP filter in the feedback chain.
+-panRate: sets the speed at which the stages are moved between left and right (sine-shaped).
+-panSpread: sets the difference is panning-phase between each next phase (do they sit next to each other or does the panning &quot;jump around&quot;)
+-wet: mixes the modulated signal with the dry signal.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="inL" description="wave input"/>
+         <frac32buffer name="inR"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="rate"/>
+         <frac32.u.map name="feed"/>
+         <frac32.u.map name="slope"/>
+         <frac32.u.map name="depth"/>
+         <frac32.u.map name="spread"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.s.map.kpitch name="panRate"/>
+         <int32 name="panSpread">
+            <MinValue i="1"/>
+            <MaxValue i="60000"/>
+         </int32>
+         <frac32.u.map name="wet"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <spinner name="stages" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+uint32_t phase;
+int32_t in[attr_stages+1];
+int j;
+int i;
+uint32_t tmp_d  ;
+uint32_t tmp_di ;
+uint32_t tmp_w1 ;
+uint32_t tmp_w2 ;
+int32_t tmp_a1  ;
+int32_t tmp_a2  ;
+int32_t tmp_r   ;
+int32_t sum;
+uint32_t PHASE;
+
+   int32_t prev1;
+   int32_t step1;
+   int32_t prev2;
+   int32_t step2;
+   int32_t Depth;
+   int32_t Spread;
+   int32_t damp[attr_stages];]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[(1<<attr_size)*attr_stages]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+   writepos = 0;
+   for(i=0;i<LENGTH*attr_stages;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_rate,freq)
+freq=freq>>10;
+int32_t panRate;
+MTOFEXTENDED(param_panRate,panRate)
+panRate=panRate>>10;
+Depth+=((param_depth>>(LENGTHPOW<11?11:LENGTHPOW)-11)-Depth)>>6;
+Spread+=(___SMMUL(param_spread<<3,param_spread<<2)-Spread)>>6;
+   step1 = (Depth - prev1)>>4;
+   int32_t depth = prev1;
+   prev1 = Depth;
+   step2 = (Spread - prev2)>>4;
+   int32_t spread = prev2;
+   prev2 = Spread;
+int32_t slope=___SMMUL(param_slope<<3,param_wet<<2);
+int32_t cutoff;
+MTOF(param_damp,cutoff)]]></code.krate>
+      <code.srate><![CDATA[depth+=step1;
+spread+=step2;
+
+int32_t IN=inlet_inL+inlet_inR>>1;
+writepos = (writepos + 1)&LENGTHMASK;
+in[0]=__SSAT(((IN>>1)+___SMMUL(-(param_feed<<1)*3,in[1]<<2))>>14,16);
+sum=0;
+int32_t sine;
+int32_t outL=0;
+int32_t outR=0;
+phase+=freq;
+PHASE+=panRate;
+for(i=0;i<attr_stages;i++){
+array[writepos+i*LENGTH] = __SSAT(in[i],15)+__SSAT(___SMMUL(-(param_feed<<1)*3,in[i+1]<<2),15);
+uint32_t Phase=phase+(i*((1<<31)/attr_size)<<1);
+Phase=Phase>(1<<31)?-Phase:Phase;
+SINE2TINTERP((i*((1<<27)/(attr_size>>1))*param_panSpread)+PHASE,sine)
+sine=(sine>>5)+(1<<26);
+      tmp_d =  (___SMMUL(depth<<1,Phase)+(i*spread/attr_stages))&((1<<27)-1);
+      tmp_di = writepos - (tmp_d>>(27-LENGTHPOW)) -1;
+      tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = array[(tmp_di&LENGTHMASK)+i*LENGTH]<<16;
+      tmp_a2 = array[((tmp_di+1)&LENGTHMASK)+i*LENGTH]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      damp[i]=___SMMLA((tmp_r-damp[i])<<1,cutoff,damp[i]);
+      in[i+1]=__SSAT(IN+(damp[i]+tmp_r>>1)>>14,15);
+      sum+=___SMMUL((damp[i]+tmp_r>>1)<<3,param_slope<<2);
+      
+     outL+=___SMMUL(___SMMUL((damp[i]+tmp_r>>1)<<3,slope<<2)<<3,sine<<2);
+     outR+=___SMMUL(___SMMUL((damp[i]+tmp_r>>1)<<3,slope<<2)<<3,(1<<27)-sine<<2);
+}
+outlet_outL=(outL<<1)+inlet_inL;
+outlet_outR=(outR<<1)+inlet_inR;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="STO2" uuid="99a42966-cddc-45c1-a20a-115438c51956">
+      <sDescription>sine wave oscillator</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="shape"/>
+         <frac32 name="pulse"/>
+         <frac32 name="sub"/>
+         <frac32 name="PW"/>
+         <frac32 name="phase"/>
+         <frac32 name="LP"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="shape"/>
+         <frac32.u.map name="pulse"/>
+         <int32 name="oct">
+            <MinValue i="1"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.u.map name="sub"/>
+         <frac32.s.map name="PW"/>
+         <frac32.s.map name="phase"/>
+         <frac32.s.map.pitch name="LP"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t prev1;
+int32_t step1;
+int32_t prev2;
+int32_t step2;
+int32_t prev3;
+int32_t step3;
+int rtrig;
+int32_t SQ;
+int32_t sq;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+SQ=0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+   freq=freq/param_oct;
+int32_t shape=inlet_shape+param_shape;
+shape=shape&((1<<28)-1);
+shape=shape>(1<<27)?(1<<28)-shape:shape;
+   step1 = (shape - prev1)>>4;
+   int32_t i1 = prev1;
+   prev1 = shape;
+   step2 = (freq - prev2)>>4;
+   int32_t i2 = prev2;
+   prev2 = freq;
+   int32_t F;
+   MTOF(param_pitch+inlet_pitch+param_LP+(inlet_LP<<1),F);
+   int32_t sub=-param_sub+inlet_sub;
+   uint64_t pulse=(1<<27)-param_pulse+inlet_pulse;
+   pulse=pulse&((1<<28)-1);
+   pulse=pulse>(1<<27)?(1<<28)-pulse:pulse;
+   float32_t ratio=(float32_t)(1<<27)/pulse;
+   pulse=pulse<<5;
+   int32_t O=param_PW+inlet_PW<<4;
+   step3 = (O - prev3)>>4;
+   int32_t i3 = prev3;
+   prev3 = O;
+   int32_t p3=(param_phase+inlet_phase<<5)/param_oct;]]></code.krate>
+      <code.srate><![CDATA[i1 += step1;
+i2 += step2;
+i3 += step3;
+Phase += i2;
+int32_t r1;
+int32_t r2;
+uint32_t p1=Phase*param_oct;
+int32_t p2 = Phase+p3;
+p1=p1>pulse?pulse:p1;
+p1=p1*ratio;
+SINE2TINTERP(p1,r1)
+r2=p1+(1<<30);
+
+//if((p2>0)&&!rtrig){
+//rtrig=1;
+//sq+=1;
+//sq=sq&1;
+//}
+//else if(p2<0){rtrig=0;}
+sq=p2>i3?1:0;
+
+r2=r2>0?r2:-r2;
+r2=(r2)-(1<<30);
+int32_t temp=sq>0?sub:-sub;
+SQ=___SMMLA((temp-SQ)<<1,F,SQ);
+r1=___SMMUL((r1>>1),((1<<27)-i1)<<2)+___SMMUL(r2,i1<<2);
+outlet_wave= (r1+SQ)>>1;]]></code.srate>
+   </obj.normal>
+</objdefs>
