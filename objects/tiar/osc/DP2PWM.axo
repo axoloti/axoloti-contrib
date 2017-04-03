@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="DP2PWM" uuid="fdbc80e7-0b26-4cad-8e79-6a609c01caa5">
       <sDescription>Low CPU Anti Aliased Pulse Width Modulated Osc (Second order differentiated polynomial).</sDescription>
       <author>T. Rochebois</author>
@@ -13,7 +13,7 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map name="pitch" description="Pitch" noLabel="true"/>
+         <frac32.s.map.pitch name="pitch"/>
          <frac32.u.map name="pw" description="Pulse Width"/>
       </params>
       <attribs/>
@@ -24,7 +24,7 @@ float I2(float p){
       <code.init><![CDATA[pa = pb = y0 = y1 = y2 = 0.0f;]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch + inlet_pitch, idp);
-dp = idp*(1.0f/(1<<31));
+dp = idp*(0.25f/(1<<30));
 _dp2 = (1 << 27) / (dp * dp);
 
 float pw = param_pw * (1.0f / (1 << 27)) + inlet_pw * (1.0f / (1 << 27));
