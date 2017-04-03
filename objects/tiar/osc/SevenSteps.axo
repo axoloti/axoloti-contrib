@@ -37,7 +37,7 @@ float w0, w_1, w_2;
 int cpt;
 float seq[7];]]></code.declaration>
       <code.init><![CDATA[cpt = 0;
-x = y = z_2 = z_1 = z0 = w_2 = w_1 = w0 = 0;
+x = y = z_2 = z_1 = z0 = 0;
 p = 0;]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch + inlet_pitch, idp);
@@ -89,15 +89,10 @@ y *= 0.999f;
 z0 *= 0.999f;
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //                                            2nd order differenciation
-w0 = z0 + z_2 - 2 * z_1;
-// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-//                                               high freq compensation
-outlet_out = (int32_t)(0.9f * w_1 - 0.1f * (w_2 + w0));
+outlet_out = (int32_t)(z0 + z_2 - 2 * z_1);
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //                                                      previous values
 z_2 = z_1; 
-z_1 = z0;
-w_2 = w_1;
-w_1 = w0;]]></code.srate>
+z_1 = z0;]]></code.srate>
    </obj.normal>
 </objdefs>
