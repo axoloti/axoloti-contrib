@@ -1,0 +1,136 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="434" y="14" text="6 digi Harmonics"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="126" y="42">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="39.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="53.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="238" y="42">
+      <params>
+         <frac32.u.map name="gain1" value="11.5"/>
+         <frac32.u.map name="gain2" value="3.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/wf_12Harm" uuid="bfccbbac-ca4b-430b-901f-cd0cfaad394c" name="wf_12Harm_1" x="434" y="42">
+      <params>
+         <frac32.s.mapvsl name="h1" value="28.0"/>
+         <frac32.s.mapvsl name="h2" value="-1.0"/>
+         <frac32.s.mapvsl name="h3" value="1.0"/>
+         <frac32.s.mapvsl name="h4" value="27.0"/>
+         <frac32.s.mapvsl name="h5" value="2.0"/>
+         <frac32.s.mapvsl name="h6" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/O2_12StepsSync" uuid="6c4da26a-bb80-4317-a883-c67faf8ba172" name="O2_12StepsSync_1" x="588" y="42">
+      <params>
+         <frac32.s.map name="pitch slave" value="0.0"/>
+         <frac32.s.map name="pitch master" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/conv/O2 to SR 59" uuid="887de25b-b437-4442-8068-2732559237c0" name="O2_1" x="728" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="882" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1036" y="42">
+      <params>
+         <frac32.s.map name="a" value="-28.0"/>
+         <frac32.s.map name="d" value="12.0"/>
+         <frac32.u.map name="s" value="12.5"/>
+         <frac32.s.map name="r" value="-8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1134" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="126" y="266">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="O2_12StepsSync_1" inlet="pitch master"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="O2_12StepsSync_1" outlet="y1"/>
+         <dest obj="O2_1" inlet="x1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="O2_12StepsSync_1" inlet="pitch slave"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="O2_12StepsSync_1" outlet="y0"/>
+         <dest obj="O2_1" inlet="x0"/>
+      </net>
+      <net>
+         <source obj="O2_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="wf_12Harm_1" outlet="waveform"/>
+         <dest obj="O2_12StepsSync_1" inlet="waveform"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>244</x>
+      <y>25</y>
+      <width>1514</width>
+      <height>926</height>
+   </windowPos>
+</patch-1.0>
