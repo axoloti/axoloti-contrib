@@ -1,16 +1,16 @@
 <patch-1.0 appVersion="1.0.12">
    <comment type="patch/comment" x="224" y="14" text="16 selectable waveforms"/>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="210" y="42">
-      <params>
-         <int32 name="value" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="tiar/osc/wf_12Bank" uuid="c4824f49-3382-4ee1-bcec-722bac1c8f42" name="wf_12Bank_1" x="280" y="42">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="56" y="28">
       <params/>
       <attribs/>
    </obj>
-   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="434" y="42">
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="182" y="42">
+      <params>
+         <int32 name="maximum" value="16"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/wf_12Bank" uuid="c4824f49-3382-4ee1-bcec-722bac1c8f42" name="wf_12Bank_1" x="322" y="42">
       <params/>
       <attribs/>
    </obj>
@@ -47,7 +47,7 @@
          <spinner attributeName="stages" value="1"/>
       </attribs>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1218" y="42">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1148" y="42">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="12.0"/>
@@ -64,7 +64,11 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="210" y="112">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="266" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="308" y="112">
       <params/>
       <attribs/>
    </obj>
@@ -72,6 +76,7 @@
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="counter_1" inlet="trig"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -113,8 +118,9 @@
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="i_1" outlet="out"/>
+         <source obj="counter_1" outlet="o"/>
          <dest obj="wf_12Bank_1" inlet="select"/>
+         <dest obj="i_1" inlet="in"/>
       </net>
    </nets>
    <settings>
