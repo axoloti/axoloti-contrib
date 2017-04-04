@@ -3,85 +3,36 @@
       <sDescription>For use with O2_12Steps(Sync)</sDescription>
       <author>Thierry Rochebois</author>
       <license>LGPL</license>
-      <helpPatch>wf_12Harm.axh</helpPatch>
+      <helpPatch>wf_12Bank.axh</helpPatch>
       <rotatedParams>true</rotatedParams>
-      <inlets/>
+      <inlets>
+         <int32 name="select"/>
+      </inlets>
       <outlets>
          <frac32buffer.bipolar name="waveform"/>
       </outlets>
       <displays/>
-      <params>
-         <frac32.s.mapvsl name="h1" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-         <frac32.s.mapvsl name="h2" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-         <frac32.s.mapvsl name="h3" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-         <frac32.s.mapvsl name="h4" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-         <frac32.s.mapvsl name="h5" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-         <frac32.s.mapvsl name="h6" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
-         </frac32.s.mapvsl>
-      </params>
+      <params/>
       <attribs/>
-      <code.declaration><![CDATA[int32_t tiar_h4w12[12*6] = {
-+134217728, +116235962,  +67108864,         +0,  -67108864, -116235962, -134217728, -116235962,  -67108864,         +0,  +67108864, +116235962, 
-+124617325, +105479145,  -19138181, -124617325, -105479145,  +19138181, +124617325, +105479145,  -19138181, -124617325, -105479145,  +19138181, 
- -68758842, +115267603,  +68758842, -115267603,  -68758842, +115267603,  +68758842, -115267603,  -68758842, +115267603,  +68758842, -115267603, 
-+115981577, -116488688,    +507111, +115981577, -116488688,    +507111, +115981577, -116488688,    +507111, +115981577, -116488688,    +507111, 
- -65763890,   -1547888,  +68444912, -117002176, +134208802, -115454288,  +65763890,   +1547888,  -68444912, +117002176, -134208802, +115454288, 
--105479145, +105479145, -105479145, +105479145, -105479145, +105479145, -105479145, +105479145, -105479145, +105479145, -105479145, +105479145 
-}; // phases chosen for reduced crest factor
-
-int32_t* h1 = tiar_h4w12 + 0 * 12;
-int32_t* h2 = tiar_h4w12 + 1 * 12;
-int32_t* h3 = tiar_h4w12 + 2 * 12;
-int32_t* h4 = tiar_h4w12 + 3 * 12;
-int32_t* h5 = tiar_h4w12 + 4 * 12;
-int32_t* h6 = tiar_h4w12 + 5 * 12;]]></code.declaration>
-      <code.krate><![CDATA[int j;
-/*
-for(j = 0;j<12;j++){
-  outlet_waveform[j] =
-  __SMMLA(param_h6, h6[j],
-    __SMMLA(param_h5, h5[j],
-      __SMMLA(param_h4, h4[j],
-        __SMMLA(param_h3, h3[j],
-          __SMMLA(param_h2, h2[j],
-            ___SMMUL(param_h1, h1[j]))))))<<5;
-}
-*/
-// optim nb reg ?...
-// 6vars
-for(j = 0;j<12;j++){
-  outlet_waveform[j] =
-          __SMMLA(param_h2, h2[j],
-            ___SMMUL(param_h1, h1[j]));
-}
-for(j = 0;j<12;j++){
-  outlet_waveform[j] =
-    __SMMLA(param_h4, h4[j],
-      __SMMLA(param_h3, h3[j],
-        outlet_waveform[j]));
-}
-for(j = 0;j<12;j++){
-  outlet_waveform[j] =
-    __SMMLA(param_h6, h6[j],
-      __SMMLA(param_h5, h5[j],
-        outlet_waveform[j]))<<5;
-}]]></code.krate>
+      <code.declaration><![CDATA[int8_t tiar_w12bank[16*12] = {
+   0,  -50,  -87, -100,  -87,  -50,    0,   50,   87,  100,   87,   50,  //  0 sin
+-100,  -82,  -64,  -45,  -27,   -9,    9,   27,   45,   64,   82,  100,  //  1 saw
+-100, -100, -100, -100, -100, -100,  100,  100,  100,  100,  100,  100,  //  2 sqr
+-100, -100, -100, -100,  100,  100,  100,  100,  100,  100,  100,  100,  //  3 sqr33
+-100, -100, -100,  100,  100,  100,  100,  100,  100,  100,  100,  100,  //  4 sqr25
+-100,  -48,    0,   41,   73,   93,  100,   93,   73,   41,    0,  -48,  //  5 half sin
+ 100,  100,  100,   93,   73,   41,    0,  -48, -100, -100, -100, -100,  //  6 R string1
+ 100,   93,   73,   41,    0,  -48, -100, -100, -100, -100, -100, -100,  //  7 R string2
+ 100,   53,   13,  -21,  -48,  -70,  -87, -100, -100, -100, -100, -100,  //  8 S string1
+ 100,   22,  -35,  -74, -100, -100, -100, -100, -100, -100, -100, -100,  //  9 S string2
+-100, -100, -100, -100,  100, -100,  100, -100,  100,  100,  100,  100,  // 10 squizor
+ -90, -100,  100,  100, -100, -100,  100,  100, -100,  -90,   30,   50,  // 11 thirdy
+-100,    0,  100, -100,    0,  100, -100,    0,  100, -100,  100,    0,  // 12 jigsaw
+   0,  -10,   20,  -40,   80, -100,  100,  -80,   40,  -20,   10,   -5,  // 13 res
+-100, -100, -100, -100,  100,  100,  100, -100, -100,  100,   66,  -66,  // 14 4321
+  84,   38,  -85,  -72,    7,  -41,  100,   17,   44,   12,  -10,   13   // 15 Randy
+};]]></code.declaration>
+      <code.krate><![CDATA[int8_t* b = tiar_w12bank + 12*(inlet_select & 15);
+for(int i = 0; i < 12; i++) outlet_waveform[i] = ((int32_t)b[i]) << 20;]]></code.krate>
    </obj.normal>
 </objdefs>
