@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
-   <comment type="patch/comment" x="224" y="14" text="16 selectable waveforms"/>
+   <comment type="patch/comment" x="182" y="14" text="16 selectable waveforms selected by the keystroke counter"/>
    <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="56" y="28">
       <params/>
       <attribs/>
@@ -14,40 +14,20 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/osc/O2_12StepsSync" uuid="6c4da26a-bb80-4317-a883-c67faf8ba172" name="O2_12StepsSync_1" x="546" y="42">
+   <obj type="tiar/osc/12StepsBLISync" uuid="c5f0161c-aaf9-4217-8e83-0e4b701e0d47" name="12StepsBLISync_1" x="504" y="42">
       <params>
          <frac32.s.map name="pitch slave" value="0.0"/>
          <frac32.s.map name="pitch master" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/conv/O2 to SR 59" uuid="887de25b-b437-4442-8068-2732559237c0" name="O2_1" x="686" y="42">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="840" y="42">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="644" y="42">
       <params>
          <frac32.u.map name="amp" value="34.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="sss/filter/paraEQ" uuid="d7026ba6-245f-47a7-92a3-66d19d1ee676" name="paraEQ_1" x="966" y="42">
-      <params>
-         <int32 name="stage" value="1"/>
-         <bool32.tgl name="STorMS" value="0"/>
-         <int32.hradio name="mode" value="2"/>
-         <frac32.s.map name="freq" value="2.0"/>
-         <frac32.u.map name="reso" value="23.0"/>
-         <frac32.s.map name="gain" value="49.0"/>
-         <int32 name="preset" value="0"/>
-         <bool32.mom name="save" value="0"/>
-         <bool32.mom name="load" value="0"/>
-      </params>
-      <attribs>
-         <spinner attributeName="stages" value="1"/>
-      </attribs>
-   </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1148" y="42">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="756" y="42">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="12.0"/>
@@ -56,11 +36,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1316" y="42">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="868" y="42">
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1372" y="42">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="924" y="42">
       <params/>
       <attribs/>
    </obj>
@@ -84,12 +64,8 @@
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
-         <dest obj="O2_12StepsSync_1" inlet="pitch master"/>
-         <dest obj="O2_12StepsSync_1" inlet="pitch slave"/>
-      </net>
-      <net>
-         <source obj="O2_12StepsSync_1" outlet="y1"/>
-         <dest obj="O2_1" inlet="x1"/>
+         <dest obj="12StepsBLISync_1" inlet="pitch slave"/>
+         <dest obj="12StepsBLISync_1" inlet="pitch master"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
@@ -97,23 +73,11 @@
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
-         <source obj="O2_12StepsSync_1" outlet="y0"/>
-         <dest obj="O2_1" inlet="x0"/>
-      </net>
-      <net>
-         <source obj="O2_1" outlet="out"/>
-         <dest obj="*c_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="wf_12Bank_1" outlet="waveform"/>
-         <dest obj="O2_12StepsSync_1" inlet="waveform"/>
+         <dest obj="12StepsBLISync_1" inlet="waveform"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
-         <dest obj="paraEQ_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="paraEQ_1" outlet="out"/>
          <dest obj="scope_1" inlet="in"/>
          <dest obj="vca_1" inlet="a"/>
       </net>
@@ -121,6 +85,10 @@
          <source obj="counter_1" outlet="o"/>
          <dest obj="wf_12Bank_1" inlet="select"/>
          <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="12StepsBLISync_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
       </net>
    </nets>
    <settings>
