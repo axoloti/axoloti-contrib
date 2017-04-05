@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="SixStepsBLISync" uuid="57ed4042-b950-4049-bd9b-ca568480c278">
+   <obj.normal id="12StepsBLISync" uuid="c5f0161c-aaf9-4217-8e83-0e4b701e0d47">
       <sDescription>Advanced version with built-in Master oscillator. See help patch for usage !!
 </sDescription>
       <author>T.Rochebois</author>
@@ -8,6 +8,7 @@
       <inlets>
          <frac32.bipolar name="pitch slave" description="pitch_slave"/>
          <frac32.bipolar name="pitch master"/>
+         <frac32buffer.bipolar name="waveform"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="out" description=""/>
@@ -16,18 +17,12 @@
       <params>
          <frac32.s.map.pitch name="pitch slave" noLabel="true"/>
          <frac32.s.map.pitch name="pitch master"/>
-         <frac32.s.map name="level0"/>
-         <frac32.s.map name="level1"/>
-         <frac32.s.map name="level2"/>
-         <frac32.s.map name="level3"/>
-         <frac32.s.map name="level4"/>
-         <frac32.s.map name="level5"/>
       </params>
       <attribs/>
       <includes>
          <include>./tiar_bli_8_64.h</include>
       </includes>
-      <code.declaration><![CDATA[int32_t y[8], seq[6], v, integ;
+      <code.declaration><![CDATA[int32_t y[8], seq[12], v, integ;
 float p, dp, _64dp, pM, dpM, _dpM, _64dpM;
 uint8_t cpt;
 uint8_t i;]]></code.declaration>
@@ -37,15 +32,21 @@ y[0]=y[1]=y[2]=y[3]=y[4]=y[5]=y[6]=y[7]=v=integ=0;
 i = 0;]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch_space_slave + inlet_pitch_space_slave, idp);
-dp = 6.0f*(idp*(0.25f/(1<<30)));
+dp = 12.0f*(idp*(0.25f/(1<<30)));
 if(dp > 1) dp = 1;
 _64dp = 64.0f / dp;
-seq[0] = param_level0 >> 9;
-seq[1] = param_level1 >> 9;
-seq[2] = param_level2 >> 9;
-seq[3] = param_level3 >> 9;
-seq[4] = param_level4 >> 9;
-seq[5] = param_level5 >> 9;
+seq[0] = (float)(inlet_waveform[0] >> 9);
+seq[1] = (float)(inlet_waveform[1] >> 9);
+seq[2] = (float)(inlet_waveform[2] >> 9);
+seq[3] = (float)(inlet_waveform[3] >> 9);
+seq[4] = (float)(inlet_waveform[4] >> 9);
+seq[5] = (float)(inlet_waveform[5] >> 9);
+seq[6] = (float)(inlet_waveform[6] >> 9);
+seq[7] = (float)(inlet_waveform[7] >> 9);
+seq[8] = (float)(inlet_waveform[8] >> 9);
+seq[9] = (float)(inlet_waveform[9] >> 9);
+seq[10] = (float)(inlet_waveform[10] >> 9);
+seq[11] = (float)(inlet_waveform[11] >> 9);
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 MTOFEXTENDED(param_pitch_space_master + inlet_pitch_space_master, idp);
 dpM = (idp*(0.25f/(1<<30)));
@@ -53,8 +54,71 @@ if(dpM > 1) dpM = 1;
 _dpM = 1 / dpM;
 _64dpM = 64.0f * _dpM;]]></code.krate>
       <code.srate><![CDATA[// phase increment
-pM += dpM;  // Master
-p += dp;    // Slave
+pM += 0.5f*dpM;  // Master
+p += 0.5f*dp;    // Slave
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                         synchro ?
+if(pM >= 1){      // phase above 1
+  pM -= 1;       // reset Master phase
+  float aM = pM * _64dpM + 32;
+
+  // The slave can reset itself in the same sample interval than a sync
+  // we take account of it if it happens before the sync
+  if(p >= 1){
+    p -= 1;
+    float a = p * _64dp + 32;
+    if(a > aM){ // slave before master
+      cpt++;          // next step in sequence
+      if(cpt >= 12)    // above 6 => wrap to 0
+        cpt = 0;
+      // select the band limited pulse according to subsample time since the transition
+      const int16_t *t = tiar_bli_8_64 + (((uint32_t)a) << 3); 
+      int32_t g = seq[cpt] - v; // gain= the diff between the new step and the current value
+      // add the selected band limited pulse to the output 8 taps
+      for(int j = 0; j <= 7; j++){
+        y[(i + j) & 7] += g * t[j];
+      }
+      v += g;   // now we can say that the value corresponds to the current step
+    }
+  }
+//  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  
+  cpt = 0;        // reset  
+  p = (pM * _dpM +0.5f) * dp; // reset Slave phase taking account of subsample time
+  // select the band limited pulse according to subsample time since the transition
+  const int16_t *t = tiar_bli_8_64 + (((uint32_t)aM) << 3); 
+  int32_t g = seq[cpt] - v; // gain = the diff between the new step and the current value
+  // add the selected band limited pulse to the output 8 taps
+  for(int j = 0; j <= 7; j++){
+    y[(i + j) & 7] += g * t[j];
+  }
+  v += g;   // now we can say that the value corresponds to the current step  //...
+} else {
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                         transition ?
+  if(p >= 1.0f){    // phase above 1
+    cpt++;          // next step in sequence
+    if(cpt >= 12)    // above 6 => wrap to 0
+      cpt = 0;
+    p -= 1.0f;      // reset phase
+    // select the band limited pulse according to subsample time since the transition
+    const int16_t *t = tiar_bli_8_64 + (((uint32_t)(p * _64dp + 32)) << 3); 
+    int32_t g = seq[cpt] - v; // gain= the diff between the new step and the current value
+    // add the selected band limited pulse to the output 8 taps
+    for(int j = 0; j <= 7; j++){
+      y[(i + j) & 7] += g * t[j];
+    }
+    v += g;   // now we can say that the value corresponds to the current step
+  }
+}
+
+
+
+
+
+
+// phase increment
+pM += 0.5f*dpM;  // Master
+p += 0.5f*dp;    // Slave
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //                                                         synchro ?
 if(pM >= 1){      // phase above 1
@@ -68,7 +132,7 @@ if(pM >= 1){      // phase above 1
     float a = p * _64dp;
     if(a > aM){ // slave before master
       cpt++;          // next step in sequence
-      if(cpt >= 6)    // above 6 => wrap to 0
+      if(cpt >= 12)    // above 6 => wrap to 0
         cpt = 0;
       // select the band limited pulse according to subsample time since the transition
       const int16_t *t = tiar_bli_8_64 + (((uint32_t)a) << 3); 
@@ -96,7 +160,7 @@ if(pM >= 1){      // phase above 1
 //                                                         transition ?
   if(p >= 1.0f){    // phase above 1
     cpt++;          // next step in sequence
-    if(cpt >= 6)    // above 6 => wrap to 0
+    if(cpt >= 12)    // above 6 => wrap to 0
       cpt = 0;
     p -= 1.0f;      // reset phase
     // select the band limited pulse according to subsample time since the transition
@@ -109,6 +173,15 @@ if(pM >= 1){      // phase above 1
     v += g;   // now we can say that the value corresponds to the current step
   }
 }
+
+
+
+
+
+
+
+
+
 outlet_out = integ += y[i]; // output integrator
 y[i] = 0;
 i = (i + 1) & 7;]]></code.srate>
