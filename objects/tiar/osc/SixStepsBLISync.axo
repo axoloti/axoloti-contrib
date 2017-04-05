@@ -54,14 +54,33 @@ _dpM = 1 / dpM;
 _64dpM = 64.0f * _dpM;]]></code.krate>
       <code.srate><![CDATA[// phase increment
 pM += dpM;
+p += dp;
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //                                                         synchro ?
-if(pM > 1){      // phase above 1
-  cpt = 0;        // reset  
+if(pM >= 1){      // phase above 1
   pM -= 1;       // reset Master phase
+  float aM = pM * _64dpM;
+  if(p >= 1){
+    p -= 1;
+    float a = p * _64dp;
+    if(a > aM){ // slave before master
+      cpt++;          // next step in sequence
+      if(cpt >= 6)    // above 6 => wrap to 0
+        cpt = 0;
+      // select the band limited pulse according to subsample time since the transition
+      const int16_t *t = tiar_bli_8_64 + (((uint32_t)a) << 3); 
+      int32_t g = seq[cpt] - v; // gain= the diff between the new step and the current value
+      // add the selected band limited pulse to the output 8 taps
+      for(int j = 0; j <= 7; j++){
+        y[(i + j) & 7] += g * t[j];
+      }
+      v += g;   // now we can say that the value corresponds to the current step
+    }
+  }
+  cpt = 0;        // reset  
   p = pM * _dpM * dp; // reset Slave phase taking account of subsample time
   // select the band limited pulse according to subsample time since the transition
-  const int16_t *t = tiar_bli_8_64 + (((uint32_t)(pM * _64dpM)) << 3); 
+  const int16_t *t = tiar_bli_8_64 + (((uint32_t)aM) << 3); 
   int32_t g = seq[cpt] - v; // gain = the diff between the new step and the current value
   // add the selected band limited pulse to the output 8 taps
   for(int j = 0; j <= 7; j++){
@@ -70,7 +89,7 @@ if(pM > 1){      // phase above 1
   v += g;   // now we can say that the value corresponds to the current step  //...
 } else {
   // phase increment
-  p += dp;
+  //p += dp;
   // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
   //                                                         transition ?
   if(p >= 1.0f){    // phase above 1
