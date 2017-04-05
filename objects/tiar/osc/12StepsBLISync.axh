@@ -45,21 +45,28 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="882" y="42">
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_2" x="868" y="42">
       <params>
-         <frac32.s.map name="pitch" value="-12.0"/>
+         <frac32.u.map name="gain1" value="13.5"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="966" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-9.0"/>
          <frac32.u.map name="reso" value="34.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="980" y="42">
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="1064" y="42">
       <params>
-         <frac32.s.map name="pitch" value="-12.0"/>
+         <frac32.s.map name="pitch" value="-6.0"/>
          <frac32.u.map name="reso" value="35.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1078" y="42">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1162" y="42">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="22.0"/>
@@ -68,11 +75,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1176" y="42">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1260" y="42">
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1232" y="42">
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1316" y="42">
       <params>
          <frac32.u.map name="InGain" value="4.0"/>
          <frac32.u.map name="OutGain" value="31.0"/>
@@ -83,16 +90,16 @@
       <params>
          <frac32.s.mapvsl name="b0" value="51.0"/>
          <frac32.s.mapvsl name="b1" value="40.0"/>
-         <frac32.s.mapvsl name="b2" value="-28.0"/>
-         <frac32.s.mapvsl name="b3" value="-26.0"/>
-         <frac32.s.mapvsl name="b4" value="47.0"/>
-         <frac32.s.mapvsl name="b5" value="50.0"/>
-         <frac32.s.mapvsl name="b6" value="-55.0"/>
-         <frac32.s.mapvsl name="b7" value="-45.0"/>
-         <frac32.s.mapvsl name="b8" value="37.0"/>
-         <frac32.s.mapvsl name="b9" value="38.0"/>
-         <frac32.s.mapvsl name="b10" value="-48.0"/>
-         <frac32.s.mapvsl name="b11" value="-63.0"/>
+         <frac32.s.mapvsl name="b2" value="52.0"/>
+         <frac32.s.mapvsl name="b3" value="-58.0"/>
+         <frac32.s.mapvsl name="b4" value="-36.0"/>
+         <frac32.s.mapvsl name="b5" value="-58.0"/>
+         <frac32.s.mapvsl name="b6" value="48.0"/>
+         <frac32.s.mapvsl name="b7" value="33.0"/>
+         <frac32.s.mapvsl name="b8" value="34.0"/>
+         <frac32.s.mapvsl name="b9" value="49.0"/>
+         <frac32.s.mapvsl name="b10" value="-57.0"/>
+         <frac32.s.mapvsl name="b11" value="-54.0"/>
       </params>
       <attribs/>
    </obj>
@@ -155,6 +162,7 @@
          <source obj="keyb_1" outlet="note"/>
          <dest obj="12StepsBLISync_1" inlet="pitch master"/>
          <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -175,9 +183,8 @@
       </net>
       <net>
          <source obj="adsr_2" outlet="env"/>
-         <dest obj="vcf3_1" inlet="pitch"/>
-         <dest obj="vcf3_2" inlet="pitch"/>
          <dest obj="mix_1" inlet="in2"/>
+         <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
          <source obj="vcf3_2" outlet="out"/>
@@ -219,6 +226,11 @@
       <net>
          <source obj="wf_12Steps_1" outlet="o"/>
          <dest obj="12StepsBLISync_1" inlet="waveform"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+         <dest obj="vcf3_2" inlet="pitch"/>
       </net>
    </nets>
    <settings>
