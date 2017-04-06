@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="DP2SawPls" uuid="454b525d-2d84-4b10-b0e3-077a48d6c5dc">
       <sDescription>Low CPU Anti Aliased Sawtooth Pulse (Second order differentiated polynomial).</sDescription>
       <author>T. Rochebois</author>
@@ -12,7 +12,7 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map name="pitch" noLabel="true"/>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[float p, dp, _dp2, y0, y1, y2;
@@ -32,7 +32,7 @@ float I2(float p){
       <code.init><![CDATA[p = y0 = y1 = y2 = 0.0f;]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch + inlet_pitch, idp);
-dp = idp*(1.0f/(1<<31));
+dp = idp*(0.25f/(1<<30));
 _dp2 = (1 << 27) / (dp * dp);
 // change of dp => update state variables y1 y2
 p -= dp; p += (p < 0);

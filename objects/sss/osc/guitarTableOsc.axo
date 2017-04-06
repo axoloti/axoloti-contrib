@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="guitarTableOsc" uuid="5ec444b9-5f52-4378-bfa7-305cef8d1d37">
       <sDescription>this is the module to use with the guitarTable module in a polyphonic synthesizer.
 The guitarTable module will create a complex waveform and this module is able to play that waveform. This was needed, otherwise, in a polyphonic setting, each module would create it&apos;s own table, filling up the available memory really quickly.
@@ -23,10 +23,7 @@ The guitarTable module will create a complex waveform and this module is able to
          <frac32.u.map name="pwm"/>
          <frac32.u.map name="mod"/>
          <frac32.u.map name="start"/>
-         <int32 name="preset">
-            <MinValue i="0"/>
-            <MaxValue i="128"/>
-         </int32>
+         <frac32.u.map name="preset"/>
       </params>
       <attribs>
          <objref name="table"/>
@@ -97,6 +94,7 @@ Start=Start>(1<<27)?(2<<27)-Start:Start;
    prev5 = B;
 
    preset=param_preset+inlet_preset;
+   preset=___SMMUL(preset<<3,attr_table.presets<<2);
    preset=preset-(preset/attr_table.presets)*attr_table.presets;
    preset=preset<0?preset+attr_table.presets:preset;
    preset=preset*attr_table.LENGTH;]]></code.krate>

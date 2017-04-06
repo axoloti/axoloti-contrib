@@ -1,0 +1,107 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive interp" uuid="244e8d0f-b9b4-4f5e-87b2-90f1dca3b3a6">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>loop_multi.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.positive name="startpoint" description="position inside range on reset"/>
+         <frac32.positive name="loopstart" description="loopstart inside range"/>
+         <frac32.bipolar name="speed" description="speed modulation"/>
+         <bool32 name="play"/>
+         <bool32.rising name="r2zero"/>
+         <bool32.rising name="r2start" description="reset to startpoint"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="audio out"/>
+         <frac32buffer name="phase" description="plaback phase in fraction of table"/>
+         <int32 name="count" description="loop count since reset"/>
+         <int32 name="spos" description="playhead position inside loop in samples"/>
+         <int32 name="stotal" description="length of range in samples"/>
+         <int32 name="sloop" description="length of loop in samples"/>
+         <frac32.bipolar name="speed" description="total speed"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t index1;
+int32_t index2;
+int32_t index3;
+
+bool r;
+uint8_t shift;
+
+int32_t t_speed;
+int32_t loopstart;
+int32_t reset;
+uint32_t count;
+bool add;
+
+uint32_t max;
+uint32_t offset;]]></code.declaration>
+      <code.init><![CDATA[//set 'shift factor' for storing the recording length/the sync output
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[offset = ___SMMUL(inlet_offset,(attr_table.LENGTH << 5));
+
+if (inlet_range == (1 << 27)- 1) max = ___SMMUL(inlet_range,(attr_table.LENGTH << 5)) + offset +1;
+else max = ___SMMUL(inlet_range,(attr_table.LENGTH << 5)) + offset;
+
+loopstart = ___SMMUL(inlet_range,inlet_loopstart)<<5;
+t_speed = (inlet_speed + param_speed) >> attr_table.LENGTHPOW;
+add = inlet_range;
+
+reset = (___SMMUL(inlet_range,inlet_startpoint)<<5);
+
+      if (inlet_r2start && (!r)) {
+         index1 = reset;
+         r = 1;
+         count = 0;
+      }
+
+      if (inlet_r2zero && (!r)) {
+         index1 = 0;
+         r = 1;
+         count = 0;
+      }
+
+      if ((!inlet_r2start) && (!inlet_r2zero)) r = 0;
+
+outlet_count = count;
+outlet_spos    =  index2;
+outlet_stotal = inlet_range >> shift;
+outlet_sloop = (inlet_range - loopstart)>>shift;
+outlet_speed = inlet_speed + param_speed;]]></code.krate>
+      <code.srate><![CDATA[if (t_speed > 0){
+      if (index1 >= inlet_range){index1 = loopstart;count += add;} 
+      } 
+      else{
+      if (index1 <= loopstart){ index1 = inlet_range;count +=add;}  
+          }    
+
+outlet_phase = __USAT(index1 + inlet_offset,27);
+
+//interpolated playback
+  index2 = outlet_phase >>shift;
+
+  if ((index2 + 1) <  max) index3 = index2 + 1;
+  else index3 = offset;
+
+ int32_t y1 = attr_table.array[index2]<<attr_table.GAIN;
+ int32_t y2= attr_table.array[index3]<<attr_table.GAIN;
+ 
+   int frac = (outlet_phase - (index2<<shift))<<(attr_table.LENGTHPOW+3);
+  int32_t rr;
+  rr = ___SMMUL(y1,(1<<30)-frac);
+  rr = ___SMMLA(y2,frac,rr);
+  outlet_wave = rr<<2;
+
+  if (inlet_play) index1 += t_speed ;
+else outlet_wave = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

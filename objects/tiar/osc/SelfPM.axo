@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="SelfPM" uuid="4c69df16-7b2a-40bd-9058-ec85890055db">
       <sDescription>Self PM oscillator (Very low cost)
 Generates a band controlled sawtooth like wave form.
@@ -20,28 +20,24 @@ fbMod modulates the feedback in the range [fb0 fb1]</sDescription>
          <frac32.s.dial name="fb" description="Modulated feedback" noLabel="true"/>
       </displays>
       <params>
-         <frac32.s.map name="pitch"/>
+         <frac32.s.map.pitch name="pitch"/>
          <frac32.s.map name="fb1" description="Feedback Range [fb0 fb1]"/>
          <frac32.s.map name="fb0" description="Feedback Range [fb0 fb1]"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[
-// _____________________________________________________________________
+      <code.declaration><![CDATA[// _____________________________________________________________________
 uint32_t p;  // phase
 int32_t kFb;  // feedback coefficient
 int32_t aFb, dFb;       // interp Fb
 int32_t y;   // raw (modulated)sine
 int32_t fy;  // filtered output
-// _____________________________________________________________________
-]]></code.declaration>
-      <code.init><![CDATA[
-// _____________________________________________________________________
+// _____________________________________________________________________]]></code.declaration>
+      <code.init><![CDATA[// _____________________________________________________________________
 p = 0;
 y = 0;
 fy = 0;
 aFb = dFb = 0;
-// _____________________________________________________________________
-]]></code.init>
+// _____________________________________________________________________]]></code.init>
       <code.krate><![CDATA[// _____________________________________________________________________
 int32_t dp; // delta phase aka freq
 MTOFEXTENDED(param_pitch + inlet_pitch, dp);

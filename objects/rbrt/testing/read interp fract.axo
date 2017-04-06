@@ -1,0 +1,46 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read interp fract" uuid="3618120c-0fcc-4207-90a2-4f3ae4d2c181">
+      <sDescription>read from table, linear interpolated.&apos;offset&apos; and &apos;range&apos; define the area inside the table to read from.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="phase" description="index in fraction of table size"/>
+         <frac32.positive name="offset"/>
+         <frac32.positive name="range"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="table[a]"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t max;
+int32_t offset;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift = 27-attr_table.LENGTHPOW;]]></code.init>
+      <code.krate><![CDATA[offset = ___SMMUL(inlet_offset,(attr_table.LENGTH << 5));
+
+//this is NOT an elegant solution
+if (inlet_range == (1 << 27)- 1) max = ___SMMUL(inlet_range,(attr_table.LENGTH << 5)) + offset +1;
+else max = ___SMMUL(inlet_range,(attr_table.LENGTH << 5)) + offset;]]></code.krate>
+      <code.srate><![CDATA[uint32_t phase = __USAT((___SMMUL(inlet_phase,inlet_range)<<5) + inlet_offset,27);
+
+    int index = phase >>shift;
+    int index2;
+    //this is also not the best I guess.but it works (;
+    if ((index + 1) <  max ) index2 = index + 1;
+    else index2 = offset;
+
+ int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+ int32_t y2= attr_table.array[index2]<<attr_table.GAIN;
+ 
+   int frac = (phase - (index<<shift))<<(attr_table.LENGTHPOW+3);
+  int32_t rr;
+  rr = ___SMMUL(y1,(1<<30)-frac);
+  rr = ___SMMLA(y2,frac,rr);
+  outlet_out = rr<<2;]]></code.srate>
+   </obj.normal>
+</objdefs>

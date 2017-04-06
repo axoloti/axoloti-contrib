@@ -1,0 +1,149 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="112" y="42">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="224" y="42">
+      <params>
+         <frac32.u.map name="gain1" value="0.0"/>
+         <frac32.u.map name="gain2" value="31.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/SixStepsSync" uuid="ac53c143-aa78-4694-ae58-fc8bf2d60b5f" name="SixStepsSync_1" x="322" y="42">
+      <params>
+         <frac32.s.map name="pitch slave" value="-4.0"/>
+         <frac32.s.map name="pitch master" value="-12.0"/>
+         <frac32.s.map name="level0" value="64.0"/>
+         <frac32.s.map name="level1" value="64.0"/>
+         <frac32.s.map name="level2" value="64.0"/>
+         <frac32.s.map name="level3" value="-64.0"/>
+         <frac32.s.map name="level4" value="63.0"/>
+         <frac32.s.map name="level5" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="490" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="644" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_1" x="742" y="42">
+      <params>
+         <frac32.s.map name="g" value="51.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="73"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="854" y="42">
+      <params>
+         <frac32.u.map name="InGain" value="25.5"/>
+         <frac32.u.map name="OutGain" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/Wave3b" uuid="284db29c-ec57-4f25-a551-dc821a6bb46f" name="Wave3b_1" x="966" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="12.010000228881836"/>
+         <frac32.u.map name="I1" value="20.0"/>
+         <frac32.u.map name="I0" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1078" y="42">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="0.0"/>
+         <frac32.u.map name="s" value="33.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1190" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1274" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="SixStepsSync_1" inlet="pitch master"/>
+         <dest obj="Wave3b_1" inlet="pitch"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="SixStepsSync_1" outlet="out"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="SixStepsSync_1" inlet="pitch slave"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="Wave3b_1" inlet="mEnv"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="Wave3b_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="Wave3b_1" inlet="m"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="allpass_1" outlet="out"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="allpass_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>231</x>
+      <y>12</y>
+      <width>1603</width>
+      <height>993</height>
+   </windowPos>
+</patch-1.0>

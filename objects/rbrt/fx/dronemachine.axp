@@ -30,7 +30,7 @@
    </obj>
    <obj type="osc/phasor" uuid="e5553f226015bf75f4fdc3faa39be1bee4f84044" name="phasor_1" x="56" y="56">
       <params>
-         <frac32.s.map name="pitch" MidiCC="9" value="-28.0"/>
+         <frac32.s.map name="pitch" value="-36.0"/>
       </params>
       <attribs/>
    </obj>
@@ -47,7 +47,7 @@
          </text>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="27d23517-3a9f-4b83-9be1-4ff57bc8df7f" name="patcher_1" x="896" y="56">
+   <patcher type="patch/patcher" uuid="0da28f70-1b50-4e90-8a84-520d2c5a6fea" name="patcher_1" x="896" y="56">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -513,14 +513,30 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <comment type="patch/comment" x="182" y="168" text="speed"/>
-   <comment type="patch/comment" x="238" y="168" text="amount"/>
-   <obj type="rbrt/fx/sat" uuid="ad8a05e7-1c30-4100-aff9-fcfdd7b7e503" name="sat_1" x="1596" y="210">
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="1568" y="56">
       <params>
-         <frac32.u.map name="drive" value="0.0"/>
+         <frac32.s.map name="freq" value="-15.0"/>
       </params>
       <attribs/>
    </obj>
+   <obj type="math/-" uuid="832edca3a945aa25ae1875d277bdd12d6709031a" name="-_1" x="1680" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1764" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_2" x="1666" y="154">
+      <params>
+         <frac32.u.map name="drive" value="0.0"/>
+         <int32.hradio name="fat" value="4"/>
+         <bool32.tgl name="smooth" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="182" y="168" text="speed"/>
+   <comment type="patch/comment" x="238" y="168" text="amount"/>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_9" x="1414" y="252">
       <params>
          <frac32.u.map name="value" value="25.5"/>
@@ -531,7 +547,40 @@
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="c133038e-febc-4a18-8ae8-2da72fa82bfb" name="patcher_9" x="1568" y="294">
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_1" x="84" y="266">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="/dronemachine.txt"/>
+      </attribs>
+   </obj>
+   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_1" x="252" y="280">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+      </attribs>
+   </obj>
+   <obj type="midi/in/keyb note" uuid="ac0cd98e6c0373b7be73d25900342a62ebcf5f" name="keyb_2" x="392" y="280">
+      <params/>
+      <attribs>
+         <spinner attributeName="note" value="18"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/midi/out/cc send 4" uuid="29673ede-ad04-49ea-bb7a-3ecf7cdcf098" name="cc_1" x="1148" y="280">
+      <params>
+         <int32 name="startcc" value="9"/>
+      </params>
+      <attribs>
+         <combo attributeName="device" selection="usb host port 1"/>
+         <spinner attributeName="channel" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/speedlim" uuid="67c994de-e8ef-47f7-823a-4956d72fb5c2" name="speedlim_1" x="924" y="294">
+      <params>
+         <frac32.s.map name="d" value="-27.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="8aac0a39-044f-4d24-bcd4-728aafd6f932" name="patcher_9" x="1568" y="294">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -707,7 +756,7 @@
          <obj type="env/follower" uuid="356ce1d18ac6b51704833f94dac5dea823fb8223" name="follower_1" x="336" y="658">
             <params/>
             <attribs>
-               <combo attributeName="time" selection="1.3ms"/>
+               <combo attributeName="time" selection="10.6ms"/>
             </attribs>
          </obj>
          <obj type="math/&gt;" uuid="8112942c245dbc2edf7d7de122fe83b0dcd0a391" name="&gt;_1" x="532" y="658">
@@ -740,6 +789,10 @@
    outlet_out = val;]]></code.krate>
             </object>
          </patchobj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="outlet_2" x="1162" y="700">
+            <params/>
+            <attribs/>
+         </obj>
          <nets>
             <net>
                <source obj="+_1" outlet="out"/>
@@ -829,6 +882,7 @@
             <net>
                <source obj="fb length_" outlet="out"/>
                <dest obj="*_1" inlet="b"/>
+               <dest obj="outlet_2" inlet="outlet"/>
             </net>
             <net>
                <source obj="fb release" outlet="inlet"/>
@@ -876,7 +930,17 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/data/tableread 8" uuid="e91f7d4e-591f-49b4-8277-241cf4661605" name="tableread_1" x="1358" y="350">
+   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_1" x="532" y="308">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/patching/loadbang" uuid="45d1f29d-ac62-4e5b-86f8-2201d2f6c689" name="loadbang_1" x="98" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/data/tableread 8" uuid="e91f7d4e-591f-49b4-8277-241cf4661605" name="tableread_1" x="1316" y="350">
       <params>
          <int32 name="offset" value="24"/>
       </params>
@@ -890,10 +954,10 @@
          <frac32.u.map name="decay" value="28.0"/>
          <frac32.u.map name="LowDamp" value="0.0"/>
          <frac32.u.map name="HighDamp" value="0.0"/>
-         <frac32.u.map name="size" value="49.0"/>
+         <frac32.u.map name="size" value="48.5"/>
          <frac32.s.map name="mod_:pitch" value="-64.0"/>
          <frac32.u.map name="mod_:gain" value="0.0"/>
-         <frac32.u.map name="diffusion" value="43.5"/>
+         <frac32.u.map name="diffusion" value="36.0"/>
          <frac32.u.map name="mix" value="64.0"/>
       </params>
       <attribs/>
@@ -901,6 +965,16 @@
    <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="1862" y="350">
       <params/>
       <attribs/>
+   </obj>
+   <obj type="rbrt/midi/in/monitor" uuid="64b3d36e-97ab-4b18-91f7-ff611e14fd7a" name="monitor_1" x="798" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_2" x="1022" y="448">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="30"/>
+      </attribs>
    </obj>
    <obj type="rbrt/midi/in/keyb zone i" uuid="507b5da7-595d-46ab-808e-6b038d7fe2d1" name="keyb_1" x="0" y="462">
       <params/>
@@ -934,6 +1008,33 @@
          <combo attributeName="device" selection="usb host port 1"/>
          <spinner attributeName="channel" value="1"/>
       </attribs>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="700" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_2" x="980" y="518">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="9"/>
+         <spinner attributeName="default" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="table/write" uuid="50b8c8807ba1fc700ed79381c9360a982e0c3fb9" name="write_1" x="1148" y="518">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+      </attribs>
+   </obj>
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_1" x="1498" y="518">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="math/window" uuid="276ef1bfd2978430dd94074347265b17092b6311" name="window_1" x="1596" y="518">
+      <params/>
+      <attribs/>
    </obj>
    <obj type="rbrt/midi/in/table store" uuid="88b231f8-706b-4133-96c3-056a1d8759cf" name="table_2" x="644" y="588">
       <params>
@@ -1005,22 +1106,16 @@
       </net>
       <net>
          <source obj="shaper_1" outlet="out"/>
-         <dest obj="patcher_9" inlet="in"/>
+         <dest obj="hp1_1" inlet="in"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
       <net>
          <source obj="patcher_9" outlet="send"/>
-         <dest obj="sat_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="sat_1" outlet="out"/>
-         <dest obj="patcher_9" inlet="return"/>
+         <dest obj="sat_2" inlet="in"/>
       </net>
       <net>
          <source obj="patcher_9" outlet="out"/>
-         <dest obj="obj_1" inlet="InL"/>
-         <dest obj="obj_1" inlet="InR"/>
-         <dest obj="xfade_1" inlet="i1"/>
-         <dest obj="xfade_2" inlet="i1"/>
+         <dest obj="+_1" inlet="in2"/>
       </net>
       <net>
          <source obj="dial_9" outlet="out"/>
@@ -1034,6 +1129,7 @@
          <source obj="&lt;&lt;_1" outlet="out"/>
          <dest obj="table_2" inlet="offset"/>
          <dest obj="table_1" inlet="offset"/>
+         <dest obj="i_1" inlet="in"/>
       </net>
       <net>
          <source obj="patcher_1" outlet="mod"/>
@@ -1069,7 +1165,7 @@
       </net>
       <net>
          <source obj="tableread_1" outlet="v0"/>
-         <dest obj="sat_1" inlet="drive"/>
+         <dest obj="sat_2" inlet="drive"/>
       </net>
       <net>
          <source obj="tableread_1" outlet="v1"/>
@@ -1093,7 +1189,7 @@
       </net>
       <net>
          <source obj="tableread_1" outlet="v6"/>
-         <dest obj="patcher_9" inlet="thresh"/>
+         <dest obj="&gt;&gt;_1" inlet="a"/>
       </net>
       <net>
          <source obj="xfade_1" outlet="o"/>
@@ -1112,15 +1208,76 @@
          <dest obj="xfade_2" inlet="c"/>
          <dest obj="xfade_1" inlet="c"/>
       </net>
+      <net>
+         <source obj="hp1_1" outlet="out"/>
+         <dest obj="-_1" inlet="in1"/>
+         <dest obj="patcher_9" inlet="in"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="obj_1" inlet="InL"/>
+         <dest obj="obj_1" inlet="InR"/>
+         <dest obj="xfade_1" inlet="i1"/>
+         <dest obj="xfade_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="patcher_9" outlet="outlet_2"/>
+         <dest obj="speedlim_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="speedlim_1" outlet="out"/>
+         <dest obj="cc_1" inlet="v0"/>
+      </net>
+      <net>
+         <source obj="cc_2" outlet="midiCC"/>
+         <dest obj="write_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="cc_2" outlet="trig"/>
+         <dest obj="write_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="write_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="window_1" outlet="win"/>
+         <dest obj="patcher_9" inlet="thresh"/>
+      </net>
+      <net>
+         <source obj="&gt;&gt;_1" outlet="result"/>
+         <dest obj="window_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="sat_2" outlet="out"/>
+         <dest obj="patcher_9" inlet="return"/>
+      </net>
+      <net>
+         <source obj="c_1" outlet="out"/>
+         <dest obj="load_1" inlet="filename"/>
+         <dest obj="save_1" inlet="filename"/>
+      </net>
+      <net>
+         <source obj="loadbang_1" outlet="pulse"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="keyb_2" outlet="gate"/>
+         <dest obj="save_1" inlet="trig"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>-8</x>
-      <y>-8</y>
-      <width>1612</width>
-      <height>876</height>
+      <x>-7</x>
+      <y>0</y>
+      <width>1036</width>
+      <height>735</height>
    </windowPos>
 </patch-1.0>
