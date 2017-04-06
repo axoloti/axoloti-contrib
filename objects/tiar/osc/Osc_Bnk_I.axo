@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="Osc Bnk I" uuid="e7e2f25e-ee0a-42c8-baec-7f68d3d0adca">
       <sDescription>Paraphonic Osc Bank inspired by existing string machine waveforms</sDescription>
       <author>Smashed Transistors (T.Rochebois)</author>
@@ -179,12 +179,16 @@ else
 
 {
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+int i7=0;
 for(i = minKey; i <= maxKey; i++) {
   float _env = env[i];
   env[i] += (gates[i]>env[i]?attack:release) * (gates[i] - env[i]);
   float denv = (env[i] - _env) * (1.0f/BUFSIZE);
   float _p = p[i];
-  float _dp = dp[i]*lfo[i%7];
+  float _dp = dp[i]*lfo[i7];
+  i7++;
+  if(i7 >= 7)
+    i7 = 0;
   for(j = 0; j < BUFSIZE; j++) {
     _env += denv;
     _p += _dp;
