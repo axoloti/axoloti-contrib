@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.11">
+<patch-1.0 appVersion="1.0.12">
    <comment type="patch/comment" x="28" y="14" text="Paraphonic Church Organ Patch by T.Rochebois (aka Smashed Transistors/TiaR)"/>
    <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc" name="object_1" x="28" y="70">
       <params>
@@ -278,10 +278,10 @@ for(i = NB_OSCS-5; i < NB_OSCS; i++) {
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="cccc4923-08f6-4b94-a8af-cd6311f82c09" name="Reverb" x="224" y="70">
+   <patcher type="patch/patcher" uuid="309798c3-f625-4784-8072-5c7052a13a3c" name="Reverb" x="224" y="70">
       <params/>
       <attribs/>
-      <subpatch appVersion="1.0.11">
+      <subpatch appVersion="1.0.12">
          <obj type="delay/read" uuid="c4fafe81010d179e889d407264b57bde81f361f" name="read_5" x="448" y="0">
             <params>
                <frac32.u.map name="time" value="41.5">
@@ -719,6 +719,14 @@ for(i = NB_OSCS-5; i < NB_OSCS; i++) {
       <params/>
       <attribs/>
    </obj>
+   <obj type="midi/in/pgm" uuid="6165409901fee4a0781b41bac3513f51c2120d67" name="pgm_1" x="252" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/load i" uuid="b79124f5b7d1e8b39e187677ddab6260ce8c60a3" name="load_1" x="336" y="294">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="DPSoftClip_1" outlet="out"/>
@@ -745,6 +753,14 @@ for(i = NB_OSCS-5; i < NB_OSCS; i++) {
       <net>
          <source obj="Reverb" outlet="outlet_2"/>
          <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="pgm_1" outlet="o"/>
+         <dest obj="load_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="pgm_1" outlet="trig"/>
+         <dest obj="load_1" inlet="trig"/>
       </net>
    </nets>
    <settings>

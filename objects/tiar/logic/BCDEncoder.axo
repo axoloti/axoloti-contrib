@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="BCDEncoder" uuid="011f2e98-4191-4e3a-9dc7-41320bc1b1bc">
+      <sDescription>display integer</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>disp.axh</helpPatch>
+      <inlets>
+         <bool32 name="0"/>
+         <bool32 name="1"/>
+         <bool32 name="2"/>
+         <bool32 name="3"/>
+         <bool32 name="4"/>
+         <bool32 name="5"/>
+         <bool32 name="6"/>
+         <bool32 name="7"/>
+         <bool32 name="8"/>
+         <bool32 name="9"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="out"/>
+         <bool32 name="gate"/>
+         <int32.positive name="out2"/>
+         <bool32 name="gate2"/>
+         <bool32 name="d1wanted"/>
+         <bool32 name="d2wanted"/>
+      </outlets>
+      <displays>
+         <int32.label name="v" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t v=0;
+int32_t v2=0;
+int32_t v2Latch=0;
+int32_t _gate = 0;
+int32_t gate2 = 0;
+int digit=0;
+bool first = true;]]></code.declaration>
+      <code.krate><![CDATA[outlet_gate = 
+   inlet_0
+|| inlet_1
+|| inlet_2
+|| inlet_3
+|| inlet_4
+|| inlet_5
+|| inlet_6
+|| inlet_7
+|| inlet_8
+|| inlet_9;
+
+if(outlet_gate){
+  if(inlet_0) v = 0;
+  else if(inlet_1) v = 1;
+  else if(inlet_2) v = 2;
+  else if(inlet_3) v = 3;
+  else if(inlet_4) v = 4;
+  else if(inlet_5) v = 5;
+  else if(inlet_6) v = 6;
+  else if(inlet_7) v = 7;
+  else if(inlet_8) v = 8;
+  else if(inlet_9) v = 9;
+}
+disp_v = outlet_out = v;
+if((digit%2)==0){
+  outlet_d1wanted = true;
+  outlet_d2wanted = false;
+} else{
+  outlet_d2wanted = true;
+  outlet_d1wanted = false;
+}
+if(!_gate && outlet_gate){
+	if((digit%2) == 0)
+	  v2 = v;
+	  gate2 = false;
+	if((digit % 2) == 1) {
+	  v2 = 10 * v2 + v;
+	  v2Latch = v2;
+	  gate2 = true;
+	  outlet_d1wanted = outlet_d2wanted = false;
+	}
+	digit++;
+}
+_gate = outlet_gate;
+outlet_gate2 = gate2;
+outlet_out2 = v2Latch;
+first = false;]]></code.krate>
+   </obj.normal>
+</objdefs>
