@@ -1,0 +1,85 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SixVarStepsBLI" uuid="58137b1f-8fc8-414b-9e5a-1642748ca7ed">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>SixVarStepsBLI.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="level0"/>
+         <frac32.s.map name="level1"/>
+         <frac32.s.map name="level2"/>
+         <frac32.s.map name="level3"/>
+         <frac32.s.map name="level4"/>
+         <frac32.s.map name="level5"/>
+      </params>
+      <attribs/>
+      <includes>
+         <include>./tiar_bli_8_64.h</include>
+      </includes>
+      <code.declaration><![CDATA[int32_t y[8], seq[6], v, integ;
+float  p, dp, dpm, _64dp;
+uint8_t cpt;
+uint8_t i;
+//float D[6] = {1.2f, 1.1f, 1.0f, 0.9f, 0.9f,0.9f};
+float D[6] = {1.3f, 0.8f, 0.83f, 0.87f, 0.85f, 0.77f};
+float S[6];]]></code.declaration>
+      <code.init><![CDATA[cpt = 0;
+p = 0;
+y[0]=y[1]=y[2]=y[3]=y[4]=y[5]=y[6]=y[7]=v=integ=0;
+i = 0;
+
+float Dtot = D[0];
+for(int j = 1; j < 6; j++) 
+  Dtot += D[j];
+float coef = 6.0f / Dtot;
+for(int j = 0; j < 6; j++){
+  D[j] *= coef;
+  S[j] = 1.0f / D[j];
+}
+
+
+]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = 6.0f*(idp*(0.25f/(1<<30)));
+if(dp > 0.8f)
+  dp = 0.8f;
+_64dp = 64.0f / dp;
+dpm = dp * S[cpt];
+seq[0] = param_level0 >> 9;
+seq[1] = param_level1 >> 9;
+seq[2] = param_level2 >> 9;
+seq[3] = param_level3 >> 9;
+seq[4] = param_level4 >> 9;
+seq[5] = param_level5 >> 9;]]></code.krate>
+      <code.srate><![CDATA[p += dpm;         // phase increment
+if(p >= 1.0f){    // phase above 1
+  float a = 1.0f-(1-(p-dpm))/dpm;
+  const int16_t *t = tiar_bli_8_64 + (((uint32_t)(64.0f*a)) << 3); 
+  cpt++;          // next step in sequence
+  if(cpt >= 6)    // above 6 => wrap to 0
+    cpt = 0;
+  dpm = dp * S[cpt]; // speed change (dp modulation)
+  // select the band limited pulse according to subsample time since the transition
+ // p -= 1.0f;      // reset phase
+  p = a * dpm;
+  
+  int32_t g = seq[cpt] - v; // gain= the diff between the new step and the current value
+  // add the selected band limited pulse to the output 8 taps
+  for(int j = 0; j <= 7; j++){
+    y[(i + j) & 7] += g * t[j];
+  }
+  v += g;   // now we can say that the value corresponds to the current step
+}
+outlet_out = integ += y[i]; // output integrator
+y[i] = 0;
+i = (i + 1) & 7;]]></code.srate>
+   </obj.normal>
+</objdefs>
