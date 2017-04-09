@@ -14,6 +14,7 @@
       </outlets>
       <displays/>
       <params>
+         <frac32.u.map name="lfoDepth"/>
          <frac32.s.map.kdecaytime.exp name="Attack"/>
          <frac32.s.map.kdecaytime.exp name="Release"/>
          <int32 name="Max Key">
@@ -131,18 +132,19 @@ int i,j;
 for(j = 0; j < BUFSIZE; j++) {
 	z[j] = 0;
 }
-lfo[0]= 1.0f + inlet_lfo1*(0.03f/(1<<27));
-lfo[1]= 1.0f - inlet_lfo1*(0.02f/(1<<27));
-lfo[2]= 1.0f + inlet_lfo1*(0.02f/(1<<27));
-lfo[3]= 1.0f - inlet_lfo2*(0.03f/(1<<27));
-lfo[4]= 1.0f + inlet_lfo2*(0.02f/(1<<27));
-lfo[5]= 1.0f + inlet_lfo3*(0.015f/(1<<27));
-lfo[6]= 1.0f - inlet_lfo3*(0.02f/(1<<27));
-lfo[7]= 1.0f + inlet_lfo1*(0.03f/(1<<27));
-lfo[8]= 1.0f - inlet_lfo3*(0.02f/(1<<27));
-lfo[9]= 1.0f + inlet_lfo1*(0.02f/(1<<27));
-lfo[10]= 1.0f + inlet_lfo2*(0.03f/(1<<27));
-lfo[11]= 1.0f - inlet_lfo2*(0.15f/(1<<27));
+float lfoDepth = param_lfoDepth * (1.0f/(1<<27));
+lfo[0]= 1.0f + lfoDepth * inlet_lfo1*(0.03f/(1<<27));
+lfo[1]= 1.0f - lfoDepth * inlet_lfo1*(0.021f/(1<<27));
+lfo[2]= 1.0f + lfoDepth * inlet_lfo1*(0.023f/(1<<27));
+lfo[3]= 1.0f - lfoDepth * inlet_lfo2*(0.029f/(1<<27));
+lfo[4]= 1.0f + lfoDepth * inlet_lfo2*(0.02f/(1<<27));
+lfo[5]= 1.0f + lfoDepth * inlet_lfo3*(0.015f/(1<<27));
+lfo[6]= 1.0f - lfoDepth * inlet_lfo3*(0.02f/(1<<27));
+lfo[7]= 1.0f + lfoDepth * inlet_lfo1*(0.029f/(1<<27));
+lfo[8]= 1.0f - lfoDepth * inlet_lfo3*(0.022f/(1<<27));
+lfo[9]= 1.0f + lfoDepth * inlet_lfo1*(0.021f/(1<<27));
+lfo[10]= 1.0f + lfoDepth * inlet_lfo2*(0.03f/(1<<27));
+lfo[11]= 1.0f - lfoDepth * inlet_lfo2*(0.027f/(1<<27));
 
 // resync (lock) of phases to avoid drift caused by calc inaccuracies
 /*float pRef = p[minKey + syncRefresh];
@@ -168,7 +170,7 @@ for(i = minKey; i <= maxKey; i++) {
   env[i] += (gates[i]>env[i]?attack:release) * (gates[i] - env[i]);
   // if(env[i]<0.01f) continue;
   float denv = (env[i] - _env) * (1.0f/BUFSIZE);
-  float _dp = dp[i]*lfo[12];
+  float _dp = dp[i]*lfo[i12];
   i12++;
   if(i12 >= 12)
     i12 = 0;
@@ -228,11 +230,12 @@ for(j = 0; j < BUFSIZE; j++) {
 }
 }]]></code.krate>
       <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
-  gates[data1 & 0x7F] = data2 * coef1[data1];
+  //gates[data1 & 0x7F] = data2 * coef1[data1];
+  gates[data1 & 0x7F] = data2 == 0 ? 0 : 100 * coef1[data1];   // <---------------------Fixed velocity
 } else if(status == MIDI_NOTE_OFF + attr_midichannel) {
   gates[data1 & 0x7F] = 0;
 } else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
   for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
 }]]></code.midihandler>
    </obj.normal>
-</objdefs>
+</objdefs> 
