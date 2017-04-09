@@ -1,6 +1,5 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="wf_12Scale" uuid="d7cd2fd3-064a-4803-a37d-3e0db695611e">
-      <sDescription></sDescription>
       <author>T.Rochebois</author>
       <license>LGPL</license>
       <helpPatch>wf_12Scale.axh</helpPatch>
@@ -17,26 +16,22 @@
          <frac32.u.map name="scale0"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[
-int32_t val(float x, int32_t wf[]){
+      <code.declaration><![CDATA[int32_t val(float x, const int32_t wf[]){
   int ix0 = (int)x;
   float fx = x - ix0;
   ix0 %= 12;
   return (int32_t)(wf[ix0] + fx * (wf[ix0 < 11 ? ix0 + 1 : 0] - wf[ix0]));
-}      
-      ]]></code.declaration>
+}]]></code.declaration>
       <code.init><![CDATA[
       ]]></code.init>
-      <code.krate><![CDATA[
-float mod = inlet_mod * (1.0f/(1<<27));
+      <code.krate><![CDATA[float mod = inlet_mod * (1.0f/(1<<27));
 if(mod < 0) mod = 0;
 if(mod > 1) mod = 1;
 float scale = param_scale0 + mod * (param_scale1 - param_scale0);
-scale = 0.5f + scale * scale * ((5.5f/(1<<27) * (1.0f/(1<<27)));
+scale = 0.25f + scale * scale * ((5.75f/(1<<27) * (1.0f/(1<<27))));
 
 for(int i = 0; i < 12; i++){
   outlet_wf12[i] = val(i * scale, inlet_wf12);
-}
-]]></code.krate>
+}]]></code.krate>
    </obj.normal>
 </objdefs>
