@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ap1" uuid="c73aab7e-9ea4-4c7f-8e7f-b24af9ecee1d">
+      <sDescription>Allpass filter w. 1st order lowpass filter. 
+
+
+NB. This version of an allpass filter has NO delay, just a straight up allpass filter.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="g"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="freq" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_freq+inlet_g,f);]]></code.krate>
+      <code.srate><![CDATA[val = ___SMMLA((inlet_in-val)<<1,f,val);
+   outlet_out= val;]]></code.srate>
+   </obj.normal>
+</objdefs>
