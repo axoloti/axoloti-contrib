@@ -10,13 +10,13 @@ Conveniently packs DISCONTINUOUS 16 steps in a &quot;audio rate output&quot;.</s
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wf16"/>
-         <bool32 name="update"/>
+         <bool32.pulse name="update"/>
       </outlets>
       <displays/>
       <params>
          <frac32.s.mapvsl name="s0" noLabel="true">
-            <MinValue v="0.0"/>
-            <MaxValue v="64.0"/>
+            <MinValue v="-62.9"/>
+            <MaxValue v="62.9"/>
          </frac32.s.mapvsl>
          <frac32.s.mapvsl name="e0" noLabel="true">
             <MinValue v="0.0"/>
@@ -144,7 +144,12 @@ Conveniently packs DISCONTINUOUS 16 steps in a &quot;audio rate output&quot;.</s
          </frac32.s.mapvsl>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[bool firstTime = true;
+      <code.declaration><![CDATA[static const int16_t c(const int32_t x){
+  if(x>0x07FFFFFF) return 32767;
+  else return (int16_t)((x&0x0FFFFFFF) >> 12);
+};
+
+bool firstTime = true;
 bool _update = false;]]></code.declaration>
       <code.krate><![CDATA[// Note: send a trig on first exec or on param change.
 if(firstTime || inlet_update){
@@ -152,53 +157,53 @@ if(firstTime || inlet_update){
   outlet_update = _update = true;
   int16_t* xStartEnd = (int16_t*)outlet_wf16;
   // 12 = 27 - 15 : q27 -> q15
-  xStartEnd[0] = (int16_t)(param_s0 >> 12);
-  xStartEnd[1] = (int16_t)(param_e0 >> 12);
+  xStartEnd[0] = c(param_s0);
+  xStartEnd[1] = c(param_e0);
   
-  xStartEnd[2] = (int16_t)(param_s1 >> 12);
-  xStartEnd[3] = (int16_t)(param_e1 >> 12);
+  xStartEnd[2] = c(param_s1);
+  xStartEnd[3] = c(param_e1);
   
-  xStartEnd[4] = (int16_t)(param_s2 >> 12);
-  xStartEnd[5] = (int16_t)(param_e2 >> 12);
+  xStartEnd[4] = c(param_s2);
+  xStartEnd[5] = c(param_e2);
   
-  xStartEnd[6] = (int16_t)(param_s3 >> 12);
-  xStartEnd[7] = (int16_t)(param_e3 >> 12);
+  xStartEnd[6] = c(param_s3);
+  xStartEnd[7] = c(param_e3);
   
-  xStartEnd[8] = (int16_t)(param_s4 >> 12);
-  xStartEnd[9] = (int16_t)(param_e4 >> 12);
+  xStartEnd[8] = c(param_s4);
+  xStartEnd[9] = c(param_e4);
   
-  xStartEnd[10] = (int16_t)(param_s5 >> 12);
-  xStartEnd[11] = (int16_t)(param_e5 >> 12);
+  xStartEnd[10] = c(param_s5);
+  xStartEnd[11] = c(param_e5);
   
-  xStartEnd[12] = (int16_t)(param_s6 >> 12);
-  xStartEnd[13] = (int16_t)(param_e6 >> 12);
+  xStartEnd[12] = c(param_s6);
+  xStartEnd[13] = c(param_e6);
   
-  xStartEnd[14] = (int16_t)(param_s7 >> 12);
-  xStartEnd[15] = (int16_t)(param_e7 >> 12);
+  xStartEnd[14] = c(param_s7);
+  xStartEnd[15] = c(param_e7);
   
-  xStartEnd[16] = (int16_t)(param_s8 >> 12);
-  xStartEnd[17] = (int16_t)(param_e8 >> 12);
+  xStartEnd[16] = c(param_s8);
+  xStartEnd[17] = c(param_e8);
   
-  xStartEnd[18] = (int16_t)(param_s9 >> 12);
-  xStartEnd[19] = (int16_t)(param_e9 >> 12);
+  xStartEnd[18] = c(param_s9);
+  xStartEnd[19] = c(param_e9);
   
-  xStartEnd[20] = (int16_t)(param_s10 >> 12);
-  xStartEnd[21] = (int16_t)(param_e10 >> 12);
+  xStartEnd[20] = c(param_s10);
+  xStartEnd[21] = c(param_e10);
   
-  xStartEnd[22] = (int16_t)(param_s11 >> 12);
-  xStartEnd[23] = (int16_t)(param_e11 >> 12);
+  xStartEnd[22] = c(param_s11);
+  xStartEnd[23] = c(param_e11);
   
-  xStartEnd[24] = (int16_t)(param_s12 >> 12);
-  xStartEnd[25] = (int16_t)(param_e12 >> 12);
+  xStartEnd[24] = c(param_s12);
+  xStartEnd[25] = c(param_e12);
   
-  xStartEnd[26] = (int16_t)(param_s13 >> 12);
-  xStartEnd[27] = (int16_t)(param_e13 >> 12);
+  xStartEnd[26] = c(param_s13);
+  xStartEnd[27] = c(param_e13);
   
-  xStartEnd[28] = (int16_t)(param_s14 >> 12);
-  xStartEnd[29] = (int16_t)(param_e14 >> 12);
+  xStartEnd[28] = c(param_s14);
+  xStartEnd[29] = c(param_e14);
   
-  xStartEnd[30] = (int16_t)(param_s15 >> 12);
-  xStartEnd[31] = (int16_t)(param_e15 >> 12);
+  xStartEnd[30] = c(param_s15);
+  xStartEnd[31] = c(param_e15);
 } else {
   outlet_update = false;
 }
