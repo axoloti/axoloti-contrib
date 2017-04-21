@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="waveformGuitar" uuid="a29f18d9-d8a3-4d78-ae87-0d77f9541054">
       <sDescription>this module is used to create a waveform-table for the guitarOscillator.
 it saves it generated waveforms into the table of the &quot;waveformGenerator&quot;
@@ -20,6 +20,10 @@ randomised settings:
       <displays/>
       <params>
          <bool32.mom name="do" noLabel="true"/>
+         <int32 name="minHarm">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
       </params>
       <attribs>
          <objref name="table"/>
@@ -52,8 +56,8 @@ if((param_do>0)&&!create)
 else if(param_do==0){create=0;}
 
 if(preset<(32)){
-	int32_t max=(((uint32_t)(GenerateRandomNumber()))&63)+20;
-	int32_t harmonics=(((uint32_t)(GenerateRandomNumber()))&31)+20;	
+	int32_t max=(((uint32_t)(GenerateRandomNumber()))&63)+param_minHarm;
+	int32_t harmonics=(((uint32_t)(GenerateRandomNumber()))&31)+param_minHarm;	
 	int32_t minDiv=1;
 	int32_t damp=(((uint32_t)(GenerateRandomNumber()))&1)+1;
 	
