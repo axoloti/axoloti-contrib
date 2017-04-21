@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="median" uuid="10ffb844-af17-4679-ac2e-270aa5f3f61b">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>Median.axh</helpPatch>
+      <inlets>
+         <frac32 name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t x0, x1, x2; // current and past inputs
+int32_t y0, y1, y2; // sorted values]]></code.declaration>
+      <code.init><![CDATA[x0 = x1 = x2 = 0;
+y0 = y1 = y2 = 0;]]></code.init>
+      <code.krate><![CDATA[x0 = inlet_in;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//basic bubble sort
+if(x1 <= x2){ y1 = x1; y2 = x2; } else { y1 = x2; y2 = x1; }
+if(x0 < y1) {y0 = x1;} else {y0 = y1; y1 = x0;}
+if(y1 > y2) { outlet_out = y2;} else {outlet_out = y1;}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+x2 = x1; x1 = x0; // update past inputs]]></code.krate>
+   </obj.normal>
+</objdefs>
