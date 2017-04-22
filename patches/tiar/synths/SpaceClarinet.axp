@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="edf4cc02-fe36-4859-b257-5e6167396b31" name="patcher_1" x="756" y="0">
+   <patcher type="patch/patcher" uuid="49f96cf5-fd3f-44e2-931f-2a52bd730217" name="patcher_1" x="756" y="0">
       <params>
          <frac32.s.map name="lowpass_1" value="12.0"/>
          <frac32.u.map name="mix_1" value="64.0"/>
@@ -10,6 +10,18 @@
          <combo attributeName="poly" selection="8"/>
       </attribs>
       <subpatch appVersion="1.0.12">
+         <obj type="tiar/osc/SixStepsBLI" uuid="59979b1f-8fc8-414b-9e5a-1642748ca7ed" name="SixStepsBLI_1" x="784" y="0">
+            <params>
+               <frac32.s.map name="pitch" value="-0.04878377914428711"/>
+               <frac32.s.map name="level0" value="-43.0"/>
+               <frac32.s.map name="level1" value="64.0"/>
+               <frac32.s.map name="level2" value="-64.0"/>
+               <frac32.s.map name="level3" value="44.0"/>
+               <frac32.s.map name="level4" value="-17.0"/>
+               <frac32.s.map name="level5" value="18.0"/>
+            </params>
+            <attribs/>
+         </obj>
          <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="14" y="14">
             <params/>
             <attribs/>
@@ -38,12 +50,6 @@
          </obj>
          <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="126" y="84">
             <params/>
-            <attribs/>
-         </obj>
-         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_1" x="924" y="112">
-            <params>
-               <frac32.s.map name="pitch" value="-0.04878377914428711"/>
-            </params>
             <attribs/>
          </obj>
          <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1372" y="112">
@@ -91,7 +97,7 @@
          <comment type="patch/comment" x="140" y="182" text="Je &quot;filtre&quot; avec cette enveloppe."/>
          <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_4" x="1218" y="210">
             <params>
-               <frac32.u.map name="gain1" value="24.0"/>
+               <frac32.u.map name="gain1" value="32.0"/>
             </params>
             <attribs/>
          </obj>
@@ -102,7 +108,7 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_2" x="924" y="224">
+         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_1" x="924" y="224">
             <params>
                <frac32.s.map name="pitch" value="0.019999980926513672"/>
             </params>
@@ -123,6 +129,17 @@
             </params>
             <attribs/>
          </obj>
+         <obj type="tiar/osc/FiveSteps" uuid="1390b265-f89d-4e9b-97ea-5d8a89b69663" name="FiveSteps_1" x="924" y="322">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.s.map name="level0" value="-48.0"/>
+               <frac32.s.map name="level1" value="64.0"/>
+               <frac32.s.map name="level2" value="-64.0"/>
+               <frac32.s.map name="level3" value="48.0"/>
+               <frac32.s.map name="level4" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
          <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="728" y="336">
             <params/>
             <attribs/>
@@ -131,12 +148,6 @@
             <params>
                <frac32.u.map name="gain1" value="0.24499940872192383"/>
                <frac32.u.map name="gain2" value="64.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="924" y="336">
-            <params>
-               <frac32.s.map name="pitch" value="0.0"/>
             </params>
             <attribs/>
          </obj>
@@ -206,10 +217,6 @@
                <dest obj="lowpass_1" inlet="in"/>
             </net>
             <net>
-               <source obj="saw_1" outlet="wave"/>
-               <dest obj="mix_4" inlet="bus_in"/>
-            </net>
-            <net>
                <source obj="vca_2" outlet="o"/>
                <dest obj="outlet_1" inlet="outlet"/>
             </net>
@@ -252,9 +259,9 @@
             </net>
             <net>
                <source obj="mix_3" outlet="out"/>
+               <dest obj="FiveSteps_1" inlet="pitch"/>
                <dest obj="DP2Saw_1" inlet="pitch"/>
-               <dest obj="DP2Saw_2" inlet="pitch"/>
-               <dest obj="saw_1" inlet="pitch"/>
+               <dest obj="SixStepsBLI_1" inlet="pitch"/>
             </net>
             <net>
                <source obj="*_2" outlet="result"/>
@@ -273,12 +280,8 @@
                <dest obj="vca_1" inlet="a"/>
             </net>
             <net>
-               <source obj="DP2Saw_2" outlet="wave"/>
-               <dest obj="+_1" inlet="in2"/>
-            </net>
-            <net>
                <source obj="DP2Saw_1" outlet="wave"/>
-               <dest obj="+_1" inlet="in1"/>
+               <dest obj="+_1" inlet="in2"/>
             </net>
             <net>
                <source obj="+c_1" outlet="out"/>
@@ -309,6 +312,14 @@
                <source obj="ZDF_1" outlet="lp12"/>
                <dest obj="vca_2" inlet="a"/>
             </net>
+            <net>
+               <source obj="FiveSteps_1" outlet="out"/>
+               <dest obj="mix_4" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="SixStepsBLI_1" outlet="out"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>polyphonic</subpatchmode>
@@ -329,14 +340,14 @@
    </patcher>
    <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1120" y="70">
       <params>
-         <frac32.u.map name="InGain" value="5.5"/>
-         <frac32.u.map name="OutGain" value="26.5"/>
+         <frac32.u.map name="InGain" value="9.0"/>
+         <frac32.u.map name="OutGain" value="17.5"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_6" x="84" y="224">
       <params>
-         <frac32.s.map name="pitch" value="-58.0"/>
+         <frac32.s.map name="pitch" value="-57.80000000000001"/>
       </params>
       <attribs/>
    </obj>
@@ -348,13 +359,13 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_7" x="280" y="224">
       <params>
-         <frac32.s.map name="pitch" value="-33.0"/>
+         <frac32.s.map name="pitch" value="-33.40999999999999"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_4" x="84" y="308">
       <params>
-         <frac32.s.map name="pitch" value="-44.72999906539917"/>
+         <frac32.s.map name="pitch" value="-44.839999065399155"/>
       </params>
       <attribs/>
    </obj>
@@ -366,13 +377,13 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_5" x="280" y="308">
       <params>
-         <frac32.s.map name="pitch" value="-17.80999994277954"/>
+         <frac32.s.map name="pitch" value="-17.669999599456787"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="84" y="392">
       <params>
-         <frac32.s.map name="pitch" value="-36.359999656677246"/>
+         <frac32.s.map name="pitch" value="-36.77999925613403"/>
       </params>
       <attribs/>
    </obj>
@@ -450,19 +461,19 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_8" x="84" y="546">
       <params>
-         <frac32.s.map name="pitch" value="-56.34999990463257"/>
+         <frac32.s.map name="pitch" value="-55.84999942779541"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_6" x="182" y="546">
       <params>
-         <frac32.u.map name="amp" value="3.7149996757507324"/>
+         <frac32.u.map name="amp" value="3.8849992752075195"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_9" x="280" y="546">
       <params>
-         <frac32.s.map name="pitch" value="-33.0"/>
+         <frac32.s.map name="pitch" value="-32.81999969482422"/>
       </params>
       <attribs/>
    </obj>
@@ -472,37 +483,37 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_10" x="84" y="630">
       <params>
-         <frac32.s.map name="pitch" value="-40.81999921798706"/>
+         <frac32.s.map name="pitch" value="-40.41999912261963"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_7" x="182" y="630">
       <params>
-         <frac32.u.map name="amp" value="2.2699999809265137"/>
+         <frac32.u.map name="amp" value="2.5099997520446777"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_11" x="280" y="630">
       <params>
-         <frac32.s.map name="pitch" value="-17.80999994277954"/>
+         <frac32.s.map name="pitch" value="-18.199999809265137"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_12" x="84" y="714">
       <params>
-         <frac32.s.map name="pitch" value="-34.84999990463257"/>
+         <frac32.s.map name="pitch" value="-35.21999979019165"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_8" x="182" y="714">
       <params>
-         <frac32.u.map name="amp" value="0.6149997711181641"/>
+         <frac32.u.map name="amp" value="0.4249997138977051"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_13" x="280" y="714">
       <params>
-         <frac32.s.map name="pitch" value="-7.0"/>
+         <frac32.s.map name="pitch" value="-7.449999809265137"/>
       </params>
       <attribs/>
    </obj>
@@ -576,7 +587,7 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_15" x="280" y="896">
       <params>
-         <frac32.s.map name="pitch" value="-34.739999771118164"/>
+         <frac32.s.map name="pitch" value="-34.44999933242798"/>
       </params>
       <attribs/>
    </obj>
@@ -588,13 +599,13 @@
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_11" x="182" y="980">
       <params>
-         <frac32.u.map name="amp" value="2.2699999809265137"/>
+         <frac32.u.map name="amp" value="2.7849998474121094"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_17" x="280" y="980">
       <params>
-         <frac32.s.map name="pitch" value="-23.229999542236328"/>
+         <frac32.s.map name="pitch" value="-22.769999504089355"/>
       </params>
       <attribs/>
    </obj>
@@ -612,7 +623,7 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_19" x="280" y="1064">
       <params>
-         <frac32.s.map name="pitch" value="-16.959999561309814"/>
+         <frac32.s.map name="pitch" value="-17.31999921798706"/>
       </params>
       <attribs/>
    </obj>
@@ -869,16 +880,16 @@
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
          <source obj="DPSoftClip_1" outlet="out"/>
          <dest obj="APNoodle_1" inlet="x"/>
          <dest obj="APNoodle_2" inlet="x"/>
          <dest obj="mix_2" inlet="bus_in"/>
          <dest obj="mix_4" inlet="bus_in"/>
          <dest obj="APNoodle_3" inlet="x"/>
-      </net>
-      <net>
-         <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="DPSoftClip_1" inlet="in"/>
       </net>
    </nets>
    <settings>
