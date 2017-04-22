@@ -21,7 +21,7 @@
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
          <frac32.u.map name="shape"/>
          <frac32.u.map name="pulse"/>
-         <int32 name="oct">
+         <int32 name="hrm">
             <MinValue i="1"/>
             <MaxValue i="8"/>
          </int32>
@@ -45,7 +45,7 @@ int32_t sq;]]></code.declaration>
 SQ=0;]]></code.init>
       <code.krate><![CDATA[int32_t freq;
    MTOFEXTENDED(param_pitch + inlet_pitch,freq);
-   freq=freq/param_oct;
+   freq=freq;
 int32_t shape=inlet_shape+param_shape;
 shape=shape&((1<<28)-1);
 shape=shape>(1<<27)?(1<<28)-shape:shape;
@@ -67,14 +67,14 @@ shape=shape>(1<<27)?(1<<28)-shape:shape;
    step3 = (O - prev3)>>4;
    int32_t i3 = prev3;
    prev3 = O;
-   int32_t p3=(param_phase+inlet_phase<<5)/param_oct;]]></code.krate>
+   int32_t p3=(param_phase+inlet_phase<<5)/param_hrm;]]></code.krate>
       <code.srate><![CDATA[i1 += step1;
 i2 += step2;
 i3 += step3;
 Phase += i2;
 int32_t r1;
 int32_t r2;
-uint32_t p1=Phase*param_oct;
+uint32_t p1=Phase*param_hrm;
 int32_t p2 = Phase+p3;
 p1=p1>pulse?pulse:p1;
 p1=p1*ratio;
