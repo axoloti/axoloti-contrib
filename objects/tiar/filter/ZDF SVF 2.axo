@@ -1,0 +1,72 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ZDF SVF 2" uuid="f6cd89ac-2cd5-4c22-82d9-e487e9c85e9f">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>ZDF SVF 2.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32buffer name="pchMod" description="audio rate pitch mod"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="lp12" description="filter output"/>
+         <frac32buffer name="hp12"/>
+         <frac32buffer name="bp6"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Q"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[// updates the coefficients with the "ZDF" step invariant method.
+void update(float _Q, float F){
+  D = _Q;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// pre iterations values (equiv to Chamberlin filter)
+  float _a = F * F;
+  float tmp = 1 - _a - D * F;
+  float _b = F * tmp + F;
+  float _c = tmp * tmp - _a;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// 3 iterations to obtain the new a b and c (equiv x8 oversampling)
+// Two sets of vars (_a _b _c and a b c) are used to bounce values
+// between iterations to optimize copies.
+  float b2;
+  b2 = _b * _b; a = b2 + _a * (2 - _a); b = _b *(1 + _c - _a); c = _c * _c - b2;
+  b2 = b * b; _a = b2 + a * (2 - a); _b = b *(1 + c - a); _c = c * c - b2;
+  b2 = _b * _b; a = b2 + _a * (2 - _a); b = _b *(1 + _c - _a); c = _c * _c - b2;
+ // b2 = b * b; _a = b2 + a * (2 - a); _b = b *(1 + c - a); _c = c * c - b2;
+ // b2 = _b * _b; a = b2 + _a * (2 - _a); b = _b *(1 + _c - _a); c = _c * _c - b2;
+
+}
+
+
+float a,  b,  c;     // current values (srate interpolated)
+float q;
+float D;             // used for hp
+float x; //input
+float lp, bp; // state variables/outputs
+float lp2, bp2; // state variables/outputs of 24dB output
+float TRF_coef = (758.0f/(1<<27)) * 2 * 3.1415926535f / (8 * 48000);]]></code.declaration>
+      <code.init><![CDATA[D = x = lp = bp = 0;
+update(  1.0f, 0.1f/8 );]]></code.init>
+      <code.krate><![CDATA[
+q = __USAT(param_Q + inlet_reso, 27) * (1.0f/(1<<27));
+q = 0.25f + q * (1 + q *q* (18.75f + q*60));  //0.25 -> 80
+q = 1/(2*q);
+]]></code.krate>
+      <code.srate><![CDATA[
+int32_t alpha;
+MTOFEXTENDED(inlet_pchMod + param_pitch + inlet_pitch, alpha);
+update(  q, alpha *  TRF_coef );      
+      
+x = (float)inlet_in;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+float x_lp = x - lp;
+outlet_lp12 = (int32_t)(lp += a * x_lp + b * bp);   
+outlet_hp12 = (int32_t)(x - D * bp - lp);
+outlet_bp6  = (int32_t)(bp = b * x_lp + c * bp);]]></code.srate>
+   </obj.normal>
+</objdefs>
