@@ -12,6 +12,7 @@
          <frac32 name="PW"/>
          <frac32 name="phase"/>
          <frac32 name="LP"/>
+         <frac32buffer name="sync"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -40,7 +41,8 @@ int32_t prev3;
 int32_t step3;
 int rtrig;
 int32_t SQ;
-int32_t sq;]]></code.declaration>
+int32_t sq;
+int strig;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
 SQ=0;]]></code.init>
       <code.krate><![CDATA[int32_t freq;
@@ -68,7 +70,13 @@ shape=shape>(1<<27)?(1<<28)-shape:shape;
    int32_t i3 = prev3;
    prev3 = O;
    int32_t p3=(param_phase+inlet_phase<<5)/param_hrm;]]></code.krate>
-      <code.srate><![CDATA[i1 += step1;
+      <code.srate><![CDATA[if((inlet_sync>0)&&!strig){
+	strig=1;
+	Phase=0;
+}
+else if(inlet_sync==0){strig=0;}
+
+i1 += step1;
 i2 += step2;
 i3 += step3;
 Phase += i2;
