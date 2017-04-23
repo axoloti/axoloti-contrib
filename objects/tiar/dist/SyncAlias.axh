@@ -29,7 +29,7 @@
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="5.0"/>
          <frac32.u.map name="s" value="38.5"/>
-         <frac32.s.map name="r" value="4.0"/>
+         <frac32.s.map name="r" value="25.0"/>
       </params>
       <attribs/>
    </obj>
@@ -37,13 +37,13 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="392" y="196">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="42.0"/>
-         <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="4.0"/>
+         <frac32.s.map name="d" value="28.0"/>
+         <frac32.u.map name="s" value="19.0"/>
+         <frac32.s.map name="r" value="45.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_3" x="490" y="196">
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_2" x="490" y="196">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
          <frac32.u.map name="gain2" value="29.5"/>
@@ -51,15 +51,27 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="658" y="378" text="Synchronised &quot;Aliaser&quot;"/>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_4" x="0" y="406">
+      <params>
+         <frac32.s.map name="pitch" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_3" x="98" y="406">
+      <params>
+         <frac32.u.map name="amp" value="15.5"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="196" y="406">
       <params>
-         <frac32.s.map name="pitch" value="19.01954984664917"/>
+         <frac32.s.map name="pitch" value="27.863136768341064"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="294" y="406">
       <params>
-         <frac32.u.map name="amp" value="32.5"/>
+         <frac32.u.map name="amp" value="29.5"/>
       </params>
       <attribs/>
    </obj>
@@ -75,8 +87,8 @@
    </obj>
    <obj type="tiar/dist/SyncAlias" uuid="873564a8-cb39-421e-848b-271e22eac2f9" name="SyncAlias_1" x="658" y="406">
       <params>
-         <frac32.s.map name="pitch slave" value="31.0"/>
-         <frac32.s.map name="pitch master" value="0.009999752044677734"/>
+         <frac32.s.map name="pitch slave" value="29.0"/>
+         <frac32.s.map name="pitch master" value="12.0"/>
       </params>
       <attribs/>
    </obj>
@@ -107,7 +119,7 @@
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="mix_1" inlet="bus_in"/>
-         <dest obj="mix_3" inlet="bus_in"/>
+         <dest obj="mix_2" inlet="bus_in"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
@@ -119,6 +131,7 @@
          <dest obj="sine_2" inlet="pitch"/>
          <dest obj="SyncAlias_1" inlet="pitch master"/>
          <dest obj="sine_3" inlet="pitch"/>
+         <dest obj="sine_4" inlet="pitch"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -135,10 +148,10 @@
       </net>
       <net>
          <source obj="adsr_2" outlet="env"/>
-         <dest obj="mix_3" inlet="in1"/>
+         <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="mix_3" outlet="out"/>
+         <source obj="mix_2" outlet="out"/>
          <dest obj="SyncAlias_1" inlet="pitch slave"/>
       </net>
       <net>
@@ -154,15 +167,23 @@
          <dest obj="SyncAlias_1" inlet="in"/>
          <dest obj="scope_2" inlet="in"/>
       </net>
+      <net>
+         <source obj="sine_4" outlet="wave"/>
+         <dest obj="*c_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_3" outlet="out"/>
+         <dest obj="sine_2" inlet="phase"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>195</x>
+      <x>635</x>
       <y>23</y>
-      <width>1538</width>
+      <width>1098</width>
       <height>932</height>
    </windowPos>
 </patch-1.0>
