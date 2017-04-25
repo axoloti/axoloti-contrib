@@ -1,4 +1,8 @@
 <patch-1.0 appVersion="1.0.12">
+   <obj type="disp/dial b" uuid="9ffed04e6a3052d9001eda83bae7024cb6d17037" name="dial_1" x="238" y="42">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="112" y="98">
       <params/>
       <attribs/>
@@ -18,10 +22,10 @@
    </obj>
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="532" y="98">
       <params>
-         <frac32.s.map name="a" value="-11.0"/>
-         <frac32.s.map name="d" value="31.0"/>
-         <frac32.u.map name="s" value="28.5"/>
-         <frac32.s.map name="r" value="33.0"/>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="8.0"/>
+         <frac32.u.map name="s" value="21.5"/>
+         <frac32.s.map name="r" value="8.0"/>
       </params>
       <attribs/>
    </obj>
@@ -37,9 +41,15 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="224" y="182">
+   <obj type="disp/note" uuid="ce3190ad98b73b468f22221f555b01feee03226a" name="note_1" x="238" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/tuning/DetHzLH" uuid="4bd16b8a-5596-491c-b62b-93881d6b3eb0" name="DetHzLH_1" x="224" y="182">
       <params>
-         <frac32.s.map name="detHz" value="2.0049996376037598"/>
+         <frac32.s.map name="HzHigh" value="1.0"/>
+         <frac32.s.map name="HzMid" value="20.0"/>
+         <frac32.s.map name="HzLow" value="0.5"/>
       </params>
       <attribs/>
    </obj>
@@ -59,13 +69,15 @@
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
-         <source obj="DetHz_1" outlet="pitch"/>
+         <source obj="DetHzLH_1" outlet="pitch"/>
          <dest obj="DP2Saw_2" inlet="pitch"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="DP2Saw_1" inlet="pitch"/>
-         <dest obj="DetHz_1" inlet="pitch"/>
+         <dest obj="note_1" inlet="in"/>
+         <dest obj="dial_1" inlet="in"/>
+         <dest obj="DetHzLH_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>

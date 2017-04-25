@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DetHzLH" uuid="4bd16b8a-5596-491c-b62b-93881d6b3eb0">
+      <sDescription>Note dependent detune in Hz fro smooth doubling.
+
+low notes: MIDI 32   G#1
+mid notes: MIDI 64   E4
+high notes: MIDI 96  C7
+
+
+2 -&gt; ~4seconds
+4 -&gt; 2s
+8 -&gt; 1Hz
+64 -&gt; ~8Hz</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>DetHzLH.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch input"/>
+      </inlets>
+      <outlets>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="HzHigh"/>
+         <frac32.s.map name="HzMid"/>
+         <frac32.s.map name="HzLow"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t coef;
+MTOFEXTENDED(-inlet_pitch, coef);
+// low:  32
+// mid:  64
+// high: 96
+
+int32_t a = __USAT(inlet_pitch + (32 << 21), 27); //-32..96 q21 clipped to 0 64 q21 ie 0,1 q27
+int32_t f; 
+if(a < (32 << 21))
+  f = ___SMMLA(param_HzMid  - param_HzLow,              a << 1, param_HzLow >> 5) << 5;
+else
+  f = ___SMMLA(param_HzHigh - param_HzMid, (a - (32<<21)) << 1, param_HzMid >> 5) << 5;
+outlet_pitch = ___SMMLA(coef, f, inlet_pitch);]]></code.krate>
+   </obj.normal>
+</objdefs>
