@@ -1,13 +1,13 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="midi/in/pgm" uuid="6165409901fee4a0781b41bac3513f51c2120d67" name="pgm_1" x="532" y="56">
+   <obj type="midi/in/pgm" uuid="6165409901fee4a0781b41bac3513f51c2120d67" name="pgm_1" x="14" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/load i" uuid="b79124f5b7d1e8b39e187677ddab6260ce8c60a3" name="load_1" x="616" y="56">
+   <obj type="patch/load i" uuid="b79124f5b7d1e8b39e187677ddab6260ce8c60a3" name="load_1" x="98" y="14">
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="a0dcbe48-f543-4dcc-8049-89490ad47c12" name="patcher_1" x="252" y="112">
+   <patcher type="patch/patcher" uuid="657c8382-7a4d-4739-8a7a-b8c8a0d5ffa7" name="patcher_1" x="280" y="14">
       <params>
          <frac32.s.map name="lowpass_1" value="-18.0"/>
          <frac32.u.map name="mix_1" value="61.5"/>
@@ -48,7 +48,7 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_3" x="924" y="112">
+         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_3" x="924" y="112">
             <params>
                <frac32.s.map name="pitch" value="-0.04878377914428711"/>
             </params>
@@ -110,7 +110,7 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_2" x="924" y="224">
+         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_2" x="924" y="224">
             <params>
                <frac32.s.map name="pitch" value="0.019999980926513672"/>
             </params>
@@ -138,11 +138,11 @@
          <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_3" x="826" y="336">
             <params>
                <frac32.u.map name="gain1" value="0.24499940872192383"/>
-               <frac32.u.map name="gain2" value="64.0"/>
+               <frac32.u.map name="gain2" value="6.999999999999928"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="924" y="336">
+         <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_1" x="924" y="336">
             <params>
                <frac32.s.map name="pitch" value="0.0"/>
             </params>
@@ -188,6 +188,10 @@
             </params>
             <attribs/>
          </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="pitch" x="280" y="490">
+            <params/>
+            <attribs/>
+         </obj>
          <nets>
             <net>
                <source obj="keyb_1" outlet="note"/>
@@ -214,7 +218,7 @@
                <dest obj="lowpass_1" inlet="in"/>
             </net>
             <net>
-               <source obj="saw_1" outlet="wave"/>
+               <source obj="DP2Saw_1" outlet="wave"/>
                <dest obj="mix_4" inlet="bus_in"/>
             </net>
             <net>
@@ -264,9 +268,9 @@
             </net>
             <net>
                <source obj="mix_3" outlet="out"/>
-               <dest obj="saw_1" inlet="pitch"/>
-               <dest obj="saw_2" inlet="pitch"/>
-               <dest obj="saw_3" inlet="pitch"/>
+               <dest obj="DP2Saw_1" inlet="pitch"/>
+               <dest obj="DP2Saw_2" inlet="pitch"/>
+               <dest obj="DP2Saw_3" inlet="pitch"/>
             </net>
             <net>
                <source obj="*_2" outlet="result"/>
@@ -289,11 +293,11 @@
                <dest obj="vca_1" inlet="a"/>
             </net>
             <net>
-               <source obj="saw_2" outlet="wave"/>
+               <source obj="DP2Saw_2" outlet="wave"/>
                <dest obj="+_1" inlet="in2"/>
             </net>
             <net>
-               <source obj="saw_3" outlet="wave"/>
+               <source obj="DP2Saw_3" outlet="wave"/>
                <dest obj="+_1" inlet="in1"/>
             </net>
             <net>
@@ -317,6 +321,10 @@
                <source obj="*_4" outlet="result"/>
                <dest obj="mix_5" inlet="in1"/>
             </net>
+            <net>
+               <source obj="pitch" outlet="inlet"/>
+               <dest obj="mix_3" inlet="in2"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>polyphonic</subpatchmode>
@@ -335,26 +343,24 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="126">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_2" x="126" y="154">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="midi/in/touch" uuid="7e3a4d718388f6d5213accadf5a80121a7c35cc9" name="touch_1" x="28" y="252">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="546" y="252">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="406" y="14">
       <params>
-         <frac32.u.map name="InGain" value="6.5"/>
-         <frac32.u.map name="OutGain" value="39.0"/>
+         <frac32.u.map name="amp" value="21.5"/>
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="c482fb27-f75b-4029-b4b5-d5d391a9e094" name="Reverb" x="658" y="252">
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="532" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPHardClip" uuid="0b95bc90-042b-4d8e-b10a-3750d645adbe" name="DPHardClip_1" x="630" y="14">
+      <params>
+         <frac32.u.map name="InGain" value="11.0"/>
+         <frac32.u.map name="OutGain" value="28.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="3452c965-62bc-4170-a52a-62c7fef64bd8" name="Reverb" x="742" y="14">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -777,65 +783,104 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="770" y="252">
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="854" y="14">
       <params>
          <frac32.u.map name="gain1" value="34.0"/>
          <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_2" x="854" y="252">
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_2" x="938" y="14">
       <params>
          <frac32.u.map name="gain1" value="34.0"/>
          <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="938" y="252">
+   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="1036" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_3" x="140" y="266">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1120" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="70" y="378">
+   <comment type="patch/comment" x="532" y="98" text="Ring Mod Xfade"/>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_2" x="882" y="210">
       <params/>
       <attribs>
-         <spinner attributeName="cc" value="1"/>
+         <spinner attributeName="cc" value="7"/>
+         <spinner attributeName="default" value="82"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="966" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="14" y="238" text="CC 113 controls the RING MODULATOR FX"/>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_3" x="14" y="266">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="113"/>
          <spinner attributeName="default" value="0"/>
       </attribs>
    </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="196" y="378">
+   <obj type="tiar/kfilter/LPRiseDecay" uuid="51ef2ec2-064a-4803-a37d-3e0db690311e" name="LPRiseDecay_1" x="98" y="266">
+      <params>
+         <frac32.s.map name="Rise" value="48.0"/>
+         <frac32.s.map name="Decay" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="6b4dd3da49f98e54900f6c20031f38f4624fa364" name="gain_1" x="224" y="266">
+      <params>
+         <frac32.u.map name="amp" value="9.024999141693115"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/sat" uuid="ae2a11c9bb4d6470ae44c7b2674e7e96184f38d3" name="sat_1" x="322" y="266">
       <params/>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="882" y="322" text="Volume CC"/>
+   <comment type="patch/comment" x="224" y="364" text="Ring Mod Xfade on the 1/9th of ctl "/>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_3" x="168" y="406">
+      <params>
+         <frac32.u.map name="gain1" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="308" y="406">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_1" x="406" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="476" y="448" text="Ring Mod output"/>
+   <comment type="patch/comment" x="126" y="504" text="1oct and a 5th sweep with the ctl"/>
+   <comment type="patch/comment" x="308" y="518" text="Sine for Ring Mod"/>
    <nets>
       <net>
-         <source obj="cc_1" outlet="midiCC"/>
-         <dest obj="dial_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="keyb_1" outlet="touch"/>
-         <dest obj="dial_2" inlet="in"/>
-      </net>
-      <net>
-         <source obj="touch_1" outlet="o"/>
-         <dest obj="dial_3" inlet="in"/>
-      </net>
-      <net>
-         <source obj="DPSoftClip_1" outlet="out"/>
+         <source obj="DPHardClip_1" outlet="out"/>
          <dest obj="mix_2" inlet="in1"/>
          <dest obj="mix_1" inlet="in1"/>
          <dest obj="Reverb" inlet="inlet_1"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
-         <dest obj="out_2" inlet="left"/>
+         <dest obj="vcaST_1" inlet="a1"/>
       </net>
       <net>
          <source obj="mix_2" outlet="out"/>
-         <dest obj="out_2" inlet="right"/>
+         <dest obj="vcaST_1" inlet="a2"/>
       </net>
       <net>
          <source obj="Reverb" outlet="outlet_1"/>
@@ -846,10 +891,6 @@
          <dest obj="mix_2" inlet="in2"/>
       </net>
       <net>
-         <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="DPSoftClip_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="pgm_1" outlet="o"/>
          <dest obj="load_1" inlet="i"/>
       </net>
@@ -857,15 +898,74 @@
          <source obj="pgm_1" outlet="trig"/>
          <dest obj="load_1" inlet="trig"/>
       </net>
+      <net>
+         <source obj="cc_2" outlet="midiCC"/>
+         <dest obj="dial_4" inlet="in"/>
+         <dest obj="vcaST_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="cc_3" outlet="midiCC"/>
+         <dest obj="LPRiseDecay_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o1"/>
+         <dest obj="out_2" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o2"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="xfade_1" outlet="o"/>
+         <dest obj="DPHardClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="xfade_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="mix_3" outlet="out"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_3" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="sat_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sat_1" outlet="out"/>
+         <dest obj="xfade_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="LPRiseDecay_1" outlet="out"/>
+         <dest obj="gain_1" inlet="in"/>
+         <dest obj="mix_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="xfade_1" inlet="i1"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>194</x>
-      <y>324</y>
+      <x>517</x>
+      <y>196</y>
       <width>1333</width>
-      <height>735</height>
+      <height>832</height>
    </windowPos>
 </patch-1.0>
