@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sinsaw" uuid="76895066-2262-4908-87d0-473605a392c4">
+      <sDescription></sDescription>
+      <author>T. Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>sinsaw.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.positive name="brill"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="brill"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[const int N = 2;
+// Saw
+float p = 0, dp = 0;
+float slope, _slope_1;]]></code.declaration>
+      <code.init><![CDATA[p = 0.0f;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(0.25f/(1<<30));
+
+float coef = 1.0f + 15-(param_brill + inlet_brill) * (15.0f / (1<<27));
+if(coef<1) coef = 1;
+slope = (N * dp *coef> 0.5f) ? 2.0f: 1.0f / (1.0f - N * dp*coef);
+_slope_1 = 1.0f / (slope - 1.0f);]]></code.krate>
+      <code.srate><![CDATA[p += dp; p -= (p > 1);
+float x = p * slope;
+if(x > 1){  // ]1, slope] -> ]1, 0]
+  x = (slope - x) * _slope_1;
+}
+x = 2 * x - 1;
+x = 0.5f * x * (3 - x * x);
+outlet_wave = (int32_t)(x * (1 << 27));]]></code.srate>
+   </obj.normal>
+</objdefs>
