@@ -1,0 +1,111 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="RanDelay" uuid="6bc226c3-740d-4f8a-b406-5c36e9ca70d3">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>RanDelay.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="left" description=""/>
+         <frac32buffer.bipolar name="right"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="minRate"/>
+         <frac32.u.map name="maxRate"/>
+      </params>
+      <attribs>
+         <combo name="NBD">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>24</string>
+               <string>32</string>
+               <string>48</string>
+            </MenuEntries>
+            <CEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>24</string>
+               <string>32</string>
+               <string>48</string>
+            </CEntries>
+         </combo>
+         <combo name="LENGTH">
+            <MenuEntries>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+            </MenuEntries>
+            <CEntries>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const int NBD = attr_NBD;
+static const int LENGTH = attr_LENGTH;
+static const int RANGE = LENGTH-5;
+
+float p[NBD];
+float env[NBD];
+float amp[NBD];
+float dp[NBD];
+int32_t d[NBD];
+float *array;
+int ind = 0;
+
+
+int32_t rnd = 137178354;]]></code.declaration>
+      <code.init><![CDATA[static float _array[attr_poly][LENGTH];// __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+rnd += GenerateRandomNumber();
+for(int i = 0; i < LENGTH; i++) 
+  array[i] = 0;
+
+for(int i = 0; i < NBD; i++){
+  p[i] = 2.0f * i / ((float)NBD);
+  rnd *= 69069;
+//  d[i] = ___SMMUL(rnd & 0x7FFFFFFF, RANGE << 1);
+  d[i] = 2 + ___SMMUL(___SMMUL(rnd, rnd), RANGE<<2 );
+  amp[i] = (i % 2) ? 1 : -1; // ]-1,1[
+  rnd *= 69069;
+}]]></code.init>
+      <code.krate><![CDATA[for(int i = 0; i < NBD; i++){
+  p[i] += dp[i];
+  if(p[i] > 2){
+    p[i] -= 2;
+    rnd *= 69069;
+    d[i] = 2 + ___SMMUL(___SMMUL(rnd, rnd), RANGE<<2 );
+  }
+  float e = p[i];
+  if(e > 1){
+    e = 2 - e;
+  }
+  //e = e * e * (3 - 2 * e);
+  env[i] = e * amp[i];
+  float a = i* (1/(attr_NBD-1.0f));//rnd * 4.656e-10f;
+  dp[i] = ((2 / 3000.0f)*(6.4f/(1<<27))) * ((1<<20)+param_minRate + a*a*(param_maxRate-param_minRate));
+}]]></code.krate>
+      <code.srate><![CDATA[ind++; ind %= LENGTH;
+array[ind] = (float)inlet_in;
+float acc = 0.0f;
+for(int i = 0; i < NBD/2; i++){
+  acc += env[i] * array[(ind + LENGTH - d[i]) % LENGTH];
+}
+outlet_left = (int32_t) acc;
+acc = 0.0f;
+for(int i = NBD/2; i < NBD; i++){
+  acc += env[i] * array[(ind + LENGTH - d[i]) % LENGTH];
+}
+outlet_right = (int32_t) acc;]]></code.srate>
+   </obj.normal>
+</objdefs>
