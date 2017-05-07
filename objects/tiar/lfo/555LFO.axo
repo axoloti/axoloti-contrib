@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="555LFO" uuid="42572d63-1879-4163-9346-1ae60a9693c7">
+      <sDescription></sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>555LFO.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="rate"/>
+         <frac32.u.map name="pos"/>
+         <frac32.u.map name="neg"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t vC = 0;
+bool sRS = true;]]></code.declaration>
+      <code.krate><![CDATA[//           -2 +2    3.25/2 q27   -1 +1 q27
+
+// f ~ 1/rc = param_rate/(3000/(20*32)); // => param_rate/4.68;
+if(sRS){
+  vC = ___SMMLA(___SMMUL(param_rate, param_rate)<<4,  2 * ((13 << 24) - param_pos) - vC, vC);
+  if(vC >  (1 << 27)){ sRS = false; vC =  (1 << 28) - vC; }
+} else {
+  vC = ___SMMLA(___SMMUL(param_rate, param_rate)<<4,  2 * (param_neg - (13 << 24)) - vC, vC);  
+  //                   RS change    vC subsample evolution ("mirror" against 1 or -1)
+  if(vC < -(1 << 27)){ sRS = true;  vC = -(1 << 28) - vC; }
+}
+outlet_out = vC;]]></code.krate>
+   </obj.normal>
+</objdefs>
