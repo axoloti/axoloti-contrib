@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="divider" uuid="e9b965e9-78f3-42aa-b2bb-77872943ccc0">
+      <sDescription>flip flop, &quot;automatic&quot;</sDescription>
+      <author>Simon Iten</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="a" description="a"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="b" description="quant(a)"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int counter;
+int sample;]]></code.declaration>
+      <code.init><![CDATA[counter = 0;]]></code.init>
+      <code.srate><![CDATA[if (inlet_a > 0 && (counter < 2)) {
+sample = (1<<26);
+counter = counter + 1;
+}
+if (inlet_a > 0 && counter == 2) {
+sample = -(1<<26);
+counter = 0;
+}
+outlet_b = sample;]]></code.srate>
+   </obj.normal>
+</objdefs>
