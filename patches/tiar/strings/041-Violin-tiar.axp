@@ -6,14 +6,16 @@
          <spinner attributeName="default" value="82"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="046ec592-eb5c-4014-a58e-361c3c94ae01" name="patcher_1" x="14" y="28">
+   <patcher type="patch/patcher" uuid="a4d073fe-0c10-4a55-94eb-5cb926a1e6aa" name="patcher_1" x="14" y="28">
       <params>
          <frac32.s.map name="SyncPM3_1:pitchC" value="-12.130000114440918"/>
          <frac32.s.map name="SyncPM3_1:pitchM1" value="-15.749999523162842"/>
          <frac32.s.map name="SyncPM3_1:pitchM2" value="-12.630000114440918"/>
          <frac32.u.map name="SyncPM3_1:index1C" value="25.0"/>
          <frac32.u.map name="SyncPM3_1:index21" value="8.0"/>
-         <frac32.u.map name="*c_2" value="1.5"/>
+         <frac32.u.map name="lp1_1" value="28.0"/>
+         <frac32.u.map name="*c_4" value="64.0"/>
+         <frac32.u.map name="*c_2" value="1.7000000000000008"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="12"/>
@@ -79,7 +81,13 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="56">
+         <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_1" x="868" y="56">
+            <params>
+               <frac32.u.map name="freq" onParent="true" value="30.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1008" y="56">
             <params/>
             <attribs/>
          </obj>
@@ -89,9 +97,15 @@
             </params>
             <attribs/>
          </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="756" y="140">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="32.5"/>
+            </params>
+            <attribs/>
+         </obj>
          <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="392" y="210">
             <params>
-               <frac32.u.map name="amp" onParent="true" value="3.5599999999999774"/>
+               <frac32.u.map name="amp" onParent="true" value="3.559999942779541"/>
             </params>
             <attribs/>
          </obj>
@@ -153,8 +167,8 @@
          <nets>
             <net>
                <source obj="adsr_1" outlet="env"/>
-               <dest obj="*c_2" inlet="in"/>
                <dest obj="max_2" inlet="in1"/>
+               <dest obj="*c_2" inlet="in"/>
             </net>
             <net>
                <source obj="*c_1" outlet="out"/>
@@ -204,9 +218,9 @@
             </net>
             <net>
                <source obj="lowpass_1" outlet="out"/>
+               <dest obj="max_2" inlet="in2"/>
                <dest obj="*_3" inlet="a"/>
                <dest obj="*_3" inlet="b"/>
-               <dest obj="max_2" inlet="in2"/>
                <dest obj="*_4" inlet="b"/>
             </net>
             <net>
@@ -215,8 +229,9 @@
             </net>
             <net>
                <source obj="*_3" outlet="result"/>
-               <dest obj="*c_3" inlet="in"/>
                <dest obj="*_4" inlet="a"/>
+               <dest obj="*c_3" inlet="in"/>
+               <dest obj="*c_4" inlet="in"/>
             </net>
             <net>
                <source obj="keyb_2" outlet="note"/>
@@ -236,10 +251,6 @@
                <dest obj="vca_1" inlet="v"/>
             </net>
             <net>
-               <source obj="vca_1" outlet="o"/>
-               <dest obj="outlet_1" inlet="outlet"/>
-            </net>
-            <net>
                <source obj="*_4" outlet="result"/>
                <dest obj="*_2" inlet="b"/>
             </net>
@@ -255,6 +266,18 @@
                <source obj="sine_3" outlet="wave"/>
                <dest obj="mix_2" inlet="in2"/>
             </net>
+            <net>
+               <source obj="lp1_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="lp1_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_4" outlet="out"/>
+               <dest obj="lp1_1" inlet="freq"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>polyphonic</subpatchmode>
@@ -267,7 +290,7 @@
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>0</x>
+            <x>14</x>
             <y>0</y>
             <width>1519</width>
             <height>885</height>
@@ -276,7 +299,7 @@
    </patcher>
    <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="168" y="28">
       <params>
-         <frac32.s.map name="freq" value="3.0"/>
+         <frac32.s.map name="freq" value="10.0"/>
       </params>
       <attribs/>
    </obj>
