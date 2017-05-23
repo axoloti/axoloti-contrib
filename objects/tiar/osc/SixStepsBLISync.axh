@@ -51,17 +51,17 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="882" y="42">
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="840" y="42">
       <params>
-         <frac32.s.map name="pitch" value="-12.0"/>
-         <frac32.u.map name="reso" value="34.0"/>
+         <frac32.s.map name="pitch" value="-11.0"/>
+         <frac32.u.map name="Q" value="17.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="980" y="42">
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_2" x="952" y="42">
       <params>
-         <frac32.s.map name="pitch" value="-12.0"/>
-         <frac32.u.map name="reso" value="35.5"/>
+         <frac32.s.map name="pitch" value="-6.0"/>
+         <frac32.u.map name="Q" value="16.5"/>
       </params>
       <attribs/>
    </obj>
@@ -156,7 +156,7 @@
       <net>
          <source obj="SixStepsBLISync_1" outlet="out"/>
          <dest obj="scope_1" inlet="in"/>
-         <dest obj="vcf3_1" inlet="in"/>
+         <dest obj="ZDF_1" inlet="x"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
@@ -164,17 +164,9 @@
       </net>
       <net>
          <source obj="adsr_2" outlet="env"/>
-         <dest obj="vcf3_1" inlet="pitch"/>
-         <dest obj="vcf3_2" inlet="pitch"/>
          <dest obj="mix_1" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="vcf3_2" outlet="out"/>
-         <dest obj="vca_1" inlet="a"/>
-      </net>
-      <net>
-         <source obj="vcf3_1" outlet="out"/>
-         <dest obj="vcf3_2" inlet="in"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+         <dest obj="ZDF_2" inlet="pitch"/>
       </net>
       <net>
          <source obj="allpass_1" outlet="out"/>
@@ -205,6 +197,14 @@
          <source obj="DPSoftClip_1" outlet="out"/>
          <dest obj="allpass_2" inlet="in"/>
       </net>
+      <net>
+         <source obj="ZDF_1" outlet="lp12"/>
+         <dest obj="ZDF_2" inlet="x"/>
+      </net>
+      <net>
+         <source obj="ZDF_2" outlet="lp12"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
@@ -213,7 +213,7 @@
    <windowPos>
       <x>29</x>
       <y>32</y>
-      <width>1461</width>
-      <height>597</height>
+      <width>1687</width>
+      <height>866</height>
    </windowPos>
 </patch-1.0>

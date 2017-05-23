@@ -1,4 +1,12 @@
 <patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/pgm" uuid="6165409901fee4a0781b41bac3513f51c2120d67" name="pgm_1" x="14" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/load i" uuid="b79124f5b7d1e8b39e187677ddab6260ce8c60a3" name="load_1" x="98" y="42">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="224" y="42">
       <params>
          <frac32.s.map name="pitch" value="2.0"/>
@@ -11,15 +19,15 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="42b17718-1f76-44b6-a627-a42360f85e5e" name="patcher_1" x="420" y="42">
+   <patcher type="patch/patcher" uuid="36069268-8057-4404-8ff6-370858c669ac" name="patcher_1" x="420" y="42">
       <params>
          <frac32.s.map name="adsr_1:a" value="-64.0"/>
-         <frac32.s.map name="adsr_1:d" value="12.0"/>
-         <frac32.u.map name="adsr_1:s" value="5.0"/>
+         <frac32.s.map name="adsr_1:d" value="29.0"/>
+         <frac32.u.map name="adsr_1:s" value="22.0"/>
          <frac32.s.map name="adsr_1:r" value="35.0"/>
-         <frac32.s.map name="vcf3_1:pitch" value="12.0"/>
-         <frac32.u.map name="vcf3_1:reso" value="0.0"/>
-         <frac32.u.map name="mix_3:gain1" value="64.0"/>
+         <frac32.s.map name="ZDF_1:pitch" value="26.0"/>
+         <frac32.u.map name="ZDF_1:Q" value="18.5"/>
+         <frac32.u.map name="mix_3:gain1" value="41.5"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="8"/>
@@ -93,10 +101,10 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="1036" y="98">
+         <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="1036" y="98">
             <params>
                <frac32.s.map name="pitch" onParent="true" value="0.0"/>
-               <frac32.u.map name="reso" onParent="true" value="0.0"/>
+               <frac32.u.map name="Q" onParent="true" value="0.0"/>
             </params>
             <attribs/>
          </obj>
@@ -157,16 +165,16 @@
                <dest obj="mix_1" inlet="in1"/>
             </net>
             <net>
-               <source obj="vcf3_1" outlet="out"/>
-               <dest obj="vca_1" inlet="a"/>
-            </net>
-            <net>
                <source obj="mix_2" outlet="out"/>
-               <dest obj="vcf3_1" inlet="in"/>
+               <dest obj="ZDF_1" inlet="x"/>
             </net>
             <net>
                <source obj="mix_3" outlet="out"/>
-               <dest obj="vcf3_1" inlet="pitch"/>
+               <dest obj="ZDF_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="ZDF_1" outlet="lp12"/>
+               <dest obj="vca_1" inlet="a"/>
             </net>
          </nets>
          <settings>
@@ -186,10 +194,26 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="532" y="42">
+   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="602" y="42">
       <params/>
       <attribs/>
    </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="700" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_2" x="602" y="154">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="7"/>
+         <spinner attributeName="default" value="82"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="686" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="602" y="266" text="Volume CC"/>
    <nets>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -200,9 +224,30 @@
          <dest obj="*c_1" inlet="in"/>
       </net>
       <net>
-         <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="out_1" inlet="right"/>
+         <source obj="pgm_1" outlet="o"/>
+         <dest obj="load_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="pgm_1" outlet="trig"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="cc_2" outlet="midiCC"/>
+         <dest obj="dial_4" inlet="in"/>
+         <dest obj="vcaST_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o1"/>
          <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o2"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="vcaST_1" inlet="a1"/>
+         <dest obj="vcaST_1" inlet="a2"/>
       </net>
    </nets>
    <settings>
@@ -210,8 +255,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>296</x>
-      <y>148</y>
+      <x>179</x>
+      <y>300</y>
       <width>1451</width>
       <height>650</height>
    </windowPos>
