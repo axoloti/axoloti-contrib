@@ -1,0 +1,78 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scalebank3" uuid="dff14943-2695-43cd-b4a5-89e9da811d68">
+      <sDescription>To be able to use this module, first load the &quot;scaleGenerator&quot; to create a table on your SDcard.
+This module then automatically loads this table from your SDcard.
+I found that in big projects, this scaling-array took too many memory. This way the array isn&apos;t stored as part of the code, leaving more memory for adding modules.</sDescription>
+      <author>Remco van der Most</author>
+      <license>GPL</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = 552;
+int8_t *note;
+static const uint32_t tLENGTH = 1644;
+int32_t *TMPR;
+int i;
+
+bool DO=1;]]></code.declaration>
+      <code.init><![CDATA[static int8_t _note[LENGTH] __attribute__ ((section (".sdram")));
+note = &_note[0];
+static int32_t _TMPR[tLENGTH] __attribute__ ((section (".sdram")));
+TMPR = &_TMPR[0];
+
+
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, "0:/scalebank.tab", FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/scalebank.tab"); return;}
+    int rem_sz = sizeof(*note)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&note[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&note[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,"0:/scalebank.tab"); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/scalebank.tab"); return;};
+
+if(DO==1){
+	
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, "0:/tempbank.tab", FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/tempbank.tab"); return;}
+    int rem_sz = sizeof(*TMPR)*tLENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&TMPR[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&TMPR[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,"0:/tempbank.tab"); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/tempbank.tab"); return;};
+}]]></code.init>
+   </obj.normal>
+</objdefs>

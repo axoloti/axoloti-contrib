@@ -1,0 +1,75 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="BPMext" uuid="1182803e-95f7-46fa-9dce-6269ac0ef37b">
+      <sDescription>simple master clock source in BPM.
+outputs pulses for beat, triplets, fourths and a variable rate multiplier.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <int32 name="BPM"/>
+         <bool32.rising name="reset" description="reset phase"/>
+         <int32 name="vari3"/>
+      </inlets>
+      <outlets>
+         <bool32 name="beat" description="square wave"/>
+         <bool32 name="trips"/>
+         <bool32 name="fours"/>
+         <bool32 name="vari1"/>
+         <bool32 name="vari2"/>
+         <bool32 name="vari3"/>
+         <int32 name="rate3"/>
+         <int32.positive name="timing"/>
+         <frac32 name="delaybase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="BPM">
+            <MinValue i="0"/>
+            <MaxValue i="500"/>
+         </int32>
+         <int32 name="vari1">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <int32 name="vari2">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <int32 name="vari3">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t Phase;
+uint32_t r;
+int rate1=3;
+int rate2=4;
+int32_t freq;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+   r = 1;]]></code.init>
+      <code.krate><![CDATA[{	 
+	int BPM=param_BPM+inlet_BPM;
+	BPM=BPM>0?BPM:1;
+	
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         
+         freq=(1<<31)/(45000/BPM);
+         Phase += freq>>2;
+      }
+      outlet_beat= (Phase>0)?1:0;
+      outlet_trips=((Phase*rate1)>0)?1:0;
+      outlet_fours=((Phase*rate2)>0)?1:0;
+      outlet_vari1=((Phase*param_vari1)>0)?1:0;
+      outlet_vari2=((Phase*param_vari2)>0)?1:0;
+      outlet_vari3=((Phase*inlet_vari3)>0)?1:0;
+      outlet_rate3=inlet_vari3<<4;
+   }
+   outlet_timing=(1<<31)/freq/3*2;
+   outlet_delaybase=(1<<31)/outlet_timing<<5;]]></code.krate>
+   </obj.normal>
+</objdefs>
