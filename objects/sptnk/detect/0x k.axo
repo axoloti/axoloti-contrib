@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="0x k" uuid="42dd125b-2b54-4c07-9d14-ce783bbf9cfd">
+      <sDescription>Detects the number of samples between zero crossings, and when a zero crossing occurs trig outputs a pulse.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <int32 name="smp" description="number of samples at k-rate sample rate"/>
+         <bool32.pulse name="trig" description="a pulse is fired when the zero crossing occurs"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t count = 0;
+uint32_t output = 0;
+
+bool sign_old = 0;
+bool sign = 0;]]></code.declaration>
+      <code.krate><![CDATA[count++;
+sign = inlet_in>0?1:0;
+bool trig = 0;
+
+if (sign != sign_old)
+{
+	output = count;
+	count = 0;
+	trig = 1;
+}
+
+outlet_smp = output;
+outlet_trig = trig;
+sign_old = sign;]]></code.krate>
+   </obj.normal>
+</objdefs>
