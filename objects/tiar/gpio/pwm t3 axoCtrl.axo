@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pwm t3 axoCtrl" uuid="aeaf1e88-2803-49c0-a66f-98fe13deca8a">
+      <sDescription>PWM output using hardware timer 3 (97.65 Hz)</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>pwm.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="pb0" description="pwm ratio"/>
+         <frac32.positive name="pb1" description="pwm ratio"/>
+         <frac32.positive name="pb8" description="pwm ratio"/>
+         <frac32.positive name="pb9" description="pwm ratio"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <depends>
+         <depend>PWMD3</depend>
+      </depends>
+      <code.init><![CDATA[static const PWMConfig pwmcfg = {400000, /* 400kHz PWM clock frequency.  */
+	4096, /* PWM period is 4096 cycles.    */
+	NULL, 
+	{{PWM_OUTPUT_ACTIVE_HIGH, NULL}, 
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL},
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL}, 
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL}},
+	/* HW dependent part.*/
+	0};
+
+pwmStart(&PWMD3, &pwmcfg);
+  
+palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(2));
+palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(2));
+palSetPadMode(GPIOB, 0, PAL_MODE_ALTERNATE(2));
+palSetPadMode(GPIOB, 1, PAL_MODE_ALTERNATE(2));]]></code.init>
+      <code.dispose><![CDATA[pwmStop(&PWMD3);]]></code.dispose>
+      <code.krate><![CDATA[pwmEnableChannel(&PWMD3, 0, (pwmcnt_t)(inlet_pb8>=0?inlet_pb8>>15:0));
+pwmEnableChannel(&PWMD3, 1, (pwmcnt_t)(inlet_pb9>=0?inlet_pb9>>15:0));
+pwmEnableChannel(&PWMD3, 2, (pwmcnt_t)(inlet_pb0>=0?inlet_pb0>>15:0));
+pwmEnableChannel(&PWMD3, 3, (pwmcnt_t)(inlet_pb1>=0?inlet_pb1>>15:0));]]></code.krate>
+   </obj.normal>
+</objdefs>
