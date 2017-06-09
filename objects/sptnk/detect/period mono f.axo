@@ -9,6 +9,7 @@
       <outlets>
          <int32 name="smp" description="number of samples at s-rate sample rate"/>
          <frac32.positive name="f" description="frequency in axoloti format"/>
+         <bool32.pulse name="trig"/>
       </outlets>
       <displays/>
       <params>
@@ -16,7 +17,7 @@
       </params>
       <attribs>
          <spinner name="max" description="Maximum period allowed. Used to discard false readings" MinValue="0" MaxValue="65535" DefaultValue="5870"/>
-         <spinner name="min" description="Minimum period allowed. Used to discard false readings" MinValue="0" MaxValue="65535" DefaultValue="9"/>
+         <spinner name="min" description="Minimum period allowed. Used to discard false readings" MinValue="16" MaxValue="65535" DefaultValue="16"/>
       </attribs>
       <code.declaration><![CDATA[float count = 0;		//sample counter
 float output = 0;	//output reading. The period is stored here
@@ -33,7 +34,8 @@ bool sign = 0;			//sign of current sample
 
 int32_t in_old;		//old input]]></code.declaration>
       <code.krate><![CDATA[outlet_smp = output;			//output the reading
-outlet_f = 268435456.0f/output;	//calculate the frequency and output it]]></code.krate>
+outlet_f = 268435456.0f/output;	//calculate the frequency and output it
+outlet_trig = 0;]]></code.krate>
       <code.srate><![CDATA[count+=1.0f;								//increase the counter by 1
 sign = inlet_in>0?1:0;						//calculate the sign of curent input
 integral += inlet_in;						//integrate the input
@@ -55,6 +57,7 @@ if (sign != sign_old)						//a zero crossing has occurred
 {
 	if (trig)								//if the "condition zero" i've explained before is met, we have a readout!
 	{
+		outlet_trig = 1;
 		output = count + intercept;			//readout, accounting for the "snippet" between samples
 		count = -intercept;					//resetting the counter, adding the snippet betweein samples
 		integral = 0;						//resetting the integrator

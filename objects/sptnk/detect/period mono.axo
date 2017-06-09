@@ -8,6 +8,7 @@
       </inlets>
       <outlets>
          <int32 name="smp" description="number of samples at s-rate sample rate"/>
+         <bool32.pulse name="trig"/>
       </outlets>
       <displays/>
       <params>
@@ -15,7 +16,7 @@
       </params>
       <attribs>
          <spinner name="max" description="Maximum period allowed. Used to discard false readings" MinValue="0" MaxValue="65535" DefaultValue="5870"/>
-         <spinner name="min" description="Minimum period allowed. Used to discard false readings" MinValue="0" MaxValue="65535" DefaultValue="9"/>
+         <spinner name="min" description="Minimum period allowed. Used to discard false readings" MinValue="16" MaxValue="65535" DefaultValue="16"/>
       </attribs>
       <code.declaration><![CDATA[uint32_t count = 0;		//sample counter
 uint32_t output = 0;	//output reading. The period is stored here
@@ -30,7 +31,8 @@ bool sign_old = 0;		//sign of previous sample
 bool sign = 0;			//sign of current sample
 
 int32_t in_old;		//old input]]></code.declaration>
-      <code.krate><![CDATA[outlet_smp = output;		//output the reading]]></code.krate>
+      <code.krate><![CDATA[outlet_smp = output;		//output the reading
+outlet_trig = 0;]]></code.krate>
       <code.srate><![CDATA[count++;									//increase the counter by 1
 sign = inlet_in>0?1:0;						//calculate the sign of curent input
 integral += inlet_in;						//integrate the input
@@ -54,6 +56,7 @@ if (sign != sign_old)						//a zero crossing has occurred
 		integral = 0;						//resetting the integrator
 		ramp = 0;							//resetting the ramp integrator
 		dx = inlet_in - in_old;				//calculating a new derivative at 0x
+		outlet_trig = 1<<27;
 	}
 	if (count > attr_max)					//the reading is taking too long. I'll start counting from here without passing the readout.
 	{

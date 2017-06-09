@@ -9,6 +9,7 @@
       <outlets>
          <int32.positive name="smp" description="number of samples between zero crossings"/>
          <frac32.positive name="f" description="frequency in axoloti format"/>
+         <frac32buffer.positive name="trig"/>
       </outlets>
       <displays/>
       <params/>
@@ -23,6 +24,7 @@ int32_t in_prev = 0;]]></code.declaration>
 outlet_f = 134217728.0f/output;]]></code.krate>
       <code.srate><![CDATA[count+=1.0f;
 sign = inlet_in>0?1:0;
+outlet_trig = 0;
 
 float intercept = ((float)inlet_in)/((float)(in_prev - inlet_in));
 
@@ -30,6 +32,7 @@ if (sign != sign_old)
 {
 	output = count + intercept;
 	count = -intercept;
+	outlet_trig = 1<<27;
 }
 
 sign_old = sign;

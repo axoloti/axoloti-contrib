@@ -8,6 +8,7 @@
       </inlets>
       <outlets>
          <int32 name="smp" description="number of samples at s-rate sample rate"/>
+         <frac32buffer.positive name="trig"/>
       </outlets>
       <displays/>
       <params/>
@@ -20,11 +21,13 @@ bool sign = 0;]]></code.declaration>
       <code.krate><![CDATA[outlet_smp = output;]]></code.krate>
       <code.srate><![CDATA[count++;
 sign = inlet_in>0?1:0;
+outlet_trig = 0;
 
 if (sign != sign_old)
 {
 	output = count;
 	count = 0;
+	outlet_trig = 1<<27;
 }
 
 sign_old = sign;]]></code.srate>
