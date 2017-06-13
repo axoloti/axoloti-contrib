@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="hyst" uuid="67189865-fea6-4aca-a32f-085f4bc3073e">
+      <sDescription></sDescription>
+      <author>Thierry Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>hyst.axh</helpPatch>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <bool32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="level1"/>
+         <frac32.s.map name="level0"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool state = false;]]></code.declaration>
+      <code.krate><![CDATA[int32_t mini = param_level0 < param_level1 ? param_level0 : param_level1;
+if( state && inlet_in < mini)
+  state = false;
+
+int32_t maxi = param_level0 > param_level1 ? param_level0 : param_level1;
+if(!state && inlet_in > maxi)
+  state = true;
+  
+outlet_out = state;]]></code.krate>
+   </obj.normal>
+</objdefs>
