@@ -1,6 +1,6 @@
 #ifndef _TIAR_BANK_PWR_H
 #define _TIAR_BANK_PWR
-int16_t tiar_w16bankPwr[32*16] = {
+const int16_t tiar_w16bankPwr[32*16] = {
 //int16_t tiar_pwr_saw[32]={
  32099,  25272,    31964,  30923,     5958,  -3018,   -17239, -29020,   
 -24690, -30034,   -20215, -26597,    20276,  22556,   -26748, -30979,   

@@ -1,6 +1,6 @@
 #ifndef _TIAR_BANK_SPKTRA_H
 #define _TIAR_BANK_SPKTRA
-int16_t tiar_w16bankSpktra[32*16] = {
+const int16_t tiar_w16bankSpktra[32*16] = {
 
 // hollow_2_3
  19671,   6000,  30226, -19728, -21888,   6432, -10055, -22406, 
