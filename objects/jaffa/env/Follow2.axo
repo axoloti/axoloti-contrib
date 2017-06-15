@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="Follow2" uuid="2058b31b-73b6-4a83-92f4-15d10e61c274">
+      <sDescription>envelope follower, linear output
+2= 1,3 ms (Shortest on old version)
+3= 2,7 ms
+4= 5,3 ms
+5= 10,6 ms
+6= 21,2 ms
+7= 42,6
+8= 85,3
+9= 170,6 ms (Longest on old version)
+10=
+11=</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input wave"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="amp" description="amplitude"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="time" noLabel="true">
+            <MinValue i="2"/>
+            <MaxValue i="9"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t accu;]]></code.declaration>
+      <code.init><![CDATA[accu = 0;]]></code.init>
+      <code.krate><![CDATA[int sabs = 0;
+int i;  for(i=0;i<BUFSIZE;i++){    int32_t v = inlet_in[i];
+    sabs += v>0?v:-v;
+  }
+  accu -= accu>>param_time;
+  accu += sabs>>(param_time+4);
+  outlet_amp = accu;]]></code.krate>
+   </obj.normal>
+</objdefs>
