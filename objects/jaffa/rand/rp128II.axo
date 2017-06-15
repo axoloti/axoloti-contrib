@@ -40,16 +40,12 @@ Select pattern, offset &amp; length control for the pattern. 128 random values i
       <depends>
          <depend>fatfs</depend>
       </depends>
-      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 7; 	// LOOK in the size attribute setting 1024 = 10	//
-static const uint32_t LENGTH = 128;	// set the length 1024 for a 1024 pattern....	//	
-// static const uint32_t LENGTHMASK = ((1<<attr_size)-1); NOT NEEDED
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 7; 	
+static const uint32_t LENGTH = 128;	
+
 static const uint32_t BITS = 8;
 static const uint32_t GAIN = 20;
 int8_t *array;
-
-
-
-
 
 int ntrig;
 
@@ -57,8 +53,6 @@ char c[64];
 int offset;
 int pval;
 
-
-// Logic/change //
    int ptrig;
    int32_t pvalLC;
    int32_t LOGICCHANGE;]]></code.declaration>
@@ -70,8 +64,6 @@ array = &_array[parent->polyIndex][0];
 }
 
 
-
-
 ntrig = 0;
 
 strcpy(&c[0],"0:/Tab/Rnd/128I/NEW000.TAB");
@@ -81,8 +73,7 @@ pval = 0;
 
 ptrig = 0;
 pvalLC = 0;]]></code.init>
-      <code.krate><![CDATA[// String index //
-if (inlet_rp+param_pattrn != pval){   pval = inlet_rp+param_pattrn;
+      <code.krate><![CDATA[if (inlet_rp+param_pattrn != pval){   pval = inlet_rp+param_pattrn;
    int i = inlet_rp+param_pattrn;   int i0 = i/10;
    c[offset+2] = '0'+i-10*i0;
    i = i0; i0 = i/10;
@@ -90,9 +81,7 @@ if (inlet_rp+param_pattrn != pval){   pval = inlet_rp+param_pattrn;
    i = i0; i0 = i/10;
    c[offset+0] = '0'+i-10*i0;
 }
-// outlet_out = &c[0];
 
-// Logic/chnage //
 if ((pvalLC != inlet_rp+param_pattrn)&(!ptrig)) { 
   LOGICCHANGE = 1;
   pvalLC = inlet_rp+param_pattrn;
@@ -102,9 +91,8 @@ if ((pvalLC != inlet_rp+param_pattrn)&(!ptrig)) {
   LOGICCHANGE = 0;
 }
 
-// Table/load //
 if ((LOGICCHANGE>0) && !ntrig) {
-    char* filename = &c[0]; // filename internally //
+    char* filename = &c[0]; 
     ntrig=1;
     FIL FileObject;
     FRESULT err;
@@ -132,12 +120,9 @@ if ((LOGICCHANGE>0) && !ntrig) {
   }
   else if (!(LOGICCHANGE>0)) ntrig=0;
 
-// Length divremc //
 int32_t DIVNEW = inlet_in/param_length;
 int32_t LENGTH = inlet_in-DIVNEW*param_length;
 
-
-     // Table/read (green in - blue out) //
      if(param_on){
      outlet_out= array[__USAT(LENGTH+param_offset,LENGTHPOW)]<<GAIN;}
      else{
