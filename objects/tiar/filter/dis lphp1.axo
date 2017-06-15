@@ -25,16 +25,13 @@
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t y = 0;
-int32_t ratef = 0;]]></code.declaration>
+int32_t ratef = 0, ratef2 = 0;]]></code.declaration>
       <code.krate><![CDATA[int32_t rateUp, rateDown;
 MTOF(param_freqUp   + inlet_freqUp,   rateUp);
 MTOF(param_freqDown + inlet_freqDown, rateDown);
-rateUp>>=1;
-rateDown>>=1;
 int32_t bias = param_bias >> 6;]]></code.krate>
       <code.srate><![CDATA[int32_t ref = ___SMMLA(inlet_in, param_type, bias) << 5;
-ratef = (ratef>>1) + ((y < ref) ? rateUp : rateDown);
-outlet_lp = y = ___SMMLA((inlet_in - y) << 1, ratef, y);
-outlet_hp = inlet_in - y;]]></code.srate>
+outlet_lp = y = ___SMMLA((inlet_in - y) << 2, ((y < ref) ? rateUp : rateDown), y);
+outlet_hp = (inlet_in - y) >> 1;]]></code.srate>
    </obj.normal>
 </objdefs>
