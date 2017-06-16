@@ -1,0 +1,129 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="simsam1" uuid="7cf56d49-d881-405f-bd26-73f250196145">
+      <sDescription>Simple sampler with an ADSR envelope.</sDescription>
+      <author>Jaffasplaffa (Original by Johannes Taelman)</author>
+      <license>BSD</license>
+      <helpPatch>Sampler HELP.axh</helpPatch>
+      <inlets>
+         <bool32 name="trig"/>
+         <frac32.bipolar name="pitch" description="pitch modulation"/>
+         <frac32.positive name="pos" description="start position in table"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="position"/>
+         <bool32.tgl name="envon"/>
+         <frac32.s.map name="a"/>
+         <frac32.s.map name="d"/>
+         <frac32.u.map name="s"/>
+         <frac32.s.map name="r"/>
+      </params>
+      <attribs>
+         <objref name="t"/>
+      </attribs>
+      <code.declaration><![CDATA[// Table/Play //
+int pstart;
+   int pstop;
+   uint64_t pos;
+int32_t TABLE;
+
+// ADSR //
+int32_t prev;
+    int32_t step;
+
+int8_t stage;
+int ntrig;
+int32_t val;
+int32_t Loopval;]]></code.declaration>
+      <code.init><![CDATA[// Table/Play //
+pos = 0;
+pstart = 0;
+pstop = 1;
+
+
+// ADSR //
+stage = 0;
+ntrig = 0;
+val = 0;]]></code.init>
+      <code.krate><![CDATA[// Table/Play //
+if ((inlet_trig>0) && !pstart) {
+      pstart = 1;
+      pstop = 0;
+      uint32_t asat = __USAT(inlet_pos+param_position,27);
+      pos = ((uint64_t)(asat>>(27-attr_t.LENGTHPOW)))<<32;
+   } else if (!(inlet_trig>0)) {
+      pstart = 0;
+   }
+   if ((0) && !pstop) {
+      pstop = 1;
+      pstart = 0;
+   }
+   uint32_t f0;
+   MTOFEXTENDED(inlet_pitch + 0xFEC747D4 + param_pitch,f0);
+
+
+// ADSR //
+// vca
+   step = (Loopval - prev)>>4;
+   int32_t i = prev;
+   prev = Loopval;
+
+   //env
+if ((inlet_trig>0) && !ntrig) {
+   stage = 1;
+   ntrig = 1;
+}
+if (!(inlet_trig>0) && ntrig) {
+   stage = 0;
+   ntrig = 0;
+}
+if (stage == 0){
+   int32_t r1;
+   int32_t r2;
+   MTOF(- param_r, r1);
+   r1 = 0x7FFFFFFF - (r1 >> 2);
+   val = ___SMMUL(val,r1)<<1;
+} else if (stage == 1){
+   int32_t a;
+   MTOF(- param_a,a);
+   a = a >> 2;
+   val = val + a;
+   if (val<0) {
+      val =0x7FFFFFFF;
+      stage = 2;
+   }
+} else if (stage == 2) {
+   int32_t s = __USAT(param_s, 27);
+   int32_t d;
+   MTOF(- param_d, d);
+   d = 0x7FFFFFFF - (d >> 2);
+   val = (s<<4) + (___SMMUL(val - (s<<4),d)<<1);
+}
+Loopval = val>>4;]]></code.krate>
+      <code.srate><![CDATA[if (!pstop) {
+      if ((pos>>32)<attr_t.LENGTH) {
+         uint32_t r = ___SMMUL(attr_t.array[pos>>32]<<attr_t.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
+         r = ___SMMLA(attr_t.array[(pos>>32)+1]<<attr_t.GAIN,(((uint32_t)pos)>>1),r);
+         TABLE = r;
+         pos += ((uint64_t)f0)<<8;
+      }
+      else TABLE = 0;
+   } else TABLE = 0;
+
+
+
+// ADSR //
+   if(param_envon){
+
+   outlet_out =  ___SMMUL(TABLE,i)<<5;
+   i += step;
+   }
+   else{
+   outlet_out = TABLE;
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>
