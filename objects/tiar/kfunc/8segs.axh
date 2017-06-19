@@ -3,6 +3,24 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_2" x="196" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/8segs" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="8segs_4" x="322" y="14">
+      <params>
+         <frac32.u.mapvsl name="p0" value="0.0"/>
+         <frac32.u.mapvsl name="p1" value="0.0"/>
+         <frac32.u.mapvsl name="p2" value="0.0"/>
+         <frac32.u.mapvsl name="p3" value="12.5"/>
+         <frac32.u.mapvsl name="p4" value="10.5"/>
+         <frac32.u.mapvsl name="p5" value="24.5"/>
+         <frac32.u.mapvsl name="p6" value="0.0"/>
+         <frac32.u.mapvsl name="p7" value="9.0"/>
+         <frac32.u.mapvsl name="p8" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="1316" y="14">
       <params/>
       <attribs/>
@@ -11,6 +29,8 @@
       <params/>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="154" y="70" text="LFO depth controlled by the note"/>
+   <comment type="patch/comment" x="182" y="84" text="Thanks to a 8segment func"/>
    <obj type="tiar/osc/sinsaw" uuid="76895066-2262-4908-87d0-473605a392c4" name="sinsaw_1" x="462" y="168">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
@@ -24,13 +44,17 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="126" y="210">
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="210" y="210">
       <params>
-         <frac32.u.map name="gain1" value="0.04999971389770508"/>
+         <frac32.u.map name="gain1" value="0.9099997138977085"/>
       </params>
       <attribs/>
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="798" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="140" y="224">
       <params/>
       <attribs/>
    </obj>
@@ -153,10 +177,7 @@
          <source obj="keyb_1" outlet="note"/>
          <dest obj="mix_1" inlet="bus_in"/>
          <dest obj="bipolar2unipolar_1" inlet="i"/>
-      </net>
-      <net>
-         <source obj="sine_1" outlet="wave"/>
-         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="bipolar2unipolar_2" inlet="i"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
@@ -203,6 +224,22 @@
       <net>
          <source obj="unipolar2bipolar_1" outlet="o"/>
          <dest obj="pan_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="bipolar2unipolar_2" outlet="o"/>
+         <dest obj="8segs_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="8segs_4" outlet="out"/>
+         <dest obj="*_1" inlet="b"/>
       </net>
    </nets>
    <settings>
