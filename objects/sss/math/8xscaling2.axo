@@ -1,0 +1,92 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="8xscaling2" uuid="3178c5e5-ac54-48ec-881b-73a71ff6333a">
+      <sDescription>description</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.bipolar name="in1"/>
+         <frac32.bipolar name="in2"/>
+         <frac32.bipolar name="in3"/>
+         <frac32.bipolar name="in4"/>
+         <frac32.bipolar name="in5"/>
+         <frac32.bipolar name="in6"/>
+         <frac32.bipolar name="in7"/>
+         <frac32.bipolar name="in8"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out1"/>
+         <frac32 name="out2"/>
+         <frac32 name="out3"/>
+         <frac32 name="out4"/>
+         <frac32 name="out5"/>
+         <frac32 name="out6"/>
+         <frac32 name="out7"/>
+         <frac32 name="out8"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="Max1" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min1" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max2" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min2" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max3" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min3" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max4" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min4" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max5" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min5" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max6" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min6" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max7" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min7" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Max8" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="Min8" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t min[8];
+int32_t max[8];
+float32_t width2[8];
+float32_t ratio[8];
+int32_t in[8];
+int32_t In[8];
+int i;]]></code.declaration>
+      <code.init><![CDATA[max[0]=attr_Max1;
+max[1]=attr_Max2;
+max[2]=attr_Max3;
+max[3]=attr_Max4;
+max[4]=attr_Max5;
+max[5]=attr_Max6;
+max[6]=attr_Max7;
+max[7]=attr_Max8;
+min[0]=attr_Min1;
+min[1]=attr_Min2;
+min[2]=attr_Min3;
+min[3]=attr_Min4;
+min[4]=attr_Min5;
+min[5]=attr_Min6;
+min[6]=attr_Min7;
+min[7]=attr_Min8;]]></code.init>
+      <code.krate><![CDATA[In[0]=inlet_in1;
+In[1]=inlet_in2;
+In[2]=inlet_in3;
+In[3]=inlet_in4;
+In[4]=inlet_in5;
+In[5]=inlet_in6;
+In[6]=inlet_in7;
+In[7]=inlet_in8;
+
+for(i=0;i<8;i++){
+width2[i]=(max[i]-min[i])<<21;
+ratio[i]=(float32_t)width2[i]/(1<<28);
+in[i]=__SSAT(In[i],28);
+}
+outlet_out1=(in[0]+(1<<27))*ratio[0]+(min[0]<<21);
+outlet_out2=(in[1]+(1<<27))*ratio[1]+(min[1]<<21);
+outlet_out3=(in[2]+(1<<27))*ratio[2]+(min[2]<<21);
+outlet_out4=(in[3]+(1<<27))*ratio[3]+(min[3]<<21);
+outlet_out5=(in[4]+(1<<27))*ratio[4]+(min[4]<<21);
+outlet_out6=(in[5]+(1<<27))*ratio[5]+(min[5]<<21);
+outlet_out7=(in[6]+(1<<27))*ratio[6]+(min[6]<<21);
+outlet_out8=(in[7]+(1<<27))*ratio[7]+(min[7]<<21);]]></code.krate>
+   </obj.normal>
+</objdefs>

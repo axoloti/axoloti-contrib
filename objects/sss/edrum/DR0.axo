@@ -9,7 +9,7 @@ Best to trigger this with a trigger instead of a gate.</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
-         <bool32.rising name="trig"/>
+         <frac32 name="trig"/>
          <int32 name="hold"/>
          <frac32 name="Vdec"/>
          <frac32 name="Pdec"/>
@@ -24,6 +24,7 @@ Best to trigger this with a trigger instead of a gate.</sDescription>
          <int32 name="mode"/>
          <frac32 name="gain"/>
          <frac32 name="LP"/>
+         <frac32 name="seed"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -99,30 +100,31 @@ seeds[4] = seeds[12];
 seeds[5] = seeds[13];
 seeds[6] = seeds[14];
 seeds[7] = seeds[15];]]></code.init>
-      <code.krate><![CDATA[int32_t F1;
+      <code.krate><![CDATA[uint32_t F1;
 MTOF(-param_Pdec-inlet_Pdec,F1)
-int32_t F2;
-MTOF(-param_Vdec-inlet_Vdec,F2)
-int32_t F3;
-MTOF(-param_Ndec-inlet_Ndec,F3)
-
+uint32_t F2;
+MTOF(-param_Vdec-inlet_Vdec<<1,F2)
+F2=F2>>1;
+uint32_t F3;
+MTOF(-(param_Ndec-inlet_Ndec<<1)+(1<<26),F3)
+int32_t Seed=param_seed+inlet_seed;
 if(count>=param_hold){
 Penv=___SMMLA(-Penv,F1<<1,Penv);
 Venv=___SMMLA(-Venv,F2<<1,Venv);
 Nenv=___SMMLA(-Nenv,F3<<1,Nenv);
 }
 if((inlet_trig>0)&&!gtrig){
-seeds[0] = seeds[8]+param_seed;
-seeds[1] = seeds[9]+param_seed;
-seeds[2] = seeds[10]+param_seed;
-seeds[3] = seeds[11]+param_seed;
-seeds[4] = seeds[12]+param_seed;
-seeds[5] = seeds[13]+param_seed;
-seeds[6] = seeds[14]+param_seed;
-seeds[7] = seeds[15]+param_seed;
+seeds[0] = seeds[8]+Seed;
+seeds[1] = seeds[9]+Seed;
+seeds[2] = seeds[10]+Seed;
+seeds[3] = seeds[11]+Seed;
+seeds[4] = seeds[12]+Seed;
+seeds[5] = seeds[13]+Seed;
+seeds[6] = seeds[14]+Seed;
+seeds[7] = seeds[15]+Seed;
 	gtrig=1;
 	Penv=(1<<27);
-	Venv=(1<<27);
+	Venv=inlet_trig;
 	Nenv=(1<<27);
 	count=0;
 	phase=0;
@@ -165,7 +167,7 @@ cut=param_LP+___SMMUL(__SSAT(param_E2C+inlet_E2C,28)<<3,VENV<<2);
 //preset=preset-preset/attr_table.Waveforms*attr_table.Waveforms;
 //preset=preset<<attr_table.LENGTHPOW;
 outlet_Penv=PENV;
-outlet_Venv=VENV;
+outlet_Venv=__USAT(VENV,27);
 int32_t Noise=(1<<28)-(__SSAT(param_cut+inlet_cut,28)+(1<<27));
 int32_t FM=___SMMUL(freq<<1,param_FM<<4);
 
@@ -207,9 +209,9 @@ phase+=freq+___SMMUL(NENV,out>>2)+___SMMUL(FM<<3,val<<3);
 
 SINE2TINTERP(phase,sine)
 
-wave= __SSAT(___SMMUL(___SMMUL(sine,sineLvl)+__SSAT((___SMMUL((noise>>2)+(___SMMUL(noise,Noise<<3)<<3),IN<<2)),28)<<2,IV<<1)<<2,29);
+wave= __SSAT(___SMMUL(___SMMUL(sine,sineLvl)+__SSAT((___SMMUL((noise>>2)+(___SMMUL(noise,Noise<<3)<<3),IN<<2)),28)<<2,IV<<1)<<2,28)<<1;
 int32_t Cut;
-MTOF(cut-((wave>0?wave:-wave)<<3),Cut)
+MTOF(cut-((wave>0?wave:-wave)<<2),Cut)
 val=___SMMLA((wave-val)<<1,Cut,val);
 
 outlet_out=val;]]></code.srate>

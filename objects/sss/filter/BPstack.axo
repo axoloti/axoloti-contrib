@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="BPstack" uuid="627b57a0-1b9e-43d3-9518-6ac8ff05e2e3">
       <sDescription>Up 16x stackable BP-filter
 -pitch controls the center frequency of all filters
@@ -19,6 +19,7 @@
          <frac32 name="rate"/>
          <frac32 name="spread"/>
          <frac32 name="depth"/>
+         <frac32 name="phase"/>
       </inlets>
       <outlets>
          <frac32buffer name="out" description="filter output"/>
@@ -81,7 +82,7 @@ MTOFEXTENDED(param_rate+inlet_rate,rate)
 mode=param_mode;
 LFO+=rate>>6;
 for(i=0;i<param_stack;i++){
-int32_t lfo=LFO+(((param_spread+inlet_spread)<<4)/(param_stack)*i<<2)>>4;
+int32_t lfo=LFO+inlet_phase+(((param_spread+inlet_spread)<<4)/(param_stack)*i<<2)>>4;
 lfo=lfo>0?lfo:-lfo;
 lfo=___SMMUL((param_depth+inlet_depth)<<3,lfo<<2);
 int32_t PITCH=inlet_pitch1+param_pitch1+lfo+(((param_Pspread+inlet_Pspread))/(param_stack)*i);

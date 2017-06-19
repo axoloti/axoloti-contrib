@@ -20,6 +20,7 @@ outputs pulses for beat, triplets, fourths and a variable rate multiplier.</sDes
          <int32 name="rate3"/>
          <int32.positive name="timing"/>
          <frac32 name="delaybase"/>
+         <frac32 name="ratebase"/>
       </outlets>
       <displays/>
       <params>
@@ -45,7 +46,7 @@ outputs pulses for beat, triplets, fourths and a variable rate multiplier.</sDes
 uint32_t r;
 int rate1=3;
 int rate2=4;
-int32_t freq;]]></code.declaration>
+uint32_t freq;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
    r = 1;]]></code.init>
       <code.krate><![CDATA[{	 
@@ -58,7 +59,7 @@ int32_t freq;]]></code.declaration>
       } else {
          if (!inlet_reset) r = 1;
          
-         freq=(1<<31)/(45000/BPM);
+         freq=(uint32_t)(1<<31)/(22500/BPM);
          Phase += freq>>2;
       }
       outlet_beat= (Phase>0)?1:0;
@@ -69,7 +70,8 @@ int32_t freq;]]></code.declaration>
       outlet_vari3=((Phase*inlet_vari3)>0)?1:0;
       outlet_rate3=inlet_vari3<<4;
    }
-   outlet_timing=(1<<31)/freq/3*2;
-   outlet_delaybase=(1<<31)/outlet_timing<<5;]]></code.krate>
+   outlet_timing=(uint32_t)(1<<31)/freq/3*2;
+   outlet_delaybase=(uint32_t)(1<<31)/outlet_timing<<5;
+   outlet_ratebase=freq>>2;]]></code.krate>
    </obj.normal>
 </objdefs>

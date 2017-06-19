@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="compST" uuid="802a0a7f-b625-499f-9670-0739ca99f02e">
+   <obj.normal id="compST" uuid="011bc610-1365-4629-8a4c-be04df5f5757">
       <sDescription>Dynamic range compressor with soft-treshold function, ratio, attack/release and gain.</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -25,6 +25,7 @@
          <frac32.u.map.kdecaytime name="attack"/>
          <frac32.u.map.kdecaytime name="decay"/>
          <frac32.u.map.gain name="gain"/>
+         <bool32.tgl name="limiter"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t frac_log(int32_t a) {
@@ -52,9 +53,10 @@ int i;
 int32_t over1;
 int32_t over2;]]></code.declaration>
       <code.init><![CDATA[accu = 0;]]></code.init>
-      <code.krate><![CDATA[int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
-int32_t treshlog = frac_log(param_tresh-soft);
-int32_t Tresh=frac_log(param_tresh);
+      <code.krate><![CDATA[int32_t TRESH=param_tresh+(8<<21)+2;
+int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
+int32_t treshlog = frac_log(TRESH-soft);
+int32_t Tresh=frac_log(TRESH);
 int32_t makeup=___SMMUL(Tresh,param_gain>>1);
 Tresh=Tresh-treshlog;
 float32_t ratio=(float32_t)(1<<27)/Tresh;
@@ -81,13 +83,21 @@ for(i=0;i<BUFSIZE;i++){
 }
 
 disp_in=In;
-disp_out=OUT;
+disp_out=OUT>>6;
 disp_comp=OVER;
 disp_tresh=over1>0?1:0;]]></code.krate>
-      <code.srate><![CDATA[IN=inlet_inL>inlet_inR?inlet_inL:inlet_inR;
-IN=IN>0?IN:-IN;
+      <code.srate><![CDATA[int32_t iL=inlet_inL;
+int32_t iR=inlet_inR;
+iL=iL>0?iL:-iL;
+iR=iR>0?iR:-iR;
+
+IN=iL>iR?iL:iR;
+
 if(IN>val){
-val=___SMMLA((IN-val)<<1,attack,val);
+if(param_limiter==1){
+val=IN;
+}
+else {val=___SMMLA((IN-val)<<1,attack,val);}
 }
 else{
 val=___SMMLA((IN-val)<<1,decay,val);

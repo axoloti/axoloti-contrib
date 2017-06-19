@@ -1,0 +1,246 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="formulator" uuid="1a5d628e-c39b-4c70-8315-267b749ae6f9">
+      <sDescription>An easy maths module, all calculations are done in floats and returned to integers.
+In- and outputs are scaled.
+4 sets of 4 formulas can be set in the text-entries.
+Start with output name and use input names in the functions, always end with an &quot; ; &quot; at the end of a formula.
+Multiple lines can be used the enter a single formula.
+you can add extra names by adding: (float32_t) X; (where X is the new name)
+
+----------example:
+
+o1=SIN(a)/COT(b)*LOG(f);
+
+o2=CLIP(c,MAX(f,g),MIN(d,e));
+
+float32_t T;
+T=POW(f,e);
+o3=1/T;
+
+o4=a+b+c+d+e+f+g+h;
+
+----------end of example
+
+list of available &quot;special&quot; functions:
+
+PI		PI-value 3.14159265359....
+SIN(X)		Sine from X. For a full cycle enter: 		SIN(X*2*PI)  
+COS(X)		Cosine from X. For a full cycle enter: 		COS(X*2*PI)  
+TAN(X)		Tangent from X. For a full cycle enter: 	TAN(X*2*PI)  
+SEC(X)		Secant from X. For a full cycle enter: 		SEC(X*2*PI)  
+CSC(X)		Cosecant from X. For a full cycle enter:	CSC(X*2*PI)  
+COT(X)		Cotangent from X. For a full cycle enter:	COT(X*2*PI) 
+POW(X,Y)	Power function X^Y
+SQR(X)		Squareroot of X
+ABS(X)		Absolute (positive) value of X
+LOG(X)		Log function on X. For an input at scaleIn value, returns 0dB change to the scaleOut value.
+QNT(X,range)	Quantizes to range value)
+DIV(X,range)	Number of divisions: number of times that X has passed the range value)
+REM(X,range)	Remaining: X wraps back to 0 if it passes the range value)
+MAX(X,Y)	Maximum of X and Y)
+MIN(X,Y)	Minimum of X and Y)
+CLP(X,max,min)	Clipping between max and min)
+
+of course you can also use the normal functions:
+
+X+Y		add X to Y
+X-Y		subtract Y from X
+X*Y   		multiply X and Y
+X/Y		divide X by Y
+X&gt;Y		compare: X greater then Y
+X&gt;=Y		compare: X greater then or equal to Y
+X&lt;Y		compare: X smaller then Y
+X&lt;=Y		compare: X smaller then or equal to Y
+X==Y		compare: only if X equals Y
+X&amp;&amp;Y		compare: AND X and Y both above 0
+X||Y		compare: OR  X or Y above zero
+
+
+&quot;not usable&quot; for float calculations, need &quot;special&quot; care to use these:
+
+^		this is a integer function, not usable for floats. BUT you can use it if you put (int32_t) in front of the value/name.
+: and ?		this is used for other functions like: (X&gt;Y?X:Y). Which means, if X is greater then Y, return X, otherwise return Y.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="a"/>
+         <frac32 name="b"/>
+         <frac32 name="c"/>
+         <frac32 name="d"/>
+         <frac32 name="e"/>
+         <frac32 name="f"/>
+         <frac32 name="g"/>
+         <frac32 name="h"/>
+         <int32 name="formula"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="o4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="formula">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.u.map name="scaleIn"/>
+         <frac32.u.map name="scaleOut"/>
+      </params>
+      <attribs>
+         <text name="formula1" description="enter 4 formula&apos;s for the 4 outputs:o1=...;o2=....;o3=...;o4=....;"/>
+         <text name="formula2" description="enter 4 formula&apos;s for the 4 outputs:o1=...;o2=....;o3=...;o4=....;"/>
+         <text name="formula3" description="enter 4 formula&apos;s for the 4 outputs:o1=...;o2=....;o3=...;o4=....;"/>
+         <text name="formula4" description="enter 4 formula&apos;s for the 4 outputs:o1=...;o2=....;o3=...;o4=....;"/>
+      </attribs>
+      <code.declaration><![CDATA[float32_t a;
+float32_t b;
+float32_t c;
+float32_t d;
+float32_t e;
+float32_t f;
+float32_t g;
+float32_t h;
+float32_t o1;
+float32_t o2;
+float32_t o3;
+float32_t o4;
+float32_t X;
+float32_t minus=(float32_t) 1/64;
+int32_t pv;
+
+
+float32_t SIN(float32_t phase){
+	return X=sinf(phase);
+};
+
+
+float32_t COS(float32_t phase){
+	return X=cosf(phase);
+};
+
+
+float32_t TAN(float32_t phase){
+	return X=sinf(phase)/cosf(phase)/64;
+};
+
+
+float32_t SEC(float32_t phase){
+	return X=((float32_t)1/64)/cosf(phase);
+};
+
+
+float32_t CSC(float32_t phase){
+	return X=((float32_t)1/64)/sinf(phase);
+};
+
+
+float32_t COT(float32_t phase){
+	return X=((float32_t)1/64)/(sinf(phase)/cosf(phase));
+};
+
+float32_t POW(float32_t X,float32_t Y){
+	return X=powf(X,Y);
+};
+
+
+float32_t SQR(float32_t X){
+	return X= sqrtf(X);
+};
+
+
+float32_t ABS(int32_t in){
+	return X=in>0?in:-in;
+};
+
+
+float32_t LOG(float32_t in){
+	return X=log(in);
+};
+
+
+float32_t QNT(float32_t in,float32_t rng){
+		  X=((int32_t)(in/rng))*rng;
+	return X+=in<0?-rng:0;
+};
+
+
+float32_t DIV(float32_t in,float32_t rng){
+		  X=(float32_t)((int32_t)(in/rng))/64;
+	return X+=in<0?-minus:0;
+};
+
+
+float32_t REM(float32_t in,float32_t rng){
+	       X=in-((int32_t)(in/rng))*rng;
+	return X+=in<0?rng:0;
+};
+
+
+float32_t MAX(float32_t A,float32_t B){
+	return X=  A>B?A:B    ;
+};
+
+
+float32_t MIN(float32_t A,float32_t B){
+	return X=  A<B?A:B    ;
+};
+
+
+float32_t CLP(float32_t in,float32_t A,float32_t B){
+	X=A<B?B:A;
+	B=A<B?A:B;
+	A=X;
+	X=(in>A?A:in);
+	return X=  X<B?B:X    ;
+};
+
+
+
+/* copy and change NAME and FUNCTION to add more functions:
+
+
+ 
+float32_t NAME(float32_t in){
+	return X=  "FUNCTION"    ;
+};
+
+
+
+
+*/]]></code.declaration>
+      <code.krate><![CDATA[int32_t value=inlet_a+inlet_b+inlet_c+inlet_d+inlet_e+inlet_f+inlet_g+inlet_h;
+int32_t scl=param_scaleIn;
+int32_t scO=param_scaleOut;
+if(!(pv==value)){
+a=(float32_t)inlet_a/scl;
+b=(float32_t)inlet_b/scl;
+c=(float32_t)inlet_c/scl;
+d=(float32_t)inlet_d/scl;
+e=(float32_t)inlet_e/scl;
+f=(float32_t)inlet_f/scl;
+g=(float32_t)inlet_g/scl;
+h=(float32_t)inlet_h/scl;
+int formula=(inlet_formula+param_formula)&3;
+if(formula==0){
+attr_formula1;
+}
+if(formula==1){
+attr_formula2;
+}
+if(formula==2){
+attr_formula3;
+}
+if(formula==3){
+attr_formula4;
+}
+}
+
+outlet_o1=o1*scO;
+outlet_o2=o2*scO;
+outlet_o3=o3*scO;
+outlet_o4=o4*scO;
+
+pv=value;]]></code.krate>
+   </obj.normal>
+</objdefs>

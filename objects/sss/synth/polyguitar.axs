@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.11">
+<patch-1.0 appVersion="1.0.12">
    <obj type="sss/osc/guitarAllocation" uuid="623061f1-0bb6-4e7d-af31-cbfff4d43c57" name="guitarAllocation_1" x="546" y="14">
       <params/>
       <attribs>
@@ -6,7 +6,7 @@
          <spinner attributeName="presets" value="1"/>
       </attribs>
    </obj>
-   <obj type="sss/osc/guitarTable" uuid="3d635174-804e-49af-bbb5-611737145f3f" name="guitarTable_1" x="168" y="42">
+   <obj type="sss/osc/guitarTable" uuid="b69960bd-b466-42b6-8dd8-ca4f7800845f" name="guitarTable_1" x="168" y="42">
       <params>
          <int32 name="damp" onParent="true" value="1"/>
          <int32 name="minDiv" onParent="true" value="2"/>
@@ -16,6 +16,7 @@
          <frac32.u.map name="position" onParent="true" value="38.5"/>
          <frac32.u.map name="strike" onParent="true" value="52.5"/>
          <int32 name="preset" value="0"/>
+         <bool32.mom name="do" onParent="true" value="0"/>
       </params>
       <attribs>
          <objref attributeName="table" obj="guitarAllocation_1"/>
@@ -31,6 +32,12 @@
    </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="START" x="364" y="210">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="vel/touch" x="812" y="210">
+      <params>
+         <frac32.u.map name="value" onParent="true" value="64.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="sync" x="364" y="252">
@@ -63,20 +70,14 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="touch2filter" x="812" y="294">
+   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_1" x="812" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="touch2filter" x="882" y="294">
       <params>
          <frac32.u.map name="amp" onParent="true" value="64.0"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="vel/touch" x="924" y="294">
-      <params>
-         <frac32.u.map name="value" onParent="true" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="mix/xfade" uuid="bb87360199938d53d1183cdc80947ed0a39e3c9a" name="xfade_1" x="994" y="294">
-      <params/>
       <attribs/>
    </obj>
    <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1064" y="294">
@@ -146,7 +147,9 @@
          <frac32.u.map name="pwm" onParent="true" value="39.5"/>
          <frac32.u.map name="mod" onParent="true" value="46.5"/>
          <frac32.u.map name="start" onParent="true" value="20.0"/>
-         <int32 name="preset" value="0"/>
+         <int32 name="preset1" value="0"/>
+         <int32 name="preset2" value="0"/>
+         <bool32.tgl name="link" value="0"/>
       </params>
       <attribs>
          <objref attributeName="table" obj="guitarAllocation_1"/>
@@ -225,15 +228,6 @@
          <dest obj="guitarDualOsc_1" inlet="pwm"/>
       </net>
       <net>
-         <source obj="smooth touch" outlet="out"/>
-         <dest obj="touch2PWM" inlet="in"/>
-         <dest obj="touch2MOD" inlet="in"/>
-         <dest obj="touch2START" inlet="in"/>
-         <dest obj="touch2filter" inlet="in"/>
-         <dest obj="touch2cutoff" inlet="in"/>
-         <dest obj="xfade_1" inlet="i2"/>
-      </net>
-      <net>
          <source obj="keyb_1" outlet="touch"/>
          <dest obj="smooth touch" inlet="in"/>
       </net>
@@ -285,6 +279,11 @@
       <net>
          <source obj="xfade_1" outlet="o"/>
          <dest obj="*_1" inlet="b"/>
+         <dest obj="touch2PWM" inlet="in"/>
+         <dest obj="touch2MOD" inlet="in"/>
+         <dest obj="touch2START" inlet="in"/>
+         <dest obj="touch2cutoff" inlet="in"/>
+         <dest obj="touch2filter" inlet="in"/>
       </net>
       <net>
          <source obj="vel/touch" outlet="out"/>
@@ -302,6 +301,10 @@
          <source obj="LPos_1" outlet="out"/>
          <dest obj="outlet_1" inlet="outlet"/>
       </net>
+      <net>
+         <source obj="smooth touch" outlet="out"/>
+         <dest obj="xfade_1" inlet="i2"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>polyphonic</subpatchmode>
@@ -316,7 +319,7 @@
    <windowPos>
       <x>-8</x>
       <y>-8</y>
-      <width>1696</width>
-      <height>1026</height>
+      <width>1296</width>
+      <height>1000</height>
    </windowPos>
 </patch-1.0>
