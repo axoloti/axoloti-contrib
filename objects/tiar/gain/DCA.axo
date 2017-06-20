@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c">
+      <sDescription>De clicked &quot;Digital&quot; Controlled Amplifier:
+      multiplies &quot;in&quot; and &quot;gain&quot; inputs.
+      The gain input is NOT INTERPOLATED, DCA is &quot;anti &quot;clicked by updating gain at zero crossings of the input.
+      This allows very sharp attack transients without additional clicks.
+      </sDescription>
+      <author>T?Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>DCA.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32 name="gain" description="gain input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t gain = 0; int32_t _in = 0;]]></code.declaration>
+      <code.srate><![CDATA[if( (inlet_in < 0 && _in >= 0) || (inlet_in >= 0 && _in < 0)){
+  gain = inlet_gain;
+}
+_in = inlet_in;
+
+outlet_out = ___SMMUL(inlet_in, gain)<<5;]]></code.srate>
+   </obj.normal>
+</objdefs>
