@@ -1,0 +1,296 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="phaser1" uuid="04fb3832-230b-467b-bd9f-b92ed5b06e5b">
+      <sDescription>A phaser with 2 stages. 
+
+Use size 256 samples for the table, it sounds best for a phaser. 
+
+6-7%</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32buffer name="time" description="delay time (fraction of total delayline size)"/>
+         <frac32 name="lfo" description="lfo speed mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <frac32.u.map name="mix" description="">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="feedback">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="freqa">
+            <DefaultValue v="11.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="freqb">
+            <DefaultValue v="17.5"/>
+         </frac32.u.map>
+         <frac32.u.map name="timea">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="timeb">
+            <DefaultValue v="23.5"/>
+         </frac32.u.map>
+         <bool32.tgl name="lfoon"/>
+         <frac32.u.map name="lfoam">
+            <DefaultValue v="46.5"/>
+         </frac32.u.map>
+         <frac32.s.map name="lfospeed">
+            <DefaultValue v="-49.0"/>
+         </frac32.s.map>
+         <bool32.tgl name="feedinvert" description=""/>
+      </params>
+      <attribs>
+         <combo name="s">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[// From delay write sdram //
+static const uint32_t LENGTHPOW1 = (attr_s);
+static const uint32_t LENGTH1 = (1<<attr_s);
+static const uint32_t LENGTHMASK1 = ((1<<attr_s)-1);
+int16_t *array1;
+uint32_t writepos1;
+
+
+int32_t vala;
+
+int32_t FILTERa;
+int32_t FILTERINVa;
+int32_t CLEANPLUSINVERTEDFILTERa;
+int32_t CLEANPLUSINVERTEDFILTERINVa;
+int32_t STEP2a;
+
+
+
+
+
+// From delay write sdram //
+static const uint32_t LENGTHPOW = (attr_s);
+static const uint32_t LENGTH = (1<<attr_s);
+static const uint32_t LENGTHMASK = ((1<<attr_s)-1);
+int16_t *array;
+uint32_t writepos;
+
+
+int32_t val;
+
+int32_t FILTER;
+int32_t FILTERINV;
+int32_t CLEANPLUSINVERTEDFILTER;
+int32_t CLEANPLUSINVERTEDFILTERINV;
+int32_t STEP2;
+
+
+// Delay - THis one is different than the others //
+// I put the allpase AFTER the delay //
+int32_t ALLPASSS;
+int32_t MIX;
+
+
+
+
+// LFO //
+uint32_t phase;
+      uint32_t old_reset;
+      __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };]]></code.declaration>
+      <code.init><![CDATA[// From delay write sdram //
+static int16_t _array1[attr_poly][1<<attr_s]  __attribute__ ((section (".sdram")));
+array1 = &_array1[parent->polyIndex][0];
+   int i1;
+   writepos1 = 0;
+   for(i1=0;i1<LENGTH1;i1++) array1[i1] = 0;
+
+
+// 6db lo pass //
+vala = 0;
+
+
+
+
+// From delay write sdram //
+static int16_t _array[attr_poly][1<<attr_s]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+
+// 6db lo pass //
+val = 0;
+
+
+
+
+phase = 0;
+      old_reset = 0;]]></code.init>
+      <code.krate><![CDATA[if( 0 && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_lfospeed+inlet_lfo, freq );
+          phase += freq>>2;
+        }
+      old_reset = 0;
+
+      int32_t saw;
+
+      saw = (phase>>4) - (1<<27);
+      int32_t ZERO = (1<<27) - ___ABS(saw<<1);
+
+      saw = ((phase-0x40000000)>>4) - (1<<27);
+      int32_t NINETY = (1<<27) - ___ABS(saw<<1);
+
+int32_t ZEROAMOUNT;
+int32_t NINETYAMOUNT;
+// on/off button + amount 
+if(param_lfoon){
+ZEROAMOUNT= ___SMMUL(ZERO<<3,param_lfoam<<2);
+NINETYAMOUNT= ___SMMUL(NINETY<<3,param_lfoam<<2);
+}
+
+else{
+ZEROAMOUNT= 0;
+NINETYAMOUNT= 0;	
+}
+
+
+
+
+// 6db lo pass //
+int32_t fa;
+   MTOF(ZEROAMOUNT+param_freqa,fa);
+
+
+// 6db lo pass //
+int32_t f;
+   MTOF(NINETYAMOUNT+param_freqa+param_freqb,f);
+
+
+   int32_t ccompl = ((128<<20)-param_mix);]]></code.krate>
+      <code.srate><![CDATA[int32_t FEEDINVERT = (param_feedinvert)?-outlet_out:outlet_out;
+int32_t FEEDAMOUNT = ___SMMUL(FEEDINVERT<<3,param_feedback<<2);
+int32_t FEEDLIMIT= ___SMMUL(FEEDAMOUNT<<3,(int32_t)(54.00f * (1 << 21))<<2);
+
+// 6db lo pass //
+vala = ___SMMLA(((inlet_in+FEEDLIMIT)-vala)<<1,fa,vala);
+    FILTERa= vala;
+
+FILTERINVa				= -FILTERa;
+CLEANPLUSINVERTEDFILTERa 	= (inlet_in+FEEDLIMIT) + FILTERINVa;
+CLEANPLUSINVERTEDFILTERINVa 	= -CLEANPLUSINVERTEDFILTERa;
+STEP2a 					= FILTERa + CLEANPLUSINVERTEDFILTERINVa;
+
+
+
+// From delay write sdram //
+  writepos1 = (writepos1 + 1)&LENGTHMASK1;
+   array1[writepos1] = __SSAT(STEP2a>>14,16);
+
+int32_t TIMEMINIMUM1 = (param_timea + inlet_time>(int32_t)(02.00f * (1 << 21)))?param_timea + inlet_time:(int32_t)(02.00f * (1 << 21));
+int32_t TIME1LIMIT= ___SMMUL(TIMEMINIMUM1<<3,(int32_t)(08.00f * (1 << 21))<<2);
+
+// delay/read interp //      
+      uint32_t tmp_d1 =  __USAT(TIME1LIMIT,27);
+      uint32_t tmp_di1 = writepos1 - (tmp_d1>>(27-LENGTHPOW1 )) ; //- BUFSIZE + buffer_index -1// 
+      uint32_t tmp_w11 = (tmp_d1<<(LENGTHPOW1 +3)) & 0x3FFFFFFF;
+      uint32_t tmp_w21 = (1<<30) - tmp_w11;
+      int32_t tmp_a11 = array1[tmp_di1&LENGTHMASK1]<<16;
+      int32_t tmp_a21 = array1[(tmp_di1+1)&LENGTHMASK1]<<16;
+      int32_t tmp_r1 = ___SMMUL(tmp_a11,tmp_w11);
+      tmp_r1 = ___SMMLA(tmp_a21,tmp_w21,tmp_r1);
+      int32_t AP1= tmp_r1;
+
+
+
+
+// 6db lo pass //
+val = ___SMMLA((AP1-val)<<1,f,val);
+    FILTER= val;
+
+FILTERINV 				= -FILTER;
+CLEANPLUSINVERTEDFILTER 		= AP1 + FILTERINV;
+CLEANPLUSINVERTEDFILTERINV 	= -CLEANPLUSINVERTEDFILTER;
+STEP2 					= FILTER + CLEANPLUSINVERTEDFILTERINV;
+
+
+
+// From delay write sdram //
+  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(STEP2>>14,16);
+
+int32_t TIMEMINIMUM2 = (param_timeb + inlet_time>(int32_t)(02.00f * (1 << 21)))?param_timeb + inlet_time:(int32_t)(02.00f * (1 << 21));
+int32_t TIME2LIMIT= ___SMMUL(TIMEMINIMUM2<<3,(int32_t)(08.00f * (1 << 21))<<2);
+
+// delay/read interp //      
+      uint32_t tmp_d =  __USAT(TIME2LIMIT,27);
+      uint32_t tmp_di = writepos - (tmp_d>>(27-LENGTHPOW )) ; //- BUFSIZE + buffer_index -1// 
+      uint32_t tmp_w1 = (tmp_d<<(LENGTHPOW +3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = array[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      ALLPASSS= tmp_r;
+
+
+
+{
+      int64_t a = (int64_t)ALLPASSS * param_mix;
+      a += (int64_t)inlet_in * ccompl;
+      MIX= a>>27;
+   }
+
+outlet_out = (param_on)?MIX:inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>
