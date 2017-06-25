@@ -1,41 +1,48 @@
 <patch-1.0 appVersion="1.0.12">
    <obj type="tiar/noise/Geiger" uuid="e8add726-86f9-4df7-bf47-9c9f90c53d8e" name="Geiger_1" x="84" y="56">
       <params>
-         <frac32.u.map name="density" value="6.5"/>
+         <frac32.u.map name="density" value="24.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="224" y="56">
+   <obj type="tiar/filter/dis lphp1" uuid="38e767d14f9175253a0e6a1d9d55ca41e0e61971" name="dis_1" x="224" y="56">
       <params>
-         <frac32.s.map name="pitch" value="-57.0"/>
-         <frac32.u.map name="Q" value="0.0"/>
+         <frac32.u.map name="freqUp" value="10.0"/>
+         <frac32.u.map name="freqDown" value="64.0"/>
+         <frac32.u.map name="type" value="0.0"/>
+         <frac32.s.map name="bias" value="0.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_2" x="336" y="56">
       <params>
-         <frac32.s.map name="pitch" value="26.0"/>
-         <frac32.u.map name="Q" value="27.5"/>
+         <frac32.s.map name="pitch" value="25.0"/>
+         <frac32.u.map name="Q" value="34.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="448" y="56">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="588" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="462" y="238">
       <params/>
       <attribs/>
    </obj>
    <nets>
       <net>
-         <source obj="Geiger_1" outlet="out"/>
-         <dest obj="ZDF_1" inlet="x"/>
-      </net>
-      <net>
-         <source obj="ZDF_1" outlet="hp12"/>
-         <dest obj="ZDF_2" inlet="x"/>
-      </net>
-      <net>
          <source obj="ZDF_2" outlet="lp12"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dis_1" outlet="hp"/>
+         <dest obj="ZDF_2" inlet="x"/>
+      </net>
+      <net>
+         <source obj="Geiger_1" outlet="out"/>
+         <dest obj="dis_1" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -45,7 +52,7 @@
    <windowPos>
       <x>251</x>
       <y>103</y>
-      <width>605</width>
+      <width>893</width>
       <height>769</height>
    </windowPos>
 </patch-1.0>
