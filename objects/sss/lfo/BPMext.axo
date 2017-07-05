@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="BPMext" uuid="1182803e-95f7-46fa-9dce-6269ac0ef37b">
+   <obj.normal id="BPMext" uuid="7b90c9ef-c596-431d-a030-cf6c78757bca">
       <sDescription>simple master clock source in BPM.
 outputs pulses for beat, triplets, fourths and a variable rate multiplier.</sDescription>
       <author>Remco van der Most</author>
@@ -14,6 +14,8 @@ outputs pulses for beat, triplets, fourths and a variable rate multiplier.</sDes
          <bool32 name="beat" description="square wave"/>
          <bool32 name="trips"/>
          <bool32 name="fours"/>
+         <bool32 name="32"/>
+         <bool32 name="64"/>
          <bool32 name="vari1"/>
          <bool32 name="vari2"/>
          <bool32 name="vari3"/>
@@ -65,13 +67,15 @@ uint32_t freq;]]></code.declaration>
       outlet_beat= (Phase>0)?1:0;
       outlet_trips=((Phase*rate1)>0)?1:0;
       outlet_fours=((Phase*rate2)>0)?1:0;
+      outlet_32=((Phase<<5)>0)?1:0;
+      outlet_64=((Phase<<6)>0)?1:0;
       outlet_vari1=((Phase*param_vari1)>0)?1:0;
       outlet_vari2=((Phase*param_vari2)>0)?1:0;
       outlet_vari3=((Phase*inlet_vari3)>0)?1:0;
       outlet_rate3=inlet_vari3<<4;
    }
-   outlet_timing=(uint32_t)(1<<31)/freq/3*2;
-   outlet_delaybase=(uint32_t)(1<<31)/outlet_timing<<5;
+   outlet_timing=(uint64_t)(1<<30)*(1<<17)/freq;
+   outlet_delaybase=(uint64_t)(1<<30)*(1<<17)/freq;
    outlet_ratebase=freq>>2;]]></code.krate>
    </obj.normal>
 </objdefs>

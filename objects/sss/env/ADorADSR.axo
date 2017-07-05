@@ -25,11 +25,16 @@ int ntrig;
 int32_t val;
 int mode;
 int32_t R;
-int32_t S;]]></code.declaration>
+int32_t S;
+int pv;]]></code.declaration>
       <code.init><![CDATA[stage = 0;
 ntrig = 0;
 val = 0;]]></code.init>
-      <code.krate><![CDATA[if ((inlet_gate>0) && !ntrig) {
+      <code.krate><![CDATA[if((pv==2)&&(inlet_gate==1)){
+	ntrig=0;
+}
+
+if ((inlet_gate>0) && !ntrig) {
 	mode=inlet_gate;
 	if(mode==1){R=param_d;S=0;}
 	if(mode==2){R=param_r;S=param_s;}
@@ -54,6 +59,8 @@ if (stage == 0){
    val = (S<<4) + (___SMMUL(val - (S<<4),param_d)<<1);
 }
 
-outlet_env = val>>4;]]></code.krate>
+outlet_env = val>>4;
+
+pv=inlet_gate;]]></code.krate>
    </obj.normal>
 </objdefs>

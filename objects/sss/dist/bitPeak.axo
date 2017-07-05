@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="bitPeak" uuid="36c3f2ad-f06d-4a46-95d3-e8f46ed5b1ef">
+      <sDescription>Attenuates the incoming signal and uses the smallest bit to add a positive/negative value depending on input sign. Then adds this to the original signal.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32 name="rate"/>
+         <frac32 name="slope"/>
+         <frac32 name="amt"/>
+         <frac32 name="tresh"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="rate"/>
+         <frac32.s.map name="slope"/>
+         <frac32.u.map name="amt"/>
+         <frac32.u.map name="tresh"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t vel;]]></code.declaration>
+      <code.krate><![CDATA[int32_t f1;
+int32_t f2;
+MTOF(param_slope+param_rate+inlet_slope+inlet_rate,f1)
+MTOF(-param_slope+param_rate-inlet_slope+inlet_rate,f2)
+f1=f1;
+f2=f2;
+int32_t tresh=__USAT(param_tresh+inlet_tresh+4,27);
+tresh=___SMMUL(tresh<<3,tresh<<2);
+tresh=___SMMUL(tresh<<3,tresh<<2);
+int32_t amt=__USAT(param_amt+inlet_amt,27);]]></code.krate>
+      <code.srate><![CDATA[if((inlet_i1/tresh)&1){
+if(inlet_i1>0){
+	val+=f1;
+	val=val>amt?amt:val;
+}
+else{
+	val-=f2;
+	val=val<-amt?-amt:val;
+}}
+vel+=val-vel>>2;
+outlet_o1=inlet_i1-(vel>>2);]]></code.srate>
+   </obj.normal>
+</objdefs>

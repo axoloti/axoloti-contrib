@@ -40,7 +40,7 @@ for type 4 counts:
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map.kpitch name="cut"/>
+         <frac32.s.map.pitch name="cut"/>
          <frac32.u.map.filterq name="res"/>
          <int32.hradio name="mode">
             <MaxValue i="4"/>
@@ -64,7 +64,7 @@ int32_t pv;
 int32_t stp;
 int32_t Freq;
 int prv;
-bool ALL;
+
 int32_t v26=(1>>26);
 int BUFMASK=BUFSIZE-1;
 int32_t band;
@@ -76,7 +76,7 @@ attr_core.band=band;
 for(i=0;i<BUFSIZE;i++){
 	attr_core.in[i]=inlet_in[i];
 }
-ALL=param_allpass;
+attr_core.ALL=(param_allpass+((inlet_MT>>4)&1))&1;
 int MODE=((param_mode&3)+((param_type&3)<<2)+inlet_MT)&15;
 
 

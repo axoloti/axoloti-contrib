@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.11">
-   <obj.normal id="4chanceSeq" uuid="6d0f0a9a-fc3e-47b7-b201-41a8df0fdb7a">
+<objdefs appVersion="1.0.12">
+   <obj.normal id="4chanceSeq" uuid="417bcec5-703a-4bd5-9f8c-e8c0b6e0e08c">
       <sDescription>quad randomisable trigger sequencer
 Each color has it&apos;s own chance.</sDescription>
       <author>Remco van der Most</author>
@@ -8,8 +8,14 @@ Each color has it&apos;s own chance.</sDescription>
       <inlets>
          <int32 name="count"/>
          <bool32 name="gate"/>
+         <bool32 name="def1"/>
+         <bool32 name="def2"/>
+         <bool32 name="def3"/>
+         <bool32 name="def4"/>
       </inlets>
       <outlets>
+         <int32 name="count"/>
+         <bool32 name="gate"/>
          <bool32 name="1"/>
          <bool32 name="2"/>
          <bool32 name="3"/>
@@ -35,21 +41,27 @@ select[1]=param_light;
 select[2]=param_dark;
 select[3]=param_black;
 
-int count=inlet_count;
+int32_t count=inlet_count;
+outlet_count=count-16;
+if((count>=0)&&(count<16)){
 if(!(count==prev)){
 gate[0]=select[param_1>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
 gate[1]=select[param_2>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
 gate[2]=select[param_3>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
 gate[3]=select[param_4>>(inlet_count<<1)&3]>((int32_t)(GenerateRandomNumber()>>5))?1:0;
 }
-
- 
-
 outlet_1=gate[0]&&inlet_gate;
 outlet_2=gate[1]&&inlet_gate;
 outlet_3=gate[2]&&inlet_gate;
 outlet_4=gate[3]&&inlet_gate;
-
-prev=count;]]></code.krate>
+}
+else{
+outlet_1=inlet_def1;
+outlet_2=inlet_def2;
+outlet_3=inlet_def3;
+outlet_4=inlet_def4;
+}
+prev=count;
+outlet_gate=inlet_gate;]]></code.krate>
    </obj.normal>
 </objdefs>

@@ -361,7 +361,8 @@ int32_t valres = ts + (ts>>1) - (tsq31p3);
    val[3] = ___SMMLA((val[2]-val[3])<<1,freq,val[3]);
    val[4] = ___SMMLA((val[3]-val[4])<<1,freq,val[4]);
    val[5] = ___SMMLA((val[4]-val[5])<<1,freq,val[5]);
-   out[i]= val[5];
+   out[i]= val[5]>>1;
+   out[i]-=(ALL>0?in[i]-out[i]:0);
 }
 ;break;
 
@@ -375,7 +376,8 @@ for(i=0;i<BUFSIZE;i++){
    In=__SSAT(val[0],28);
    val[3]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[1],28)<<2,res<<3),28)<<1)-val[1]-val[3])<<1,freq,val[3]);
    val[1] = ___SMMLA((val[3])<<1,freq,val[1]);
-   out[i]= val[1];
+   out[i]= val[1]>>1;
+   out[i]-=(ALL>0?in[i]-out[i]:0);
 }
 ;break;
 
@@ -389,23 +391,26 @@ for(i=0;i<BUFSIZE;i++){
    In=__SSAT(val[0]-In,28);
    val[3]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[1],28)<<2,res<<3),28)<<1)-val[1]-val[3])<<1,freq,val[3]);
    val[1] = ___SMMLA((val[3])<<1,freq,val[1]);
-   out[i]= val[1]-In;
+   out[i]= val[1]-In>>1;
+   out[i]-=(ALL>0?in[i]-out[i]:0);
 }
 ;break;
 
 case 15:
 for(i=0;i<BUFSIZE;i++){
 freq+=stp;
-int32_t In=__SSAT(___SMMUL((24<<21)+(v26),in[i]<<4)<<1,27);
+int32_t In=__SSAT(___SMMUL((3<<24)+(v26)<<1,in[i]<<2)<<1,27);
    val[1]+=___SMMUL((In)-val[0],freq)-___SMMUL(val[1]<<1,res); 
    val[1]=val[1]>casc?casc:val[1];
    val[1]=val[1]<-casc?-val[1]:val[1];
+   val[1]-=val[1]>>9;
    val[0] += val[1];
    val[2]+=___SMMUL(val[0]-val[2],mix);
 int32_t ts = __SSAT(val[0]-val[2],28);
 int32_t tsq31 = ts<<2;
 int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
-out[i] = ts + (ts>>1) - (tsq31p3)>>1;
+out[i] = ts + (ts>>1) - (tsq31p3);
+out[i]-=(ALL>0?in[i]-out[i]:0);
 }
 ;break;
 }};]]></code.declaration>

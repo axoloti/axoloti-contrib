@@ -1,10 +1,11 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="ribbonKeyboard" uuid="19bd7e4a-917a-418b-ba8b-804ba4b4e4ef">
+   <obj.normal id="ribbonKeyboard" uuid="980b9e6e-9805-4f28-acf5-be192f0e949a">
       <sDescription>Ribbon like keyboard
 Works with the scalebank modules (not the 7-note-only version)
 Selected scale is shown on the keyboard
 Black notes won&apos;t respond when clicked
-Possible to &quot;swipe&quot; over the keyboard, playing arpeggio&apos;s</sDescription>
+Possible to &quot;swipe&quot; over the keyboard, playing arpeggio&apos;s
+trg-output sends triggers while swiping, note though, that this also seems to happen even though your still o the same note..</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
       <helpPatch>note scale.axh</helpPatch>
@@ -14,6 +15,7 @@ Possible to &quot;swipe&quot; over the keyboard, playing arpeggio&apos;s</sDescr
       </inlets>
       <outlets>
          <int32 name="note"/>
+         <bool32 name="trg"/>
       </outlets>
       <displays>
          <int32.label name="val" noLabel="true"/>
@@ -43,8 +45,9 @@ if(!((inlet_key+inlet_scale)==prv)){
 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],cur,0xFFFD);
 }
 
-
+outlet_trg=0;
 if(!(param_b1==cur)){
+	outlet_trg=1;
 	tmp=param_b1-cur;
 	if(tmp>0){
 	ch=0;

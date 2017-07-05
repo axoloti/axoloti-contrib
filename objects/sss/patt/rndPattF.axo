@@ -14,13 +14,13 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
       <author>Remco van der Most</author>
       <license>BSD</license>
       <inlets>
-         <bool32.rising name="rnd" description="trigger"/>
-         <int32 name="count"/>
-         <int32 name="length"/>
-         <int32 name="chance"/>
-         <frac32 name="change"/>
-         <frac32 name="max"/>
-         <frac32 name="min"/>
+         <bool32.rising name="rnd" description="when triggered steps in the array get randomised controlled by chance/change settings"/>
+         <int32 name="count" description="input for the counter (logic-&gt;counter)"/>
+         <int32 name="length" description="maximum count (eg. use my counter modules as these have in/outs for the length set)"/>
+         <int32 name="chance" description="external randomise chance input"/>
+         <frac32 name="change" description="external change size input"/>
+         <frac32 name="max" description="external control for max output value"/>
+         <frac32 name="min" description="external control for min output value"/>
       </inlets>
       <outlets>
          <frac32 name="v"/>
@@ -28,16 +28,20 @@ The pattern will be newly randomised each time you start up your axoloti.</sDesc
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="repeat"/>
-         <int32 name="chance">
+         <frac32.u.map name="repeat" description="sets a repeat length within zero and the &quot;length&quot; input/max array size. 32 would be half way the length. 22 would select 1/3 of the length input/max array size."/>
+         <int32 name="chance" description="chance that steps get randomised when a trigger is received at the input">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
-         <frac32.u.map name="change"/>
-         <frac32.s.map name="max"/>
-         <frac32.s.map name="min"/>
-         <bool32.mom name="rnd"/>
-         <frac32.u.map name="CV"/>
+         <frac32.u.map name="change" description="change-size from current value when a step  is randomised"/>
+         <frac32.u.map name="nonMemRnd" description="Sets a chance of a random offset added to the pattern. This offset is not put into the memory and occurs only once."/>
+         <frac32.u.map name="size" description="Sets the size of the random offset away from the repeating pattern."/>
+         <frac32.u.map name="freeze" description="Sets the chance that the output freezes for a random amount of counts"/>
+         <frac32.u.map name="maxFreeze" description="Sets the maximum amount of counts that the output can be frozen"/>
+         <bool32.mom name="rnd" description="press to randomise pattern"/>
+         <frac32.u.map name="CV" description="move the CV knob to auto-record the values of the knob to the pattern"/>
+         <frac32.s.map name="max" description="maximum output value"/>
+         <frac32.s.map name="min" description="minimum output value"/>
       </params>
       <attribs>
          <spinner name="maxSteps" MinValue="1" MaxValue="1024" DefaultValue="0"/>
@@ -49,7 +53,11 @@ int count;
 int32_t length;
 int i;
 int on;
-int prev;]]></code.declaration>
+int prev;
+int32_t Gen;
+uint32_t pv;
+int upd;
+uint32_t Tmp;]]></code.declaration>
       <code.init><![CDATA[on=1;
 ntrig = 0;]]></code.init>
       <code.krate><![CDATA[int chance=param_chance+inlet_chance;
@@ -79,12 +87,24 @@ int TRIG=0;
    }
    else if (!(trig>0)) ntrig=0;
    count=inlet_count-(inlet_count/length)*length;
-
+   
+if(!(count==pv)){
+	upd=__USAT(upd-1,28);
+	Gen=((uint32_t)(GenerateRandomNumber())>>5)<param_nonMemRnd?1:0;
+	if(Gen==1){
+		Gen=___SMMUL(param_size,(int32_t)GenerateRandomNumber())<<5;
+	}
+	if(upd==0){
+	upd=((uint32_t)(GenerateRandomNumber())>>5)<param_freeze?param_maxFreeze>>23:0;
+	}
+}
 if(!(param_CV==prev)){
 	val[count]=param_CV<<3;
 }
+if(upd==0){
+Tmp=val[count]+Gen;}
 
-   outlet_v = (___SMMUL(val[count]>>1,width)<<3)+param_min+inlet_min;
+   outlet_v = (___SMMUL(Tmp>>1,width)<<3)+param_min+inlet_min;
 if(on>0){
 	for(i=0;i<attr_maxSteps;i++){
          val[i] = (uint32_t)(GenerateRandomNumber()>>2);}
@@ -92,6 +112,8 @@ if(on>0){
 
 on=0;
 outlet_rnd=TRIG;
-prev=param_CV;]]></code.krate>
+prev=param_CV;
+
+pv=count;]]></code.krate>
    </obj.normal>
 </objdefs>
