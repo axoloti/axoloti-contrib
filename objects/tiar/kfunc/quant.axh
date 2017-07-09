@@ -1,0 +1,164 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="14" y="14">
+      <params>
+         <frac32.s.map name="value" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/quant" uuid="c7fe0315-febf-47b4-915e-d8fefd0ae05e" name="quant_1" x="84" y="14">
+      <params>
+         <frac32.u.map name="quant" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial b" uuid="9ffed04e6a3052d9001eda83bae7024cb6d17037" name="dial_2" x="182" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/Steps/SixStepsBLI" uuid="59979b1f-8fc8-414b-9e5a-1642748ca7ed" name="SixStepsBLI_1" x="392" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.s.map name="level0" value="-64.0"/>
+         <frac32.s.map name="level1" value="35.0"/>
+         <frac32.s.map name="level2" value="-10.0"/>
+         <frac32.s.map name="level3" value="10.0"/>
+         <frac32.s.map name="level4" value="35.0"/>
+         <frac32.s.map name="level5" value="60.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="546" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="9.0"/>
+         <frac32.u.map name="Q" value="26.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="672" y="224">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="32.0"/>
+         <frac32.u.map name="s" value="8.0"/>
+         <frac32.s.map name="r" value="43.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/quant" uuid="c7fe0315-febf-47b4-915e-d8fefd0ae05e" name="quant_3" x="798" y="224">
+      <params>
+         <frac32.u.map name="quant" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="896" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="994" y="224">
+      <params>
+         <frac32.u.map name="amp" value="32.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1134" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="1134" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="28" y="364">
+      <params>
+         <frac32.s.map name="a" value="-18.0"/>
+         <frac32.s.map name="d" value="41.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="168" y="364">
+      <params>
+         <frac32.u.map name="gain1" value="31.5"/>
+         <frac32.u.map name="gain2" value="31.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/quant" uuid="c7fe0315-febf-47b4-915e-d8fefd0ae05e" name="quant_2" x="280" y="364">
+      <params>
+         <frac32.u.map name="quant" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="quant_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="quant_1" outlet="out"/>
+         <dest obj="dial_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="quant_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="SixStepsBLI_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="lp12"/>
+         <dest obj="DCA_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="quant_2" outlet="out"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="quant_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="quant_3" outlet="out"/>
+         <dest obj="DCA_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="SixStepsBLI_1" outlet="out"/>
+         <dest obj="ZDF_1" inlet="x"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_2" inlet="left"/>
+         <dest obj="out_2" inlet="right"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DCA_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>294</x>
+      <y>145</y>
+      <width>1448</width>
+      <height>838</height>
+   </windowPos>
+</patch-1.0>
