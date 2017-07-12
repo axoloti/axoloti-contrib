@@ -1,6 +1,5 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f">
-      <sDescription></sDescription>
       <author>T.Rochebois</author>
       <license>LGPL</license>
       <helpPatch>ZDF SVF 1.axh</helpPatch>
@@ -60,7 +59,7 @@ update(  1.0f, 0.1f/32 );
 a = na; b = nb; c = nc;
 da = db = dc = 0;]]></code.init>
       <code.krate><![CDATA[float q = __USAT(param_Q + inlet_reso, 27) * (1.0f/(1<<27));
-q = 0.25f + q * (1 + q *q* (18.75f + q*60));  //0.25 -> 80
+q = 0.25f + q * (1 + q *q* (18.75f + q*20));  //0.25 -> 40
 
 int32_t alpha;
 MTOFEXTENDED(param_pitch + inlet_pitch, alpha);
@@ -70,6 +69,10 @@ b += db;
 c += dc;
 x = (float)inlet_x;
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+if(bp > (float)( 1<<30)) bp = (float)( 1<<30);
+if(bp < (float)(-1<<30)) bp = (float)(-1<<30);
+if(lp > (float)( 1<<30)) lp = (float)( 1<<30);
+if(lp < (float)(-1<<30)) lp = (float)(-1<<30);
 float x_lp = x - lp;
 outlet_lp12 = (int32_t)(lp += a * x_lp + b * bp);   
 outlet_hp12 = (int32_t)(x - D * bp - lp);
