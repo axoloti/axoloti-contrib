@@ -248,7 +248,7 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="9659e019-ebfa-4a62-88be-16ffe0dae457" name="patcher_1" x="1008" y="532">
+   <patcher type="patch/patcher" uuid="0dab2fc4-def3-4148-a36e-0de1439a6b6e" name="patcher_1" x="1008" y="532">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="6"/>
@@ -410,13 +410,17 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="350" y="420">
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="350" y="420">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="420" y="420">
             <params>
                <frac32.s.map name="freq" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="touch curve" x="476" y="420">
+         <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="touch curve" x="546" y="420">
             <params>
                <frac32.u.mapvsl name="p0" value="0.0"/>
                <frac32.u.mapvsl name="p1" value="8.0"/>
@@ -494,10 +498,6 @@
             <attribs/>
          </obj>
          <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="1764" y="448">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="196" y="490">
             <params/>
             <attribs/>
          </obj>
@@ -617,7 +617,7 @@
             </net>
             <net>
                <source obj="keyb_2" outlet="touch"/>
-               <dest obj="*_3" inlet="a"/>
+               <dest obj="max_1" inlet="in2"/>
             </net>
             <net>
                <source obj="touch_1" outlet="o"/>
@@ -625,7 +625,7 @@
             </net>
             <net>
                <source obj="max_1" outlet="out"/>
-               <dest obj="lowpass_1" inlet="in"/>
+               <dest obj="*_3" inlet="a"/>
             </net>
             <net>
                <source obj="keyb_2" outlet="gate"/>
@@ -634,10 +634,6 @@
             <net>
                <source obj="adsr_2" outlet="env"/>
                <dest obj="*_3" inlet="b"/>
-            </net>
-            <net>
-               <source obj="*_3" outlet="result"/>
-               <dest obj="max_1" inlet="in2"/>
             </net>
             <net>
                <source obj="AftFilter" outlet="inlet"/>
@@ -698,8 +694,8 @@
             </net>
             <net>
                <source obj="hp1_1" outlet="out"/>
-               <dest obj="xfade_3" inlet="i1"/>
                <dest obj="DCA_2" inlet="in"/>
+               <dest obj="xfade_3" inlet="i1"/>
             </net>
             <net>
                <source obj="xfade_3" outlet="o"/>
@@ -707,8 +703,8 @@
             </net>
             <net>
                <source obj="Dist" outlet="inlet"/>
-               <dest obj="xfade_3" inlet="c"/>
                <dest obj="DCA_2" inlet="gain"/>
+               <dest obj="xfade_3" inlet="c"/>
             </net>
             <net>
                <source obj="DCA_2" outlet="out"/>
@@ -721,6 +717,10 @@
             <net>
                <source obj="&gt;&gt;_1" outlet="result"/>
                <dest obj="xfade_3" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="*_3" outlet="result"/>
+               <dest obj="lowpass_1" inlet="in"/>
             </net>
          </nets>
          <settings>
