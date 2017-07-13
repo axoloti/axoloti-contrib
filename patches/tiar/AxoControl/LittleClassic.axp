@@ -89,7 +89,7 @@
          <combo attributeName="mode" selection="Push pull"/>
       </attribs>
    </obj>
-   <hyperlink type="patch/hyperlink" name="http://community.axoloti.com/t/tiar-smashedtransistors-contributions/2737/81" x="826" y="182"/>
+   <comment type="patch/comment" x="770" y="182" text="             UNFINISHED WORK: SUBJECT TO CHANGES :                 "/>
    <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="DecAtt_" x="70" y="196">
       <params/>
       <attribs>
@@ -132,18 +132,19 @@
    </obj>
    <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="Aft Filter" x="546" y="196">
       <params>
-         <frac32.u.mapvsl name="p0" value="14.5"/>
-         <frac32.u.mapvsl name="p1" value="14.0"/>
-         <frac32.u.mapvsl name="p2" value="3.5"/>
-         <frac32.u.mapvsl name="p3" value="0.0"/>
+         <frac32.u.mapvsl name="p0" value="34.0"/>
+         <frac32.u.mapvsl name="p1" value="21.5"/>
+         <frac32.u.mapvsl name="p2" value="7.0"/>
+         <frac32.u.mapvsl name="p3" value="4.0"/>
          <frac32.u.mapvsl name="p4" value="0.0"/>
          <frac32.u.mapvsl name="p5" value="0.0"/>
-         <frac32.u.mapvsl name="p6" value="9.5"/>
-         <frac32.u.mapvsl name="p7" value="24.0"/>
+         <frac32.u.mapvsl name="p6" value="0.0"/>
+         <frac32.u.mapvsl name="p7" value="20.0"/>
          <frac32.u.mapvsl name="p8" value="64.0"/>
       </params>
       <attribs/>
    </obj>
+   <hyperlink type="patch/hyperlink" name="http://community.axoloti.com/t/tiar-smashedtransistors-contributions/2737/81" x="770" y="210"/>
    <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_11" x="770" y="294">
       <params/>
       <attribs>
@@ -248,17 +249,21 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="b901ae2a-a22c-4102-bc8b-6c9910496013" name="patcher_1" x="1008" y="476">
+   <patcher type="patch/patcher" uuid="c2264b68-b1a1-4b9d-a138-573d9a5a8b68" name="patcher_1" x="1008" y="476">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="6"/>
       </attribs>
       <subpatch appVersion="1.0.12">
-         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Detune2" x="28" y="28">
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Vibrato" x="28" y="28">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Detune3" x="112" y="28">
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Detune2" x="154" y="28">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="Detune3" x="238" y="28">
             <params/>
             <attribs/>
          </obj>
@@ -294,7 +299,11 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="98" y="126">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="AddVib" x="126" y="126">
             <params/>
             <attribs/>
          </obj>
@@ -523,13 +532,6 @@
          <comment type="patch/comment" x="210" y="644" text="se retrouve avec une pression faible.. bug =&gt; sensitivity&lt;0,80"/>
          <nets>
             <net>
-               <source obj="keyb_1" outlet="note"/>
-               <dest obj="DetHzLH_2" inlet="pitch"/>
-               <dest obj="DetHzLH_1" inlet="pitch"/>
-               <dest obj="SelfPM_1" inlet="pitch"/>
-               <dest obj="mix_2" inlet="bus_in"/>
-            </net>
-            <net>
                <source obj="keyb_1" outlet="gate"/>
                <dest obj="adsr_1" inlet="gate"/>
                <dest obj="adsr_3" inlet="gate"/>
@@ -732,6 +734,21 @@
                <source obj="*c_1" outlet="out"/>
                <dest obj="xfade_3" inlet="i2"/>
             </net>
+            <net>
+               <source obj="AddVib" outlet="out"/>
+               <dest obj="SelfPM_1" inlet="pitch"/>
+               <dest obj="DetHzLH_2" inlet="pitch"/>
+               <dest obj="DetHzLH_1" inlet="pitch"/>
+               <dest obj="mix_2" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="AddVib" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="Vibrato" outlet="inlet"/>
+               <dest obj="AddVib" inlet="in1"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>polyphonic</subpatchmode>
@@ -746,9 +763,9 @@
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>32</x>
+            <x>101</x>
             <y>108</y>
-            <width>1867</width>
+            <width>1798</width>
             <height>891</height>
          </windowPos>
       </subpatch>
@@ -839,14 +856,14 @@
    </obj>
    <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="Aft Gain" x="476" y="644">
       <params>
-         <frac32.u.mapvsl name="p0" value="10.5"/>
-         <frac32.u.mapvsl name="p1" value="10.5"/>
-         <frac32.u.mapvsl name="p2" value="12.0"/>
-         <frac32.u.mapvsl name="p3" value="12.0"/>
-         <frac32.u.mapvsl name="p4" value="11.5"/>
-         <frac32.u.mapvsl name="p5" value="12.0"/>
-         <frac32.u.mapvsl name="p6" value="18.0"/>
-         <frac32.u.mapvsl name="p7" value="24.5"/>
+         <frac32.u.mapvsl name="p0" value="14.5"/>
+         <frac32.u.mapvsl name="p1" value="15.0"/>
+         <frac32.u.mapvsl name="p2" value="9.5"/>
+         <frac32.u.mapvsl name="p3" value="3.5"/>
+         <frac32.u.mapvsl name="p4" value="0.0"/>
+         <frac32.u.mapvsl name="p5" value="0.0"/>
+         <frac32.u.mapvsl name="p6" value="0.0"/>
+         <frac32.u.mapvsl name="p7" value="14.0"/>
          <frac32.u.mapvsl name="p8" value="64.0"/>
       </params>
       <attribs/>
@@ -905,7 +922,7 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="e730df97-f61c-4c04-bbe1-9b55642d3501" name="Reverb" x="728" y="854">
+   <patcher type="patch/patcher" uuid="51c98d86-504e-42dc-9633-f46040700b8f" name="Reverb" x="728" y="854">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -1410,7 +1427,22 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1148" y="854">
+   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="1218" y="854">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1344" y="854">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_2" x="1148" y="952">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="7"/>
+         <spinner attributeName="default" value="82"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="1232" y="952">
       <params/>
       <attribs/>
    </obj>
@@ -1442,6 +1474,79 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="28" y="1050">
+      <params>
+         <frac32.s.map name="pitch" value="7.12999963760376"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="126" y="1050">
+      <params>
+         <frac32.s.map name="pitch" value="14.03999948501587"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="224" y="1050">
+      <params>
+         <frac32.s.map name="pitch" value="-21.81999921798706"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="7d947bff9b8466d81c2ddd49b4a7fb702302e05c" name="mix_2" x="322" y="1050">
+      <params>
+         <frac32.u.map name="gain1" value="45.5"/>
+         <frac32.u.map name="gain2" value="6.5"/>
+         <frac32.u.map name="gain3" value="20.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="406" y="1050">
+      <params/>
+      <attribs>
+         <spinner attributeName="cc" value="1"/>
+         <spinner attributeName="default" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/kfilter/LPRiseDecay" uuid="51ef2ec2-064a-4803-a37d-3e0db690311e" name="LPRiseDecay_1" x="490" y="1050">
+      <params>
+         <frac32.s.map name="Rise" value="-27.0"/>
+         <frac32.s.map name="Decay" value="-10.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="616" y="1050">
+      <params>
+         <frac32.u.mapvsl name="p0" value="0.0"/>
+         <frac32.u.mapvsl name="p1" value="0.10000000149011612"/>
+         <frac32.u.mapvsl name="p2" value="0.20000000298023224"/>
+         <frac32.u.mapvsl name="p3" value="0.4000000059604645"/>
+         <frac32.u.mapvsl name="p4" value="0.800000011920929"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="Vibrato" x="700" y="1050">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_6" x="728" y="1148">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/u4b" uuid="1e1253ac-ca4b-430b-971f-cd0cfaad394c" name="u4b_1" x="42" y="1162">
+      <params>
+         <frac32.s.mapvsl name="p0" value="0.0"/>
+         <frac32.s.mapvsl name="p1" value="-2.0"/>
+         <frac32.s.mapvsl name="p2" value="-4.0"/>
+         <frac32.s.mapvsl name="p3" value="-5.0"/>
+         <frac32.s.mapvsl name="p4" value="-6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_5" x="504" y="1162">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1218" y="1162" text="Volume CC"/>
    <nets>
       <net>
          <source obj="DecAtt" outlet="out"/>
@@ -1585,7 +1690,7 @@
       </net>
       <net>
          <source obj="+_2" outlet="out"/>
-         <dest obj="out_2" inlet="left"/>
+         <dest obj="vcaST_1" inlet="a1"/>
       </net>
       <net>
          <source obj="*_3" outlet="result"/>
@@ -1593,7 +1698,7 @@
       </net>
       <net>
          <source obj="+_3" outlet="out"/>
-         <dest obj="out_2" inlet="right"/>
+         <dest obj="vcaST_1" inlet="a2"/>
       </net>
       <net>
          <source obj="DPSoftClip_1" outlet="out"/>
@@ -1656,6 +1761,59 @@
       <net>
          <source obj="dist" outlet="out"/>
          <dest obj="patcher_1" inlet="Dist"/>
+      </net>
+      <net>
+         <source obj="cc_2" outlet="midiCC"/>
+         <dest obj="dial_4" inlet="in"/>
+         <dest obj="vcaST_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o1"/>
+         <dest obj="out_2" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o2"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="cc_1" outlet="midiCC"/>
+         <dest obj="LPRiseDecay_1" inlet="in"/>
+         <dest obj="dial_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="Vibrato" inlet="a"/>
+      </net>
+      <net>
+         <source obj="sine_3" outlet="wave"/>
+         <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="LPRiseDecay_1" outlet="out"/>
+         <dest obj="u4u_1" inlet="in"/>
+         <dest obj="u4b_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="u4u_1" outlet="out"/>
+         <dest obj="Vibrato" inlet="b"/>
+         <dest obj="dial_6" inlet="in"/>
+      </net>
+      <net>
+         <source obj="Vibrato" outlet="result"/>
+         <dest obj="patcher_1" inlet="Vibrato"/>
+      </net>
+      <net>
+         <source obj="u4b_1" outlet="out"/>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="sine_2" inlet="pitch"/>
       </net>
    </nets>
    <settings>
