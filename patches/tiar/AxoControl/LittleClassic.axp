@@ -244,11 +244,11 @@
          <frac32.u.mapvsl name="p5" value="64.0"/>
          <frac32.u.mapvsl name="p6" value="64.0"/>
          <frac32.u.mapvsl name="p7" value="49.5"/>
-         <frac32.u.mapvsl name="p8" value="21.5"/>
+         <frac32.u.mapvsl name="p8" value="25.5"/>
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="27d5d6d8-9d56-401d-8014-1cbb7c731dad" name="patcher_1" x="1008" y="532">
+   <patcher type="patch/patcher" uuid="aa0117b8-30a0-44f9-8408-99d5fddd7166" name="patcher_1" x="1008" y="532">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="6"/>
@@ -434,13 +434,17 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="686" y="448">
+         <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_4" x="686" y="448">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="756" y="448">
             <params>
-               <frac32.s.map name="freq" value="-25.0"/>
+               <frac32.s.map name="freq" value="-14.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_3" x="812" y="448">
+         <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="868" y="448">
             <params>
                <frac32.s.map name="pitch" value="10.0"/>
                <frac32.u.map name="Q" value="0.0"/>
@@ -482,22 +486,18 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1512" y="448">
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="1512" y="448">
             <params/>
             <attribs/>
          </obj>
-         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="1568" y="448">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1652" y="448">
+         <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1596" y="448">
             <params>
                <frac32.u.map name="InGain" value="12.0"/>
-               <frac32.u.map name="OutGain" value="49.5"/>
+               <frac32.u.map name="OutGain" value="32.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="1764" y="448">
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="out" x="1708" y="448">
             <params/>
             <attribs/>
          </obj>
@@ -543,7 +543,7 @@
             </net>
             <net>
                <source obj="mix_2" outlet="out"/>
-               <dest obj="ZDF_3" inlet="pitch"/>
+               <dest obj="ZDF_1" inlet="pitch"/>
             </net>
             <net>
                <source obj="adsr_3" outlet="env"/>
@@ -587,11 +587,11 @@
             </net>
             <net>
                <source obj="Reso" outlet="inlet"/>
-               <dest obj="ZDF_3" inlet="reso"/>
+               <dest obj="ZDF_1" inlet="reso"/>
             </net>
             <net>
                <source obj="GainComp" outlet="inlet"/>
-               <dest obj="*_1" inlet="b"/>
+               <dest obj="*_4" inlet="b"/>
             </net>
             <net>
                <source obj="Waveform" outlet="inlet"/>
@@ -645,7 +645,7 @@
             </net>
             <net>
                <source obj="xfade_2" outlet="o"/>
-               <dest obj="*_1" inlet="a"/>
+               <dest obj="DCA_1" inlet="gain"/>
             </net>
             <net>
                <source obj="touch curve" outlet="out"/>
@@ -681,12 +681,8 @@
                <dest obj="out" inlet="outlet"/>
             </net>
             <net>
-               <source obj="*_1" outlet="result"/>
-               <dest obj="DCA_1" inlet="gain"/>
-            </net>
-            <net>
                <source obj="hp1_1" outlet="out"/>
-               <dest obj="ZDF_3" inlet="x"/>
+               <dest obj="ZDF_1" inlet="x"/>
             </net>
             <net>
                <source obj="xfade_3" outlet="o"/>
@@ -714,13 +710,17 @@
                <dest obj="lowpass_1" inlet="in"/>
             </net>
             <net>
-               <source obj="ZDF_3" outlet="lp12"/>
+               <source obj="ZDF_1" outlet="lp12"/>
                <dest obj="DCA_2" inlet="in"/>
                <dest obj="xfade_3" inlet="i1"/>
             </net>
             <net>
-               <source obj="mix_1" outlet="out"/>
+               <source obj="*_4" outlet="result"/>
                <dest obj="hp1_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="*_4" inlet="a"/>
             </net>
          </nets>
          <settings>
@@ -766,7 +766,7 @@
          <frac32.u.mapvsl name="p5" value="21.0"/>
          <frac32.u.mapvsl name="p6" value="25.5"/>
          <frac32.u.mapvsl name="p7" value="32.0"/>
-         <frac32.u.mapvsl name="p8" value="59.5"/>
+         <frac32.u.mapvsl name="p8" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -895,7 +895,7 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="6ed3da89-432d-44f2-b365-ecca2b765ae0" name="Reverb" x="728" y="854">
+   <patcher type="patch/patcher" uuid="16be549b-6cf6-45b9-985b-f881b18ac977" name="Reverb" x="728" y="854">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
