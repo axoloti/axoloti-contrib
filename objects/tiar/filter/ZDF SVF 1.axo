@@ -29,10 +29,12 @@ void update(float _Q, float F){
   float _b = F * tmp + F;
   float _c = tmp * tmp - _a;
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-// 5 iterations to obtain the new a b and c (equiv x32 oversampling)
+// 7 iterations to obtain the new a b and c (equiv x32 oversampling)
 // Two sets of vars (_a _b _c and na nb nc) are used to bounce values
 // between iterations to optimize copies.
   float b2;
+  b2 = _b * _b; na = b2 + _a * (2 - _a); nb = _b *(1 + _c - _a); nc = _c * _c - b2;
+  b2 = nb * nb; _a = b2 + na * (2 - na); _b = nb *(1 + nc - na); _c = nc * nc - b2;
   b2 = _b * _b; na = b2 + _a * (2 - _a); nb = _b *(1 + _c - _a); nc = _c * _c - b2;
   b2 = nb * nb; _a = b2 + na * (2 - na); _b = nb *(1 + nc - na); _c = nc * nc - b2;
   b2 = _b * _b; na = b2 + _a * (2 - _a); nb = _b *(1 + _c - _a); nc = _c * _c - b2;
@@ -53,7 +55,7 @@ float D;             // used for hp
 float x; //input
 float lp, bp; // state variables/outputs
 float lp2, bp2; // state variables/outputs of 24dB output
-float TRF_coef = (758.0f/(1<<27)) * 2 * 3.1415926535f / (32 * 48000);]]></code.declaration>
+float TRF_coef = (820.0f/(1<<27)) * 2 * 3.1415926535f / (128 * 48000);]]></code.declaration>
       <code.init><![CDATA[D = x = lp = bp = 0;
 update(  1.0f, 0.1f/32 ); 
 a = na; b = nb; c = nc;
@@ -62,7 +64,7 @@ da = db = dc = 0;]]></code.init>
 q = 0.25f + q * (1 + q *q* (18.75f + q*60));  //0.25 -> 80
 
 int32_t alpha;
-MTOFEXTENDED(param_pitch + inlet_pitch, alpha);
+MTOFEXTENDED(param_pitch + inlet_pitch-7, alpha);
 update(  1/(2*q), alpha *  TRF_coef );]]></code.krate>
       <code.srate><![CDATA[a += da;
 b += db;

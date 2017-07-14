@@ -16,9 +16,7 @@ fbMod modulates the feedback in the range [fb0 fb1]</sDescription>
       <outlets>
          <frac32buffer.bipolar name="wave" description="selfPM wave"/>
       </outlets>
-      <displays>
-         <frac32.s.dial name="fb" description="Modulated feedback" noLabel="true"/>
-      </displays>
+      <displays/>
       <params>
          <frac32.s.map.pitch name="pitch"/>
          <frac32.s.map name="fb1" description="Feedback Range [fb0 fb1]"/>
@@ -43,9 +41,9 @@ int32_t dp; // delta phase aka freq
 MTOFEXTENDED(param_pitch + inlet_pitch, dp);
 // mapping:
 // fbMod [0 64] -> [fb0 fb1] with scaling
-kFb = ___SMMUL(param_fb1*3,                inlet_fbMod <<4    );
-kFb = ___SMMLA(param_fb0*3, (((1<<27)-1) - inlet_fbMod)<<4, kFb);
-disp_fb = kFb>>1;
+int32_t fbMod = __USAT(inlet_fbMod, 27);
+kFb = ___SMMUL(param_fb1*3,                fbMod <<4    );
+kFb = ___SMMLA(param_fb0*3, (((1<<27)-1) - fbMod)<<4, kFb);
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //                                             kRate -> aRate FB interp
 dFb = (kFb - aFb) >> 4;
