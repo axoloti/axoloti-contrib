@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.10">
+<objdefs appVersion="1.0.12">
    <obj.normal id="glide_multi" uuid="78ca6107-ebdf-439f-9aad-d112fe763f7a">
       <sDescription>glide module for control signals with 3 different glide modes:
 1-exponential (continous calculation of difference between current output value and input value, adding a part of the difference to the output at each sample calculation)
@@ -27,16 +27,14 @@ int64_t diff;
 int64_t rate; ]]></code.declaration>
       <code.krate><![CDATA[rate=___SMMUL(param_glide<<3,param_glide<<2);
 rate=rate<<8;
+if(inlet_glideOFF==0)
+{
 if(param_mode==0)
 {
-if(inlet_glideOFF==0)
-{diff=inlet_in-follow;
+diff=inlet_in-follow;
 diff=(diff<<21)/((1<<21)+rate);
 follow += diff;
 outlet_out=follow;
-}
-else
-{outlet_out=inlet_in;}
 }
 if (param_mode==1)
 {
@@ -77,6 +75,8 @@ follow+=(diff<<21)/((1<<21)+rate);
 outlet_out=follow;
 prev=inlet_in;
 }
-]]></code.krate>
+}
+else
+{outlet_out=inlet_in;}]]></code.krate>
    </obj.normal>
 </objdefs>

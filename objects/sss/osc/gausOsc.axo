@@ -6,6 +6,7 @@
       <helpPatch>gaussian.axh</helpPatch>
       <inlets>
          <frac32 name="pitch"/>
+         <frac32 name="seed"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="white noise"/>
@@ -59,18 +60,19 @@ MTOFEXTENDED(inlet_pitch+param_pitch,freq)
 int32_t g;
 MTOF(param_damp+inlet_pitch+param_pitch,g)
 int32_t R;
-MTOF(param_rate,R)]]></code.krate>
+MTOF(param_rate,R)
+int32_t Seed=param_seed+inlet_seed;]]></code.krate>
       <code.srate><![CDATA[phase+=freq;
 if((phase>0)&&!trig){
 	trig=1;
-seeds[0] = seeds[8]+___SMMUL(param_seed<<3,seeds[13]<<2);
-seeds[1] = seeds[9]+___SMMUL(param_seed<<3,seeds[15]<<2);
-seeds[2] = seeds[10]+___SMMUL(param_seed<<3,seeds[9]<<2);
-seeds[3] = seeds[11]+___SMMUL(param_seed<<3,seeds[11]<<2);
-seeds[4] = seeds[12]+___SMMUL(param_seed<<3,seeds[10]<<2);
-seeds[5] = seeds[13]+___SMMUL(param_seed<<3,seeds[14]<<2);
-seeds[6] = seeds[14]+___SMMUL(param_seed<<3,seeds[8]<<2);
-seeds[7] = seeds[15]+___SMMUL(param_seed<<3,seeds[12]<<2);
+seeds[0] = seeds[8]+___SMMUL(Seed<<3,seeds[13]<<2);
+seeds[1] = seeds[9]+___SMMUL(Seed<<3,seeds[15]<<2);
+seeds[2] = seeds[10]+___SMMUL(Seed<<3,seeds[9]<<2);
+seeds[3] = seeds[11]+___SMMUL(Seed<<3,seeds[11]<<2);
+seeds[4] = seeds[12]+___SMMUL(Seed<<3,seeds[10]<<2);
+seeds[5] = seeds[13]+___SMMUL(Seed<<3,seeds[14]<<2);
+seeds[6] = seeds[14]+___SMMUL(Seed<<3,seeds[8]<<2);
+seeds[7] = seeds[15]+___SMMUL(Seed<<3,seeds[12]<<2);
 }
 else if (phase<0){trig=0;}
 int i;

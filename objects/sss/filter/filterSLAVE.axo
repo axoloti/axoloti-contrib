@@ -49,6 +49,7 @@ for type 4 counts:
             <MaxValue i="4"/>
          </int32.hradio>
          <bool32.tgl name="allpass"/>
+         <bool32.tgl name="add"/>
       </params>
       <attribs>
          <objref name="core"/>
@@ -106,7 +107,12 @@ for(i=0;i<8;i++){
 }
 
 for(i=0;i<BUFSIZE;i++){
-	outlet_out[i]=__SSAT(attr_core.out[i],28);
+int32_t tmp=__SSAT(attr_core.out[i],28)+(param_add>0?inlet_in[i]:0);
+   int32_t ts = __SSAT(tmp,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+outlet_out[i] = ts + (ts>>1) - (tsq31p3);
+
 }
 prv=MODE;
 bs=attr_core.bs;

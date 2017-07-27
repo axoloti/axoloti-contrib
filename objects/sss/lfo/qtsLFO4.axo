@@ -30,6 +30,7 @@
          <frac32.bipolar name="w3"/>
          <frac32.bipolar name="w4"/>
          <frac32 name="baserate"/>
+         <int32 name="timer"/>
       </outlets>
       <displays/>
       <params>
@@ -130,9 +131,10 @@ sine[instance]=(temp-(1<<30))<<1;
 	}
 
 else if(inlet_r<=0){rtrig=0;}
-rate=((float32_t)(timer))/((float32_t)(48000));
-rate=(((1<<31)/1500)/rate);
+//rate=((float32_t)(timer))/((float32_t)(48000));
 
+//rate=(((1<<31)/1500)/rate);
+rate=(float32_t)(1<<29)/timer*8;
 M[0]=param_m1+inlet_m1;
 M[1]=param_m2+inlet_m2;
 M[2]=param_m3+inlet_m3;
@@ -186,7 +188,8 @@ if(param_bip4>0){
 outlet_w4=(sine[3]>>4);}
 else{
 outlet_w4=(sine[3]>>5)+(1<<26);}
-outlet_baserate=rate;]]></code.krate>
+outlet_baserate=(int32_t)rate*16;
+outlet_timer=timer;]]></code.krate>
       <code.srate><![CDATA[if((inlet_HS>0)&&(!(ttrig)))
 {ttrig=1;
 timer=count;

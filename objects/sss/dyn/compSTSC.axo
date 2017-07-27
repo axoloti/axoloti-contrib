@@ -1,0 +1,148 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="compSTSC" uuid="d1edbef0-c869-4bfe-a39a-9d06aa16a5a7">
+      <sDescription>Dynamic range compressor with soft-treshold function, ratio, attack/release and gain.
+Sidechain lowers the treshold of the compressor, forcing it to duck while keeping the attack/release/ratio response intact for normal compression of the stereo signal. The side-ducking has it&apos;s own treshold, ratio, attack and decay.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>comp.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="inL"/>
+         <frac32buffer name="inR"/>
+         <frac32buffer name="side" description="eg. a basskick to duck bass"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays>
+         <frac32.vu name="in"/>
+         <frac32.vu name="comp"/>
+         <frac32.vu name="out"/>
+         <bool32 name="tresh"/>
+      </displays>
+      <params>
+         <frac32.u.map name="tresh" description="treshold for the stereo compression (is lowered by side-chain ducking)"/>
+         <frac32.u.map name="soft" description="softness of the treshold for stereo compression (fades in ratio)"/>
+         <frac32.u.map name="ratio" description="amount of compression (full=hard limiting)."/>
+         <bool32.tgl name="limiter" description="sets attack-rate to immediate-following"/>
+         <frac32.u.map.kdecaytime name="attack" description="attack rate (unresponsive when &quot;limiter&quot; is on!)"/>
+         <frac32.u.map.kdecaytime name="decay" description="decay response of stereo compression"/>
+         <frac32.u.map.gain name="gain" description="add gain to stereo output"/>
+         <frac32.u.map name="sidetresh" description="treshold for the sidechain to breach"/>
+         <frac32.u.map name="sideRatio" description="amount of ducking of the treshold for the stereo signal, up to 2x ducking for low level signals."/>
+         <frac32.u.map.kdecaytime name="sideAtt" description="attack response of the sideducking"/>
+         <frac32.u.map.kdecaytime name="sideDec" description="decay response of the sideducking"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	//a=a>0?a:-1;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+int32_t frac_exp(int32_t a) {
+	int8_t s = (a>>24)+4;
+	uint8_t ei = a>>16;
+	if (s>=0)
+	     return expt[ei]<<s;
+	else return expt[ei]>>(-s);
+}
+
+int32_t accu;
+int32_t prev;
+int32_t IN;
+int32_t val;
+int32_t vl;
+int i;
+int32_t over1;
+int32_t over2;]]></code.declaration>
+      <code.init><![CDATA[accu = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t TRESH=param_tresh+(8<<21)+2;
+int32_t sTRESH=param_sidetresh+(8<<21)+2;
+int32_t soft=___SMMUL(param_tresh<<3,param_soft<<1)+(8<<21);
+int32_t treshlog = frac_log(TRESH-soft);
+int32_t sTresh = frac_log(sTRESH);
+int32_t Tresh=frac_log(TRESH);
+int32_t makeup=___SMMUL(Tresh,param_gain>>1);
+Tresh=Tresh-treshlog;
+float32_t ratio=(float32_t)(1<<27)/Tresh;
+float32_t sratio=(float32_t)(1<<27)/sTresh;
+int32_t attack;
+int32_t decay;
+MTOF((1<<27)-(param_attack<<1),attack)
+MTOF((1<<27)-(param_decay<<1),decay)
+int32_t sattack;
+int32_t sdecay;
+MTOF((1<<27)-(param_sideAtt<<1),sattack)
+MTOF((1<<27)-(param_sideDec<<1),sdecay)
+sdecay=sdecay>>3;
+int32_t In=0;
+int32_t OUT=0;
+int32_t OVER=0;
+int32_t tmp=0;
+
+for(i=0;i<BUFSIZE;i++){
+	tmp=inlet_inL[i]>inlet_inR[i]?inlet_inL[i]:inlet_inR[i];
+	tmp=tmp>0?tmp:-tmp;
+	In=tmp>In?tmp:In;
+	tmp=outlet_outL[i]>outlet_outR[i]?outlet_outL[i]:outlet_outR[i];
+	tmp=tmp>0?tmp:-tmp;
+	OUT=tmp>OUT?tmp:OUT;
+	tmp=___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5;
+	tmp=tmp>0?tmp:-tmp;
+	OVER=tmp>OVER?tmp:OVER;
+	
+}
+
+disp_in=In;
+disp_out=OUT>>6;
+disp_comp=OVER;
+disp_tresh=over1>0?1:0;]]></code.krate>
+      <code.srate><![CDATA[int32_t iL=inlet_inL;
+int32_t iR=inlet_inR;
+iL=iL>0?iL:-iL;
+iR=iR>0?iR:-iR;
+IN=iL>iR?iL:iR;
+
+int32_t SD=inlet_side;
+SD=SD>0?SD:-SD;
+
+if(SD>vl){
+vl=___SMMLA((SD-vl)<<1,sattack,vl);
+}
+else{
+vl=___SMMLA((SD-vl)<<1,sdecay,vl);
+}
+
+int32_t SDlog = frac_log(vl)-sTresh;
+int32_t over3=__USAT((SDlog>>1)*sratio,27);
+SDlog=___SMMUL((int32_t)(SDlog-over3/sratio),param_sideRatio<<3)<<4;
+if(IN>val){
+if(param_limiter==1){
+val=IN;
+}
+else {val=___SMMLA((IN-val)<<1,attack,val);}
+}
+else{
+val=___SMMLA((IN-val)<<1,decay,val);
+}
+
+int32_t inlog = frac_log(val);
+over1 = inlog-(treshlog-SDlog);
+over2 = __USAT((over1>>1)*ratio,27);
+over1=over1-over2/ratio;
+int32_t gain;
+if (over1<0){
+	//gain = 0x80000;
+	gain = frac_exp(makeup);
+} else {
+	gain = frac_exp(makeup-(___SMMUL(over1,___SMMUL(over2<<3,param_ratio<<2))<<5));
+}
+
+outlet_outL=___SMMUL(inlet_inL<<3,gain<<10);
+outlet_outR=___SMMUL(inlet_inR<<3,gain<<10);]]></code.srate>
+   </obj.normal>
+</objdefs>

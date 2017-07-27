@@ -14,6 +14,7 @@
          <bool32 name="trig4ppq"/>
          <bool32 name="trig24ppq"/>
          <int32 name="time"/>
+         <frac32 name="baserate"/>
       </outlets>
       <displays/>
       <params/>
@@ -46,7 +47,8 @@ val2+=(val1-val2)>>8;
 if((val2>Time+2000)||(val2<Time-2000)){
 	Time=val2;
 }
-outlet_time=TIME;]]></code.krate>
+outlet_time=TIME;
+outlet_baserate=(int32_t)((float32_t)(1<<29)/Time)<<12;]]></code.krate>
       <code.srate><![CDATA[cnt+=1;]]></code.srate>
       <code.midihandler><![CDATA[if (status == MIDI_TIMING_CLOCK) {
   _pos_shadow++;
