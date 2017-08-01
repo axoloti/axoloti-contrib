@@ -34,7 +34,7 @@
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="d1" x="546" y="84">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="32768 (682ms)"/>
+         <combo attributeName="size" selection="65536 (1.36s)"/>
       </attribs>
    </obj>
    <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_1" x="140" y="224">
