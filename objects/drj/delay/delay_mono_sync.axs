@@ -75,11 +75,12 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author></Author>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>580</x>
-      <y>195</y>
+      <x>851</x>
+      <y>316</y>
       <width>818</width>
       <height>505</height>
    </windowPos>
