@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DP sqrt" uuid="7cdd9f5b-db6b-4837-be96-32ad6dbd4b5f">
+      <sDescription>Square root with Differentiated Polynomial Anti aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>DP sqrt.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+         <frac32.bipolar name="negSlope"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="negSlope" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+float slope;]]></code.declaration>
+      <code.krate><![CDATA[slope = __SSAT(param_negSlope + inlet_negSlope,28) * (1.0f/(1<<27));
+if(x0>0)
+    y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+else
+    y0 = -slope * (2.0f/3) * x0 * arm::vsqrtf(-x0);]]></code.krate>
+      <code.srate><![CDATA[x1 = x0;  y1 = y0; x0 = arm::q_to_float(inlet_in, 27);
+float dx = x1 - x0;
+if(fabs(dx) > 0.00001f){
+  if(x0 >= 0){
+    y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+  } else {
+    y0 = -slope * (2.0f/3) * x0 * arm::vsqrtf(-x0);
+  }
+  float dy = y1 - y0;
+  outlet_out = arm::float_to_q(dy / dx, 27);
+} else {
+  float rt = x0 >= 0 ?          arm::vsqrtf( x0) 
+                     : -slope * arm::vsqrtf(-x0);
+  y0 = (2.0f/3) * x0 * rt;
+  outlet_out = arm::float_to_q(rt, 27);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
