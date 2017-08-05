@@ -13,31 +13,62 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map name="negSlope" noLabel="true"/>
+         <frac32.s.map name="negSlope"/>
+         <bool32.tgl name="negLin"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[float x0 = 0, x1 = 0, y0 = 0, y1 = 0;
 float slope;]]></code.declaration>
       <code.krate><![CDATA[slope = __SSAT(param_negSlope + inlet_negSlope,28) * (1.0f/(1<<27));
-if(x0>0)
-    y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
-else
-    y0 = -slope * (2.0f/3) * x0 * arm::vsqrtf(-x0);]]></code.krate>
-      <code.srate><![CDATA[x1 = x0;  y1 = y0; x0 = arm::q_to_float(inlet_in, 27);
-float dx = x1 - x0;
-if(fabs(dx) > 0.00001f){
-  if(x0 >= 0){
-    y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
-  } else {
+if(x0 > 0)
+  y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+else if(param_negLin)
+    y0 = slope * 0.5f * x0 * x0;
+  else
     y0 = -slope * (2.0f/3) * x0 * arm::vsqrtf(-x0);
+    
+if(param_negLin){
+for(int i = 0; i < BUFSIZE; i++){
+  x1 = x0;  y1 = y0; x0 = arm::q_to_float(inlet_in[i], 27);
+  float dx = x1 - x0;
+  if(fabs(dx) > 0.0001f){
+    if(x0 >= 0){
+      y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+    } else {
+      y0 = slope * 0.5f * x0 * x0;
+    }
+    float dy = y1 - y0;
+    outlet_out[i] = arm::float_to_q(dy / dx, 27);
+  } else {
+    if(x0 >= 0){
+      y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+      outlet_out[i] = arm::float_to_q(arm::vsqrtf( x0), 27);
+    } else {
+      y0 = slope * 0.5f * x0 * x0;
+      outlet_out[i] = arm::float_to_q(x0 * slope, 27);
+    }
   }
-  float dy = y1 - y0;
-  outlet_out = arm::float_to_q(dy / dx, 27);
-} else {
-  float rt = x0 >= 0 ?          arm::vsqrtf( x0) 
-                     : -slope * arm::vsqrtf(-x0);
-  y0 = (2.0f/3) * x0 * rt;
-  outlet_out = arm::float_to_q(rt, 27);
-}]]></code.srate>
+}
+}
+else{
+for(int i = 0; i < BUFSIZE; i++){
+  x1 = x0;  y1 = y0; x0 = arm::q_to_float(inlet_in[i], 27);
+  float dx = x1 - x0;
+  if(fabs(dx) > 0.00001f){
+    if(x0 >= 0){
+      y0 = (2.0f/3) * x0 * arm::vsqrtf(x0);
+    } else {
+      y0 = -slope * (2.0f/3) * x0 * arm::vsqrtf(-x0);
+    }
+    float dy = y1 - y0;
+    outlet_out[i] = arm::float_to_q(dy / dx, 27);
+  } else {
+    float rt = x0 >= 0 ?          arm::vsqrtf( x0) 
+                       : -slope * arm::vsqrtf(-x0);
+    y0 = (2.0f/3) * x0 * rt;
+    outlet_out[i] = arm::float_to_q(rt, 27);
+  }
+}
+}]]></code.krate>
    </obj.normal>
 </objdefs>
