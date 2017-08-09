@@ -3,9 +3,15 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="392" y="0">
+   <obj type="osc/tri" uuid="905879afa8256b0ca207557d656949e476ca6f16" name="tri_1" x="392" y="0">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="490" y="0">
+      <params>
+         <frac32.u.map name="amp" value="8.0"/>
       </params>
       <attribs/>
    </obj>
@@ -79,8 +85,8 @@
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
-         <dest obj="sine_2" inlet="pitch"/>
          <dest obj="sine_3" inlet="pitch"/>
+         <dest obj="tri_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
@@ -105,10 +111,10 @@
          <dest obj="MIDscope_2" inlet="in"/>
       </net>
       <net>
-         <source obj="sine_2" outlet="wave"/>
-         <dest obj="MIDscope_2" inlet="syncIn"/>
+         <source obj="tri_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
-         <dest obj="DP_1" inlet="in"/>
+         <dest obj="gain_1" inlet="in"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
       </net>
       <net>
          <source obj="adsr_2" outlet="env"/>
@@ -122,6 +128,10 @@
          <source obj="sine_3" outlet="wave"/>
          <dest obj="vca_1" inlet="a"/>
          <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="DP_1" inlet="in"/>
       </net>
    </nets>
    <settings>
