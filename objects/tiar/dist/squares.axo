@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="squares" uuid="c65e224e-41e4-4861-8cef-b584b580efb9">
+      <sDescription>Squares wave distortion.
+Differentiated Anti aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>squares.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x0 = 0, x1 = 0, y0 = 0, y1 = 0;]]></code.declaration>
+      <code.srate><![CDATA[x1 = x0; y1 = y0;
+x0 = arm::q_to_float(___SMMUL(inlet_in, param_gain), 27-5-3);
+float f0 = x0+16.5f;
+int32_t i0 = (int32_t)f0;
+if(i0 & 1){
+  y0 = (f0 - i0) - 0.5f;
+  f0 = 1;
+} else {
+  y0 = -(f0 - i0) + 0.5f;
+  f0 = -1;
+}
+float x1_x0 = x1 - x0;
+if(fabs(x1_x0) > 0.001f){
+  outlet_out = arm::float_to_q((y1 - y0) / (x1_x0), 27);
+} else {
+  outlet_out = arm::float_to_q(f0, 27);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

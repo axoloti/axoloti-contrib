@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="expand" uuid="9cf74a8c-5936-4fb9-ac2f-9d618117d693">
+      <sDescription>Expander (inverse function of the &quot;compand&quot; object).
+Differentiated Anti aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>expand.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x0 = 0, x1 = 0, y0 = 0, y1 = 0;]]></code.declaration>
+      <code.srate><![CDATA[x1 = x0; y1 = y0;
+x0 = arm::q_to_float(inlet_in, 27);
+float f0 = fabs(x0) * x0;                // f(x0)
+y0 = (1.0f/3) * f0 * x0;                 // F(x0)
+float x1_x0 = x1 - x0;
+if(fabs(x1_x0) > 0.001f){
+  outlet_out = arm::float_to_q((y1 - y0) / (x1_x0), 27);
+} else {
+  outlet_out = arm::float_to_q(f0, 27);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
