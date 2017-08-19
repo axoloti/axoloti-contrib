@@ -31,7 +31,13 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="d1" x="546" y="84">
+   <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="feedback" x="532" y="84">
+      <params>
+         <frac32.u.map name="gain1" onParent="true" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="d1" x="630" y="84">
       <params/>
       <attribs>
          <combo attributeName="size" selection="65536 (1.36s)"/>
@@ -120,7 +126,7 @@
       <net>
          <source obj="*c_1" outlet="out"/>
          <dest obj="mix_1" inlet="bus_in"/>
-         <dest obj="d1" inlet="in"/>
+         <dest obj="feedback" inlet="bus_in"/>
       </net>
       <net>
          <source obj="read_1" outlet="out"/>
@@ -141,6 +147,7 @@
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="fnd4Mod_1" inlet="in1"/>
+         <dest obj="feedback" inlet="in1"/>
       </net>
       <net>
          <source obj="fnd4Mod_1" outlet="out4"/>
@@ -169,6 +176,10 @@
       <net>
          <source obj="+_3" outlet="out"/>
          <dest obj="outR" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="feedback" outlet="out"/>
+         <dest obj="d1" inlet="in"/>
       </net>
    </nets>
    <settings>
