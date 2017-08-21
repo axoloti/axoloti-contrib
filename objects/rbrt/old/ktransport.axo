@@ -1,15 +1,15 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="stransport" uuid="9ef10560-6d6c-4ed7-bdf7-d0b9dc6efc4c">
+   <obj.normal id="ktransport" uuid="eb98575f-a820-4d6d-ab2e-e4232755692a">
       <sDescription>sort of a transport for sequencing.
-48000 at inlet &apos;smps&apos; will result in a 1hz wave ranging from 0 to 64.
+3000 at inlet &apos;kticks&apos; will result in a 1hz wave ranging from 0 to 64.
 also,a position between 0 and the value of &apos;steps&apos; is put out,as well as 24ppq - pulses.
 &apos;factor&apos; sets a multiplikation or divison factor,while &apos;mode&apos; selects whether to multiply or divide the &apos;tempo&apos;.</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
       <helpPatch>transport.axh</helpPatch>
       <inlets>
-         <int32 name="smps" description="length in samples"/>
-         <int32 name="factor" description="multiplies &apos;factor&apos;"/>
+         <int32 name="kticks" description="length in kticks"/>
+         <int32 name="factor" description="adds to &apos;factor&apos;"/>
          <bool32.risingfalling name="mode" description="or &apos;mode&apos;"/>
          <bool32.rising name="reset" description="reset phase"/>
       </inlets>
@@ -54,10 +54,9 @@ uint32_t prev;
 uint32_t ppq;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
    r = 1;]]></code.init>
-      <code.krate><![CDATA[factor = ((inlet_factor * param_factor) > 0)  ? (inlet_factor * param_factor) : 1 ;
-
-base = (param_mode || inlet_mode) ?  (inlet_smps * factor) : (inlet_smps / factor);
-freq = (int)(281474976710656.f/(base * (128<<3)));
+      <code.krate><![CDATA[factor = inlet_factor + param_factor;
+base = (param_mode || inlet_mode) ?  (inlet_kticks * factor) : (inlet_kticks / factor);
+freq = (int)(281474976710656.f/(base * (128<<7)));
 steps = 29 - attr_steps;
 
 {
