@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read tuned" uuid="e7822155-5cea-4711-acdd-2e2af1a00733">
+      <sDescription>delay read tuned.</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>read tuned.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="offset"/>
+      </params>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[//16 step cos (0..15) q31
+int32_t fade[16] = {
+  0x00000000, 0x013ad060, 0x04df2861, 0x0ac933ad,
+  0x12bec333, 0x1c71898c, 0x27821d59, 0x3383a3e1,
+  0x3fffffff, 0x4c7c5c1e, 0x587de2a6, 0x638e7673,
+  0x6d413ccc, 0x7536cc52, 0x7b20d79e, 0x7ec52f9f};
+// "a" fade out
+// "b" fade in (new values)
+int32_t a_alpha  = 0, b_alpha  = 0;
+int32_t a_rp = 100, b_rp = 100;]]></code.declaration>
+      <code.krate><![CDATA[{
+  int32_t per_q16;
+  int32_t pitch = param_pitch+inlet_pitch;
+  MTOFEXTENDED(-pitch, per_q16); // exact values for integer(-64 64) midi pitches
+  per_q16 = ___SMMLA(per_q16, 1389681862, param_offset >> 5);  // param_offset -64 64 q21
+  if(per_q16 < 0) per_q16 = 0;
+  if(per_q16 > ((attr_delayname.LENGTH-17) << 16)) per_q16 = ((attr_delayname.LENGTH-17) << 16);
+  
+  int32_t rp_q16 = 
+  (
+    (attr_delayname.writepos << 16) // pos of first non delayed in buf
+    - ((BUFSIZE - 1) << 16)
+    - per_q16 
+    + (attr_delayname.LENGTH << 16)
+  ) & ((attr_delayname.LENGTH << 16)-1);
+  // new values
+  b_alpha  = (rp_q16 & 0xFFFF) << 15;
+  b_rp = rp_q16 >> 16;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t a_out, b_out;
+  {
+    int32_t n_rp = (a_rp + 1) & attr_delayname.LENGTHMASK;
+    int32_t t1 = attr_delayname.array[n_rp] << 14;
+    int32_t t0 = attr_delayname.array[a_rp] << 14;
+    a_out = ___SMMLA(a_alpha, t1 - t0, t0 >> 1) << 1;
+    a_rp = n_rp;
+  }
+  {
+    int32_t n_rp = (b_rp + 1) & attr_delayname.LENGTHMASK;
+    int32_t t1 = attr_delayname.array[n_rp] << 14;
+    int32_t t0 = attr_delayname.array[b_rp] << 14;
+    b_out = ___SMMLA(b_alpha, t1 - t0, t0 >> 1) << 1;
+    b_rp = n_rp;
+  }
+  //                         q31 (i<<27 for lin)
+  outlet_out[i] = ___SMMLA(fade[i], b_out - a_out, a_out >> 1)<<1; 
+}
+a_rp = b_rp;
+a_alpha = b_alpha;]]></code.krate>
+   </obj.normal>
+</objdefs>
