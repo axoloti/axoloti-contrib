@@ -18,7 +18,6 @@ the length of the fade-in of the recording with &apos;attack&apos;.</sDescriptio
          <bool32.risingfalling name="rec" description="record,set tempo"/>
          <int32 name="slot" description="select slot to record into"/>
          <bool32.risingfalling name="sync"/>
-         <bool32.rising name="stopfade" description="stop and disable fades for the current recording"/>
       </inlets>
       <outlets>
          <frac32.positive name="offset" description="offset inside the table"/>
@@ -76,18 +75,14 @@ uint32_t shold;
 int32_t env;
 
 int32_t _ap;
-int32_t phase;
-
-bool fades;
-bool rtrig;
-bool strig;]]></code.declaration>
+int32_t phase;]]></code.declaration>
       <code.init><![CDATA[recpos =0;
 rec = 0;
 start = 0;
       rec_max = attr_table.LENGTH >> attr_slots;
 
 shift =     (27-attr_table.LENGTHPOW);]]></code.init>
-      <code.krate><![CDATA[if ((inlet_rec) && !recstate) {
+      <code.krate><![CDATA[if ((inlet_rec) && !rec) {
       rec = 1;
       recstate = 1;
       recpos = 0;
@@ -100,17 +95,12 @@ shift =     (27-attr_table.LENGTHPOW);]]></code.init>
      } 
 
 //fades
-if (rec && (!rtrig)) {fades = !param_nofade;rtrig = 1;}
-if (inlet_stopfade  && (!strig)) {fades = 0;strig = 1;}
-if (!inlet_stopfade) strig = 0;
-if (fades){
+if (!param_nofade){
    if (rec) env = (param_hard) ? (1<<27) : (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
    else env = ___SMMUL(env,param_release)<<1;
   recstate = env;
 }else {recstate = rec;env = rec<<27;}
-if (!rec) rtrig = 0;
-
-       
+      
   //rec stopped-> wait for rollover if sync is on 
 if ((!inlet_rec) && rec) {
  	if (mode)	{
@@ -131,7 +121,7 @@ if ((!inlet_rec) && rec) {
       <code.srate><![CDATA[//record   
 
 if (recstate) {
- recpos ++;             
+        
  if ((recpos >= rec_max)||(recpos >= shold)) recpos = 0;          	
  if (rec) attr_table.array[recpos + rec_offset] = 
  __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
@@ -139,6 +129,7 @@ if (recstate) {
  else attr_table.array[recpos + rec_offset] = 
 (__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos + rec_offset] << attr_table.GAIN))>>attr_table.GAIN;
 
+recpos ++;      
 }]]></code.srate>
    </obj.normal>
 </objdefs>

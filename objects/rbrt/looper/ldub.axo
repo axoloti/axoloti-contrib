@@ -9,7 +9,6 @@
          <frac32buffer name="wave" description="audio in"/>
          <bool32.risingfalling name="overdub" description="overdub"/>
          <frac32.positive name="feedback" description="feedback amount"/>
-         <bool32.rising name="stopfade" description="stop and disable fades for the current recording"/>
       </inlets>
       <outlets>
          <bool32 name="fade" description="recording state,post - fadeout"/>
@@ -42,21 +41,16 @@ uint8_t shift;
   bool rtrig;
   bool strig;]]></code.declaration>
       <code.init><![CDATA[shift = 27-attr_table.LENGTHPOW;]]></code.init>
-      <code.krate><![CDATA[if (inlet_overdub && (!rtrig)) {fades = !param_nofade;rtrig = 1;}
-if (inlet_stopfade  && (!strig)) {fades = 0;strig = 1;}
-if (!inlet_stopfade) strig = 0;
-
-if (fades){
+      <code.krate><![CDATA[if (!param_nofade){
    if (inlet_overdub) env = (param_hard) ? (1<<27) : (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
    else env = ___SMMUL(env,param_release)<<1;
   dubstate = env;
 }else {dubstate = inlet_overdub;env = inlet_overdub<<27;}
 
-outlet_fade = dubstate;
-if (!dubstate) rtrig = 0;]]></code.krate>
+outlet_fade = dubstate;]]></code.krate>
       <code.srate><![CDATA[if (dubstate){
 
-csample =  (__USAT(inlet_phase,27)>>shift) + 1;
+csample =  (__USAT(inlet_phase,27)>>shift);
 dub= (___SMMUL((attr_table.array[csample]<<attr_table.GAIN),(inlet_feedback + param_feedback))<<5);
 
 attr_table.array[csample] =  (__SSAT((___SMMUL((inlet_wave),env)<<5) + dub,28 ))>>attr_table.GAIN;
