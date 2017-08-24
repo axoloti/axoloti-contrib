@@ -1,0 +1,160 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="table/alloc 16b sdram load" uuid="e6b85dad3ab43565cda93ea4c43c73b668b1cd43" name="sample" x="196" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="262144"/>
+         <file attributeName="filename" file="C:\Users\matth_000\Documents\axoloti\WaveTables\cymbsc.raw"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="d8cb1a10-eb23-4e82-b8fa-f358353c185c" name="voice" x="182" y="140">
+      <params>
+         <frac32.s.map name="VCA:a" value="-64.0"/>
+         <frac32.s.map name="VCA:d" value="0.0"/>
+         <frac32.u.map name="VCA:s" value="50.0"/>
+         <frac32.s.map name="VCA:r" value="-8.0"/>
+         <frac32.s.map name="FILTER:a" value="-22.0"/>
+         <frac32.s.map name="FILTER:d" value="47.0"/>
+         <frac32.u.map name="FILTER:s" value="64.0"/>
+         <frac32.s.map name="FILTER:r" value="-64.0"/>
+         <frac32.u.map name="Filt:cut" value="15.5"/>
+         <frac32.u.map name="Filt:res" value="9.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+         <combo attributeName="midichannel" selection="1"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="1"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="98" y="70">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/play pitch" uuid="5632a54926261833bbb9fff049e71322c360e57e" name="play_1" x="252" y="98">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../sample"/>
+            </attribs>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="VCA" x="392" y="112">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+               <frac32.u.map name="s" onParent="true" value="50.0"/>
+               <frac32.s.map name="r" onParent="true" value="-5.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="FILTER" x="518" y="140">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+               <frac32.u.map name="s" onParent="true" value="50.0"/>
+               <frac32.s.map name="r" onParent="true" value="-5.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="sss/filter/36dbLP" uuid="90dcc21c-580b-4cd5-9aa3-e4cedb7e5262" name="Filt" x="686" y="224">
+            <params>
+               <frac32.u.map name="cut" onParent="true" value="64.0"/>
+               <frac32.u.map name="res" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="868" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="OUT" x="952" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="play_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="VCA" outlet="env"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="OUT" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="play_1" outlet="wave"/>
+               <dest obj="Filt" inlet="in"/>
+            </net>
+            <net>
+               <source obj="FILTER" outlet="env"/>
+               <dest obj="Filt" inlet="cut"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="play_1" inlet="start"/>
+               <dest obj="VCA" inlet="gate"/>
+               <dest obj="FILTER" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="Filt" outlet="out"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>902</x>
+            <y>766</y>
+            <width>1457</width>
+            <height>665</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="fx/rngs/chorus" uuid="fefe9ec6-1b22-431f-ad8f-09529a3fb5e6" name="chorus_1" x="924" y="238">
+      <params>
+         <frac32.u.map name="amount" value="42.5"/>
+         <frac32.u.map name="depth" value="42.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1092" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="chorus_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="chorus_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="voice" outlet="OUT"/>
+         <dest obj="chorus_1" inlet="l"/>
+         <dest obj="chorus_1" inlet="r"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>66</x>
+      <y>60</y>
+      <width>1936</width>
+      <height>1096</height>
+   </windowPos>
+</patch-1.0>
