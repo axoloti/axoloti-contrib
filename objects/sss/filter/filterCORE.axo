@@ -195,10 +195,10 @@ res=R;
 case 15:
 MTOF(f,Freq);
 
-MTOF(-(__SSAT(R,28)<<1)+v28>>1,res);
+MTOF(-(__SSAT(R,28)<<1)+v28>>2,res);
 
 MTOF(f-v27,mix);
-casc=v27-v27*0.9;
+casc=v27-v26*0.9;
 casc=___SMMUL(casc<<3,casc<<2);
 
 ;break;
@@ -402,10 +402,10 @@ case 15:
 for(i=0;i<BUFSIZE;i++){
 freq+=stp;
 int32_t In=__SSAT(___SMMUL((3<<24)+(v26)<<1,in[i]<<2)<<1,27);
-   val[1]+=___SMMUL((In)-val[0],freq)-___SMMUL(val[1]<<1,res); 
+   val[1]+=(___SMMUL((In)-val[0],freq)<<1)-___SMMUL(val[1]<<1,res); 
    val[1]=val[1]>casc?casc:val[1];
    val[1]=val[1]<-casc?-val[1]:val[1];
-   val[1]-=val[1]>>9;
+  // val[1]-=val[1]>>9;
    val[0] += val[1];
    val[2]+=___SMMUL(val[0]-val[2],mix);
 int32_t ts = __SSAT(val[0]-val[2],28);
