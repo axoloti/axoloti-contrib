@@ -1,0 +1,24 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="divScaleA" uuid="28a87a43-fbbd-47d0-9e2c-1602b5b5d253">
+      <sDescription>Multiply (attenuate) with a constant value, then divide by an integer.
+To be used with the divide-outputs of the table-oscillators/LFO&apos;s to scale the input back to maximal quantification 4 steps, whatever the amount of quantification of the quantizer of the oscillator/LFO.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <int32 name="D"/>
+         <frac32buffer name="add"/>
+         <frac32buffer name="amp"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="amp" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[outlet_out= (___SMMUL(__SSAT(param_amp+inlet_amp,29)<<3,inlet_in<<2))/inlet_D+inlet_add;]]></code.srate>
+   </obj.normal>
+</objdefs>

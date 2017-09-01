@@ -1,0 +1,46 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DP inv2" uuid="98074878-34e7-452c-9ef2-14a737c0fa4b">
+      <sDescription>1/x2 distortion with Differentiated Polynomial Anti aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>DP inv2.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+         <frac32 name="factor"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="factor" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x0 = 0, v0 = 0, x1 = 0, y0 = 0, y1 = 0;]]></code.declaration>
+      <code.krate><![CDATA[float factor = 0.02f + __USAT(param_factor + inlet_factor, 27) * (0.96f/(1<<27));
+float vmax = 1/((1-factor)*(1-factor));
+float vmin = 1/((1+factor)*(1+factor));
+float coef = 2/(vmax-vmin);
+float offset = - coef*vmin-1;
+
+// update according to new values
+x0 = 1 - factor * v0;
+y0 = -1/x0;
+
+// Integ x^-2 dx = -x^-1 = -1/x
+    
+for(int i = 0; i < BUFSIZE; i++){
+  x1 = x0;  y1 = y0; x0 = 1 - factor * (v0 = arm::q_to_float(__SSAT(inlet_in[i], 28), 27));
+  float dx = x1 - x0;
+  if(fabs(dx) > 0.005f){   
+    y0 = -1/x0;
+    float dy = y1 - y0;
+    outlet_out[i] = arm::float_to_q(coef * dy / dx + offset, 27);
+  } else {
+    float inv = 1/x0;
+    y0 = -inv;
+    outlet_out[i] = arm::float_to_q(coef * inv*inv + offset , 27);
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

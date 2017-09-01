@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="timepoint" uuid="4aa7200d-f2bb-41f9-82cb-e7a6447d091c">
+      <sDescription>puts out a pulse when &apos;phase&apos; reaches the value defined by &apos;pos&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="phase" description="phase"/>
+         <frac32.positive name="pos" description="position to reach"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig" description="pulse when phase == pos"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _ap;
+int32_t phase;
+int32_t d;
+bool trig;
+bool ptrig;]]></code.declaration>
+      <code.init><![CDATA[_ap = 0;]]></code.init>
+      <code.krate><![CDATA[phase = (inlet_phase - inlet_pos) & ((1<<27)-1);
+d= phase - _ap;
+_ap = phase;
+
+trig = (d >= 0 ) ? 0 : 1;
+
+outlet_trig = (trig != ptrig) ? 1 : 0;
+ptrig = trig;]]></code.krate>
+   </obj.normal>
+</objdefs>

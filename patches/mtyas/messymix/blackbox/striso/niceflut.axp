@@ -1,0 +1,389 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_5" x="28" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_6" x="168" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC0 (ADC1_IN10)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_2" x="294" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC1 (ADC1_IN11)"/>
+      </attribs>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="168" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_3" x="294" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC2 (ADC1_IN12)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_1" x="658" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC4 (ADC1_IN14)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_4" x="294" y="126">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC3 (ADC1_IN13)"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="5a8cf493-1388-405a-9896-73f41e6c1ea0" name="patcher_1" x="70" y="140">
+      <params>
+         <frac32.u.map name="mix_1:gain1" value="64.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="5"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_1" x="0" y="0">
+            <params/>
+            <attribs>
+               <combo attributeName="pad" selection="PB9"/>
+               <combo attributeName="mode" selection="pulldown"/>
+            </attribs>
+         </obj>
+         <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_2" x="98" y="0">
+            <params/>
+            <attribs>
+               <combo attributeName="pad" selection="PB7"/>
+               <combo attributeName="mode" selection="pulldown"/>
+            </attribs>
+         </obj>
+         <patchobj type="patch/object" uuid="97a2b03c-61b7-47b1-b680-5fe62d4e3e48" name="mpe_1" x="0" y="84">
+            <params/>
+            <attribs/>
+            <object id="patch/object" uuid="97a2b03c-61b7-47b1-b680-5fe62d4e3e48">
+               <sDescription>Controller input for MIDI Polyphonic Expression (tailored to Linnstrument)</sDescription>
+               <author>Johannes Elliesen</author>
+               <license>BSD</license>
+               <helpPatch>mpe.axh</helpPatch>
+               <inlets/>
+               <outlets>
+                  <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+                  <bool32 name="gate" description="key pressed, no retrigger legato"/>
+                  <bool32 name="gate2" description="key pressed, retrigger on legato"/>
+                  <frac32.positive name="velocity" description="note-on velocity"/>
+                  <frac32.positive name="releaseVelocity" description="note-off velocity"/>
+                  <frac32.positive name="pressure" description="continuous pressure"/>
+                  <frac32 name="bend" description="continuous pitchbend (-64..63)"/>
+                  <frac32 name="timbre" description="continuous timbre (-64..63)"/>
+                  <frac32 name="pitch" description="pitch including pitchbend"/>
+               </outlets>
+               <displays/>
+               <params/>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[int8_t _note;
+int32_t _gate;
+int32_t _gate2;
+uint32_t _velo;
+uint32_t _rvelo;
+uint32_t _pressure;
+int32_t _bend;
+int32_t _timbre;
+uint8_t _lastRPN_LSB;
+uint8_t _lastRPN_MSB;
+uint8_t _bendRange;
+int32_t _pitch;
+int32_t _xl,_yl,_zl;static const uint8_t xccl = 85;static const uint8_t yccl = 87;static const uint8_t zccl = 86;]]></code.declaration>
+               <code.init><![CDATA[_gate = 0;
+_note = 0;
+_pressure = 0;
+_bend = 0;
+_timbre = 0;
+_bendRange = 48;
+_xl=_yl=_zl=0;]]></code.init>
+               <code.krate><![CDATA[outlet_note= _note<<21;
+outlet_gate= _gate;
+outlet_gate2= _gate2;
+_gate2 = _gate;
+outlet_velocity= _velo;
+outlet_releaseVelocity= _rvelo;
+outlet_pressure = _pressure;
+outlet_bend = _bend;
+outlet_timbre = _timbre;
+outlet_pitch = _pitch;]]></code.krate>
+               <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  _bend = 0;
+  _velo = data2<<20;
+  _note = data1-64;
+  _gate = 1<<27;
+  _gate2 = 0;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note == data1-64) {
+    _rvelo = data2<<20;
+    _gate = 0;
+    _pressure = 0;
+  }
+} else if (status == attr_midichannel + MIDI_CHANNEL_PRESSURE) {
+  _pressure = (data1<<20) + _zl;
+} else if (status == attr_midichannel + MIDI_PITCH_BEND) {
+  _bend = (((int)((data2<<7)+data1)-0x2000)<<14) + _xl;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {
+  if (data1 == MIDI_C_TIMBRE) {
+    _timbre = (((int)(data2<<7)-0x2000)<<14) + _yl;
+  } else if (data1 == zccl) {
+   _zl = data2 << 13;  } else if (data1 == xccl) {
+   _xl = data2 << 7;  } else if (data1 == yccl) {
+   _yl = data2 << 14;  } else if(data1 == MIDI_C_ALL_NOTES_OFF) {
+    _gate = 0;
+  } else if (data1 == MIDI_C_RPN_MSB || data1 == MIDI_C_RPN_LSB || data1 == MIDI_C_DATA_ENTRY) {
+    switch(data1) {
+         case MIDI_C_RPN_LSB: _lastRPN_LSB = data2; break;
+         case MIDI_C_RPN_MSB: _lastRPN_MSB = data2; break;
+         case MIDI_C_DATA_ENTRY: {
+              if (_lastRPN_LSB == 0 && _lastRPN_MSB == 0) {
+                _bendRange = data2;
+              }
+            }
+            break;
+        default: break;
+    }
+  }
+}]]></code.midihandler>
+            </object>
+         </patchobj>
+         <obj type="hug/math/octaveShift" uuid="fdfd3e78-2e1b-4942-b027-65c98f6f7e87" name="octaveShift_2" x="140" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 2 g" uuid="a68d65dda222bc916b36b283cc06d2edd719bf3b" name="mix_1" x="266" y="84">
+            <params>
+               <frac32.u.map name="gain1" onParent="true" value="32.0"/>
+               <frac32.u.map name="gain2" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/fluted" uuid="18c4121e-004c-4f1f-a92b-a344b7a6ae8b" name="fluted_1" x="378" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" value="0.0"/>
+               <frac32.u.map name="color" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="560" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="644" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="mpe_1" outlet="bend"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="fluted_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="fluted_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="digital_1" outlet="out"/>
+               <dest obj="octaveShift_2" inlet="up"/>
+            </net>
+            <net>
+               <source obj="digital_2" outlet="out"/>
+               <dest obj="octaveShift_2" inlet="down"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="note"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="octaveShift_2" outlet="result"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="velocity"/>
+               <dest obj="fluted_1" inlet="color"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="fluted_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="gate2"/>
+               <dest obj="fluted_1" inlet="strike"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyexpression</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>281</x>
+            <y>166</y>
+            <width>879</width>
+            <height>527</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="mtyas/delay/long-delay" uuid="0bebeddc-4444-46eb-a644-05937045d2d7" name="obj_1" x="252" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="392" y="182">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="490" y="182">
+      <params>
+         <frac32.u.map name="amount" value="19.0"/>
+         <frac32.u.map name="time" value="30.5"/>
+         <frac32.u.map name="diffusion" value="49.5"/>
+         <frac32.u.map name="gain" value="14.0"/>
+         <frac32.u.map name="lowpass" value="24.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="686" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="840" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_2" x="70" y="420">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB7"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="196" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/load" uuid="634bf1f8c313920d7f19fc402ba937fd1ee27802" name="load_8" x="322" y="420">
+      <params/>
+      <attribs>
+         <table attributeName="filename" table="../start.bin"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_3" x="70" y="504">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB9"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="obj_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="digital_3" outlet="out"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="digital_2" outlet="out"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="load_8" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o1"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcaST_1" outlet="o2"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="vcaST_1" inlet="a2"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="vcaST_1" inlet="a1"/>
+      </net>
+      <net>
+         <source obj="analog_1" outlet="out"/>
+         <dest obj="vcaST_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_1"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_4" outlet="out"/>
+         <dest obj="obj_1" inlet="amount"/>
+      </net>
+      <net>
+         <source obj="analog_3" outlet="out"/>
+         <dest obj="obj_1" inlet="feedback"/>
+      </net>
+      <net>
+         <source obj="analog_2" outlet="out"/>
+         <dest obj="obj_1" inlet="speed"/>
+      </net>
+      <net>
+         <source obj="analog_6" outlet="out"/>
+         <dest obj="vcf3_1" inlet="reso"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="analog_5" outlet="out"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="reverb_1" inlet="r"/>
+         <dest obj="reverb_1" inlet="l"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>652</x>
+      <y>167</y>
+      <width>947</width>
+      <height>839</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,145 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tedit" uuid="07025e30-e95e-4e52-8cca-7cab2335c9b8">
+      <sDescription>view and edit 16 elements of a table.
+&apos;offset&apos; changes the start to display/edit from.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>wave creator.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.mapvsl name="b0" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b1" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b2" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b3" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b4" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b5" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b6" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b7" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b8" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b9" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b10" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b11" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b12" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b13" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b14" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="b15" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="10000000"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t prev[16];
+int32_t prevp[16];
+
+bool trig;
+bool changed;
+
+int i;
+int32_t adr;
+int32_t padr;]]></code.declaration>
+      <code.init><![CDATA[changed = 0;]]></code.init>
+      <code.krate><![CDATA[adr = (inlet_offset + param_offset);
+if (adr != padr){changed = 1; padr = adr;}
+
+
+if (changed) {
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],attr_table.array[__USAT((adr + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],attr_table.array[__USAT((adr + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b2],attr_table.array[__USAT((adr + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b3],attr_table.array[__USAT((adr + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b4],attr_table.array[__USAT((adr + 4),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b5],attr_table.array[__USAT((adr + 5),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b6],attr_table.array[__USAT((adr + 6),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b7],attr_table.array[__USAT((adr + 7),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b8],attr_table.array[__USAT((adr + 8),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b9],attr_table.array[__USAT((adr + 9),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b10],attr_table.array[__USAT((adr + 10),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b11],attr_table.array[__USAT((adr + 11),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b12],attr_table.array[__USAT((adr + 12),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b13],attr_table.array[__USAT((adr + 13),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b14],attr_table.array[__USAT((adr + 14),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b15],attr_table.array[__USAT((adr + 15),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+
+}
+
+if (i > 15) i = 0;
+if ((attr_table.array[i + adr] != prev [i ] ) && (!changed)) {changed = 1; prev [i ] = attr_table.array [i + adr];}
+else changed = 0;
+i ++;
+
+
+if (prevp [0] != param_b0) { attr_table.array[adr + 0]= param_b0 >> attr_table.GAIN; prevp [0] = param_b0 ; }
+if (prevp [1] != param_b1) { attr_table.array[adr + 1]= param_b1 >> attr_table.GAIN; prevp [1] = param_b1 ; }
+if (prevp [2] != param_b2) { attr_table.array[adr + 2]= param_b2 >> attr_table.GAIN; prevp [2] = param_b2 ; }
+if (prevp [3] != param_b3) { attr_table.array[adr + 3]= param_b3 >> attr_table.GAIN; prevp [3] = param_b3 ; }
+if (prevp [4] != param_b4) { attr_table.array[adr + 4]= param_b4 >> attr_table.GAIN; prevp [4] = param_b4 ; }
+if (prevp [5] != param_b5) { attr_table.array[adr + 5]= param_b5 >> attr_table.GAIN; prevp [5] = param_b5 ; }
+if (prevp [6] != param_b6) { attr_table.array[adr + 6]= param_b6 >> attr_table.GAIN; prevp [6] = param_b6 ; }
+if (prevp [7] != param_b7) { attr_table.array[adr + 7]= param_b7 >> attr_table.GAIN; prevp [7] = param_b7 ; }
+if (prevp [8] != param_b8) { attr_table.array[adr + 8]= param_b8 >> attr_table.GAIN; prevp [8] = param_b8 ; }
+if (prevp [9] != param_b9) { attr_table.array[adr + 9]= param_b9 >> attr_table.GAIN; prevp [9] = param_b9 ; }
+if (prevp [10] != param_b10) { attr_table.array[adr + 10]= param_b10 >> attr_table.GAIN; prevp [10] = param_b10 ; }
+if (prevp [11] != param_b11) { attr_table.array[adr + 11]= param_b11 >> attr_table.GAIN; prevp [11] = param_b11 ; }
+if (prevp [12] != param_b12) { attr_table.array[adr + 12]= param_b12 >> attr_table.GAIN; prevp [12] = param_b12 ; }
+if (prevp [13] != param_b13) { attr_table.array[adr + 13]= param_b13 >> attr_table.GAIN; prevp [13] = param_b13 ; }
+if (prevp [14] != param_b14) { attr_table.array[adr + 14]= param_b14 >> attr_table.GAIN; prevp [14] = param_b14 ; }
+if (prevp [15] != param_b15) { attr_table.array[adr + 15]= param_b15 >> attr_table.GAIN; prevp [15] = param_b15 ; }]]></code.krate>
+   </obj.normal>
+</objdefs>

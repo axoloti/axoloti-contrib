@@ -54,6 +54,8 @@ int32_t Freq;
 int prv;
 bool ALL;
 int32_t v26=(1>>26);
+int32_t v27=(1<<27);
+int32_t v28=(1<<28);
 int BUFMASK=BUFSIZE-1;
 /*
 6dB LP with slope control instead of resonance (cascading multiple 6dB filters)
@@ -72,7 +74,7 @@ Biquad NO
 int32_t alpha;
 uint32_t freq;
 int32_t res;
-int32_t t1=(1<<27)/3;
+int32_t t1=v27/3;
 
 int32_t SVF(int32_t IN){
 band-=___SMMUL(___SMMUL(band<<2,band<<2),band<<2);
@@ -174,13 +176,13 @@ case 11:
 
 case 12:
 
-MTOF(f,Freq);
+MTOFEXTENDED(f+v27>>1,Freq);
 res=R;
 ;break;
 
 case 13:
 
-MTOF(f,Freq);
+MTOFEXTENDED(f,Freq);
 res=R;
 ;break;
 
@@ -193,10 +195,10 @@ res=R;
 case 15:
 MTOF(f,Freq);
 
-MTOF(-(__SSAT(R,28)<<1)+(1<<28)>>1,res);
+MTOF(-(__SSAT(R,28)<<1)+v28>>2,res);
 
-MTOF(f-(1<<27),mix);
-casc=(1<<27)-(32<<21)*0.9;
+MTOF(f-v27,mix);
+casc=v27-v26*0.9;
 casc=___SMMUL(casc<<3,casc<<2);
 
 ;break;
@@ -371,11 +373,11 @@ for(i=0;i<BUFSIZE;i++){
    freq+=stp;
    int32_t In=in[i];
    val[2]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[0],28)<<2,res<<3),28)<<1)-val[0]-val[2])<<1,freq,val[2]);
-   val[0] = ___SMMLA((val[2])<<1,freq,val[0]);
+   val[0]= ___SMMLA((val[2])<<1,freq,val[0]);
 
    In=__SSAT(val[0],28);
    val[3]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[1],28)<<2,res<<3),28)<<1)-val[1]-val[3])<<1,freq,val[3]);
-   val[1] = ___SMMLA((val[3])<<1,freq,val[1]);
+   val[1]= ___SMMLA((val[3])<<1,freq,val[1]);
    out[i]= val[1]>>1;
    out[i]-=(ALL>0?in[i]-out[i]:0);
 }
@@ -400,10 +402,10 @@ case 15:
 for(i=0;i<BUFSIZE;i++){
 freq+=stp;
 int32_t In=__SSAT(___SMMUL((3<<24)+(v26)<<1,in[i]<<2)<<1,27);
-   val[1]+=___SMMUL((In)-val[0],freq)-___SMMUL(val[1]<<1,res); 
+   val[1]+=(___SMMUL((In)-val[0],freq)<<1)-___SMMUL(val[1]<<1,res); 
    val[1]=val[1]>casc?casc:val[1];
    val[1]=val[1]<-casc?-val[1]:val[1];
-   val[1]-=val[1]>>9;
+  // val[1]-=val[1]>>9;
    val[0] += val[1];
    val[2]+=___SMMUL(val[0]-val[2],mix);
 int32_t ts = __SSAT(val[0]-val[2],28);

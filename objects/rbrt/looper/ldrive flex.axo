@@ -1,0 +1,116 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive flex" uuid="b2b61bd5-a26d-4c90-a68f-844c09672372">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ldrive.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.positive name="startpoint" description="position inside range on reset"/>
+         <frac32.positive name="loopstart" description="loopstart inside range"/>
+         <frac32.bipolar name="speed" description="speed modulation"/>
+         <bool32.risingfalling name="1shot" description="playback mode; 0 = looped, 1 = 1-shot"/>
+         <bool32 name="play" description="toggle playback (looped);trigger playback (1-shot)"/>
+         <bool32.rising name="r2offset" description="reset to &apos;offset&apos;"/>
+         <bool32.rising name="r2start" description="reset to &apos;startpoint&apos;"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="pos" description="relative position inside table"/>
+         <int32 name="count" description="loop count since reset"/>
+         <int32 name="spos" description="playhead position inside range in samples"/>
+         <int32 name="stotal" description="length of range in samples"/>
+         <int32 name="sloop" description="length of loop in samples"/>
+         <frac32.bipolar name="speed" description="total speed"/>
+         <bool32 name="play" description="playback state"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true">
+            <DefaultValue v="64.0"/>
+         </frac32.s.map>
+         <bool32.tgl name="1shot"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t index;
+bool rrs;
+bool rro;
+uint8_t shift;
+
+int ntrig;
+
+int32_t t_speed;
+int32_t re;
+int32_t rs;
+
+int32_t start;
+int32_t loopstart;
+int32_t lrange;
+int32_t lstart;
+
+uint32_t count;
+bool add;
+bool play;
+bool mode;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[loopstart = ___SMMUL(inlet_range,inlet_loopstart)<<5;
+add = inlet_range;
+mode = inlet_1shot || param_1shot;
+//scale ranges up 8 times to achieve decent resolution for parameter speed
+lrange = inlet_range << 3;
+lstart = loopstart << 3;
+start = ___SMMUL(inlet_range,inlet_startpoint)<< 8;
+re = (t_speed > 0 ) ? lrange - (4 << shift) : lrange;
+rs = (t_speed > 0 ) ? start : start -  (4 << shift);
+t_speed =  (((inlet_speed + param_speed ) << 3) >> attr_table.LENGTHPOW) + ((inlet_speed + param_speed ) > 0);
+
+if (mode) {
+	     if (inlet_play && (!ntrig)) {
+         ntrig = 1;
+         index = (t_speed < 0) ? lrange:start;
+         play = 1; 
+         }  
+         else 
+  if (!(inlet_play > 0)) ntrig = 0;
+}
+else {play = inlet_play;
+      if (inlet_r2start && (!rrs)) {
+         index = start;
+         rrs = 1;
+         count = 0;
+      }
+      if (inlet_r2offset && (!rro)) {
+         index = 0;
+         rro = 1;
+         count = 0;
+      }
+      if (!inlet_r2offset) rro = 0;
+      if (!inlet_r2start) rrs = 0;
+}
+
+outlet_count = (inlet_play) ? count : -1;
+outlet_spos =  (((index >> 3) >> shift) > 0) ? ((index >> 3)>> shift) : 0;
+outlet_stotal = inlet_range >> shift;
+outlet_sloop = (inlet_range - loopstart)>>shift;
+outlet_speed = inlet_speed + param_speed;
+outlet_play = play;]]></code.krate>
+      <code.srate><![CDATA[if (!mode) {
+if (t_speed > 0){
+      if (index >= lrange){index = lstart;count += add;} 
+      } 
+      else{
+      if (index <= lstart){ index = lrange;count +=add;}  
+          }    
+}
+else if ((index > re)||(index < rs)) play = 0;
+
+
+outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);
+   
+   if (play) index += t_speed;
+
+   else outlet_pos = 1 << 27;]]></code.srate>
+   </obj.normal>
+</objdefs>

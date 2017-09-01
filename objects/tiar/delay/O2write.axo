@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="O2write" uuid="6b414f1c-c61d-4bf9-ac79-a6546551dab9">
+      <sDescription></sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>O2write.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="x1" description="older"/>
+         <frac32buffer name="x0"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = 1 << LENGTHPOW;
+static const uint32_t LENGTHMASK = LENGTH - 1;
+int16_t array[LENGTH];
+uint32_t writepos = 0;]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < LENGTH; i++)
+  array[i] = 0;]]></code.init>
+      <code.srate><![CDATA[writepos = (writepos + 1) & LENGTHMASK;
+array[writepos] = __SSAT(inlet_x1 >> 14, 16);
+writepos = (writepos + 1) & LENGTHMASK;
+array[writepos] = __SSAT(inlet_x0 >> 14, 16);]]></code.srate>
+   </obj.normal>
+</objdefs>

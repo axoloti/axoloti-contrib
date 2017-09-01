@@ -11,6 +11,7 @@ Bandwith limited</sDescription>
          <frac32buffer name="strike"/>
          <frac32 name="env"/>
          <int32 name="mode"/>
+         <frac32 name="self"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="triangle wave, anti-aliased"/>
@@ -465,13 +466,14 @@ for(i=0;i<BUFSIZE;i++){
 
 
 int32_t P2=Pitch+((39<<21)/100);
-if(wave==0){SIN(Pitch,param_mod,param_self);}
-if(wave==1){TRI(Pitch,param_mod,param_self);}
-if(wave==2){SAW(Pitch,param_mod,param_self,1);}
-if(wave==3){SAW(Pitch,param_mod,param_self,-1);}
-if(wave==4){SQR(Pitch,param_mod,param_self);}
-if(wave==5){STR(P2,param_mod,param_self);}
-if(wave==6){TAB(Pitch,param_mod,param_self,preset);}
+int32_t Self=param_self+inlet_self<<1;
+if(wave==0){SIN(Pitch,param_mod,Self);}
+if(wave==1){TRI(Pitch,param_mod,Self);}
+if(wave==2){SAW(Pitch,param_mod,Self,1);}
+if(wave==3){SAW(Pitch,param_mod,Self,-1);}
+if(wave==4){SQR(Pitch,param_mod,Self);}
+if(wave==5){STR(P2,param_mod,Self);}
+if(wave==6){TAB(Pitch,param_mod,Self,preset);}
 for(i=0;i<BUFSIZE;i++){
 	outlet_wave[i]=___SMMUL(out[parent->polyIndex][i],I)<<5;
 	 I += step;

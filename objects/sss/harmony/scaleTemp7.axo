@@ -1,0 +1,82 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scaleTemp7" uuid="ea0e85bf-4381-4502-991c-4d556cf740b3">
+      <sDescription>46-scale scaling and 137-temperaments module, but with a 1-key per note response like the factory harmony module
+This module contains 4 scalers in one to be able to control 4 oscillators at the same time in the same scaling, saves up a bit of memory and tidies up the patch.
+
+Add the &quot;scale7bank&quot; module to provide the module the scale-list.
+(Before first use, add the scale7generator once to create the list and auto-save it to the SD-card, the scale7bank then uses this file.
+If you don&apos;t have a SD-card, you can use the generator module and refer to that module)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="p1"/>
+         <int32 name="p2"/>
+         <int32 name="p3"/>
+         <int32 name="p4"/>
+         <int32 name="key"/>
+         <int32 name="scale"/>
+         <int32 name="temper"/>
+         <frac32 name="stretch"/>
+         <bool32 name="track"/>
+      </inlets>
+      <outlets>
+         <frac32 name="n1"/>
+         <frac32 name="n2"/>
+         <frac32 name="n3"/>
+         <frac32 name="n4"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="scale"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t out;
+int key;
+int scale;
+int32_t STR;
+int32_t temper;
+int32_t N[4];
+int32_t scalar(int NT){
+int32_t pitch=NT+64;
+int32_t octave=pitch/7;
+int semitone=pitch-octave*7;
+int32_t note=(attr_scale.note[semitone+scale]+octave*12)-112+key<<21;
+
+int mn=(note+(1<<20)>>21)+8;
+int32_t stretch=mn/12;
+stretch=stretch*(STR/1000);
+int oct=mn/12*12;
+oct=note<0?oct-12:oct;
+mn=mn-oct;
+int tmpr=temper;
+tmpr=tmpr-tmpr/137*137;
+tmpr+=tmpr<0?137:0;
+tmpr=tmpr*12;
+return out=attr_scale.TMPR[mn+tmpr]*0+note+stretch;
+};]]></code.declaration>
+      <code.init><![CDATA[N[0]=0;
+N[1]=0;
+N[2]=0;
+N[3]=0;]]></code.init>
+      <code.krate><![CDATA[scale=inlet_scale;
+scale=scale-scale/46*46;
+scale=scale<0?scale+46:scale;
+scale=scale*7;
+
+key=(inlet_key)*5-4;
+key=key-(key/12)*12;
+key=key<0?key+12:key;
+temper=inlet_temper;
+STR=inlet_stretch;
+if(inlet_track>0){
+N[0]=scalar(inlet_p1);
+N[1]=scalar(inlet_p2);
+N[2]=scalar(inlet_p3);
+N[3]=scalar(inlet_p4);}
+
+outlet_n1=N[0];
+outlet_n2=N[1];
+outlet_n3=N[2];
+outlet_n4=N[3];]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -17,7 +17,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/seq/stransport" uuid="22d348d0-6bf2-4f65-97ce-fe774b2989d2" name="stransport_1" x="756" y="182">
+   <obj type="rbrt/seq/stransport" uuid="9ef10560-6d6c-4ed7-bdf7-d0b9dc6efc4c" name="stransport_1" x="756" y="182">
       <params>
          <int32 name="factor" value="1"/>
          <bool32.tgl name="mode" value="0"/>
@@ -37,7 +37,7 @@
    </obj>
    <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="factor" x="224" y="280">
       <params>
-         <int32 name="value" value="0"/>
+         <int32 name="value" value="1"/>
       </params>
       <attribs/>
    </obj>
@@ -45,12 +45,12 @@
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="196" y="350" text="external input factor is ADDED to the parameter &apos;factor&apos; of stransport and ktransport"/>
+   <comment type="patch/comment" x="224" y="350" text="input &apos;factor&apos; is multiplied with parameter &apos;factor&apos;"/>
    <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="630" y="350">
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="196" y="364" text="so if inlet &apos;factor&apos; is set to &apos;1&apos; , the actual factor is 2."/>
+   <comment type="patch/comment" x="224" y="364" text="unless it&apos;s zero,then only parameter &apos;facor&apos; is applied"/>
    <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="kscope_2" x="1022" y="378">
       <params/>
       <attribs/>
@@ -59,7 +59,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/seq/ktransport" uuid="eb98575f-a820-4d6d-ab2e-e4232755692a" name="ktransport_1" x="756" y="392">
+   <obj type="rbrt/seq/ktransport" uuid="e1132b5e-a7db-4457-8d5b-8cf2e214e6a1" name="ktransport_1" x="756" y="392">
       <params>
          <int32 name="factor" value="1"/>
          <bool32.tgl name="mode" value="0"/>
@@ -89,8 +89,8 @@
       </net>
       <net>
          <source obj="factor" outlet="out"/>
-         <dest obj="ktransport_1" inlet="factor"/>
          <dest obj="stransport_1" inlet="factor"/>
+         <dest obj="ktransport_1" inlet="factor"/>
       </net>
       <net>
          <source obj="ktransport_1" outlet="phase"/>
@@ -103,13 +103,13 @@
       </net>
       <net>
          <source obj="mul/div" outlet="o"/>
-         <dest obj="ktransport_1" inlet="mode"/>
          <dest obj="stransport_1" inlet="mode"/>
+         <dest obj="ktransport_1" inlet="mode"/>
       </net>
       <net>
          <source obj="inv_1" outlet="o"/>
-         <dest obj="ktransport_1" inlet="reset"/>
          <dest obj="stransport_1" inlet="reset"/>
+         <dest obj="ktransport_1" inlet="reset"/>
       </net>
       <net>
          <source obj="stransport_1" outlet="step"/>
@@ -133,7 +133,7 @@
    <windowPos>
       <x>-8</x>
       <y>-8</y>
-      <width>1616</width>
-      <height>876</height>
+      <width>1378</width>
+      <height>780</height>
    </windowPos>
 </patch-1.0>

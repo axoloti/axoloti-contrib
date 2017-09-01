@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="step" uuid="2226214a-1da7-45e5-b617-1a421e77cd32">
+      <sDescription>Step (infinite gain saturation).
+Differentiated Anti aliasing.</sDescription>
+      <author>T.Rochebois</author>
+      <license>BSD</license>
+      <helpPatch>expand.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x0 = 0, x1 = 0, y0 = 0, y1 = 0;]]></code.declaration>
+      <code.srate><![CDATA[x1 = x0; y1 = y0;
+x0 = arm::q_to_float(inlet_in, 27);
+y0 = fabs(x0);
+float x1_x0 = x1 - x0;
+if(fabs(x1_x0) > 0.001f){
+  outlet_out = arm::float_to_q((y1 - y0) / (x1_x0), 27);
+} else {
+  outlet_out = arm::float_to_q(x0 > 0 ? 1 : -1, 27);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
