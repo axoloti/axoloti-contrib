@@ -2,7 +2,7 @@
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound" x="42" y="28">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="1048576 (21.8s)"/>
+         <combo attributeName="size" selection="524288 (10.9s)"/>
       </attribs>
    </obj>
    <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_1" x="42" y="98">
