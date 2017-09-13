@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tablestore" uuid="6fb9cc1d-81ff-417e-9e72-be25d747abb1">
+      <sDescription>writes and outputs a value to a table if the value changes.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="v0"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+      </inlets>
+      <outlets>
+         <frac32 name="v0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="offset" MinValue="0" MaxValue="1000000" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t prev0;
+      uint32_t prev1;
+         uint32_t prev2;
+      uint32_t prev3;]]></code.declaration>
+      <code.init><![CDATA[prev0 = 0;
+prev1 = 0;
+prev2 = 0;
+prev3 = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_v0 != prev0){
+attr_table.array[inlet_offset + attr_offset]=__SSAT(inlet_v0,28)>>attr_table.GAIN;
+outlet_v0= attr_table.array[__USAT((inlet_offset + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev0 = inlet_v0;
+}
+else {outlet_v0= attr_table.array[__USAT((inlet_offset + attr_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;}]]></code.krate>
+   </obj.normal>
+</objdefs>

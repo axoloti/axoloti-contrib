@@ -1,0 +1,218 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="rbrt/launchpad/matrix disp" uuid="9074be26-db88-4259-9643-756ee5e1e261" name="matrix_1" x="616" y="28">
+      <params>
+         <bool32.tgl name="active" value="1"/>
+         <int32 name="length" value="32"/>
+         <int32 name="start" value="0"/>
+         <int32 name="offset" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="blocksize" selection="1"/>
+         <combo attributeName="coloron" selection="green M"/>
+         <combo attributeName="coloroff" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_1" x="924" y="28">
+      <params>
+         <bool32.tgl name="active" value="1"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="color" selection="red M"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="1078" y="28" text="set a pad on the matrix to a color,"/>
+   <obj type="rbrt/launchpad/matrix toggle" uuid="e4cfb313-6d47-487f-9f28-def89e6d6dc6" name="matrix_3" x="252" y="42">
+      <params>
+         <int32 name="offset" value="0"/>
+         <int32 name="start" value="0"/>
+         <int32 name="length" value="32"/>
+         <bool32.tgl name="active" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="blocksize" selection="1"/>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="data" x="420" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="64"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="1078" y="42" text="when the pad index changes,the matrix "/>
+   <comment type="patch/comment" x="1078" y="56" text="is updated to display the corresponding element of the table"/>
+   <comment type="patch/comment" x="1078" y="84" text="useful to display the steps of a sequence"/>
+   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_2" x="1302" y="84">
+      <params>
+         <bool32.tgl name="active" value="1"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="color" selection="yellow S"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="1092" y="140">
+      <params>
+         <frac32.s.map name="pitch" value="28.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="1204" y="140">
+      <params>
+         <int32 name="maximum" value="32"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="redraw" x="448" y="154">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="252" y="238" text="toggle elements of a table with the 8x8 matrix"/>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="154" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="616" y="252" text="display an area of a table on the 8x8 matrix,"/>
+   <comment type="patch/comment" x="616" y="266" text="starting from top/left,row by row"/>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="490" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/slider 8" uuid="230974e7-ce90-4675-b956-adc88cdfac8e" name="slider_1" x="616" y="294">
+      <params>
+         <int32 name="offset" value="32"/>
+         <int32 name="rows" value="4"/>
+         <int32 name="startrow" value="4"/>
+         <bool32.tgl name="active" value="1"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="color" selection="yellow W"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="1064" y="294">
+      <params>
+         <int32 name="value" value="12"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/right row" uuid="b2364061-8870-4e9d-904d-3dd4c69582ff" name="right_6" x="28" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/right disp" uuid="515d095e-931a-4bff-a560-f99140e1fcb6" name="right_7" x="182" y="308">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="0"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="red W"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="910" y="448" text="provide feedback about the right row buttons"/>
+   <comment type="patch/comment" x="616" y="476" text="display elements of a table as horizontal sliders"/>
+   <obj type="rbrt/launchpad/top row" uuid="b6dc9676-87ca-43b1-b3ab-1a230d5c193e" name="top_3" x="910" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_5" x="1064" y="476">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="0"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="red W"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="616" y="490" text="8-steps,using the right buttons to reset to 0."/>
+   <comment type="patch/comment" x="616" y="504" text="there&apos;s a 7 step version as well."/>
+   <obj type="rbrt/launchpad/matrix clear" uuid="d608f3a6-32fa-4ba0-9751-7dec1c5b8427" name="matrix_2" x="644" y="532">
+      <params>
+         <int32 name="length" value="32"/>
+         <int32 name="start" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="clear" x="560" y="546">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="910" y="630" text="provide feedback about the top row buttons"/>
+   <comment type="patch/comment" x="644" y="644" text="clear an area of the 8x8 matrix"/>
+   <nets>
+      <net>
+         <source obj="matrix_1" outlet="coloron"/>
+         <dest obj="step_1" inlet="coloron"/>
+         <dest obj="step_2" inlet="coloron"/>
+      </net>
+      <net>
+         <source obj="matrix_1" outlet="coloroff"/>
+         <dest obj="step_1" inlet="coloroff"/>
+         <dest obj="step_2" inlet="coloroff"/>
+      </net>
+      <net>
+         <source obj="matrix_1" outlet="blocksize"/>
+         <dest obj="step_1" inlet="blocksize"/>
+         <dest obj="step_2" inlet="blocksize"/>
+      </net>
+      <net>
+         <source obj="top_3" outlet="t0"/>
+         <dest obj="top_5" inlet="on"/>
+      </net>
+      <net>
+         <source obj="right_6" outlet="r0"/>
+         <dest obj="right_7" inlet="on"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="clear" outlet="o"/>
+         <dest obj="matrix_2" inlet="clear"/>
+      </net>
+      <net>
+         <source obj="redraw" outlet="o"/>
+         <dest obj="matrix_1" inlet="redraw"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="counter_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="step_1" inlet="step"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="matrix_3" inlet="active"/>
+      </net>
+      <net>
+         <source obj="matrix_3" outlet="matrix"/>
+         <dest obj="i_1" inlet="in"/>
+         <dest obj="step_2" inlet="step"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

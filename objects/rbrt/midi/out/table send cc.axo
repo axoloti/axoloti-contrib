@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.11">
-   <obj.normal id="table send cc" uuid="ec921f78-8343-4755-a95e-10dabbb4739e">
+<objdefs appVersion="1.0.12">
+   <obj.normal id="table send cc" uuid="9efe8e3b-5a2d-412b-b31f-e72ae70abdc2">
       <sDescription>send data of a table as midi controler data.set the start of the range of the controlers to send with &apos;startcc&apos;,the length of the range with &apos;length&apos;.useful for controllers capable of bi-directional midi,like &apos;livid base&apos; or &apos;novation launchpad&apos;.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -47,6 +47,25 @@
          <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
          <spinner name="startcc" MinValue="0" MaxValue="127" DefaultValue="0"/>
          <spinner name="length" MinValue="1" MaxValue="128" DefaultValue="1"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[int i;
 int32_t v [128];
@@ -65,7 +84,7 @@ if (inlet_active || param_active){
 { 
 	i +=1;
   if (i == attr_length) i = 0; 
-  v [i]= attr_table.array[__USAT((i+offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+  v [i]= attr_table.array[__USAT(((i << attr_blocksize) +offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
 
   if ((v [i] != prev [i]) && !ntrig [i]) {MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_channel-1),i +attr_startcc + inlet_startcc,(v[i]>>20));prev [i] = v [i];  ntrig[i]=1;}
 if (v [i] == prev [i]) ntrig [i]=0;

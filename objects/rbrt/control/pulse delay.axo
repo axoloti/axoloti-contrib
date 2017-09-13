@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7">
       <sDescription>delays a pulse by a period specified in &apos;k-ticks&apos;.</sDescription>
       <author>robert schirmer</author>
@@ -13,7 +13,9 @@
       </outlets>
       <displays/>
       <params/>
-      <attribs/>
+      <attribs>
+         <spinner name="kticks" MinValue="0" MaxValue="10000000" DefaultValue="0"/>
+      </attribs>
       <code.declaration><![CDATA[int32_t Phase;
 uint32_t r;
 int ntrig;
@@ -21,7 +23,7 @@ int ntrig;
 int32_t freq;
 int32_t ticks;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;]]></code.init>
-      <code.krate><![CDATA[freq = (int)(281474976710656.f/(inlet_kticks  * (128<<7)));
+      <code.krate><![CDATA[freq = (int)(281474976710656.f/((inlet_kticks + attr_kticks) * (128<<7)));
    
 
 if (inlet_trig > 0) {Phase = 0; outlet_trig = 0;ntrig = 1;}
