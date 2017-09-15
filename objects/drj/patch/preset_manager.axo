@@ -175,10 +175,37 @@
        *
        *   - Avoiding audio glitches by calling codec_clearbuffer() before save/load operations
        *   - Avoiding audio glitches by providing a gain coefficiant outlet with fade in/out
-       *     before and after save/load operations
-       *   - Much faster loading by scannign the directory and pre-loading all presets into RAM
+       *     before and after save/load operations (DONE, SEE: attr_volfade)
+       *   - Much faster loading by scanning the directory and pre-loading all presets into DRAM
        *     on module startup and preset save operations. Challenges: memory mamangement, sparse preset sets.
+       *   - Polyphonic parameter access, ref. methods from xpatch.cpp:
        *
+       *        static voice * getVoices(void){
+       *             static voice v[3];
+       *            return v;
+       *        }
+       *        static void PropagateToVoices(ParameterExchange_t *origin) {
+       *              ParameterExchange_t *pex = (ParameterExchange_t *)origin->finalvalue;
+       *              int vi;
+       *              for (vi = 0; vi < 3; vi++) {
+       *                PExParameterChange(pex,origin->modvalue,0xFFFFFFEE);
+       *                  pex = (ParameterExchange_t *)((int)pex + sizeof(voice)); // dirty trick...
+       *              }
+       *        }
+       *
+       *
+       *        int vi; for(vi=0;vi<3;vi++) {
+       *           voice *v = &getVoices()[vi];
+       *           v->polyIndex = vi;
+       *           v->common = this;
+       *           v->Init(&getVoices()[vi]);
+       *           notePlaying[vi]=0;
+       *           voicePriority[vi]=0;
+       *           for (j = 0; j < v->NPEXCH; j++) {
+       *              v->PExch[j].value = 0;
+       *              v->PExch[j].modvalue = 0;
+       *           }
+       *        }
        */
 
       //#define DEBUGF LogTextMessage
