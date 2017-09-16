@@ -24,7 +24,7 @@
     ]]></code.init>
     <code.krate><![CDATA[
 
-      if( start_sequence == 0 || inlet_trig != old_inlet_trig )
+      if( start_sequence == 0 || inlet_trig != 0 && old_inlet_trig == 0 )
         {
           FIL     FileObject;
           int32_t err;
@@ -38,7 +38,7 @@
           else
             {
               file_size = f_size( &FileObject ) >> 1;
-              LogTextMessage("file_size = %d", file_size );
+              LogTextMessage("!!!");
             }
 
           if( &FileObject != NULL )
@@ -47,9 +47,9 @@
             }
 
           start_sequence++;
-          old_inlet_trig = inlet_trig;
         }
 
+      old_inlet_trig = inlet_trig;
       outlet_samples = file_size;
 
     ]]></code.krate>
