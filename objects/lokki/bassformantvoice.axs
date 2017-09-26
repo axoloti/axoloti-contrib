@@ -1,4 +1,4 @@
-<patch-1.0 appVersion="1.0.11">
+<patch-1.0 appVersion="1.0.12">
    <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="1386" y="0">
       <params/>
       <attribs>
@@ -80,13 +80,6 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="jt/filter/vcf4pole" uuid="f926d4ad-3053-4a66-be48-6db4447a260a" name="bassvcf" x="1484" y="126">
-      <params>
-         <frac32.s.map name="pitch" value="12.0"/>
-         <frac32.u.map name="reso" onParent="true" value="17.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <comment type="patch/comment" x="1708" y="126" text="formant resonators"/>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="velocity-sens" x="714" y="140">
       <params>
@@ -116,13 +109,6 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_1" x="1708" y="154">
-      <params>
-         <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_2" x="140" y="182">
       <params/>
       <attribs/>
@@ -147,6 +133,13 @@
    </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_3" x="602" y="182">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="jt/filter/vcf4pole" uuid="f926d4ad-3053-4a66-be48-6db4447a260a" name="bassvcf" x="1484" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="12.0"/>
+         <frac32.u.map name="reso" onParent="true" value="17.5"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="osc/supersaw" uuid="ece83feb36cfaee7dc3964b75c485774ea0309cf" name="supersaw" x="1162" y="210">
@@ -175,47 +168,6 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="1932" y="238">
-      <params>
-         <frac32.u.map name="gain1" value="32.0"/>
-         <frac32.u.map name="gain2" value="32.0"/>
-         <frac32.u.map name="gain3" value="32.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="1386" y="252">
-      <params>
-         <frac32.u.map name="gain1" value="32.0"/>
-         <frac32.u.map name="gain2" value="32.0"/>
-         <frac32.u.map name="gain3" value="32.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="2044" y="252">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="formant out" x="2114" y="252">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1498" y="280">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise" x="1274" y="308">
-      <params>
-         <frac32.u.map name="amp" onParent="true" value="1.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_2" x="1708" y="308">
-      <params>
-         <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="humanize" x="126" y="322">
       <params>
          <frac32.u.map name="value" onParent="true" value="14.5"/>
@@ -229,6 +181,10 @@
          <spinner attributeName="default" value="0"/>
       </attribs>
    </obj>
+   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="1162" y="350">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="formant shift" x="490" y="364">
       <params>
          <frac32.s.map name="value" onParent="true" value="0.0"/>
@@ -241,7 +197,21 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="1162" y="364">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise" x="1274" y="364">
+      <params>
+         <frac32.u.map name="amp" onParent="true" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="1400" y="364">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1498" y="364">
       <params/>
       <attribs/>
    </obj>
@@ -253,6 +223,13 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_1" x="1708" y="434">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="980" y="462">
       <params/>
       <attribs/>
@@ -262,21 +239,6 @@
       <attribs/>
    </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_5" x="1162" y="462">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_3" x="1708" y="462">
-      <params>
-         <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="1918" y="476">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="bass out" x="2072" y="476">
       <params/>
       <attribs/>
    </obj>
@@ -384,7 +346,18 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="1862" y="546">
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_2" x="1708" y="588">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/sat" uuid="a64166c1389cd0d5c62a8d3cd5963613be84e9e8" name="sat_1" x="1904" y="588">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="1974" y="588">
       <params/>
       <attribs/>
    </obj>
@@ -404,13 +377,40 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="filter/bp svf m" uuid="90abfee2793172fc193ec82288a454727134cb31" name="bp_3" x="1708" y="742">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="1932" y="742">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_2" x="28" y="784">
       <params/>
       <attribs>
          <spinner attributeName="value" value="1"/>
       </attribs>
    </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="2072" y="784">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="formant out" x="2142" y="812">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_3" x="28" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="bass out" x="2142" y="868">
       <params/>
       <attribs/>
    </obj>
@@ -777,9 +777,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>0</x>
-      <y>0</y>
-      <width>1366</width>
-      <height>768</height>
+      <x>4</x>
+      <y>22</y>
+      <width>1362</width>
+      <height>746</height>
    </windowPos>
 </patch-1.0>
