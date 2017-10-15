@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="polySpread" uuid="cc2e16a2-568c-4c1e-89bf-347f8269a903">
+      <sDescription>Outputs a value evenly spread between -64 and +64, depending on the current voice number - e.g. for 3 voices, the output would be -64, 0, +64. For 5 voices it would be -64, -32, 0, 32, 64 and so on. For the straight distribution, the output will be ordered: The lowest voice will output the lowest value, stepping up to the next value as the voice number increases. For the random distribution, the possible values are randomly distributed to each voice when the patch loads.</sDescription>
+      <author>Johannes Elliesen</author>
+      <license>GPL</license>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="spread"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="distribution">
+            <MenuEntries>
+               <string>straight</string>
+               <string>random</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t output[attr_poly];]]></code.declaration>
+      <code.init><![CDATA[// assign outputs for an even spread.
+for (int i = 0; i < attr_poly; i++)
+{
+	output[i] = ((128<<21) / (attr_poly-1)) * i - (64<<21);
+}
+
+// shuffle for random spread
+#if attr_distribution == 1
+	for (int i = attr_poly; i > 1; i--)
+	{
+		int32_t random = GenerateRandomNumber()%i; 
+		int32_t tmp = output[i - 1];
+		output[i - 1] = output[random];
+		output[random] = tmp;
+	}
+#endif]]></code.init>
+      <code.krate><![CDATA[outlet_spread = output[parent->polyIndex];]]></code.krate>
+   </obj.normal>
+</objdefs>

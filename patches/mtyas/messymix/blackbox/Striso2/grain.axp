@@ -68,6 +68,18 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_10" x="1148" y="224">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 1 g" uuid="2065eeca525a4691f1bc08a7dc5468871de651b7" name="mix_4" x="1372" y="224">
+      <params>
+         <frac32.u.map name="gain1" value="48.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_13" x="224" y="238">
       <params/>
       <attribs>
@@ -98,15 +110,17 @@
          </text>
       </attribs>
    </obj>
+   <obj type="audio/inconfig" uuid="9a80ef3c19f2a8f81da3a3b7c1c44d18126b97d9" name="inconfig_1" x="266" y="280">
+      <params/>
+      <attribs>
+         <combo attributeName="gain" selection="21dB"/>
+         <combo attributeName="boost" selection="0dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
    <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="490" y="280">
       <params/>
       <attribs/>
-   </obj>
-   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_10" x="1218" y="308">
-      <params/>
-      <attribs>
-         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
-      </attribs>
    </obj>
    <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_3" x="1400" y="322">
       <params/>
@@ -143,32 +157,64 @@
          <combo attributeName="channel" selection="PB0 (ADC1_IN8)"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="3a210635-b4b7-41b1-8057-f56929b9fa65" name="patcher_3" x="140" y="378">
+   <patcher type="patch/patcher" uuid="f675f642-1080-4f37-bb98-083e23cebb67" name="patcher_3" x="140" y="378">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="1"/>
       </attribs>
       <subpatch appVersion="1.0.12">
-         <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_2" x="70" y="84">
+         <obj type="midi/ctrl/mpe" uuid="94323477e6476a10b9332922e5dfcd2705641af1" name="mpe_1" x="70" y="84">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="outlet_1" x="280" y="84">
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="note" x="280" y="84">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="outlet_2" x="280" y="126">
+         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="gate" x="280" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="velo" x="280" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="pressure" x="280" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="bend" x="280" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="timbre" x="280" y="294">
             <params/>
             <attribs/>
          </obj>
          <nets>
             <net>
-               <source obj="keyb_2" outlet="note"/>
-               <dest obj="outlet_1" inlet="outlet"/>
+               <source obj="mpe_1" outlet="note"/>
+               <dest obj="note" inlet="outlet"/>
             </net>
             <net>
-               <source obj="keyb_2" outlet="gate2"/>
-               <dest obj="outlet_2" inlet="outlet"/>
+               <source obj="mpe_1" outlet="gate2"/>
+               <dest obj="gate" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="velocity"/>
+               <dest obj="velo" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="pressure" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="bend"/>
+               <dest obj="bend" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="timbre" inlet="outlet"/>
             </net>
          </nets>
          <settings>
@@ -183,11 +229,18 @@
          <windowPos>
             <x>0</x>
             <y>0</y>
-            <width>400</width>
-            <height>400</height>
+            <width>527</width>
+            <height>574</height>
          </windowPos>
       </subpatch>
    </patcher>
+   <obj type="mix/mix 2 g" uuid="a68d65dda222bc916b36b283cc06d2edd719bf3b" name="mix_3" x="266" y="378">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="table/record" uuid="2f8909f3691be093f0b8cf6532d4acff2dcb1a9f" name="record_1" x="868" y="378">
       <params/>
       <attribs>
@@ -238,8 +291,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_4" x="518" y="518">
-      <params/>
+   <obj type="mix/mix 2 g" uuid="a68d65dda222bc916b36b283cc06d2edd719bf3b" name="mix_5" x="266" y="588">
+      <params>
+         <frac32.u.map name="gain1" value="39.0"/>
+         <frac32.u.map name="gain2" value="41.5"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_5" x="392" y="588">
@@ -248,7 +304,7 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="5a8ae1f3-d6dc-4f0b-a29e-f369275c6f79" name="patcher_1" x="532" y="588">
+   <patcher type="patch/patcher" uuid="ffb6e209-e3fa-4e6d-9bb4-85ee63e611b9" name="patcher_1" x="532" y="588">
       <params>
          <frac32.s.map name="square_1" value="-12.0"/>
       </params>
@@ -496,12 +552,6 @@
          <combo attributeName="channel" selection="PC0 (ADC1_IN10)"/>
       </attribs>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="252" y="630">
-      <params>
-         <frac32.u.map name="amp" value="42.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_1" x="126" y="700">
       <params/>
       <attribs>
@@ -522,7 +572,7 @@
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="3ef7a4b2-3a43-4f69-a230-541ddbc00722" name="patcher_2" x="532" y="770">
+   <patcher type="patch/patcher" uuid="4d202e35-9ba1-4fed-8a89-f6cff79ec7f2" name="patcher_2" x="532" y="770">
       <params>
          <frac32.s.map name="square_1" value="-8.0"/>
       </params>
@@ -793,7 +843,7 @@
    <obj type="jt/filter/vcf4pole" uuid="f926d4ad-3053-4a66-be48-6db4447a260a" name="vcf4pole_2" x="980" y="812">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
+         <frac32.u.map name="reso" value="1.0"/>
       </params>
       <attribs/>
    </obj>
@@ -898,7 +948,7 @@
       </net>
       <net>
          <source obj="lowpass_4" outlet="out"/>
-         <dest obj="+_4" inlet="in1"/>
+         <dest obj="mix_3" inlet="in1"/>
       </net>
       <net>
          <source obj="lowpass_5" outlet="out"/>
@@ -912,10 +962,6 @@
       <net>
          <source obj="analog_4" outlet="out"/>
          <dest obj="unipolar2bipolar_2" inlet="i"/>
-      </net>
-      <net>
-         <source obj="analog_1" outlet="out"/>
-         <dest obj="*c_1" inlet="in"/>
       </net>
       <net>
          <source obj="unipolar2bipolar_2" outlet="o"/>
@@ -934,7 +980,7 @@
          <dest obj="record_2" inlet="start"/>
       </net>
       <net>
-         <source obj="*c_1" outlet="out"/>
+         <source obj="mix_5" outlet="out"/>
          <dest obj="lowpass_1" inlet="in"/>
       </net>
       <net>
@@ -976,7 +1022,7 @@
       </net>
       <net>
          <source obj="analog_10" outlet="out"/>
-         <dest obj="unipolar2bipolar_3" inlet="i"/>
+         <dest obj="mix_4" inlet="bus_in"/>
       </net>
       <net>
          <source obj="unipolar2bipolar_3" outlet="o"/>
@@ -1117,7 +1163,7 @@
          <dest obj="load_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="+_4" outlet="out"/>
+         <source obj="mix_3" outlet="out"/>
          <dest obj="patcher_1" inlet="pitch"/>
          <dest obj="patcher_2" inlet="pitch"/>
       </net>
@@ -1149,8 +1195,28 @@
          <dest obj="chart_1" inlet="in"/>
       </net>
       <net>
-         <source obj="patcher_3" outlet="outlet_1"/>
-         <dest obj="+_4" inlet="in2"/>
+         <source obj="patcher_3" outlet="note"/>
+         <dest obj="mix_3" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="patcher_3" outlet="bend"/>
+         <dest obj="mix_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_4" outlet="out"/>
+         <dest obj="unipolar2bipolar_3" inlet="i"/>
+      </net>
+      <net>
+         <source obj="patcher_3" outlet="pressure"/>
+         <dest obj="mix_4" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="analog_1" outlet="out"/>
+         <dest obj="mix_5" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="patcher_3" outlet="timbre"/>
+         <dest obj="mix_5" inlet="in2"/>
       </net>
    </nets>
    <settings>
@@ -1159,8 +1225,8 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>-8</x>
-      <y>-8</y>
-      <width>1382</width>
-      <height>744</height>
+      <y>0</y>
+      <width>1802</width>
+      <height>1047</height>
    </windowPos>
 </patch-1.0>

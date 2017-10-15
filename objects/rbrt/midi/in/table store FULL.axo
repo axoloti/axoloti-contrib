@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="table store FULL" uuid="b9335d8a-f7dd-4cd5-8c3e-3325d7ad5b39">
+      <sDescription>writes midi controler data to a table.set the start of the range of the controlers to read out with &apos;startcc&apos;,the length of the range with &apos;length&apos;.
+the data is written to the table starting at &apos;offset&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>launchpad.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset"/>
+         <int32 name="startcc"/>
+         <bool32.risingfalling name="active"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="chtrig" description="pulse if any cc value changes"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <bool32.tgl name="active"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="startcc" MinValue="0" MaxValue="127" DefaultValue="0"/>
+         <spinner name="length" MinValue="1" MaxValue="128" DefaultValue="1"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int8_t cc;
+int32_t cv;
+int32_t prevcv;
+uint8_t prevcc;
+
+uint8_t end;
+uint8_t start;
+uint32_t offset;
+
+bool chtrig;]]></code.declaration>
+      <code.init><![CDATA[prevcv=  0;
+prevcc = 0;
+chtrig = 0;]]></code.init>
+      <code.krate><![CDATA[start = attr_startcc + inlet_startcc;
+end = start + attr_length;
+offset = (inlet_offset + param_offset);
+	
+
+if (((cc >= start) && (cc < end)) && (inlet_active || param_active)) {
+
+if ((cv != prevcv)||(cc != prevcc)){
+      attr_table.array[((cc - start) << attr_blocksize) + offset]= __SSAT(cv,28)>>attr_table.GAIN;
+      prevcv = cv; 
+      prevcc = cc;
+      chtrig = 1;   
+   }  
+
+   outlet_chtrig = chtrig;
+  chtrig = 0;
+}]]></code.krate>
+      <code.midihandler><![CDATA[if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {cc = data1;cv = ((33284 * data2) >> 15) << 20 ;}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

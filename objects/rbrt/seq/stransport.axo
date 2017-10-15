@@ -12,6 +12,7 @@ also,a position between 0 and the value of &apos;steps&apos; is put out,as well 
          <int32 name="factor" description="multiplies &apos;factor&apos;"/>
          <bool32.risingfalling name="mode" description="or &apos;mode&apos;"/>
          <bool32.rising name="reset" description="reset phase"/>
+         <frac32 name="topos" description="reset phase to position"/>
       </inlets>
       <outlets>
          <frac32 name="phase" description="phase 0. till 64."/>
@@ -54,7 +55,7 @@ uint32_t prev;
 uint32_t ppq;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;
    r = 1;]]></code.init>
-      <code.krate><![CDATA[factor = ((inlet_factor * param_factor) > 0)  ? (inlet_factor * param_factor) : 1 ;
+      <code.krate><![CDATA[factor = ((inlet_factor) ? inlet_factor : 1) * param_factor;
 
 base = (param_mode || inlet_mode) ?  (inlet_smps * factor) : (inlet_smps / factor);
 freq = (int)(281474976710656.f/(base * (128<<3)));
@@ -62,7 +63,7 @@ steps = 29 - attr_steps;
 
 {
       if (inlet_reset && r) {
-         Phase = 0;
+         Phase = inlet_topos << 5;
          r = 0;
       } else {
          if (!inlet_reset) r = 1;

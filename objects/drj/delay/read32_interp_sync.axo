@@ -97,6 +97,7 @@
         CLOCK_SOURCE_midi_omni= 3
       } CLOCK_SOURCE;
 
+      int32_t   start_sequence;
       int32_t   clock_source;
       int32_t   clock_multiplier;
       int32_t   clock_divider;
@@ -182,6 +183,13 @@
     ]]></code.declaration>
     <code.init><![CDATA[
 
+      // Use preset time until synced
+      if( start_sequence == 0 && clock_source != CLOCK_SOURCE_internal )
+        {
+          sync_time = param_time;
+          start_sequence++;
+        }
+
 #if attr_smooth>0
       for( avg.fifo_i = 0; avg.fifo_i < FIFO_LEN; avg.fifo_i++ )
         {
@@ -190,6 +198,7 @@
       avg.fifo_i       = 0;
       avg.acc          = 0;
 #endif
+      start_sequence   = 0;
       clock_source     = CLOCK_SOURCE_internal;
       clock_multiplier = 1;
       clock_divider    = 12;

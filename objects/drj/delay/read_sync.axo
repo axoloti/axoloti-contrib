@@ -97,6 +97,7 @@
         CLOCK_SOURCE_midi_omni= 3
       } CLOCK_SOURCE;
 
+      int32_t   start_sequence;
       int32_t   clock_source;
       int32_t   clock_multiplier;
       int32_t   clock_divider;
@@ -175,7 +176,7 @@
           }
         else
           {
-            sync_time  = FToQ27( period * delay_length_cpl );
+            sync_time = FToQ27( period * delay_length_cpl );
           }
       }
 
@@ -190,6 +191,7 @@
       avg.fifo_i       = 0;
       avg.acc          = 0;
 #endif
+      start_sequence   = 0;
       clock_source     = CLOCK_SOURCE_internal;
       clock_multiplier = 1;
       clock_divider    = 12;
@@ -202,6 +204,13 @@
 
     ]]></code.init>
     <code.krate><![CDATA[
+
+      // Use preset time until synced
+      if( start_sequence == 0 && clock_source != CLOCK_SOURCE_internal )
+        {
+          sync_time = param_time;
+          start_sequence++;
+        }
 
 #ifdef USE_SYNC_HOLDOFF
       // If too long between clocks (likely absence of clock), require two successive clocks to resync.

@@ -1,0 +1,191 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="ccc005be-09e9-466f-b00c-38c3cf4c323e" name="PanSpreadSynth" x="238" y="98">
+      <params>
+         <frac32.u.map name="panSpreadAmount" value="64.0"/>
+         <frac32.u.map name="Volume " value="34.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+         <combo attributeName="midichannel" selection="inherit"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="TSG/patch/polySpread" uuid="cc2e16a2-568c-4c1e-89bf-347f8269a903" name="polySpread_1" x="392" y="56">
+            <params/>
+            <attribs>
+               <combo attributeName="distribution" selection="random"/>
+            </attribs>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="panSpreadAmount" x="532" y="56">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="34.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="140" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="294" y="154">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="294" y="294">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="53.0"/>
+               <frac32.u.map name="s" value="0.0"/>
+               <frac32.s.map name="r" value="14.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="Volume " x="406" y="294">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="34.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="518" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="spat/pan m" uuid="f6c6c0d7224841d9d76962e64d7f779d8194b7f9" name="pan_1" x="658" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="L" x="756" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="R" x="756" y="336">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="pan_1" outlet="left"/>
+               <dest obj="L" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="pan_1" outlet="right"/>
+               <dest obj="R" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="pan_1" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="Volume " inlet="in"/>
+            </net>
+            <net>
+               <source obj="panSpreadAmount" outlet="out"/>
+               <dest obj="pan_1" inlet="c"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="polySpread_1" outlet="spread"/>
+               <dest obj="panSpreadAmount" inlet="in"/>
+            </net>
+            <net>
+               <source obj="Volume " outlet="out"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="sine_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>216</x>
+            <y>100</y>
+            <width>879</width>
+            <height>669</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="TSG/fx/reverb" uuid="0d1a8848-0f9d-4740-91e9-45a6d1cf36cd" name="Just A Reverb" x="392" y="98">
+      <params>
+         <frac32.u.map name="PreDelay" value="17.5"/>
+         <frac32.u.map name="decay" value="29.0"/>
+         <frac32.u.map name="LowDamp" value="0.0"/>
+         <frac32.u.map name="HighDamp" value="0.0"/>
+         <frac32.u.map name="size" value="64.0"/>
+         <frac32.s.map name="mod_:pitch" value="-16.0"/>
+         <frac32.u.map name="mod_:gain" value="7.5"/>
+         <frac32.u.map name="diffusion" value="63.0"/>
+         <frac32.u.map name="mix" value="24.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="504" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="PanSpreadSynth" outlet="L"/>
+         <dest obj="Just A Reverb" inlet="InL"/>
+      </net>
+      <net>
+         <source obj="PanSpreadSynth" outlet="R"/>
+         <dest obj="Just A Reverb" inlet="InR"/>
+      </net>
+      <net>
+         <source obj="Just A Reverb" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="Just A Reverb" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>Johannes Elliesen</Author>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>273</x>
+      <y>224</y>
+      <width>1029</width>
+      <height>591</height>
+   </windowPos>
+</patch-1.0>

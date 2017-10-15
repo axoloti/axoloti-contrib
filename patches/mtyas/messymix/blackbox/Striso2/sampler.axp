@@ -38,7 +38,7 @@
       <params/>
       <attribs>
          <combo attributeName="size" selection="524288"/>
-         <file attributeName="filename" file="C:\Users\matth\OneDrive\SAMPLES\Broken pianos\raw\softmid.raw"/>
+         <file attributeName="filename" file="..\..\..\..\..\..\WaveTables\softmid.raw"/>
       </attribs>
    </obj>
    <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_5" x="728" y="126">
@@ -59,15 +59,15 @@
          <combo attributeName="channel" selection="PC1 (ADC1_IN11)"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="ddb7a95f-e721-4efa-914c-6f62ddea46b2" name="patcher_1" x="112" y="140">
+   <patcher type="patch/patcher" uuid="58e3df90-e3d7-45a2-8756-5c152ecf9e91" name="patcher_1" x="112" y="140">
       <params>
          <frac32.u.map name="mix_1:gain1" value="64.0"/>
          <frac32.s.map name="play_1" value="-10.799999713897705"/>
-         <frac32.s.map name="adsr_1:a" value="-63.0"/>
+         <frac32.s.map name="adsr_1:a" value="-55.0"/>
          <frac32.s.map name="adsr_1:d" value="49.0"/>
-         <frac32.u.map name="adsr_1:s" value="53.0"/>
-         <frac32.s.map name="adsr_1:r" value="-7.0"/>
-         <frac32.s.map name="vcf3_1:pitch" value="19.0"/>
+         <frac32.u.map name="adsr_1:s" value="64.0"/>
+         <frac32.s.map name="adsr_1:r" value="28.0"/>
+         <frac32.s.map name="vcf3_1:pitch" value="33.0"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="8"/>
@@ -117,6 +117,10 @@
             <attribs/>
          </obj>
          <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="952" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/half" uuid="d3aa9c64dbf1ec7871bbc3e2d8905f8e443c9823" name="half_1" x="560" y="238">
             <params/>
             <attribs/>
          </obj>
@@ -173,16 +177,24 @@
                <dest obj="outlet_1" inlet="outlet"/>
             </net>
             <net>
-               <source obj="mpe_1" outlet="pressure"/>
-               <dest obj="vcf3_1" inlet="pitch"/>
-            </net>
-            <net>
                <source obj="*_2" outlet="result"/>
                <dest obj="mix_1" inlet="in1"/>
             </net>
             <net>
                <source obj="analog_1" outlet="out"/>
                <dest obj="*_2" inlet="b"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="vcf3_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="half_1" outlet="out"/>
+               <dest obj="vcf3_1" inlet="reso"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="half_1" inlet="in"/>
             </net>
          </nets>
          <settings>
@@ -192,7 +204,6 @@
             <NPresetEntries>32</NPresetEntries>
             <NModulationSources>8</NModulationSources>
             <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-            <Author></Author>
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
@@ -203,9 +214,27 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="252" y="168">
+   <obj type="sss/math/scaleInOut" uuid="1469e0f0-7674-4f23-897c-5dff075314f6" name="scaleInOut_1" x="1148" y="140">
       <params>
-         <frac32.u.map name="amp" value="22.5"/>
+         <frac32.s.map name="inMin" value="6.0"/>
+         <frac32.s.map name="inMax" value="64.0"/>
+         <frac32.s.map name="outMin" value="0.0"/>
+         <frac32.s.map name="outMax" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="238" y="168">
+      <params>
+         <frac32.u.map name="amp" value="18.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/eq4" uuid="e74037f1462a4ff4c609ebd11974780e4d486ba6" name="eq4_1" x="350" y="182">
+      <params>
+         <int32 name="lowmid" value="-1"/>
+         <int32 name="mid" value="0"/>
+         <int32 name="highmid" value="1"/>
+         <int32 name="high" value="1"/>
       </params>
       <attribs/>
    </obj>
@@ -219,13 +248,8 @@
          <combo attributeName="channel" selection="PC2 (ADC1_IN12)"/>
       </attribs>
    </obj>
-   <obj type="jho/filter/para" uuid="fafd6412-8488-4b59-9860-4e93bd1ce560" name="para_1" x="378" y="196">
-      <params>
-         <frac32.s.map name="pitch" value="18.0"/>
-         <frac32.u.map name="reso" value="0.0"/>
-         <frac32.s.map name="gain" value="32.0"/>
-         <bool32.tgl name="on" value="1"/>
-      </params>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="448" y="196">
+      <params/>
       <attribs/>
    </obj>
    <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="504" y="238">
@@ -251,30 +275,161 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="mtyas/delay/long-delay" uuid="259f8ad0-184d-4a9b-8395-f92c7ae48de5" name="obj_1" x="840" y="266">
+   <patcher type="patch/patcher" uuid="a5c65aaa-5f47-48e2-ae3d-dc2a236cedfa" name="obj_1" x="840" y="266">
       <params/>
       <attribs/>
-   </obj>
+      <subpatch appVersion="1.0.12">
+         <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound" x="42" y="28">
+            <params/>
+            <attribs>
+               <combo attributeName="size" selection="262144 (5.46s)"/>
+            </attribs>
+         </obj>
+         <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_1" x="42" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="350" y="140">
+            <params>
+               <frac32.u.map name="gain1" value="44.5"/>
+               <frac32.u.map name="gain2" value="64.0"/>
+               <frac32.u.map name="gain3" value="42.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_7" x="616" y="210">
+            <params>
+               <frac32.u.map name="amp" value="20.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="812" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1022" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="feedback" x="154" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="c16a625a661f40e4b359db604dcd00b3befcdbe3" name="*_1" x="476" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_1" x="84" y="336">
+            <params>
+               <frac32.u.map name="time" value="58.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="conv/interp" uuid="d68c1a8709d8b55e3de8715d727ec0a2d8569d9a" name="interp_1" x="210" y="378">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="delay/read interp" uuid="e3d8b8823ab551c588659520bf6cc25c630466c7" name="read_1" x="406" y="378">
+            <params>
+               <frac32.u.map name="time" value="0.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="delayname" obj="sound"/>
+            </attribs>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="speed" x="42" y="518">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="amount" x="280" y="588">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="inlet_1" outlet="inlet"/>
+               <dest obj="*c_7" inlet="in"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="*c_7" outlet="out"/>
+               <dest obj="xfade_1" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="smooth_1" outlet="out"/>
+               <dest obj="interp_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="sound" inlet="in"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="out"/>
+               <dest obj="xfade_1" inlet="i2"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="interp_1" outlet="o"/>
+               <dest obj="read_1" inlet="time"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="amount" outlet="inlet"/>
+               <dest obj="xfade_1" inlet="c"/>
+            </net>
+            <net>
+               <source obj="speed" outlet="inlet"/>
+               <dest obj="smooth_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="feedback" outlet="inlet"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="xfade_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>884</x>
+            <y>333</y>
+            <width>880</width>
+            <height>737</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
    <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_2" x="616" y="336">
       <params>
-         <frac32.s.map name="freq" value="-26.0"/>
+         <frac32.s.map name="freq" value="-41.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="868" y="392">
       <params>
-         <frac32.u.map name="gain1" value="46.5"/>
-         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="25.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="fx/lmnts/reverb" uuid="8027561C-A0B5-4DF8-A10E-3ED1274F2980" name="reverb_1" x="980" y="392">
       <params>
          <frac32.u.map name="amount" value="0.0"/>
-         <frac32.u.map name="time" value="23.0"/>
-         <frac32.u.map name="diffusion" value="42.5"/>
-         <frac32.u.map name="gain" value="9.0"/>
-         <frac32.u.map name="lowpass" value="47.0"/>
+         <frac32.u.map name="time" value="0.0"/>
+         <frac32.u.map name="diffusion" value="0.0"/>
+         <frac32.u.map name="gain" value="18.0"/>
+         <frac32.u.map name="lowpass" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -302,6 +457,24 @@
       <params/>
       <attribs>
          <combo attributeName="channel" selection="PA4 (ADC1_IN4)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_8" x="434" y="532">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA7 (ADC1_IN7)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_9" x="434" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA6 (ADC1_IN6)"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_10" x="434" y="644">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA5 (ADC1_IN5)"/>
       </attribs>
    </obj>
    <nets>
@@ -334,12 +507,12 @@
          <dest obj="reverb_1" inlet="amount"/>
       </net>
       <net>
-         <source obj="para_1" outlet="out"/>
-         <dest obj="vcf3_1" inlet="in"/>
+         <source obj="eq4_1" outlet="out"/>
+         <dest obj="soft_1" inlet="in"/>
       </net>
       <net>
          <source obj="gain_1" outlet="out"/>
-         <dest obj="para_1" inlet="in"/>
+         <dest obj="eq4_1" inlet="in"/>
       </net>
       <net>
          <source obj="analog_4" outlet="out"/>
@@ -371,7 +544,7 @@
       </net>
       <net>
          <source obj="analog_7" outlet="out"/>
-         <dest obj="lowpass_3" inlet="in"/>
+         <dest obj="scaleInOut_1" inlet="in"/>
       </net>
       <net>
          <source obj="lowpass_2" outlet="out"/>
@@ -416,6 +589,26 @@
          <dest obj="demux_1" inlet="s"/>
          <dest obj="digital_1" inlet="in"/>
       </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="scaleInOut_1" outlet="out"/>
+         <dest obj="lowpass_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_10" outlet="out"/>
+         <dest obj="reverb_1" inlet="lowpass"/>
+      </net>
+      <net>
+         <source obj="analog_9" outlet="out"/>
+         <dest obj="reverb_1" inlet="diffusion"/>
+      </net>
+      <net>
+         <source obj="analog_8" outlet="out"/>
+         <dest obj="reverb_1" inlet="time"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
@@ -423,7 +616,7 @@
    <notes><![CDATA[]]></notes>
    <windowPos>
       <x>-8</x>
-      <y>-8</y>
+      <y>0</y>
       <width>1382</width>
       <height>744</height>
    </windowPos>
