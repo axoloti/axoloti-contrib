@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scale" uuid="9f13eb54-8362-486b-83f7-7fa3551c3ba1">
+      <sDescription>Generates the 7 notes of the selected scale relative to a root pitch</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="root"/>
+      </inlets>
+      <outlets>
+         <frac32 name="I"/>
+         <frac32 name="II"/>
+         <frac32 name="III"/>
+         <frac32 name="IV"/>
+         <frac32 name="V"/>
+         <frac32 name="VI"/>
+         <frac32 name="VII"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="mode">
+            <MenuEntries>
+               <string>ionian</string>
+               <string>dorian</string>
+               <string>phyrigian</string>
+               <string>lydian</string>
+               <string>myxolydian</string>
+               <string>aeolian</string>
+               <string>locrian</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[#if (attr_mode ==0)
+int32_t notes[6] = {2<<21,4<<21,5<<21,7<<21,9<<21,11<<21};
+#elif (attr_mode ==1)
+int32_t notes[6] = {2<<21,3<<21,5<<21,7<<21,9<<21,10<<21};
+#elif (attr_mode ==2)
+int32_t notes[6] = {1<<21,3<<21,5<<21,7<<21,8<<21,10<<21};
+#elif (attr_mode ==3)
+int32_t notes[6] = {2<<21,4<<21,6<<21,7<<21,9<<21,11<<21};
+#elif (attr_mode ==4)
+int32_t notes[6] = {2<<21,4<<21,5<<21,7<<21,9<<21,10<<21};
+#elif (attr_mode ==5)
+int32_t notes[6] = {2<<21,3<<21,5<<21,7<<21,8<<21,10<<21};
+#elif (attr_mode ==6)
+int32_t notes[6] = {1<<21,3<<21,5<<21,6<<21,8<<21,10<<21};
+#endif]]></code.declaration>
+      <code.krate><![CDATA[outlet_I = inlet_root;
+outlet_II = inlet_root+notes[0];
+outlet_III = inlet_root+notes[1];
+outlet_IV = inlet_root+notes[2];
+outlet_V = inlet_root+notes[3];
+outlet_VI = inlet_root+notes[4];
+outlet_VII = inlet_root+notes[5];]]></code.krate>
+   </obj.normal>
+</objdefs>
