@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="matrix toggle" uuid="e4cfb313-6d47-487f-9f28-def89e6d6dc6">
       <sDescription>toggles the elements of a table with the 8x8 matrix of a &apos;launchpad&apos;.
 &apos;offset&apos; sets the table index to start at,
@@ -70,11 +70,13 @@ uint8_t bitmask1 = 0b10001110;
 
 int32_t _value;
 int32_t _cc;
+int32_t offset;
 
 int rtrig;
 int ntrig;
 bool op;]]></code.declaration>
-      <code.krate><![CDATA[start = inlet_start + param_start;
+      <code.krate><![CDATA[offset = inlet_offset + param_offset;
+start = inlet_start + param_start;
 end = (start + ( inlet_length + param_length));
 
 matrix = (_note1 -((_note1 >> 4) << 3));
@@ -86,9 +88,9 @@ if ((matrix >= start) && (matrix < end)) {
 if (inlet_active || param_active){
 if (((_gate1>0) && !ntrig) ||(matrix != prevmatrix))  {
       ntrig=1;
-      op = attr_table.array[(matrix << attr_blocksize)];
+      op = attr_table.array[(matrix << attr_blocksize) + offset];
       op = !op ;
-         attr_table.array[(matrix << attr_blocksize)]= (op * ((1 << 27)- 1 >>attr_table.GAIN));
+         attr_table.array[(matrix << attr_blocksize)+ offset]= (op * ((1 << 27)- 1 >>attr_table.GAIN));
          if (op) rtrig = 1;
    }
    if (!(_gate1>0)) ntrig=0;

@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="slider 8" uuid="230974e7-ce90-4675-b956-adc88cdfac8e">
       <sDescription>display and edit indexes of a table starting as horizontal sliders.
 8 - step - version,the right row button will set the slider to 0.
@@ -135,15 +135,14 @@ if (!(inlet_redraw > 0 )) ntrig = 0;
 { if ((crow == rows) || (rows != prerow)) {crow = 0; prerow = rows;}
 	
 pos = (_note1 - ((row  +crow ) << 4));
-if (((pos >= 1 ) && (pos <= 8)) && ((pos != prepos)|| _gate1)) {
+if (((pos >= 1 ) && (pos <= 9)) && ((pos != prepos)|| _gate1)) {
 	prepos = pos;
-     attr_table.array[offset + crow]=__SSAT((pos  << 24),28)>>attr_table.GAIN;
+  if (pos != 9) attr_table.array[offset + crow]=  __SSAT((pos  << 24),28)>>attr_table.GAIN;
+    else attr_table.array[offset + crow]= 0;
      range = 1;
      }
      else range = 0;
-          	
-	if (pos == 9 ) {attr_table.array[offset + crow]= 0;range = 1;}
-
+     
 v = ((attr_table.array[__USAT((offset + crow),attr_table.LENGTHPOW)]<<attr_table.GAIN) >> 23);
 
 //changed??

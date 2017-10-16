@@ -1,160 +1,27 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="rbrt/math/&lt;&lt; i c" uuid="984d06ee-2b58-4536-822a-bb4d9e119250" name="&lt;&lt;_1" x="224" y="14">
-      <params>
-         <int32 name="shift" value="7"/>
-      </params>
-      <attribs/>
-   </obj>
-   <patchobj type="patch/object" uuid="ee8d1bcc-4a5b-4f40-8106-0adf7e8156af" name="matrix_2" x="434" y="14">
+   <obj type="rbrt/launchpad/matrix toggle" uuid="e4cfb313-6d47-487f-9f28-def89e6d6dc6" name="matrix_2" x="504" y="14">
       <params>
          <int32 name="offset" value="0"/>
          <int32 name="start" value="0"/>
          <int32 name="length" value="16"/>
-         <bool32.tgl name="active" value="1"/>
+         <bool32.tgl name="active" value="0"/>
       </params>
       <attribs>
          <objref attributeName="table" obj="data"/>
          <combo attributeName="blocksize" selection="8"/>
-         <spinner attributeName="hold" value="400"/>
       </attribs>
-      <object id="patch/object" uuid="ee8d1bcc-4a5b-4f40-8106-0adf7e8156af">
-         <sDescription>toggles the elements of a table with the 8x8 matrix of a &apos;launchpad&apos;
-&apos;offset&apos; sets the table index to start at,
-&apos;startpad&apos; sets the first pad of the launchpad&apos;s active area,
-&apos;length&apos; sets the length of the area.
-&apos;blocksize&apos; sets the size of the data-block.</sDescription>
-         <author>robert schirmer</author>
-         <license>BSD</license>
-         <helpPatch>launchpad.axh</helpPatch>
-         <inlets>
-            <int32 name="offset"/>
-            <int32 name="start"/>
-            <int32 name="length"/>
-            <bool32.risingfalling name="active"/>
-         </inlets>
-         <outlets>
-            <bool32.pulse name="trig" description="pulse if an element is changed"/>
-            <int32 name="matrix" description="pad index if inside range"/>
-            <int32 name="hold" description="pad index if a pad is held down"/>
-         </outlets>
-         <displays/>
-         <params>
-            <int32 name="offset">
-               <MinValue i="0"/>
-               <MaxValue i="1000000"/>
-            </int32>
-            <int32 name="start">
-               <MinValue i="0"/>
-               <MaxValue i="1000000"/>
-            </int32>
-            <int32 name="length">
-               <MinValue i="0"/>
-               <MaxValue i="1000000"/>
-            </int32>
-            <bool32.tgl name="active"/>
-         </params>
-         <attribs>
-            <objref name="table"/>
-            <combo name="blocksize">
-               <MenuEntries>
-                  <string>1</string>
-                  <string>4</string>
-                  <string>8</string>
-                  <string>16</string>
-                  <string>32</string>
-                  <string>64</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>0</string>
-                  <string>2</string>
-                  <string>3</string>
-                  <string>4</string>
-                  <string>5</string>
-                  <string>6</string>
-                  <string>7</string>
-               </CEntries>
-            </combo>
-            <spinner name="hold" MinValue="300" MaxValue="10000" DefaultValue="1000"/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[int8_t _note1;
-bool _gate1;
-uint8_t matrix;
-uint8_t hold;
-uint8_t prevmatrix;
-uint8_t lastmatrix;
-uint32_t offset;
-
-
-uint8_t start;
-uint8_t end;
-
-uint8_t bitmask1 = 0b10001110;
-
-int32_t _value;
-int32_t _cc;
-
-int rtrig;
-int ntrig;
-bool op;
-bool ttrig;
-uint32_t tc;
-
-int32_t tv ;]]></code.declaration>
-         <code.krate><![CDATA[start = inlet_start + param_start;
-end = (start + ( inlet_length + param_length));
-offset = param_offset + inlet_offset;
-
-matrix = (_note1 -((_note1 >> 4) << 3));
-	
-if ((matrix >= start) && (matrix < end)) {
-	outlet_matrix = matrix;lastmatrix = matrix;
-
-if (inlet_active || param_active){
-if  ((_gate1 && !ntrig) ||(matrix != prevmatrix)) {
-      ntrig=1;
-      tv = attr_table.array[(matrix << attr_blocksize) + offset];
-      op = tv;
-      op = !op;
-      attr_table.array[(matrix << attr_blocksize)+ offset]= ((op) << 27) - op >>attr_table.GAIN;
-      rtrig = 1;
-   }
-   if (!_gate1) {ntrig=0;ttrig = 0;}
-   
-   tc+= _gate1;
-if ((matrix != prevmatrix) || (!_gate1)) tc = 0;	
-	if ((tc > attr_hold) && (!ttrig)) {
-         attr_table.array[(matrix << attr_blocksize)+offset]= tv;
-         ttrig = 1;
-         hold = matrix;
-	}
-   }
-}
-else {
-	if (!lastmatrix) lastmatrix = start;
-outlet_matrix = lastmatrix;
-     }
-
-prevmatrix = matrix;
-outlet_trig = rtrig;
-outlet_hold = hold;
-rtrig = 0;]]></code.krate>
-         <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {	
-  if ((data1 -8) & bitmask1) {
-    _note1 = data1;
-    _gate1 = 1;
-  }
-} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||          (status == MIDI_NOTE_OFF + attr_midichannel)) {
-  if (_note1 == data1) {
-    _gate1 = 0;
-  }
-
-} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
-   _gate1 = 0;
-}]]></code.midihandler>
-      </object>
-   </patchobj>
-   <obj type="rbrt/launchpad/matrix disp" uuid="9074be26-db88-4259-9643-756ee5e1e261" name="matrix_1" x="924" y="28">
+   </obj>
+   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_2" x="2058" y="14">
+      <params>
+         <bool32.tgl name="active" value="1"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="color" selection="lime 1 S"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/matrix disp" uuid="9074be26-db88-4259-9643-756ee5e1e261" name="matrix_1" x="1050" y="28">
       <params>
          <bool32.tgl name="active" value="1"/>
          <int32 name="length" value="16"/>
@@ -169,7 +36,7 @@ rtrig = 0;]]></code.krate>
          <combo attributeName="coloroff" selection="off"/>
       </attribs>
    </obj>
-   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_1" x="1232" y="28">
+   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_1" x="1358" y="28">
       <params>
          <bool32.tgl name="active" value="1"/>
       </params>
@@ -179,136 +46,55 @@ rtrig = 0;]]></code.krate>
          <combo attributeName="color" selection="red M"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="1386" y="28" text="set a pad on the matrix to a color,"/>
-   <obj type="rbrt/launchpad/step disp" uuid="b82a72df-ed07-401c-91b0-46590bbed2fb" name="step_2" x="1736" y="28">
+   <comment type="patch/comment" x="1512" y="28" text="set a pad on the matrix to a color,"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1946" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/math/&lt;&lt; i c" uuid="984d06ee-2b58-4536-822a-bb4d9e119250" name="&lt;&lt;_1" x="308" y="42">
       <params>
-         <bool32.tgl name="active" value="1"/>
+         <int32 name="shift" value="7"/>
       </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1512" y="42" text="when the pad index changes,the matrix "/>
+   <comment type="patch/comment" x="1512" y="56" text="is updated to display the corresponding element of the table"/>
+   <comment type="patch/comment" x="1512" y="84" text="useful to display the steps of a sequence"/>
+   <obj type="math/-1" uuid="5fd46bab471bb6509ae83de702dea72933683a98" name="-1_1" x="1736" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/divremc" uuid="fd7d945542e16344358136d7e22cffd5be704260" name="divremc_1" x="1806" y="126">
+      <params/>
       <attribs>
-         <objref attributeName="table" obj="data"/>
-         <combo attributeName="device" selection="usb host port / LP"/>
-         <combo attributeName="color" selection="yellow S"/>
+         <spinner attributeName="denominator" value="16"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="1386" y="42" text="when the pad index changes,the matrix "/>
-   <comment type="patch/comment" x="1386" y="56" text="is updated to display the corresponding element of the table"/>
-   <comment type="patch/comment" x="1386" y="84" text="useful to display the steps of a sequence"/>
-   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="1400" y="140">
+   <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="==_1" x="1932" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/latch" uuid="2a50e4657301542464c6a97931847b5e8e0e6d2b" name="latch_1" x="952" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="1526" y="140">
       <params>
          <frac32.s.map name="pitch" value="5.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="1512" y="140">
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="1638" y="140">
       <params>
          <int32 name="maximum" value="16"/>
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="ef233f43-46f1-4986-a0d5-1859fd0692ff" name="hold redraw" x="1610" y="140">
-      <params/>
-      <attribs/>
-      <subpatch appVersion="1.0.12">
-         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="seq index" x="42" y="70">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/-1" uuid="5fd46bab471bb6509ae83de702dea72933683a98" name="-1_1" x="210" y="112">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/divremc" uuid="fd7d945542e16344358136d7e22cffd5be704260" name="divremc_1" x="280" y="112">
-            <params/>
-            <attribs>
-               <spinner attributeName="denominator" value="16"/>
-            </attribs>
-         </obj>
-         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="step hold" x="42" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="==_1" x="406" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="rbrt/control/t2p" uuid="e076e6e6-f59e-429e-b4ca-c0f3e55f074a" name="t2p_1" x="490" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="602" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="rbrt/control/pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7" name="pulse_1" x="700" y="126">
-            <params/>
-            <attribs>
-               <spinner attributeName="kticks" value="700"/>
-            </attribs>
-         </obj>
-         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="redraw" x="840" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_1" x="490" y="182">
-            <params/>
-            <attribs/>
-         </obj>
-         <nets>
-            <net>
-               <source obj="step hold" outlet="inlet"/>
-               <dest obj="==_1" inlet="in2"/>
-               <dest obj="change_1" inlet="in"/>
-            </net>
-            <net>
-               <source obj="==_1" outlet="out"/>
-               <dest obj="t2p_1" inlet="trig"/>
-            </net>
-            <net>
-               <source obj="t2p_1" outlet="pulse"/>
-               <dest obj="or_1" inlet="i1"/>
-            </net>
-            <net>
-               <source obj="-1_1" outlet="result"/>
-               <dest obj="divremc_1" inlet="a"/>
-            </net>
-            <net>
-               <source obj="divremc_1" outlet="rem"/>
-               <dest obj="==_1" inlet="in1"/>
-            </net>
-            <net>
-               <source obj="or_1" outlet="o"/>
-               <dest obj="pulse_1" inlet="trig"/>
-            </net>
-            <net>
-               <source obj="change_1" outlet="trig"/>
-               <dest obj="or_1" inlet="i2"/>
-            </net>
-            <net>
-               <source obj="seq index" outlet="inlet"/>
-               <dest obj="-1_1" inlet="a"/>
-            </net>
-            <net>
-               <source obj="pulse_1" outlet="trig"/>
-               <dest obj="redraw" inlet="outlet"/>
-            </net>
-         </nets>
-         <settings>
-            <subpatchmode>no</subpatchmode>
-         </settings>
-         <notes><![CDATA[]]></notes>
-         <windowPos>
-            <x>407</x>
-            <y>255</y>
-            <width>1114</width>
-            <height>625</height>
-         </windowPos>
-      </subpatch>
-   </patcher>
-   <obj type="rbrt/patching/automux i 2" uuid="04976af6-f239-40a0-95b7-2da458fe9ab3" name="automux_1" x="602" y="154">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="392" y="154">
       <params/>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="4f31eb77-ae9a-44e5-8cb2-dbe254953d4a" name="DCA_1" x="2002" y="154">
+   <patchobj type="patch/object" uuid="4f31eb77-ae9a-44e5-8cb2-dbe254953d4a" name="DCA_1" x="2226" y="154">
       <params/>
       <attribs/>
       <object id="patch/object" uuid="4f31eb77-ae9a-44e5-8cb2-dbe254953d4a">
@@ -342,15 +128,36 @@ trig = 0;]]></code.krate>
 _in = inlet_in;]]></code.srate>
       </object>
    </patchobj>
-   <obj type="rbrt/launchpad/launchpad in" uuid="90f4fb72-1767-4039-8a61-e05e72b6fc03" name="launchpad_1" x="0" y="196">
+   <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_1" x="728" y="168">
       <params/>
       <attribs/>
    </obj>
-   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="196" y="252">
+   <obj type="rbrt/control/pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7" name="pulse_3" x="1918" y="196">
+      <params/>
+      <attribs>
+         <spinner attributeName="kticks" value="500"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/t2p" uuid="e076e6e6-f59e-429e-b4ca-c0f3e55f074a" name="t2p_1" x="1722" y="210">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_2" x="336" y="252">
+   <obj type="rbrt/launchpad/launchpad in" uuid="90f4fb72-1767-4039-8a61-e05e72b6fc03" name="launchpad_1" x="0" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/rpass i" uuid="6ff2991d-4134-4c51-ab1d-526d6e987484" name="rpass_1" x="182" y="252">
+      <params>
+         <int32 name="high" value="3"/>
+         <int32 name="low" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="322" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_2" x="462" y="252">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -359,9 +166,9 @@ _in = inlet_in;]]></code.srate>
          <combo attributeName="off" selection="red W"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="924" y="252" text="display an area of a table on the 8x8 matrix,"/>
-   <comment type="patch/comment" x="924" y="266" text="starting from top/left,row by row"/>
-   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_2" x="1778" y="266">
+   <comment type="patch/comment" x="1050" y="252" text="display an area of a table on the 8x8 matrix,"/>
+   <comment type="patch/comment" x="1050" y="266" text="starting from top/left,row by row"/>
+   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_2" x="1974" y="266">
       <params>
          <frac32.u.map name="drive" value="0.0"/>
          <int32.hradio name="fat" value="4"/>
@@ -369,7 +176,7 @@ _in = inlet_in;]]></code.srate>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_3" x="1414" y="280">
+   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_3" x="1540" y="280">
       <params>
          <int32 name="offset" value="0"/>
       </params>
@@ -377,23 +184,17 @@ _in = inlet_in;]]></code.srate>
          <objref attributeName="table" obj="data"/>
       </attribs>
    </obj>
-   <obj type="rbrt/control/pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7" name="pulse_3" x="1694" y="280">
-      <params/>
-      <attribs>
-         <spinner attributeName="kticks" value="600"/>
-      </attribs>
-   </obj>
-   <obj type="rbrt/control/pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7" name="pulse_2" x="2128" y="280">
+   <obj type="rbrt/control/pulse delay" uuid="6b629e7c-9173-453f-ac27-0e322d077ba7" name="pulse_2" x="2254" y="280">
       <params/>
       <attribs>
          <spinner attributeName="kticks" value="0"/>
       </attribs>
    </obj>
-   <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_2" x="826" y="294">
+   <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="952" y="294">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/launchpad/slider 8" uuid="230974e7-ce90-4675-b956-adc88cdfac8e" name="slider_1" x="924" y="294">
+   <obj type="rbrt/launchpad/slider 8" uuid="230974e7-ce90-4675-b956-adc88cdfac8e" name="slider_1" x="1050" y="294">
       <params>
          <int32 name="offset" value="0"/>
          <int32 name="rows" value="6"/>
@@ -406,23 +207,19 @@ _in = inlet_in;]]></code.srate>
          <combo attributeName="color" selection="yellow W"/>
       </attribs>
    </obj>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1610" y="294">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="2044" y="294">
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="2170" y="294">
       <params>
          <int32 name="value" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_3" x="714" y="308">
+   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_3" x="826" y="308">
       <params/>
       <attribs>
          <combo attributeName="blocksize" selection="8"/>
       </attribs>
    </obj>
-   <patchobj type="patch/object" uuid="a9a5ec26-e7c6-48dd-9f5d-bc0d93ac9638" name="pulse_1" x="1988" y="364">
+   <patchobj type="patch/object" uuid="a9a5ec26-e7c6-48dd-9f5d-bc0d93ac9638" name="pulse_1" x="2114" y="364">
       <params/>
       <attribs>
          <spinner attributeName="kticks" value="15"/>
@@ -463,17 +260,17 @@ env = ntrig ? Phase: 1 << 27;
 outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
       </object>
    </patchobj>
-   <obj type="lokki/mix/mix 4 gsc" uuid="e189ccc9-794e-4915-87e4-7c2aa0e23c57" name="mix_1" x="2114" y="364">
+   <obj type="lokki/mix/mix 4 gsc" uuid="e189ccc9-794e-4915-87e4-7c2aa0e23c57" name="mix_1" x="2240" y="364">
       <params>
          <frac32.u.map name="gain1" value="47.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="2240" y="364">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="2366" y="364">
       <params/>
       <attribs/>
    </obj>
-   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="data" x="574" y="378">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="data" x="700" y="378">
       <params/>
       <attribs>
          <combo attributeName="size" selection="512"/>
@@ -482,17 +279,17 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          </text>
       </attribs>
    </obj>
-   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="1918" y="378">
+   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="2044" y="378">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_2" x="1246" y="392">
+   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_2" x="1372" y="392">
       <params/>
       <attribs>
          <combo attributeName="blocksize" selection="8"/>
       </attribs>
    </obj>
-   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_3" x="336" y="406">
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_3" x="462" y="406">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -501,7 +298,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <combo attributeName="off" selection="red W"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="23fb6d3f-3e07-42fb-8203-eeb30a26bce0" name="patcher_3" x="1764" y="406">
+   <patcher type="patch/patcher" uuid="c977b8e7-efa5-456c-a4e9-72edb0fd2e95" name="patcher_3" x="1890" y="406">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -709,13 +506,13 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_1" x="1610" y="420">
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_1" x="1736" y="420">
       <params/>
       <attribs>
          <combo attributeName="sample" selection="808bd"/>
       </attribs>
    </obj>
-   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="copy" x="574" y="476">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="copy" x="700" y="476">
       <params/>
       <attribs>
          <combo attributeName="size" selection="8"/>
@@ -724,10 +521,22 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          </text>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="924" y="476" text="display elements of a table as horizontal sliders"/>
-   <comment type="patch/comment" x="924" y="490" text="8-steps,using the right buttons to reset to 0."/>
-   <comment type="patch/comment" x="924" y="504" text="there&apos;s a 7 step version as well."/>
-   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_4" x="336" y="560">
+   <comment type="patch/comment" x="1050" y="476" text="display elements of a table as horizontal sliders"/>
+   <obj type="rbrt/launchpad/top row" uuid="b6dc9676-87ca-43b1-b3ab-1a230d5c193e" name="top_1" x="126" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="308" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1050" y="490" text="8-steps,using the right buttons to reset to 0."/>
+   <comment type="patch/comment" x="1050" y="504" text="there&apos;s a 7 step version as well."/>
+   <obj type="disp/ibar 16" uuid="302bfed4cde8894229679ce81f6b8a5c5212dd98" name="ibar_1" x="1288" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_4" x="462" y="560">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -736,7 +545,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <combo attributeName="off" selection="red W"/>
       </attribs>
    </obj>
-   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_4" x="1428" y="560">
+   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_4" x="1554" y="560">
       <params>
          <int32 name="offset" value="128"/>
       </params>
@@ -744,11 +553,11 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <objref attributeName="table" obj="data"/>
       </attribs>
    </obj>
-   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_2" x="1946" y="560">
+   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_2" x="2072" y="560">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_3" x="1778" y="602">
+   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_3" x="1904" y="602">
       <params>
          <frac32.u.map name="drive" value="0.0"/>
          <int32.hradio name="fat" value="3"/>
@@ -756,13 +565,22 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
       </params>
       <attribs/>
    </obj>
-   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_2" x="1582" y="630">
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_6" x="280" y="616">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="7"/>
+         <combo attributeName="on" selection="lime 1 S"/>
+         <combo attributeName="off" selection="lime 1 W"/>
+      </attribs>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_2" x="1708" y="630">
       <params/>
       <attribs>
          <combo attributeName="sample" selection="808bd"/>
       </attribs>
    </obj>
-   <obj type="rbrt/launchpad/right disp" uuid="515d095e-931a-4bff-a560-f99140e1fcb6" name="right_1" x="1036" y="686">
+   <obj type="rbrt/launchpad/right disp" uuid="515d095e-931a-4bff-a560-f99140e1fcb6" name="right_1" x="1162" y="686">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -771,7 +589,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <combo attributeName="off" selection="green W"/>
       </attribs>
    </obj>
-   <obj type="rbrt/data/tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396" name="tcopy_1" x="1218" y="686">
+   <obj type="rbrt/data/tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396" name="tcopy_1" x="1344" y="686">
       <params>
          <int32 name="src" value="0"/>
          <int32 name="dst" value="0"/>
@@ -785,7 +603,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <spinner attributeName="speed" value="1"/>
       </attribs>
    </obj>
-   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_5" x="336" y="714">
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_5" x="462" y="714">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -794,11 +612,11 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <combo attributeName="off" selection="red W"/>
       </attribs>
    </obj>
-   <obj type="rbrt/launchpad/right row" uuid="b2364061-8870-4e9d-904d-3dd4c69582ff" name="right_2" x="658" y="728">
+   <obj type="rbrt/launchpad/right row" uuid="b2364061-8870-4e9d-904d-3dd4c69582ff" name="right_2" x="784" y="728">
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="a32feaa7-c95a-407a-a830-438619d7605f" name="patcher_4" x="1778" y="728">
+   <patcher type="patch/patcher" uuid="b809d098-c720-4309-851d-3f57df72b2cb" name="patcher_4" x="1904" y="728">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -1006,7 +824,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="rbrt/launchpad/right disp" uuid="515d095e-931a-4bff-a560-f99140e1fcb6" name="right_3" x="1036" y="854">
+   <obj type="rbrt/launchpad/right disp" uuid="515d095e-931a-4bff-a560-f99140e1fcb6" name="right_3" x="1162" y="854">
       <params/>
       <attribs>
          <combo attributeName="device" selection="usb host port / LP"/>
@@ -1015,7 +833,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <combo attributeName="off" selection="red W"/>
       </attribs>
    </obj>
-   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_5" x="1428" y="868">
+   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_5" x="1554" y="868">
       <params>
          <int32 name="offset" value="256"/>
       </params>
@@ -1023,11 +841,19 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <objref attributeName="table" obj="data"/>
       </attribs>
    </obj>
-   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_3" x="1946" y="868">
+   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_3" x="2072" y="868">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_4" x="1778" y="910">
+   <obj type="rbrt/control/p2t" uuid="5051eb28-2556-42e9-a7e5-2aef68b09781" name="p2t_1" x="238" y="910">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/timer" uuid="d4a352fc-5acf-466d-b462-079a1b5a2b41" name="timer_1" x="392" y="910">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_4" x="1904" y="910">
       <params>
          <frac32.u.map name="drive" value="0.0"/>
          <int32.hradio name="fat" value="3"/>
@@ -1035,7 +861,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/data/tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396" name="tcopy_2" x="1218" y="924">
+   <obj type="rbrt/data/tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396" name="tcopy_2" x="1344" y="924">
       <params>
          <int32 name="src" value="0"/>
          <int32 name="dst" value="0"/>
@@ -1049,19 +875,50 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <spinner attributeName="speed" value="1"/>
       </attribs>
    </obj>
-   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_3" x="1582" y="938">
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_3" x="1708" y="938">
       <params/>
       <attribs>
          <combo attributeName="sample" selection="808bd"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="1610" y="1008">
+   <obj type="logic/latch" uuid="2a50e4657301542464c6a97931847b5e8e0e6d2b" name="latch_2" x="532" y="952">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/rpass i" uuid="6ff2991d-4134-4c51-ab1d-526d6e987484" name="rpass_2" x="630" y="952">
+      <params>
+         <int32 name="high" value="1000000"/>
+         <int32 name="low" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/replace i" uuid="36ec6493-9512-4e10-8e0e-d07bf07dac3f" name="replace_1" x="756" y="952">
+      <params>
+         <int32 name="replace" value="0"/>
+         <int32 name="with" value="3000"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/ktransport" uuid="e1132b5e-a7db-4457-8d5b-8cf2e214e6a1" name="ktransport_1" x="882" y="952">
+      <params>
+         <int32 name="factor" value="4"/>
+         <bool32.tgl name="mode" value="1"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="16"/>
+      </attribs>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="434" y="966">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="1736" y="1008">
       <params>
          <frac32.u.map name="value" value="4.5"/>
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="bc599635-8e2e-48df-a10d-437be5040cf1" name="patcher_5" x="1778" y="1036">
+   <patcher type="patch/patcher" uuid="3bf9ef31-4d71-4a94-8089-87736e478677" name="patcher_5" x="1904" y="1036">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -1269,7 +1126,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_6" x="1428" y="1176">
+   <obj type="rbrt/seq/step read H 8" uuid="2fa1019c-ef82-4a1a-bfbb-57bef1e7282c" name="step_6" x="1554" y="1176">
       <params>
          <int32 name="offset" value="384"/>
       </params>
@@ -1277,11 +1134,11 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <objref attributeName="table" obj="data"/>
       </attribs>
    </obj>
-   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_4" x="1946" y="1176">
+   <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_4" x="2072" y="1176">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_5" x="1778" y="1218">
+   <obj type="rbrt/fx/sat fat" uuid="aca76ea8-fc4f-484e-84ad-147861c06df3" name="sat_5" x="1904" y="1218">
       <params>
          <frac32.u.map name="drive" value="0.0"/>
          <int32.hradio name="fat" value="3"/>
@@ -1289,13 +1146,13 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
       </params>
       <attribs/>
    </obj>
-   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_4" x="1582" y="1246">
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_4" x="1708" y="1246">
       <params/>
       <attribs>
          <combo attributeName="sample" selection="808hatopen"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="70b39ba1-a671-4b8c-856d-962d39ebad82" name="patcher_6" x="1778" y="1344">
+   <patcher type="patch/patcher" uuid="cf5e4cbf-b501-4da9-a224-c5e7274e626c" name="patcher_6" x="1904" y="1344">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -1524,20 +1381,6 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <dest obj="counter_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="counter_1" outlet="o"/>
-         <dest obj="step_1" inlet="step"/>
-         <dest obj="blocksize_2" inlet="in"/>
-         <dest obj="hold redraw" inlet="seq index"/>
-      </net>
-      <net>
-         <source obj="matrix_2" outlet="hold"/>
-         <dest obj="automux_1" inlet="i1"/>
-      </net>
-      <net>
-         <source obj="hold redraw" outlet="redraw"/>
-         <dest obj="or_1" inlet="i2"/>
-      </net>
-      <net>
          <source obj="step_3" outlet="h0"/>
          <dest obj="*_1" inlet="a"/>
       </net>
@@ -1657,7 +1500,7 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
       <net>
          <source obj="&lt;&lt;_1" outlet="out"/>
          <dest obj="matrix_1" inlet="offset"/>
-         <dest obj="+_2" inlet="in1"/>
+         <dest obj="+_1" inlet="in1"/>
          <dest obj="matrix_2" inlet="offset"/>
       </net>
       <net>
@@ -1666,19 +1509,18 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <dest obj="step_2" inlet="offset"/>
       </net>
       <net>
-         <source obj="+_2" outlet="out"/>
+         <source obj="+_1" outlet="out"/>
          <dest obj="slider_1" inlet="offset"/>
          <dest obj="tcopy_1" inlet="src"/>
          <dest obj="tcopy_2" inlet="dst"/>
       </net>
       <net>
          <source obj="blocksize_3" outlet="out"/>
-         <dest obj="+_2" inlet="in2"/>
+         <dest obj="+_1" inlet="in2"/>
       </net>
       <net>
          <source obj="launchpad_1" outlet="top"/>
-         <dest obj="int_1" inlet="i1"/>
-         <dest obj="&lt;&lt;_1" inlet="in"/>
+         <dest obj="rpass_1" inlet="in"/>
       </net>
       <net>
          <source obj="int_1" outlet="o0"/>
@@ -1803,16 +1645,6 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <dest obj="flashplay_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="matrix_2" outlet="matrix"/>
-         <dest obj="automux_1" inlet="i0"/>
-      </net>
-      <net>
-         <source obj="automux_1" outlet="o"/>
-         <dest obj="blocksize_3" inlet="in"/>
-         <dest obj="step_2" inlet="step"/>
-         <dest obj="hold redraw" inlet="step hold"/>
-      </net>
-      <net>
          <source obj="pulse_1" outlet="out"/>
          <dest obj="mix_1" inlet="in1"/>
       </net>
@@ -1825,16 +1657,95 @@ outlet_out =___SMMUL(inlet_in<<3,env<<2);]]></code.srate>
          <dest obj="pulse_2" inlet="kticks"/>
       </net>
       <net>
-         <source obj="matrix_2" outlet="trig"/>
+         <source obj="top_1" outlet="t7"/>
+         <dest obj="top_6" inlet="on"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="rpass_1" outlet="out"/>
+         <dest obj="int_1" inlet="i1"/>
+         <dest obj="&lt;&lt;_1" inlet="in"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="matrix_2" inlet="active"/>
+      </net>
+      <net>
+         <source obj="matrix_2" outlet="matrix"/>
+         <dest obj="latch_1" inlet="i"/>
+         <dest obj="change_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="latch_1" outlet="o"/>
+         <dest obj="step_2" inlet="step"/>
+         <dest obj="blocksize_3" inlet="in"/>
+         <dest obj="==_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="divremc_1" outlet="rem"/>
+         <dest obj="==_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="-1_1" outlet="result"/>
+         <dest obj="divremc_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="==_1" outlet="out"/>
+         <dest obj="t2p_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="pulse_3" outlet="trig"/>
+         <dest obj="step_2" inlet="redraw"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="trig"/>
          <dest obj="or_1" inlet="i1"/>
+         <dest obj="latch_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="t2p_1" outlet="pulse"/>
+         <dest obj="or_1" inlet="i2"/>
       </net>
       <net>
          <source obj="or_1" outlet="o"/>
          <dest obj="pulse_3" inlet="trig"/>
       </net>
       <net>
-         <source obj="pulse_3" outlet="trig"/>
-         <dest obj="step_2" inlet="redraw"/>
+         <source obj="top_1" outlet="t6"/>
+         <dest obj="p2t_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="p2t_1" outlet="o"/>
+         <dest obj="timer_1" inlet="toggle"/>
+         <dest obj="inv_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="ktransport_1" outlet="step"/>
+         <dest obj="ibar_1" inlet="in"/>
+         <dest obj="blocksize_2" inlet="in"/>
+         <dest obj="step_1" inlet="step"/>
+         <dest obj="-1_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="timer_1" outlet="t"/>
+         <dest obj="latch_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="latch_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="latch_2" outlet="o"/>
+         <dest obj="rpass_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="replace_1" outlet="out"/>
+         <dest obj="ktransport_1" inlet="kticks"/>
+      </net>
+      <net>
+         <source obj="rpass_2" outlet="out"/>
+         <dest obj="replace_1" inlet="in"/>
       </net>
    </nets>
    <settings>
