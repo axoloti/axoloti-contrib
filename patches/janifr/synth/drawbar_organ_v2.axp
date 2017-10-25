@@ -1,17 +1,17 @@
 <patch-1.0 appVersion="1.0.12">
    <patchobj type="patch/object" uuid="a467e87d-ea4d-4fd1-8f32-b59b93a0d727" name="switched_1" x="14" y="14">
       <params>
-         <frac32.u.map name="leakage" value="35.0"/>
+         <frac32.u.map name="leakage" value="0.0"/>
          <frac32.u.map name="velosense" value="0.0"/>
          <frac32.u.map name="f1" MidiCC="73" value="63.99999952316284"/>
-         <frac32.u.map name="f2" MidiCC="75" value="63.99999952316284"/>
+         <frac32.u.map name="f2" MidiCC="75" value="0.0"/>
          <frac32.u.map name="f3" MidiCC="72" value="63.99999952316284"/>
          <frac32.u.map name="f4" MidiCC="91" value="0.0"/>
-         <frac32.u.map name="f5" MidiCC="92" value="0.0"/>
-         <frac32.u.map name="f6" MidiCC="93" value="0.0"/>
-         <frac32.u.map name="f7" MidiCC="94" value="0.0"/>
-         <frac32.u.map name="f8" MidiCC="95" value="0.0"/>
-         <frac32.u.map name="f9" MidiCC="7" value="0.0"/>
+         <frac32.u.map name="f5" MidiCC="92" value="9.5"/>
+         <frac32.u.map name="f6" MidiCC="93" value="32.0"/>
+         <frac32.u.map name="f7" MidiCC="94" value="12.5"/>
+         <frac32.u.map name="f8" MidiCC="95" value="11.0"/>
+         <frac32.u.map name="f9" MidiCC="7" value="20.0"/>
          <frac32.u.map name="treble" value="38.0"/>
       </params>
       <attribs>
@@ -131,9 +131,37 @@ int i;
 for(i=offset<<1;i<nkeys;i+=16){	
 	int32_t a1 = 0;
 	int32_t a2 = 0;
-	//int32_t l1;
-	//int32_t l2;
+	int32_t l1 = 0;
+	int32_t l2 = 0;
 	int32_t k12;
+
+	if (i>107){
+		k12 = *((int32_t *)&keys[i-16+keyoffset]);
+		a1 = _SMLABB(k12,f78,a1);
+		a2 = _SMLATB(k12,f78,a2);
+		k12 = *((int32_t *)&keys[i-19+keyoffset]);
+		a1 = _SMLABT(k12,f78,a1);
+		a2 = _SMLATT(k12,f78,a2);
+
+		k12 = *((int32_t *)&keys[i-24+keyoffset]);
+		a1 = _SMLABB(k12,f90,a1);
+		a2 = _SMLATB(k12,f90,a2);
+		a1 = a1>>1;
+		a2 = a2>>1;
+	}
+	
+	if (i>71){
+		l1 = array[i-48];
+		l2 = array[i-47];
+	}
+	else
+	{
+		l1 = array[i+48];
+		l2 = array[i+49];
+	}
+	
+	a1 = __SMMLA(leakage,l1,a1);
+	a2 = __SMMLA(leakage,l2,a2);
 	
 	k12 = *((int32_t *)&keys[i+12+keyoffset]);
 	a1 = _SMLABB(k12,f12,a1);
@@ -175,7 +203,7 @@ for(i=offset<<1;i<nkeys;i+=16){
 	array[i  ]= a1;
 	array[i+1]= a2;
 	
-	if (i>71){
+	/*if (i>71){
 		a1 = array[i-48];
 		a2 = array[i-47];
 	}
@@ -187,7 +215,7 @@ for(i=offset<<1;i<nkeys;i+=16){
 	a1 = ___SMMUL(leakage,a1);
 	a2 = ___SMMUL(leakage,a2);
 	array[i] += a1;
-	array[i+1] += a2;
+	array[i+1] += a2;*/
 	
 }]]></code.krate>
          <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
@@ -238,10 +266,10 @@ for(i=offset<<1;i<nkeys;i+=16){
    </patchobj>
    <patchobj type="patch/object" uuid="2038be33-72e8-4fe0-98d4-d624e0bf978d" name="r_1" x="126" y="14">
       <params>
-         <bool32.tgl name="perc2ndor3rd" value="0"/>
+         <bool32.tgl name="perc2ndor3rd" MidiCC="65" value="0"/>
          <frac32.s.map name="release" value="-5.0"/>
-         <frac32.s.map name="decay" value="44.0"/>
-         <frac32.u.map name="volume" value="64.0"/>
+         <frac32.s.map name="decay" MidiCC="74" value="7.0"/>
+         <frac32.u.map name="volume" MidiCC="71" value="63.99999952316284"/>
       </params>
       <attribs>
          <objref attributeName="input" obj="switched_1"/>
@@ -277,9 +305,9 @@ int percussion_gain=0;]]></code.declaration>
 for(i=0;i<LENGTH;i++){
 	array[i]=0;
 }]]></code.init>
-         <code.krate><![CDATA[int pr = 0x80000000 - param_release<<1;
+         <code.krate><![CDATA[int pr = 0x80000000 - param_release;
 pr = pr<<2;
-int decay = 0x80000000 - param_decay<<1;
+int decay = 0x80000000 - param_decay;
 decay = decay<<2;
 
 int percussion_offset=attr_input.keyoffset-(12+7*(param_perc2ndor3rd&&1));
