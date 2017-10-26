@@ -3,15 +3,15 @@
       <params>
          <frac32.u.map name="leakage" value="0.0"/>
          <frac32.u.map name="velosense" value="0.0"/>
-         <frac32.u.map name="f1" MidiCC="73" value="63.99999952316284"/>
-         <frac32.u.map name="f2" MidiCC="75" value="0.0"/>
-         <frac32.u.map name="f3" MidiCC="72" value="63.99999952316284"/>
+         <frac32.u.map name="f1" MidiCC="73" value="37.0"/>
+         <frac32.u.map name="f2" MidiCC="75" value="15.5"/>
+         <frac32.u.map name="f3" MidiCC="72" value="40.0"/>
          <frac32.u.map name="f4" MidiCC="91" value="0.0"/>
-         <frac32.u.map name="f5" MidiCC="92" value="9.5"/>
-         <frac32.u.map name="f6" MidiCC="93" value="32.0"/>
-         <frac32.u.map name="f7" MidiCC="94" value="12.5"/>
-         <frac32.u.map name="f8" MidiCC="95" value="11.0"/>
-         <frac32.u.map name="f9" MidiCC="7" value="20.0"/>
+         <frac32.u.map name="f5" MidiCC="92" value="7.5"/>
+         <frac32.u.map name="f6" MidiCC="93" value="30.0"/>
+         <frac32.u.map name="f7" MidiCC="94" value="8.0"/>
+         <frac32.u.map name="f8" MidiCC="95" value="0.5"/>
+         <frac32.u.map name="f9" MidiCC="7" value="16.0"/>
          <frac32.u.map name="treble" value="38.0"/>
       </params>
       <attribs>
@@ -135,6 +135,7 @@ for(i=offset<<1;i<nkeys;i+=16){
 	int32_t l2 = 0;
 	int32_t k12;
 
+// foldback
 	if (i>107){
 		k12 = *((int32_t *)&keys[i-16+keyoffset]);
 		a1 = _SMLABB(k12,f78,a1);
@@ -149,7 +150,8 @@ for(i=offset<<1;i<nkeys;i+=16){
 		a1 = a1>>1;
 		a2 = a2>>1;
 	}
-	
+
+//leakage
 	if (i>71){
 		l1 = array[i-48];
 		l2 = array[i-47];
@@ -195,6 +197,7 @@ for(i=offset<<1;i<nkeys;i+=16){
 	a1 = _SMLABB(k12,f90,a1);
 	a2 = _SMLATB(k12,f90,a2);
 	
+// treble boost simulating treble part of tone generator calibration curve 	
 	if (i>59){
 		a1=__SMMLA((i-60)*treble,a1<<2,a1);
 		a2=__SMMLA((i-59)*treble,a2<<2,a2);
@@ -202,20 +205,6 @@ for(i=offset<<1;i<nkeys;i+=16){
 	
 	array[i  ]= a1;
 	array[i+1]= a2;
-	
-	/*if (i>71){
-		a1 = array[i-48];
-		a2 = array[i-47];
-	}
-	else
-	{
-		a1 = array[i+48];
-		a2 = array[i+49];
-	}
-	a1 = ___SMMUL(leakage,a1);
-	a2 = ___SMMUL(leakage,a2);
-	array[i] += a1;
-	array[i+1] += a2;*/
 	
 }]]></code.krate>
          <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
@@ -267,8 +256,8 @@ for(i=offset<<1;i<nkeys;i+=16){
    <patchobj type="patch/object" uuid="2038be33-72e8-4fe0-98d4-d624e0bf978d" name="r_1" x="126" y="14">
       <params>
          <bool32.tgl name="perc2ndor3rd" MidiCC="65" value="0"/>
-         <frac32.s.map name="release" value="-5.0"/>
-         <frac32.s.map name="decay" MidiCC="74" value="7.0"/>
+         <frac32.s.map name="release" value="-9.0"/>
+         <frac32.s.map name="decay" MidiCC="74" value="18.0"/>
          <frac32.u.map name="volume" MidiCC="71" value="63.99999952316284"/>
       </params>
       <attribs>
@@ -332,7 +321,7 @@ for(i=0;i<LENGTH;i+=2){
 	int32_t in2 = *pIn++;
 	int32_t out1 = *pOut++;
 	int32_t out2 = *pOut--;
-
+	
 	if(i>47){
 		in1 += percussion_gain*(attr_input.keys[i+percussion_offset]&&1);
 		in2 += percussion_gain*(attr_input.keys[i+percussion_offset+1]&&1);
@@ -340,14 +329,14 @@ for(i=0;i<LENGTH;i+=2){
 	
 	int32_t d1 = in1-out1;
 	
-	if (d1>0)
+	if (d1>=0)
 		out1 = in1;
 	else
 		out1 = __SMMLA(d1,pr,out1);
 
 	int32_t d2 = in2-out2;
 	
-	if (d2>0)
+	if (d2>=0)
 		out2 = in2;
 	else
 		out2 = __SMMLA(d2,pr,out2);
