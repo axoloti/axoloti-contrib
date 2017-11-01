@@ -291,7 +291,7 @@ for(i=offset<<1;i<nkeys;i+=16){
    </patchobj>
    <patchobj type="patch/object" uuid="2038be33-72e8-4fe0-98d4-d624e0bf978d" name="r_1" x="126" y="14">
       <params>
-         <bool32.tgl name="perc2ndor3rd" MidiCC="65" value="1"/>
+         <bool32.tgl name="perc2ndor3rd" MidiCC="65" value="0"/>
          <frac32.s.map name="release" value="-32.0"/>
          <frac32.s.map name="decay" MidiCC="74" value="23.0"/>
          <frac32.u.map name="volume" MidiCC="71" value="63.99999952316284"/>
@@ -394,10 +394,10 @@ percussion_gain = ___SMMLS(percussion_gain,decay,percussion_gain);]]></code.krat
    <patchobj type="patch/object" uuid="77d1df07-daf8-4157-b0be-275a3c033923" name="scanner" x="434" y="14">
       <params>
          <frac32.u.map name="vibrato" MidiCC="77" value="63.99999952316284"/>
-         <bool32.tgl name="upper" value="1"/>
-         <bool32.tgl name="lower" value="0"/>
-         <bool32.tgl name="chorus" value="1"/>
-         <frac32.u.map name="rate" MidiCC="76" value="25.5"/>
+         <bool32.tgl name="upper" MidiCC="8" value="1"/>
+         <bool32.tgl name="lower" MidiCC="9" value="0"/>
+         <bool32.tgl name="chorus" MidiCC="11" value="1"/>
+         <frac32.u.map name="rate" MidiCC="76" value="58.0"/>
       </params>
       <attribs/>
       <object id="patch/object" uuid="77d1df07-daf8-4157-b0be-275a3c033923">
@@ -461,11 +461,11 @@ else
 	for (i=0;i<BUFSIZE;i++){
 		uint32_t pos=i+delay_position;
 		uint32_t depth=___SMMUL(param_vibrato,lfo_phase<<1);
-		int32_t frac=(depth&0x7f)<<24;
-		depth = depth>>7;
+		int32_t frac=(depth&0xffffff)<<7;
+		depth = depth>>24;
 		delay_line[(pos)&0x1f]=scanner_in[i];
-		int32_t delayed_sample = __SMMLA(delay_line[(pos-1-(depth))&0x1f],frac,
-							___SMMUL(delay_line[(pos-(depth))&0x1f],(0x7f<<24)-frac));
+		int32_t delayed_sample = __SMMLA(delay_line[(pos-2-(depth))&0x1f],frac,
+							___SMMUL(delay_line[(pos-1-(depth))&0x1f],(0x7f<<24)-frac));
 		outlet_out[i]=delayed_sample<<1;
 		lfo_phase += lfo_increment;
 	}
