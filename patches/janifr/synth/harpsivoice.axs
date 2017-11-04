@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="midi/in/keyb zone lru" uuid="36a44968a4f8b980273e94dca846b7544a3c45d2" name="keyb_1" x="14" y="14">
+   <obj type="midi/in/keyb zone" uuid="e7413176a91acc060036fd7f68fda24bbee265d3" name="keyb_1" x="14" y="14">
       <params/>
       <attribs>
          <spinner attributeName="startNote" value="0"/>
@@ -57,7 +57,7 @@
          <frac32.u.map name="time" value="0.0"/>
       </params>
       <attribs>
-         <objref attributeName="delayname" obj="d1"/>
+         <objref attributeName="delayname" obj="write_1"/>
       </attribs>
    </obj>
    <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_1" x="532" y="168">
@@ -66,7 +66,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="delay/write" uuid="bd73958e3830021807ee97a8cff4500a72a5710d" name="d1" x="644" y="168">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="630" y="168">
       <params/>
       <attribs>
          <combo attributeName="size" selection="2048 (42.66ms)"/>
@@ -101,19 +101,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_2" x="574" y="280">
-      <params>
-         <frac32.s.map name="freq" value="49.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="770" y="280">
-      <params>
-         <frac32.u.map name="amp" value="23.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="896" y="280">
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="546" y="280">
       <params/>
       <attribs/>
    </obj>
@@ -129,7 +117,7 @@
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="vca_2" inlet="a"/>
-         <dest obj="d1" inlet="in"/>
+         <dest obj="write_1" inlet="in"/>
       </net>
       <net>
          <source obj="interp_1" outlet="o"/>
@@ -148,14 +136,9 @@
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="gate2"/>
+         <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
          <dest obj="d_1" inlet="trig"/>
-      </net>
-      <net>
-         <source obj="*c_1" outlet="out"/>
-         <dest obj="out_1" inlet="left"/>
-         <dest obj="out_1" inlet="right"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -192,25 +175,26 @@
          <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="lp1_2" outlet="out"/>
-         <dest obj="*c_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="lp1_1" outlet="out"/>
-         <dest obj="lp1_2" inlet="in"/>
-      </net>
-      <net>
          <source obj="-_1" outlet="out"/>
          <dest obj="d_1" inlet="d"/>
       </net>
+      <net>
+         <source obj="lp1_1" outlet="out"/>
+         <dest obj="outlet_1" inlet="outlet"/>
+      </net>
    </nets>
    <settings>
-      <subpatchmode>no</subpatchmode>
+      <subpatchmode>polyphonic</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>117</x>
-      <y>95</y>
+      <x>199</x>
+      <y>93</y>
       <width>1024</width>
       <height>660</height>
    </windowPos>
