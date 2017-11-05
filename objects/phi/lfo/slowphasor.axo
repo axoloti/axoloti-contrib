@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slowphasor" uuid="b377476c-4e8b-43cb-9e14-73a095436cf8">
+      <sDescription>phasor wave LFO, linear interpolated table, pitch input and octave down input</sDescription>
+      <author>Philoop</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <int32.positive name="div"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch"/>
+         <int32 name="div">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[{      int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      Phase += freq>>((param_div+1)+inlet_div);
+      outlet_wave = Phase>>5;
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>
