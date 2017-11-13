@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="allBiqModes" uuid="bd203935-c245-4346-81d8-b5a690c955e6">
+      <sDescription>This filter is build up from 2 biquad allpass filters. Depending on how they&apos;re summed/subtracted (side knobs) a LP, HP (invert knob), BP, lowshelf and highshelf filter can be created</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="center"/>
+         <frac32 name="width"/>
+         <frac32 name="side1"/>
+         <frac32 name="side2"/>
+         <frac32 name="invert"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="noise"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="center"/>
+         <frac32.s.map name="width"/>
+         <frac32.s.map name="side1"/>
+         <frac32.s.map name="side2"/>
+         <frac32.s.map name="invert"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t All;
+int32_t bs[4][2];
+uint32_t v30=1<<30;
+uint32_t v27=1<<27;
+uint32_t v23=1<<25;
+uint32_t v8=1<<8;
+int32_t noise;
+int32_t Frq[4];
+int32_t RMS;
+int32_t ALLPASS(int32_t in,int I){
+bs[I][1]=___SMMUL(-in<<1,Frq[I])+bs[I][0]+___SMMUL(bs[I][1]<<1,Frq[I]);
+All=bs[I][1];
+bs[I][0]=in;
+}]]></code.declaration>
+      <code.init><![CDATA[RMS=v30;
+noise=0;]]></code.init>
+      <code.krate><![CDATA[int32_t center=param_center+inlet_center;
+int32_t width=param_width+inlet_width;
+
+SINE2TINTERP(__SSAT(v27-center-width,28)<<3,Frq[0])
+SINE2TINTERP(__SSAT(v27-center+width,28)<<3,Frq[1])
+int32_t inv=__SSAT(param_invert+inlet_invert,28);
+int32_t side1=__SSAT(param_side1+inlet_side1,28);
+int32_t side2=__SSAT(param_side2+inlet_side2,28);]]></code.krate>
+      <code.srate><![CDATA[noise= inlet_in;
+int32_t NS=noise;
+ALLPASS(noise,0);
+noise-=(___SMMUL(side1<<4,All)<<1);
+ALLPASS(noise,1);
+noise-=(___SMMUL(side2<<4,All)<<1);
+int32_t ns=noise-___SMMUL(inv<<3,NS<<2);
+//int32_t ts=ns;
+//ts=ts>0?ts:-ts;
+//ts=ts<v8?v8:ts;
+//RMS+=((ts-RMS)>>8);
+outlet_noise=ns;//*((float32_t)v23/RMS);]]></code.srate>
+   </obj.normal>
+</objdefs>
