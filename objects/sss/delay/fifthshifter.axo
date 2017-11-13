@@ -1,0 +1,103 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fifthshifter" uuid="43a9531c-6ef2-41ba-aa75-a099d0f7b033">
+      <sDescription>this is a pitchshifter with a 6dB crossover filter.
+The low frequency region will be pitched up by a fifth, the high frequency region will be pitched down by an octave.
+Mostly usable for drony stuff.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="crossover"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="feed"/>
+         <frac32.u.map.gain name="dry"/>
+         <frac32.u.map.gain name="wet"/>
+         <frac32.s.map.pitch name="crossover" description="sets &quot;mid&quot; crossover frequency. The pitchshifter/delay will mostly focus around this point"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *arrayL;
+int16_t *arrayH;
+uint32_t writepos;
+uint32_t readL;
+uint32_t readH;
+int32_t low;
+int32_t high;
+int32_t feed;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _arrayL[1<<attr_size]  __attribute__ ((section (".sdram")));
+arrayL = &_arrayL[0];
+static int16_t _arrayH[1<<attr_size]  __attribute__ ((section (".sdram")));
+arrayH = &_arrayH[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) {
+   	arrayL[i] = 0;
+   	arrayH[i] = 0;
+   }]]></code.init>
+      <code.krate><![CDATA[int32_t frq;
+MTOF(param_crossover+inlet_crossover,frq)]]></code.krate>
+      <code.srate><![CDATA[int32_t in=__SSAT(inlet_in+___SMMUL(-feed<<1,param_feed),28);
+low=___SMMLA((in-low)<<1,frq,low);
+high=in-low;
+writepos = (writepos + 1)&LENGTHMASK;
+arrayL[writepos] = __SSAT(low>>14,16);
+arrayH[writepos] = __SSAT(high>>14,16);
+readL=(readL + 2)&LENGTHMASK;
+readH=(readH + 1)&LENGTHMASK;
+int32_t outLA=arrayL[(writepos+readL)&LENGTHMASK]<<14;
+int32_t outLB=arrayL[(writepos+((readL+(LENGTH>>1)&LENGTHMASK)))&LENGTHMASK]<<14;
+int32_t outHA=arrayH[(writepos-(readH>>1))&LENGTHMASK]<<14;
+int32_t outHB=arrayH[(writepos-((readH+(LENGTH>>1)&LENGTHMASK)>>1))&LENGTHMASK]<<14;
+int32_t mixL=readL>(LENGTH>>1)?LENGTH-readL:readL;
+mixL=mixL<<31-LENGTHPOW;
+int32_t mixH=readH>(LENGTH>>1)?LENGTH-readH:readH;
+//mixH=mixH>>1;
+mixH=mixH<<31-LENGTHPOW;
+int32_t OUT=(outLB+___SMMUL(outLA-outLB<<2,mixL))+(outHB+___SMMUL(outHA-outHB<<2,mixH));
+outlet_out=__SSAT(__SSAT(___SMMUL(inlet_in<<1,param_dry),28)+__SSAT(___SMMUL(OUT<<1,param_wet),28),28);
+feed=__SSAT(OUT,29)<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>
