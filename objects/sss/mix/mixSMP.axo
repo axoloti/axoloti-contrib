@@ -1,0 +1,116 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mixSMP" uuid="86cd46e0-8db0-4a7e-a97f-985ebcf4fa76">
+      <sDescription>This is a mixing module with a low control count, allowing quick adjustments in a live situation.
+
+select: morphs through the available inputs and sets that channel as the &quot;main channel&quot;, following channels will be &quot;side&quot; channels. The main is always the &quot;loudest&quot; channel
+
+mix: controls the volume of the &quot;side&quot; channels. 1nd channel to be mixed in is mixed in linearly, 2nd at a power of 2 and 3rd at a power of 4.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i0"/>
+         <frac32buffer name="i1"/>
+         <frac32buffer name="i2"/>
+         <frac32buffer name="i3"/>
+         <frac32 name="select"/>
+         <frac32 name="mix"/>
+         <frac32 name="pan"/>
+         <frac32 name="spread"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="left"/>
+         <frac32buffer name="right"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="select"/>
+         <frac32.s.map name="pan"/>
+         <frac32.s.map name="spread"/>
+         <frac32.u.map name="mix"/>
+         <frac32.u.map name="volume"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t left;
+int32_t right;
+int i;
+int j;
+int32_t panL[4];
+int32_t panR[4];
+int32_t Gain[4];
+int32_t lvls(int32_t Pan,int32_t Spread,int32_t gain,int32_t i){
+	int32_t PAN=(Pan+Spread*i*2+(1<<27))&((1<<29)-1);
+	PAN=PAN>(1<<28)?(1<<29)-PAN:PAN;
+	PAN=PAN<<2;
+	panL[i]=___SMMUL(PAN,gain<<2)<<3;
+	panR[i]=(gain<<3)-panL[i];
+}
+
+
+int32_t paN(int32_t X,int32_t pan,int32_t ipan){
+	left+=___SMMUL(pan,X);
+	right+=___SMMUL(ipan,X);
+}]]></code.declaration>
+      <code.init><![CDATA[Gain[0]=(1<<27);]]></code.init>
+      <code.krate><![CDATA[Gain[1]=__USAT(param_mix+inlet_mix,27);
+Gain[2]=Gain[1];
+Gain[1]=(1<<27)-Gain[1];
+Gain[1]=(1<<27)-___SMMUL(Gain[1]<<3,Gain[1]<<2);
+Gain[3]=___SMMUL(Gain[2]<<3,Gain[2]<<2);
+int32_t S=(param_select+inlet_select)&((1<<27)-1);
+int32_t tgain=0;
+for(i=0;i<4;i++){
+	tgain+=Gain[0];
+}
+float32_t ratio=(float32_t)(1<<30)/(tgain>>2);
+
+for(j=0;j<4;j++){
+lvls(param_pan+inlet_pan,param_spread+inlet_spread,Gain[j],j);
+}
+
+int32_t a1;
+   int32_t b1;
+   int32_t c1;
+   int32_t d1;
+   int32_t a2;
+   int32_t b2;
+   int32_t c2;
+   int32_t d2;
+   int32_t x;
+   int32_t y;
+
+   int32_t selectbase;
+   int32_t select1;
+   int32_t select2;
+   selectbase=((S>>25));
+   select1=(selectbase) &3;
+   select2=(selectbase+1) &3;
+   x= (S-(selectbase<<25))<<3;
+   y=(1<<28)-x;
+   x=___SMMUL(x<<2,param_volume<<3)*ratio;
+   y=___SMMUL(y<<2,param_volume<<3)*ratio;]]></code.krate>
+      <code.srate><![CDATA[left=0;
+right=0;
+
+switch(int(select1)>0?select1:0){
+      case 0: a1= inlet_i0,b1= inlet_i1,c1= inlet_i2,d1= inlet_i3;break;
+      case 1: a1= inlet_i1,b1= inlet_i2,c1= inlet_i3,d1= inlet_i0;break;
+      case 2: a1= inlet_i2,b1= inlet_i3,c1= inlet_i0,d1= inlet_i1;break;
+      case 3: a1= inlet_i3,b1= inlet_i0,c1= inlet_i1,d1= inlet_i2;break;
+      default: a1= inlet_i0,b1= inlet_i1,c1= inlet_i2,d1= inlet_i3;break;
+}
+   switch(int(select2)>0?select2:0){
+      case 0: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3;break;
+      case 1: a2= inlet_i1,b2= inlet_i2,c2= inlet_i3,d2= inlet_i0;break;
+      case 2: a2= inlet_i2,b2= inlet_i3,c2= inlet_i0,d2= inlet_i1;break;
+      case 3: a2= inlet_i3,b2= inlet_i0,c2= inlet_i1,d2= inlet_i2;break;
+      default: a2= inlet_i0,b2= inlet_i1,c2= inlet_i2,d2= inlet_i3;break;
+}
+
+paN(__SSAT( ___SMMUL(y,a1)+___SMMUL(x,a2)<<3,29),panL[0],panR[0]);
+paN(__SSAT(___SMMUL(y,b1)+___SMMUL(x,b2)<<3,29),panL[1],panR[1]);
+paN(__SSAT(___SMMUL(y,c1)+___SMMUL(x,c2)<<3,29),panL[2],panR[2]);
+paN(__SSAT(___SMMUL(y,d1)+___SMMUL(x,d2)<<3,29),panL[3],panR[3]);
+outlet_left=left;
+outlet_right=right;]]></code.srate>
+   </obj.normal>
+</objdefs>

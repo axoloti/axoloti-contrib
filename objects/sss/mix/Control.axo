@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="Control" uuid="d04724c0-c83b-4fce-a669-cc603ebb20fc">
+      <sDescription>Control element for the desktop mixer</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="peak" description="connect to peak-output on desktop mixer"/>
+      </inlets>
+      <outlets>
+         <frac32 name="V" description="connect to volume input on desktop mixer"/>
+         <frac32 name="P" description="connect to pan input on desktop mixer"/>
+         <int32 name="A" description="connect to aux input on desktop mixer"/>
+         <frac32 name="S" description="connect to sendVo linput on desktop mixer"/>
+      </outlets>
+      <displays>
+         <frac32.vbar.db name="peak" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.u.mapvsl name="V">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.s.map name="P"/>
+         <int32 name="A">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.u.map name="S"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[disp_peak=inlet_peak;]]></code.krate>
+      <code.srate><![CDATA[outlet_V=param_V;
+outlet_P=(param_P>>1)+(1<<26);
+outlet_A=param_A;
+outlet_S=param_S;]]></code.srate>
+   </obj.normal>
+</objdefs>

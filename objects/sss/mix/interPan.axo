@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="interPan" uuid="8f306526-5858-4eeb-bf30-059febca4b2f">
+      <sDescription>panner, with linear interpolation from k- to s-rate</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="v" description="gain input"/>
+         <frac32buffer name="a" description="audio input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1" description="output"/>
+         <frac32buffer name="o2"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+    int32_t step;]]></code.declaration>
+      <code.krate><![CDATA[step = (inlet_v - prev)>>4;
+   int32_t i = prev;
+   prev = inlet_v;]]></code.krate>
+      <code.srate><![CDATA[outlet_o1 =  inlet_a+(___SMMUL(-inlet_a,i)<<5);
+outlet_o2 =  (___SMMUL(inlet_a,i)<<5);
+   
+   
+   i += step;]]></code.srate>
+   </obj.normal>
+</objdefs>

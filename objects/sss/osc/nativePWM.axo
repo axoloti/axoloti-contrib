@@ -1,0 +1,96 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="nativePWM" uuid="949e49b7-a859-4f28-b92b-f1b99d477490">
+      <sDescription>pulse width modulation oscillator with &quot;active&quot; control
+Bandwith limited</sDescription>
+      <author>Johannes Taelman (editted by Remco van der Most)</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="pw" description="pulse width. Zero corresponds to 50% duty cycle."/>
+         <bool32 name="active"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="pwm wave, anti-aliased"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[  int32_t osc_p;
+  static const int blepvoices = 8;
+  int16_t *oscp[blepvoices];
+  uint32_t nextvoice;
+  int32_t pwmp;
+]]></code.declaration>
+      <code.init><![CDATA[    int j;
+    for(j=0;j<blepvoices;j++)
+      oscp[j] = &blept[BLEPSIZE-1];   nextvoice = 0;]]></code.init>
+      <code.krate><![CDATA[if(inlet_active>0){
+      
+      uint32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+  int j;
+  int16_t *lastblep = &blept[BLEPSIZE-1];
+  for(j=0;j<BUFSIZE;j++){
+    int i;
+    int p;
+    p = osc_p;
+    osc_p = p+freq;
+    int32_t sum=0;
+    if (((int32_t)osc_p)>=((int32_t)(osc_p-pwmp))){
+      if ((osc_p>0)&&!(p>0)){   // dispatch
+        nextvoice = (nextvoice+1)&(blepvoices-1);
+        int32_t x = 0;
+        if (freq>>24)
+           x = osc_p/(freq>>6);
+        else if (freq)
+           x = (osc_p<<6)/freq;
+        oscp[nextvoice] = &blept[x];
+        pwmp = ((1<<27)+inlet_pw)<<4;
+      }
+      if (((osc_p-pwmp)>0)&&!((p-pwmp)>0)){   // dispatch
+        nextvoice = (nextvoice+1)&(blepvoices-1);
+        uint32_t x = 0;
+        if (freq>>24)
+          x = (osc_p-pwmp)/(freq>>6);
+        else if (freq)
+          x = ((osc_p-pwmp)<<6)/(freq);
+        oscp[nextvoice] = &blept[x];
+      }
+    } else {
+      if (((osc_p-pwmp)>0)&&!((p-pwmp)>0)){   // dispatch
+        nextvoice = (nextvoice+1)&(blepvoices-1);
+        uint32_t x = 0;
+        if (freq>>24)
+          x = (osc_p-pwmp)/(freq>>6);
+        else if (freq)
+          x = ((osc_p-pwmp)<<6)/(freq);
+        oscp[nextvoice] = &blept[x];
+      }
+      if ((osc_p>0)&&!(p>0)){   // dispatch
+        nextvoice = (nextvoice+1)&(blepvoices-1);
+        int32_t x = 0;
+        if (freq>>24)
+           x = osc_p/(freq>>6);
+        else if (freq)
+           x = (osc_p<<6)/freq;
+        oscp[nextvoice] = &blept[x];
+        pwmp = ((1<<27)+inlet_pw)<<4;
+      }
+    }
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[i];
+      if (i&1) sum+=*t; else sum-=*t; 
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      oscp[i]=t;
+    }
+    sum -= ((((nextvoice+1)&1)<<1)-1)<<13;
+    outlet_wave[j]=sum<<13;
+  }
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active==0){outlet_wave=0;}]]></code.srate>
+   </obj.normal>
+</objdefs>

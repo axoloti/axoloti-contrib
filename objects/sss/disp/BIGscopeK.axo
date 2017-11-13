@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="BIGscopeK" uuid="7c48260e-333a-48a3-8fc5-071c814aaef0">
+      <sDescription>bipolar audio rate signal oscilloscope (time domain), showing 128 consecutive samples after the signal becomes positive.
+
+this module has outputs to link several scopes behind each other for a big scope</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>scope.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <int8array128.vbar name="1" noLabel="true"/>
+         <int8array128.vbar name="2" noLabel="true"/>
+         <int8array128.vbar name="3" noLabel="true"/>
+         <int8array128.vbar name="4" noLabel="true"/>
+         <int8array128.vbar name="5" noLabel="true"/>
+         <int8array128.vbar name="6" noLabel="true"/>
+         <int8array128.vbar name="7" noLabel="true"/>
+         <int8array128.vbar name="8" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t t[1024];
+bool trg;
+int32_t write;
+int32_t sum;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<1024;i++) t[i]=0;]]></code.init>
+      <code.krate><![CDATA[write+=1;
+write=write&((1<<13)-1);
+int i;
+
+i=write>>3;
+     	  
+     	  if(i<128){disp_1[i]=inlet_in>>21;}
+       else if(i<256){disp_2[i-128]=inlet_in>>21;}
+       else if(i<384){disp_3[i-256]=inlet_in>>21;}
+       else if(i<512){disp_4[i-384]=inlet_in>>21;}
+       else if(i<640){disp_5[i-512]=inlet_in>>21;}
+       else if(i<768){disp_6[i-640]=inlet_in>>21;}
+       else if(i<768){disp_7[i-768]=inlet_in>>21;}
+       else 		 {disp_8[i-896]=inlet_in>>21;}]]></code.krate>
+   </obj.normal>
+</objdefs>

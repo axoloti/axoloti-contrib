@@ -1,0 +1,89 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="CY2" uuid="1fe5dbfc-9b20-49b1-948c-01bb640ae686">
+      <sDescription>non-alliased 4x squarewave based cymbal generator</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="closed"/>
+         <frac32 name="open"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="wave" description="phasor wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.kdecaytime name="decClosed"/>
+         <frac32.u.map.kdecaytime name="decOpen"/>
+         <frac32.s.map name="p1"/>
+         <frac32.s.map name="p2"/>
+         <frac32.s.map name="p3"/>
+         <frac32.s.map name="p4"/>
+         <frac32.s.map name="pw1"/>
+         <frac32.s.map name="pw2"/>
+         <frac32.s.map name="pw3"/>
+         <frac32.s.map name="pw4"/>
+         <frac32.u.map name="lvl"/>
+         <frac32.s.map name="pwm1"/>
+         <frac32.s.map name="pwm2"/>
+         <frac32.s.map name="pwm3"/>
+         <frac32.s.map name="pwm4"/>
+         <frac32.s.map name="fmw"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t Phase[4];
+int32_t wave[4];
+int i;
+int32_t env;
+bool trg;
+uint32_t D;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<4;i++){
+Phase[i] = 0;}]]></code.init>
+      <code.krate><![CDATA[uint32_t freq[4];
+   MTOFEXTENDED(param_p1 + inlet_pitch,freq[0]);
+   MTOFEXTENDED(param_p2 + inlet_pitch,freq[1]);
+   MTOFEXTENDED(param_p3 + inlet_pitch,freq[2]);
+   MTOFEXTENDED(param_p4 + inlet_pitch,freq[3]);
+
+
+
+
+int32_t pw[4];
+pw[0]=param_pw1;
+pw[1]=param_pw2;
+pw[2]=param_pw3;
+pw[3]=param_pw4;
+int32_t pwm[4];
+pwm[0]=param_pwm1;
+pwm[1]=param_pwm2;
+pwm[2]=param_pwm3;
+pwm[3]=param_pwm4;
+int32_t lvl=param_lvl>>2;
+int32_t fmw=param_fmw;
+
+bool TRG=inlet_closed+inlet_open;
+
+env-=___SMMUL(env,D);
+
+if(TRG&&!trg){
+	trg=1;
+	if(inlet_open>0){
+		env=inlet_open;
+		MTOF((-param_decOpen<<1)+(1<<27),D)
+	}
+	else if(inlet_closed>0){
+		env=inlet_closed;
+		MTOF((-param_decClosed<<1)+(1<<27),D)
+	}
+}
+else if(TRG==0){trg=0;}]]></code.krate>
+      <code.srate><![CDATA[int32_t out=0;
+for(i=0;i<4;i++){
+Phase[i] += freq[i]+___SMMUL(fmw<<4,wave[(i+3)&3]<<3);
+wave[i]+= ((Phase[i]>(pw[i]+___SMMUL(pwm[i]<<4,wave[(i+3)&3]<<3)<<5)?lvl:-lvl)-wave[i])>>4;
+out+=wave[i];
+}
+outlet_wave=___SMMUL(out<<2,env<<3);]]></code.srate>
+   </obj.normal>
+</objdefs>

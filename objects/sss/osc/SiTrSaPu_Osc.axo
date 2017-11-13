@@ -1,0 +1,85 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="SiTrSaPu_Osc" uuid="87a0121c-c4db-4382-b582-4c73d70c44cd">
+      <sDescription>description</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32.bipolar name="FMW"/>
+         <frac32buffer name="freq"/>
+         <frac32buffer name="phase"/>
+         <frac32.positive name="slope"/>
+         <frac32.positive name="shift"/>
+         <frac32.positive name="saturate"/>
+         <bool32 name="active"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="FM"/>
+         <frac32.u.map name="slope"/>
+         <frac32.u.map name="shift"/>
+         <bool32.tgl name="sine"/>
+         <frac32.u.map name="saturate"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t phase;
+uint32_t Phase;
+float32_t slope1n;
+uint64_t slope1d;
+uint64_t slope1e;
+int32_t out;
+int32_t sine;
+int64_t val;
+int32_t Slope;
+int32_t Shift;
+int32_t Fmw;
+int32_t FMW;
+int32_t vil;
+int32_t HP;
+int32_t freq;
+int32_t saturate;
+float32_t scale;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
+MTOF(param_pitch+inlet_pitch,freq)
+saturate=((1<<27)-(param_saturate+inlet_saturate))+64;
+saturate=saturate<64?64:saturate;
+saturate=saturate>((1<<27)-64)?((1<<27)-64):saturate;
+scale = (float)1/(((float)(1<<28))/((float)((1<<28)+((saturate)<<3))));
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+int32_t slape=__SSAT(param_slope+inlet_slope,28);
+Slope=Slope+((slape-Slope)>>6);
+int32_t shaft=__SSAT(param_shift+inlet_shift,28);
+Shift=Shift+(((1<<27)-shaft-Shift)>>6);
+int32_t fmw=__SSAT(param_FM+inlet_FMW,29);
+Fmw=Fmw+((fmw-Fmw)>>6);
+FMW=___SMMUL(inlet_freq<<4,(Fmw)<<2);
+phase+=freq+___SMMUL(FMW<<4,freq<<4);
+Phase=phase+(inlet_phase<<5);
+slope1d=(1<<27)-Slope;
+if(Phase<(Slope<<5))
+{slope1n=((float)((1<<31)))/((float)(Slope));
+out=((Phase>>5)*slope1n)+(Shift<<3);
+}
+else
+{slope1n=((float)((1<<31)))/((float)(slope1d));
+out=-(((Phase-(Slope<<5))>>5)*slope1n)-(Shift<<3);
+}
+if(param_sine>0)
+{SINE2TINTERP(out,sine)}
+else{sine=out<<1;}
+val=val+((sine-val)>>2);
+int32_t vol=val>=0?val>>3:-val>>3;
+int32_t dir=val>=0?1:-1;
+int32_t ccomp=(((float)(vol))/((float)(vol+((saturate)<<3))))*(1<<27)*dir*scale;
+vil=vil+((ccomp-vil)>>1);
+HP=HP + ((vil-HP)>>9);
+outlet_out=(vil-HP)>>1;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

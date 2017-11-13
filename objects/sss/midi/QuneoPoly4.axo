@@ -1,0 +1,132 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="QuneoPoly4" uuid="77883de7-8f01-462d-9017-e7e4317ebea1">
+      <sDescription>Polyphonic MIDI keyboard with note, gate, velocity, pressure, X and Y outputs to use with the QuNeo midicontroller.
+The module sorts out the 2 extra X/Y midicontrols that are send with each note and outputs these a 2 extra polyphonic controls next to the pressure output.
+This module can play 4 voices, each with their own X/Y control.
+
+quneo layout of the 16 pad:
+lowest note=36, left bottom is first note, then to the right and up:
+
+48,49,50,51
+44,45,46,47
+40,41,42,43
+36,37,38,39
+
+pressure starts at 23, each next in line has an increment of 3 (23,26,29, etc)
+pressure starts at 24, each next in line has an increment of 3 (24,27,30, etc)
+pressure starts at 25, each next in line has an increment of 3 (25,28,31, etc)
+
+eg for pressure:
+
+59,62,65,68
+47,50,53,56
+35,38,41,44
+23,26,29,32</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+      </inlets>
+      <outlets>
+         <bool32 name="G1" description="key pressed, no retrigger legato"/>
+         <frac32.bipolar name="N1" description="midi note number (-64..63)"/>
+         <frac32.positive name="V1" description="note-on velocity"/>
+         <frac32 name="P1"/>
+         <frac32 name="A1"/>
+         <frac32 name="B1"/>
+         <bool32 name="G2"/>
+         <frac32 name="N2"/>
+         <frac32 name="V2"/>
+         <frac32 name="P2"/>
+         <frac32 name="A2"/>
+         <frac32 name="B2"/>
+         <bool32 name="G3"/>
+         <frac32 name="N3"/>
+         <frac32 name="V3"/>
+         <frac32 name="P3"/>
+         <frac32 name="A3"/>
+         <frac32 name="B3"/>
+         <bool32 name="G4"/>
+         <frac32 name="N4"/>
+         <frac32 name="V4"/>
+         <frac32 name="P4"/>
+         <frac32 name="A4"/>
+         <frac32 name="B4"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t N[4];
+int32_t G[4];
+uint8_t V[4];
+int i;
+int32_t c0[4];
+int32_t c1[4];
+int32_t c2[4];
+int8_t T[4];]]></code.declaration>
+      <code.krate><![CDATA[outlet_N1= N[0]<<21;
+outlet_G1= G[0];
+outlet_V1= V[0]<<20;
+outlet_P1=c0[0];
+outlet_A1=c1[0];
+outlet_B1=c2[0];
+
+outlet_N2= N[1]<<21;
+outlet_G2= G[1];
+outlet_V2= V[1]<<20;
+outlet_P2=c0[1];
+outlet_A2=c1[1];
+outlet_B2=c2[1];
+
+outlet_N3= N[2]<<21;
+outlet_G3= G[2];
+outlet_V3= V[2]<<20;
+outlet_P3=c0[2];
+outlet_A3=c1[2];
+outlet_B3=c2[2];
+
+outlet_N4= N[3]<<21;
+outlet_G4= G[3];
+outlet_V4= V[3]<<20;
+outlet_P4=c0[3];
+outlet_A4=c1[3];
+outlet_B4=c2[3];]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+	int S=1;
+	i=-1;
+	while((S==1)&&(i<4))
+	{
+	i+=S>0?1:0;
+	S=G[i];
+	
+	
+	}
+	if(i==4){
+		i=(int32_t)GenerateRandomNumber()&3;
+	}
+  	V[i] = data2;
+  	N[i] = data1-64;
+  	G[i] = 1;
+	T[i]=(data1-36);
+	T[i]=(T[i]-T[i]/16*16)*3;
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  for(i=0;i<4;i++){
+  if (N[i] == data1-64) {
+    
+    G[i] = 0;}
+  }
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(i=0;i<4;i++){
+  G[i] = 0;}
+}
+
+
+for(i=0;i<4;i++){
+ if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+23))&&(G[i])) { c0[i] = data2<<20;}
+ if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+24))&&(G[i])) { c1[i] = data2<<20;}
+ if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+25))&&(G[i])) { c2[i] = data2<<20;}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

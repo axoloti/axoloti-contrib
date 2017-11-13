@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="phazorFM" uuid="63e5ef3b-aa2c-4c1b-bd39-5464c06ed368">
+      <sDescription>phasor
+saw wave like oscillator
+Uses frequency dependent thru-zero FM.
+Features an FM-index input</sDescription>
+      <author>SirSickSik</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="phase increment"/>
+         <frac32 name="FMW"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phasor" description="phasor wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[   uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+]]></code.krate>
+      <code.srate><![CDATA[int32_t FM=___SMMUL(inlet_freq<<3,freq<<4);
+FM=___SMMUL(FM<<3,inlet_FMW<<2);
+
+Phase += freq + FM;
+   outlet_phasor = Phase>>5;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="saturatorSt" uuid="02227b18-26e8-4152-aad1-8778c6c00eb0">
+      <sDescription>inverse exponential saturator/hard limiter
+non-linear response</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="inL"/>
+         <frac32buffer name="inR"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain16 name="amp"/>
+         <frac32.u.map name="strength"/>
+         <frac32.u.map name="max"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int i;]]></code.declaration>
+      <code.srate><![CDATA[int32_t In=___SMMUL(param_amp,inlet_inL<<4)<<1;
+int32_t in=__SSAT(In,28);
+int32_t pos=in>0?in:-in;
+int32_t dir=in>0?1:-1;
+int32_t ccomp=(1<<27)-pos;
+int32_t temp=param_strength;
+int32_t itemp=(1<<27)-temp;
+temp=___SMMUL(temp<<3,ccomp<<2);
+itemp=itemp+temp;
+ccomp=___SMMUL(ccomp<<3,itemp<<2);
+ccomp=___SMMUL(ccomp<<3,itemp<<2);
+pos=(1<<27)-ccomp;
+outlet_outL=___SMMUL(param_max<<3,___SMMUL(ccomp<<3,In<<1)+___SMMUL(pos<<2,(dir<<27)<<2)<<3);
+
+In=___SMMUL(param_amp,inlet_inR<<4)<<1;
+in=__SSAT(In,28);
+pos=in>0?in:-in;
+dir=in>0?1:-1;
+ccomp=(1<<27)-pos;
+temp=param_strength;
+itemp=(1<<27)-temp;
+temp=___SMMUL(temp<<3,ccomp<<2);
+itemp=itemp+temp;
+ccomp=___SMMUL(ccomp<<3,itemp<<2);
+ccomp=___SMMUL(ccomp<<3,itemp<<2);
+pos=(1<<27)-ccomp;
+outlet_outR=___SMMUL(param_max<<3,___SMMUL(ccomp<<3,In<<1)+___SMMUL(pos<<2,(dir<<27)<<2)<<3);]]></code.srate>
+   </obj.normal>
+</objdefs>

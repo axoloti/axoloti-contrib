@@ -1,0 +1,95 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="songnotes" uuid="0de2b583-ee90-4299-8f04-8de2a47db46e">
+      <sDescription>46-scale scaling module for multiple oscillators.
+&quot;root&quot; sets the &quot;rootnote&quot; that will offset all the channels.
+&quot;chord&quot; sets the chord-spreading-variations throughout the scale. Max value...? unknown...
+&quot;invert&quot; creates different invertions of the chord. Max value...? unknown...
+&quot;spread&quot; spreads the chord by octaves in different combinations. Max value...? unknown...
+&quot;bass&quot; controls the bassline, available notes are the 4 notes used by the chord and perfect fifths above these up to 4 octaves, forced into the scale.
+&quot;arp&quot; and &quot;melody&quot; function in the same way, the inputs only offset the root. Chord-notes have no influence.
+
+
+All the generated notes will be scaled to the selected scale. 46! scales are included and each scale can be set to a key. See the Local Date for which scales are included. Scales are somewhat ordered on alphabetic orde (except the main major/minor scale variations which are the first ones). You can always set them to another order if you want, but keep the total at 46 as this selecting value gets wrapped above 46 in the code.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="key"/>
+         <int32 name="scale"/>
+         <int32 name="root"/>
+         <int32.positive name="chord"/>
+         <int32.positive name="invert"/>
+         <int32.positive name="spread"/>
+         <int32 name="bass"/>
+         <int32 name="arp"/>
+         <int32 name="melody"/>
+      </inlets>
+      <outlets>
+         <frac32 name="root"/>
+         <frac32 name="chord1"/>
+         <frac32 name="chord2"/>
+         <frac32 name="chord3"/>
+         <frac32 name="chord4"/>
+         <frac32 name="bass"/>
+         <frac32 name="arp"/>
+         <frac32 name="melody"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="scale"/>
+      </attribs>
+      <code.declaration><![CDATA[int note;
+int32_t scale(int NOTE,int SCALE, int KEY){
+int octave=NOTE/12-(NOTE<0?1:0);
+int semitone=NOTE-octave*12;
+note=(attr_scale.note[semitone+SCALE*12]+octave*12+KEY);};
+int ofs[4];
+int32_t chord[4];
+int i;]]></code.declaration>
+      <code.krate><![CDATA[int key=inlet_key-4;
+key=key-(key/12)*12;
+key=key<0?key+12:key;
+int Scale=inlet_scale;
+Scale=Scale-(Scale/46)*46;
+Scale=Scale<0?Scale+46:Scale;
+
+for(i=0;i<4;i++){
+int j;
+int k=1+(inlet_invert+1)/4;
+j=i*k+inlet_invert;
+j=j&3;
+int chord1=(1+inlet_chord>>1)*j/12;
+int chord2=(1+inlet_chord>>1)*j-chord1*12;
+chord2+=chord1;
+chord2=chord2-chord2/12*12;
+j=j*inlet_spread;
+int l=j/3;
+j+=l;
+j=j-j/3*3;
+j=j*12;
+ofs[i]=chord2+j;
+}
+
+scale(inlet_root,Scale,key);
+outlet_root=note<<21;
+
+scale(inlet_root+ofs[0],Scale,key);
+chord[0]=note;
+outlet_chord1=chord[0]<<21;
+scale(inlet_root+ofs[1],Scale,key);
+chord[1]=note;
+outlet_chord2=chord[1]<<21;
+scale(inlet_root+ofs[2],Scale,key);
+chord[2]=note;
+outlet_chord3=chord[2]<<21;
+scale(inlet_root+ofs[3],Scale,key);
+chord[3]=note;
+outlet_chord4=chord[3]<<21;
+scale(inlet_root+chord[inlet_bass&3]-chord[inlet_bass&3]/12*12+((inlet_bass>>2)&7)*3.5,Scale,key);
+outlet_bass=note<<21;
+scale(inlet_root+inlet_arp,Scale,key);
+outlet_arp=note<<21;
+scale(inlet_root+inlet_melody,Scale,key);
+outlet_melody=note<<21;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,131 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="basicformantcontrol" uuid="31a583c2-8d80-49b0-9c5a-5c425eedb9a1">
+      <sDescription>basic formant controller
+connect all the outputs to the corresponding input of the formant filter.
+you can use the 8xsmoother from my &quot;maths&quot; folder to smooth out changes, so it sound more like talking.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32.positive name="voice" description="selects between 5 voices (0=soprano, 1=tenor, 2=alto,3=bass,4=countertenor) Use saw-lfo on morph-input to update voice-input!!"/>
+         <int32.positive name="vowel" description="selects between 5 vowels (0=a,1=e,2=i, 3=o,4=u) Use saw-lfo on morph-input to update vowel-input!!"/>
+         <frac32 name="morph" description="connect a saw-LFO (NOT bandlimited!) to the morph input to sample and hold the voice&amp;vowel values and morph from the former to the next"/>
+      </inlets>
+      <outlets>
+         <frac32 name="frq1"/>
+         <frac32 name="frq2"/>
+         <frac32 name="frq3"/>
+         <frac32 name="frq4"/>
+         <frac32 name="frq5"/>
+         <frac32 name="bw1"/>
+         <frac32 name="bw2"/>
+         <frac32 name="bw3"/>
+         <frac32 name="bw4"/>
+         <frac32 name="bw5"/>
+         <frac32 name="gain1"/>
+         <frac32 name="gain2"/>
+         <frac32 name="gain3"/>
+         <frac32 name="gain4"/>
+         <frac32 name="gain5"/>
+         <frac32 name="sine"/>
+         <bool32 name="hold"/>
+         <int32 name="voice"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _freq1[25];
+int32_t _freq2[25];
+int32_t _freq3[25];
+int32_t _freq4[25];
+int32_t _freq5[25];
+int32_t _bw1[25];
+int32_t _bw2[25];
+int32_t _bw3[25];
+int32_t _bw4[25];
+int32_t _bw5[25];
+int32_t _gain1[25];
+int32_t _gain2[25];
+int32_t _gain3[25];
+int32_t _gain4[25];
+int32_t _gain5[25];
+int32_t sine;
+int voicenext;
+int vowelnext;
+int voiceprev;
+int vowelprev;
+int trig;
+int voc;
+int vow;]]></code.declaration>
+      <code.init><![CDATA[//soprano
+ _freq1[0]=800<<16; _freq2[0]=1150<<16; _freq3[0]=2900<<16; _freq4[0]=3900<<16; _freq5[0]=4950<<16; _gain1[0]=0; _gain2[0]=-6<<21;  _gain3[0]=-32<<21 ;_gain4[0]=-20<<21 ;_gain5[0]=-50<<21 ;_bw1[0]=80<<16 ;_bw2[0]=90<<16  ;_bw3[0]=120<<16 ;_bw4[0]=130<<16 ;_bw5[0]=140<<16;
+ _freq1[1]=350<<16; _freq2[1]=2000<<16; _freq3[1]=2800<<16; _freq4[1]=3600<<16; _freq5[1]=4950<<16; _gain1[1]=0; _gain2[1]=-20<<21; _gain3[1]=-15<<21 ;_gain4[1]=-40<<21 ;_gain5[1]=-56<<21 ;_bw1[1]=60<<16 ;_bw2[1]=100<<16 ;_bw3[1]=120<<16 ;_bw4[1]=150<<16 ;_bw5[1]=200<<16;
+ _freq1[2]=270<<16; _freq2[2]=2140<<16; _freq3[2]=2950<<16; _freq4[2]=3900<<16; _freq5[2]=4950<<16; _gain1[2]=0; _gain2[2]=-12<<21; _gain3[2]=-26<<21 ;_gain4[2]=-26<<21 ;_gain5[2]=-44<<21 ;_bw1[2]=60<<16 ;_bw2[2]=90<<16  ;_bw3[2]=100<<16 ;_bw4[2]=120<<16 ;_bw5[2]=120<<16;
+ _freq1[3]=450<<16; _freq2[3]=800<<16;  _freq3[3]=2830<<16; _freq4[3]=3800<<16; _freq5[3]=4950<<16; _gain1[3]=0; _gain2[3]=-11<<21; _gain3[3]=-22<<21 ;_gain4[3]=-22<<21 ;_gain5[3]=-50<<21 ;_bw1[3]=70<<16 ;_bw2[3]=80<<16  ;_bw3[3]=100<<16 ;_bw4[3]=130<<16 ;_bw5[3]=135<<16;
+ _freq1[4]=325<<16; _freq2[4]=700<<16;  _freq3[4]=2700<<16; _freq4[4]=3800<<16; _freq5[4]=4950<<16; _gain1[4]=0; _gain2[4]=-16<<21; _gain3[4]=-35<<21 ;_gain4[4]=-40<<21 ;_gain5[4]=-60<<21 ;_bw1[4]=50<<16 ;_bw2[4]=60<<16  ;_bw3[4]=170<<16 ;_bw4[4]=180<<16 ;_bw5[4]=200<<16;
+//tenor  
+ _freq1[5]=650<<16; _freq2[5]=1080<<16; _freq3[5]=2650<<16; _freq4[5]=2900<<16; _freq5[5]=3250<<16; _gain1[5]=0; _gain2[5]=-6<<21;  _gain3[5]=-7<<21  ;_gain4[5]=-8<<21  ;_gain5[5]=-22<<21 ;_bw1[5]=80<<16 ;_bw2[5]=90<<16  ;_bw3[5]=120<<16 ;_bw4[5]=130<<16 ;_bw5[5]=140<<16;
+ _freq1[6]=400<<16; _freq2[6]=1700<<16; _freq3[6]=2600<<16; _freq4[6]=3200<<16; _freq5[6]=3580<<16; _gain1[6]=0; _gain2[6]=-15<<21; _gain3[6]=-12<<21 ;_gain4[6]=-14<<21 ;_gain5[6]=-20<<21 ;_bw1[6]=70<<16 ;_bw2[6]=80<<16  ;_bw3[6]=100<<16 ;_bw4[6]=120<<16 ;_bw5[6]=120<<16;
+ _freq1[7]=290<<16; _freq2[7]=1870<<16; _freq3[7]=2800<<16; _freq4[7]=3250<<16; _freq5[7]=3540<<16; _gain1[7]=0; _gain2[7]=-15<<21; _gain3[7]=-18<<21 ;_gain4[7]=-20<<21 ;_gain5[7]=-30<<21 ;_bw1[7]=40<<16 ;_bw2[7]=90<<16  ;_bw3[7]=100<<16 ;_bw4[7]=120<<16 ;_bw5[7]=120<<16;
+ _freq1[8]=400<<16; _freq2[8]=800<<16;  _freq3[8]=2600<<16; _freq4[8]=2800<<16; _freq5[8]=3000<<16; _gain1[8]=0; _gain2[8]=-10<<21; _gain3[8]=-12<<21 ;_gain4[8]=-12<<21 ;_gain5[8]=-26<<21 ;_bw1[8]=40<<16 ;_bw2[8]=80<<16  ;_bw3[8]=100<<16 ;_bw4[8]=120<<16 ;_bw5[8]=120<<16;
+ _freq1[9]=350<<16; _freq2[9]=600<<16;  _freq3[9]=2700<<16; _freq4[9]=2900<<16; _freq5[9]=3300<<16; _gain1[9]=0; _gain2[9]=-20<<21; _gain3[9]=-17<<21; _gain4[9]=-14<<21; _gain5[9]=-26<<21; _bw1[9]=40<<16; _bw2[9]=60<<16 ; _bw3[9]=100<<16; _bw4[9]=120<<16; _bw5[9]=120<<16;
+//alto
+_freq1[10]=800<<16;_freq2[10]=1150<<16;_freq3[10]=2800<<16;_freq4[10]=3500<<16;_freq5[10]=4950<<16;_gain1[10]=0;_gain2[10]=-4<<21; _gain3[10]=-20<<21;_gain4[10]=-36<<21;_gain5[10]=-60<<21;_bw1[10]=80<<16;_bw2[10]=90<<16 ;_bw3[10]=120<<16;_bw4[10]=130<<16;_bw5[10]=140<<16;
+_freq1[11]=400<<16;_freq2[11]=1600<<16;_freq3[11]=2700<<16;_freq4[11]=3300<<16;_freq5[11]=4950<<16;_gain1[11]=0;_gain2[11]=-24<<21;_gain3[11]=-30<<21;_gain4[11]=-35<<21;_gain5[11]=-60<<21;_bw1[11]=60<<16;_bw2[11]=80<<16 ;_bw3[11]=120<<16;_bw4[11]=150<<16;_bw5[11]=200<<16;
+_freq1[12]=350<<16;_freq2[12]=1700<<16;_freq3[12]=2700<<16;_freq4[12]=3700<<16;_freq5[12]=4950<<16;_gain1[12]=0;_gain2[12]=-20<<21;_gain3[12]=-30<<21;_gain4[12]=-36<<21;_gain5[12]=-60<<21;_bw1[12]=50<<16;_bw2[12]=100<<16;_bw3[12]=120<<16;_bw4[12]=150<<16;_bw5[12]=200<<16;
+_freq1[13]=450<<16;_freq2[13]=800<<16; _freq3[13]=2830<<16;_freq4[13]=3500<<16;_freq5[13]=4950<<16;_gain1[13]=0;_gain2[13]=-9<<21; _gain3[13]=-16<<21;_gain4[13]=-28<<21;_gain5[13]=-55<<21;_bw1[13]=70<<16;_bw2[13]=80<<16 ;_bw3[13]=100<<16;_bw4[13]=130<<16;_bw5[13]=135<<16;
+_freq1[14]=325<<16;_freq2[14]=700<<16; _freq3[14]=2530<<16;_freq4[14]=3500<<16;_freq5[14]=4950<<16;_gain1[14]=0;_gain2[14]=-12<<21;_gain3[14]=-30<<21;_gain4[14]=-40<<21;_gain5[14]=-64<<21;_bw1[14]=50<<16;_bw2[14]=60<<16 ;_bw3[14]=170<<16;_bw4[14]=180<<16;_bw5[14]=200<<16;
+//bass
+_freq1[15]=600<<16;_freq2[15]=1040<<16;_freq3[15]=2250<<16;_freq4[15]=2450<<16;_freq5[15]=2750<<16;_gain1[15]=0;_gain2[15]=-7<<21; _gain3[15]=-9<<21 ;_gain4[15]=-9<<21 ;_gain5[15]=-20<<21;_bw1[15]=60<<16;_bw2[15]=70<<16 ;_bw3[14]=110<<16;_bw4[15]=120<<16;_bw5[15]=130<<16;
+_freq1[16]=400<<16;_freq2[16]=1620<<16;_freq3[16]=2400<<16;_freq4[16]=2800<<16;_freq5[16]=3100<<16;_gain1[16]=0;_gain2[16]=-12<<21;_gain3[16]=-9<<21 ;_gain4[16]=-12<<21;_gain5[16]=-18<<21;_bw1[16]=40<<16;_bw2[16]=80<<16 ;_bw3[15]=100<<16;_bw4[16]=120<<16;_bw5[16]=120<<16;
+_freq1[17]=250<<16;_freq2[17]=1750<<16;_freq3[17]=2600<<16;_freq4[17]=3050<<16;_freq5[17]=3340<<16;_gain1[17]=0;_gain2[17]=-30<<21;_gain3[17]=-16<<21;_gain4[17]=-22<<21;_gain5[17]=-28<<21;_bw1[17]=60<<16;_bw2[17]=90<<16 ;_bw3[16]=100<<16;_bw4[17]=120<<16;_bw5[17]=120<<16;
+_freq1[18]=400<<16;_freq2[18]=750<<16; _freq3[18]=2400<<16;_freq4[18]=2900<<16;_freq5[18]=2900<<16;_gain1[18]=0;_gain2[18]=-11<<21;_gain3[18]=-21<<21;_gain4[18]=-20<<21;_gain5[18]=-40<<21;_bw1[18]=40<<16;_bw2[18]=80<<16 ;_bw3[17]=100<<16;_bw4[18]=120<<16;_bw5[18]=120<<16;
+_freq1[19]=350<<16;_freq2[19]=500<<16; _freq3[19]=2400<<16;_freq4[19]=2950<<16;_freq5[19]=2950<<16;_gain1[19]=0;_gain2[19]=-20<<21;_gain3[19]=-32<<21;_gain4[19]=-28<<21;_gain5[19]=-36<<21;_bw1[19]=40<<16;_bw2[19]=80<<16 ;_bw3[19]=100<<16;_bw4[19]=120<<16;_bw5[19]=120<<16;
+//countertenor
+_freq1[20]=660<<16;_freq2[20]=1120<<16;_freq3[20]=2750<<16;_freq4[20]=3000<<16;_freq5[20]=3350<<16;_gain1[20]=0;_gain2[20]=-6<<21; _gain3[20]=-23<<21;_gain4[20]=-24<<21;_gain5[20]=-38<<21;_bw1[20]=80<<16;_bw2[20]=90<<16 ;_bw3[20]=120<<16;_bw4[20]=130<<16;_bw5[20]=140<<16;
+_freq1[21]=440<<16;_freq2[21]=1800<<16;_freq3[21]=2700<<16;_freq4[21]=3000<<16;_freq5[21]=3300<<16;_gain1[21]=0;_gain2[21]=-14<<21;_gain3[21]=-18<<21;_gain4[21]=-20<<21;_gain5[21]=-20<<21;_bw1[21]=70<<16;_bw2[21]=80<<16 ;_bw3[21]=100<<16;_bw4[21]=120<<16;_bw5[21]=120<<16;
+_freq1[22]=270<<16;_freq2[22]=1850<<16;_freq3[22]=2900<<16;_freq4[22]=3350<<16;_freq5[22]=3590<<16;_gain1[22]=0;_gain2[22]=-24<<21;_gain3[22]=-24<<21;_gain4[22]=-36<<21;_gain5[22]=-36<<21;_bw1[22]=40<<16;_bw2[22]=90<<16 ;_bw3[22]=100<<16;_bw4[22]=120<<16;_bw5[22]=120<<16;
+_freq1[23]=430<<16;_freq2[23]=820<<16; _freq3[23]=2700<<16;_freq4[23]=3000<<16;_freq5[23]=3300<<16;_gain1[23]=0;_gain2[23]=-10<<21;_gain3[23]=-26<<21;_gain4[23]=-22<<21;_gain5[23]=-34<<21;_bw1[23]=40<<16;_bw2[23]=80<<16 ;_bw3[23]=100<<16;_bw4[23]=120<<16;_bw5[23]=120<<16;
+_freq1[24]=370<<16;_freq2[24]=630<<16; _freq3[24]=2750<<16;_freq4[24]=3000<<16;_freq5[24]=3400<<16;_gain1[24]=0;_gain2[24]=-20<<21;_gain3[24]=-23<<21;_gain4[24]=-30<<21;_gain5[24]=-34<<21;_bw1[24]=40<<16;_bw2[24]=60<<16 ;_bw3[24]=100<<16;_bw4[24]=120<<16;_bw5[24]=120<<16;
+trig=0;
+
+voicenext=1;
+vowelnext=1;
+voiceprev=1;
+vowelprev=1;]]></code.init>
+      <code.krate><![CDATA[voc=inlet_voice>4?4:inlet_voice;
+vow=inlet_vowel>4?4:inlet_vowel;
+int32_t morph=inlet_morph;
+if((morph<(1<<26)) && (!(trig)))
+{trig=1;
+voiceprev=voicenext;
+voicenext=(voc*5)+vow;
+outlet_hold=1;
+}
+else
+{
+outlet_hold=0;	
+if (morph>(1<<26))
+{trig=0;}
+}
+SINE2TINTERP((morph<<4)-(1<<30),sine)
+sine=(sine>>1)+(1<<30);
+int32_t ccomp=(1<<31)-sine;
+outlet_sine=ccomp>>4;
+outlet_frq1=(___SMMUL(ccomp,_freq1[voiceprev])+___SMMUL(sine,_freq1[voicenext]));
+outlet_frq2=(___SMMUL(ccomp,_freq2[voiceprev])+___SMMUL(sine,_freq2[voicenext]));
+outlet_frq3=(___SMMUL(ccomp,_freq3[voiceprev])+___SMMUL(sine,_freq3[voicenext]));
+outlet_frq4=(___SMMUL(ccomp,_freq4[voiceprev])+___SMMUL(sine,_freq4[voicenext]));
+outlet_frq5=(___SMMUL(ccomp,_freq5[voiceprev])+___SMMUL(sine,_freq5[voicenext]));
+outlet_bw1=___SMMUL(ccomp,_bw1[voiceprev])+___SMMUL(sine,_bw1[voicenext]);
+outlet_bw2=___SMMUL(ccomp,_bw2[voiceprev])+___SMMUL(sine,_bw2[voicenext]);
+outlet_bw3=___SMMUL(ccomp,_bw3[voiceprev])+___SMMUL(sine,_bw3[voicenext]);
+outlet_bw4=___SMMUL(ccomp,_bw4[voiceprev])+___SMMUL(sine,_bw4[voicenext]);
+outlet_bw5=___SMMUL(ccomp,_bw5[voiceprev])+___SMMUL(sine,_bw5[voicenext]);
+outlet_gain1=___SMMUL(ccomp,_gain1[voiceprev])+___SMMUL(sine,_gain1[voicenext]);
+outlet_gain2=___SMMUL(ccomp,_gain2[voiceprev])+___SMMUL(sine,_gain2[voicenext]);
+outlet_gain3=___SMMUL(ccomp,_gain3[voiceprev])+___SMMUL(sine,_gain3[voicenext]);
+outlet_gain4=___SMMUL(ccomp,_gain4[voiceprev])+___SMMUL(sine,_gain4[voicenext]);
+outlet_gain5=___SMMUL(ccomp,_gain5[voiceprev])+___SMMUL(sine,_gain5[voicenext]);
+outlet_voice=voicenext;]]></code.krate>
+   </obj.normal>
+</objdefs>

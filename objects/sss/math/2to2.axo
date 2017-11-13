@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="2to2" uuid="aee81760-33b2-4a66-8bcb-1cffdf3d7290">
+      <sDescription>Mode 1:
+Divides the incoming signal (inlet-in) up in portions (inlet-mod) and adds these to A and B outputs one by one (A&gt;B&gt;A&gt;B&gt;A&gt;B&gt;etc). Summed, these will give back the original signal.
+
+Mode 2:
+panning inlet-in using inled-mod
+
+Mode 3: mid(A)/side(B) signal
+
+Mode 4: max(A)/min(B) signal</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32 name="in"/>
+         <frac32 name="mod"/>
+         <frac32 name="switch"/>
+      </inlets>
+      <outlets>
+         <frac32 name="A"/>
+         <frac32 name="B"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="mod"/>
+         <int32.hradio name="mode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <bool32.tgl name="switch"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t v27=1<<27;
+int32_t A;
+int32_t B;
+
+int32_t DIV(int32_t in,int32_t quant){
+quant=(quant<0?-quant:quant)+2;
+int32_t hq=quant>>1;
+int32_t dest=(in/quant);
+dest+=in<0?-1:0;
+int32_t left=in-dest*quant;
+A=(left>hq?hq:left)+dest*hq;
+B=(left<hq?0:left-hq)+dest*hq;
+};
+
+int32_t PAN(int32_t in,int32_t pan){
+int32_t PN=__SSAT(pan,28)+v27<<2;
+B=___SMMUL(in<<2,PN);
+A=in-B;
+};
+
+int32_t SD(int32_t in,int32_t S){
+A=in+S>>1;
+B=in-S>>1;
+}
+int32_t MM(int32_t in,int32_t S){
+A=in>S?in:S;
+B=in>S?S:in;
+}]]></code.declaration>
+      <code.krate><![CDATA[int32_t mod=mod+inlet_mod;
+switch(param_mode){
+case 0: DIV(inlet_in,mod);break;
+case 1: PAN(inlet_in,mod);break;
+case 2: SD(inlet_in,mod);break;
+case 3: MM(inlet_in,mod);break;
+}
+if((param_switch>0)||(inlet_switch>0)){
+outlet_A=B;
+outlet_B=A;
+}
+else{
+	outlet_A=A;
+	outlet_B=B;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

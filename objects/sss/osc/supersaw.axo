@@ -1,0 +1,82 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="supersaw" uuid="0d5078ed-c419-416b-b85c-0d006dad7767">
+      <sDescription>supersaw shaper</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="input"/>
+         <frac32 name="b" description="1st Rate Base"/>
+         <frac32 name="c" description="1st Rate Spread"/>
+         <frac32 name="d" description="2nd Rate Base"/>
+         <frac32 name="e" description="2nd Rate Spread"/>
+         <frac32 name="f" description="LFO rate"/>
+         <frac32 name="g" description="LFO phasemod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t phaseinv;
+int32_t ua;
+int32_t ub;
+int32_t uc;
+int32_t ud;
+
+int32_t phaseofs1;
+int32_t phaseofs2;
+int32_t phaseofs3;
+int32_t siner;
+int32_t sawterp;
+int32_t mixf;
+int32_t mixg1;
+int32_t mixg2;]]></code.declaration>
+      <code.krate><![CDATA[phaseofs1+=inlet_f>>12;
+phaseofs2+=(inlet_f>>12)*1.3333+(1<<9);
+phaseofs3+=(inlet_f>>12)*1.75+(1<<10);]]></code.krate>
+      <code.srate><![CDATA[phaseinv=((1<<27)-inlet_a+phaseofs3) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,inlet_b<<4)+phaseofs1) & ((1<<25)-1))<<5,phaseinv<<2));
+ub=ua*0.25;
+
+phaseinv=((1<<27)-inlet_a+phaseofs1) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_b-inlet_c)<<4)+phaseofs2) & ((1<<25)-1))<<5,phaseinv<<2));
+uc=ua*0.2;
+
+phaseinv=((1<<27)-inlet_a+phaseofs2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_b+inlet_c)<<4)+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+ud=ua*0.15;
+
+ SINE2TINTERP ((ub+uc+ud-(inlet_a/2))<<6,siner);
+ sawterp=((ub+uc+ud)<<1 & ((1<<26)-1))-(1<<25);
+mixf=(1<<27)- (inlet_g & ((1<<27)-1));
+mixg1=___SMMUL(mixf<<3,sawterp<<2)+___SMMUL((inlet_g & ((1<<27)-1))<<3,siner>>4);
+
+
+
+
+phaseinv=-(inlet_a+phaseofs2*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,inlet_d<<4)+phaseofs2+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+ub=ua*0.25;
+
+phaseinv=-(inlet_a+phaseofs3*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_d-inlet_e)<<4)+phaseofs1+phaseofs3) & ((1<<25)-1))<<5,phaseinv<<2));
+uc=ua*0.2;
+
+phaseinv=-(inlet_a+phaseofs1*2) & ((1<<27)-1);
+ua=(___SMMUL(((___SMMUL((inlet_a)<<4,(inlet_d+inlet_e)<<4)+phaseofs1+phaseofs2) & ((1<<25)-1))<<5,phaseinv<<2));
+ud=ua*0.15;
+
+ SINE2TINTERP ((ub+uc+ud-(inlet_a/2))<<6,siner);
+ sawterp=((ub+uc+ud)<<1 & ((1<<26)-1))-(1<<25);
+mixf=(1<<27)- (inlet_g & ((1<<27)-1));
+mixg2=___SMMUL(mixf<<3,sawterp<<2)+___SMMUL((inlet_g & ((1<<27)-1))<<3,siner>>4);
+
+
+
+ outlet_result= mixg1+mixg2;
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

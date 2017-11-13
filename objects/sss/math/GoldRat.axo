@@ -1,0 +1,86 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="GoldRat" uuid="8f6ae7f2-564a-467b-939c-a834a52a0b91">
+      <sDescription>Golden Ratio calculator
+Set the total size with the &quot;size&quot; parameter
+the outputs will give the size of each next golden division of the smallest part of the previous division
+
+The buttons &quot;next&quot; and &quot;prev&quot; can be used to get to even smaller divisions based on the current size.
+Next will take the next smaller division and resets the control to the next smaller division
+Prev will take the current size and multiplies it with the golden ratio+1</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="b1"/>
+         <frac32 name="s1"/>
+         <frac32 name="b2"/>
+         <frac32 name="s2"/>
+         <frac32 name="b3"/>
+         <frac32 name="s3"/>
+         <frac32 name="b4"/>
+         <frac32 name="s4"/>
+         <frac32 name="b5"/>
+         <frac32 name="s5"/>
+         <frac32 name="b6"/>
+         <frac32 name="s6"/>
+         <frac32 name="b7"/>
+         <frac32 name="s7"/>
+         <frac32 name="b8"/>
+         <frac32 name="s8"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="size"/>
+         <bool32.mom name="next"/>
+         <bool32.mom name="prev"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float32_t Gratio1=1.61803398875;
+float32_t Gratio2=2.61803398875;
+int32_t ratioB[8];
+int32_t ratioS[8];
+int i;
+int ntrig;
+int ptrig;]]></code.declaration>
+      <code.krate><![CDATA[if((param_next>0)&&!ntrig){
+	ntrig=1;
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_size],ratioS[0],0xFFFD);
+}
+else if(param_next==0){ntrig=0;}
+
+if((param_prev>0)&&!ptrig){
+	ptrig=1;
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_size],param_size*Gratio2,0xFFFD);
+}
+else if(param_prev==0){ptrig=0;}
+
+
+
+ratioS[0]=((float32_t)(param_size))/Gratio2;
+ratioB[0]=ratioS[0]*Gratio1;
+
+for(i=0;i<7;i++){
+	ratioS[i+1]=ratioS[i]/Gratio2;
+	ratioB[i+1]=ratioS[i]-ratioS[i+1];
+}
+
+outlet_b1=ratioB[0];
+outlet_s1=ratioS[0];
+outlet_b2=ratioB[1];
+outlet_s2=ratioS[1];
+outlet_b3=ratioB[2];
+outlet_s3=ratioS[2];
+outlet_b4=ratioB[3];
+outlet_s4=ratioS[3];
+outlet_b5=ratioB[4];
+outlet_s5=ratioS[4];
+outlet_b6=ratioB[5];
+outlet_s6=ratioS[5];
+outlet_b7=ratioB[6];
+outlet_s7=ratioS[6];
+outlet_b8=ratioB[7];
+outlet_s8=ratioS[7];]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tableOS2" uuid="e4352c50-4845-4620-88ff-53b2abd77e7f">
+      <sDescription>simple, up to 16x oversampled, wavetable oscillator, able to use wavetables from the waveformLoader, waveformGenerator, waveformGuitar and waveformRandom modules.
+&quot;mix&quot; mixes from preset1 to preset2.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32 name="preset1"/>
+         <frac32 name="preset2"/>
+         <frac32 name="mix"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="preset1"/>
+         <frac32.u.map name="mix"/>
+         <frac32.u.map name="preset2"/>
+         <int32 name="OS">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+int i;
+   int32_t prev;
+    int32_t step;]]></code.declaration>
+      <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_pitch+inlet_pitch,freq)
+freq=freq/param_OS;
+int32_t preset1=___SMMUL((param_preset1+inlet_preset1&((1<<27)-1))<<3,attr_table.Waveforms-1<<2)*attr_table.LENGTH;
+int32_t preset2=___SMMUL((param_preset2+inlet_preset2&((1<<27)-1))<<3,attr_table.Waveforms-1<<2)*attr_table.LENGTH;
+int32_t mix=__USAT(param_mix+inlet_mix,27)<<3;
+   step = ((mix - prev)>>4)/param_OS;
+   int32_t Mix = prev;
+   prev = mix;]]></code.krate>
+      <code.srate><![CDATA[outlet_out=0;
+
+
+	 for(i=0;i<param_OS;i++){
+	 Mix+=step;
+	 int32_t iMix=(1<<30)-Mix;
+	 phase+=freq;
+	 uint32_t tmp_d =  phase>>5;
+      uint32_t tmp_di = (tmp_d>>(27-attr_table.LENGTHPOW));
+      uint32_t tmp_w1 = (tmp_d<<(attr_table.LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a11 = attr_table.array[(tmp_di&attr_table.LENGTHMASK)+preset1];
+      int32_t tmp_a21 = attr_table.array[((tmp_di+1)&attr_table.LENGTHMASK)+preset1];
+      int32_t tmp_a12 = attr_table.array[(tmp_di&attr_table.LENGTHMASK)+preset2];
+      int32_t tmp_a22 = attr_table.array[((tmp_di+1)&attr_table.LENGTHMASK)+preset2];
+      tmp_a11=___SMMUL(iMix,tmp_a11<<2)+___SMMUL(Mix,tmp_a12<<2);
+      tmp_a21=___SMMUL(iMix,tmp_a21<<2)+___SMMUL(Mix,tmp_a22<<2);
+      int32_t tmp_r = ___SMMUL(tmp_a11,tmp_w1);
+      tmp_r = ___SMMLA(tmp_a21,tmp_w2,tmp_r);
+      outlet_out+= tmp_r/param_OS;}]]></code.srate>
+   </obj.normal>
+</objdefs>

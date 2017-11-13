@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="AP2" uuid="8bb737bf-c295-4905-ac3a-78e7c329882a">
+      <sDescription>2nd order ALLPASS biquad filter with resonance at 0 (=equal slope).
+LP-HP</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freq" description="cutoff frequency"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="freq" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bsl;biquad_coefficients bcl;
+biquad_state bsh;biquad_coefficients bch;
+int32_t tmp[BUFSIZE];]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bsl);
+biquad_clearstate(&bsh);]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_freq+inlet_freq,f);
+   biquad_hp_coefs(&bch,f,INT_MAX );
+   biquad_lp_coefs(&bcl,f,INT_MAX );
+   biquad_dsp(&bsh,&bch,inlet_in,tmp);
+   biquad_dsp(&bsl,&bcl,inlet_in,outlet_out);
+   for(int i=0;i<BUFSIZE;i++){
+   outlet_out[i]-=tmp[i];
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>

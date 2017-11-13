@@ -1,0 +1,459 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="multiType" uuid="40053c66-8338-48eb-bb39-edb854d86987">
+      <sDescription>any type and any mode filter
+
+type1=normal filters based on cascaded 6dB filters without resonance. Res knob controls cascading/filter mode (HP/LP)
+type2=SVF filters
+type3=Biquad filters
+type4= my own custom filters
+
+for type1 counts:
+1=cascadable 6dB LP filters. from 0dB slope up to 48dB
+2=cascadable 6dB HP filters. from 0dB slope up to 48dB
+3=12dB LP-BP-HP morphable based on two 6dB filters
+4=18dB LP-BP1-BP2-HP morphable filters based on three 6dB filters
+
+for type 2 and 3 counts:
+1=LP
+2=HP
+3=BP
+4=NOTCH
+
+for type 4 counts:
+1=36dB LP with control over cutoff and resonance
+2=mostfilter2 LP version with control over cutoff and resonance
+3=mostfilter2 HP version with control over cutoff and resonance
+4=mostBfilter LP, a new filter which internally boosts the signal to get a more aggressive character</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="cut"/>
+         <frac32 name="res"/>
+         <int32 name="MT"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="cut"/>
+         <frac32.u.map.filterq name="res"/>
+         <int32.hradio name="mode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32.hradio name="type">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <bool32.tgl name="allpass"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs;
+biquad_coefficients bc;
+int32_t in[BUFSIZE];
+int32_t val[8];
+int32_t out[BUFSIZE];
+int32_t low;
+int32_t band;
+int32_t notch;
+int32_t high;
+int i;
+int k;
+int32_t casc;
+int32_t mix;
+int32_t Mix;
+int32_t tmp;
+int32_t pv;
+int32_t stp;
+int32_t Freq;
+int prv;
+bool ALL;
+int32_t v26=(1>>26);
+int BUFMASK=BUFSIZE-1;
+/*
+6dB LP with slope control instead of resonance (cascading multiple 6dB filters)
+6dB HP with slope control instead of resonance (cascading multiple 6dB filters) 
+12dB BP (6dB LP and HP filters) with LP-HP serial crossfading
+18dB BP (6dB LP and HP filters) with LP-HP serial crossfading
+SVF LP
+SVF HP
+SVF BP
+SVF NO (notch)
+Biquad LP
+Biquad HP
+Biquad BP
+Biquad NO
+*/
+int32_t alpha;
+uint32_t freq;
+int32_t res;
+int32_t t1=(1<<27)/3;
+
+int32_t SVF(int32_t IN){
+band-=___SMMUL(___SMMUL(band<<2,band<<2),band<<2);
+notch = IN - (___SMMUL(res,band)<<1);
+low = low + (___SMMUL(freq,band)<<1);
+high  = notch - low;
+band = (___SMMUL(freq,high)<<1) + band;
+}
+
+
+
+
+int32_t settings(int32_t f,int32_t R,int mode){
+switch(mode){
+	
+case 0: // 6dB LP cascadable
+	MTOF(f,Freq);
+	casc=(R>>24);
+	mix=(R-(casc<<24))<<6;	
+	casc+=1;
+	
+	;break;
+		
+case 1: // 6dB HP cascadable
+	MTOF(f,Freq);
+	casc=(R>>24);
+	mix=(R-(casc<<24))<<6;	
+	casc+=1;	
+	;break;
+		
+case 2: // 12dB LP-BP-HP crossfading
+	MTOF(f,Freq);
+	mix=__USAT((int32_t)R,26);
+	casc=R-mix<<4;
+	mix=mix<<4;
+	;break;
+	
+case 3: // 18dB LP-BP1-BP2-HP crossfading
+	MTOF(f,Freq);
+	mix=R>=t1?t1-1:R;
+	casc=R-mix;
+	casc=casc>=t1?t1-1:casc;
+	Mix=(R-mix-casc)*3<<3;
+	casc=casc*3<<3;
+	mix=mix*3<<3;
+	;break;
+
+case 4:
+	res = (0x80<<24) - (R<<4);
+	res = ___SMMUL(res,res);
+	
+	MTOFEXTENDED(f,alpha);
+	SINE2TINTERP(alpha,Freq);
+	;break;
+	
+case 5:
+	res = (0x80<<24) - (R<<4);
+	res = ___SMMUL(res,res);
+	
+	MTOFEXTENDED(f,alpha);
+	SINE2TINTERP(alpha,Freq);
+	;break;
+	
+case 6:
+	res = (0x80<<24) - (R<<4);
+	res = ___SMMUL(res,res);
+	
+	MTOFEXTENDED(f,alpha);
+	SINE2TINTERP(alpha,Freq);
+	;break;
+	
+case 7:
+	res = (0x80<<24) - (R<<4);
+	res = ___SMMUL(res,res);
+	
+	MTOFEXTENDED(f,alpha);
+	SINE2TINTERP(alpha,Freq);
+	;break;
+
+case 8:
+      MTOF(f,freq);
+      biquad_lp_coefs(&bc,freq,INT_MAX - (R<<4));
+	;break;
+
+case 9:
+      MTOF(f,freq);
+      biquad_hp_coefs(&bc,freq,INT_MAX - (R<<4));
+	;break;
+
+case 10:
+      MTOF(f,freq);
+      biquad_bp_coefs(&bc,freq,INT_MAX - (R<<4));
+	;break;
+
+case 11:
+      MTOF(f,freq);
+      biquad_bp_coefs(&bc,freq,INT_MAX - (R<<4));
+	;break;
+
+case 12:
+
+MTOF(f,Freq);
+res=R;
+;break;
+
+case 13:
+
+MTOF(f,Freq);
+res=R;
+;break;
+
+case 14:
+
+MTOF(f,Freq);
+res=R;
+;break;
+
+case 15:
+MTOF(f,Freq);
+
+MTOF(-(__SSAT(R,28)<<1)+(1<<28)>>1,res);
+
+MTOF(f-(1<<27),mix);
+casc=(1<<27)-(32<<21)*0.9;
+casc=___SMMUL(casc<<3,casc<<2);
+
+;break;
+
+}};
+int32_t filter(int mode){
+switch(mode){
+
+case 0: // 6dB LP cascadable
+	
+		for(i=0;i<BUFSIZE;i++){
+			freq+=stp;
+			int l=(i-1)&BUFMASK;
+			for(k=0;k<casc;k++){
+			val[k]=___SMMLA((in[i]-val[k])<<1,freq,val[k]);
+			if(k<(casc-1)){		
+				in[i]=val[k]-(ALL>0?in[i]-val[k]:0);
+			}
+			else if(k==(casc-1)){
+				in[i]=in[i]+___SMMUL(mix,-in[i]+(val[k]-(ALL>0?in[i]-val[k]:0))<<2);
+			}
+		}
+		out[i]=in[i];
+	}
+
+	;break;	
+
+case 1: // 6dB HP cascadable
+	
+		for(i=0;i<BUFSIZE;i++){
+			freq+=stp;
+		int l=(i-1)&BUFMASK;
+		for(k=0;k<casc;k++){			
+			val[k]=___SMMLA((in[i]-val[k])<<1,freq,val[k]);
+			if(k<(casc-1)){
+				in[i]=in[i]-val[k]-(ALL>0?val[k]:0);
+			}
+			else{
+				in[i]=in[i]+___SMMUL(mix,-val[k]-(ALL>0?val[k]:0)<<2);
+			}
+		}
+	}
+
+	
+	for(i=0;i<BUFSIZE;i++){	
+	out[i]=in[i];
+	}
+	
+	;break;
+	
+case 2: // 12dB LP-BP-HP crossfading
+
+	for(i=0;i<BUFSIZE;i++){	
+		freq+=stp;
+	int l=(i-1)&(BUFMASK);
+	val[0]=___SMMLA((in[i]-val[0])<<1,freq,val[0]);
+	
+	tmp=val[0]+___SMMUL(mix,in[i]-(val[0]<<1)<<2);
+	tmp=tmp-(ALL>0?in[i]-tmp:0);
+	val[1]=___SMMLA((tmp-val[1])<<1,freq,val[1]);
+	int32_t tp=val[1]+___SMMUL(casc,tmp-(val[1]<<1)<<2);
+	out[i]=tp-(ALL>0?tmp-tp:0);
+	}	
+	
+	;break;
+
+case 3: // LP SVF
+
+	for(i=0;i<BUFSIZE;i++){
+		freq+=stp;	
+	int l=(i-1)&(BUFMASK);
+	val[0]=___SMMLA((in[i]-val[0])<<1,freq,val[0]);
+	tmp=val[0]+___SMMUL(mix,in[i]-(val[0]<<1)<<2);
+	tmp=tmp-(ALL>0?in[i]-tmp:0);
+	val[1]=___SMMLA((tmp-val[1])<<1,freq,val[1]);
+	int32_t tp=val[1]+___SMMUL(casc,tmp-(val[1]<<1)<<2);
+	tp=tp-(ALL>0?tmp-tp:0);
+
+	val[2]=___SMMLA((tp-val[2])<<1,freq,val[2]);
+	int32_t TP=val[2]+___SMMUL(Mix,tp-(val[2]<<1)<<2);
+	out[i]=TP-(ALL>0?tp-TP:0);
+	}
+	
+	;break;	
+
+case 4: //SVF LP
+
+	for(i=0;i<BUFSIZE;i++){
+		freq+=stp;
+	SVF(in[i]);
+	out[i]=low-(ALL>0?-(high+band):0);
+	}
+	
+	;break;
+
+case 5: //SVF HP
+
+	for(i=0;i<BUFSIZE;i++){
+		freq+=stp;
+	SVF(in[i]);
+	out[i]=high-(ALL>0?(low+band)-(in[i]-notch):0);
+	}
+	
+	;break;
+
+case 6: //SVF BP
+
+	for(i=0;i<BUFSIZE;i++){
+		freq+=stp;
+	SVF(in[i]);
+	out[i]=band-(ALL>0?in[i]-band:0);
+	}
+	
+	;break;
+
+case 7: //SVF NO
+
+	for(i=0;i<BUFSIZE;i++){
+		freq+=stp;
+	SVF(in[i]);
+	out[i]=notch-(ALL>0?in[i]-notch:0);
+	}
+
+	;break;
+
+case 8:
+biquad_dsp(&bs,&bc,in,out);
+for(i=0;i<BUFSIZE;i++){
+out[i]=out[i]-(ALL>0?in[i]-out[i]:0);
+}
+;break;
+case 9:
+biquad_dsp(&bs,&bc,in,out);
+for(i=0;i<BUFSIZE;i++){
+out[i]=out[i]-(ALL>0?in[i]-out[i]:0);
+}
+;break;
+case 10:
+biquad_dsp(&bs,&bc,in,out);
+for(i=0;i<BUFSIZE;i++){
+out[i]=out[i]-(ALL>0?in[i]-out[i]:0);
+}
+;break;
+case 11:
+biquad_dsp(&bs,&bc,in,out);
+for(i=0;i<BUFSIZE;i++){
+out[i]=in[i]-out[i]-(ALL>0?-out[i]<<1:0);
+}
+;break;
+
+case 12:
+for(i=0;i<BUFSIZE;i++){
+freq+=stp;
+int32_t valsat=___SMMUL((in[i]-val[5])<<2,res<<4);
+int32_t ts = __SSAT(valsat,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+int32_t valres = ts + (ts>>1) - (tsq31p3);
+   val[0] = ___SMMLA(((in[i]+valres)-val[0])<<1,freq,val[0]);
+   val[1] = ___SMMLA((val[0]-val[1])<<1,freq,val[1]);
+   val[2] = ___SMMLA((val[1]-val[2])<<1,freq,val[2]);
+   val[3] = ___SMMLA((val[2]-val[3])<<1,freq,val[3]);
+   val[4] = ___SMMLA((val[3]-val[4])<<1,freq,val[4]);
+   val[5] = ___SMMLA((val[4]-val[5])<<1,freq,val[5]);
+   out[i]= val[5];
+}
+;break;
+
+case 13:
+for(i=0;i<BUFSIZE;i++){
+   freq+=stp;
+   int32_t In=in[i];
+   val[2]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[0],28)<<2,res<<3),28)<<1)-val[0]-val[2])<<1,freq,val[2]);
+   val[0] = ___SMMLA((val[2])<<1,freq,val[0]);
+
+   In=__SSAT(val[0],28);
+   val[3]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[1],28)<<2,res<<3),28)<<1)-val[1]-val[3])<<1,freq<<1,val[3]);
+   val[1] = ___SMMLA((val[3])<<1,freq,val[1]);
+   out[i]= val[1];
+}
+;break;
+
+case 14:
+for(i=0;i<BUFSIZE;i++){
+   freq+=stp;
+   int32_t In=in[i];
+   val[2]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[0],28)<<2,res<<3),28)<<1)-val[0]-val[2])<<1,freq,val[2]);
+   val[0] = ___SMMLA((val[2])<<1,freq,val[0]);
+
+   In=__SSAT(val[0]-In,28);
+   val[3]=___SMMLA((In+(__SSAT(___SMMUL(__SSAT(In-val[1],28)<<2,res<<3),28)<<1)-val[1]-val[3])<<1,freq<<1,val[3]);
+   val[1] = ___SMMLA((val[3])<<1,freq,val[1]);
+   out[i]= val[1]-In;
+}
+;break;
+
+case 15:
+for(i=0;i<BUFSIZE;i++){
+freq+=stp;
+int32_t In=__SSAT(___SMMUL((24<<21)+(v26),in[i]<<4)<<1,27);
+   val[1]+=___SMMUL((In)-val[0],freq)-___SMMUL(val[1]<<1,res); 
+   val[1]=val[1]>casc?casc:val[1];
+   val[1]=val[1]<-casc?-val[1]:val[1];
+   val[0] += val[1];
+   val[2]+=___SMMUL(val[0]-val[2],mix);
+int32_t ts = __SSAT(val[0]-val[2],28);
+int32_t tsq31 = ts<<2;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+out[i] = ts + (ts>>1) - (tsq31p3)>>1;
+}
+;break;
+}};]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[for(i=0;i<BUFSIZE;i++){
+	in[i]=inlet_in[i];
+}
+ALL=param_allpass;
+int MODE=((param_mode&3)+((param_type&3)<<2)+inlet_MT)&15;
+
+
+if(!(MODE==prv)){
+	for(i=0;i<8;i++){
+		val[i]=0;
+	}
+}
+
+settings(param_cut+inlet_cut,__USAT(param_res+inlet_res,27),MODE);
+
+if((MODE<8)||(MODE>11)){
+stp=(Freq-pv)>>4;
+freq=pv;
+pv=Freq;}
+else{freq=Freq;}
+
+
+filter(MODE);
+
+
+for(i=0;i<BUFSIZE;i++){
+	outlet_out[i]=__SSAT(out[i],28);
+}
+prv=MODE;]]></code.krate>
+   </obj.normal>
+</objdefs>

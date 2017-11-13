@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="startupFadeIn" uuid="e608c672-7b9a-43f0-9012-bf324b8ec92f">
+      <sDescription>smooth volume intro at startup</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="a" description="audio input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[
+int32_t i;
+int32_t step;]]></code.declaration>
+      <code.init><![CDATA[step=0;]]></code.init>
+      <code.krate><![CDATA[   step = step+(((1<<31)-step)>>(21+(((1<<31)-step)>>29)));
+
+]]></code.krate>
+      <code.srate><![CDATA[      i += ((step-i)>>8);
+   outlet_o =  ___SMMUL(inlet_a,i);
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

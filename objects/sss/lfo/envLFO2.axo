@@ -1,0 +1,113 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="envLFO2" uuid="3efe73fc-4aff-48ab-981c-2e557a69cf88">
+      <sDescription>Tempo Synced LFO with multiple waveforms out
+
+Envelope-LFO creats a positive linear envelope-type LFO
+Automatically syncs tempo to the incoming clock on sync-input.
+Tempo can be multiplied and divided by integers to keep a tight ratio and can also be shifted up/down up to 8 octaves.
+Reset resets the phase to zero.
+Length controls the length of the &quot;envelope&quot;, making it shorter then the looping time of the LFO
+att2dec controls the attack/decay length ratio.
+pairs well with the expCurveK module for creating (inverse) exponential enveloping
+
+Reset will hard-reset the phase of the internal LFO</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="sync"/>
+         <frac32 name="att2dec"/>
+         <frac32 name="length"/>
+         <int32 name="multiply"/>
+         <int32.positive name="divide"/>
+         <int32.bipolar name="octave"/>
+         <int32 name="D"/>
+         <int32 name="M"/>
+         <bool32.rising name="reset"/>
+      </inlets>
+      <outlets>
+         <frac32 name="peak1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="att2dec"/>
+         <frac32.u.map name="length"/>
+         <int32 name="multiply">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="divide">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="octave">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <int32 name="D">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="M">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint64_t timer;
+uint64_t held;
+uint64_t hold;
+int ttrig;
+int rtrig;
+int strig;
+int utrig;
+int64_t phase;
+int32_t count;
+int64_t divide;
+int32_t multiply;
+int8_t octave;
+uint32_t tomer;
+uint32_t tamer;
+int32_t peak1;
+int32_t val;
+int32_t length;
+int32_t att2dec;
+int32_t temp;]]></code.declaration>
+      <code.krate><![CDATA[int32_t D=param_D+inlet_D;
+int32_t M=param_M+inlet_M;
+octave=param_octave+inlet_octave;
+multiply=param_multiply+inlet_multiply;
+divide=param_divide+inlet_divide;
+length=__USAT(param_length+inlet_length,27);
+att2dec=__USAT(param_att2dec+inlet_att2dec,27);
+if((inlet_reset>0)&&!utrig)
+{utrig=1;timer=0;}
+else if(!(inlet_reset>0)){utrig=0;}
+
+if((inlet_sync>0)&&!ttrig)
+{ttrig=1;
+held=tamer;
+tamer=0;}
+else if(!(inlet_sync>0)){ttrig=0;}
+tamer+=1;
+timer+=1;
+if(param_octave>=0)
+{temp=(held*D/M>>octave);
+timer=(timer-(timer/temp)*temp);
+hold=___SMMUL((held>>octave)<<3,length<<2);}
+else
+{temp=(held*D/M<<-octave);
+timer=(timer-(timer/temp)*temp);
+hold=___SMMUL((held<<-octave)<<3,param_length<<2);}
+tomer=(timer*multiply/divide)-((timer*multiply/divide)/hold)*hold;
+tomer=timer>=hold?hold:tomer;
+
+int32_t attack;
+int32_t decay;
+attack=___SMMUL(att2dec<<3,hold<<2);
+decay=hold-attack;
+peak1=tomer>attack?(1<<27)-((((tomer-attack)<<10)/decay)<<17):(((tomer<<10)/attack)<<17);
+peak1=___SMMUL(peak1<<3,peak1<<2);
+val=val+((peak1-val)>>2);
+outlet_peak1=val;]]></code.krate>
+   </obj.normal>
+</objdefs>

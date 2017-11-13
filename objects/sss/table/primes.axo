@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="primes" uuid="f77764d2-dc31-498c-b3aa-7177cc7cefa4">
+      <sDescription>table allocation module for first 1024 primes.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 10;
+static const uint32_t LENGTH = 1024;
+static const uint32_t LENGTHMASK = 1023;
+static const uint32_t BITS = 16;
+static const uint32_t GAIN = 12;
+int16_t *array;
+int i;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, "0:/1024primes.tab", FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/1024primes.tab"); return;}
+    int rem_sz = 1024;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(_array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(_array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,"0:/1024primes.tab"); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,"0:/1024primes.tab"); return;};]]></code.init>
+   </obj.normal>
+</objdefs>

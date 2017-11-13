@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rndStepper" uuid="7c690b2e-c2ce-4d79-8199-08ca843b6fb2">
+      <sDescription>pattern generator
+-creates a list of random stepsizes together with their negative counterpart (eg. 2 and -2)
+-then randomly re-orders this list so that if the whole sequence is played it will always go back to 0 at starting point.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>counter.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <bool32.rising name="r" description="reset"/>
+         <bool32 name="rnd" description="generates a new random step-list"/>
+         <bool32 name="sort" description="re-orders the step-list"/>
+      </inlets>
+      <outlets>
+         <int32 name="o" description="output"/>
+         <bool32.pulse name="c" description="carry pulse"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="rnd"/>
+         <int32 name="amtX2" description="amount of step-values (entire sequence length is twice this size, as the generator will also create their negative counterparts)">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="maxstep" description="maximum stepsize to be generated">
+            <MinValue i="1"/>
+            <MaxValue i="24"/>
+         </int32>
+         <int32 name="maximum" description="maximum output value">
+            <MinValue i="-64"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="minimum" description="minimum output value">
+            <MinValue i="-64"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.s.map name="chance" description="chance that a step-value gets updated at a randomise trigger"/>
+         <frac32.u.map name="change" description="changesize of the step, note that for small &quot;maxstep&quot; values, this change parameter should be high to get even a little change."/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+   int rtrig;
+   int count;
+int32_t A[64];
+int32_t B[64];
+bool DO=1;
+int i;
+bool rtrg;
+bool gtrg;
+int max;
+int val;]]></code.declaration>
+      <code.init><![CDATA[count=0;
+   ntrig = 0;
+   rtrig = 0;
+   val=0;]]></code.init>
+      <code.krate><![CDATA[outlet_c=0;
+bool rnd=param_rnd||DO||inlet_rnd||inlet_sort;
+
+if ((inlet_trig>0) && !ntrig) {
+   count += 1; if (count>=(param_amtX2<<1)) {count = 0; outlet_c = 1;val=-B[count];}
+   ntrig=1;
+   
+   val+=B[count];
+}
+else if (!(inlet_trig>0)) {ntrig=0;}
+if ((inlet_r>0) && !rtrig) {count=0; rtrig = 1;}
+else if (!(inlet_r>0)) {rtrig=0;}
+
+int32_t tmp;
+if((rnd>0)&&!rtrg){
+	rtrg=1;max=param_amtX2<<1;
+	if(!(inlet_sort)){
+for(i=0;i<param_amtX2;i++){
+	tmp=GenerateRandomNumber()>>4;
+	tmp=tmp-tmp/param_maxstep*param_maxstep;
+	tmp=tmp<0?tmp+param_maxstep:tmp;
+	if(((int32_t)GenerateRandomNumber()>>5)<param_chance){
+	A[i<<1]+=___SMMUL(tmp-A[i<<1]<<2,param_change<<3);
+	A[(i<<1)+1]+=___SMMUL(-tmp-A[i<<1]<<2,param_change<<3);}
+}}
+int j;
+for(i=0;i<(param_amtX2<<1);i++){
+	tmp=GenerateRandomNumber()>>4;
+	tmp=tmp-tmp/max*max;
+	tmp=tmp<0?tmp+max:tmp;
+	B[i]=A[tmp];
+	for(j=tmp;j<((param_amtX2<<1)-1);j++){
+		A[j]=A[j+1];
+	}
+	max-=1;
+}
+}
+else if(rnd==0){rtrg=0;}
+int width=param_maximum-param_minimum;
+int TMP=val-val/width*width;
+TMP=TMP<0?TMP+width:TMP;
+outlet_o= TMP+param_minimum;
+if(DO>0){DO=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,103 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="TransientDesigner" uuid="4306885e-54c0-4191-9b30-55e3347d3511">
+      <sDescription>audio transient designer, enhances/dehances(?) attack and/or decay stage of incoming audio</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input wave"/>
+         <frac32.positive name="attackA"/>
+         <frac32.positive name="decayB"/>
+         <frac32.bipolar name="gainA"/>
+         <frac32.bipolar name="gainB"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t out1;
+int32_t out2;
+int32_t out3;
+
+int32_t val1;
+int32_t val2;
+int32_t val3;]]></code.declaration>
+      <code.krate><![CDATA[int64_t decay1 = (1<<27)-(1<<23);
+decay1=___SMMUL(decay1<<3,decay1<<2);
+decay1=___SMMUL(decay1<<3,decay1<<2);
+int64_t drate1;
+drate1=(1<<27)-decay1;
+
+int64_t attack2 = (1<<27)-inlet_attackA;
+int64_t decay3 = (1<<27)-inlet_decayB;
+attack2=___SMMUL(attack2<<3,attack2<<2);
+attack2=___SMMUL(attack2<<3,attack2<<2);
+decay3=___SMMUL(decay3<<3,decay3<<2);
+decay3=___SMMUL(decay3<<3,decay3<<2);
+int64_t arate2;
+int64_t drate3;
+arate2=(1<<27)-attack2;
+drate3=(1<<27)-decay3;]]></code.krate>
+      <code.srate><![CDATA[int32_t in;
+in=inlet_in;
+
+int sabs;
+sabs=(in>=0)?in:-in;
+
+if (sabs>val1)      val1 = sabs;
+else val1 = ___SMMLA(val1-sabs,(-1<<26)+(drate1>>1),val1);
+   out1 = val1;
+
+ if (out1>val2)      val2 = ___SMMLA(val2-out1, (-1<<26)+(arate2>>1),val2);
+      else val2 = out1;
+   out2 = val2;
+
+ if (out1>val3)      val3 = out1;
+      else val3 = ___SMMLA(val3-out1,(-1<<26)+(drate3>>1),val3);
+   out3 = val3;
+
+int32_t r1;
+int32_t r2;
+
+Float_t f;
+f.f = (out1);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+out1 = r1 + r2;
+
+f.f = (out2);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+out2 = r1 + r2;
+
+f.f = (out3);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+out3 = r1 + r2;
+
+int32_t slogA= ___SMMUL((out1-out2)<<2,inlet_gainA<<3);
+int32_t slogB= ___SMMUL((out3-out1)<<2,inlet_gainB<<3);
+int32_t slogC=slogA+slogB;
+
+
+int8_t s = (slogC>>24)+12;
+uint8_t ei = slogC>>16;
+int32_t audioA;
+if (s>=0)
+     audioA = (expt[ei]<<s);
+else audioA = (expt[ei]>>(-s));
+
+s = (slogB>>24)+12;
+ei = slogB>>16;
+int32_t audioB;
+if (s>=0)
+     audioB = (expt[ei]<<s);
+else audioB = (expt[ei]>>(-s));
+
+outlet_out=___SMMUL(audioA<<3,inlet_in<<2);
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,65 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pulsine" uuid="94a050d4-d061-4e99-914a-b4b30f80725a">
+      <sDescription>modded waveform oscillator able to make saw, sine and pulse waveforms using the &quot;gain&quot; parameters
+-&quot;gain1&quot; controls the phase width going into the sine shaper, saturated.
+-&quot;extend&quot; enables the gain to go lower, enabling saw-&gt;sine-&gt;pulse morphing instead of only sine-&gt;pulse.
+-&quot;gain2&quot; controls the width of the sine going into a saturator.
+
+the pitch output outputs the combined pitch information (parameter+input+FM-signal), this can be used together with the &quot;mostfilter&quot; module to filter the waveform while keeping track of the modulated pitch in real time.
+-the result goes through a highpass filter to remove DC-offset</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="fmw"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32 name="gain1"/>
+         <frac32 name="gain2"/>
+         <frac32 name="hp"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+         <frac32buffer name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="fmw"/>
+         <frac32.s.map name="phase"/>
+         <frac32.u.map name="gain1"/>
+         <bool32.tgl name="extend"/>
+         <frac32.u.map name="gain2"/>
+         <frac32.u.map name="hp"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t sig;
+int32_t hp;
+int32_t HP;
+]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+hp=0;]]></code.init>
+      <code.krate><![CDATA[
+   int32_t gain1=param_gain1+inlet_gain1+(4<<21);
+   if(param_extend>0){gain1+=(4<<21);}
+   int32_t gain2=param_gain2+inlet_gain2+(4<<21);
+int32_t fmw=inlet_fmw+param_fmw;]]></code.krate>
+      <code.srate><![CDATA[
+int32_t mod=___SMMUL(inlet_freq<<3,fmw<<3);   
+   int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch+ mod,freq);
+int32_t HP;
+   MTOF((param_hp<<1)+param_pitch+ inlet_pitch+inlet_hp+ mod-(1<<26),HP);
+
+Phase += freq ;
+int32_t r;
+int32_t p2 = Phase + (inlet_phase<<4);
+SINE2TINTERP((__SSAT(___SMMUL(gain1<<4,p2),28)<<4)+(param_phase<<1),r)
+sig=__SSAT(___SMMUL(gain2<<4,r),27);
+hp = ___SMMLA((sig-hp)<<1,HP,hp);
+outlet_wave=sig-hp;
+outlet_pitch=param_pitch+inlet_pitch+mod;]]></code.srate>
+   </obj.normal>
+</objdefs>

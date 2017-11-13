@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="notchDuck" uuid="e9035d5e-f100-42de-b2c0-03c706ffa192">
+      <sDescription>2-pole resonant band-pass filter (biquad)</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32buffer name="add"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+         <frac32 name="duck"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+int32_t prev;
+int32_t step;
+int32_t out[BUFSIZE];
+int i;]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+      MTOF(param_pitch + inlet_pitch,freq);
+      biquad_bp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,out);
+   step = (inlet_duck - prev)>>4;
+   int32_t j = prev;
+   prev = inlet_duck;
+
+   for(i=0;i<BUFSIZE;i++){
+j += step;
+outlet_out[i] = inlet_add[i]+inlet_in[i]-___SMMUL(out[i]<<2,j<<3);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="spectralOscillator" uuid="86d1f544-9acf-4f37-b7a1-9973f6d737d0">
+      <sDescription>Spectral Oscillator with up to 32 harmonics.
+Depending on the jump, offset and range parameters, the oscillator creates different waveforms.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32buffer name="freq"/>
+         <int32 name="start"/>
+         <int32 name="jump"/>
+         <int32 name="offset"/>
+         <int32 name="after"/>
+         <int32 name="expo"/>
+         <frac32.positive name="damp"/>
+         <bool32 name="active"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="FM"/>
+         <int32 name="harmonics">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="start">
+            <MinValue i="-1024"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <int32 name="jump">
+            <MinValue i="-1024"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <int32 name="offset">
+            <MinValue i="-1024"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <int32 name="after">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="expo">
+            <MinValue i="-1024"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <int32 name="range">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.u.map name="damp"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[    int32_t  _Phase[32];
+    int32_t  _sine[32];
+    int32_t  _harm[32];
+    int32_t  _Ranged[32];
+int32_t phase;
+
+int32_t range;
+int64_t sum;
+int32_t Ranged;
+int32_t FM;
+int32_t jump;
+int32_t offset;
+int32_t after;
+int32_t start;
+int32_t expo;
+uint32_t damp;
+int32_t freq;]]></code.declaration>
+      <code.krate><![CDATA[
+if(inlet_active>0){
+MTOF(param_pitch+inlet_pitch,freq)
+
+range=param_range;
+
+jump=inlet_jump+param_jump;
+offset=param_offset+inlet_offset;
+after=param_after+inlet_after;
+start=inlet_start+param_start;
+expo=inlet_expo+param_expo;
+}]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active>0){
+FM=___SMMUL(inlet_freq<<3,param_FM<<3);
+phase+=freq+___SMMUL(freq<<8,FM<<4);
+damp=inlet_damp+param_damp;
+sum=0;
+    for(int i=0;i<=param_harmonics;i++) {
+    	_sine[i]=0;
+    	SINE2TINTERP(phase+phase*(((i+start)*jump+((i+start)>>after)*offset+i*i*expo) & ((1<<range)-1))+(((i+start)*jump+(((i+start)>>after)*offset+i*i*expo)&1)<<30),_sine[i])
+sum+=(_sine[i<param_harmonics?i:param_harmonics]>>5)/(1+___SMMUL(i<<8,damp));
+}
+
+outlet_out=sum>>2;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

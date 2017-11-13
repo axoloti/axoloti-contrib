@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="1RngCount" uuid="e7edeee6-ecd1-48c3-b210-b871cf5a9930">
+      <sDescription>single core range counter (divremc with internal level manipulation)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <int32 name="Count" description="nominator"/>
+         <int32 name="PreRng" description="denominator"/>
+         <frac32 name="PreMul"/>
+         <frac32 name="PreJmp"/>
+         <frac32 name="PreChg"/>
+         <int32 name="AftRng"/>
+      </inlets>
+      <outlets>
+         <int32 name="PreRng"/>
+         <int32 name="AftRng"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t ptrig;
+int32_t pval;]]></code.declaration>
+      <code.init><![CDATA[ptrig = 0;
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[int r;
+int s;
+int t;
+int u;
+int a;
+int b;
+int c;
+int d;
+int e;
+int f;
+int g;
+int h;
+int i;
+int j;
+int k;
+int l;
+int m;
+int n;
+
+if (inlet_Count >=0)
+  r = ((unsigned int)inlet_Count)/inlet_PreRng;
+else  r = -(((unsigned int)(inlet_PreRng-inlet_Count))/inlet_PreRng);
+
+a = inlet_Count-(r*inlet_PreRng);
+c = inlet_AftRng<<2;
+b = a*___SMMUL((inlet_PreMul)<<3,c)+r*___SMMUL(inlet_PreJmp<<3,c)+r*a*___SMMUL(inlet_PreChg<<3,c);
+
+if (b >=0)
+  s = ((unsigned int)b)/inlet_AftRng;
+else  s = -(((unsigned int)(inlet_AftRng-b))/inlet_AftRng);
+
+d = b-(s*inlet_AftRng);
+
+outlet_PreRng = a;
+outlet_AftRng = d;
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

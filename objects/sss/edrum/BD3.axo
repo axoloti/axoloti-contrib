@@ -1,0 +1,233 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="BD3" uuid="72b4c54e-5071-450a-9e3a-9986f9f76934">
+      <sDescription>drum synthesizer with an extra wavetable shaper to add higher harmonics to the sine-base.
+Uses wavetables made with the wavetable creator &quot;Creator&quot; (1024 waves of 1024 samples long each)
+Seperate envelopes for pitch, volume and noise levels.
+Volume envelope can be fed to the end-LP filter (E2C knob)
+Noise part has it&apos;s own SVF filter with cutoff, resonance and selectable mode(LP,HP,BP,NOTCH)
+Best to trigger this with a trigger instead of a gate.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig"/>
+         <frac32 name="pitch"/>
+         <frac32 name="mix"/>
+         <int32 name="Xrate"/>
+         <int32 name="timing"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+         <frac32 name="env"/>
+         <int32 name="div"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="control"/>
+         <bool32.tgl name="next"/>
+         <int32 name="hold">
+            <MinValue i="1"/>
+            <MaxValue i="500"/>
+         </int32>
+         <frac32.u.map.kdecaytime name="Vdec"/>
+         <frac32.u.map.kdecaytime name="Pdec"/>
+         <frac32.u.map.kdecaytime name="Watt"/>
+         <frac32.u.map name="rate"/>
+         <frac32.u.map name="phase"/>
+         <frac32.u.map name="MW"/>
+         <frac32.u.map name="pitch"/>
+         <frac32.u.map name="Pamt"/>
+         <frac32.u.map name="FM"/>
+         <frac32.u.map name="env2wave"/>
+         <frac32.u.map name="mix"/>
+         <frac32.u.map name="hrm"/>
+         <frac32.u.map name="wave"/>
+         <frac32.u.map name="quant"/>
+         <frac32.u.map name="step"/>
+         <frac32.u.map name="sineLvl"/>
+         <frac32.u.map name="waveLvl"/>
+         <frac32.u.map name="start"/>
+         <frac32.u.map name="gain"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+uint32_t Phase;
+int32_t sine;
+int32_t read;
+uint32_t Penv;
+uint32_t Venv;
+uint32_t Wenv;
+int gtrig;
+int Gtrig;
+int32_t noise;
+int32_t val;
+int32_t table1;
+int32_t table2;
+int32_t preset;
+int32_t count;
+int32_t mix;
+int32_t tablemix(int32_t WaveA,int32_t WaveB,int32_t Mix){
+	mix=___SMMUL(((1<<27)-Mix)<<3,WaveA<<2)+___SMMUL(Mix<<3,WaveB<<2);
+}
+int i;
+int32_t MIX1;
+int32_t W[2];
+int32_t array[19];
+int prev;
+int trig;
+int select;
+int pv;
+int last;
+int DO;
+int cnt;
+int next;
+uint32_t PLFO;]]></code.declaration>
+      <code.krate><![CDATA[array[0]=param_Vdec;
+array[1]=param_Pdec;
+array[2]=param_Watt;
+array[3]=param_rate;////////
+array[4]=param_phase;
+array[5]=param_MW; ///////////
+array[6]=param_pitch;
+array[7]=param_Pamt;
+array[8]=param_FM;
+array[9]=param_env2wave;
+array[10]=param_mix;
+array[11]=param_hrm;
+array[12]=param_wave;
+array[13]=param_quant;
+array[14]=param_step;
+array[15]=param_sineLvl;
+array[16]=param_waveLvl;
+array[17]=param_start;
+array[18]=param_gain;
+
+
+
+if(!(DO==(next>>3))){
+	cnt=0;
+	last=select;
+	select=next>>3;
+	
+	MidiSend3((midi_device_t) MIDI_DEVICE_USB_HOST, 1, MIDI_NOTE_ON + 1,select<<1,64);
+	MidiSend3((midi_device_t) MIDI_DEVICE_USB_HOST, 1, MIDI_NOTE_OFF + 1,last<<1,64);
+}
+
+if(!(param_control==pv)){
+MidiSend3((midi_device_t) MIDI_DEVICE_USB_HOST, 1, MIDI_CONTROL_CHANGE ,3,__USAT((param_control>>20),8));}
+
+if(!(select==prev)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_control],__USAT(array[select],28),0xFFFD);
+}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_Vdec+select],__USAT(param_control,28),0xFFFD);
+
+PLFO+=inlet_timing*((param_rate>>22)+1)*inlet_Xrate;
+int32_t LFO;
+SINE2TINTERP(PLFO+(param_phase<<5)+(1<<30),LFO)
+LFO=___SMMUL(LFO,param_MW-(1<<26)<<2);
+
+int32_t MiX1=inlet_mix+param_mix+___SMMUL(param_env2wave<<3,Venv+LFO);
+MiX1=MiX1&((1<<27)-1);
+int32_t quant=(param_quant>>21)+1;
+float32_t step=((float32_t)(attr_table.Waveforms))/(quant)*(param_step>>21);
+outlet_div=quant;
+
+W[0]=((MiX1>>4)*quant)>>23;
+MiX1=(MiX1-(W[0]<<27)/quant)*quant;
+W[1]=W[0]*step+step+(param_wave>>20);
+W[0]=W[0]*step+(param_wave>>18);
+
+for(i=0;i<2;i++){
+W[i]=(W[i]-(W[i]/attr_table.Waveforms)*attr_table.Waveforms);
+W[i]=W[i]<0?W[i]+attr_table.Waveforms:W[i];
+W[i]=W[i]*attr_table.LENGTH;
+}
+
+int32_t F1;
+MTOF(-param_Pdec,F1)
+int32_t F2;
+MTOF(-(param_Vdec),F2)
+F2=F2>>2;
+int32_t F4;
+MTOF(-param_Watt,F4)
+if(count>=param_hold){
+Penv=___SMMLA(-Penv,F1<<1,Penv);
+Venv=___SMMLA(-Venv,F2<<1,Venv);
+Wenv=___SMMLA(-Wenv,F4<<1,Wenv);}
+if((inlet_trig>0)&&!gtrig){
+	gtrig=1;
+	Penv=(1<<27);
+	Venv=(1<<27);
+	Wenv=(1<<27);
+	count=0;
+}
+else if(inlet_trig==0){gtrig=0;}
+int hold=param_hold;
+count+=1;
+count=count>hold?hold:count;
+
+int32_t PENV=Penv;
+PENV=___SMMUL(PENV<<3,PENV<<2);
+
+int32_t VENV=Venv;
+VENV=___SMMUL(VENV<<3,VENV<<2);
+VENV+=___SMMUL(__USAT(param_gain,28)<<2,VENV<<3);
+
+int32_t WENV=(1<<27)-Wenv;
+WENV=___SMMUL(WENV<<3,WENV<<2);
+WENV=___SMMUL(WENV<<3,WENV<<2);
+//WENV=___SMMUL(WENV<<3,WENV<<2);
+WENV=___SMMUL(WENV<<3,__USAT(param_waveLvl,28)<<2);
+
+
+
+
+int32_t freq;
+int32_t pitch=param_pitch+inlet_pitch+___SMMUL(__SSAT((param_Pamt)-param_pitch-inlet_pitch,29)<<3,PENV<<2)-(1<<26);
+MTOFEXTENDED(pitch,freq)
+freq=freq;
+
+int32_t sineLvl=__USAT(param_sineLvl,27);
+int32_t cut;
+MTOF(pitch+___SMMUL((1<<30),VENV)+(1<<27),cut)
+outlet_env=Penv;
+int32_t FM=___SMMUL(freq<<1,-param_FM<<4);
+
+
+prev=select;
+pv=param_control;
+DO=next>>3;]]></code.krate>
+      <code.srate><![CDATA[if((inlet_trig>0)&&!Gtrig){
+	PLFO=0;
+	Gtrig=1;
+	phase=0;
+	Phase=0;
+}
+else if(inlet_trig==0){Gtrig=0;}
+Phase+=(freq+___SMMUL(FM<<1,val<<3))*((param_hrm>>22)+1)>>4;
+phase+=freq+___SMMUL(FM<<1,val<<3);
+table1=___SMMUL(attr_table.array[((((Phase+(param_start<<5))>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+W[0])]<<3,WENV<<3);
+table2=___SMMUL(attr_table.array[((((Phase+(param_start<<5))>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+W[1])]<<3,WENV<<3);
+tablemix(table1,table2,MiX1);
+SINE2TINTERP(phase,sine)
+int32_t wave;
+wave= __SSAT(___SMMUL(__SSAT(___SMMUL(sine>>3,sineLvl)+(__SSAT(___SMMUL(mix<<1,LFO),28)),28)<<2,VENV<<3)<<5,28);
+val=___SMMLA((wave-val)<<1,cut,val);
+outlet_out=val>>1;]]></code.srate>
+      <code.midihandler><![CDATA[if ((status == 0 + MIDI_CONTROL_CHANGE)&&(data1==10)) {
+	
+     
+	if(data2==1){
+		next+=1;
+		
+		}
+	if(data2==127){
+		next-=1;
+		}
+	next=next-next/152*152;
+	next=next<0?next+152:next;
+		
+	}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

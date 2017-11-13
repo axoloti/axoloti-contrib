@@ -1,0 +1,46 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="mostFilter" uuid="6f994b57-f21a-433b-bbc6-52e6b27a07d9">
+      <sDescription>Custom designed 2-stage filter with crossfade between LP, BP and HP using the &quot;mode&quot; control.
+2nd input is an inversed input with inversed filter effects: HP, NOTCH and LP respectively.
+The &quot;mod&quot; control is an extra filter control, softening the sound, though distorting at higher mod and resonance settings with higher frequencies. It came as a possible extra control within the design..</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32buffer name="iv"/>
+         <frac32 name="pitch"/>
+         <frac32buffer name="freq"/>
+         <frac32 name="resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freq"/>
+         <frac32.u.map name="resonance"/>
+         <frac32.u.map name="mode"/>
+         <frac32.u.map name="mod"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t rate;
+int32_t diff;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+rate=0;]]></code.init>
+      <code.krate><![CDATA[
+int32_t resonance=(1<<27)-__USAT(param_resonance+inlet_resonance,28);
+resonance=___SMMUL(resonance<<2,resonance<<2);]]></code.krate>
+      <code.srate><![CDATA[   int32_t in;
+   in=(inlet_in-inlet_iv);
+   diff=in-val;
+   int32_t f;
+   MTOF(param_freq+inlet_pitch+inlet_freq-___SMMUL(((diff>0?diff:-diff))<<3,param_mod<<1),f);
+   rate = ___SMMLA((diff)<<1,f,rate);
+   rate=rate-___SMMUL(rate<<3,((1<<21)+resonance)<<2);
+   val += rate;
+   outlet_out= val-___SMMUL(in<<3,param_mode<<2)+(inlet_iv);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

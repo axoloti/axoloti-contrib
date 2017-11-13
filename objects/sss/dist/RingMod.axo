@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="RingMod" uuid="703c4d73-cdf2-4ca9-8f1a-f7d944ff99cb">
+      <sDescription>multi-mode Ring Modulator
+mode 1 just ringmodulates input A with input B in the normal bipolar sence.
+mode 2 first multiplies input A with itself before multiplying it with input B
+mode 3 first multiplies input B with itself before multiplying it with input A
+mode 4 first multiplies input A and B width themselves before multiplying them with each other.
+
+input can be saturated befor the ringmodulation process.
+
+Alvl is the dry-level of input A to the output
+Blvl is the dry-level of input B to the output
+Ringlvl is the wet-level of the ringmodulated signal</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="input"/>
+         <frac32buffer name="b" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="mode">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.u.map.gain16 name="gain"/>
+         <frac32.s.map name="Alvl"/>
+         <frac32.s.map name="Blvl"/>
+         <frac32.s.map name="Ringlvl"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t hp;]]></code.declaration>
+      <code.srate><![CDATA[int32_t A=__SSAT(___SMMUL(param_gain>>2,__SSAT(inlet_a,27)<<4)<<1,27);
+int32_t B=__SSAT(___SMMUL(param_gain>>2,__SSAT(inlet_b,27)<<4)<<1,27);
+
+
+int32_t result;
+if(param_mode==0){result= ___SMMUL(A<<3,B<<2);}
+if(param_mode==1){
+	result=___SMMUL(A<<3,A<<2);
+	result=___SMMUL(result<<3,B<<2);
+}
+if(param_mode==2){
+	result=___SMMUL(A<<3,A<<2);
+	result=___SMMUL(result<<3,B<<2);
+}
+if(param_mode==3){
+	int32_t risult=___SMMUL(A<<3,A<<2);
+	result=___SMMUL(B<<3,B<<2);
+	result=___SMMUL(result<<3,risult<<2);
+}
+result=___SMMUL(result<<4,param_Ringlvl<<4)+___SMMUL(inlet_a<<3,param_Alvl<<2)+___SMMUL(inlet_b<<3,param_Blvl<<2);
+hp=hp+((result-hp)>>13);
+outlet_result=result-hp;]]></code.srate>
+   </obj.normal>
+</objdefs>

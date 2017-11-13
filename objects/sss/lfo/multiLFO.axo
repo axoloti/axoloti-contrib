@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="multiLFO" uuid="57c4490e-dad4-4778-8460-32796424a131">
+      <sDescription>LFO with 6 different waveform outputs. Each waveform can run at it&apos;s own harmonic rate (x1, x2, x3 etc) based on the root frequency.
+When &quot;frqIn&quot; is high, it reads the pitch-input as frequency (eg. for host-tempo-sync with BPMext module) and the pitch-knob is not used (octave and harmonics are still used!).</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch (freq when &quot;frqIn&quot; is high)"/>
+         <frac32 name="freq" description="fm input"/>
+         <frac32 name="phase"/>
+         <bool32.rising name="reset" description="reset phase"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="sine" description="sine wave"/>
+         <frac32 name="tri"/>
+         <frac32 name="saw"/>
+         <frac32 name="rmp"/>
+         <frac32 name="sqr"/>
+         <frac32 name="pls"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch" description="pitch control if &quot;frqIn&quot; is low, otherwise not used" noLabel="true"/>
+         <bool32.tgl name="frqIn" description="when high, uses &quot;pitch&quot; input as a frequency instead of semitone input (eg. connect BPMext&apos;s &quot;baserate&quot; output to &quot;pitch&quot; input)"/>
+         <int32 name="octave" description="sets octave respective to root frequency">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+         <int32 name="hrmSin" description="harmonic number for sine">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="hrmTri" description="harmonic number for triangle">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="hrmSaw" description="harmonic number for saw">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="hrmRmp" description="harmonic number for ramp">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="hrmSqr" description="harmonic number for square">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="hrmPls">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.s.map name="PW"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t Phase;uint32_t r;
+int32_t v30=1<<30;
+uint32_t v31=1<<31;
+int32_t v27=1<<27;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;r = 1;]]></code.init>
+      <code.krate><![CDATA[if (inlet_reset && r) {
+         Phase = inlet_phase << 4;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+     }    
+          
+      int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      if(param_frqIn>0){
+      freq=inlet_pitch;
+      }
+      freq=param_octave>0?freq<<param_octave:freq>>-param_octave;
+      freq=freq>>2;
+      freq+=___SMMUL(freq,inlet_freq<<4)<<2;
+      Phase += freq;
+      int32_t sine;
+      SINE2TINTERP(Phase*param_hrmSin,sine)
+      outlet_sine= (sine>>4);
+      int32_t tri=Phase*param_hrmTri;
+      outlet_tri=(tri>0?tri:-tri)-v30>>3;
+      int32_t saw=(Phase-v30);
+      saw=saw*param_hrmSaw;
+      outlet_saw=saw>>4;
+      int32_t rmp=(-Phase+v30);
+      rmp=rmp*param_hrmRmp;
+      outlet_rmp=rmp>>4;
+      int32_t sqr=-Phase-v30;
+      sqr=sqr*param_hrmSqr;
+      outlet_sqr=sqr>0?-v27:v27;
+      uint32_t Sqr=Phase+v30;
+      Sqr=Sqr*param_hrmPls;
+      Sqr=Sqr>>4;
+      outlet_pls=Sqr<param_PW+v27?-v27:v27;]]></code.krate>
+   </obj.normal>
+</objdefs>

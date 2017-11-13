@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="multiform" uuid="c1281771-92c6-4ec2-b3ca-9238129d7db6">
+      <sDescription>saw wave LFO, rising slope, frequency input</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="Hz" description="frequency"/>
+         <bool32.rising name="reset" description="reset phase"/>
+         <int32 name="waveform"/>
+         <bool32 name="Bipolar"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="wave" description="saw wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t r;
+uint32_t h;
+]]></code.declaration>
+      <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[   {
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += ((inlet_Hz)/44*30);
+      }
+int32_t r;
+int32_t wave;
+      switch(inlet_waveform>0?inlet_waveform:0){
+      case 0: SINE2TINTERP(Phase,r) wave= (r>>5)+(1<<26);break;
+      case 1: wave= (((Phase>>4)-(1<<27))>(1<<27)?((Phase>>4)-(1<<27)):-((Phase>>4)-(1<<27)))+(1<<27);break;
+      case 2: wave= (Phase>>5);break;
+      case 3: wave= (1<<27)-(Phase>>5);break;
+      default: wave= (((Phase>>4)-(1<<27))>(1<<27)?(1<<27):0);break;
+}
+      switch(inlet_Bipolar>0?inlet_Bipolar:0){
+      case 0: outlet_wave= wave;break;
+      default: outlet_wave= (wave<<1)-(1<<27);break;
+}
+}
+   
+
+   ;]]></code.krate>
+   </obj.normal>
+</objdefs>

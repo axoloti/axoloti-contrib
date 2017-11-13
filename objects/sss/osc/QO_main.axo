@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="QO_main" uuid="85bca950-47d6-4ce0-a5f6-6724fd09589b">
+      <sDescription>This is the main pitch/volume/pulse-width modulation-width control module for the QO_core quad oscillator.
+Enter the name of this module into the &quot;main&quot; object reference on the QO_control and QO_core modules.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32 name="volume"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map name="fine"/>
+         <int32 name="octave">
+            <MinValue i="-5"/>
+            <MaxValue i="5"/>
+         </int32>
+         <int32 name="semi">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <frac32.s.map name="FM"/>
+         <frac32.u.map name="PWM"/>
+         <frac32.u.mapvsl name="volume">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _volume;
+int32_t _mainpitch;
+int32_t _fm;
+int32_t PWM;]]></code.declaration>
+      <code.krate><![CDATA[_mainpitch=((param_semi+param_octave*12)<<21)+(param_fine>>8)+inlet_pitch;
+_volume=___SMMUL(param_volume<<3,inlet_volume<<2);
+_fm=param_FM;
+PWM=param_PWM;]]></code.krate>
+   </obj.normal>
+</objdefs>

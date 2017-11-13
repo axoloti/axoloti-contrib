@@ -1,0 +1,143 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="shapingLFO" uuid="309f593b-55c1-40d0-b9cd-d5f5bb8a2221">
+      <sDescription>LFO with multiple shaping tools</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="Hz" description="frequency"/>
+         <frac32 name="Phase" description="phase offset input (parallel to beziercurve!)"/>
+         <frac32 name="reset" description="resets when reset input goes above 0."/>
+         <int32 name="waveform" description="0=sine,1=triangle,2=saw,3=ramp,4=pulse"/>
+         <bool32 name="Bipolar" description="Sets output waveform from unipolar to bipolar"/>
+         <frac32.bipolar name="Bezier1" description="Bezier phase distortion A"/>
+         <frac32.bipolar name="Bezier2" description="Bezier phase distortion B"/>
+         <int32 name="curve" description="0=normal, 1=exp,2=inv exp,3=S-peak,4=S-sqr"/>
+         <frac32.bipolar name="sinedPhase"/>
+      </inlets>
+      <outlets>
+         <frac32 name="wave"/>
+         <frac32 name="sined"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t r;
+uint32_t h;
+   int32_t x1;
+   int32_t y1;
+
+int32_t crv1;
+int32_t crv2;
+int32_t wavs;
+int32_t wavr;]]></code.declaration>
+      <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[   
+      if ((inlet_reset>0) && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!(inlet_reset>0)) r = 1;
+         Phase += ((inlet_Hz)/44*30);
+      }
+
+int32_t Bezier;
+   x1=Phase>>5;
+   y1=((1<<27)-(x1));
+   int p0 = (int64_t)inlet_Bezier1;
+   int p1 = (int64_t)inlet_Bezier2;
+   int p2 = (int64_t)-inlet_Bezier1;
+   int p3 = (int64_t)inlet_Bezier1-inlet_Bezier2;
+   int p4 = (int64_t)inlet_Bezier1;
+
+int x2 = ___SMMUL(x1<<3,x1<<2);
+int x3 = ___SMMUL(x2<<3,x1<<2);
+int x4 = ___SMMUL(x3<<3,x1<<2);
+int y2 = ___SMMUL(y1<<3,y1<<2);
+int y3 = ___SMMUL(y2<<3,y1<<2);
+int y4 = ___SMMUL(y3<<3,y1<<2);
+
+int a = ___SMMUL(y4<<3,p0<<2);
+int b = ___SMMUL(x1<<3,___SMMUL(y3<<3,p1<<2)<<2)*4;
+int c = ___SMMUL(x2<<3,___SMMUL(y2<<3,p2<<2)<<2)*6;
+int d = ___SMMUL(x3<<3,___SMMUL(y1<<3,p3<<2)<<2)*4;
+int e =___SMMUL(x4<<3,p4<<2); 
+      Bezier= ((((-(a+b+c+d+e))<<4)+Phase-(inlet_Phase<<4))>>4) ;
+   
+     
+int32_t r;
+int32_t wave;
+      switch(inlet_waveform>0?inlet_waveform:0){
+      case 0: SINE2TINTERP(Bezier<<4,r) wave= (r>>5)+(1<<26);break;
+      case 1: wave= (((Bezier)-(1<<27))>(0)?((Bezier)-(1<<27)):-((Bezier)-(1<<27)));break;
+      case 2: wave= (Bezier>>1);break;
+      case 3: wave= (1<<27)-(Bezier>>1);break;
+      case 4: wave= (((Bezier>>1)-(1<<26))>(0))?(1<<27):0;break;
+}
+
+switch(inlet_curve>0?inlet_curve:0)
+{
+	case 0:
+		wavs=wave;
+		;break;
+
+	case 1:
+		wavs=___SMMUL(wave<<3,wave<<2);
+	break;
+	
+	case 2:
+		crv1=(1<<27)-wave;
+		crv2=___SMMUL(crv1<<3,crv1<<2);
+		wavs=(1<<27)-crv2;
+	break;	
+	
+	case 3:
+		crv1=((wave<<1)-(1<<27));
+		crv2=___SMMUL(crv1<<3,crv1<<2); 
+		wavs=((___SMMUL(crv1<<3,crv2<<2))>>1)+(1<<26);
+	;break;
+		
+	case 4:
+		if((wave)>=(1<<26))
+		{
+			wavr=(1<<26)-(((wave)-(1<<26))*9/10);
+		}
+		else
+		{
+			wavr=(-1<<26)-(((wave)-(1<<26))*9/10);
+		}
+			crv2=___SMMUL((wavr)<<4,wavr<<3); 
+			crv1=___SMMUL((wavr)<<4,crv2<<2);
+		if((crv1)>=0)
+		{
+			wavs=(((1<<26)-(crv1>>1)))+(1<<26);
+		}
+		else
+		{
+			wavs=(((-1<<26)-(crv1>>1)))+(1<<26);
+		}	
+	break;
+	
+	default:
+		wavs=wave;
+	;break;
+}
+
+      switch(inlet_Bipolar>0?inlet_Bipolar:0){
+      case 0: outlet_wave= wavs;break;
+      default: outlet_wave= (wavs<<1)-(1<<27);break;
+}
+int32_t sine;
+int32_t sina;
+SINE2TINTERP((wavs+inlet_sinedPhase)<<5,sine)
+sina=((sine)>>5)+(1<<26);
+switch(inlet_Bipolar>0?inlet_Bipolar:0){
+      case 0: outlet_sined= sina;break;
+      default: outlet_sined= (sina<<1)-(1<<27);break;
+}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

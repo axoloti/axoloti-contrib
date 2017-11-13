@@ -1,0 +1,127 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="planetLFO" uuid="ca7e1475-6f98-4434-87e7-7d511ba2926f">
+      <sDescription>LFO that mimics the interaction of 2 &quot;loose&quot; planets and a &quot;fixed/controlled&quot; planet.
+centerx and centery parameters/inputs control the x/y position of the &quot;fixed/controlled&quot; planet.
+centermw controls the modulation width of the external xy modulation of the center.
+x1,y1 and rate1 are the starting positions of the 1st &quot;loose&quot; planet.
+x2,y2 and rate2 are the starting positions of the 2nd &quot;loose&quot; planet.
+mass controls the &quot;strength&quot; of the planet in comparison to the &quot;loose&quot; planets
+for the &quot;loose planets:
+the heavier the planet, the slower it will respond to a smaller planet.
+the smaller the planet, the faster it will respond to a heavier planet.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="centerx"/>
+         <frac32 name="centery"/>
+      </inlets>
+      <outlets>
+         <frac32 name="x1"/>
+         <frac32 name="y1"/>
+         <frac32 name="x2"/>
+         <frac32 name="y2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="reset"/>
+         <frac32.s.map name="x1"/>
+         <frac32.s.map name="y1"/>
+         <frac32.s.map name="x1rate"/>
+         <frac32.s.map name="y1rate"/>
+         <frac32.s.map name="x2"/>
+         <frac32.s.map name="y2"/>
+         <frac32.s.map name="x2rate"/>
+         <frac32.s.map name="y2rate"/>
+         <frac32.s.map name="centerx"/>
+         <frac32.s.map name="centery"/>
+         <frac32.s.map name="centermw"/>
+         <frac32.u.map name="mass1"/>
+         <frac32.u.map name="mass2"/>
+         <frac32.u.map name="centermass"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t position1x;
+int32_t position1y;
+int32_t position2x;
+int32_t position2y;
+float32_t rate1x;
+float32_t rate1y;
+float32_t rate2x;
+float32_t rate2y;
+int reset;
+int rtrig;]]></code.declaration>
+      <code.init><![CDATA[reset=1;
+rate1x=0;
+rate1y=0;
+rate2x=0;
+rate2y=0;]]></code.init>
+      <code.krate><![CDATA[int32_t centerx=___SMMUL(param_centermw<<3,inlet_centerx<<2)+param_centerx;
+int32_t centery=___SMMUL(param_centermw<<3,inlet_centery<<2)+param_centery;
+
+float32_t ratio=((float32_t)(param_mass1+1))/((float32_t)(param_mass2+1));
+float32_t iratio=((float32_t)(1))/ratio;
+
+float32_t cratio1=((float32_t)(param_centermass+1))/((float32_t)(param_mass1+1));
+float32_t icratio1=((float32_t)(1))/cratio1;
+float32_t cratio2=((float32_t)(param_centermass+1))/((float32_t)(param_mass2+1));
+float32_t icratio2=((float32_t)(1))/cratio2;
+
+
+if(reset>0){
+position1x=param_x1;
+position1y=param_y1;
+position2x=param_x2;
+position2y=param_y2;
+rate1x=param_x1rate>>13;
+rate1y=param_y1rate>>13;
+rate2x=param_x2rate>>13;
+rate2y=param_y2rate>>13;
+}
+reset=0;
+int32_t diffx=position1x-position2x;
+int32_t diffy=position1y-position2y;
+int32_t distance=___SMMUL(diffx<<3,diffx<<2)+___SMMUL(diffy<<3,diffy<<2);
+float32_t idist=distance;
+idist=idist==0?1:idist;
+idist = _VSQRTF(idist)*(1<<7);
+
+
+int32_t xdist1=position1x-centerx;
+int32_t ydist1=position1y-centery;
+xdist1=___SMMUL(xdist1<<3,xdist1<<2)+___SMMUL(ydist1<<3,ydist1<<2);
+float32_t ixdist1=xdist1;
+ixdist1=ixdist1==0?1:ixdist1;
+ixdist1=_VSQRTF(ixdist1)*(1<<7);
+
+int32_t xdist2=position2x-centerx;
+int32_t ydist2=position2y-centery;
+xdist2=___SMMUL(xdist2<<3,xdist2<<2)+___SMMUL(ydist2<<3,ydist2<<2);
+float32_t ixdist2=xdist2;
+ixdist2=ixdist2==0?1:ixdist2;
+ixdist2=_VSQRTF(ixdist2)*(1<<7);
+
+rate1x-=((float32_t)(diffx))/(((float32_t)(idist))*iratio)+((float32_t)(+(position1x-centerx)))/(((float32_t)(ixdist1))*icratio1);
+rate1y-=((float32_t)(diffy))/(((float32_t)(idist))*iratio)+((float32_t)(+(position1y-centery)))/(((float32_t)(ixdist1))*icratio1);
+rate2x+=((float32_t)(diffx))/(((float32_t)(idist))*ratio)+((float32_t)(-(position2x-centerx)))/(((float32_t)(ixdist2))*icratio2);
+rate2y+=((float32_t)(diffy))/(((float32_t)(idist))*ratio)+((float32_t)(-(position2y-centery)))/(((float32_t)(ixdist2))*icratio2);
+outlet_x1=position1x+=rate1x;
+outlet_y1=position1y+=rate1y;
+outlet_x2=position2x+=rate2x;
+outlet_y2=position2y+=rate2y;
+if((param_reset>0)&&(!(rtrig==1)))
+{rtrig=1;reset=1;}
+else 
+{reset=0;
+if(!(param_reset>0)){rtrig=0;}}
+
+position1x=__SSAT(position1x,28);
+position1y=__SSAT(position1y,28);
+position2x=__SSAT(position2x,28);
+position2y=__SSAT(position2y,28);
+//position1x=(position1x<<3)>>3;
+//position1y=(position1y<<3)>>3;
+//position2x=(position2x<<3)>>3;
+//position2y=(position2y<<3)>>3;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

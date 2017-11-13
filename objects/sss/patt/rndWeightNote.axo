@@ -1,0 +1,304 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="rndWeightNote" uuid="b749a200-6f22-40f8-a0a8-aa506b0766b1">
+      <sDescription>Weighted random note generator
+2 modes:
+-random: randomly chosen with each trigger at the trigger input.
+-repeating: the incoming count selects notes from a randomised table.
+
+-for each note in the octave you can set the weighted chance that this note-value will show up at the random outputs.
+-if a chance-control is zero, the note will not be selected by the randomiser.
+-if only one chance-control is above zero, only this note will be played.
+-if more then 1 note is above zero, the ratio between the controls will be the weight of the chance of these notes being played.
+-8 of these chance-tables can be made (eg. one for each chordmode plus one extra)
+
+inputs:
+-trig: updates the &quot;random&quot; output to a new random value depending on the random-weight of each note.
+-rnd: randomises the internal tables (set length with &quot;maxlength&quot; attribute and the amount of tables with the &quot;maxpatterns&quot; attribute). 
+-count: connect a counter or pattern generator to step through the randomised table. Count will be wrapped when above &quot;length&quot;.
+-length: set the maximum value till where the incoming count/pattern-output will come. Maximum is &quot;maxlength&quot; attribute.
+-maxOct: sets the maximum octave which the randomised or repeating note outputs can reach.
+-minOct: sets the minimum octave which the randomised or repeating note outputs can reach.
+	(to cover only octave &quot;zero&quot;, set both to 0)
+-pattern: selects one of the randomised patterns to use for the &quot;repeating&quot; output.
+-chancepatt: selects which chance-pattern is used to select the chance of each note to be selected by the random values.
+
+CHANCE PRESETS:
+-save: press save to save the chance-table to a file on your SD-card (set filename using a filename module-&gt;string folder)
+-load: press load to load a chance-table from your SD-card
+-filename: set the filename you want the chance-tables to be saved to/loaded from.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <bool32 name="trig"/>
+         <bool32 name="rnd"/>
+         <int32 name="count"/>
+         <int32 name="length"/>
+         <int32 name="maxOct"/>
+         <int32 name="minOct"/>
+         <int32 name="pattern"/>
+         <int32 name="chancePatt"/>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
+      </inlets>
+      <outlets>
+         <frac32 name="random"/>
+         <frac32 name="repeating"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.mapvsl name="C" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="cis" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="D" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="dis" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="E" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="F" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="fis" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="G" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="gis" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="A" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="ais" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="B" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+      </params>
+      <attribs>
+         <spinner name="maxlength" MinValue="1" MaxValue="64" DefaultValue="16"/>
+         <spinner name="maxpatterns" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = 104;
+static const uint32_t LENGTHMASK = 103;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+uint32_t *chance;
+
+uint32_t melody[attr_maxpatterns][attr_maxlength];
+int i;
+int j;
+int gtrig;
+int32_t select;
+int32_t note;
+int count;
+int rtrig;
+int32_t Melody;
+int oct[attr_maxpatterns][attr_maxlength];
+int prev;
+int init;
+int Chance;
+int prvchance;
+int ntrig;
+int ltrig;
+int Roct;
+int RPoct;
+int32_t temp;]]></code.declaration>
+      <code.init><![CDATA[static uint32_t _chance[LENGTH] __attribute__ ((section (".sdram")));
+chance = &_chance[0];
+
+  
+
+init=1;
+ntrig=0;
+ltrig=0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_save>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*chance)*104;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&chance[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&chance[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(inlet_save>0)) ntrig=0;
+
+
+  if ((inlet_load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*chance)*104;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&chance[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&chance[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(inlet_load>0)) ltrig=0;
+
+int32_t chancepatt=(inlet_chancePatt&7)*13;
+int change=chancepatt+inlet_load;
+
+
+if(!(change==prvchance))
+{
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_B],chance[12+chancepatt]-chance[11+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_ais],chance[11+chancepatt]-chance[10+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_A],chance[10+chancepatt]-chance[9+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_gis],chance[9+chancepatt]-chance[8+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_G],chance[8+chancepatt]-chance[7+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_fis],chance[7+chancepatt]-chance[6+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_F],chance[6+chancepatt]-chance[5+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_E],chance[5+chancepatt]-chance[4+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_dis],chance[4+chancepatt]-chance[3+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_D],chance[3+chancepatt]-chance[2+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_cis],chance[2+chancepatt]-chance[1+chancepatt],0xFFFD);
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_C],chance[1+chancepatt],0xFFFD);
+	
+}
+
+
+chance[0+chancepatt]=0;
+chance[1+chancepatt]=param_C;
+chance[2+chancepatt]=param_cis;
+chance[3+chancepatt]=param_D;
+chance[4+chancepatt]=param_dis;
+chance[5+chancepatt]=param_E;
+chance[6+chancepatt]=param_F;
+chance[7+chancepatt]=param_fis;
+chance[8+chancepatt]=param_G;
+chance[9+chancepatt]=param_gis;
+chance[10+chancepatt]=param_A;
+chance[11+chancepatt]=param_ais;
+chance[12+chancepatt]=param_B;
+
+int length=inlet_length>attr_maxlength?attr_maxlength:inlet_length;
+count=inlet_count-(inlet_count/length)*length;
+count=count<0?count+length:count;
+
+int pattern=inlet_pattern-(inlet_pattern/attr_maxpatterns)*attr_maxpatterns;
+pattern=pattern<0?pattern+attr_maxpatterns:pattern;
+
+
+
+
+int32_t total=0;
+for(i=0;i<13;i++){
+	total+=chance[i+chancepatt];
+}
+for(i=2;i<13;i++){
+	j=i+chancepatt;
+	chance[j]=chance[j]+chance[j-1];
+}
+if((inlet_trig)&&!gtrig){
+	select=___SMMUL(((uint32_t)(GenerateRandomNumber()))>>1,total)<<1;
+}
+
+
+int diff=inlet_maxOct-inlet_minOct;
+if((inlet_rnd>0)&&!rtrig)
+{
+	rtrig=1;
+	for(j=0;j<attr_maxpatterns;j++){
+	for(i=0;i<length;i++)
+	{
+		melody[j][i]=((uint32_t)(GenerateRandomNumber()))>>1;
+		oct[j][i]=inlet_minOct*12+(___SMMUL(((uint32_t)(GenerateRandomNumber()))>>1,(diff<<1)+1))*12;
+	}
+	}
+}
+else if(inlet_rnd==0){rtrig=0;}
+
+if(init>0){
+for(j=0;j<attr_maxpatterns;j++){
+for(i=0;i<attr_maxlength;i++){
+	melody[j][i]=((uint32_t)(GenerateRandomNumber()))>>1;
+	oct[j][i]=inlet_minOct*12+(___SMMUL(((uint32_t)(GenerateRandomNumber()))>>1,(diff<<1)+1))*12;
+	}}}
+init=0;
+
+
+if((inlet_trig)&&!gtrig)
+{
+	gtrig=1;
+	for(i=11;i>=0;i--)
+	{
+		j=i+chancepatt;
+		note=((select>=chance[j])&&(select<chance[j+1]))>0?i:note;
+	}
+	Roct=inlet_minOct*12+(___SMMUL(((uint32_t)(GenerateRandomNumber()))>>1,(diff<<1)+1))*12;
+}
+else if(inlet_trig==0){gtrig=0;}
+
+if(!(prev==count))
+{
+	for(i=11;i>=0;i--)
+	{
+		j=i+chancepatt;
+		temp=___SMMUL(melody[pattern][count],chance[12+chancepatt]<<1);
+		Melody=((temp>=chance[j])&&(temp<chance[j+1]))>0?i:Melody;
+	}
+	RPoct=oct[pattern][count];
+}
+
+outlet_random=(note+Roct)<<21;
+outlet_repeating=(Melody+RPoct)<<21;
+prev=count;
+prvchance=change;]]></code.krate>
+   </obj.normal>
+</objdefs>

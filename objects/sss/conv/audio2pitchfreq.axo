@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="audio2pitchfreq" uuid="332c7daa-1647-4266-8d7a-700eaf64d8de">
+      <sDescription>audio-rate pitch detector module with &quot;average&quot; function for krate signals.
+
+&quot;damp&quot; dampens the input signal to remove higher harmonics from interfering with the detection.
+&quot;avg&quot; sets the &quot;averager&quot; length-&gt;records all zero-crossings into an array and takes the average to send to both pitch and frqAvg outputs.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32 name="pitch"/>
+         <frac32 name="frqAvg"/>
+         <frac32buffer name="freq"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="damp"/>
+         <int32 name="avg">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t prev;
+bool ZT;
+uint64_t timer;
+bool GT;
+uint64_t cnt;
+uint32_t ct;
+int32_t ar[1024];
+uint64_t hl=(1<<31);
+int32_t out;
+int32_t LOG(int32_t in){
+	Float_t f;
+f.f = in;
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+out = r1 + r3;
+
+}]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+cnt=1;
+prev=0;]]></code.init>
+      <code.krate><![CDATA[int i;
+int32_t f;
+   MTOF(param_damp,f);
+ int64_t avg=0;
+int32_t mid;
+MTOFEXTENDED(0,mid);
+LOG(mid);
+mid=out;
+
+
+for(i=0;i<(param_avg<<4);i++){
+   		avg+=ar[i];
+   	}
+avg=(avg/(param_avg<<4));
+
+int32_t to;
+LOG(avg);
+to=out;
+outlet_pitch=(to-mid>>1)*3;
+
+
+
+outlet_frqAvg=avg>>4;]]></code.krate>
+      <code.srate><![CDATA[int32_t diff=inlet_in-prev>>4;
+   
+  
+   for(i=0;i<16;i++)
+   	{
+   		
+   	prev+=diff;
+  	val += ___SMMUL((prev-val),f)>>2;
+   	cnt+=1;	   
+   	if((prev>0)&&!GT)
+   		{
+   		
+   		timer=hl/(cnt);
+   		ct+=1;
+   		ct=ct>=(param_avg<<4)?0:ct;
+   		ar[ct]=timer>>28;
+   		cnt=0;
+   		GT=1;
+   		}
+   	else if(prev<0){GT=0;}
+   	}
+   	
+   outlet_freq=timer>>28;
+   
+   prev=inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

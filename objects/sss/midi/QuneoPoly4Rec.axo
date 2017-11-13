@@ -1,0 +1,357 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="QuneoPoly4Rec" uuid="55d32e1b-ab8d-4807-aaf8-d84147ae8b6d">
+      <sDescription>4 voice polyphonic MIDI keyboard RECORDER with note, gate, velocity, pressure, X and Y outputs to use with the QuNeo midicontroller.
+The module sorts out the 2 extra X/Y midicontrols that are send with each note and outputs these a 2 extra polyphonic controls next to the pressure output.
+This module can record 4 voices, each with their own X/Y control.
+
+The count input can be set to a fast rate, this way, combined with a large table-size, fast automations can be recorded
+Note though, the bigger the tables, the longer the load/save time!
+
+quneo layout of the 16 pad:
+lowest note=36, left bottom is first note, then to the right and up:
+
+48,49,50,51
+44,45,46,47
+40,41,42,43
+36,37,38,39
+
+pressure starts at 23, each next in line has an increment of 3 (23,26,29, etc)
+pressure starts at 24, each next in line has an increment of 3 (24,27,30, etc)
+pressure starts at 25, each next in line has an increment of 3 (25,28,31, etc)
+
+eg for pressure:
+
+59,62,65,68
+47,50,53,56
+35,38,41,44
+23,26,29,32</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+         <bool32 name="load"/>
+         <bool32 name="save"/>
+         <charptr32 name="filename"/>
+         <bool32 name="clear"/>
+         <bool32 name="whipe"/>
+      </inlets>
+      <outlets>
+         <bool32 name="G1" description="key pressed, no retrigger legato"/>
+         <frac32.bipolar name="N1" description="midi note number (-64..63)"/>
+         <frac32.positive name="V1" description="note-on velocity"/>
+         <frac32 name="P1"/>
+         <frac32 name="A1"/>
+         <frac32 name="B1"/>
+         <bool32 name="G2"/>
+         <frac32 name="N2"/>
+         <frac32 name="V2"/>
+         <frac32 name="P2"/>
+         <frac32 name="A2"/>
+         <frac32 name="B2"/>
+         <bool32 name="G3"/>
+         <frac32 name="N3"/>
+         <frac32 name="V3"/>
+         <frac32 name="P3"/>
+         <frac32 name="A3"/>
+         <frac32 name="B3"/>
+         <bool32 name="G4"/>
+         <frac32 name="N4"/>
+         <frac32 name="V4"/>
+         <frac32 name="P4"/>
+         <frac32 name="A4"/>
+         <frac32 name="B4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="load"/>
+         <bool32.mom name="save"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+
+uint8_t *array;
+uint32_t L2=LENGTH*6;
+uint32_t L3=LENGTH*12;
+uint32_t L4=LENGTH*18;
+int i;
+
+uint8_t N[4];
+uint8_t G[4];
+bool g[4];
+bool H[4];
+uint8_t V[4];
+uint8_t P[4];
+uint8_t A[4];
+uint8_t B[4];
+uint8_t T[4];
+bool ltrig;
+bool strig;
+bool clear;
+bool whipe;
+int32_t pv;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[LENGTH*24] __attribute__ ((section (".sdram")));
+array = &_array[0];
+{ 
+  int i;
+  for(i=0;i<LENGTH*24;i++) array[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[bool load=inlet_load||param_load;
+bool save=inlet_save||param_save;
+
+if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*(LENGTH*24);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*(LENGTH*24);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(load>0)) ltrig=0;
+
+uint32_t count=(inlet_count&LENGTHMASK)*6;
+
+if((inlet_whipe>0)&&(!(pv==count))){
+	for(i=0;i<6;i++){
+	int k;
+	for(k=0;k<4;k++){
+		array[count+i+(k<<attr_size)*6]=0;
+	}
+	}
+}
+
+if((inlet_clear>0)&&!clear){
+	clear=1;
+	for(i=0;i<LENGTH*24;i++){
+		array[i]=0;
+	}
+}
+else if(inlet_clear==0){clear=0;}
+
+for(i=0;i<4;i++){
+uint32_t k=count+(i<<attr_size)*6;
+	if(g[i]>0)
+	{
+		array[k]=H[i];
+		array[1+k]=N[i];
+		array[2+k]=V[i];
+		array[3+k]=P[i];
+		array[4+k]=A[i];
+		array[5+k]=B[i];
+	}
+	
+if(array[k]>0){
+		G[i]=array[k];
+		N[i]=array[1+k];
+		V[i]=array[2+k];
+		P[i]=array[3+k];
+		A[i]=array[4+k];
+		B[i]=array[5+k];	
+}
+else{G[i]=0;}
+
+g[i]=H[i];
+
+}
+
+
+outlet_G1= G[0];
+outlet_N1= N[0]-64<<21;
+outlet_V1= V[0]<<20;
+outlet_P1= P[0]<<20;
+outlet_A1= A[0]<<20;
+outlet_B1= B[0]<<20;
+
+outlet_G2= G[1];
+outlet_N2= N[1]-64<<21;
+outlet_V2= V[1]<<20;
+outlet_P2= P[1]<<20;
+outlet_A2= A[1]<<20;
+outlet_B2= B[1]<<20;
+
+outlet_G3= G[2];
+outlet_N3= N[2]-64<<21;
+outlet_V3= V[2]<<20;
+outlet_P3= P[2]<<20;
+outlet_A3= A[2]<<20;
+outlet_B3= B[2]<<20;
+
+outlet_G4= G[3];
+outlet_N4= N[3]-64<<21;
+outlet_V4= V[3]<<20;
+outlet_P4= P[3]<<20;
+outlet_A4= A[3]<<20;
+outlet_B4= B[3]<<20;
+
+
+/*
+outlet_G1= array[count];
+outlet_N1= array[count+1]-64<<21;
+outlet_V1= array[count+2]<<20;
+outlet_P1= array[count+3]<<20;
+outlet_A1= array[count+4]<<20;
+outlet_B1= array[count+5]<<20;
+
+outlet_G2= array[count+L2];
+outlet_N2= array[count+1+L2]-64<<21;
+outlet_V2= array[count+2+L2]<<20;
+outlet_P2= array[count+3+L2]<<20;
+outlet_A2= array[count+4+L2]<<20;
+outlet_B2= array[count+5+L2]<<20;
+
+outlet_G3= array[count+L3];
+outlet_N3= array[count+1+L3]-64<<21;
+outlet_V3= array[count+2+L3]<<20;
+outlet_P3= array[count+3+L3]<<20;
+outlet_A3= array[count+4+L3]<<20;
+outlet_B3= array[count+5+L3]<<20;
+
+outlet_G4= array[count+L4];
+outlet_N4= array[count+1+L4]-64<<21;
+outlet_V4= array[count+2+L4]<<20;
+outlet_P4= array[count+3+L4]<<20;
+outlet_A4= array[count+4+L4]<<20;
+outlet_B4= array[count+5+L4]<<20;
+*/
+pv=count;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) 
+{
+	int S=1;
+	i=-1;
+	while((S==1)&&(i<4))
+	{
+	i+=S>0?1:0;
+	S=G[i];
+	if((S==1)&&(i==3)){
+	S=0;
+	i=((int32_t)GenerateRandomNumber()>>5)&3;
+	}
+	}
+	
+  	V[i] = data2;
+  	N[i] = data1;
+  	G[i] = 1;
+  	H[i] = 1;
+	T[i]=(data1-36);
+	T[i]=(T[i]-T[i]/16*16)*3;
+	g[i]=0;
+} 
+else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel)) 
+{
+  	for(i=0;i<4;i++)
+  	{
+  		if (N[i] == data1) 
+  		{ 
+    			G[i] = 0;
+    			H[i] = 0;
+    		}
+  	}
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) 
+{
+  	for(i=0;i<4;i++)
+  	{
+ 	 	G[i] = 0;
+ 	 	H[i] = 0;
+  	}
+}
+
+for(i=0;i<4;i++)
+{
+ 	if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+23))&&(H[i])) { P[i] = data2;}
+ 	if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+24))&&(H[i])) { A[i] = data2;}
+ 	if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == (T[i]+25))&&(H[i])) { B[i] = data2;}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

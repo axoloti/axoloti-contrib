@@ -1,0 +1,331 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="rubisikTable" uuid="e9ac6cad-b327-47e4-8d36-69075c055761">
+      <sDescription>An emulation of the eurorack rubicon oscillator with some extra waveforms and options
+
+INPUTS:
+pitch: well.. it&apos;s the pitch..
+freq: linear thru-zero highpass-filtered FM audio input.
+FMS: select waveform for internal frequency modulation
+intFMW: adds to the width of the internal linear thru-zero FM.
+extFMW: connect an envelope of LFO to open up the external FM.
+HSon: switches hardsync to on when it receives a high gate.
+waveA: select waveform for osc 1
+waveB: select waveform for osc 2
+mix: select waveform for controlling the crossfade between osc 1 and osc2
+tableform1: select waveform for the first table
+tableform2: select waveform for the second table
+
+EXTRA CONTROLS:
+sub: transposes the sub oscillator 1 octave
+FMW: controls the frequency modulation width-offset for the internal FM
+extFMW: controls the width of the incoming k-rate envelope/LFO on the extFMW input
+FMS: same as input
+waveA: same as input
+waveB: same as input
+mix: same as input
+tableform1: same as input
+tableform2: same as input
+pw: sets pulse width of pulse-waveform(9)
+LP: sets lowpass frequency
+HP: sets highpass frequency
+Hsync: manual control for syncing the oscillator to the &quot;freq&quot; input
+
+DISPLAYS
+the displays show the waveforms that are selected.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="phase increment"/>
+         <int32 name="FMS"/>
+         <frac32 name="intFMW"/>
+         <frac32 name="extFMW"/>
+         <frac32buffer name="PWM"/>
+         <bool32 name="HSon"/>
+         <int32 name="waveA"/>
+         <int32 name="waveB"/>
+         <int32 name="mix"/>
+         <int32 name="tableform1"/>
+         <int32 name="tableform2"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays>
+         <bool32 name="sine0"/>
+         <bool32 name="halfsine1"/>
+         <bool32 name="doublesine2"/>
+         <bool32 name="triangle3"/>
+         <bool32 name="saw4"/>
+         <bool32 name="doublesaw5"/>
+         <bool32 name="doubleshark6"/>
+         <bool32 name="doublefin7"/>
+         <bool32 name="square8"/>
+         <bool32 name="pulse9"/>
+         <bool32 name="sub10"/>
+         <bool32 name="table11"/>
+         <bool32 name="table12"/>
+         <bool32 name="white13"/>
+         <bool32 name="pink14"/>
+         <bool32 name="mixOut15"/>
+         <bool32 name="filtered16"/>
+      </displays>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32.hradio name="sub">
+            <MaxValue i="2"/>
+         </int32.hradio>
+         <frac32.s.map name="FMW"/>
+         <frac32.s.map name="extFMW"/>
+         <int32 name="FMS">
+            <MinValue i="0"/>
+            <MaxValue i="17"/>
+         </int32>
+         <int32 name="waveA">
+            <MinValue i="0"/>
+            <MaxValue i="17"/>
+         </int32>
+         <int32 name="waveB">
+            <MinValue i="0"/>
+            <MaxValue i="17"/>
+         </int32>
+         <int32 name="mix">
+            <MinValue i="0"/>
+            <MaxValue i="17"/>
+         </int32>
+         <int32 name="tableform1">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <int32 name="tableform2">
+            <MinValue i="0"/>
+            <MaxValue i="1023"/>
+         </int32>
+         <frac32.s.map name="pw"/>
+         <frac32.s.map.pitch name="LP"/>
+         <frac32.s.map.pitch name="HP"/>
+         <bool32.tgl name="Hsync"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[static const int noct = 7;
+int32_t obuf[noct];
+int32_t sum;
+uint32_t seed;
+int index;
+const int8_t * dyadictree(void){
+   static const int8_t dtree[] = {
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,6,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,-1};
+   return dtree;
+}
+
+
+uint32_t phase;
+uint32_t Phase;
+int32_t wave[17];
+int select[17];
+int i;
+int32_t FM;
+int32_t HP;
+int32_t LP;
+int32_t mix;
+int htrig;
+int32_t fmw1;
+int32_t fmw2;
+int32_t intFMW;
+int32_t INTFMW;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+
+int i;
+for(i=0;i<noct;i++)
+   obuf[i]=0;
+index = 0;
+sum = 0;
+seed = 0x830af41e + GenerateRandomNumber();
+]]></code.init>
+      <code.krate><![CDATA[   uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+   freq=(freq>>(1+param_sub));
+
+int waveA=__USAT(param_waveA+inlet_waveA,8);
+int waveB=__USAT(param_waveB+inlet_waveB,8);
+int MIX=__USAT(param_mix+inlet_mix,8);
+int FmS=__USAT(param_FMS+inlet_FMS,8);
+waveA=waveA-(waveA/17)*17;
+waveB=waveB-(waveB/17)*17;
+MIX=MIX-(MIX/17)*17;
+FmS=FmS-(FmS/17)*17;
+waveA=waveA>0?waveA:-waveA;
+waveB=waveB>0?waveB:-waveB;
+MIX=MIX>0?MIX:-MIX;
+FmS=FmS>0?FmS:-FmS;
+
+
+for(i=0;i<17;i++){
+select[i]=((waveA==i)+(waveB==i)+(MIX==i)+(FmS==i))>0?1:0;}
+
+
+int32_t lp;
+   MTOF(param_LP,lp);
+
+int32_t hp;
+   MTOF(param_HP,hp);
+
+
+fmw1=___SMMUL(param_extFMW<<3,inlet_extFMW<<2);
+INTFMW=param_FMW+inlet_intFMW;
+
+disp_sine0=select[0];
+disp_halfsine1=select[1];
+disp_doublesine2=select[2];
+disp_triangle3=select[3];
+disp_saw4=select[4];
+disp_doublesaw5=select[5];
+disp_doubleshark6=select[6];
+disp_doublefin7=select[7];
+disp_square8=select[8];
+disp_pulse9=select[9];
+disp_sub10=select[10];
+disp_table11=select[11];
+disp_table12=select[12];
+disp_white13=select[13];
+disp_pink14=select[14];
+disp_mixOut15=select[15];
+disp_filtered16=select[16];
+
+
+int16_t tableform1=(inlet_tableform1+param_tableform1)&1023;
+int16_t tableform2=(inlet_tableform2+param_tableform2)&1023;]]></code.krate>
+      <code.srate><![CDATA[if(param_Hsync+inlet_HSon>0){
+if((inlet_freq>0)&&!htrig){
+	htrig=1;
+	phase=0;
+}
+else if(inlet_freq<0){htrig=0;}}
+
+fmw2=fmw2+(((fmw1)-fmw2)>>6);
+intFMW=intFMW+(((INTFMW)-intFMW)>>6);
+int32_t Fm;
+Fm=___SMMUL(fmw2<<4,inlet_freq<<3)+___SMMUL(intFMW<<4,(wave[FmS])<<3);
+FM=FM+((Fm-FM)>>9);
+phase += freq+___SMMUL(freq<<3,(FM-Fm)<<2);
+
+if(select[10]>0){
+int32_t sub=(phase+(1<<29));
+sub=sub>0?(1<<26):-(1<<26);
+wave[10]=sub;
+}
+
+Phase=phase<<(1+param_sub);
+int32_t Sphase=Phase+(1<<30);
+int32_t doublesaw;
+doublesaw=Phase<<1;
+
+if(select[0]>0){
+int32_t sine;
+SINE2TINTERP(Phase,sine)
+sine=sine>>5;
+wave[0]=sine;
+}
+
+if(select[1]>0){
+int32_t sine;
+SINE2TINTERP((Sphase)>>1,sine)
+sine=sine>>5;
+wave[1]=sine;
+}
+
+if(select[2]>0){
+int32_t sine;
+SINE2TINTERP(Phase<<1,sine)
+sine=sine>>5;
+wave[2]=sine;
+}
+
+
+
+if(select[9]>0){
+int32_t pulse;
+pulse=Sphase>((param_pw+inlet_PWM)<<4)?(1<<26):-(1<<26);
+wave[9]=pulse;
+}
+
+if(select[8]>0){
+int32_t square;
+square=Sphase>0?(1<<26):-(1<<26);
+wave[8]=square;
+}
+
+if(select[4]>0){
+int32_t saw=(Sphase+(1<<31))>>5;
+wave[4]=saw;
+}
+
+if(select[6]>0){
+int32_t doublesharks=(doublesaw>0?(1<<31)-doublesaw:doublesaw)>>5;
+wave[6]=doublesharks;
+}
+
+if(select[7]>0){
+int32_t doublefin=(doublesaw>0?doublesaw:(1<<31)-doublesaw)>>5;
+wave[7]=doublefin;
+}
+
+if(select[5]>0){
+doublesaw=doublesaw>>5;
+wave[5]=doublesaw;
+}
+
+if(select[3]>0){
+int32_t tri;
+tri=Sphase>0?Sphase:-Sphase;
+tri=(tri-(1<<30))>>4;
+wave[3]=tri;
+}
+
+if(select[11]>0){
+int32_t table;
+table=attr_table.array[(((Phase>>22)&1023)+(tableform1<<10))&attr_table.LENGTHMASK];
+wave[11]=table;
+}
+
+if(select[12]>0){
+int32_t table;
+table=attr_table.array[(((Phase>>22)&1023)+(tableform2<<10))&attr_table.LENGTHMASK];
+wave[12]=table;
+}
+
+if(select[13]>0){
+wave[13]=(int32_t)(GenerateRandomNumber());
+}
+
+
+if(select[14]>0){
+int o = dyadictree()[index++];
+if (o==-1){
+   index=0;
+} else {
+   sum -= obuf[o];
+   seed = (seed * 196314165) + 907633515;
+   obuf[o] = ((int32_t)seed)>>7;
+   sum += obuf[o];
+}
+seed = (seed * 196314165) + 907633515;
+wave[14] = sum + (((int32_t)seed)>>7);
+}
+
+
+mix=___SMMUL(wave[waveA]<<3,(wave[MIX]+(1<<26))<<2)+___SMMUL(wave[waveB]<<3,((1<<27)-(wave[MIX]+(1<<26)))<<2);
+wave[15]=mix;
+HP= ___SMMLA((mix-HP)<<1,hp,HP);
+LP= ___SMMLA((mix-HP-LP)<<1,lp,LP);
+
+wave[16]=LP;
+outlet_out=LP;]]></code.srate>
+   </obj.normal>
+</objdefs>

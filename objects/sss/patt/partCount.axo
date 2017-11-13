@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="partCount" uuid="bf76706c-c1e9-4ab2-a7a0-271f10d03943">
+      <sDescription>part counter
+only lets the count through for a part of the whole range.
+The last count position can be kept when &quot;sustain&quot; is high, otherwise it goes back to 0 when it reaches the maximum length.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count"/>
+      </inlets>
+      <outlets>
+         <int32 name="out"/>
+         <int32 name="range"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="range">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <frac32.u.map name="offset"/>
+         <frac32.u.map name="length"/>
+         <bool32.tgl name="sustain"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t length=___SMMUL(param_range<<3,param_length<<2);
+int32_t offset=___SMMUL(param_range<<3,param_offset<<2);
+int32_t count=(inlet_count+offset-((inlet_count+offset)/param_range)*param_range);
+outlet_out=count>length?0+param_sustain*param_length:count;]]></code.krate>
+   </obj.normal>
+</objdefs>

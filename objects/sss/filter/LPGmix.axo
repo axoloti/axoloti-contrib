@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="LPGmix" uuid="fd551ccd-b6fa-4170-8b4b-44c9a2459cf6">
+      <sDescription>combination of a crossfader and a lowpass gate
+When input v goes up, crossfades from sine input to harmonics input, while opening up the filter cutoff on the harmonics input.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="v" description="gain input"/>
+         <frac32buffer name="sine" description="audio input"/>
+         <frac32buffer name="harmonics"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+    int32_t step;
+    int32_t val;]]></code.declaration>
+      <code.krate><![CDATA[step = (inlet_v - prev)>>4;
+   int32_t i = prev;
+   prev = inlet_v;
+   int32_t freq;]]></code.krate>
+      <code.srate><![CDATA[MTOF(i-(1<<26)<<1,freq)
+val=___SMMLA((inlet_harmonics-val)<<1,freq,val);
+int32_t out=___SMMUL(i<<3,val-inlet_sine<<2)+inlet_sine;
+
+outlet_o =  ___SMMUL(out<<3,i<<2);
+   i += step;]]></code.srate>
+   </obj.normal>
+</objdefs>

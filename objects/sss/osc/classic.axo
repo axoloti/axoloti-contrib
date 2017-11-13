@@ -1,0 +1,166 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="classic" uuid="275baf8b-027b-4f85-a76a-284e45735d52">
+      <sDescription>sine wave based internal PM/FM oscillator
+Though the knobs tell their independent function when the rest is set to zero, there is a lot of cross-influencing between the wave-morphs.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32 name="saw"/>
+         <frac32 name="pls"/>
+         <frac32 name="shark"/>
+         <frac32 name="p2s"/>
+         <frac32 name="rate"/>
+         <bool32 name="trig"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+         <frac32 name="duck"/>
+         <frac32buffer name="phase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32 name="div" description="sets frequency-division for sub-harmonics">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <frac32.s.map name="saw" description="saw-wave amount: feeds the output back into the phase of the sineshaper. creating a saw-wave. The higher the amount, the weirder the other parameters behave!"/>
+         <frac32.u.map name="pls" description="pulse-wave: multiplies the phase of the pulse, creating a strong frequency peak in the higher harmonics"/>
+         <frac32.s.map name="shark" description="shark-wave amount, flatens/steepens the frequency roll-off"/>
+         <frac32.u.map name="p2s" description="changes phase position of the shark, turning it from square-like to peak-like (expo triangle)"/>
+         <bool32.tgl name="track"/>
+         <int32 name="OS">
+            <MinValue i="0"/>
+            <MaxValue i="3"/>
+         </int32>
+         <frac32.s.map name="rate"/>
+         <int32 name="wave">
+            <MinValue i="0"/>
+            <MaxValue i="4"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t phs;
+int32_t r;
+int32_t t1;
+int32_t t2;
+int32_t t3;
+int32_t t4;
+int i;
+int32_t val;
+int32_t vil;
+int32_t pv[4];
+int32_t stp[4];
+int32_t v26=(1<<26);
+int32_t v27=(1<<27);
+int32_t v28=(1<<28);
+int32_t v29=(1<<29);
+int32_t v30=(1<<30);
+int32_t Phs;
+int32_t SHAPE(int32_t P,int md){
+switch(md){
+case 0:Phs=P;break;
+case 1:Phs=-P;break;
+case 2:Phs=P>0?P:-P;break;
+case 3:SINE2TINTERP(P,Phs);break;
+case 4:Phs=P>0?(1<<30):-(1<<30);break;
+}
+}
+bool trg;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+int32_t pitch=__SSAT(param_pitch + inlet_pitch,28);
+   MTOFEXTENDED(pitch,freq);
+freq=freq/param_div>>param_OS;
+int32_t nyq;
+MTOF(56,nyq)
+nyq=nyq;
+int32_t width;
+int32_t iwidth;
+int32_t tmp;
+MTOF(56<<21,tmp)
+int32_t dck;
+MTOF(__SSAT((v26)+pitch,29),dck)
+int32_t norm;
+MTOF(-52<<21,norm)
+float32_t ratio=(float32_t)(norm)/(dck);
+float32_t iratio=1-ratio;
+//ratio=ratio*ratio;
+iratio=1-iratio*iratio;
+
+int32_t SAW=param_saw+inlet_saw;
+int32_t PLS=(param_pls+inlet_pls)+pitch*param_track>>1;
+PLS=PLS&((v28)-1);
+PLS=PLS>(v27)?(v28)-PLS:PLS;
+int32_t SHARK=param_shark+inlet_shark;
+int32_t P2S=param_p2s+inlet_p2s<<3;
+
+int32_t super;
+MTOFEXTENDED(param_rate+inlet_rate,super)
+super=(super>>param_OS)>>12;
+
+iwidth=(v29)-(v29)*iratio;
+width=(v29)-(v29)*ratio;
+SAW  =___SMMUL(SAW<<3,iwidth<<1)<<2;
+PLS=___SMMUL(PLS<<3,PLS<<2);
+if(param_track>0){
+MTOF(PLS,PLS);}
+PLS  =___SMMUL(PLS<<1,width)<<3;
+SHARK=___SMMUL(SHARK<<2,iwidth)<<3;
+
+outlet_duck=width>>3;
+
+stp[0]=(SAW-pv[0])>>4;
+stp[1]=(PLS-pv[1])>>4;
+stp[2]=(SHARK-pv[2])>>4;
+stp[3]=(P2S-pv[3])>>4;
+int32_t saw=pv[0];
+int32_t pls=pv[1];
+int32_t shark=pv[2];
+int32_t p2s=pv[3];
+pv[0]=SAW;
+pv[1]=PLS;
+pv[2]=SHARK;
+pv[3]=P2S;
+
+if((inlet_trig>0)&&!trg){
+	trg=1;
+	Phase=0;
+	phs=0;
+}
+else if (inlet_trig==0){trg=0;}]]></code.krate>
+      <code.srate><![CDATA[saw+=stp[0];
+pls+=stp[1];
+shark+=stp[2];
+p2s+=stp[3];
+
+
+int32_t out;
+for(i=0;i<(1<<param_OS);i++){
+phs+=super;
+SHAPE(phs,param_wave);
+Phase += freq  ;
+int32_t p2 = Phase + (inlet_phase<<4);
+uint32_t p3=p2+(t1<<1)+t2+(t3<<3);
+SINE2TINTERP((p3*param_div+(t4<<8)+Phs),r)
+int32_t s;
+SINE2TINTERP(p3+(p2s),s)
+out=r;
+t2+=t1-t2>>1;
+t1+=___SMMUL(r,saw)-t1>>2;
+r=___SMMUL(s,r);
+t3+=(___SMMUL(shark,r-(v30)))-t3>>4;
+r=___SMMUL(s,s);
+t4+=(___SMMUL(pls,r-(3<<29)))-t4>>4;
+val+=((out>>4)-val)>>1+param_OS;
+vil+=(val-vil)>>10+param_OS;
+}
+outlet_wave= (val)-vil>>1;
+outlet_phase=Phase*param_div>>5;]]></code.srate>
+   </obj.normal>
+</objdefs>

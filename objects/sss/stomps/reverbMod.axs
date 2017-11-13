@@ -45,7 +45,7 @@
    </obj>
    <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_1" x="140" y="224">
       <params>
-         <frac32.u.map name="time" onParent="true" value="14.0"/>
+         <frac32.u.map name="time" onParent="true" value="13.979999999999997"/>
       </params>
       <attribs>
          <objref attributeName="delayname" obj="d1"/>
@@ -53,7 +53,7 @@
    </obj>
    <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_2" x="140" y="322">
       <params>
-         <frac32.u.map name="time" onParent="true" value="21.5"/>
+         <frac32.u.map name="time" onParent="true" value="21.549999999999994"/>
       </params>
       <attribs>
          <objref attributeName="delayname" obj="d1"/>
@@ -65,7 +65,7 @@
    </obj>
    <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_3" x="140" y="420">
       <params>
-         <frac32.u.map name="time" onParent="true" value="31.5"/>
+         <frac32.u.map name="time" onParent="true" value="31.729999999999997"/>
       </params>
       <attribs>
          <objref attributeName="delayname" obj="d1"/>
@@ -83,10 +83,10 @@
       <params>
          <frac32.u.map name="size" onParent="true" value="31.5"/>
          <frac32.u.map name="decay" onParent="true" value="21.5"/>
-         <frac32.u.map name="s1" onParent="true" value="12.5"/>
-         <frac32.u.map name="s2" onParent="true" value="33.0"/>
-         <frac32.u.map name="s3" onParent="true" value="43.5"/>
-         <frac32.u.map name="s4" onParent="true" value="52.0"/>
+         <frac32.u.map name="s1" onParent="true" value="25.525"/>
+         <frac32.u.map name="s2" onParent="true" value="39.515"/>
+         <frac32.u.map name="s3" onParent="true" value="49.03500000000001"/>
+         <frac32.u.map name="s4" onParent="true" value="51.98499999999999"/>
       </params>
       <attribs>
          <spinner attributeName="d1" value="3000"/>

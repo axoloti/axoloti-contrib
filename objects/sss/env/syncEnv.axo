@@ -1,0 +1,134 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="syncEnv" uuid="17e46b45-94f4-40ff-a78a-cab98ee9f1d1">
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="gate"/>
+         <frac32 name="sync"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+         <int32 name="stage"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="division">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="A">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="D">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.s.map name="S"/>
+         <int32 name="R">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t env;
+uint32_t count;
+uint32_t timer;
+int gtrig;
+int stage;
+int32_t goal;
+int strig;
+uint32_t rate;
+int32_t level;
+int32_t prevlevel;
+int otrig;]]></code.declaration>
+      <code.init><![CDATA[level=0;
+stage=3;
+otrig=0;]]></code.init>
+      <code.krate><![CDATA[if((inlet_gate>0)&&!gtrig){
+	gtrig=1;
+	env=0;
+	stage=1;
+	goal=(1<<27);
+	prevlevel=level;                                                
+}
+else if(!(inlet_gate>0)){gtrig=0;}
+
+if((inlet_gate==0)&&!otrig){
+	otrig=1;
+	prevlevel=level;                                                 
+	goal=0;
+	stage=0;
+	env=0;
+}
+else if(inlet_gate>0){otrig=0;}
+if((level==0)&&(stage==0)){stage=3;}
+
+if(stage==1){
+	rate=timer*param_division/param_A;
+	env+=rate;
+	level=___SMMUL(env>>1,goal-prevlevel<<1)+prevlevel;
+	if(param_A==0){
+		stage=2;
+		env=0;
+		goal=param_S;
+		prevlevel=level=(1<<27);
+	}
+	else if(((env>>2)+(rate>>2))>=(1<<30)-1){
+		stage=2;
+		env=0;
+		goal=param_S;
+		prevlevel=level;                                                 
+	}
+}
+
+if(stage==2){
+	rate=timer*param_division/param_D;
+	env+=rate;
+	level=___SMMUL(env>>1,goal-prevlevel<<1)+prevlevel;
+	if(param_D==0){
+		stage=3;
+		env=0;
+		goal=0;
+		prevlevel=level;
+	}
+	else if(((env>>2)+(rate>>2))>=(1<<30)-1){
+		stage=3;
+		prevlevel=level;                                                 
+		env=0;
+		goal=0;
+		
+	}
+}
+
+if(stage==0){
+	if(param_R==0){
+		stage=3;
+		level=0;
+		prevlevel=level;                                                 
+		env=0;
+	}
+	else{
+	rate=timer*param_division/param_R;
+	env+=rate;
+	level=___SMMUL(env>>1,goal-prevlevel<<1)+prevlevel;
+	if(((env>>2)+(rate>>2))>(1<<30)-1){
+		stage=3;
+		level=0;
+		prevlevel=level;                                                 
+		env=0;	
+	}
+	}
+}
+
+outlet_out=level;
+outlet_stage=stage;]]></code.krate>
+      <code.srate><![CDATA[if((inlet_sync>0)&&!strig){
+	strig=1;
+	timer=((1<<31)/(count))<<4;
+	count=0;
+}
+else if(!(inlet_sync>0)){strig=0;}
+count+=1;]]></code.srate>
+   </obj.normal>
+</objdefs>

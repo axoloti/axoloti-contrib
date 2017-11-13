@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="hrmOsc" uuid="848ac740-6991-41ba-92e2-d997c94efc43">
+      <sDescription>sort of harmonics-selecting oscillator or something
+
+-quant sets the amount of harmonics used in a single phase-cycle, in powers of 2 (so, 2,4,8,16,32,64)
+-offset gives an offset to all harmonic values, selecting a different set of harmonics in a single cycle
+-step sets the stepsize for selecting harmonic values
+-range sets the range for the highest harmonic that may be used</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="phase increment"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phasor" description="phasor wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="fm"/>
+         <int32 name="quant">
+            <MinValue i="1"/>
+            <MaxValue i="8"/>
+         </int32>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="step">
+            <MinValue i="1"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="range">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint64_t P1;
+uint64_t P2;
+int32_t S1;
+int32_t S2;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[   uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+]]></code.krate>
+      <code.srate><![CDATA[Phase += (freq>>0) + ___SMMUL(___SMMUL(inlet_freq<<4,param_fm<<4)<<3,freq<<2);
+P1=Phase;
+P1=(P1/((1<<30)>>(param_quant)))>>2;
+P2=((Phase-((P1<<2)*((1<<30)>>(param_quant)))<<param_quant))>>1;
+SINE2TINTERP(P2-(1<<30),P2)
+P2=(P2>>5)+(1<<26);
+int p1=P1;
+int p2=1+P1;
+p2=p2-((p2>>(param_quant))<<(param_quant));
+p1=(p1+param_offset)*param_step;
+p2=(p2+param_offset)*param_step;
+p1=p1-((p1/param_range)*param_range);
+p2=p2-((p2/param_range)*param_range);
+SINE2TINTERP(Phase*(1+p1),S1)
+SINE2TINTERP(Phase*(1+p2),S2)
+outlet_phasor =___SMMUL(S1,((1<<27)-P2))+___SMMUL(S2,P2);]]></code.srate>
+   </obj.normal>
+</objdefs>

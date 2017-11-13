@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="nativeSaw" uuid="84db3823-007e-4e61-b424-ff1ec8ce2d36">
+      <sDescription>saw wave oscillator with &quot;active&quot; control
+Non-bandwith limited, medium quality</sDescription>
+      <author>Johannes Taelman(editted by Remco van der Most)</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <bool32 name="active"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="saw wave, non-anti-aliased"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[  int32_t osc_p;
+]]></code.declaration>
+      <code.init><![CDATA[    osc_p=0;
+]]></code.init>
+      <code.krate><![CDATA[if(inlet_active>0){
+  uint32_t freq;
+  MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+  int32_t f0i = 0x7fffffff/(1+((int)freq)>>11);
+  int j;
+  for(j=0;j<BUFSIZE;j++){
+    int32_t p1 = osc_p;
+    int32_t p2 = p1 + freq;
+    osc_p = p2;
+    if ((p2<0)&&(p1>0))
+outlet_wave[j] = ___SMMLS(f0i, p2&~(1<<31), 0x200)<<15;
+    else
+      outlet_wave[j] = p2>>7;
+  }
+}
+]]></code.krate>
+      <code.srate><![CDATA[if(inlet_active==0) {outlet_wave=0;}]]></code.srate>
+   </obj.normal>
+</objdefs>

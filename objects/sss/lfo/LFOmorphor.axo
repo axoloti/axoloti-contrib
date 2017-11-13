@@ -1,0 +1,218 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="LFOmorphor" uuid="5ba4d657-739c-4a18-8df2-53b8d6638872">
+      <sDescription>based on the sculptor and morphor, but without the editing parameters and for LFO purposes. 
+First make a wavetable (or load a previous designed wavetable), then load the table into the module. If there is no wavetable, there won&apos;t be a modulation!
+
+Also, instead of a &quot;lowpass morphed&quot; change between presets, this uses an internal LFO to update the two tables to the currently selected preset-value and to morph between them using a sine-shape (thus always smooth)
+
+You can &quot;override&quot; the load by sending a gate high to the load input (will update one of the tables and the other one at the next trigger, over and over..etc) This is useful, since the tables are updated by the LFO and it might take a while before the first trigger is send to update the table from a preset.
+
+An extra phase-output (also in the sculptor) is added that you can use for adding shaped signals to the wavetable sound (eg use one of my phase-shaper modules).
+
+NOTE!!!
+Don&apos;t forget to add the table allocation module and set the name to a table that you have recorded to!
+If you haven&apos;t made a wavetable yet, by using the sculptor, you won&apos;t hear a thing!!!!!!!!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch"/>
+         <int32 name="preset" description="connect to some pattern generator?"/>
+         <bool32.rising name="load" description="when load goes high, loads current preset-&quot;input+parameter&quot;"/>
+         <frac32 name="fm"/>
+         <frac32 name="phase"/>
+         <frac32 name="sync"/>
+         <frac32 name="Hz"/>
+         <bool32.rising name="reset"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+         <frac32 name="phase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.s.map name="fm" description="controls frequency modulation width"/>
+         <frac32.s.map name="pm" description="controls phase modulation width"/>
+         <int32 name="softness" description="LP-filter">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.mom name="load" description="loads selected preset to current waveform"/>
+         <int32 name="preset" description="sets preset to load from/save to.">
+            <MinValue i="0"/>
+            <MaxValue i="512"/>
+         </int32>
+         <frac32.u.map name="morph" description="morph rate when new preset is selected."/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t array[1024];
+int32_t arrey[1024];
+int i;
+int loop;
+int ntrig;
+int atrig;
+int xtrig;
+int strig;
+int ctrig;
+int itrig;
+int ftrig;
+int trhg;
+int trgg;
+int32_t sine;
+uint32_t phase;
+uint32_t phose;
+int32_t sum;
+int32_t sam;
+int count;
+int caunt;
+int ceunt;
+int ciunt;
+int32_t vol;
+int32_t vel;
+int32_t vul;
+int32_t vil;
+int save;
+int loadA;
+int loadB;
+int next;
+int LoadA;
+int LoadB;
+int LOadA;
+int LOadB;
+int32_t LOAdA;
+int32_t LOAdB;
+int LOAD;
+int trip;
+int32_t morph;
+int32_t mot;
+int32_t ccomp;
+int tok;
+int32_t x;
+
+uint32_t Phase;
+uint32_t r;
+uint32_t h;
+
+   int trg1;
+   int trg2;
+   int trg3;
+   int trg4;
+
+int32_t prevA;
+int32_t prevB;]]></code.declaration>
+      <code.init><![CDATA[for (i=0;i<1024;i++) (array[i])=attr_table.array[i+(0)*1024]<<attr_table.GAIN;(array[i])=attr_table.array[i+(1)*1024]<<attr_table.GAIN;{}
+phose=0;
+vil=0;
+vel=0;
+vol=0;
+vil=0;
+LoadA=1;
+LoadB=(1<<27);
+   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[int32_t preset=param_preset+inlet_preset;
+
+int32_t wave;
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } 
+      else {
+         if (!inlet_reset) r = 1;
+         Phase += ((inlet_Hz+(param_morph>>4))/44*30);
+      }
+
+
+wave= (Phase>>5);
+
+
+trg1= (wave>(1<<26))?(1<<27):0;
+trg2=(1<<27)-trg1;
+
+LOAdB=trg1*(trg3==0)?(1<<27):0;
+LOAdA=trg2*(trg4==0)?(1<<27):0;
+
+trg3=trg1;
+trg4=trg2;
+
+int32_t Sin;
+SINE2TINTERP(Phase-(1<<29),Sin)
+int32_t fine;
+fine=-(Sin>>5)+(1<<26);
+
+if((LOAdA>0) && (!(trhg)))
+{trhg=1;
+for(i=0;i<1024;i++)
+         {(array[i])=attr_table.array[i+(preset)*1024]<<attr_table.GAIN;}}
+else if (!(LOAdA>0)) {trhg=0;}
+
+if((LOAdB>0) && (!(trgg)))
+{trgg=1;
+for(i=0;i<1024;i++)
+         {(arrey[i])=attr_table.array[i+(preset)*1024]<<attr_table.GAIN;}}
+else if (!(LOAdB>0)) {trgg=0;}
+
+
+
+LOAD=__USAT(param_load+inlet_load,28);
+if(((LOAD)>0) &&(!(trip)))
+{trip=1;
+next=next>0?0:1;
+if(LOadA>0){next=0;}
+if(LOadB>0){next=1;}
+if(next==0)
+{LoadA=LOAD; LoadB=0;}
+if(next==1){LoadB=LOAD;LoadA=0;}
+}
+else if ((LOAD)<1)
+{trip=0;}
+   if (((LoadA)>0) && !loadA) {
+      loadA=1;
+     for(i=0;i<1024;i++)
+         {(array[i])=attr_table.array[i+(preset)*1024]<<attr_table.GAIN;}
+   }
+   if (!((LoadA)>0)) loadA=0;
+
+   if (((LoadB)>0) && !loadB) {
+      loadB=1;
+     for(i=0;i<1024;i++)
+         {(arrey[i])=attr_table.array[i+(preset)*1024]<<attr_table.GAIN;}
+   }
+   if (!((LoadB)>0)) loadB=0;
+
+  int32_t mos=___SMMUL(((1<<27)-param_morph)<<3,((1<<27)-param_morph)<<2);
+  mos=___SMMUL(mos<<3,mos<<2);
+  int32_t frq;
+frq=(param_pitch+inlet_pitch)>>4;
+
+int32_t FMW=___SMMUL(param_fm<<3,inlet_fm<<2);
+if((inlet_sync>0) && (!(tok)))
+{phase=0;
+tok=1;}
+else
+{phase+=(frq+___SMMUL(frq<<6,FMW<<3))/441*300; if(inlet_sync<0){tok=0;}}
+phose=phase+___SMMUL((inlet_phase<<5),param_pm<<5);
+outlet_phase=phose>>5;
+phose=phose>>22;
+//phise=(phose<<16);
+sum=array[phose];
+sam=arrey[phose];
+
+morph=morph+(___SMMUL(((next<<27)-morph),mos));
+ccomp=(1<<27)-fine;
+mot=___SMMUL(ccomp<<3,sum<<2)+___SMMUL(fine<<3,sam<<2);
+vil=vil+((mot-vil)/param_softness);
+vol=vol+((mot-vol)>>15);
+vel=mot>0?mot:-mot;
+if(vel>vul)
+{vul=vel;}
+else
+{vul=vul*0.9999;}
+
+outlet_out=vil;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

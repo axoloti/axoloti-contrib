@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="KarplusStrong2" uuid="e0ae375a-c621-4865-94d5-dd136330a55c">
+      <sDescription>Karplus-strong delay tuned to audio-frequencies and a very long decay (depending on dampening-strength)
+
+-pitch sets the pitch of the delay-time, tuned to the same pitch as normal oscillators
+-position sets the &quot;strike&quot; position where the audio enter the buffer (creates two seperate buffer-writing positions)
+-tailtime sets the time of the tail. 64 is about 40 seconds
+-color sets the frequency of the &quot;dampening&quot; filter.
+-mode sets the filter mode: left is lowpass, middle is bandpass, right is highpass.
+-strength sets the strength of the filtering. At zero, no filtering is applied, at max, lots of damping is applied (6dB per frequency-cycle-&gt;that&apos;s seriously a lot and very quick to fade out-&gt;percussion?)
+-influence sets the influence by the pitch on the dampening frequency. For a guitar-string, where multiple notes can be played on a single string, this would be around zero, but for a piano, where each keys has it&apos;s own three strings with changing materials and thickness between each key, each key will have a different behavior and the higher the key (probably, not sure though haha google knows..) the higher the dampening frequency.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="delay time (fraction of total delayline size)"/>
+         <frac32 name="pitch"/>
+         <frac32 name="position"/>
+         <frac32 name="tailtime"/>
+         <frac32 name="color"/>
+         <frac32 name="mode"/>
+         <frac32 name="strength"/>
+         <frac32 name="influence"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="position"/>
+         <frac32.u.map name="tailtime"/>
+         <frac32.s.map.pitch name="color"/>
+         <frac32.u.map name="mode"/>
+         <frac32.u.map name="strength"/>
+         <frac32.s.map name="influence"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (13);
+static const uint32_t LENGTH = (1<<13);
+static const uint32_t LENGTHMASK = ((1<<13)-1);
+int32_t *array;
+uint32_t writepos;
+int32_t feed;
+int32_t Time;
+int32_t val1;
+int32_t val2;
+int32_t T1ime;
+int32_t lp;
+]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[attr_poly][1<<13]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+
+]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=inlet_pitch+95860818+param_pitch;
+int32_t damp;
+MTOF(param_color+___SMMUL(pitch<<3,(__USAT(param_influence+inlet_influence,27))<<2)+inlet_color,damp)
+int32_t mode=__USAT(param_mode+inlet_mode,27);
+int32_t strength=__USAT(param_strength+inlet_strength,27);
+strength=___SMMUL(strength<<3,strength<<2);
+float32_t fratio=-pitch;
+fratio=powf(2,(fratio/((float32_t)(12<<21))));
+Time=(((int32_t)((1<<25)*fratio))>>27-LENGTHPOW);
+int32_t tailtime=(param_tailtime+inlet_tailtime)>>5;
+float32_t ratio=(float32_t)(Time)/(float32_t)(tailtime);
+float32_t dB=(float32_t)(-10)*ratio;
+dB=powf(2,dB);
+int32_t DB=(1<<31)*dB;
+DB=DB;
+int32_t TIME=(int32_t)((1<<25)*fratio);
+uint32_t tmp_w1 = (TIME<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+uint32_t tmp_w2 = (1<<30) - tmp_w1;
+
+int32_t position=__USAT(param_position+inlet_position,27);
+
+
+
+]]></code.krate>
+      <code.srate><![CDATA[writepos = (writepos + 1)&LENGTHMASK;          
+uint32_t tmp_di1 = writepos - (Time) -1;
+int32_t tmp_a1 = array[tmp_di1&LENGTHMASK];
+int32_t tmp_a2 = array[(tmp_di1+1)&LENGTHMASK];
+int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+lp=___SMMUL(tmp_r<<3,DB);
+val1=___SMMLA((((int32_t)(lp))-val1)<<1,damp,val1);
+feed=___SMMUL(((1<<27)-(strength>>3))<<3,lp<<2)+___SMMUL(strength,(val1+___SMMUL(mode<<3,(lp-(val1<<1))<<2))<<2);
+array[writepos] = -feed;
+array[(writepos-___SMMUL(Time<<3,position<<2))&LENGTHMASK]+=inlet_in>>1;
+array[(writepos-Time+___SMMUL(Time<<3,position<<2))&LENGTHMASK]+=inlet_in>>1;
+outlet_out=-feed+inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

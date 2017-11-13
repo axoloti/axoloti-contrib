@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="guitarTable" uuid="b69960bd-b466-42b6-8dd8-ca4f7800845f">
+      <sDescription>this module is used to create a monophonic table for the guitarOscillator, so it can be used in a polyphonic setting (each oscillator reads from the same table, so the table itself doesn&apos;t have to be polyphonic). This was needed as otherwise each voice would create it&apos;s own table, filling up the available memory really quickly!
+
+&quot;fixed&quot; controls, even though you could change them live, this will create a harsh bleep as it has to recalculate the waveform.
+-damp: dampening-factor for each next added harmonic corresponding to harmonic number.
+-harmonics: how many harmonics will be generated for the wavetable (low numbers reduce recalculation time!)
+-jump: &quot;jump&quot; size for next added harmonic, skipping harmonics in-between
+-max: sets maximum harmonic number that can be added, wraps when above the max.
+-position: sets the read-out position of the guitar-element
+-strike: sets the position where the string is struck</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="damp">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="minDiv">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="harmonics">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="jump">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="max">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <frac32.u.map name="position"/>
+         <frac32.u.map name="strike"/>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+         <bool32.mom name="do"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+int i;
+int j;
+int32_t sum;
+int32_t r;
+int32_t posWidth;
+int32_t position;
+int32_t prev;
+int ctrig;
+int create;
+int32_t Pos;
+int k;
+int32_t start;
+float32_t A;
+float32_t B;
+uint32_t PM;
+int DO;]]></code.declaration>
+      <code.init><![CDATA[DO=1;]]></code.init>
+      <code.krate><![CDATA[if((param_do>0)||DO>0){
+DO=0;
+int32_t preset=param_preset;
+preset=preset-(preset/attr_table.Waveforms)*attr_table.Waveforms;
+int32_t update=param_position+param_strike+param_damp+param_harmonics+param_jump+param_max+param_minDiv;
+
+
+if((!(prev==(update)))&&!create)
+	{create=1;
+	attr_table.Do=1;
+	Pos=param_position;
+	start=param_strike;
+	for(i=0;i<attr_table.LENGTH;i++){attr_table.array[i+param_preset*attr_table.LENGTH]=0;}
+	for(j=0;j<param_harmonics;j++){
+		k=(j*param_jump-(j*param_jump/param_max)*param_max);
+		position=((j+1)*Pos<<4);
+		SINE2TINTERP(position,posWidth)
+		for(i=0;i<attr_table.LENGTH;i++){
+			SINE2TINTERP((i<<32-attr_table.LENGTHPOW)/param_minDiv*(k+param_minDiv)-(start<<3)*(k+param_minDiv),r)
+			attr_table.array[i+preset*attr_table.LENGTH]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
+			}
+		}
+	}
+else if(prev==(update)){create=0;}
+
+prev=update;
+}
+else if(param_do==0){attr_table.Do=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

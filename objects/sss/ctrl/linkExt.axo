@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="linkExt" uuid="308a869d-634c-4949-a9f4-56a93f96ba84">
+      <sDescription>Linked control, eg for controlling the volume of multiple channels on a mixer.
+The module has an internal array for 4 values which can be edited by the &quot;control&quot; knob.
+When a switch is on, the corresponding channel will have the change of the knob added to it&apos;s value. Thus, you can change multiple channels at the same time while keeping their relative differences (though it will saturate at 64).</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="control"/>
+         <bool32 name="c1"/>
+         <bool32 name="c2"/>
+         <bool32 name="c3"/>
+         <bool32 name="c4"/>
+      </inlets>
+      <outlets>
+         <frac32 name="1"/>
+         <frac32 name="2"/>
+         <frac32 name="3"/>
+         <frac32 name="4"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t A[4];
+int32_t prev;]]></code.declaration>
+      <code.krate><![CDATA[int use[4];
+use[0]=inlet_c1;
+use[1]=inlet_c2;
+use[2]=inlet_c3;
+use[3]=inlet_c4;
+int i;
+int32_t diff=inlet_control-prev;
+for(i=0;i<4;i++){
+	if(use[i]>0){
+		A[i]=__USAT(A[i]+diff,27);
+	}
+}
+prev=inlet_control;
+outlet_1=A[0];
+outlet_2=A[1];
+outlet_3=A[2];
+outlet_4=A[3];]]></code.krate>
+   </obj.normal>
+</objdefs>

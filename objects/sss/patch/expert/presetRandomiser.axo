@@ -1,0 +1,161 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="presetRandomiser" uuid="a9ad0f0c-eeb2-47ee-aad7-ab042d1fa903">
+      <sDescription>EXPERT MODULE! (in like, I&apos;m the amateur.. can&apos;t make this universal and this will probably not work with next update! Also, this one can screw up your lovely patch! Save before using!!!!)
+You need to change the code in order for this module to work correctly for your patch!!
+
+This module can be used to randomise lots of knobs with just a press of a button, even parameters that don&apos;t have an external input or those which can&apos;t be controlled by midi (eg. selectors).
+
+It works together with the presetMorpher, which is also an &quot;expert&quot; module and is also able to perfectly screw up your patch.
+
+BUT! Rightly (never press load on presetMorpher if there ain&apos;t a preset saved yet!) used and bounded(the randomisations), these together open up every single corner of your synthesizer/effect!
+Just hit that randomise button until you hear a sweet patch, save it with the presetMorpher, create a bank of 64 presets and then just morph the hell out of it between all your presets, all parameters together at the same time!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>hook.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <bool32 name="rndEQ"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="adsr1"/>
+         <bool32.tgl name="lfo"/>
+         <bool32.tgl name="blepped"/>
+         <bool32.tgl name="filter1"/>
+         <bool32.tgl name="sinemorph"/>
+         <bool32.tgl name="filter2"/>
+         <bool32.tgl name="quantizer"/>
+         <bool32.tgl name="biquad"/>
+         <bool32.tgl name="svf"/>
+         <bool32.tgl name="rnd"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool rnd;
+int i;
+int oct1;
+int oct2;
+int oct3;
+bool lfo1;
+bool lfo2;
+int lfo3;]]></code.declaration>
+      <code.init><![CDATA[rnd=0;]]></code.init>
+      <code.krate><![CDATA[if((param_rnd>0)&&!rnd){
+	rnd=1;
+	//PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd],0,0xFFFD);
+if(param_adsr1>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+1+6],-(1<<27),0xFFFD);                                     //randomisor starts counting parameters from it's own "rnd" button-> "+1"
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+2+6],(int32_t)(GenerateRandomNumber()>>5)-(1<<26),0xFFFD); //BUT!! I have a module (presetMorpher) with 6 parameters in-between which isn't allowed to be randomised, thus +6 had to be added first
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+3+6],(int32_t)(GenerateRandomNumber()>>6)+(1<<26),0xFFFD); //depending on the parameter receiving the randomisation, the random-value has to be scaled accordingly!!
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+4+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);   //this one is bipolar knob/slider
+}
+if(param_lfo>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+5+6],(int32_t)(GenerateRandomNumber()&1),0xFFFD);		  //this is a toggle-switch
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+6+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+7+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);		  //this one is unipolar knob
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+10+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);//each time you have parameters that are not allowed to be randomised, skip them by adding this to the count: 8->10
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+11+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+12+6],(int32_t)(GenerateRandomNumber()&1),0xFFFD);	
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+13+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+14+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+17+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+18+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+19+6],(int32_t)(GenerateRandomNumber()&1),0xFFFD);	
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+20+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+21+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+24+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+25+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+26+6],(int32_t)(GenerateRandomNumber()&1),0xFFFD);	
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+27+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+28+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+31+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+32+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+//precision&step
+for(i=0;i<4;i++){																								//overhere I have thrown the randomisation of controls of 4 identical modules in one for-loop
+int j=i*7;
+bool P=((int32_t)(GenerateRandomNumber()&100))>75?1:0;																	//only if the value goes above 75%, the control will actually be randomised, otherwise zero (eg. when not-often used)
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+8+j+6],P>0?(int32_t)(GenerateRandomNumber()>>6)+(1<<26):0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+9+j+6],P>0?(int32_t)(GenerateRandomNumber()>>5):0,0xFFFD);
+}
+}
+if(param_blepped>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+33+6],(int32_t)((GenerateRandomNumber()%3)-2)*12<<21,0xFFFD);        //this one offsets a pitch-knob 1 octave below or above 0
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+34+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+35+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+36+6],(int32_t)(GenerateRandomNumber()&1),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+37+6],(int32_t)(GenerateRandomNumber()%5),0xFFFD);				//this one outputs between 0 and 5
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+38+6],(int32_t)(GenerateRandomNumber()&127),0xFFFD);				//this one wraps output in 8bits
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+39+6],(int32_t)(GenerateRandomNumber()&127),0xFFFD);
+}
+if(param_filter1>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+40+6],(int32_t)(GenerateRandomNumber()>>5)-(3<<25),0xFFFD);		//this one has a unipolar random-width and is subtracted 48.-> -48 to +16
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+41+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+42+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+43+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+44+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+45+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+46+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+}
+if(param_sinemorph>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+47+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+48+6],(int32_t)((GenerateRandomNumber()%3)-1)*12<<21,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+49+6],0,0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+50+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+51+6],(int32_t)(GenerateRandomNumber()&31),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+52+6],(int32_t)(GenerateRandomNumber()&31),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+53+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+54+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+55+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+56+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+57+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+58+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+59+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+60+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+61+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+62+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+}
+if(param_filter2>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+63+6],(int32_t)(GenerateRandomNumber()>>5)-(3<<25),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+64+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+65+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+66+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+67+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+68+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+69+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+}
+if(param_quantizer>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+70+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+71+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+72+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+73+6],(int32_t)(GenerateRandomNumber()%3),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+74+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+75+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+}
+if(param_biquad>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+76+6],(int32_t)(GenerateRandomNumber()>>5)-(3<<25),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+77+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+78+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+79+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+80+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+81+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+82+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);	
+}
+if(param_svf>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+83+6],(int32_t)(GenerateRandomNumber()>>5)-(3<<25),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+84+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+85+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+86+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+87+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+88+6],(int32_t)(GenerateRandomNumber()>>5),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_rnd+89+6],(int32_t)(GenerateRandomNumber()>>4)-(1<<27),0xFFFD);	
+}
+}
+else if((param_rnd==0)&&(rnd==1)){rnd=0;outlet_rndEQ=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

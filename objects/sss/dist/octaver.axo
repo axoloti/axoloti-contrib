@@ -1,0 +1,100 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="octaver" uuid="dc46ccac-7952-45fd-a9ec-29155d335bc6">
+      <sDescription>octaver distortion
+incoming signal gets rectified, of which the rectified part has a gain of 2 and to the whole rectified signal can be added some gain. Then this goes through a highpass filter, then added to the non-rectified signal (+ former rectified signal when stacking) at half volume and the result is lowpass filtered and then added again to half the non-rectified+stacked signal.
+Using stack, this function is repeated multiple times, stacking octaving upon octaving up to 16 times, feeding back the combined signal as a new &quot;non-rectified&quot; input.
+Gain</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32 name="gain"/>
+         <frac32 name="LP"/>
+         <frac32 name="HP"/>
+         <frac32 name="stack"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="gain"/>
+         <frac32.s.map.pitch name="LP"/>
+         <bool32.tgl name="link"/>
+         <frac32.s.map.pitch name="HP"/>
+         <frac32.u.map name="stack"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val1[17];
+int32_t val2[17];
+int32_t t1[17];
+int32_t t2[17];
+int i;
+   int32_t prevG;
+   int32_t stepG;
+   int32_t prevL;
+   int32_t stepL;
+   int32_t prevH;
+   int32_t stepH;
+   int32_t prevS;
+   int32_t stepS;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<16;i++){
+	val1[i]=0;
+	val2[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[int32_t HP=param_HP+inlet_HP;
+int32_t LP=param_LP+inlet_LP+HP*param_link;
+MTOF(HP,HP)
+MTOF(LP,LP)
+int32_t gain=inlet_gain+param_gain;
+
+
+
+   stepG = (gain - prevG)>>4;
+   int32_t iG = prevG;
+   prevG = gain;
+
+   stepL = (LP - prevL)>>4;
+   int32_t iL = prevL;
+   prevL = LP;
+
+   stepH = (HP - prevH)>>4;
+   int32_t iH = prevH;
+   prevH = HP;
+
+   int32_t STACK=inlet_stack+param_stack;
+   STACK=STACK&((1<<28)-1);
+   STACK=STACK>(1<<27)?(1<<28)-STACK:STACK;
+   stepS = (STACK - prevS)>>4;
+   int32_t Stack = prevS;
+   prevS = STACK;]]></code.krate>
+      <code.srate><![CDATA[iG += stepG;
+iL += stepL;
+iH += stepH;
+Stack +=stepS;
+
+int32_t stack=Stack>>23;
+int32_t mix=(Stack-(stack<<23))<<4;
+int32_t ccomp=(1<<27)-mix;
+
+t1[0]=inlet_i1>>1;
+for(i=0;i<stack+1;i++)
+{
+	//rectify
+	t2[i]=t1[i]>0?t1[i]:(-t1[i]<<1);
+	t2[i]=___SMMUL(t2[i]<<3,iG<<4);
+	//HP
+	val1[i]=___SMMLA((t2[i]-val1[i])<<1,iH,val1[i]);
+	//add
+	t2[i]=t2[i]-val1[i]+(t1[i]>>1);
+	t2[i]=-t2[i];
+	//LP
+	val2[i]=___SMMLA((t2[i]-val2[i])<<1,iL,val2[i]);
+	//add
+	t2[i]=val2[i];
+	t1[i+1]=__SSAT(t2[i]+t1[i],27);
+}
+
+outlet_o1=(___SMMUL(t1[__USAT(stack,4)]<<3,ccomp<<2)+___SMMUL(t1[__USAT(stack+1,4)]<<3,mix<<2)>>2)+(inlet_i1);]]></code.srate>
+   </obj.normal>
+</objdefs>

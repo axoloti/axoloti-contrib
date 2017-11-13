@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="multiband" uuid="20f1c1ef-3052-4d31-9a94-18fd2243fa79">
+      <sDescription>2-pole resonant 3x multimode filter (LP,HP,BP)(biquad) for multiband purposes
+The &quot;inv&quot; output subtracts the filtered signal from the original signal to get an inverted response. (input-filter=leftover).
+
+Eg. use this to create a multi-band-compressor/distortion/delay.
+Connect the &quot;out&quot; output to a compressor/distortion/delay and send the &quot;inv&quot; output to the next filter-stage as this signal is the &quot;left-over&quot; part that has been filtered away.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+         <frac32buffer name="inv"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs>
+         <combo name="mode">
+            <MenuEntries>
+               <string>bp</string>
+               <string>lp</string>
+               <string>hp</string>
+            </MenuEntries>
+            <CEntries>
+               <string>bp</string>
+               <string>lp</string>
+               <string>hp</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+
+int i;]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+      MTOF(param_pitch + inlet_pitch,freq);
+      biquad_attr_mode_coefs(&bc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+      for(i=0;i<BUFSIZE;i++){
+      	outlet_inv[i]=inlet_in[i]-outlet_out[i];
+      }]]></code.krate>
+   </obj.normal>
+</objdefs>

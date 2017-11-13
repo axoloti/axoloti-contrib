@@ -1,0 +1,91 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="HH1" uuid="543068e0-de1c-4e1b-b5e6-5dc4f11ce3b0">
+      <sDescription>simple hihat</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <bool32 name="close"/>
+         <bool32 name="open"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="CloseDec"/>
+         <frac32.s.map name="OpenDec"/>
+         <int32 name="octaves">
+            <MinValue i="0"/>
+            <MaxValue i="5"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase1;
+uint32_t Phase2;
+int32_t ad1;
+int32_t ad2;
+int32_t ad3;
+int32_t freq;
+int32_t decay1;
+int32_t decay2;
+int32_t decay3;
+int ttrig;
+static const int noct = 5;
+int32_t obuf[noct];
+int32_t sum;
+uint32_t seed;
+int index;
+const int8_t * dyadictree(void){
+   static const int8_t dtree[] = {
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,6,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,7};
+   return dtree;
+}
+int gate;
+int set;]]></code.declaration>
+      <code.init><![CDATA[
+int i;
+for(i=0;i<noct;i++)
+   obuf[i]=0;
+index = 0;
+sum = 0;
+seed = 0x830af41e + GenerateRandomNumber();
+]]></code.init>
+      <code.krate><![CDATA[decay1=(1<<27)-param_CloseDec;
+decay1=___SMMUL(decay1<<3,decay1<<2);
+decay1=___SMMUL(decay1<<3,decay1<<2);
+decay1=(1<<27)-decay1;
+decay3=(1<<27)-param_OpenDec;
+decay3=___SMMUL(decay3<<3,decay3<<2);
+decay3=___SMMUL(decay3<<3,decay3<<2);
+decay3=(1<<27)-decay3;
+]]></code.krate>
+      <code.srate><![CDATA[int o = dyadictree()[index++];
+if (o==param_octaves){
+   index=0;
+} else {
+   sum -= obuf[o];
+   seed = (seed * 196314165) + 907633515;
+   obuf[o] = ((int32_t)seed)>>7;
+   sum += obuf[o];
+}
+seed = (seed * 196314165) + 907633515;
+int32_t noise= sum + (((int32_t)seed)>>param_octaves);
+
+gate=inlet_close+inlet_open;
+if((gate>0)&&(!(ttrig)))
+{ad3=(1<<27);}
+if(inlet_open>0){set=1;}
+if(inlet_close>0){set=0;}
+if(set==0)
+{ad3=___SMMUL(ad3<<3,decay1<<2);}
+if(set==1)
+{ad3=___SMMUL(ad3<<3,decay3<<2);}
+ad1=___SMMUL(ad3<<3,ad3<<2);
+outlet_wave= ___SMMUL(ad3,noise)>>2;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
