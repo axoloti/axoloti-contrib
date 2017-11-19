@@ -25,6 +25,7 @@ See inputs/controls for their functions (hoover above them)</sDescription>
          <int32 name="step2" description="multiplies the grain-offset-position of the second of the two delay-lines after quantification"/>
          <bool32 name="overwrite" description="when high, records the input continuously. There has to be a recorded buffer already! That one sets the buffersize!"/>
          <frac32.bipolar name="feedback" description="sets the amount of feedback when in &quot;overwrite&quot; mode."/>
+         <frac32 name="wet"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -204,7 +205,8 @@ float32_t wratio=(float32_t)(1<<30)/(window>>1);
 prate=(int64_t)((int64_t)RATE*pratio-RATE)*wratio;
 if(param_dir<2){
 dir=param_dir<1?1:-1;}
-else{dir=inlet_dir>0?-1:1;}]]></code.krate>
+else{dir=inlet_dir>0?-1:1;}
+int32_t wet=__USAT((inlet_wet<<3)+(param_wet>>1),30)<<1;]]></code.krate>
       <code.srate><![CDATA[int32_t FRQ=___SMMUL(prate*dir<<2,RT<<3);
 phase+=___SMMUL(RATE*dir<<2,RT<<3);
 phs+=FRQ;
@@ -247,7 +249,7 @@ int32_t mp;
 SINE2TINTERP(phs-(1<<30),mp)
 mp=(mp>>2)+(1<<29);
 int32_t out=tmp2+(___SMMUL(tmp1-tmp2,mp)<<2);
-outlet_out=__SSAT(___SMMUL(out,param_wet)+___SMMUL(inlet_in,param_dry),27)<<1;
+outlet_out=__SSAT(___SMMUL(out,wet)+___SMMUL(inlet_in,param_dry),27)<<1;
 FD=___SMMUL(out,feed)<<1;
 prv=phs;]]></code.srate>
    </obj.normal>
