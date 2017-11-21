@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="allBiqModes" uuid="bd203935-c245-4346-81d8-b5a690c955e6">
+   <obj.normal id="allBiqModes" uuid="27d464aa-0481-45e3-b840-109036177a67">
       <sDescription>This filter is build up from 2 biquad allpass filters. Depending on how they&apos;re summed/subtracted (side knobs) a LP, HP (invert knob), BP, lowshelf and highshelf filter can be created</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -24,21 +24,16 @@
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t All;
-int32_t bs[4][2];
-uint32_t v30=1<<30;
-uint32_t v27=1<<27;
-uint32_t v23=1<<25;
-uint32_t v8=1<<8;
-int32_t noise;
-int32_t Frq[4];
-int32_t RMS;
+int32_t bs[2][2];
+int32_t Frq[2];
 int32_t ALLPASS(int32_t in,int I){
 bs[I][1]=___SMMUL(-in<<1,Frq[I])+bs[I][0]+___SMMUL(bs[I][1]<<1,Frq[I]);
 All=bs[I][1];
 bs[I][0]=in;
-}]]></code.declaration>
-      <code.init><![CDATA[RMS=v30;
-noise=0;]]></code.init>
+}
+int32_t noise;
+uint32_t v27=1<<27;]]></code.declaration>
+      <code.init><![CDATA[noise=0;]]></code.init>
       <code.krate><![CDATA[int32_t center=param_center+inlet_center;
 int32_t width=param_width+inlet_width;
 
@@ -50,14 +45,22 @@ int32_t side2=__SSAT(param_side2+inlet_side2,28);]]></code.krate>
       <code.srate><![CDATA[noise= inlet_in;
 int32_t NS=noise;
 ALLPASS(noise,0);
-noise-=(___SMMUL(side1<<4,All)<<1);
+if(side1>0){
+noise=noise+(___SMMUL(side1,(noise-All>>1)-noise)<<5);
+}
+else{
+noise=noise+(___SMMUL(side1,-(noise+All>>1)+noise)<<5);
+}
+
 ALLPASS(noise,1);
-noise-=(___SMMUL(side2<<4,All)<<1);
+if(side2>0){
+noise=noise+(___SMMUL(side2,(noise-All>>1)-noise)<<5);
+}
+else{
+noise=noise+(___SMMUL(side2,-(noise+All>>1)+noise)<<5);
+}
+
 int32_t ns=noise-___SMMUL(inv<<3,NS<<2);
-//int32_t ts=ns;
-//ts=ts>0?ts:-ts;
-//ts=ts<v8?v8:ts;
-//RMS+=((ts-RMS)>>8);
-outlet_noise=ns;//*((float32_t)v23/RMS);]]></code.srate>
+outlet_noise=ns;]]></code.srate>
    </obj.normal>
 </objdefs>
