@@ -7,6 +7,7 @@
       <inlets>
          <frac32.bipolar name="pitch" description="pitch"/>
          <frac32buffer name="freq" description="frequency"/>
+         <frac32 name="phase"/>
          <bool32 name="sync"/>
       </inlets>
       <outlets>
@@ -16,6 +17,7 @@
       <displays/>
       <params>
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map.gain name="phase"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[uint32_t Phase;
@@ -33,11 +35,12 @@ int32_t prev;]]></code.declaration>
 
    step=(freq-prev)>>4;
    int32_t I=prev;
-   prev=freq;]]></code.krate>
+   prev=freq;
+   int32_t phase=(param_phase<<1)+(inlet_phase<<4);]]></code.krate>
       <code.srate><![CDATA[I+=step;
 Phase += I + inlet_freq;
 int32_t r;
-int32_t p2 = Phase;
+int32_t p2 = Phase+phase;
 SINE2TINTERP(p2,r)
 outlet_wave= (r>>4);
 outlet_phase=Phase;]]></code.srate>
