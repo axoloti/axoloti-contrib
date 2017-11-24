@@ -121,6 +121,23 @@
       case 7: outlet_o= inlet_i7;break;
       case 8: outlet_o= inlet_i8;break;
       case 9: outlet_o= inlet_i9;break;
+      // 24.11.2017 19:51
+      // BUG in 1.0.12
+      //  For the audio rate sample buffer inlet type, the patcher mangles the building of the patch source
+      //  when an input has a name that ends in a number with more than 2 digits.
+      //
+      //  Use "mux 12b" as a temprary work around until the patcher has been fixed.
+      //
+      // In the code below
+      //      case 10: outlet_o= inlet_i10;break;
+      //      case 11: outlet_o= inlet_i11;break;
+      //      default: outlet_o= inlet_i11;break;
+      // becomes:
+      //      case 10: outlet_o[buffer_index]= inlet_i1[buffer_index]0;break;
+      //      case 11: outlet_o[buffer_index]= inlet_i1[buffer_index]1;break;
+      //      default: outlet_o[buffer_index]= inlet_i1[buffer_index]1;break;
+      // when the patch source is built:
+
       case 10: outlet_o= inlet_i10;break;
       case 11: outlet_o= inlet_i11;break;
       default: outlet_o= inlet_i11;break;
