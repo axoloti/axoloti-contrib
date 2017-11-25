@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="softClip" uuid="7930b1ec-6ad4-44c9-869b-1b0999121d19">
+      <sDescription>Soft limiter with input gain and positive/negative gain offset (gain-modulation by incoming audio)to create tube-like waveforms and other distortions (high mod settings)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32 name="gain"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain"/>
+         <frac32.s.map name="mod"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t v30=1<<30;
+int32_t v27=1<<27;
+int32_t prv;
+int32_t stp;]]></code.declaration>
+      <code.krate><![CDATA[int32_t gain=__USAT(param_gain+inlet_gain,28);
+stp=gain-prv>>4;
+int32_t Gain=prv;
+prv=gain;]]></code.krate>
+      <code.srate><![CDATA[int32_t mod=___SMMUL(param_mod<<3,Gain<<2);
+int32_t i1=__SSAT(inlet_i1,28);
+int32_t val=__SSAT(___SMMUL(i1<<1,Gain+___SMMUL(i1<<3,mod<<4)),25)<<6;
+val=__SSAT(val,28);
+int32_t ABS=val>0?val:-val;
+int32_t dir=val>0?v27:-v27;
+outlet_o1=val-(___SMMUL(ABS,val-dir)<<5);
+Gain+=stp;]]></code.srate>
+   </obj.normal>
+</objdefs>
