@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="fifthShifter3" uuid="78bb7174-1d55-4231-a02e-e00f3ce12e82">
+   <obj.normal id="fifthShifter3" uuid="513e9eaf-c947-45dd-aebc-ebcca833879b">
       <sDescription>this is a quad-delayline pitchshifter/delay with 6dB crossover filters.
 The low frequency region will be pitched up by a fifth, the high frequency region will be pitched down by an octave.
 The &quot;crossover&quot; parameter sets the crossover frequency for the input, to send low frequencies to the fifth-up and high frequencies to the octave-down delayline.
@@ -13,6 +13,8 @@ Mostly usable for drony stuff.</sDescription>
       <inlets>
          <frac32buffer name="in" description="wave input"/>
          <frac32 name="crossover"/>
+         <frac32 name="highest"/>
+         <frac32 name="lowest"/>
          <frac32 name="rate"/>
       </inlets>
       <outlets>
@@ -22,8 +24,8 @@ Mostly usable for drony stuff.</sDescription>
       <displays/>
       <params>
          <frac32.s.map.pitch name="crossover" description="sets &quot;mid&quot; crossover frequency. The pitchshifter/delay will mostly focus around this point"/>
-         <frac32.s.map.pitch name="lowest"/>
          <frac32.s.map.pitch name="highest"/>
+         <frac32.s.map.pitch name="lowest"/>
          <frac32.s.map.lfopitch name="panRate"/>
          <frac32.u.map.gain name="window"/>
          <frac32.u.map name="delay"/>
@@ -146,8 +148,8 @@ ArrayH = &_ArrayH[0];
 MTOF(param_crossover+inlet_crossover,frq)
 int32_t LOW;
 int32_t HIGH;
-MTOF(param_highest,LOW)
-MTOF(param_lowest,HIGH)
+MTOF(param_highest+inlet_highest,LOW)
+MTOF(param_lowest+inlet_lowest,HIGH)
 
 
 int32_t rate;
