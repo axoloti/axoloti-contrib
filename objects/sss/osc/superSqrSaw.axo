@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="superSqrSaw" uuid="3f84d7a0-e91d-401d-89b8-52ce3904fd05">
+      <sDescription>seven detuned square/saw wave oscillators
+Non-bandwith limited
+pw: controls the pulsewidth-base of the squarewaves. Detuned squarewaves have their pw-control multiplied, so each pulse can have another width.
+power: when 0 all waves have the same volume, the higher &quot;power&quot;, the less the detuned waves can be heard.
+saw: sets the amount of saws instead of pulse waveforms
+base: when on, uses a sawwave as base instead of a squarewave</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="detune"/>
+         <frac32 name="pw"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="supersaw wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="detune"/>
+         <frac32.s.map name="pw"/>
+         <frac32.u.map name="power"/>
+         <int32 name="saw">
+            <MinValue i="0"/>
+            <MaxValue i="5"/>
+         </int32>
+         <bool32.tgl name="base"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t osc_p[7];
+int32_t v26=1<<25;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<7;i++)
+    osc_p[i]=0;]]></code.init>
+      <code.krate><![CDATA[uint32_t f0;
+  uint32_t f[6];
+  MTOFEXTENDED(param_pitch + inlet_pitch,f0);
+    uint32_t det1 = __USAT(param_detune + inlet_detune,27);
+  uint32_t det = ___SMMUL(det1,det1)<<2;
+  uint32_t f0d = ___SMMUL(det<<8,f0);
+  int i,j;
+  f[0] = f0+___SMMUL(f0d,-0x05432123);
+  f[1] = f0+___SMMUL(f0d,-0x03111111);
+  f[2] = f0+___SMMUL(f0d,-0x01020304);
+  f[3] = f0+___SMMUL(f0d,0x01030450);
+  f[4] = f0+___SMMUL(f0d,0x03212121);
+  f[5] = f0+___SMMUL(f0d,0x05542211);
+  int32_t pw=inlet_pw+param_pw<<4;]]></code.krate>
+      <code.srate><![CDATA[osc_p[0]+=f0;
+for(i=0;i<6;i++){
+osc_p[i+1]+=f[i];
+}
+if(param_base>0){
+outlet_wave=osc_p[0]>>6;	
+}
+else{
+outlet_wave=osc_p[0]>(pw)?v26:-v26;
+}
+int32_t tmp=v26;
+for(i=0;i<6;i++){
+tmp-=___SMMUL(tmp<<2,param_power<<3);
+if(i>param_saw){
+outlet_wave+=osc_p[i+1]>(pw*i)?tmp:-tmp;
+}
+else{
+outlet_wave+=___SMMUL(osc_p[i+1],tmp);
+}
+}
+outlet_wave=__SSAT(outlet_wave,28);]]></code.srate>
+   </obj.normal>
+</objdefs>
