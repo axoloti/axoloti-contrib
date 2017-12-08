@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="distribute4" uuid="492f6e72-5589-4c4a-8e2a-92b626449635">
+      <sDescription>value distributor module to be used with 4 &quot;gateSpreader&quot; modules. Used to distribute the amount of gates that may be played by several voices.
+when width and slope are zero, the incoming voltage is mixed through output o1 up to o4 after which it returns to output o1.
+When increasing slope, it decreases the rate at which adjoining sides decrease in value. When slope is set at 64, all inputs receive the full input value.
+The &quot;width&quot; sets the width of the &quot;center&quot; value that receives most of the incoming value.
+Note that only when width and slope are set to zero, the sum of all the outputs is the same as the value of the input. Increasing either will result in a greater summation.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="in"/>
+         <frac32 name="select"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="o4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="select"/>
+         <frac32.u.map name="width"/>
+         <frac32.u.map name="slope"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t V[4];
+int i;
+int32_t v27=1<<27;
+
+int32_t v29=1<<29;]]></code.declaration>
+      <code.krate><![CDATA[int32_t select=(param_select+inlet_select)&(v27-1);
+for(i=0;i<4;i++){
+	
+int32_t tmp=(select-(i<<25))<<2;
+tmp=tmp&(v29-1);
+tmp=tmp>(v27*4>>1)?v29-tmp:tmp;
+tmp=___SMMUL(v27-param_slope<<3,tmp<<2);
+tmp=__USAT(tmp-(param_width<<1),27);
+tmp=v27-tmp;
+tmp=__USAT(tmp,27);
+V[i]=tmp;
+
+}
+
+outlet_o1=___SMMUL(V[0]<<3,inlet_in<<2);
+outlet_o2=___SMMUL(V[1]<<3,inlet_in<<2);
+outlet_o3=___SMMUL(V[2]<<3,inlet_in<<2);
+outlet_o4=___SMMUL(V[3]<<3,inlet_in<<2);]]></code.krate>
+   </obj.normal>
+</objdefs>
