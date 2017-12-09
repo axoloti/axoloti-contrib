@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="axoComp" uuid="03aa82ad-bd36-4cdf-9e4e-12a08a1af138">
+      <sDescription>audio compressor
+on request of axoman I added a modulation that enables a curved response of the attack/release stages.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input wave"/>
+         <frac32.positive name="gainAdd" description="adds gain to input audio"/>
+         <frac32.positive name="treshold" description="level treshold (with auto make-up gain)"/>
+         <frac32.bipolar name="attack"/>
+         <frac32.bipolar name="Acrv" description="mods the attack rate to create a curved attack. Negative values will make the attack-rate start faster and positive values will make it start slower(allowing more &quot;punch&quot;)"/>
+         <frac32.bipolar name="ACrvRate"/>
+         <frac32.bipolar name="release"/>
+         <frac32.bipolar name="Rcrv" description="mods the decay rate in the same way as the attack-curve. These values are added to the attack/rise times when switching between rise/fall and then faded back to zero."/>
+         <frac32.bipolar name="RCrvRate"/>
+         <frac32.positive name="ratio" description="sets the ratio of the compression"/>
+         <frac32.positive name="goal" description="Goal Volume"/>
+         <frac32.positive name="expander" description="Open to turn Compressor into expander (glitches when both threshold and expander values are high, causing a fat, harsh distortion. Awesome for bassdrums!)"/>
+         <bool32 name="AutoGain" description="adds gain in respect to the treshold, the lower the treshold, the more post-gain is added."/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t out1;
+int32_t out2;
+int32_t out3;
+
+int32_t val;
+int32_t aofs;
+int32_t dofs;
+int32_t trg;]]></code.declaration>
+      <code.krate><![CDATA[int32_t Arate;
+MTOF(inlet_ACrvRate,Arate)
+int32_t Rrate;
+MTOF(inlet_RCrvRate,Rrate)
+int32_t arate;
+int32_t drate;]]></code.krate>
+      <code.srate><![CDATA[int32_t in;
+in=___SMMUL(inlet_in<<3,((1<<26)+(inlet_gainAdd))<<3);
+
+int sabs;
+sabs=(in>=0)?in:-in;
+
+aofs-=___SMMUL(aofs,Arate)<<1;
+dofs-=___SMMUL(dofs,Rrate)<<1;
+if((sabs>val)&&!trg){
+	trg=1;
+	aofs=inlet_Acrv;
+}
+else if((val>sabs)&&trg){
+	trg=0;
+	dofs=inlet_Rcrv;
+}
+MTOF(-inlet_attack-aofs,arate)
+MTOF(-inlet_release-dofs,drate)
+ if (sabs>val)      val = ___SMMLA(sabs-val<<1, arate,val);
+      else val = ___SMMLA(sabs-val<<1,drate,val);
+   out1 = val;
+
+
+
+int32_t thresa=(inlet_treshold>=(1<<18))?inlet_treshold:(1<<18);
+Float_t f;
+f.f = (thresa);
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t thresh = r1 + r2;
+int32_t thresb;
+thresb=___SMMUL(out1<<2,inlet_expander<<3)+___SMMUL(thresa<<3,((1<<27)-inlet_expander)<<2);
+
+f.f = (thresb>out1)?(thresb):___SMMUL((out1-thresb)<<3,inlet_ratio<<2)+thresb;
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t audioIn = r1 + r2;
+
+
+int32_t slog= (thresh-audioIn);
+
+f.f = (1<<27);
+r1 = ((f.parts.exponent&0x7F)-18) << 24;
+r2 = logt[f.parts.mantissa>>15]<<10;
+int32_t normal = r1 + r2;
+
+int32_t normat= (normal-thresh);
+
+int8_t s = (slog>>24)+12;
+uint8_t ei = slog>>16;
+int32_t audioOut;
+if (s>=0)
+     audioOut = (expt[ei]<<s);
+else audioOut = (expt[ei]>>(-s));
+
+s = (normat>>24)+6;
+ei = normat>>16;
+int32_t norman;
+if (s>=0)
+     norman = (expt[ei]<<s);
+else norman = (expt[ei]>>(-s));
+
+int32_t outa=___SMMUL(audioOut<<2,in<<3);
+int32_t outb=(outa>>3)*(norman>>18);
+if(inlet_AutoGain>0)
+{
+	outlet_out=___SMMUL(outb<<3,inlet_goal<<2);
+}
+
+else
+{
+	outlet_out=___SMMUL(outa<<3,inlet_goal<<2);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
