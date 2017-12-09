@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="axoComp" uuid="03aa82ad-bd36-4cdf-9e4e-12a08a1af138">
+   <obj.normal id="axoComp" uuid="864c52b4-3622-4c38-8542-b11d0d2df274">
       <sDescription>audio compressor
 on request of axoman I added a modulation that enables a curved response of the attack/release stages.</sDescription>
       <author>Remco van der Most</author>
@@ -24,12 +24,14 @@ on request of axoman I added a modulation that enables a curved response of the 
          <frac32buffer name="out"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <frac32.u.map.kdecaytime.reverse name="smooth" description="smooths out the decay of the initial rectifier/envelope follower." noLabel="true"/>
+      </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t out1;
 int32_t out2;
 int32_t out3;
-
+int32_t smth;
 int32_t val;
 int32_t aofs;
 int32_t dofs;
@@ -45,7 +47,8 @@ in=___SMMUL(inlet_in<<3,((1<<26)+(inlet_gainAdd))<<3);
 
 int sabs;
 sabs=(in>=0)?in:-in;
-
+smth=sabs>smth?sabs:___SMMLA((sabs-smth)<<1,param_smooth,smth);
+sabs=smth;
 aofs-=___SMMUL(aofs,Arate)<<1;
 dofs-=___SMMUL(dofs,Rrate)<<1;
 if((sabs>val)&&!trg){
