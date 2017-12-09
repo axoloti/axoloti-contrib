@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="SyncPulse" uuid="518938a6-83d3-4c00-8ad2-12e2d6741adf">
       <sDescription>Generates a single pulse after a rising edge on trigger input.
 The pulse-length depends on the time in-between triggers.
@@ -22,13 +22,13 @@ int ntrig;
 uint32_t timer;]]></code.declaration>
       <code.init><![CDATA[val = 0;
 ntrig = 0;]]></code.init>
-      <code.krate><![CDATA[if ((inlet_trig > 0) && !ntrig) {
+      <code.krate><![CDATA[val+=1;
+if ((inlet_trig > 0) && !ntrig) {
 	ntrig = 1;
 timer=val;
 val=0;
 }
 else if (!(inlet_trig > 0)){ntrig = 0;}
-val+=1;
-outlet_out=val<___SMMUL(param_length<<3,timer<<2);]]></code.krate>
+outlet_out=(val<(___SMMUL(param_length<<3,timer<<2))||(val<1);]]></code.krate>
    </obj.normal>
 </objdefs>
