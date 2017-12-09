@@ -1,0 +1,78 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="polyplay" uuid="2e6265136ddaaf4d885a669520546de2e3306819">
+      <sDescription>A variant on the wave/play streaming playback object for mono 16bit .raw (headerless .wav) files. This version has pitch control and works in poly patches, but is less efficient and more memory hungry. Max 6 instances because of memory restrictions.</sDescription>
+      <author>Kai Drange</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pos" description="position"/>
+         <bool32.rising name="start" description="trigger"/>
+         <bool32.rising name="stop" description="trigger"/>
+         <charptr32 name="filename" description="file name"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+         <bool32.pulse name="end" description="end of stream"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="rate" description="Pitch 0.5 to 1.5" noLabel="true">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+         <include>./pitchstreamer.h</include>
+      </includes>
+      <code.declaration><![CDATA[WORKING_AREA(waThreadSD, 850);
+   sdReadFilePingpong *stream;
+   int starttrig;
+   int stoptrig;]]></code.declaration>
+      <code.init><![CDATA[static sdReadFilePingpong s[attr_poly] __attribute__ ((section (".data")));
+// unmap from aliased memory for DMA
+stream = (sdReadFilePingpong *)(0x20000000 | (int)&s[parent->polyIndex]);
+stream->pingpong = CLOSED;
+stream->doSeek = 0;
+stream->offset = -1;
+stream->rate = 1;
+stream->sampleFrac = 0;
+starttrig = 0;
+stoptrig = 0;
+stream->pThreadSD = chThdCreateStatic(waThreadSD, sizeof(waThreadSD),
+                    LOWPRIO, ThreadSD, (void *)stream);]]></code.init>
+      <code.dispose><![CDATA[sdStopStreamer(stream);]]></code.dispose>
+      <code.krate><![CDATA[int32_t i;
+
+outlet_end = 0;
+     if ((inlet_start>0) && !starttrig) {
+        UINT lowres_rate = (param_rate/(float)(1<<27) + 0.5)*256;
+	   stream->rate = lowres_rate / 256.0;
+        sdOpenStream(stream,inlet_filename);
+        sdSeekStream(stream,((inlet_pos)>>4)<<2);
+        starttrig=1;
+     } 
+     else if ((!(inlet_start>0)) && starttrig) {
+     	starttrig=0;
+     }
+     if ((inlet_stop>0) && !stoptrig) {
+        sdCloseStream(stream);
+        stoptrig=1;
+     } 
+     else if ((!(inlet_stop>0)) && stoptrig) {
+     	stoptrig=0;
+     }
+     int16_t *p = 0;
+     int16_t *q = 0;
+     p=sdReadStream(stream);
+     if (p) {
+        for(i=0;i<BUFSIZE;i++){
+           outlet_out[i] = (*(p++))<<10;
+        }
+     }
+     else {
+        for(i=0;i<BUFSIZE;i++) 
+        	outlet_out[i] = 0;
+        outlet_end = 1;
+     }]]></code.krate>
+   </obj.normal>
+</objdefs>
