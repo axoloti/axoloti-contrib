@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="axoComp" uuid="864c52b4-3622-4c38-8542-b11d0d2df274">
+   <obj.normal id="axoComp" uuid="97cedd10-8591-4816-8e74-217bdb7f86a9">
       <sDescription>audio compressor
 on request of axoman I added a modulation that enables a curved response of the attack/release stages.</sDescription>
       <author>Remco van der Most</author>
@@ -43,7 +43,7 @@ MTOF(inlet_RCrvRate,Rrate)
 int32_t arate;
 int32_t drate;]]></code.krate>
       <code.srate><![CDATA[int32_t in;
-in=___SMMUL(inlet_in<<3,((1<<26)+(inlet_gainAdd))<<3);
+in=___SMMUL(inlet_in<<3,((1<<27)+(inlet_gainAdd))<<2);
 
 int sabs;
 sabs=(in>=0)?in:-in;
@@ -53,11 +53,11 @@ aofs-=___SMMUL(aofs,Arate)<<1;
 dofs-=___SMMUL(dofs,Rrate)<<1;
 if((sabs>val)&&!trg){
 	trg=1;
-	aofs=inlet_Acrv;
+	aofs=inlet_Acrv<<1;
 }
 else if((val>sabs)&&trg){
 	trg=0;
-	dofs=inlet_Rcrv;
+	dofs=inlet_Rcrv<<1;
 }
 MTOF(-inlet_attack-aofs,arate)
 MTOF(-inlet_release-dofs,drate)
