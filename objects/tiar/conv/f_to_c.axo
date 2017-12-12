@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="f_to_c" uuid="a16394eb-0588-4449-abdc-bc73587f1b71">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32 name="i"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="prefix"/>
+      </attribs>
+      <code.declaration><![CDATA[char c[7+strlen("attr_prefix")];
+char *p=c+strlen("attr_prefix");]]></code.declaration>
+      <code.init><![CDATA[strcpy(&c[0],"attr_prefix");]]></code.init>
+      <code.krate><![CDATA[float f = inlet_i * (1.0f/(1<<21));
+if(inlet_i > 0)       p[0] = '+';
+else if(inlet_i < 0) {p[0] = '-'; f = -f; }
+else p[0] = ' ';
+if(f >= 1000){
+  p[1]=127;p[2]=127;p[3]=0;
+} else {
+  {
+    int cent=(int)(f/100);
+    if(cent == 0) p[1]=' '; else p[1]='0' + cent;
+    f -= cent * 100;
+  }
+  {
+    int diz=(int)(f/10);
+    if(diz == 0) p[2] = ' '; else p[2]='0' + diz;
+    f -= diz * 10;
+  }
+  {
+    int un = (int)(f);
+    p[3] = '0' + un;
+    f -= un * 1;
+    p[4] = '.';
+  }
+  {
+  int diz = (int)(f*10);
+  p[5] = '0'+diz;
+  f -= diz * 10;
+  }
+  p[6]=0;
+}
+
+outlet_o= c;]]></code.krate>
+   </obj.normal>
+</objdefs>
