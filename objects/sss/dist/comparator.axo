@@ -1,0 +1,82 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="comparator" uuid="57aa5003-c09c-485a-abf7-f7a797e91bb9">
+      <sDescription>high quality audio comparator using blit synthesis (bandwidth limited)
+mode 0: 3-way comparator (low,0,high)
+mode 1: 2-way comparator (low,high)
+mode 2: quantizer</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in" description="level input"/>
+         <frac32buffer name="treshold" description="trigger input, triggers on rising zero-crossing"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="audio output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="treshold"/>
+         <int32.hradio name="mode">
+            <MaxValue i="3"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const int blepvoices = 16;
+  int16_t *oscp[blepvoices];
+  int32_t vgain[blepvoices];
+  uint32_t nextvoice;
+  int32_t i0;
+  int32_t in0;
+  int32_t acc;
+  int32_t trg;
+  int32_t v26=1<<26;
+  int32_t lp;]]></code.declaration>
+      <code.init><![CDATA[int j;
+  for(j=0;j<blepvoices;j++)
+    oscp[j] = &blept[BLEPSIZE-1];
+  nextvoice = 0;
+  i0 = 0;
+  in0 = 0;
+  acc = 0;]]></code.init>
+      <code.krate><![CDATA[int j;
+  int16_t *lastblep = &blept[BLEPSIZE-1];
+
+  for(j=0;j<BUFSIZE;j++){
+  	  int32_t treshold=param_treshold+inlet_treshold[j]>>1;
+    int i;
+    int32_t VL;
+    switch(param_mode){
+    case 0: VL=inlet_in[j]>treshold?v26:(inlet_in[j]<-treshold?-v26:0);break;
+    case 1: VL=inlet_in[j]>treshold?v26:-v26						;break;
+    case 2: 	treshold=(((treshold>0?treshold:-treshold)>>14)+1)<<13;VL=(int32_t)(inlet_in[j]/treshold)*treshold-(inlet_in[j]<0?treshold:0);break;
+    }	
+    int32_t i1; 
+    if(param_mode<2){
+    	i1= VL;
+    }
+    else{i1=inlet_in[j]-VL-(treshold>>2);}
+    if (param_mode<2?(!(i1==i0)):((i1>0)&&!(i0>0))){   // dispatch
+      nextvoice = (nextvoice+1)&(blepvoices-1);
+      int32_t x = (i1<<6)/(i1-i0);
+      oscp[nextvoice] = &blept[x];
+      int32_t val = (((64-x)*(VL>>2)) + (x*(in0>>2)))>>6;
+      vgain[nextvoice] = (acc-val)<<2;
+      acc = val;
+    }
+    
+    int32_t sum=0;
+    i0 = i1;
+    in0 = VL;//param_mode<2?VL:inlet_in[j];
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[i];
+      sum =___SMMLA((16384-(*t))<<16,vgain[i],sum);
+      t+=64;
+      if (t>=lastblep) {        t=lastblep;
+        vgain[i] = 0;
+      }
+      oscp[i]=t;
+    }
+    outlet_out[j]=(sum+acc)<<2;
+  }]]></code.krate>
+   </obj.normal>
+</objdefs>
