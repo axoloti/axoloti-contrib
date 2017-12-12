@@ -27,7 +27,9 @@ Bandwith limited</sDescription>
          <objref name="core"/>
       </attribs>
       <code.declaration><![CDATA[int32_t osc_p;
+uint32_t uosc_p;
   static const int blepvoices = 4;
+  const int16_t *uoscp[blepvoices];
   int16_t *oscp[blepvoices];
   int32_t vgain[blepvoices];
   uint32_t nextvoice;
@@ -38,6 +40,7 @@ Bandwith limited</sDescription>
       oscp[j] = &blept[BLEPSIZE-1];   nextvoice = 0;  i0 = 0;]]></code.init>
       <code.krate><![CDATA[for(i=0;i<blepvoices;i++){
 	attr_core.oscp[i]=oscp[i];
+	attr_core.uoscp[i]=uoscp[i];
 	attr_core.vgain[i]=vgain[i];
 }
 for(i=0;i<BUFSIZE;i++){
@@ -46,6 +49,7 @@ for(i=0;i<BUFSIZE;i++){
 }
 attr_core.i0=i0;
 attr_core.osc_p=osc_p;
+attr_core.uosc_p=uosc_p;
 attr_core.nextvoice=nextvoice;
 
 switch(param_wave){
@@ -59,10 +63,12 @@ for(i=0;i<BUFSIZE;i++){
 }
 for(i=0;i<blepvoices;i++){
 	oscp[i]=attr_core.oscp[i];
+	uoscp[i]=attr_core.uoscp[i];
 	vgain[i]=attr_core.vgain[i];
 }
 i0=attr_core.i0;
 osc_p=attr_core.osc_p;
+uosc_p=attr_core.uosc_p;
 nextvoice=attr_core.nextvoice;
 
 outlet_pitch=param_pitch+inlet_pitch;]]></code.krate>
