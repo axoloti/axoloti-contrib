@@ -9,6 +9,7 @@ Bandwith limited</sDescription>
          <frac32.bipolar name="pitch" description="pitch"/>
          <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
          <frac32buffer name="mod"/>
+         <int32 name="wave"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
@@ -51,8 +52,8 @@ attr_core.i0=i0;
 attr_core.osc_p=osc_p;
 attr_core.uosc_p=uosc_p;
 attr_core.nextvoice=nextvoice;
-
-switch(param_wave){
+int wave=(param_wave+inlet_wave)&3;
+switch(wave){
 case 0: attr_core.OSC_SIN(param_pitch+inlet_pitch);	break;
 case 1: attr_core.OSC_TRI(param_pitch+inlet_pitch);	break;
 case 2: attr_core.OSC_SAW(param_pitch+inlet_pitch);	break;
