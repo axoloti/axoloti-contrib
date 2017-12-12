@@ -11,6 +11,7 @@ resonance... ghehehehe... let it snow, let it snow, let it snoooooooow XD</sDesc
       <helpPatch>filter.axh</helpPatch>
       <inlets>
          <frac32buffer name="in" description="input"/>
+         <frac32 name="cutoff"/>
       </inlets>
       <outlets>
          <frac32buffer name="out" description="output"/>
@@ -37,6 +38,7 @@ int32_t tmp;
 int32_t OFS;
 int32_t Ofs;]]></code.declaration>
       <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=__SSAT(param_pitch+inlet_pitch,28);]]></code.krate>
       <code.srate><![CDATA[OFS+=___SMMUL(param_smooth,ofs-OFS)<<1;
 if((inlet_in>val)&&!trg){
 	trg=1;
@@ -51,8 +53,8 @@ else if((inlet_in<val)&&trg){
 Ofs-=___SMMUL(Ofs,param_smooth)<<1;
 int32_t f1;
 int32_t f2;
-MTOF(__SSAT(param_pitch+param_up+Ofs,29),f1);
-MTOF(__SSAT(param_pitch+param_down+Ofs,29),f2);
+MTOF(__SSAT(pitch+param_up+Ofs,29),f1);
+MTOF(__SSAT(pitch+param_down+Ofs,29),f2);
 if(inlet_in>val){
 val = ___SMMLA((__SSAT(inlet_in+___SMMUL(param_res,-tmp<<1),28)-val)<<1,f1,val);}
 else{
