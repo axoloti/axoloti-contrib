@@ -1,0 +1,162 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="168" y="14" text="pitch and vibrato"/>
+   <comment type="patch/comment" x="686" y="14" text="Qsc"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="112" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="210" y="42">
+      <params>
+         <frac32.u.map name="amp" value="1.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="308" y="42">
+      <params>
+         <frac32.u.map name="gain1" value="11.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/Qsc" uuid="4591f2dc-d3d9-413a-b1e6-080caa00a95e" name="Qsc_1" x="658" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="res" value="20.0"/>
+         <frac32.s.map name="brill" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="756" y="42">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="2.0"/>
+         <frac32.u.map name="s" value="12.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="868" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="938" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/lfo/triphase_vlfo" uuid="fda37e83-8355-4909-ac55-e642dcec5a20" name="triphase_vlfo_1" x="434" y="98">
+      <params>
+         <frac32.u.map name="cycle" value="15.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="546" y="98">
+      <params>
+         <frac32.u.map name="amp" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="28" y="196">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="7.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-5.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine r" uuid="725d481acbefa181fa5d92f414d317c86b77b789" name="sine_2" x="168" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_2" x="280" y="196">
+      <params>
+         <frac32.u.map name="gain1" value="39.5"/>
+         <frac32.u.map name="gain2" value="20.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="392" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="Qsc_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="Qsc_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="Qsc_1" inlet="brill"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate2"/>
+         <dest obj="sine_2" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="Qsc_1" inlet="res"/>
+      </net>
+      <net>
+         <source obj="triphase_vlfo_1" outlet="phi 0"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_2" inlet="left"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>65</x>
+      <y>66</y>
+      <width>1432</width>
+      <height>650</height>
+   </windowPos>
+</patch-1.0>
