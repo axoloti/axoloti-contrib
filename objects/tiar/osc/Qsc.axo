@@ -50,19 +50,14 @@ if(pMast > 1){
   pMast -= 1;
   pC = (uint32_t)(pMast * _dpMast * dpCf);
 }
-int32_t y = sine2t[pC>>20] >> 5;
+int32_t y = sine2t[pC>>20]>>5;
 pC += dpC;
 
 //skewed triangle
 float e = pMast >= skew ? (1 - pMast) * _1skew : pMast * _skew;
 
 //waveshaper
-float es = e * e * (6 - 4 * e)-1;
-outlet_out = (int32_t)(es* ((1<<27) + res *( e * y - (1<<27))));
-
-//outlet_out = (int32_t)((2*e-1)* ((1<<27) + res *( (1-(1-e)*(1-e)) * y - (1<<27))));
-//float out = es*(1<<27);
-//float outr = e * y;
-//outlet_out = (int32_t)(out + res *( outr-out));]]></code.srate>
+float es = e * e * (6 - 4 * e) - 1;
+outlet_out = (int32_t)(es * ((1<<27) + res * ( e * y - (1<<27))));]]></code.srate>
    </obj.normal>
 </objdefs>
