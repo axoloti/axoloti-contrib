@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="diodeSat" uuid="97810a83-53ff-40dd-97dd-1f1e3ab9d4e9">
+      <license>GPL</license>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain" noLabel="true"/>
+      </params>
+      <attribs/>
+      <includes>
+         <include>./diodeSat/resources.h</include>
+      </includes>
+      <code.krate><![CDATA[int8_t s = (param_gain>>24)+4;
+uint8_t ei = param_gain>>16;
+int32_t gain;
+if (s>=0)
+     gain = expt[ei]<<s;
+else
+	gain = expt[ei]>>(-s);]]></code.krate>
+      <code.srate><![CDATA[// reads from the lookup table (interpolated)
+bool invert = (inlet_in <= 0.0);
+s32 fractional;
+s32 left;
+s32 right;
+s32 inputRect = ___SMMUL(gain, (invert?-inlet_in:inlet_in))<<6;
+
+if (inputRect <= (8<<21))
+{
+	s32 integral = (inputRect>>15);
+	s32 tableIdx = (integral > 0x1FF)?0x1FF:integral;
+	fractional = (inputRect - (integral<<15))<<12;
+	left = lutTSGDiodeSatSmall[tableIdx];
+	right = lutTSGDiodeSatSmall[tableIdx + 1];
+}
+else
+{
+	s32 integral = (inputRect>>19);
+	s32 tableIdx = (integral > 0x1FF)?0x1FF:integral;
+	fractional = (inputRect - (integral<<19))<<10;
+	// lowest 64 indices are contained in the small table
+	// to avoid duplicate data
+	left = lutTSGDiodeSatBig[tableIdx - 64];
+	right = lutTSGDiodeSatBig[tableIdx - 64 + 1];
+}
+
+int64_t a = (int64_t)right * fractional;
+a += (int64_t)left * ((64<<21)-fractional);
+outlet_out = a>>27;
+
+if (invert)
+	outlet_out = -outlet_out;]]></code.srate>
+   </obj.normal>
+</objdefs>
