@@ -37,7 +37,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound_" x="644" y="196">
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound" x="644" y="196">
       <params/>
       <attribs>
          <combo attributeName="size" selection="262144 (5.46s)"/>
@@ -63,7 +63,7 @@
       </net>
       <net>
          <source obj="+_1" outlet="out"/>
-         <dest obj="sound_" inlet="in"/>
+         <dest obj="sound" inlet="in"/>
       </net>
       <net>
          <source obj="read_2" outlet="out"/>
