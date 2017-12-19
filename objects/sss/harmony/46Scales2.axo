@@ -18,15 +18,15 @@ All the generated notes will be scaled to the selected scale. 46! scales are inc
       <attribs>
          <objref name="scale"/>
       </attribs>
-      <code.krate><![CDATA[int key=inlet_key-4;
+      <code.krate><![CDATA[int key=inlet_key;
 key=key-(key/12)*12;
 key=key<0?key+12:key;
 int Scale=inlet_scale;
 Scale=Scale-(Scale/46)*46;
 Scale=Scale<0?Scale+46:Scale;
-
-int octave=inlet_pitch/12-(inlet_pitch<0?1:0)-key;
-int semitone=inlet_pitch-octave*12;
-outlet_note=(attr_scale.note[semitone+Scale*12]+octave*12+key)<<21;]]></code.krate>
+int pitch=inlet_pitch+4-(key-4);
+int octave=pitch/12-(pitch<0?1:0);
+int semitone=pitch-octave*12;
+outlet_note=(attr_scale.note[semitone+Scale*12]+octave*12+(key-4))<<21;]]></code.krate>
    </obj.normal>
 </objdefs>
