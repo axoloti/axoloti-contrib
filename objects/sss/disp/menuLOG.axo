@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="menuLOG" uuid="c4bf42b7-3875-4f6f-97ea-fbdc1c164e63">
+      <sDescription>Module for logging names and selection for integer signals in the log window (like a menu for waveforms)
+example for a waveform selector with 4 waveforms:
+
+-edit a name of the parameter in the paramName attribute like  (include the &quot; &quot;):
+
+&quot;waveform OSC 1&quot;
+
+-set the amount of available waveforms using the selections attribute
+
+-edit the names attribute to include all the names of the waveforms (include the { } and &quot; &quot;):
+
+{&quot;sin&quot;,&quot;tri&quot;,&quot;saw&quot;,&quot;sqr&quot;}
+
+when the input switches value, it updates the newly selected waveform in the logging window</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="sel"/>
+      </inlets>
+      <outlets>
+         <int32 name="sel"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="paramName"/>
+         <spinner name="selections" MinValue="2" MaxValue="128" DefaultValue="0"/>
+         <text name="names"/>
+      </attribs>
+      <code.declaration><![CDATA[char c[attr_selections][4]=attr_names;
+int32_t v27=1<<27;
+int prv;]]></code.declaration>
+      <code.krate><![CDATA[outlet_sel=inlet_sel;
+
+if(!(prv==outlet_sel)){
+	LogTextMessage(attr_paramName);
+	LogTextMessage(c[outlet_sel]);
+}
+
+prv=outlet_sel;]]></code.krate>
+   </obj.normal>
+</objdefs>
