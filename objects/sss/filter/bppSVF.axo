@@ -56,9 +56,10 @@ int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
 return out = ts + (ts>>1) - (tsq31p3);
 }]]></code.declaration>
       <code.krate><![CDATA[int32_t width=__SSAT(inlet_width+param_width,28);
-COEF(__SSAT(param_cutoff+(___SMMUL(__SSAT(param_center+inlet_center,28),width)<<5),28),param_resoPeak,0);
-COEF(__SSAT(param_cutoff+width,28),param_resoLP,1);
-COEF(__SSAT(param_cutoff-width,28),param_resoHP,2);]]></code.krate>
+int32_t cutoff=param_cutoff+inlet_cutoff;
+COEF(__SSAT(cutoff+(___SMMUL(__SSAT(param_center+inlet_center,28),width)<<5),28),param_resoPeak,0);
+COEF(__SSAT(cutoff+width,28),param_resoLP,1);
+COEF(__SSAT(cutoff-width,28),param_resoHP,2);]]></code.krate>
       <code.srate><![CDATA[SVF(inlet_in>>1,0);
 SVF(SOFT((inlet_in>>1)+(___SMMUL(band[0],param_peak<<4)<<1)),1);
 SVF(SOFT(low[1]),2);
