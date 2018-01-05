@@ -1,6 +1,5 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="gen t" uuid="9d68b77c-f33b-411a-94d9-1950d1d7f216">
-      <sDescription></sDescription>
       <author>T.Rochebois</author>
       <license>LGPL</license>
       <helpPatch>gen t.axh</helpPatch>
@@ -21,13 +20,13 @@
       <attribs>
          <text name="code"/>
       </attribs>
-      <code.declaration><![CDATA[int16_t tc;
+      <code.declaration><![CDATA[int32_t tc;
 int16_t c;
 int32_t out;
 bool ares = false;]]></code.declaration>
       <code.init><![CDATA[c = 0;
 tc = 0;]]></code.init>
-      <code.krate><![CDATA[int32_t offset = (inlet_offset >> (27-16));
+      <code.krate><![CDATA[int32_t offset = inlet_offset >> 9;
 if(inlet_reset && !ares){
   tc = 0;
 }
@@ -36,7 +35,7 @@ ares = inlet_reset;]]></code.krate>
   c = 0;
   // t*((t>>12|t>>8)&63&t>>4)
   // t&17*t&91+t>>5
-  int16_t t = (int16_t)(tc + offset);
+  int32_t t = tc + offset;
   out =  (attr_code) ;
   tc++;
 
