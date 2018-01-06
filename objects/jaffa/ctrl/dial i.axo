@@ -1,0 +1,23 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dial i" uuid="ac6473d0-05db-4d2a-84ff-698c9682ba3c">
+      <sDescription>Unipolar dial interpolated with linear interpolation from k- to s-rate.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="value" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _prev;
+    int32_t _step;]]></code.declaration>
+      <code.krate><![CDATA[_step = (param_value - _prev)>>4;
+   int32_t _i = _prev;
+   _prev = param_value;]]></code.krate>
+      <code.srate><![CDATA[outlet_o = _i;
+   _i += _step;]]></code.srate>
+   </obj.normal>
+</objdefs>
