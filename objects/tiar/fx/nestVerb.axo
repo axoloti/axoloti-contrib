@@ -1,0 +1,2936 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="nestVerb" uuid="1fe4ba32-848b-48e4-bc7b-1287135b1a31">
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <inlets>
+         <frac32buffer name="inlet_1" description="inlet_1"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outlet_1" description="outlet_1"/>
+         <frac32buffer name="outlet_2" description="outlet_2"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t NPEXCH = 11;
+    ParameterExchange_t PExch[NPEXCH];
+    int32_t displayVector[3];
+    static const uint32_t NPRESETS = 8;
+    static const uint32_t NPRESET_ENTRIES = 32;
+    static const uint32_t NMODULATIONSOURCES = 8;
+    static const uint32_t NMODULATIONTARGETS = 8;
+    int32_t PExModulationPrevVal[1][NMODULATIONSOURCES];
+/* modsource defines */
+/* parameter instance indices */
+static const int PARAM_INDEX_read__3_time = 0;
+static const int PARAM_INDEX_allpass__3_g = 1;
+static const int PARAM_INDEX_allpass__4_g = 2;
+static const int PARAM_INDEX_lp1__1_freq = 3;
+static const int PARAM_INDEX_APNoodle__2_g = 4;
+static const int PARAM_INDEX_lp__1_pitch = 5;
+static const int PARAM_INDEX_lp__1_reso = 6;
+static const int PARAM_INDEX_hp__1_pitch = 7;
+static const int PARAM_INDEX_hp__1_reso = 8;
+static const int PARAM_INDEX_allpass__1_g = 9;
+static const int PARAM_INDEX_allpass__2_g = 10;
+/* controller classes */
+/* object classes */
+class instancedelay4{
+  public: // v1
+  attr_parent *parent;
+static const uint32_t LENGTHPOW = (14);
+static const uint32_t LENGTH = (1<<14);
+static const uint32_t LENGTHMASK = ((1<<14)-1);
+int16_t *array;
+uint32_t writepos;
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+static int16_t _array[1][1<<14]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(inlet_in[buffer_index]>>14,16);
+
+}
+}
+}
+;class instanceread__3{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceread__3_time;
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_read__3_time].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instanceread__3_time,ObjectKvpRoot, "read_3" ,&parent->PExch[PARAM_INDEX_read__3_time], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instanceread__3_time);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32_t  inlet_time,
+int32buffer  & outlet_out,
+int param_time  ){
+   uint32_t delay = parent->instancedelay4_i.writepos - (__USAT(param_time + inlet_time,27)>>(27-parent->instancedelay4_i.LENGTHPOW)) - BUFSIZE;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  outlet_out[buffer_index]= parent->instancedelay4_i.array[(delay++) & parent->instancedelay4_i.LENGTHMASK]<<14;
+
+}
+}
+}
+;class instancenested3{
+  public: // v1
+  attr_parent *parent;
+    static const uint32_t NPEXCH = 5;
+    ParameterExchange_t PExch[NPEXCH];
+    int32_t displayVector[3];
+    static const uint32_t NPRESETS = 8;
+    static const uint32_t NPRESET_ENTRIES = 32;
+    static const uint32_t NMODULATIONSOURCES = 8;
+    static const uint32_t NMODULATIONTARGETS = 8;
+    int32_t PExModulationPrevVal[1][NMODULATIONSOURCES];
+/* modsource defines */
+/* parameter instance indices */
+static const int PARAM_INDEX_read__3_time = 0;
+static const int PARAM_INDEX_hp1__1_freq = 1;
+static const int PARAM_INDEX_allpass__3_g = 2;
+static const int PARAM_INDEX_allpass__4_g = 3;
+static const int PARAM_INDEX_APNoodle__2_g = 4;
+/* controller classes */
+/* object classes */
+class instancex{
+  public: // v1
+  instancenested3 *parent;
+int32buffer _inlet;
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (int32buffer  & outlet_inlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   outlet_inlet[buffer_index] = _inlet[buffer_index];
+}
+}
+}
+;class instancedelay3{
+  public: // v1
+  instancenested3 *parent;
+static const uint32_t LENGTHPOW = (12);
+static const uint32_t LENGTH = (1<<12);
+static const uint32_t LENGTHMASK = ((1<<12)-1);
+int16_t *array;
+uint32_t writepos;
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+static int16_t _array[1][1<<12]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(inlet_in[buffer_index]>>14,16);
+
+}
+}
+}
+;class instanceread__3{
+  public: // v1
+  instancenested3 *parent;
+KeyValuePair KVP_instanceread__3_time;
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_read__3_time].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instanceread__3_time,ObjectKvpRoot, "read_3" ,&parent->PExch[PARAM_INDEX_read__3_time], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instanceread__3_time);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32_t  inlet_time,
+int32buffer  & outlet_out,
+int param_time  ){
+   uint32_t delay = parent->instancedelay3_i.writepos - (__USAT(param_time + inlet_time,27)>>(27-parent->instancedelay3_i.LENGTHPOW)) - BUFSIZE;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  outlet_out[buffer_index]= parent->instancedelay3_i.array[(delay++) & parent->instancedelay3_i.LENGTHMASK]<<14;
+
+}
+}
+}
+;class instancehp1__1{
+  public: // v1
+  instancenested3 *parent;
+KeyValuePair KVP_instancehp1__1_freq;
+int32_t val;
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_hp1__1_freq].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancehp1__1_freq,ObjectKvpRoot, "hp1_1" ,&parent->PExch[PARAM_INDEX_hp1__1_freq], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancehp1__1_freq);
+val = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_freq  ){
+int32_t f;
+   MTOF(param_freq,f);
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   val = ___SMMLA((inlet_in[buffer_index]-val)<<1,f,val);
+   outlet_out[buffer_index]= inlet_in[buffer_index]-val;
+
+}
+}
+}
+;class instancenested2{
+  public: // v1
+  instancenested3 *parent;
+    static const uint32_t NPEXCH = 5;
+    ParameterExchange_t PExch[NPEXCH];
+    int32_t displayVector[3];
+    static const uint32_t NPRESETS = 8;
+    static const uint32_t NPRESET_ENTRIES = 32;
+    static const uint32_t NMODULATIONSOURCES = 8;
+    static const uint32_t NMODULATIONTARGETS = 8;
+    int32_t PExModulationPrevVal[1][NMODULATIONSOURCES];
+/* modsource defines */
+/* parameter instance indices */
+static const int PARAM_INDEX_read__2_time = 0;
+static const int PARAM_INDEX_allpass__3_g = 1;
+static const int PARAM_INDEX_allpass__4_g = 2;
+static const int PARAM_INDEX_lp1__1_freq = 3;
+static const int PARAM_INDEX_APNoodle__2_g = 4;
+/* controller classes */
+/* object classes */
+class instancex{
+  public: // v1
+  instancenested2 *parent;
+int32buffer _inlet;
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (int32buffer  & outlet_inlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   outlet_inlet[buffer_index] = _inlet[buffer_index];
+}
+}
+}
+;class instancedelay2{
+  public: // v1
+  instancenested2 *parent;
+static const uint32_t LENGTHPOW = (11);
+static const uint32_t LENGTH = (1<<11);
+static const uint32_t LENGTHMASK = ((1<<11)-1);
+int16_t *array;
+uint32_t writepos;
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+static int16_t _array[1][1<<11]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(inlet_in[buffer_index]>>14,16);
+
+}
+}
+}
+;class instanceread__2{
+  public: // v1
+  instancenested2 *parent;
+KeyValuePair KVP_instanceread__2_time;
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_read__2_time].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instanceread__2_time,ObjectKvpRoot, "read_2" ,&parent->PExch[PARAM_INDEX_read__2_time], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instanceread__2_time);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32_t  inlet_time,
+int32buffer  & outlet_out,
+int param_time  ){
+   uint32_t delay = parent->instancedelay2_i.writepos - (__USAT(param_time + inlet_time,27)>>(27-parent->instancedelay2_i.LENGTHPOW)) - BUFSIZE;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  outlet_out[buffer_index]= parent->instancedelay2_i.array[(delay++) & parent->instancedelay2_i.LENGTHMASK]<<14;
+
+}
+}
+}
+;class instancenested1{
+  public: // v1
+  instancenested2 *parent;
+    static const uint32_t NPEXCH = 6;
+    ParameterExchange_t PExch[NPEXCH];
+    int32_t displayVector[3];
+    static const uint32_t NPRESETS = 8;
+    static const uint32_t NPRESET_ENTRIES = 32;
+    static const uint32_t NMODULATIONSOURCES = 8;
+    static const uint32_t NMODULATIONTARGETS = 8;
+    int32_t PExModulationPrevVal[1][NMODULATIONSOURCES];
+/* modsource defines */
+/* parameter instance indices */
+static const int PARAM_INDEX_read__1_time = 0;
+static const int PARAM_INDEX_allpass__1_g = 1;
+static const int PARAM_INDEX_allpass__2_g = 2;
+static const int PARAM_INDEX_hp1__1_freq = 3;
+static const int PARAM_INDEX_lp1__1_freq = 4;
+static const int PARAM_INDEX_APNoodle__1_g = 5;
+/* controller classes */
+/* object classes */
+class instancex{
+  public: // v1
+  instancenested1 *parent;
+int32buffer _inlet;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (int32buffer  & outlet_inlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   outlet_inlet[buffer_index] = _inlet[buffer_index];
+}
+}
+}
+;class instancedelay1{
+  public: // v1
+  instancenested1 *parent;
+static const uint32_t LENGTHPOW = (10);
+static const uint32_t LENGTH = (1<<10);
+static const uint32_t LENGTHMASK = ((1<<10)-1);
+int16_t *array;
+uint32_t writepos;
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+static int16_t _array[1][1<<10]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  writepos = (writepos + 1)&LENGTHMASK;
+   array[writepos] = __SSAT(inlet_in[buffer_index]>>14,16);
+
+}
+}
+}
+;class instanceread__1{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instanceread__1_time;
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_read__1_time].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instanceread__1_time,ObjectKvpRoot, "read_1" ,&parent->PExch[PARAM_INDEX_read__1_time], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instanceread__1_time);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32_t  inlet_time,
+int32buffer  & outlet_out,
+int param_time  ){
+   uint32_t delay = parent->instancedelay1_i.writepos - (__USAT(param_time + inlet_time,27)>>(27-parent->instancedelay1_i.LENGTHPOW)) - BUFSIZE;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+  outlet_out[buffer_index]= parent->instancedelay1_i.array[(delay++) & parent->instancedelay1_i.LENGTHMASK]<<14;
+
+}
+}
+}
+;class instanceallpass__1{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instanceallpass__1_g;
+int16_t d[52];
+int dpos;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__1_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__1_g,ObjectKvpRoot, "allpass_1" ,&parent->PExch[PARAM_INDEX_allpass__1_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__1_g);
+int i;
+for (i=0;i<52;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 52) dpos = 0;
+
+}
+}
+}
+;class instanceallpass__2{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instanceallpass__2_g;
+int16_t d[173];
+int dpos;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__2_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__2_g,ObjectKvpRoot, "allpass_2" ,&parent->PExch[PARAM_INDEX_allpass__2_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__2_g);
+int i;
+for (i=0;i<173;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 173) dpos = 0;
+
+}
+}
+}
+;class instancehp1__1{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instancehp1__1_freq;
+int32_t val;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_hp1__1_freq].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancehp1__1_freq,ObjectKvpRoot, "hp1_1" ,&parent->PExch[PARAM_INDEX_hp1__1_freq], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancehp1__1_freq);
+val = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_freq  ){
+int32_t f;
+   MTOF(param_freq,f);
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   val = ___SMMLA((inlet_in[buffer_index]-val)<<1,f,val);
+   outlet_out[buffer_index]= inlet_in[buffer_index]-val;
+
+}
+}
+}
+;class instancelp1__1{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instancelp1__1_freq;
+int32_t val;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_lp1__1_freq].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancelp1__1_freq,ObjectKvpRoot, "lp1_1" ,&parent->PExch[PARAM_INDEX_lp1__1_freq], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancelp1__1_freq);
+val = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_freq  ){
+int32_t f;
+   MTOF(param_freq,f);
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   val = ___SMMLA((inlet_in[buffer_index]-val)<<1,f,val);
+   outlet_out[buffer_index]= val;
+
+}
+}
+}
+;class instanceAPNoodle__1{
+  public: // v1
+  instancenested1 *parent;
+KeyValuePair KVP_instanceAPNoodle__1_g;
+int32_t _g;
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_APNoodle__1_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceAPNoodle__1_g,ObjectKvpRoot, "APNoodle_1" ,&parent->PExch[PARAM_INDEX_APNoodle__1_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceAPNoodle__1_g);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_x,
+const int32buffer  inlet_v,
+int32buffer  & outlet_y,
+int32buffer  & outlet_u,
+int param_g  ){
+_g = -param_g;
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+// SMMUL(q27, q27) -> q(27+27-32) = q22
+// => inlet_x[buffer_index] q27 -> inlet_x[buffer_index]>>5 q22
+// << 5 back to q27
+outlet_u[buffer_index] = ___SMMLA(inlet_v[buffer_index], param_g, inlet_x[buffer_index] >> 5) << 5;
+outlet_y[buffer_index] = ___SMMLA(outlet_u[buffer_index],     _g, inlet_v[buffer_index] >> 5) << 5;
+}
+}
+}
+;class instancey{
+  public: // v1
+  instancenested1 *parent;
+int32buffer _outlet;
+
+  public: void Init(instancenested1 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_outlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   _outlet[buffer_index] = inlet_outlet[buffer_index];
+
+}
+}
+}
+;/* controller instances */
+/* object instances */
+     instancex instancex_i;
+     instancedelay1 instancedelay1_i;
+     instanceread__1 instanceread__1_i;
+     instanceallpass__1 instanceallpass__1_i;
+     instanceallpass__2 instanceallpass__2_i;
+     instancehp1__1 instancehp1__1_i;
+     instancelp1__1 instancelp1__1_i;
+     instanceAPNoodle__1 instanceAPNoodle__1_i;
+     instancey instancey_i;
+/* net latches */
+    int32buffer  net0Latch;
+static const int polyIndex = 0;
+   static int32_t * GetInitParams(void){
+      static const int32_t p[6]= {
+      116391936,
+      94371840,
+      98566144,
+      -35651584,
+      69206016,
+      -88080384
+      };
+      return (int32_t *)&p[0];
+   }   static const int32_t * GetPresets(void){
+      static const int32_t p[NPRESETS][NPRESET_ENTRIES][2] = {
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         }
+      };
+   return &p[0][0][0];
+   };
+void ApplyPreset(int index){
+   if (!index) {
+     int i;
+     int32_t *p = GetInitParams();
+     for(i=0;i<NPEXCH;i++){
+        PExParameterChange(&PExch[i],p[i],0xFFEF);
+     }
+   }
+   index--;
+   if (index < NPRESETS) {
+     PresetParamChange_t *pa = (PresetParamChange_t *)(GetPresets());
+     PresetParamChange_t *p = &pa[index*NPRESET_ENTRIES];
+       int i;
+       for(i=0;i<NPRESET_ENTRIES;i++){
+         PresetParamChange_t *pp = &p[i];
+         if ((pp->pexIndex>=0)&&(pp->pexIndex<NPEXCH)) {
+           PExParameterChange(&PExch[pp->pexIndex],pp->value,0xFFEF);         }
+         else break;
+       }
+   }
+}
+   static PExModulationTarget_t * GetModulationTable(void){
+    static const PExModulationTarget_t PExModulationSources[NMODULATIONSOURCES][NMODULATIONTARGETS] = 
+{{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}}};
+   return (PExModulationTarget_t *)&PExModulationSources[0][0];
+   };
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+   int i;
+   int j;
+   const int32_t *p;
+   p = GetInitParams();
+   for(j=0;j<6;j++){
+      PExch[j].value = p[j];
+      PExch[j].modvalue = p[j];
+      PExch[j].signals = 0;
+      PExch[j].pfunction = 0;
+   }
+   int32_t *pp = &PExModulationPrevVal[0][0];
+   for(j=0;j<1*NMODULATIONSOURCES;j++){
+      *pp = 0; pp++;
+   }
+     displayVector[0] = 0x446F7841;
+     displayVector[1] = 0;
+     displayVector[2] = 0;
+   instancex_i.Init(this );
+   instancedelay1_i.Init(this );
+   instanceread__1_i.Init(this );
+   instanceallpass__1_i.Init(this );
+   instanceallpass__2_i.Init(this );
+   instancehp1__1_i.Init(this );
+   instancelp1__1_i.Init(this );
+   instanceAPNoodle__1_i.Init(this );
+   instancey_i.Init(this );
+      int k;
+      for (k = 0; k < NPEXCH; k++) {
+        if (PExch[k].pfunction){
+          (PExch[k].pfunction)(&PExch[k]);
+        } else {
+          PExch[k].finalvalue = PExch[k].value;
+        }
+      }
+
+}
+  public: void Dispose() {
+   instancey_i.Dispose();
+   instanceAPNoodle__1_i.Dispose();
+   instancelp1__1_i.Dispose();
+   instancehp1__1_i.Dispose();
+   instanceallpass__2_i.Dispose();
+   instanceallpass__1_i.Dispose();
+   instanceread__1_i.Dispose();
+   instancedelay1_i.Dispose();
+   instancex_i.Dispose();
+
+}
+  public: void dsp (const int32buffer  inlet_x,
+int32buffer  & outlet_y  ){
+int i; /*...*/
+   for(i=0;i<BUFSIZE;i++) instancex_i._inlet[i] = inlet_x[i];
+//--------- <nets> -----------//
+    int32buffer  net0;
+    int32buffer  net1;
+    int32buffer  net2;
+    int32buffer  net3;
+    int32buffer  net4;
+    int32buffer  net5;
+    int32buffer  net6;
+    int32buffer  net7;
+//--------- </nets> ----------//
+//--------- <zero> ----------//
+  int32_t UNCONNECTED_OUTPUT;
+  static const int32_t UNCONNECTED_INPUT=0;
+  static const int32buffer zerobuffer = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int32buffer UNCONNECTED_OUTPUT_BUFFER;
+//--------- </zero> ----------//
+//--------- <controller calls> ----------//
+//--------- <object calls> ----------//
+  instancex_i.dsp(net3);
+  instancedelay1_i.dsp(net0Latch);
+  instanceread__1_i.dsp(0 , net1, PExch[PARAM_INDEX_read__1_time].finalvalue);
+  instanceallpass__1_i.dsp(net1, net2, PExch[PARAM_INDEX_allpass__1_g].finalvalue);
+  instanceallpass__2_i.dsp(net2, net7, PExch[PARAM_INDEX_allpass__2_g].finalvalue);
+  instancehp1__1_i.dsp(net7, net6, PExch[PARAM_INDEX_hp1__1_freq].finalvalue);
+  instancelp1__1_i.dsp(net6, net5, PExch[PARAM_INDEX_lp1__1_freq].finalvalue);
+  instanceAPNoodle__1_i.dsp(net3, net5, net4, net0, PExch[PARAM_INDEX_APNoodle__1_g].finalvalue);
+  instancey_i.dsp(net4);
+//--------- </object calls> ----------//
+//--------- <net latch copy> ----------//
+   for(i=0;i<BUFSIZE;i++)
+      net0Latch[i]=net0[i];
+//--------- </net latch copy> ----------//
+      for(i=0;i<BUFSIZE;i++) outlet_y[i] = instancey_i._outlet[i];
+
+}
+void MidiInHandler(midi_device_t dev, uint8_t port, uint8_t status, uint8_t data1, uint8_t data2) {
+{
+if ( attr_mididevice > 0 && dev > 0 && attr_mididevice != dev) return;
+if ( attr_midiport > 0 && port > 0 && attr_midiport != port) return;
+}
+}
+}
+;class instanceallpass__3{
+  public: // v1
+  instancenested2 *parent;
+KeyValuePair KVP_instanceallpass__3_g;
+int16_t d[175];
+int dpos;
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__3_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__3_g,ObjectKvpRoot, "allpass_3" ,&parent->PExch[PARAM_INDEX_allpass__3_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__3_g);
+int i;
+for (i=0;i<175;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 175) dpos = 0;
+
+}
+}
+}
+;class instanceallpass__4{
+  public: // v1
+  instancenested2 *parent;
+KeyValuePair KVP_instanceallpass__4_g;
+int16_t d[217];
+int dpos;
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__4_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__4_g,ObjectKvpRoot, "allpass_4" ,&parent->PExch[PARAM_INDEX_allpass__4_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__4_g);
+int i;
+for (i=0;i<217;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 217) dpos = 0;
+
+}
+}
+}
+;class instancelp1__1{
+  public: // v1
+  instancenested2 *parent;
+KeyValuePair KVP_instancelp1__1_freq;
+int32_t val;
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_lp1__1_freq].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancelp1__1_freq,ObjectKvpRoot, "lp1_1" ,&parent->PExch[PARAM_INDEX_lp1__1_freq], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancelp1__1_freq);
+val = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_freq  ){
+int32_t f;
+   MTOF(param_freq,f);
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   val = ___SMMLA((inlet_in[buffer_index]-val)<<1,f,val);
+   outlet_out[buffer_index]= val;
+
+}
+}
+}
+;class instanceAPNoodle__2{
+  public: // v1
+  instancenested2 *parent;
+KeyValuePair KVP_instanceAPNoodle__2_g;
+int32_t _g;
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_APNoodle__2_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceAPNoodle__2_g,ObjectKvpRoot, "APNoodle_2" ,&parent->PExch[PARAM_INDEX_APNoodle__2_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceAPNoodle__2_g);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_x,
+const int32buffer  inlet_v,
+int32buffer  & outlet_y,
+int32buffer  & outlet_u,
+int param_g  ){
+_g = -param_g;
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+// SMMUL(q27, q27) -> q(27+27-32) = q22
+// => inlet_x[buffer_index] q27 -> inlet_x[buffer_index]>>5 q22
+// << 5 back to q27
+outlet_u[buffer_index] = ___SMMLA(inlet_v[buffer_index], param_g, inlet_x[buffer_index] >> 5) << 5;
+outlet_y[buffer_index] = ___SMMLA(outlet_u[buffer_index],     _g, inlet_v[buffer_index] >> 5) << 5;
+}
+}
+}
+;class instancey{
+  public: // v1
+  instancenested2 *parent;
+int32buffer _outlet;
+
+  public: void Init(instancenested2 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_outlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   _outlet[buffer_index] = inlet_outlet[buffer_index];
+
+}
+}
+}
+;/* controller instances */
+/* object instances */
+     instancex instancex_i;
+     instancedelay2 instancedelay2_i;
+     instanceread__2 instanceread__2_i;
+     instancenested1 instancenested1_i;
+     instanceallpass__3 instanceallpass__3_i;
+     instanceallpass__4 instanceallpass__4_i;
+     instancelp1__1 instancelp1__1_i;
+     instanceAPNoodle__2 instanceAPNoodle__2_i;
+     instancey instancey_i;
+/* net latches */
+    int32buffer  net0Latch;
+static const int polyIndex = 0;
+   static int32_t * GetInitParams(void){
+      static const int32_t p[5]= {
+      98566144,
+      90177536,
+      90177536,
+      102760448,
+      -96468992
+      };
+      return (int32_t *)&p[0];
+   }   static const int32_t * GetPresets(void){
+      static const int32_t p[NPRESETS][NPRESET_ENTRIES][2] = {
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         }
+      };
+   return &p[0][0][0];
+   };
+void ApplyPreset(int index){
+   if (!index) {
+     int i;
+     int32_t *p = GetInitParams();
+     for(i=0;i<NPEXCH;i++){
+        PExParameterChange(&PExch[i],p[i],0xFFEF);
+     }
+   }
+   index--;
+   if (index < NPRESETS) {
+     PresetParamChange_t *pa = (PresetParamChange_t *)(GetPresets());
+     PresetParamChange_t *p = &pa[index*NPRESET_ENTRIES];
+       int i;
+       for(i=0;i<NPRESET_ENTRIES;i++){
+         PresetParamChange_t *pp = &p[i];
+         if ((pp->pexIndex>=0)&&(pp->pexIndex<NPEXCH)) {
+           PExParameterChange(&PExch[pp->pexIndex],pp->value,0xFFEF);         }
+         else break;
+       }
+   }
+}
+   static PExModulationTarget_t * GetModulationTable(void){
+    static const PExModulationTarget_t PExModulationSources[NMODULATIONSOURCES][NMODULATIONTARGETS] = 
+{{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}}};
+   return (PExModulationTarget_t *)&PExModulationSources[0][0];
+   };
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+   int i;
+   int j;
+   const int32_t *p;
+   p = GetInitParams();
+   for(j=0;j<5;j++){
+      PExch[j].value = p[j];
+      PExch[j].modvalue = p[j];
+      PExch[j].signals = 0;
+      PExch[j].pfunction = 0;
+   }
+   int32_t *pp = &PExModulationPrevVal[0][0];
+   for(j=0;j<1*NMODULATIONSOURCES;j++){
+      *pp = 0; pp++;
+   }
+     displayVector[0] = 0x446F7841;
+     displayVector[1] = 0;
+     displayVector[2] = 0;
+   instancex_i.Init(this );
+   instancedelay2_i.Init(this );
+   instanceread__2_i.Init(this );
+   instancenested1_i.Init(this );
+   instanceallpass__3_i.Init(this );
+   instanceallpass__4_i.Init(this );
+   instancelp1__1_i.Init(this );
+   instanceAPNoodle__2_i.Init(this );
+   instancey_i.Init(this );
+      int k;
+      for (k = 0; k < NPEXCH; k++) {
+        if (PExch[k].pfunction){
+          (PExch[k].pfunction)(&PExch[k]);
+        } else {
+          PExch[k].finalvalue = PExch[k].value;
+        }
+      }
+
+}
+  public: void Dispose() {
+   instancey_i.Dispose();
+   instanceAPNoodle__2_i.Dispose();
+   instancelp1__1_i.Dispose();
+   instanceallpass__4_i.Dispose();
+   instanceallpass__3_i.Dispose();
+   instancenested1_i.Dispose();
+   instanceread__2_i.Dispose();
+   instancedelay2_i.Dispose();
+   instancex_i.Dispose();
+
+}
+  public: void dsp (const int32buffer  inlet_x,
+int32buffer  & outlet_y  ){
+int i; /*...*/
+   for(i=0;i<BUFSIZE;i++) instancex_i._inlet[i] = inlet_x[i];
+//--------- <nets> -----------//
+    int32buffer  net0;
+    int32buffer  net1;
+    int32buffer  net2;
+    int32buffer  net3;
+    int32buffer  net4;
+    int32buffer  net5;
+    int32buffer  net6;
+    int32buffer  net7;
+//--------- </nets> ----------//
+//--------- <zero> ----------//
+  int32_t UNCONNECTED_OUTPUT;
+  static const int32_t UNCONNECTED_INPUT=0;
+  static const int32buffer zerobuffer = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int32buffer UNCONNECTED_OUTPUT_BUFFER;
+//--------- </zero> ----------//
+//--------- <controller calls> ----------//
+//--------- <object calls> ----------//
+  instancex_i.dsp(net5);
+  instancedelay2_i.dsp(net0Latch);
+  instanceread__2_i.dsp(0 , net1, PExch[PARAM_INDEX_read__2_time].finalvalue);
+  instancenested1_i.dsp(net1, net2);
+  instanceallpass__3_i.dsp(net2, net3, PExch[PARAM_INDEX_allpass__3_g].finalvalue);
+  instanceallpass__4_i.dsp(net3, net7, PExch[PARAM_INDEX_allpass__4_g].finalvalue);
+  instancelp1__1_i.dsp(net7, net6, PExch[PARAM_INDEX_lp1__1_freq].finalvalue);
+  instanceAPNoodle__2_i.dsp(net5, net6, net4, net0, PExch[PARAM_INDEX_APNoodle__2_g].finalvalue);
+  instancey_i.dsp(net4);
+//--------- </object calls> ----------//
+//--------- <net latch copy> ----------//
+   for(i=0;i<BUFSIZE;i++)
+      net0Latch[i]=net0[i];
+//--------- </net latch copy> ----------//
+      for(i=0;i<BUFSIZE;i++) outlet_y[i] = instancey_i._outlet[i];
+
+}
+void MidiInHandler(midi_device_t dev, uint8_t port, uint8_t status, uint8_t data1, uint8_t data2) {
+{
+if ( attr_mididevice > 0 && dev > 0 && attr_mididevice != dev) return;
+if ( attr_midiport > 0 && port > 0 && attr_midiport != port) return;
+instancenested1_i.MidiInHandler(dev, port, status, data1, data2);
+}
+}
+}
+;class instanceallpass__3{
+  public: // v1
+  instancenested3 *parent;
+KeyValuePair KVP_instanceallpass__3_g;
+int16_t d[49];
+int dpos;
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__3_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__3_g,ObjectKvpRoot, "allpass_3" ,&parent->PExch[PARAM_INDEX_allpass__3_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__3_g);
+int i;
+for (i=0;i<49;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 49) dpos = 0;
+
+}
+}
+}
+;class instanceallpass__4{
+  public: // v1
+  instancenested3 *parent;
+KeyValuePair KVP_instanceallpass__4_g;
+int16_t d[411];
+int dpos;
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__4_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__4_g,ObjectKvpRoot, "allpass_4" ,&parent->PExch[PARAM_INDEX_allpass__4_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__4_g);
+int i;
+for (i=0;i<411;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 411) dpos = 0;
+
+}
+}
+}
+;class instanceAPNoodle__2{
+  public: // v1
+  instancenested3 *parent;
+KeyValuePair KVP_instanceAPNoodle__2_g;
+int32_t _g;
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_APNoodle__2_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceAPNoodle__2_g,ObjectKvpRoot, "APNoodle_2" ,&parent->PExch[PARAM_INDEX_APNoodle__2_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceAPNoodle__2_g);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_x,
+const int32buffer  inlet_v,
+int32buffer  & outlet_y,
+int32buffer  & outlet_u,
+int param_g  ){
+_g = -param_g;
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+// SMMUL(q27, q27) -> q(27+27-32) = q22
+// => inlet_x[buffer_index] q27 -> inlet_x[buffer_index]>>5 q22
+// << 5 back to q27
+outlet_u[buffer_index] = ___SMMLA(inlet_v[buffer_index], param_g, inlet_x[buffer_index] >> 5) << 5;
+outlet_y[buffer_index] = ___SMMLA(outlet_u[buffer_index],     _g, inlet_v[buffer_index] >> 5) << 5;
+}
+}
+}
+;class instancey{
+  public: // v1
+  instancenested3 *parent;
+int32buffer _outlet;
+
+  public: void Init(instancenested3 * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_outlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   _outlet[buffer_index] = inlet_outlet[buffer_index];
+
+}
+}
+}
+;/* controller instances */
+/* object instances */
+     instancex instancex_i;
+     instancedelay3 instancedelay3_i;
+     instanceread__3 instanceread__3_i;
+     instancehp1__1 instancehp1__1_i;
+     instancenested2 instancenested2_i;
+     instanceallpass__3 instanceallpass__3_i;
+     instanceallpass__4 instanceallpass__4_i;
+     instanceAPNoodle__2 instanceAPNoodle__2_i;
+     instancey instancey_i;
+/* net latches */
+    int32buffer  net0Latch;
+static const int polyIndex = 0;
+   static int32_t * GetInitParams(void){
+      static const int32_t p[5]= {
+      122484162,
+      -6291456,
+      90177536,
+      90177536,
+      -96468992
+      };
+      return (int32_t *)&p[0];
+   }   static const int32_t * GetPresets(void){
+      static const int32_t p[NPRESETS][NPRESET_ENTRIES][2] = {
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         }
+      };
+   return &p[0][0][0];
+   };
+void ApplyPreset(int index){
+   if (!index) {
+     int i;
+     int32_t *p = GetInitParams();
+     for(i=0;i<NPEXCH;i++){
+        PExParameterChange(&PExch[i],p[i],0xFFEF);
+     }
+   }
+   index--;
+   if (index < NPRESETS) {
+     PresetParamChange_t *pa = (PresetParamChange_t *)(GetPresets());
+     PresetParamChange_t *p = &pa[index*NPRESET_ENTRIES];
+       int i;
+       for(i=0;i<NPRESET_ENTRIES;i++){
+         PresetParamChange_t *pp = &p[i];
+         if ((pp->pexIndex>=0)&&(pp->pexIndex<NPEXCH)) {
+           PExParameterChange(&PExch[pp->pexIndex],pp->value,0xFFEF);         }
+         else break;
+       }
+   }
+}
+   static PExModulationTarget_t * GetModulationTable(void){
+    static const PExModulationTarget_t PExModulationSources[NMODULATIONSOURCES][NMODULATIONTARGETS] = 
+{{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}}};
+   return (PExModulationTarget_t *)&PExModulationSources[0][0];
+   };
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+   int i;
+   int j;
+   const int32_t *p;
+   p = GetInitParams();
+   for(j=0;j<5;j++){
+      PExch[j].value = p[j];
+      PExch[j].modvalue = p[j];
+      PExch[j].signals = 0;
+      PExch[j].pfunction = 0;
+   }
+   int32_t *pp = &PExModulationPrevVal[0][0];
+   for(j=0;j<1*NMODULATIONSOURCES;j++){
+      *pp = 0; pp++;
+   }
+     displayVector[0] = 0x446F7841;
+     displayVector[1] = 0;
+     displayVector[2] = 0;
+   instancex_i.Init(this );
+   instancedelay3_i.Init(this );
+   instanceread__3_i.Init(this );
+   instancehp1__1_i.Init(this );
+   instancenested2_i.Init(this );
+   instanceallpass__3_i.Init(this );
+   instanceallpass__4_i.Init(this );
+   instanceAPNoodle__2_i.Init(this );
+   instancey_i.Init(this );
+      int k;
+      for (k = 0; k < NPEXCH; k++) {
+        if (PExch[k].pfunction){
+          (PExch[k].pfunction)(&PExch[k]);
+        } else {
+          PExch[k].finalvalue = PExch[k].value;
+        }
+      }
+
+}
+  public: void Dispose() {
+   instancey_i.Dispose();
+   instanceAPNoodle__2_i.Dispose();
+   instanceallpass__4_i.Dispose();
+   instanceallpass__3_i.Dispose();
+   instancenested2_i.Dispose();
+   instancehp1__1_i.Dispose();
+   instanceread__3_i.Dispose();
+   instancedelay3_i.Dispose();
+   instancex_i.Dispose();
+
+}
+  public: void dsp (const int32buffer  inlet_x,
+int32buffer  & outlet_y  ){
+int i; /*...*/
+   for(i=0;i<BUFSIZE;i++) instancex_i._inlet[i] = inlet_x[i];
+//--------- <nets> -----------//
+    int32buffer  net0;
+    int32buffer  net1;
+    int32buffer  net2;
+    int32buffer  net3;
+    int32buffer  net4;
+    int32buffer  net5;
+    int32buffer  net6;
+    int32buffer  net7;
+//--------- </nets> ----------//
+//--------- <zero> ----------//
+  int32_t UNCONNECTED_OUTPUT;
+  static const int32_t UNCONNECTED_INPUT=0;
+  static const int32buffer zerobuffer = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int32buffer UNCONNECTED_OUTPUT_BUFFER;
+//--------- </zero> ----------//
+//--------- <controller calls> ----------//
+//--------- <object calls> ----------//
+  instancex_i.dsp(net5);
+  instancedelay3_i.dsp(net0Latch);
+  instanceread__3_i.dsp(0 , net7, PExch[PARAM_INDEX_read__3_time].finalvalue);
+  instancehp1__1_i.dsp(net7, net6, PExch[PARAM_INDEX_hp1__1_freq].finalvalue);
+  instancenested2_i.dsp(net6, net3);
+  instanceallpass__3_i.dsp(net3, net2, PExch[PARAM_INDEX_allpass__3_g].finalvalue);
+  instanceallpass__4_i.dsp(net2, net1, PExch[PARAM_INDEX_allpass__4_g].finalvalue);
+  instanceAPNoodle__2_i.dsp(net5, net1, net4, net0, PExch[PARAM_INDEX_APNoodle__2_g].finalvalue);
+  instancey_i.dsp(net4);
+//--------- </object calls> ----------//
+//--------- <net latch copy> ----------//
+   for(i=0;i<BUFSIZE;i++)
+      net0Latch[i]=net0[i];
+//--------- </net latch copy> ----------//
+      for(i=0;i<BUFSIZE;i++) outlet_y[i] = instancey_i._outlet[i];
+
+}
+void MidiInHandler(midi_device_t dev, uint8_t port, uint8_t status, uint8_t data1, uint8_t data2) {
+{
+if ( attr_mididevice > 0 && dev > 0 && attr_mididevice != dev) return;
+if ( attr_midiport > 0 && port > 0 && attr_midiport != port) return;
+instancenested2_i.MidiInHandler(dev, port, status, data1, data2);
+}
+}
+}
+;class instanceallpass__3{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceallpass__3_g;
+int16_t d[91];
+int dpos;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__3_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__3_g,ObjectKvpRoot, "allpass_3" ,&parent->PExch[PARAM_INDEX_allpass__3_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__3_g);
+int i;
+for (i=0;i<91;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 91) dpos = 0;
+
+}
+}
+}
+;class instanceallpass__4{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceallpass__4_g;
+int16_t d[421];
+int dpos;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__4_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__4_g,ObjectKvpRoot, "allpass_4" ,&parent->PExch[PARAM_INDEX_allpass__4_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__4_g);
+int i;
+for (i=0;i<421;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 421) dpos = 0;
+
+}
+}
+}
+;class instancelp1__1{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instancelp1__1_freq;
+int32_t val;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_lp1__1_freq].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancelp1__1_freq,ObjectKvpRoot, "lp1_1" ,&parent->PExch[PARAM_INDEX_lp1__1_freq], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancelp1__1_freq);
+val = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_freq  ){
+int32_t f;
+   MTOF(param_freq,f);
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   val = ___SMMLA((inlet_in[buffer_index]-val)<<1,f,val);
+   outlet_out[buffer_index]= val;
+
+}
+}
+}
+;class instanceinlet__1{
+  public: // v1
+  attr_parent *parent;
+int32buffer _inlet;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (int32buffer  & outlet_inlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   outlet_inlet[buffer_index] = _inlet[buffer_index];
+}
+}
+}
+;class instanceAPNoodle__2{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceAPNoodle__2_g;
+int32_t _g;
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_APNoodle__2_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceAPNoodle__2_g,ObjectKvpRoot, "APNoodle_2" ,&parent->PExch[PARAM_INDEX_APNoodle__2_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceAPNoodle__2_g);
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_x,
+const int32buffer  inlet_v,
+int32buffer  & outlet_y,
+int32buffer  & outlet_u,
+int param_g  ){
+_g = -param_g;
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+// SMMUL(q27, q27) -> q(27+27-32) = q22
+// => inlet_x[buffer_index] q27 -> inlet_x[buffer_index]>>5 q22
+// << 5 back to q27
+outlet_u[buffer_index] = ___SMMLA(inlet_v[buffer_index], param_g, inlet_x[buffer_index] >> 5) << 5;
+outlet_y[buffer_index] = ___SMMLA(outlet_u[buffer_index],     _g, inlet_v[buffer_index] >> 5) << 5;
+}
+}
+}
+;class instancelp__1{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instancelp__1_pitch;
+KeyValuePair KVP_instancelp__1_reso;
+biquad_state bs;biquad_coefficients bc;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_lp__1_pitch].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancelp__1_pitch,ObjectKvpRoot, "lp_1:pitch" ,&parent->PExch[PARAM_INDEX_lp__1_pitch], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancelp__1_pitch);
+parent->PExch[PARAM_INDEX_lp__1_reso].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instancelp__1_reso,ObjectKvpRoot, "lp_1:reso" ,&parent->PExch[PARAM_INDEX_lp__1_reso], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instancelp__1_reso);
+biquad_clearstate(&bs);
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_pitch,
+int param_reso  ){
+      int32_t freq;
+      MTOF(param_pitch,freq);
+      biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+
+}
+}
+;class instancehp__1{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instancehp__1_pitch;
+KeyValuePair KVP_instancehp__1_reso;
+biquad_state bs;biquad_coefficients bc;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_hp__1_pitch].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instancehp__1_pitch,ObjectKvpRoot, "hp_1:pitch" ,&parent->PExch[PARAM_INDEX_hp__1_pitch], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instancehp__1_pitch);
+parent->PExch[PARAM_INDEX_hp__1_reso].pfunction = pfun_unsigned_clamp;
+  SetKVP_IPVP(&KVP_instancehp__1_reso,ObjectKvpRoot, "hp_1:reso" ,&parent->PExch[PARAM_INDEX_hp__1_reso], 0, 1<<27);
+  KVP_RegisterObject(&KVP_instancehp__1_reso);
+biquad_clearstate(&bs);
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_pitch,
+int param_reso  ){
+      int32_t freq;
+      MTOF(param_pitch,freq);
+      biquad_hp_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+
+}
+}
+;class instanceallpass__1{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceallpass__1_g;
+int16_t d[725];
+int dpos;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__1_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__1_g,ObjectKvpRoot, "allpass_1" ,&parent->PExch[PARAM_INDEX_allpass__1_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__1_g);
+int i;
+for (i=0;i<725;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 725) dpos = 0;
+
+}
+}
+}
+;class instance_plus___1{
+  public: // v1
+  attr_parent *parent;
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in1,
+const int32buffer  inlet_in2,
+int32buffer  & outlet_out  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+outlet_out[buffer_index]= inlet_in1[buffer_index]+inlet_in2[buffer_index] ;
+}
+}
+}
+;class instanceoutlet__1{
+  public: // v1
+  attr_parent *parent;
+int32buffer _outlet;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_outlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   _outlet[buffer_index] = inlet_outlet[buffer_index];
+
+}
+}
+}
+;class instanceallpass__2{
+  public: // v1
+  attr_parent *parent;
+KeyValuePair KVP_instanceallpass__2_g;
+int16_t d[526];
+int dpos;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+parent->PExch[PARAM_INDEX_allpass__2_g].pfunction = pfun_signed_clamp;
+  SetKVP_IPVP(&KVP_instanceallpass__2_g,ObjectKvpRoot, "allpass_2" ,&parent->PExch[PARAM_INDEX_allpass__2_g], -1<<27, 1<<27);
+  KVP_RegisterObject(&KVP_instanceallpass__2_g);
+int i;
+for (i=0;i<526;i++)
+   d[i] = 0;
+dpos = 0;
+
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in,
+int32buffer  & outlet_out,
+int param_g  ){
+int32_t g2 = param_g<<4;
+
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in[buffer_index]>>1);
+d[dpos++]=din>>15;
+outlet_out[buffer_index] = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == 526) dpos = 0;
+
+}
+}
+}
+;class instance_plus___2{
+  public: // v1
+  attr_parent *parent;
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_in1,
+const int32buffer  inlet_in2,
+int32buffer  & outlet_out  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+outlet_out[buffer_index]= inlet_in1[buffer_index]+inlet_in2[buffer_index] ;
+}
+}
+}
+;class instanceoutlet__2{
+  public: // v1
+  attr_parent *parent;
+int32buffer _outlet;
+
+  public: void Init(attr_parent * _parent) {
+parent = _parent;
+}
+  public: void Dispose() {
+}
+  public: void dsp (const int32buffer  inlet_outlet  ){
+int buffer_index;
+for(buffer_index=0;buffer_index<BUFSIZE;buffer_index++) {
+   _outlet[buffer_index] = inlet_outlet[buffer_index];
+
+}
+}
+}
+;/* controller instances */
+/* object instances */
+     instancedelay4 instancedelay4_i;
+     instanceread__3 instanceread__3_i;
+     instancenested3 instancenested3_i;
+     instanceallpass__3 instanceallpass__3_i;
+     instanceallpass__4 instanceallpass__4_i;
+     instancelp1__1 instancelp1__1_i;
+     instanceinlet__1 instanceinlet__1_i;
+     instanceAPNoodle__2 instanceAPNoodle__2_i;
+     instancelp__1 instancelp__1_i;
+     instancehp__1 instancehp__1_i;
+     instanceallpass__1 instanceallpass__1_i;
+     instance_plus___1 instance_plus___1_i;
+     instanceoutlet__1 instanceoutlet__1_i;
+     instanceallpass__2 instanceallpass__2_i;
+     instance_plus___2 instance_plus___2_i;
+     instanceoutlet__2 instanceoutlet__2_i;
+/* net latches */
+    int32buffer  net0Latch;
+static const int polyIndex = 0;
+   static int32_t * GetInitParams(void){
+      static const int32_t p[11]= {
+      121435586,
+      90177536,
+      90177536,
+      111149056,
+      -96468992,
+      0,
+      0,
+      0,
+      0,
+      96468992,
+      -96468992
+      };
+      return (int32_t *)&p[0];
+   }   static const int32_t * GetPresets(void){
+      static const int32_t p[NPRESETS][NPRESET_ENTRIES][2] = {
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         },
+         {
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0},
+           {-1,0}
+         }
+      };
+   return &p[0][0][0];
+   };
+void ApplyPreset(int index){
+   if (!index) {
+     int i;
+     int32_t *p = GetInitParams();
+     for(i=0;i<NPEXCH;i++){
+        PExParameterChange(&PExch[i],p[i],0xFFEF);
+     }
+   }
+   index--;
+   if (index < NPRESETS) {
+     PresetParamChange_t *pa = (PresetParamChange_t *)(GetPresets());
+     PresetParamChange_t *p = &pa[index*NPRESET_ENTRIES];
+       int i;
+       for(i=0;i<NPRESET_ENTRIES;i++){
+         PresetParamChange_t *pp = &p[i];
+         if ((pp->pexIndex>=0)&&(pp->pexIndex<NPEXCH)) {
+           PExParameterChange(&PExch[pp->pexIndex],pp->value,0xFFEF);         }
+         else break;
+       }
+   }
+}
+   static PExModulationTarget_t * GetModulationTable(void){
+    static const PExModulationTarget_t PExModulationSources[NMODULATIONSOURCES][NMODULATIONTARGETS] = 
+{{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}},
+{{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0},{-1,0}}};
+   return (PExModulationTarget_t *)&PExModulationSources[0][0];
+   };]]></code.declaration>
+      <code.init><![CDATA[int i;
+   int j;
+   const int32_t *p;
+   p = GetInitParams();
+   for(j=0;j<11;j++){
+      PExch[j].value = p[j];
+      PExch[j].modvalue = p[j];
+      PExch[j].signals = 0;
+      PExch[j].pfunction = 0;
+   }
+   int32_t *pp = &PExModulationPrevVal[0][0];
+   for(j=0;j<attr_poly*NMODULATIONSOURCES;j++){
+      *pp = 0; pp++;
+   }
+     displayVector[0] = 0x446F7841;
+     displayVector[1] = 0;
+     displayVector[2] = 0;
+   instancedelay4_i.Init(this );
+   instanceread__3_i.Init(this );
+   instancenested3_i.Init(this );
+   instanceallpass__3_i.Init(this );
+   instanceallpass__4_i.Init(this );
+   instancelp1__1_i.Init(this );
+   instanceinlet__1_i.Init(this );
+   instanceAPNoodle__2_i.Init(this );
+   instancelp__1_i.Init(this );
+   instancehp__1_i.Init(this );
+   instanceallpass__1_i.Init(this );
+   instance_plus___1_i.Init(this );
+   instanceoutlet__1_i.Init(this );
+   instanceallpass__2_i.Init(this );
+   instance_plus___2_i.Init(this );
+   instanceoutlet__2_i.Init(this );
+      int k;
+      for (k = 0; k < NPEXCH; k++) {
+        if (PExch[k].pfunction){
+          (PExch[k].pfunction)(&PExch[k]);
+        } else {
+          PExch[k].finalvalue = PExch[k].value;
+        }
+      }]]></code.init>
+      <code.dispose><![CDATA[instanceoutlet__2_i.Dispose();
+   instance_plus___2_i.Dispose();
+   instanceallpass__2_i.Dispose();
+   instanceoutlet__1_i.Dispose();
+   instance_plus___1_i.Dispose();
+   instanceallpass__1_i.Dispose();
+   instancehp__1_i.Dispose();
+   instancelp__1_i.Dispose();
+   instanceAPNoodle__2_i.Dispose();
+   instanceinlet__1_i.Dispose();
+   instancelp1__1_i.Dispose();
+   instanceallpass__4_i.Dispose();
+   instanceallpass__3_i.Dispose();
+   instancenested3_i.Dispose();
+   instanceread__3_i.Dispose();
+   instancedelay4_i.Dispose();]]></code.dispose>
+      <code.krate><![CDATA[int i; /*...*/
+   for(i=0;i<BUFSIZE;i++) instanceinlet__1_i._inlet[i] = inlet_inlet__1[i];
+//--------- <nets> -----------//
+    int32buffer  net0;
+    int32buffer  net1;
+    int32buffer  net2;
+    int32buffer  net3;
+    int32buffer  net4;
+    int32buffer  net5;
+    int32buffer  net6;
+    int32buffer  net7;
+    int32buffer  net8;
+    int32buffer  net9;
+    int32buffer  net10;
+    int32buffer  net11;
+    int32buffer  net12;
+    int32buffer  net13;
+//--------- </nets> ----------//
+//--------- <zero> ----------//
+  int32_t UNCONNECTED_OUTPUT;
+  static const int32_t UNCONNECTED_INPUT=0;
+  static const int32buffer zerobuffer = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int32buffer UNCONNECTED_OUTPUT_BUFFER;
+//--------- </zero> ----------//
+//--------- <controller calls> ----------//
+//--------- <object calls> ----------//
+  instancedelay4_i.dsp(net0Latch);
+  instanceread__3_i.dsp(0 , net3, PExch[PARAM_INDEX_read__3_time].finalvalue);
+  instancenested3_i.dsp(net3, net4);
+  instanceallpass__3_i.dsp(net4, net2, PExch[PARAM_INDEX_allpass__3_g].finalvalue);
+  instanceallpass__4_i.dsp(net2, net6, PExch[PARAM_INDEX_allpass__4_g].finalvalue);
+  instancelp1__1_i.dsp(net6, net5, PExch[PARAM_INDEX_lp1__1_freq].finalvalue);
+  instanceinlet__1_i.dsp(net9);
+  instanceAPNoodle__2_i.dsp(net9, net5, net1, net0, PExch[PARAM_INDEX_APNoodle__2_g].finalvalue);
+  instancelp__1_i.dsp(net1, net10, PExch[PARAM_INDEX_lp__1_pitch].finalvalue, PExch[PARAM_INDEX_lp__1_reso].finalvalue);
+  instancehp__1_i.dsp(net1, net7, PExch[PARAM_INDEX_hp__1_pitch].finalvalue, PExch[PARAM_INDEX_hp__1_reso].finalvalue);
+  instanceallpass__1_i.dsp(net7, net8, PExch[PARAM_INDEX_allpass__1_g].finalvalue);
+  instance_plus___1_i.dsp(net8, net10, net11);
+  instanceoutlet__1_i.dsp(net11);
+  instanceallpass__2_i.dsp(net7, net13, PExch[PARAM_INDEX_allpass__2_g].finalvalue);
+  instance_plus___2_i.dsp(net13, net10, net12);
+  instanceoutlet__2_i.dsp(net12);
+//--------- </object calls> ----------//
+//--------- <net latch copy> ----------//
+   for(i=0;i<BUFSIZE;i++)
+      net0Latch[i]=net0[i];
+//--------- </net latch copy> ----------//
+      for(i=0;i<BUFSIZE;i++) outlet_outlet__1[i] = instanceoutlet__1_i._outlet[i];
+      for(i=0;i<BUFSIZE;i++) outlet_outlet__2[i] = instanceoutlet__2_i._outlet[i];]]></code.krate>
+      <code.midihandler><![CDATA[if ( attr_mididevice > 0 && dev > 0 && attr_mididevice != dev) return;
+if ( attr_midiport > 0 && port > 0 && attr_midiport != port) return;
+instancenested3_i.MidiInHandler(dev, port, status, data1, data2);]]></code.midihandler>
+   </obj.normal>
+</objdefs>
