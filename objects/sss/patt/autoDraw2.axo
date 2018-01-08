@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="autoDraw2" uuid="c6ea982c-d1a7-4ea3-9a5c-ef5931f43183">
+   <obj.normal id="autoDraw2" uuid="f7069a89-8c44-45df-b26a-b83bcd006c9e">
       <sDescription>Automation &quot;drawing&quot; module. Could also be used to make custom waveforms (read out the table with an interpolated table-read module).
 Please read the below well:
 
@@ -49,14 +49,14 @@ Connect a string-object for the filename and hit &quot;save&quot; to save.. and 
          <int32.label name="__position"/>
          <int32.label name="__till"/>
          <int32.label name="__width"/>
-         <int8array128.vbar name="d1"/>
-         <int8array128.vbar name="d2"/>
-         <int8array128.vbar name="d3"/>
-         <int8array128.vbar name="d4"/>
-         <int8array128.vbar name="d5"/>
-         <int8array128.vbar name="d6"/>
-         <int8array128.vbar name="d7"/>
-         <int8array128.vbar name="d8"/>
+         <int8array128.vbar name="d1" noLabel="true"/>
+         <int8array128.vbar name="d2" noLabel="true"/>
+         <int8array128.vbar name="d3" noLabel="true"/>
+         <int8array128.vbar name="d4" noLabel="true"/>
+         <int8array128.vbar name="d5" noLabel="true"/>
+         <int8array128.vbar name="d6" noLabel="true"/>
+         <int8array128.vbar name="d7" noLabel="true"/>
+         <int8array128.vbar name="d8" noLabel="true"/>
       </displays>
       <params>
          <frac32.u.map name="readout"/>
@@ -181,9 +181,7 @@ float32_t Crat;
 int32_t k;
 int cdir;]]></code.declaration>
       <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
-array = &_array[0];
-
-//  for(i=0;i<LENGTH;i++) {array[i]=0;}]]></code.init>
+array = &_array[0];]]></code.init>
       <code.krate><![CDATA[int save=param_save+inlet_save;
 int load=param_load+inlet_load;
 
@@ -252,7 +250,7 @@ if(update==0){
 if(param_edit>0){
 pos1=param_startPos>>17;
 pos1+=read;
-diff=(param_width>>16)*128/127;
+diff=(param_width>>16)+1;//*128/127;
 ratio=((float32_t)(1))/diff;
 lvl1=param_startLvl;
 lvl2=param_endLvl;
@@ -275,11 +273,12 @@ EXPO(k,__SSAT(param_curve+___SMMUL((int32_t)(k-(crat*diff/2))<<3,-param_Scrv<<3)
 aut=out*Crat;
 array[(i+pos1)&LENGTHMASK]=__SSAT((lvl1+aut),28);
 }
-if(param_startPos<(1<<26)){
-PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],(pos1-read+diff)<<20,0xFFFD);}
-if(param_startPos>=(1<<26)){
-PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],param_startPos-(128<<18),0xFFFD);
-PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_readout],param_readout+(128<<14)+(diff<<16),0xFFFD);
+if((param_startPos)<(1<<26)){
+//PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],param_startPos+(param_width>>1),0xFFFD);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],(pos1-read+diff-1)<<17,0xFFFD);}
+if((param_startPos)>=(1<<26)){
+//PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],param_startPos-(128<<15),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_readout],param_readout+(128<<17)*0+(diff-1<<16),0xFFFD);
 }
 pos1+=diff;
 }
@@ -303,7 +302,7 @@ for(i=0;i<1024;i++){
 	else if(i<512){disp_d4[i-384]=array[(i+current)&LENGTHMASK]>>21;}
 	else if(i<640){disp_d5[i-512]=array[(i+current)&LENGTHMASK]>>21;}
 	else if(i<758){disp_d6[i-640]=array[(i+current)&LENGTHMASK]>>21;}
-	else if(i<896){disp_d7[i-758]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<896){disp_d7[i-768]=array[(i+current)&LENGTHMASK]>>21;}
 	else if(i<1024){disp_d8[i-896]=array[(i+current)&LENGTHMASK]>>21;}
 }
 if(param_edit>0){
@@ -354,8 +353,8 @@ disp___till=pos1+diff;}}
       uint32_t tmp_w2 = (1<<30) - tmp_w1;
       int32_t tmp_a1 = array[tmp_di&LENGTHMASK];
       int32_t tmp_a2 = array[(tmp_di+1)&LENGTHMASK];
-      int32_t tmp_r = ___SMMUL(tmp_a1<<2,tmp_w1);
-      tmp_r = ___SMMLA(tmp_a2<<2,tmp_w2,tmp_r);
+      int32_t tmp_r = ___SMMUL(tmp_a1<<2,tmp_w2);
+      tmp_r = ___SMMLA(tmp_a2<<2,tmp_w1,tmp_r);
       outlet_out= tmp_r;]]></code.krate>
    </obj.normal>
 </objdefs>

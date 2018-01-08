@@ -15,6 +15,7 @@ Bandwith limited</sDescription>
          <int32 name="wave"/>
          <frac32.bipolar name="softsync"/>
          <frac32buffer name="reverse"/>
+         <frac32 name="self"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="triangle wave, anti-aliased"/>
@@ -373,11 +374,12 @@ Div=Div>0?Div:1-Div;
 int32_t wave=inlet_wave+param_wave;
 wave=wave-wave/5*5;
 wave+=wave<0?5:0;
-if(wave==0){SIN(inlet_pitch+param_pitch,param_mod,param_self);}
-if(wave==1){TRI(inlet_pitch+param_pitch,param_mod,param_self);}
-if(wave==2){SAW(inlet_pitch+param_pitch,param_mod,param_self);}
-if(wave==3){SQR(inlet_pitch+param_pitch,param_mod,param_self);}
-if(wave==4){PWM(inlet_pitch+param_pitch,param_mod,param_self);}
+int32_t self=param_self+inlet_self;
+if(wave==0){SIN(inlet_pitch+param_pitch,param_mod,self);}
+if(wave==1){TRI(inlet_pitch+param_pitch,param_mod,self);}
+if(wave==2){SAW(inlet_pitch+param_pitch,param_mod,self);}
+if(wave==3){SQR(inlet_pitch+param_pitch,param_mod,self);}
+if(wave==4){PWM(inlet_pitch+param_pitch,param_mod,self);}
 for(i=0;i<BUFSIZE;i++){
 	hp+=out[i]-hp>>10;
 	out[i]-=hp;
