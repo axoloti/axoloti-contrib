@@ -1,0 +1,361 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="autoDraw2" uuid="c6ea982c-d1a7-4ea3-9a5c-ef5931f43183">
+      <sDescription>Automation &quot;drawing&quot; module. Could also be used to make custom waveforms (read out the table with an interpolated table-read module).
+Please read the below well:
+
+The first 3 knobs, &quot;readout&quot;, &quot;startPos&quot; and &quot;width&quot; are used to set the start and end points of the slope you are creating.
+-readout: sets the startpoint anywhere in the whole array (big position offset).
+-startpoint: sets the startpoint inside the display (small position offset)
+-width: this sets the length of the slope/value-change. This value can go outside of the display for longer slopes/changes!
+
+The two next knobs are used to set the start and end level, followed by two toggle buttons that control their response. In &quot;normal&quot; response, after hitting the &quot;do&quot; button, the start-level knob will change to the value of the end-level knob, so there&apos;s always a perfect fit to the next stage.
+-startLvl: sets the level from which the change starts (readout+start).
+-endLvl: sets the level of the end position (start+readout+width).
+-follow: when this switch is on, changing the readout/start/width controls will change the level-knobs to the level of the current read-positions. This is very useful to smooth out a recording or force the recorded changes to a certain beat-size.
+-keep: when on, keeps the current levels the same after hitting the &quot;do&quot; button. This way you can easily repeat a certain sawwave-like slope.
+
+The next 4 controls are for setting the curve of the change.
+-curve: creates an exponential or inverse-exponential slope from start to end point.
+-Scrv: applies a S-curve to the change. the &quot;curve&quot; control changes it&apos;s mid-point.
+-stack: stack multiple exponential functions to create steeper (s-)curves.
+-mode: when mode is on, the &quot;curve&quot; parameter value is inverted after each &quot;do&quot; (see next part). Sometimes you&apos;ll notice that this parameter &quot;should&quot; invert after every &quot;do&quot; to create nicer automations.
+
+The last controls are &quot;menu/setting&quot; controls.
+-do: when &quot;do&quot; goes high, it copies the slope that you&apos;ve created into the internal table, resets the start-level and end-level controls depending on whether the &quot;follow&quot; or &quot;keep&quot; are used and resets the start-position to the last end-position. So there&apos;s no need to adjust the start/readout positions every time. Note, that the readout-inlet is not used for the edit-position! So even while &quot;track&quot; is on, you can still just go ahead editting the automation normally.
+
+-rec: records the &quot;level&quot; inlet into the current readout position (readout position is also controlled by the readout-inlet!). This way you could add a manual knob-change into your automation. Then use the editor to &quot;sync&quot; the changes to a certain &quot;beat-length&quot;. As long as the &quot;width&quot; is set to a power-of-two value, it will be in sync with a 4/4 beat (as long as the LFO connected to the readout is in-sync to host tempo).
+
+-track: when track is on, the display will follow the readout-inlet. Though, you can still see your &quot;editting&quot;. Note that when hitting &quot;do&quot;, it will not use the readout-inlet to copy the curve into the table. The readout-inlet is only used for reading out the table, putting it into the display and sending it to the module&apos;s output.
+
+-edit: when on, it shows the current &quot;edit&quot; slope/curve on the display, which would be applied if you&apos;ld hit &quot;do&quot;.
+
+Of course, your automation can be saved&amp;loaded.
+Connect a string-object for the filename and hit &quot;save&quot; to save.. and &quot;load&quot; to ehm... what was it..?</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>scope.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="readout"/>
+         <frac32 name="level"/>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays>
+         <int32.label name="__position"/>
+         <int32.label name="__till"/>
+         <int32.label name="__width"/>
+         <int8array128.vbar name="d1"/>
+         <int8array128.vbar name="d2"/>
+         <int8array128.vbar name="d3"/>
+         <int8array128.vbar name="d4"/>
+         <int8array128.vbar name="d5"/>
+         <int8array128.vbar name="d6"/>
+         <int8array128.vbar name="d7"/>
+         <int8array128.vbar name="d8"/>
+      </displays>
+      <params>
+         <frac32.u.map name="readout"/>
+         <frac32.u.map name="startPos"/>
+         <frac32.u.map name="width"/>
+         <frac32.s.map name="startLvl"/>
+         <frac32.s.map name="endLvl"/>
+         <bool32.tgl name="follow"/>
+         <bool32.tgl name="keep"/>
+         <frac32.s.map name="curve"/>
+         <frac32.s.map name="Scrv"/>
+         <int32 name="stack">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <bool32.tgl name="mode"/>
+         <bool32.mom name="do"/>
+         <bool32.tgl name="rec"/>
+         <bool32.tgl name="track"/>
+         <bool32.tgl name="edit"/>
+         <bool32.mom name="load"/>
+         <bool32.mom name="save"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
+
+int32_t *array;
+
+int strig;
+int ltrig;
+int dtrig;
+int32_t prvS;
+int32_t prvE;
+int i;
+int j;
+int dir;
+int32_t expo[34];
+int32_t out;
+int32_t EXPO(int32_t value,int32_t curve,int stack, int OF){
+int32_t inexpo=__SSAT(-curve,28);
+dir=inexpo>0?1:-1;
+inexpo=inexpo>0?inexpo:-inexpo;
+int32_t inv=(1<<27)-inexpo;
+int32_t pos=value>0?value:-value;
+if(dir>0)
+{expo[OF]=___SMMUL(pos<<3,(inv+___SMMUL(inexpo<<3,pos<<2))<<2);}
+if(dir<0)
+{expo[OF]=___SMMUL(((1<<27)-pos)<<3,(inv+___SMMUL(inexpo<<3,((1<<27)-pos)<<2))<<2);}
+for(j=1;j<=stack;j++){
+expo[j+OF]=___SMMUL(expo[j-1+OF]<<3,(inv+___SMMUL(inexpo<<3,expo[j-1+OF]<<2))<<2);}
+if(dir>0)
+{out=expo[stack+OF];}
+if(dir<0)
+{out=((1<<27)-expo[stack+OF]);}
+};
+
+int update;
+int32_t aut;
+
+int32_t pos1;
+int32_t diff;
+int32_t lvl1;
+int32_t lvl2;
+float32_t ratio;
+int32_t cdiv;
+float32_t crat;
+float32_t Crat;
+int32_t k;
+int cdir;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+//  for(i=0;i<LENGTH;i++) {array[i]=0;}]]></code.init>
+      <code.krate><![CDATA[int save=param_save+inlet_save;
+int load=param_load+inlet_load;
+
+if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(load>0)) ltrig=0;
+
+int32_t X;
+if(param_rec>0){
+array[(inlet_readout>>27-LENGTHPOW)&LENGTHMASK]=inlet_level;
+}
+update=(update+1)&127;
+
+int32_t read=param_readout>>16;
+if(update==0){
+if(param_edit>0){
+pos1=param_startPos>>17;
+pos1+=read;
+diff=(param_width>>16)*128/127;
+ratio=((float32_t)(1))/diff;
+lvl1=param_startLvl;
+lvl2=param_endLvl;
+cdir=lvl2>lvl1?1:-1;
+cdiv=param_endLvl-param_startLvl;
+cdiv=cdiv==0?cdiv=1:cdiv;
+crat=((float32_t)(1<<27))*cdir*ratio;
+Crat=(float32_t)(cdiv)/(1<<27);
+pos1=pos1+diff>LENGTH?LENGTH-diff:pos1;
+
+
+if((param_do>0)&&!dtrig){
+dtrig=1;
+if(param_mode>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_curve],-param_curve,0xFFFD);
+}
+for(i=0;i<diff+1;i++){
+int32_t k=crat*i;
+EXPO(k,__SSAT(param_curve+___SMMUL((int32_t)(k-(crat*diff/2))<<3,-param_Scrv<<3),28),param_stack,0);//55555555555
+aut=out*Crat;
+array[(i+pos1)&LENGTHMASK]=__SSAT((lvl1+aut),28);
+}
+if(param_startPos<(1<<26)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],(pos1-read+diff)<<20,0xFFFD);}
+if(param_startPos>=(1<<26)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startPos],param_startPos-(128<<18),0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_readout],param_readout+(128<<14)+(diff<<16),0xFFFD);
+}
+pos1+=diff;
+}
+else if((param_do==0)&&dtrig){dtrig=0;if(param_keep==0){PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startLvl],array[(pos1)&LENGTHMASK],0xFFFD);}}
+if(param_follow>0){
+if(!(prvS==pos1)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_startLvl],array[pos1&LENGTHMASK],0xFFFD);
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endLvl],array[(pos1+diff)&LENGTHMASK],0xFFFD);
+}
+if(!(prvE==diff+pos1)){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_endLvl],array[(pos1+diff)&LENGTHMASK],0xFFFD);
+}
+prvE=diff+pos1;
+prvS=pos1;
+}}
+int32_t current=param_track>0?inlet_readout>>27-LENGTHPOW:read;
+for(i=0;i<1024;i++){
+	if(i<128){disp_d1[i]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<256){disp_d2[i-128]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<384){disp_d3[i-256]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<512){disp_d4[i-384]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<640){disp_d5[i-512]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<758){disp_d6[i-640]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<896){disp_d7[i-758]=array[(i+current)&LENGTHMASK]>>21;}
+	else if(i<1024){disp_d8[i-896]=array[(i+current)&LENGTHMASK]>>21;}
+}
+if(param_edit>0){
+X=diff;//(diff>(128-(pos1-read))?(128-(pos1-read)):diff);
+for(i=0;i<X;i++){
+k=crat*i;
+EXPO(k,__SSAT(param_curve+___SMMUL((int32_t)(k-(crat*X/2))<<3,-param_Scrv<<3),28),param_stack,17);//55555555555
+aut=out*Crat;
+int j=(i+pos1-read)&LENGTHMASK;
+if(j<128){disp_d1[j]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<256){disp_d2[j-128]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<384){disp_d3[j-256]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<512){disp_d4[j-384]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<640){disp_d5[j-512]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<768){disp_d6[j-640]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<896){disp_d7[j-768]=__SSAT((lvl1+aut),28)>>21;}
+else if(j<1024){disp_d8[j-896]=__SSAT((lvl1+aut),28)>>21;}
+}
+int32_t TP1=pos1-read;
+int32_t TP2=pos1-read+diff;
+if(TP1<128){disp_d1[TP1]=64;}
+else if(TP1<256){disp_d2[TP1-128]=64;}
+else if(TP1<384){disp_d3[TP1-256]=64;}
+else if(TP1<512){disp_d4[TP1-384]=64;}
+else if(TP1<640){disp_d5[TP1-512]=64;}
+else if(TP1<768){disp_d6[TP1-640]=64;}
+else if(TP1<896){disp_d7[TP1-768]=64;}
+else if(TP1<1024){disp_d8[TP1-896]=64;}
+
+if(TP2<128){disp_d1[TP2]=-64;}
+else if(TP2<256){disp_d2[TP2-128]=-64;}
+else if(TP2<384){disp_d3[TP2-256]=-64;}
+else if(TP2<512){disp_d4[TP2-384]=-64;}
+else if(TP2<640){disp_d5[TP2-512]=-64;}
+else if(TP2<768){disp_d6[TP2-640]=-64;}
+else if(TP2<896){disp_d7[TP2-768]=-64;}
+else if(TP2<1024){disp_d8[TP2-896]=-64;}
+
+disp___position=pos1;
+disp___width=diff;
+prvE=diff+pos1;
+disp___till=pos1+diff;}}
+
+
+      uint32_t tmp_d =  __USAT(inlet_readout,27);
+      uint32_t tmp_di = (tmp_d>>(27-LENGTHPOW));
+      uint32_t tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = array[tmp_di&LENGTHMASK];
+      int32_t tmp_a2 = array[(tmp_di+1)&LENGTHMASK];
+      int32_t tmp_r = ___SMMUL(tmp_a1<<2,tmp_w1);
+      tmp_r = ___SMMLA(tmp_a2<<2,tmp_w2,tmp_r);
+      outlet_out= tmp_r;]]></code.krate>
+   </obj.normal>
+</objdefs>
