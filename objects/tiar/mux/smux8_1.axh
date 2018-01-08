@@ -1,0 +1,370 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="0" y="0" text="The polyphonic organ"/>
+   <comment type="patch/comment" x="266" y="0" text="A chain of phasing units: each stage output is connected to the scanners (aka smux8)"/>
+   <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc" name="object_1" x="28" y="28">
+      <params>
+         <frac32.u.map name="H1" value="64.0"/>
+         <frac32.u.map name="H2" value="64.0"/>
+         <frac32.u.map name="H3" value="0.0"/>
+         <frac32.u.map name="H4" value="0.0"/>
+         <frac32.u.map name="H6" value="64.0"/>
+         <frac32.u.map name="H8" value="0.0"/>
+         <frac32.u.map name="D10" value="35.0"/>
+         <frac32.u.map name="H12" value="64.0"/>
+         <frac32.u.map name="H16" value="20.5"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-dabae1341efc">
+         <sDescription>String</sDescription>
+         <license>BSD</license>
+         <inlets/>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="H1"/>
+            <frac32.u.map name="H2"/>
+            <frac32.u.map name="H3"/>
+            <frac32.u.map name="H4"/>
+            <frac32.u.map name="H6"/>
+            <frac32.u.map name="H8"/>
+            <frac32.u.map name="D10"/>
+            <frac32.u.map name="H12"/>
+            <frac32.u.map name="H16"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[// dp midi [24 35]
+int32_t dp[12]={2926232, 3100235, 3284585, 3479896,
+3686822, 3906052, 4138318, 4384395, 
+              4645104, 4921317, 5213953, 5523991};
+
+uint32_t p[12];
+int32_t target[91];
+int32_t env[91];
+int32_t env1[91];
+int32_t env2[91];
+
+int32_t gates[128];
+int32_t rnd=137137137;]]></code.declaration>
+         <code.init><![CDATA[for(int i = 0; i < 91; i++){ env[i] = 0; }
+
+for (int i=0;i<128;i++)
+	gates[i]=0;]]></code.init>
+         <code.krate><![CDATA[int i,j;
+for(i=0;i<91;i++) target[i]=0;  // target amplitudes for the AR enveloppes
+int32_t H1 = param_H1>>2;int32_t H2 = param_H2>>2;int32_t H3 = param_H3>>2;int32_t H4 = param_H4>>2;
+int32_t H6 = param_H6>>3;int32_t H8 = param_H8>>3;int32_t D10 = param_D10>>3;int32_t H12 = param_H12>>4;
+int32_t H16 = param_H16>>4;
+for(i=0; i < 12; i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;target[i+19] += H3;target[i+24] += H4;target[i+31] += H6;target[i+36] += H8;target[i+40] += D10;target[i+43] += H12;target[i+48] += H16;}
+for(i=12; i < 43; i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;target[i+19] += H3;target[i+24] += H4;target[i+31] += H6;target[i+36] += H8;target[i+40] += D10;target[i+43] += H12;target[i+48] += H16;}
+for(i=43;i<48;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+19] += H3;target[i+12] += H2;target[i+24] += H4;target[i+31] += H6;target[i+36] += H8;target[i+40] += D10;target[i+43] += H12;}
+for(i=48;i<51;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+19] += H3;target[i+12] += H2;target[i+24] += H4;target[i+31] += H6;target[i+36] += H8;target[i+40] += D10;}
+for(i=51;i<55;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;target[i+19] += H3;target[i+24] += H4;target[i+31] += H6;target[i+36] += H8;}
+for(i=55;i<60;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+19] += H3;target[i+12] += H2;target[i+24] += H4;target[i+31] += H6;}
+for(i=60;i<67;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;target[i+19] += H3;target[i+24] += H4;}
+for(i=67;i<72;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;target[i+19] += H3;}
+for(i=72;i<79;i++)if (gates[i+24] != 0) {target[i] += H1;target[i+12] += H2;}
+for(i=79;i<91;i++)if (gates[i+24] != 0) {target[i] += H1;}
+// _____________________________________________________________
+// simple anti click AR enveloppes
+for(i=0;i<91;i++){
+	env1[i] = __SMMLA(env1[i]<target[i]?0x20000000:0x2000000, target[i] - env1[i], env1[i]); 
+	env2[i] = __SMMLA(env2[i]<target[i]?0x08000000:0x0800000, target[i] - env2[i], env2[i]);
+	env[i] = env1[i]+(env2[i]>>4);
+	}
+
+for(j = 0; j < BUFSIZE; j++){
+  int32_t s[12];
+  // base oscs calc
+  for(int note = 0; note < 12; note++){
+    p[note] += dp[note];
+    SINE2TINTERP(p[note], s[note]);
+  }
+  //
+  int32_t out = 0;
+  for(int note = 0; note < 12; note++){
+    // y: q30 value of sine wave
+    // note: q31 caused overflow 
+    int32_t y = s[note]>>1;  
+    out = __SMMLA(y, env[note], out);
+    for(int ind = note + 12; ind < 91; ind += 12){
+      // frequency doubler:
+      // cos(2*x) = 2 * (cos(x)^2 - 0.5)
+      
+      // fixed point arithmetics notes:
+      // __SMMUL(q30, q30) is q28
+      // 0xF8000000 = -0.5_q28
+      
+      // y  <-  (y^2 - 0.5) * 2
+      //          q30 q30 - 0.5_q28       * 2   q28->q30
+      y = __SMMLA(y,  y, 0xF8000000 ) << ( 1   +   2 );
+     
+      // output accumulation
+      out = __SMMLA(y, env[ind], out);
+    }
+  }
+  outlet_out[j] = out;
+}]]></code.krate>
+         <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
+  gates[data1 & 0x7F] = data2<<23UL;
+} else if(status == MIDI_NOTE_OFF + attr_midichannel) {
+  gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_1" x="126" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_2" x="224" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_3" x="322" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_4" x="420" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_5" x="518" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_6" x="616" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_7" x="714" y="28">
+      <params>
+         <frac32.s.map name="g" value="40.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="868" y="392" text="Left scanner"/>
+   <comment type="patch/comment" x="980" y="392" text="Direct/Vib mix"/>
+   <comment type="patch/comment" x="1078" y="392" text="output stage"/>
+   <obj type="tiar/mux/smux8_1" uuid="d88fdb97-631c-4fcf-8574-c8ea3c644a4d" name="smux8_1_1" x="868" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="980" y="420">
+      <params>
+         <frac32.u.map name="gain1" value="31.5"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1064" y="420">
+      <params>
+         <frac32.u.map name="InGain" value="17.0"/>
+         <frac32.u.map name="OutGain" value="30.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="0" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/lfo/triphase_lfo" uuid="c5ee2ec2-064a-4803-a37d-3e0db693311e" name="triphase_lfo_1" x="532" y="532">
+      <params>
+         <frac32.s.map name="pitch" value="6.014708995819092"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_1" x="644" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="770" y="532">
+      <params>
+         <frac32.u.map name="amp" value="54.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/mux/smux8_1" uuid="d88fdb97-631c-4fcf-8574-c8ea3c644a4d" name="smux8_1_2" x="868" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_2" x="980" y="616">
+      <params>
+         <frac32.u.map name="gain1" value="31.5"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_2" x="1064" y="616">
+      <params>
+         <frac32.u.map name="InGain" value="17.0"/>
+         <frac32.u.map name="OutGain" value="30.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="448" y="658" text="outputs are 120° apart from each other"/>
+   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_2" x="644" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="770" y="686">
+      <params>
+         <frac32.u.map name="amp" value="54.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="770" y="784" text="Vibrato depth"/>
+   <comment type="patch/comment" x="868" y="784" text="Right scanner"/>
+   <nets>
+      <net>
+         <source obj="smux8_1_1" outlet="o"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="allpass_1" outlet="out"/>
+         <dest obj="allpass_2" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i1"/>
+         <dest obj="smux8_1_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="allpass_2" outlet="out"/>
+         <dest obj="allpass_3" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i2"/>
+         <dest obj="smux8_1_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="allpass_3" outlet="out"/>
+         <dest obj="allpass_4" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i3"/>
+         <dest obj="smux8_1_2" inlet="i4"/>
+      </net>
+      <net>
+         <source obj="allpass_4" outlet="out"/>
+         <dest obj="allpass_5" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i4"/>
+         <dest obj="smux8_1_2" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="allpass_5" outlet="out"/>
+         <dest obj="allpass_6" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i5"/>
+         <dest obj="smux8_1_2" inlet="i5"/>
+      </net>
+      <net>
+         <source obj="allpass_6" outlet="out"/>
+         <dest obj="allpass_7" inlet="in"/>
+         <dest obj="smux8_1_1" inlet="i6"/>
+         <dest obj="smux8_1_2" inlet="i6"/>
+      </net>
+      <net>
+         <source obj="allpass_7" outlet="out"/>
+         <dest obj="smux8_1_1" inlet="i7"/>
+         <dest obj="smux8_1_2" inlet="i7"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="smux8_1_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="bipolar2unipolar_1" outlet="o"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="out"/>
+         <dest obj="allpass_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="smux8_1_1" inlet="i0"/>
+         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="smux8_1_2" inlet="i0"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="triphase_lfo_1" outlet="phi 0"/>
+         <dest obj="bipolar2unipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="smux8_1_2" outlet="o"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="smux8_1_2" inlet="s"/>
+      </net>
+      <net>
+         <source obj="bipolar2unipolar_2" outlet="o"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="DPSoftClip_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="triphase_lfo_1" outlet="phi 120"/>
+         <dest obj="bipolar2unipolar_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>T.Rochebois</Author>
+      <License>LGPL</License>
+      <Saturate>false</Saturate>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>516</x>
+      <y>9</y>
+      <width>1387</width>
+      <height>1012</height>
+   </windowPos>
+</patch-1.0>
