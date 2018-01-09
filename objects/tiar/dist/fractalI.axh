@@ -1,0 +1,78 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="70" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="168" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="266" y="28">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="23.0"/>
+         <frac32.u.map name="s" value="43.0"/>
+         <frac32.s.map name="r" value="22.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="364" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/fractalI" uuid="8b6a9059-5928-45fb-8b06-1908b49b24c2" name="fractalI_1" x="448" y="28">
+      <params>
+         <frac32.u.map name="gain" value="9.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="588" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="98" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="fractalI_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="fractalI_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>304</x>
+      <y>368</y>
+      <width>1442</width>
+      <height>621</height>
+   </windowPos>
+</patch-1.0>

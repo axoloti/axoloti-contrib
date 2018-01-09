@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fractalI" uuid="8b6a9059-5928-45fb-8b06-1908b49b24c2">
+      <sDescription>FractalI.
+Basic x8 oversampling aliasing limiting.</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>fractalI.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t x = 0;]]></code.declaration>
+      <code.srate><![CDATA[// basic 8x oversampling
+int32_t dx = (inlet_in + 0x02AAAAAA - x) >> 3;  // => 0 <-> 0
+int32_t y = (x += dx) ^ 0x02AAAAAA; // inverts one bit in two
+for(int i = 1; i < 8; i++)
+  y += (x += dx) ^ 0x02AAAAAA;
+outlet_out = ___SMMUL(y, 0x16000000);]]></code.srate>
+   </obj.normal>
+</objdefs>
