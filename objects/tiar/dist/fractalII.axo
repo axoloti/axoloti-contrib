@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fractalII" uuid="e8325de0-7757-4e39-849c-12790dc6de92">
+      <sDescription>FractalII.
+Basic x8 oversampling aliasing limiting.</sDescription>
+      <author>T.Rochebois</author>
+      <license>LGPL</license>
+      <helpPatch>fractalII.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t x = 0;]]></code.declaration>
+      <code.srate><![CDATA[// basic 8x oversampling
+
+int32_t dx = (inlet_in*2 - x) >> 3;  // => 0 <-> 0
+int32_t y = 0;
+  for(int i = 0; i < 8; i++){
+    x += dx;
+    y += x^(x>>1);
+  }
+
+outlet_out = ___SMMUL(y, x>0?0x0E000000:-0x0E000000);]]></code.srate>
+   </obj.normal>
+</objdefs>
