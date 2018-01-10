@@ -1,0 +1,177 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="blepSlaveS" uuid="c228943d-7002-4bdc-b4af-057962d60b6d">
+      <sDescription>Multi wave oscillator with sync and FM modulation
+Bandwith limited</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>saw sync.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="SPofs"/>
+         <frac32 name="fm"/>
+         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
+         <frac32buffer name="mod"/>
+         <int32 name="wave"/>
+         <frac32 name="mix"/>
+         <int32 name="Sstep"/>
+         <int32 name="Sstart"/>
+         <int32 name="syncs"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="SPofs"/>
+         <frac32.u.map name="detune"/>
+         <int32.hradio name="wave">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <int32 name="Wstep">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <frac32.s.map name="fm"/>
+         <frac32.s.map name="SFMofs"/>
+         <frac32.s.map name="defm"/>
+         <bool32.tgl name="selectM"/>
+         <int32 name="Sstart">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="Sstep">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="syncs">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+         <bool32.tgl name="selectS"/>
+         <frac32.u.map name="mix"/>
+         <frac32.u.map name="demix"/>
+         <int32 name="stack">
+            <MinValue i="1"/>
+            <MaxValue i="8"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="core"/>
+         <spinner name="maxStack" MinValue="1" MaxValue="8" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const int stack=attr_maxStack;
+int32_t osc_p[stack];
+uint32_t uosc_p[stack];
+  static const int blepvoices = 8;
+  const int16_t *uoscp[stack][blepvoices];
+  int16_t *oscp[stack][blepvoices];
+  int32_t vgain[stack][blepvoices];
+  uint32_t nextvoice[stack];
+  int32_t i0[stack];
+  int32_t sync[BUFSIZE];
+  int32_t mix[stack];
+  int i;
+  int k;
+  int wave[stack];
+  int32_t pitch[stack];
+  bool snc[stack];
+  int32_t fm[stack];
+  int32_t v27=1<<27;
+  int32_t SQRT(int32_t in){
+int32_t ai = in;
+float aif = ai;
+aif *= (1<<27);
+aif = _VSQRTF(aif);
+return (int)aif;
+  }]]></code.declaration>
+      <code.init><![CDATA[int j;
+	for(i=0;i<stack;i++){
+    for(j=0;j<blepvoices;j++){
+      oscp[i][j] = &blept[BLEPSIZE-1];   
+      nextvoice[i] = 0; 
+      i0[i] = 0;
+      }}]]></code.init>
+      <code.krate><![CDATA[if(param_stack>attr_maxStack)
+{
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_stack],attr_maxStack,0xFFFD);
+}
+if(param_syncs>attr_maxStack)
+{
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_syncs],attr_maxStack,0xFFFD);
+}
+
+int32_t mx=__USAT(param_mix+inlet_mix,27);
+for(i=0;i<param_stack;i++){
+int m=(i*(param_Wstep+(inlet_wave>>2)));
+wave[i]=(param_wave+inlet_wave+m+(m>>2)+(m>>4))&3;
+pitch[i]=param_pitch+inlet_pitch+i*(param_detune>>8);
+snc[i]=0;
+fm[i]=param_fm+inlet_fm+param_defm*i/param_stack;
+mix[i]=SQRT(SQRT((__USAT(mx-___SMMUL(((v27-param_demix)/param_stack)*i<<3,mx<<2),27)<<3)/param_stack));
+}
+
+int syncs=param_syncs+inlet_syncs;
+syncs=syncs-syncs/param_stack*param_stack;
+syncs+=syncs<0?param_stack:0;
+int Sstep=param_Sstep+inlet_Sstep;
+int Sstart=param_Sstart+inlet_Sstart;
+int selectM=(param_selectM+(inlet_Sstep>>3))&1;
+int selectS=(param_selectS+(inlet_Sstart>>3))&1;
+for(i=0;i<syncs;i++){
+	int tmp=i*Sstep+Sstart;
+	tmp+=tmp>>3;
+	tmp=tmp-tmp/param_stack*param_stack;
+	snc[tmp]=1;
+	pitch[tmp]+=param_SPofs+inlet_SPofs;
+	fm[tmp]+=param_SFMofs;
+}
+
+
+
+
+
+for(k=0;k<param_stack;k++){
+for(i=0;i<blepvoices;i++){
+	attr_core.oscp[i]=oscp[k][i];
+	attr_core.uoscp[i]=uoscp[k][i];
+	attr_core.vgain[i]=vgain[k][i];
+}
+for(i=0;i<BUFSIZE;i++){
+	attr_core.sync[i]=snc[k]>0?(k>0?sync[i]:inlet_sync[i]):0;
+	attr_core.mod[i]=___SMMUL((k>0?(selectM>0?inlet_mod[i]:attr_core.wave[i]):inlet_mod[i])<<2,fm[k]);
+}
+attr_core.i0=i0[k];
+attr_core.osc_p=osc_p[k];
+attr_core.uosc_p=uosc_p[k];
+attr_core.nextvoice=nextvoice[k];
+
+switch(wave[k]){
+case 0: attr_core.OSC_SIN(pitch[k]);	break;
+case 1: attr_core.OSC_TRI(pitch[k]);	break;
+case 2: attr_core.OSC_SAW(pitch[k]);	break;
+case 3: attr_core.OSC_SQR(pitch[k]);	break;
+}
+for(i=0;i<BUFSIZE;i++){
+		if(k==0){
+	outlet_wave[i]=___SMMUL(attr_core.wave[i]<<2,mix[k]);
+		sync[i]=selectS>0?inlet_sync[i]:attr_core.wave[i];
+	}
+	else {
+		outlet_wave[i]+=___SMMUL(attr_core.wave[i]<<2,mix[k]);
+	}
+}
+for(i=0;i<blepvoices;i++){
+	oscp[k][i]=attr_core.oscp[i];
+	uoscp[k][i]=attr_core.uoscp[i];
+	vgain[k][i]=attr_core.vgain[i];
+}
+i0[k]=attr_core.i0;
+osc_p[k]=attr_core.osc_p;
+uosc_p[k]=attr_core.uosc_p;
+nextvoice[k]=attr_core.nextvoice;
+}
+outlet_pitch=param_pitch+inlet_pitch;]]></code.krate>
+   </obj.normal>
+</objdefs>
