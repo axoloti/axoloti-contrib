@@ -30,7 +30,7 @@ int32_t OSC_SIN(int32_t pitch){
   	int j;
   	for(j=0;j<BUFSIZE;j++){
   	
-	osc_p+=freq+(___SMMUL(freq,mod[j]<<3)<<8);
+	osc_p+=freq+(___SMMUL(freq,mod[j]<<3)<<6);
 	if((sync[j]>0)&&!nextvoice){
   		nextvoice=1;
   		osc_p=0;
@@ -48,7 +48,7 @@ int32_t OSC_TRI(int32_t pitch){
   int j;
   const int16_t *lastblep = &blt[BLEPSIZE-1];
   for(j=0;j<BUFSIZE;j++){
-    int32_t freq=Freq+(___SMMUL(Freq>>1,mod[j]<<3)<<9);
+    int32_t freq=Freq+(___SMMUL(Freq>>1,mod[j]<<3)<<6);
     int dir=freq>0?1:0;
     int32_t frq=freq;
     freq=freq>0?freq:-freq; 
@@ -103,7 +103,7 @@ int32_t OSC_SAW(int32_t pitch){
   for(j=0;j<BUFSIZE;j++){
     int i;
     int p;
-    int32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<8);
+    int32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<6);
     int dir=freq>0?1:-1;
     freq=freq>0?freq:-freq;
     p = osc_p;
@@ -144,7 +144,7 @@ int32_t OSC_SQR(int32_t pitch){
   for(j=0;j<BUFSIZE;j++){
     int i;
     int p;
-    uint32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<8);
+    uint32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<6);
     p = osc_p;
     osc_p = p+(freq<<1);
     int32_t sum=0;
