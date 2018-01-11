@@ -22,6 +22,7 @@ each LFO has a different rate-division based on root frequency and set by the &q
       <displays/>
       <params>
          <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+         <bool32.tgl name="frqIN"/>
          <frac32.u.map.gain name="slope"/>
          <int32 name="time">
             <MinValue i="0"/>
@@ -67,8 +68,15 @@ pPhase = 0;
          r = 0;
       } else {
          if (!inlet_reset) r = 1;
-         int32_t freq;
-         MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+         uint32_t freq;
+         if(param_frqIN==0){MTOFEXTENDED(param_pitch + inlet_pitch,freq);}
+         else{
+         	float32_t rt;
+         	uint32_t tmp;
+         	MTOFEXTENDED(0,tmp)
+         	MTOFEXTENDED(param_pitch,freq)
+         	rt=(float32_t)freq/tmp;
+         	freq=inlet_pitch*rt;}
          Phase += freq>>8;
       }
    
