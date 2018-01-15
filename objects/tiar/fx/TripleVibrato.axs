@@ -202,7 +202,7 @@
       <NPresetEntries>32</NPresetEntries>
       <NModulationSources>8</NModulationSources>
       <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
-      <Author>T.Rochebois</Author>
+      <Author>Smashed Transistors</Author>
       <License>LGPL</License>
       <Attributions>based on jt&apos;s stereo chorus</Attributions>
    </settings>
