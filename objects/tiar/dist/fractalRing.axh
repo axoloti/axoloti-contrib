@@ -1,0 +1,148 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="126" y="0" text="Quadrature sines"/>
+   <comment type="patch/comment" x="238" y="0" text="ADSR before FX, play with S and D"/>
+   <comment type="patch/comment" x="462" y="0" text="Gain on Y, affects symetry"/>
+   <comment type="patch/comment" x="630" y="0" text="offset on X"/>
+   <comment type="patch/comment" x="756" y="0" text="offset on Y"/>
+   <comment type="patch/comment" x="882" y="0" text="Fractal Ring"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/osc/quad_sine" uuid="75f7330c26a15673215dccc3ba3b9008545c1daa9" name="quad_sine_1" x="126" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="238" y="28">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="52.0"/>
+         <frac32.u.map name="s" value="52.0"/>
+         <frac32.s.map name="r" value="21.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="336" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_4" x="392" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="476" y="28">
+      <params>
+         <frac32.u.map name="amp" value="47.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="phi/math/-+c" uuid="df4659359ceb0bbf74263d97c4bb041f95r9c773" name="-+c_1" x="630" y="28">
+      <params>
+         <frac32.s.map name="c" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="phi/math/-+c" uuid="df4659359ceb0bbf74263d97c4bb041f95r9c773" name="-+c_2" x="756" y="28">
+      <params>
+         <frac32.s.map name="c" value="-6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/FractalRing" uuid="1b7c6d0a-2747-4b5b-8596-2ad0e181bd76" name="FractalRing_1" x="882" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="182" y="266" text="Output enveloppe"/>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="154" y="294">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="2.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="252" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="308" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="462" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="FractalRing_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="quad_sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+         <dest obj="vca_4" inlet="v"/>
+      </net>
+      <net>
+         <source obj="quad_sine_1" outlet="0"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="quad_sine_1" outlet="90"/>
+         <dest obj="vca_4" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="-+c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_4" outlet="o"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="vca_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="-+c_1" outlet="out"/>
+         <dest obj="FractalRing_1" inlet="x"/>
+      </net>
+      <net>
+         <source obj="-+c_2" outlet="out"/>
+         <dest obj="FractalRing_1" inlet="y"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="-+c_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>41</x>
+      <y>100</y>
+      <width>1680</width>
+      <height>840</height>
+   </windowPos>
+</patch-1.0>
