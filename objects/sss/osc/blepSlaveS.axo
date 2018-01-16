@@ -16,6 +16,8 @@ Bandwith limited</sDescription>
          <int32 name="Sstep"/>
          <int32 name="Sstart"/>
          <int32 name="syncs"/>
+         <int32 name="hrmPst"/>
+         <int32 name="octPst"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
@@ -86,14 +88,32 @@ float aif = ai;
 aif *= (1<<27);
 aif = _VSQRTF(aif);
 return (int)aif;
-  }]]></code.declaration>
+  }
+
+int Pst;
+
+int32_t octPst[8][8]=
+{
+	{0,0,0,0,0,0,0,0},
+	{0,-1,0,-1,0,-1,0,-1},
+	{0,-1,0,-1,-2,0,-1,-2},
+	{0,1,-1,0,1,-1,0,-2},
+	{0,1,2,-1,-2,0,1,-1},
+	{0,1,-1,-2,-1,-2,-3,-4},
+	{0,-1,-2,-3,-4,-5,-6,-7},
+	{-3,-2,-1,0,1,2,1,-4}
+};]]></code.declaration>
       <code.init><![CDATA[int j;
 	for(i=0;i<stack;i++){
     for(j=0;j<blepvoices;j++){
       oscp[i][j] = &blept[BLEPSIZE-1];   
       nextvoice[i] = 0; 
       i0[i] = 0;
-      }}]]></code.init>
+      }
+       for(j=0;j<8;j++){
+       	octPst[j][i]=(octPst[j][i]*12)<<21;
+       }
+      }]]></code.init>
       <code.krate><![CDATA[if(param_stack>attr_maxStack)
 {
 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_stack],attr_maxStack,0xFFFD);
@@ -103,11 +123,14 @@ if(param_syncs>attr_maxStack)
 	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_syncs],attr_maxStack,0xFFFD);
 }
 
+attr_core.pst=inlet_hrmPst&15;
+
 int32_t mx=__USAT(param_mix+inlet_mix,27);
 for(i=0;i<param_stack;i++){
+attr_core.core=i&7;
 int m=(i*(param_Wstep+(inlet_wave>>2)));
 wave[i]=(param_wave+inlet_wave+m+(m>>2)+(m>>4))&3;
-pitch[i]=param_pitch+inlet_pitch+i*(param_detune>>8);
+pitch[i]=param_pitch+inlet_pitch+i*(param_detune>>8)+(octPst[(inlet_octPst>>4)&7][i&7]);
 snc[i]=0;
 fm[i]=param_fm+inlet_fm+param_defm*i/param_stack;
 mix[i]=SQRT(SQRT((__USAT(mx-___SMMUL(((v27-param_demix)/param_stack)*i<<3,mx<<2),27)<<3)/param_stack));
