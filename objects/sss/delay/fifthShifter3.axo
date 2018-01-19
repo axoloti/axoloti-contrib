@@ -16,6 +16,7 @@ Mostly usable for drony stuff.</sDescription>
          <frac32 name="highest"/>
          <frac32 name="lowest"/>
          <frac32 name="rate"/>
+         <frac32 name="window"/>
       </inlets>
       <outlets>
          <frac32buffer name="outL"/>
@@ -155,7 +156,7 @@ MTOF(param_lowest+inlet_lowest,HIGH)
 int32_t rate;
 MTOFEXTENDED(param_panRate+inlet_rate,rate)
 rate=rate>>5;
-int32_t window=v8+___SMMUL(param_window,LENGTHMASK-v8<<1);
+int32_t window=v8+___SMMUL(__USAT((param_window>>4)+inlet_window,27)<<4,LENGTHMASK-v8<<1);
 uint32_t RD=param_delay>>27-LP;]]></code.krate>
       <code.srate><![CDATA[LFO+=rate;
 int32_t sine;
