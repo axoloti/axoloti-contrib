@@ -27,7 +27,9 @@
    </obj>
    <obj type="tiar/kfilter/median" uuid="10ffb844-af17-4679-ac2e-270aa5f3f61b" name="median_1" x="546" y="56">
       <params/>
-      <attribs/>
+      <attribs>
+         <combo attributeName="N" selection="3"/>
+      </attribs>
    </obj>
    <obj type="disp/kscope 128 b trig" uuid="b24afecdaf757006c3a4bb578f0aea1d7441153e" name="kscope_2" x="644" y="56">
       <params/>
@@ -35,7 +37,9 @@
    </obj>
    <obj type="tiar/kfilter/median" uuid="10ffb844-af17-4679-ac2e-270aa5f3f61b" name="median_2" x="812" y="56">
       <params/>
-      <attribs/>
+      <attribs>
+         <combo attributeName="N" selection="3"/>
+      </attribs>
    </obj>
    <obj type="disp/kscope 128 b trig" uuid="b24afecdaf757006c3a4bb578f0aea1d7441153e" name="kscope_5" x="910" y="56">
       <params/>
@@ -43,7 +47,9 @@
    </obj>
    <obj type="tiar/kfilter/median" uuid="10ffb844-af17-4679-ac2e-270aa5f3f61b" name="median_3" x="1078" y="56">
       <params/>
-      <attribs/>
+      <attribs>
+         <combo attributeName="N" selection="3"/>
+      </attribs>
    </obj>
    <obj type="disp/kscope 128 b trig" uuid="b24afecdaf757006c3a4bb578f0aea1d7441153e" name="kscope_6" x="1176" y="56">
       <params/>
@@ -74,7 +80,7 @@
    </obj>
    <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="1078" y="280">
       <params>
-         <frac32.s.map name="freq" value="53.0"/>
+         <frac32.s.map name="freq" value="51.0"/>
       </params>
       <attribs/>
    </obj>
@@ -82,17 +88,14 @@
       <params/>
       <attribs/>
    </obj>
+   <hyperlink type="patch/hyperlink" name="http://community.axoloti.com/t/tiar-smashedtransistors-contributions/2737/40" x="350" y="308"/>
    <comment type="patch/comment" x="1092" y="490" text="Finally a low pass filter can smooth the output"/>
    <nets>
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="median_1" inlet="in"/>
          <dest obj="kscope_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="median_1" outlet="out"/>
-         <dest obj="kscope_2" inlet="in"/>
-         <dest obj="median_2" inlet="in"/>
+         <dest obj="lowpass_1" inlet="in"/>
       </net>
       <net>
          <source obj="*_1" outlet="result"/>
@@ -119,22 +122,26 @@
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="median_3" outlet="out"/>
-         <dest obj="kscope_6" inlet="in"/>
-         <dest obj="lowpass_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="median_2" outlet="out"/>
-         <dest obj="median_3" inlet="in"/>
-         <dest obj="kscope_5" inlet="in"/>
-      </net>
-      <net>
          <source obj="uniform_2" outlet="wave"/>
          <dest obj="&gt;c_1" inlet="in"/>
       </net>
       <net>
          <source obj="&gt;c_1" outlet="out"/>
          <dest obj="rising_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="median_1" outlet="med"/>
+         <dest obj="kscope_2" inlet="in"/>
+         <dest obj="median_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="median_2" outlet="med"/>
+         <dest obj="kscope_5" inlet="in"/>
+         <dest obj="median_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="median_3" outlet="med"/>
+         <dest obj="kscope_6" inlet="in"/>
       </net>
    </nets>
    <settings>

@@ -2,7 +2,7 @@
    <obj.normal id="fractalI" uuid="8b6a9059-5928-45fb-8b06-1908b49b24c2">
       <sDescription>FractalI.
 8x oversampling with triangular window decimation.</sDescription>
-      <author>T.Rochebois</author>
+      <author>Smashed Transistors</author>
       <license>LGPL</license>
       <helpPatch>fractalI.axh</helpPatch>
       <inlets>
@@ -12,14 +12,18 @@
          <frac32buffer name="out" description="out"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <frac32.s.map name="offset" noLabel="true"/>
+      </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t na = 0, x = 0;
 int32_t f(int32_t x){
   return x ^ 0x02AAAAAA; //one in two bit inversion
 }]]></code.declaration>
+      <code.krate><![CDATA[int32_t offset_in = 0x02AAAAAA + param_offset;
+int32_t offset_out = (-9*f(offset_in))/16;]]></code.krate>
       <code.srate><![CDATA[// 8x oversampling with triangular window decimation
-int32_t dx = (inlet_in + 0x02AAAAAA - x) / 8;
+int32_t dx = (inlet_in + offset_in - x) / 8;
 int32_t a;
 { int32_t y = f(x += dx); a = ___SMMLA((8<<25), y, na); na = ___SMMUL((1<<25), y);     }
 { int32_t y = f(x += dx); a = ___SMMLA((7<<25), y,  a); na = ___SMMLA((2<<25), y, na); }
@@ -29,6 +33,6 @@ int32_t a;
 { int32_t y = f(x += dx); a = ___SMMLA((3<<25), y,  a); na = ___SMMLA((6<<25), y, na); }
 { int32_t y = f(x += dx); a = ___SMMLA((2<<25), y,  a); na = ___SMMLA((7<<25), y, na); }
 { int32_t y = f(x += dx); a = ___SMMLA((1<<25), y,  a); na = ___SMMLA((8<<25), y, na); }
-outlet_out = a ;]]></code.srate>
+outlet_out = a + offset_out;]]></code.srate>
    </obj.normal>
 </objdefs>
