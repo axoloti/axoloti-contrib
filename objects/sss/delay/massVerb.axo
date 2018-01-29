@@ -14,6 +14,7 @@ Internal parameters are randomisable and function as different room-shapes. Thes
          <frac32buffer name="in2" description="in2"/>
          <frac32buffer name="in3" description="in3"/>
          <frac32buffer name="in4" description="in4"/>
+         <bool32 name="rndALL"/>
       </inlets>
       <outlets>
          <frac32buffer name="out1" description="out1"/>
@@ -141,14 +142,14 @@ if((param_rndMR>0)&&!rndMR){
 	}
 }
 else if(param_rndMR==0){rndMR=0;}
-
-if((param_rndALL>0)&&!rndALL){
+int RNDALL=(param_rndALL+inlet_rndALL)&1;
+if((RNDALL>0)&&!rndALL){
 	rndALL=1;
 	for(i=0;i<24;i++){
 	array[i]=(int32_t)(GenerateRandomNumber()>>5);
 	}
 }
-else if(param_rndALL==0){rndALL=0;}]]></code.krate>
+else if(RNDALL==0){rndALL=0;}]]></code.krate>
       <code.srate><![CDATA[int32_t i1 = d1d[d1p];
 int32_t i2 = d2d[d2p];
 int32_t i3 = d3d[d3p];
