@@ -4,12 +4,15 @@
       <author>Smashed Transistors</author>
       <license>LGPL</license>
       <inlets>
+         <bool32 name="chainTrig"/>
+         <charptr32 name="chainIn"/>
          <frac32 name="i0"/>
          <frac32 name="i1"/>
          <frac32 name="i2"/>
          <frac32 name="i3"/>
       </inlets>
       <outlets>
+         <bool32 name="chainTrig"/>
          <charptr32 name="out" description="string"/>
       </outlets>
       <displays/>
@@ -39,22 +42,33 @@ strcpy(&c3[0],"attr_prefix3");
 
 p = p0;
 c = c0;]]></code.init>
-      <code.krate><![CDATA[if(abs(inlet_i0 - m0) > (1<<22)){
+      <code.krate><![CDATA[outlet_chainTrig = false;
+
+if(inlet_chainTrig){
+  select = -1;
+  outlet_chainTrig = true;
+} else if(abs(inlet_i0 - m0) > (1<<22)){
   select = 0;
   m0 = inlet_i0;
+  outlet_chainTrig = true;
 } else if(abs(inlet_i1 - m1) > (1<<22)){
   select = 1;
   m1 = inlet_i1;
+  outlet_chainTrig = true;
 } else if(abs(inlet_i2 - m2) > (1<<22)){
   select = 2;
   m2 = inlet_i2;
+  outlet_chainTrig = true;
 } else if(abs(inlet_i3 - m3) > (1<<22)){
   select = 3;
   m3 = inlet_i3;
+  outlet_chainTrig = true;
 }
 
 int32_t i;
 switch(select){
+  case -1:
+  break;
   case 0: default:
     p = p0; c = c0; i = inlet_i0; break;
   case 1:
@@ -64,7 +78,7 @@ switch(select){
   case 3:
     p = p3; c = c3; i = inlet_i3; break;
 }
-
+if(select>=0){
 float f = i * (1.0f/(1<<21));
 if(i > 0)       p[0] = '+';
 else if(i < 0) {p[0] = '-'; f = -f; }
@@ -96,6 +110,9 @@ if(f >= 1000){
   p[6]=0;
 }
 
-outlet_out = c;]]></code.krate>
+outlet_out = c;
+} else {
+  outlet_out = (char *)inlet_chainIn;
+}]]></code.krate>
    </obj.normal>
 </objdefs>
