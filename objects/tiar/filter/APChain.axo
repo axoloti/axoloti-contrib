@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="APChain" uuid="7875c220-4569-4ce4-a213-0f765024bef8">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>APChain.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="freq" description="pitch"/>
+         <frac32 name="g2" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freq"/>
+         <frac32.s.map.ratio name="g2"/>
+      </params>
+      <attribs>
+         <combo name="order">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>12</string>
+               <string>16</string>
+               <string>24</string>
+            </MenuEntries>
+            <CEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>12</string>
+               <string>16</string>
+               <string>24</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[class APC{
+  public:
+  int32_t v[attr_order];
+  void init(void){
+    for(int i = 0; i < attr_order; i++)
+      v[i] = 0;
+  }
+  int32_t aProc(int32_t x, int32_t g){
+    int32_t y = x;
+    for(int p = 0; p < attr_order; p++){
+      int32_t u = ___SMMLA(g, v[p] << 1, y   );
+      y         = ___SMMLS(g, u    << 1, v[p]);
+      v[p] = u;
+    }
+    return y;
+  }
+};
+APC apc;
+int32_t v = 0;]]></code.declaration>
+      <code.init><![CDATA[apc.init();]]></code.init>
+      <code.krate><![CDATA[int32_t g = 0x7FFFFFFF - (__USAT((param_freq + inlet_freq), 27) << 4);
+int32_t g2 = param_g2<<4; // q31]]></code.krate>
+      <code.srate><![CDATA[// nested all pass chain
+int32_t u = ___SMMLA(g2, v<<1, inlet_in);
+outlet_out = ___SMMLS(g2, u<<1, v);
+v = apc.aProc(u>>8, g)<<8;]]></code.srate>
+   </obj.normal>
+</objdefs>
