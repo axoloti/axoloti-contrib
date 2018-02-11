@@ -1,0 +1,201 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rndLGC" uuid="7af9fc4a-7160-45be-928e-d9a8949224d3">
+      <sDescription>multi logic with 4 inputs and randomisation
+Uses 16 stages of A/B logic, that interconnected, outputs can select any of the logic inputs or logic-calculations.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <bool32 name="i1" description="input 1"/>
+         <bool32 name="i2" description="input 2"/>
+         <bool32 name="i3"/>
+         <bool32 name="i4"/>
+         <bool32 name="rnd"/>
+      </inlets>
+      <outlets>
+         <bool32 name="o1"/>
+         <bool32 name="o2"/>
+         <bool32 name="o3"/>
+         <bool32 name="o4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="f1" description="">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f2">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f3">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f4">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f5">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f6">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f7">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="f8">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="1a">
+            <MinValue i="0"/>
+            <MaxValue i="3"/>
+         </int32>
+         <int32 name="1b">
+            <MinValue i="0"/>
+            <MaxValue i="3"/>
+         </int32>
+         <int32 name="2a">
+            <MinValue i="0"/>
+            <MaxValue i="4"/>
+         </int32>
+         <int32 name="2b">
+            <MinValue i="0"/>
+            <MaxValue i="4"/>
+         </int32>
+         <int32 name="3a">
+            <MinValue i="0"/>
+            <MaxValue i="5"/>
+         </int32>
+         <int32 name="3b">
+            <MinValue i="0"/>
+            <MaxValue i="5"/>
+         </int32>
+         <int32 name="4a">
+            <MinValue i="0"/>
+            <MaxValue i="6"/>
+         </int32>
+         <int32 name="4b">
+            <MinValue i="0"/>
+            <MaxValue i="6"/>
+         </int32>
+         <int32 name="5a">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <int32 name="5b">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <int32 name="6a">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+         <int32 name="6b">
+            <MinValue i="0"/>
+            <MaxValue i="8"/>
+         </int32>
+         <int32 name="7a">
+            <MinValue i="0"/>
+            <MaxValue i="9"/>
+         </int32>
+         <int32 name="7b">
+            <MinValue i="0"/>
+            <MaxValue i="9"/>
+         </int32>
+         <int32 name="8a">
+            <MinValue i="0"/>
+            <MaxValue i="10"/>
+         </int32>
+         <int32 name="8b">
+            <MinValue i="0"/>
+            <MaxValue i="10"/>
+         </int32>
+         <int32 name="o1">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="o2">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="o3">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <int32 name="o4">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <bool32.mom name="rnd"/>
+         <frac32.u.map.gain name="chance"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool array[32];
+bool rnd;
+int i;
+int in;
+int prv;
+int32_t func(int S,int A,int B,int I){
+	I+=4;
+	switch(S){
+		case 0: array[I]=array[A]&&array[B];break;
+		case 1: array[I]=!(array[A]&&array[B]);break;
+		case 2: array[I]=array[A]&&(!array[B]);break;
+		case 3: array[I]=(!array[A])&&array[B];break;
+		case 4: array[I]=array[A]||array[B];break;
+		case 5: array[I]=!(array[A]||array[B]);break;
+		case 6: array[I]=array[A]||(!array[B]);break;
+		case 7: array[I]=(!array[A])||array[B];break;
+		case 8: array[I]=array[A]^array[B];break;
+		case 9: array[I]=!(array[A]^array[B]);break;
+		case 10: array[I]=array[A]^(!array[B]);break;
+		case 11: array[I]=(!array[A])^array[B];break;
+	}
+	
+}]]></code.declaration>
+      <code.krate><![CDATA[bool R=param_rnd||inlet_rnd;
+if(((R)>0)&&!rnd){
+	rnd=1;
+	for(i=0;i<28;i++){
+		if(i<8){
+			if((int32_t)(GenerateRandomNumber()>>1)<param_chance){
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_f1+i],(int32_t)(GenerateRandomNumber()%12),0xFFFD);}
+		}
+		if(i>7){
+		int k=i-8;
+		k=k>15?15:k;
+		if((int32_t)(GenerateRandomNumber()>>1)<param_chance){
+		PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_f1+i],(int32_t)(GenerateRandomNumber()%(4+(k>>1))),0xFFFD);	}
+		}
+	}
+}
+else if((R)<1){rnd=0;}
+in=inlet_i1+inlet_i2+inlet_i3+inlet_i4;
+array[0]=inlet_i1;
+array[1]=inlet_i2;
+array[2]=inlet_i3;
+array[3]=inlet_i4;
+if(!(in==prv)){
+func(param_f1,array[param_1a],array[param_1b],0);
+func(param_f2,array[param_2a],array[param_2b],1);
+func(param_f3,array[param_3a],array[param_3b],2);
+func(param_f4,array[param_4a],array[param_4b],3);
+func(param_f5,array[param_5a],array[param_5b],4);
+func(param_f6,array[param_6a],array[param_6b],5);
+func(param_f7,array[param_7a],array[param_7b],6);
+func(param_f8,array[param_8a],array[param_8b],7);
+	
+}
+outlet_o1=array[param_o1];
+outlet_o2=array[param_o2];
+outlet_o3=array[param_o3];
+outlet_o4=array[param_o4];
+prv=in;]]></code.krate>
+   </obj.normal>
+</objdefs>
