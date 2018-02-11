@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="modulator" uuid="23445e24-3fed-49da-ac68-a08b022186e8">
+      <sDescription>General purpose modulator object. Used to modulate other object by itself or through other objects.</sDescription>
+      <author>Albert van der Zee</author>
+      <license>GPL</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="in"/>
+         <frac32.bipolar name="ModIn"/>
+         <frac32.positive name="ModHeadroom"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out" description="output"/>
+      </outlets>
+      <displays>
+         <frac32.u.dial name="out" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.u.map name="value"/>
+         <frac32.u.map.gain name="master"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t oud_in;
+int32_t oud_parameter;
+int32_t output;]]></code.declaration>
+      <code.init><![CDATA[oud_in = 0;
+oud_parameter = 0;
+output = 0;]]></code.init>
+      <code.krate><![CDATA[if (!(inlet_in == oud_in))
+	{output = inlet_in;}
+
+if (!(param_value == oud_parameter))
+	{output = param_value;}
+
+// reset comparison values
+oud_parameter = param_value;
+oud_in = inlet_in;
+
+// modulate ModIn
+int32_t accum = __SSAT(inlet_ModIn + output,28);
+
+// modulate ModHeadroom
+
+accum = ___SMMLA((0x07FFFFFF - accum)<<3,inlet_ModHeadroom<<2,accum); 
+
+// apply master control
+accum = ___SMMUL(accum,param_master);
+accum = __SSAT( (accum<<1),28);
+
+disp_out = accum;
+outlet_out= accum;]]></code.krate>
+   </obj.normal>
+</objdefs>
