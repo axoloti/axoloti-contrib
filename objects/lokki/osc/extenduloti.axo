@@ -1,6 +1,6 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="auduloti" uuid="622fc7b1-29d2-47a9-b334-22305f1074e3">
-      <sDescription>auduino port to axoloti, auduloti</sDescription>
+   <obj.normal id="extenduloti" uuid="1a6da436-5ddd-4dc7-9d2e-4aa75cb2e382">
+      <sDescription>extended auduino port to axoloti, extenduloti</sDescription>
       <author>Simon Iten</author>
       <license>BSD</license>
       <helpPatch>phasor.axh</helpPatch>
@@ -21,6 +21,14 @@
          <frac32.u.map name="graindecay"/>
          <frac32.u.map name="grainfreq2"/>
          <frac32.u.map name="graindecay2"/>
+         <int32.hradio name="waveform1">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <frac32.u.map name="pulsewidth1"/>
+         <int32.hradio name="waveform2">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <frac32.s.map name="pulsewidth2"/>
          <bool32.tgl name="8bit"/>
       </params>
       <attribs/>
@@ -71,13 +79,35 @@ syncPhaseInc = freq>>16;
 
   // Convert phase into a triangle wave
   value = (grainPhaseAcc >> 7) & 0xff;
+  switch (param_waveform1) {
+  case 0:
   if (grainPhaseAcc & 0x8000) value = ~value;
+  break;
+  case 1:
+  value = value;
+  break;
+  case 2:
+  if (value <= param_pulsewidth1 >> 17) value = 255;
+  else value = 0;
+  break;
+  }
   // Multiply by current grain amplitude to get sample
   output = value * (grainAmp >> 8);
 
   // Repeat for second grain
   value = (grain2PhaseAcc >> 7) & 0xff;
+  switch (param_waveform2) {
+  case 0:
   if (grain2PhaseAcc & 0x8000) value = ~value;
+  break;
+  case 1:
+  value = value;
+  break;
+  case 2:
+  if (value <= param_pulsewidth2 >> 17) value = 255;
+  else value = 0;
+  break;
+  }
   output += value * (grain2Amp >> 8);
 
   // Make the grain amplitudes decay by a factor every sample (exponential decay)
@@ -85,8 +115,7 @@ syncPhaseInc = freq>>16;
   grain2Amp -= (grain2Amp >> 8) * grain2Decay;
 
   // Scale output to the available range, clipping if necessary
-
-  if (param_8bit) {
+if (param_8bit) {
 	output >>= 9;
  if (output > 255) output = 255;
   outlet_phasor = output<<20;
