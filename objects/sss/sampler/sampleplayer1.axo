@@ -1,0 +1,155 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sampleplayer1" uuid="7f444c53-8a65-420c-adbf-6a24ebd95271">
+      <sDescription>complex dual sample player to use with the loadtrain modules</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="gate" description="when high, plays sample and possible repeat while gate is high, else plays till sample end"/>
+         <int32 name="sample1" description="select sample 1 index (not repeated)"/>
+         <bool32 name="swap" description="swap index numbers for sample 1 and 2"/>
+         <int32 name="sample2" description="select sample 2 index (repeatable)"/>
+         <frac32 name="mixrate" description="sets the rate of the mix-envelope for mixing between sample 1 and 2"/>
+         <frac32buffer name="mixTilt" description="tilts the mix envelope. At left position starts with sample 1 and mixes to sample 2. At mid position both samples are preset equally"/>
+         <frac32 name="pitch1" description="set pitch offset for sample 1"/>
+         <frac32 name="pitch2" description="set pitch offset for sample 2"/>
+         <bool32 name="reverse" description="when high, reverse the play position. Note, this reverses the read-position, not the actual phase-position itself, which will always run &quot;forward&quot;"/>
+         <bool32 name="repeat" description="when high, goes into &quot;repeat-mode&quot;, using the loopstart and loopend positions"/>
+         <int32 name="Swalk" description="when not zero, this will select a different sample each time the repeat goes back to loopstart. Swalk sets the next sample-index-offset size for each trigger."/>
+         <bool32 name="alternate" description="when high, the repeater will alternate between forward and backward play"/>
+         <frac32 name="start" description="sets sample start when gate goes high (should be below both loopend and end)"/>
+         <frac32 name="loopStart" description="sets sample loopstart when repeat is on (should be below the loopend)"/>
+         <frac32 name="loopEnd" description="sets sample loopend when repeat is on (should be higher then loopstart)"/>
+         <frac32 name="end" description="sets sample end where the sample will end if repeat is off"/>
+         <int32 name="first" description="sets the sample index where sample selection may start (eg. when samples 8 to 11 are all snares, set &quot;first&quot; to 8 )"/>
+         <int32 name="samples" description="sets the amount of consecutive samples that can be selected  (eg. when samples 8 to 11 are all snares, set &quot;samples&quot; to 4, as you&apos;ll load sample 8,9,10 and 11 = 4 samples)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="audio out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="samples" description="this should refer to a 16bit table allocator (sdram)"/>
+         <objref name="starts" description="this should refer to a 32bit table allocator"/>
+      </attribs>
+      <code.declaration><![CDATA[bool gate;
+uint32_t pos1;
+uint32_t pos2;
+int32_t Env;
+int32_t env;
+int32_t v30=1<<30;
+int32_t v29=1<<29;
+int32_t P1;
+int32_t P2;
+int32_t S1;
+int32_t S2;
+bool reverse;
+bool dir;]]></code.declaration>
+      <code.init><![CDATA[pos1=1<<30;
+pos2=1<<30;
+Env=0;
+S1=0;
+S2=0;]]></code.init>
+      <code.krate><![CDATA[uint32_t PS=__USAT(inlet_start,27);
+uint32_t PLS=__USAT(inlet_loopStart,27);
+uint32_t PLE=__USAT(inlet_loopEnd,27);
+uint32_t PE=__USAT(inlet_end,27);
+PS=PS<<4;
+PLS=PLS<<4;
+PLE=PLE<<4;
+PE=PE<<4;
+
+int sample1=inlet_sample1;
+int sample2=inlet_sample2;
+sample1=sample1-sample1/inlet_samples*inlet_samples;
+sample2=sample2-sample2/inlet_samples*inlet_samples;
+sample1+=sample1<0?inlet_samples:0;
+sample2+=sample2<0?inlet_samples:0;
+if((inlet_gate>0)&&!gate){
+	P1=0;
+	P2=PS;
+	gate=1;
+	Env=v30;
+
+if(inlet_swap>0){
+	S1=(sample2+inlet_first)&attr_starts.LENGTHMASK;
+	S2=(sample1+inlet_first)&attr_starts.LENGTHMASK;
+}
+else{S1=(sample1+inlet_first)&attr_starts.LENGTHMASK;S2=(sample2+inlet_first)&attr_starts.LENGTHMASK;}
+}
+else if(inlet_gate==0){gate=0;}
+uint32_t sStart1=S1>0?attr_starts.array[S1-1]:0;
+uint32_t width1=(attr_starts.array[S1])-sStart1;
+uint32_t sStart2=S1>0?attr_starts.array[S2-1]:0;
+uint32_t width2=(attr_starts.array[S2])-sStart2;
+int32_t Erate;
+
+MTOFEXTENDED(inlet_mixrate,Erate)
+Erate=Erate>>6;
+int32_t frq1;
+int32_t frq2;
+float32_t r1;
+uint32_t base;
+MTOFEXTENDED(inlet_pitch1,frq1)
+MTOFEXTENDED(inlet_pitch2,frq2)
+MTOFEXTENDED(0,base)
+r1=(float32_t)frq1/base;
+frq1=((int64_t)1<<32)/width1*r1;
+r1=(float32_t)frq2/base;
+frq2=((int64_t)1<<32)/width2*r1;]]></code.krate>
+      <code.srate><![CDATA[/*uint32_t asat = __USAT(inlet_a,27);
+    int index = asat>>(27-(attr_table.LENGTHPOW-param_size));
+   int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+   int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+   int frac = (asat - (index<<(27-(attr_table.LENGTHPOW-param_size))))<<((attr_table.LENGTHPOW-param_size)+3);
+  int32_t rr;
+  rr = ___SMMUL(y1,(1<<30)-frac);
+  rr = ___SMMLA(y2,frac,rr);
+outlet_o= rr<<2;
+*/
+
+if(Env>0){
+	Env-=Erate;
+}
+else{Env=0;}
+
+if(inlet_repeat&&inlet_gate){
+if((P2<0)||(P2>PLE)){
+
+S2=(S2+inlet_Swalk)-inlet_first;
+S2=S2-S2/inlet_samples*inlet_samples;
+if(S2<0){
+S2+=inlet_samples;
+}
+S2=(S2+inlet_first)&attr_starts.LENGTHMASK;
+Env=v30;
+P2=PLS;
+P1=PLS;
+if(inlet_alternate>0){
+dir=!dir;
+}
+}
+}
+else{
+P2=P2>PE?-8:P2;
+dir=0;
+}
+P1=P1>PE?-8:P1;
+env=Env-v29;
+env=v29+___SMMUL(__SSAT(inlet_mixTilt,28)<<4,env<<1);
+pos1=___SMMUL(width1<<1,P1);
+pos2=___SMMUL(width2<<1,P2);
+outlet_out=0;
+if((pos1<width1)&&(pos1>=0)){
+	outlet_out=___SMMUL(attr_samples.array[((dir>0?!reverse:reverse)>0?(width1-pos1-1):pos1)+sStart1]<<12,env)<<2;
+	P1+=frq1;
+	//pos1+=1;
+}
+if((pos2<width2)&&(pos1>=0)){
+	outlet_out+=___SMMUL(attr_samples.array[((dir>0?!reverse:reverse)>0?(width2-pos2-1):pos2)+sStart2]<<12,v30-env)<<2;
+	P2+=frq2;
+	//pos2+=1;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

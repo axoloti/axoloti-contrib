@@ -1,0 +1,127 @@
+<patch-1.0 appVersion="1.0.12">
+   <hyperlink type="patch/hyperlink" name="http://community.axoloti.com/t/tiar-smashedtransistors-contributions/2737/130" x="322" y="14"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="42" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="28" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/fraXOR" uuid="3b08e332-06f9-44d5-91e5-5068f9ed17c4" name="fraXOR_1" x="182" y="224">
+      <params>
+         <frac32.u.map name="G1" value="30.0"/>
+         <frac32.u.map name="G2" value="43.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/DP2PWM" uuid="fdbc80e7-0b26-4cad-8e79-6a609c01caa5" name="DP2PWM_1" x="434" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="pw" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="574" y="224">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="658" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="32.0"/>
+         <frac32.u.map name="Q" value="28.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="798" y="224">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="32.0"/>
+         <frac32.u.map name="s" value="31.0"/>
+         <frac32.s.map name="r" value="43.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="896" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="994" y="224">
+      <params>
+         <frac32.u.map name="amp" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1134" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/chart b" uuid="d2bdf496f96ee521628490a038411210fbe29b15" name="chart_2" x="210" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/chart b" uuid="d2bdf496f96ee521628490a038411210fbe29b15" name="chart_1" x="210" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_2" inlet="left"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="DCA_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="DCA_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="chart_2" inlet="in"/>
+         <dest obj="fraXOR_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DP2PWM_1" outlet="wave"/>
+         <dest obj="ZDF_1" inlet="x"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="DP2PWM_1" inlet="pitch"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="fraXOR_1" outlet="out"/>
+         <dest obj="chart_1" inlet="in"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="lp12"/>
+         <dest obj="DCA_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>294</x>
+      <y>145</y>
+      <width>1448</width>
+      <height>838</height>
+   </windowPos>
+</patch-1.0>
