@@ -1,0 +1,140 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sb rec" uuid="20220343-1d73-4c5f-8749-b6b38baf74f0">
+      <sDescription>&apos;arm&apos; will arm the recorder,
+&apos;rec&apos; will start recording to the selected slot or, when already recording,start another recording in a selected slot.
+when &apos;arm&apos; is 0 again,recording will stop,and the recorded slots can be played back.
+you cannot record into a slot that already contains sample data.
+if already recording,recording will continue in the slot you were recording to before.
+sample start-and endpoints can be accessed &apos;from the outside&apos; as a table named as the recorder-object.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>brec.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="wave" description="audio in"/>
+         <int32.positive name="slot" description="select a slot to record into (0 - 127)"/>
+         <bool32.risingfalling name="arm" description="arm the recorder or stop recording "/>
+         <bool32.rising name="rec" description="a pulse will start a recording a sample in the selected slot if &apos;arm&apos; is 1 and the selected slot doesn&apos;t already contain a sample"/>
+         <bool32.rising name="getend" description="get the end of the used area inside the sample table"/>
+         <bool32.rising name="delete" description="delete the current slot"/>
+         <bool32.rising name="defrag" description="defragment the sample-table "/>
+         <bool32.rising name="clear" description="clear "/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="rec" description="issues a pulse when a new slot is recorded"/>
+         <frac32.positive name="remain" description="remaining recording-time"/>
+         <bool32 name="active" description="&apos;1&apos; if a slot already contains a sample"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table" description="table to record to "/>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+bool arm;
+uint32_t recpos;
+uint32_t rec_max;
+uint8_t shift;
+
+static const uint32_t LENGTHPOW = 9;
+static const uint32_t LENGTH = 1<<9;
+static const uint32_t LENGTHMASK = (1<<9)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t array[LENGTH];
+
+int8_t preslot;
+int8_t chunks;
+int8_t chunk [127];
+
+bool rtrig;
+bool ntrig;
+bool full;
+bool ctrig;
+uint32_t sstart;
+uint32_t send;
+uint32_t slength;
+uint32_t end;
+bool dtrig;
+bool gtrig;]]></code.declaration>
+      <code.init><![CDATA[rec_max = attr_table.LENGTH ;
+shift =     (27-attr_table.LENGTHPOW);
+preslot = -1;]]></code.init>
+      <code.krate><![CDATA[full = array [(inlet_slot << 2) + 3];
+
+if (inlet_arm && !arm) arm = 1;
+if (arm){
+	if ((inlet_rec && !ntrig ) && !full) {	
+			 ntrig = 1;	
+			 array [(inlet_slot << 2)] = recpos;
+	if (preslot > -1)   array [(preslot << 2) + 1] = recpos;
+			 chunk [chunks] = inlet_slot;
+			 preslot = inlet_slot;
+			 chunks += 1;			
+		      rec = 1;}
+}
+if (!inlet_rec) ntrig = 0;
+
+if (!inlet_arm && arm) {
+	arm = 0;
+	if (rec) array [(preslot << 2) + 1] = recpos;
+	rec = 0;
+	preslot = -1;
+	int i;
+  for(i=0;i<chunks;i++) array [(chunk [i] << 2 ) + 3] = 1;
+	chunks = 0;
+	}
+
+ // clear
+if (inlet_clear && !rtrig) {rtrig = 1;recpos = 0;preslot = -1;
+ int i;
+ for(i=0;i<512;i++) array[i]=0;} 
+if (!inlet_clear) rtrig = 0;
+
+//delete
+if (inlet_delete && !dtrig) {dtrig = 1;array[(inlet_slot << 2) + 3] = 0 ;} 
+if (!inlet_delete) dtrig = 0;
+
+//compact
+if (inlet_defrag && !ctrig) {
+	ctrig = 1;end = 0;
+int i;
+ for(i=0;i<512;i+= 4) if (array[i + 1] > end) end = array[i + 1];
+ int ii;
+ for(ii=0;ii<512;ii+= 4) if (array[ii + 1] && (!array[ii + 3]))
+ { 
+ sstart = array[ii];
+ send = array[ii + 1];
+ slength = ( array[ii + 1] - array[ii] );
+ array[ii] = 0;
+ array[ii + 1] = 0;
+ int iii;
+for(iii=0;iii<512;iii+= 4) if (array[iii] >= send) {array[iii] = (array[iii] - slength) ;array[iii + 1] = (array[iii +1] - slength);}
+int iiii;
+for(iiii=send;iiii<end;iiii+= 1) attr_table.array [iiii - slength] = attr_table.array [iiii]; 
+end -= slength;
+recpos -= slength;
+ } 
+}
+if (!inlet_defrag) ctrig = 0;
+
+// get end
+if (inlet_getend && !gtrig) {
+ end = 0;
+ gtrig = 1;
+ int i;
+ for(i=0;i<512;i+= 4) if (array[i + 1] > end) end = array[i + 1];
+ recpos = end;
+ } 
+if (!inlet_getend) gtrig = 0;
+
+	outlet_rec = ntrig;
+  	outlet_active = full;
+  	outlet_remain = (rec_max - recpos )<< shift;]]></code.krate>
+      <code.srate><![CDATA[//record   
+
+if (rec) {
+ attr_table.array[recpos] =  __SSAT(inlet_wave,28 )>>attr_table.GAIN;
+ recpos ++;    
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

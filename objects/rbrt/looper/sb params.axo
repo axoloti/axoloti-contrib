@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sb params" uuid="98955534-5faf-4fc4-ad25-ab7a1a8e62eb">
+      <sDescription>translates sample start-and end information created by &apos;sb rec&apos; -objects
+from samples into fraction of a table,to be used by &apos;ldrive&apos; - objects</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>brec.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="offset" description="sample start in fraction of the table"/>
+         <frac32.positive name="range" description="sample length in fraction of the table"/>
+         <frac32.positive name="unused" description="unused,whatever"/>
+         <bool32 name="active" description="is the selected slot actually used ?"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="data"/>
+         <objref name="wave"/>
+      </attribs>
+      <code.declaration><![CDATA[bool full;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_wave.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[full = attr_data.array [(inlet_slot << 2) + 3];
+
+outlet_offset  = (full) ?  attr_data.array [inlet_slot << 2] << shift : 0;
+outlet_range  = (full) ?  (attr_data.array [(inlet_slot << 2) + 1] - attr_data.array [inlet_slot << 2]) << shift : 0;
+outlet_unused = (full) ?  attr_data.array [(inlet_slot << 2) + 2] << shift : 0;
+outlet_active = full;]]></code.krate>
+   </obj.normal>
+</objdefs>
