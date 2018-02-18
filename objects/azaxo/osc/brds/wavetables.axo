@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="wavetables" uuid="fd500cec-433e-4191-a908-d4634d7e3b62">
+      <sDescription>&quot;Wavetables&quot; oscillator from Mutable Instruments Braids</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="timbre"/>
+         <frac32 name="color"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="timbre">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="color">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <includes>
+         <include>./brds_digital.h</include>
+      </includes>
+      <code.declaration><![CDATA[braids_digital_deriv::Wavetables osc;]]></code.declaration>
+      <code.init><![CDATA[osc.Init();]]></code.init>
+      <code.krate><![CDATA[osc.set_parameters(__USAT((inlet_timbre+param_timbre)>>12,15),__USAT((inlet_color+param_color)>>12,15));
+osc.set_pitch((64<<7)+((param_pitch + inlet_pitch)>>14));
+osc.Render(0,&outlet_wave[0],BUFSIZE);]]></code.krate>
+   </obj.normal>
+</objdefs>
