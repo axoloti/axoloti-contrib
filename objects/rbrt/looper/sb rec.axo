@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="sb rec" uuid="20220343-1d73-4c5f-8749-b6b38baf74f0">
+   <obj.normal id="sb rec" uuid="2a2320ca-fd12-4666-90dd-a1a6c99ea79c">
       <sDescription>&apos;arm&apos; will arm the recorder,
 &apos;rec&apos; will start recording to the selected slot or, when already recording,start another recording in a selected slot.
 when &apos;arm&apos; is 0 again,recording will stop,and the recorded slots can be played back.
@@ -40,11 +40,15 @@ static const uint32_t LENGTH = 1<<9;
 static const uint32_t LENGTHMASK = (1<<9)-1;
 static const uint32_t BITS = 32;
 static const uint32_t GAIN = 0;
-int32_t array[LENGTH];
+uint32_t array[LENGTH];
 
 int8_t preslot;
-int8_t chunks;
-int8_t chunk [127];
+uint8_t chunks;
+uint8_t chunk [128];
+
+uint32_t del [256];
+uint8_t delcount;
+
 
 bool rtrig;
 bool ntrig;
@@ -85,45 +89,50 @@ if (!inlet_arm && arm) {
 	}
 
  // clear
-if (inlet_clear && !rtrig) {rtrig = 1;recpos = 0;preslot = -1;
+if (inlet_clear && !rtrig) {rtrig = 1;recpos = 0;preslot = -1;delcount = 0;
  int i;
  for(i=0;i<512;i++) array[i]=0;} 
 if (!inlet_clear) rtrig = 0;
 
 //delete
-if (inlet_delete && !dtrig) {dtrig = 1;array[(inlet_slot << 2) + 3] = 0 ;} 
+if (inlet_delete && !dtrig) {
+	dtrig = 1;
+	del [delcount] = array[(inlet_slot << 2) ];
+	del [delcount + 1] = array[(inlet_slot << 2) + 1 ];
+	delcount += 2;
+	array[(inlet_slot << 2) + 3] = 0;
+}
 if (!inlet_delete) dtrig = 0;
 
 //compact
 if (inlet_defrag && !ctrig) {
-	ctrig = 1;end = 0;
-int i;
- for(i=0;i<512;i+= 4) if (array[i + 1] > end) end = array[i + 1];
+	ctrig = 1;
  int ii;
- for(ii=0;ii<512;ii+= 4) if (array[ii + 1] && (!array[ii + 3]))
- { 
- sstart = array[ii];
- send = array[ii + 1];
- slength = ( array[ii + 1] - array[ii] );
- array[ii] = 0;
- array[ii + 1] = 0;
- int iii;
-for(iii=0;iii<512;iii+= 4) if (array[iii] >= send) {array[iii] = (array[iii] - slength) ;array[iii + 1] = (array[iii +1] - slength);}
-int iiii;
-for(iiii=send;iiii<end;iiii+= 1) attr_table.array [iiii - slength] = attr_table.array [iiii]; 
-end -= slength;
+ for(ii=0;ii<delcount;ii+= 2){ 
+ sstart = del[ii];
+ send =   del[ii + 1];
+ slength = ( del[ii + 1] - del[ii] );
+ int shift_index;
+for(shift_index=0;shift_index<512;shift_index+= 4) 
+if (array[shift_index] >= send) {array[shift_index] -= slength ;array[shift_index + 1] -= slength;}
+int move_samples;
+for(move_samples=send;move_samples<recpos;move_samples+= 1)
+attr_table.array [move_samples - slength] = attr_table.array [move_samples];
+int shift_chunks;
+for (shift_chunks = 0;shift_chunks<delcount;shift_chunks += 2) 
+if (del[shift_chunks] >= send ) {del [shift_chunks] -=slength;del [shift_chunks + 1] -= slength;}
 recpos -= slength;
  } 
+delcount = 0;
 }
 if (!inlet_defrag) ctrig = 0;
 
 // get end
 if (inlet_getend && !gtrig) {
- end = 0;
+ recpos = 0;
  gtrig = 1;
  int i;
- for(i=0;i<512;i+= 4) if (array[i + 1] > end) end = array[i + 1];
- recpos = end;
+ for(i=0;i<512;i+= 4) if (array[i + 1] > recpos) recpos = array[i + 1];
  } 
 if (!inlet_getend) gtrig = 0;
 
