@@ -1,151 +1,250 @@
 <patch-1.0 appVersion="1.0.12">
-   <comment type="patch/comment" x="854" y="0" text="&apos;sb params&apos;:"/>
-   <comment type="patch/comment" x="854" y="14" text="translates a slot&apos;s start and end information (stored in samples)"/>
-   <comment type="patch/comment" x="854" y="28" text="to in-fraction-of-table information used by &apos;ldrive&apos; and such"/>
-   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="56" y="42">
+   <comment type="patch/comment" x="910" y="0" text="&apos;sb params&apos;:"/>
+   <comment type="patch/comment" x="910" y="14" text="translates a slot&apos;s start and end information (stored in samples)"/>
+   <comment type="patch/comment" x="910" y="28" text="to in-fraction-of-table information used by &apos;ldrive&apos; and such"/>
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="84" y="42">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="168" y="42">
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="196" y="42">
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="476" y="56" text="sample-bank-recorder.you can record into up to 127 &apos;slots&apos;. "/>
-   <comment type="patch/comment" x="854" y="56" text="&apos;sb rec&apos; data format is:"/>
-   <comment type="patch/comment" x="476" y="70" text="GREAT FUN to record a bunch of slices really quick"/>
-   <comment type="patch/comment" x="854" y="70" text="0:start "/>
-   <comment type="patch/comment" x="854" y="84" text="1:end"/>
-   <comment type="patch/comment" x="854" y="98" text="2:unused"/>
-   <obj type="rbrt/looper/sb rec" uuid="2a2320ca-fd12-4666-90dd-a1a6c99ea79c" name="sb_1" x="448" y="112">
-      <params/>
-      <attribs>
-         <objref attributeName="table" obj="rec"/>
-      </attribs>
-   </obj>
-   <comment type="patch/comment" x="854" y="112" text="3:slot active or not?"/>
-   <obj type="rbrt/midi/in/note on" uuid="c096fbf5-e91c-44c2-9d14-ee9af6bfa6ef" name="note_1" x="56" y="140">
+   <comment type="patch/comment" x="532" y="56" text="sample-bank-recorder.you can record into up to 127 &apos;slots&apos;. "/>
+   <comment type="patch/comment" x="910" y="56" text="&apos;sb rec&apos; data format is:"/>
+   <comment type="patch/comment" x="532" y="70" text="GREAT FUN to record a bunch of slices really quick"/>
+   <comment type="patch/comment" x="910" y="70" text="0:start "/>
+   <comment type="patch/comment" x="910" y="84" text="1:end"/>
+   <comment type="patch/comment" x="910" y="98" text="2:unused"/>
+   <obj type="rbrt/midi/in/keyb zone poly" uuid="59a541ab-344b-407b-8c52-8b4156642d4e" name="keyb_1" x="196" y="112">
       <params/>
       <attribs>
          <spinner attributeName="startNote" value="0"/>
          <spinner attributeName="endNote" value="127"/>
       </attribs>
    </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="remaining time" x="644" y="140">
+   <obj type="rbrt/looper/sb rec" uuid="2a2320ca-fd12-4666-90dd-a1a6c99ea79c" name="sb_1" x="504" y="112">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="910" y="112" text="3:slot active or not?"/>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="remaining time" x="700" y="140">
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/looper/sb params" uuid="98955534-5faf-4fc4-ad25-ab7a1a8e62eb" name="sb_2" x="756" y="140">
+   <comment type="patch/comment" x="1218" y="140" text="&apos;sb params&apos; translates a slots start/end"/>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="980" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1064" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1218" y="154" text="position in samples to &apos;in fraction of the table&apos;"/>
+   <patcher type="patch/patcher" uuid="af4ac746-0c96-4947-b812-375d28552048" name="ldrive inside" x="826" y="182">
+      <params>
+         <frac32.s.map name="ldrive_1:speed" value="64.0"/>
+         <bool32.tgl name="ldrive_1:1shot" value="1"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="rbrt/midi/in/note on" uuid="c096fbf5-e91c-44c2-9d14-ee9af6bfa6ef" name="note_1" x="42" y="126">
+            <params/>
+            <attribs>
+               <spinner attributeName="startNote" value="0"/>
+               <spinner attributeName="endNote" value="127"/>
+            </attribs>
+         </obj>
+         <obj type="rbrt/looper/sb params" uuid="98955534-5faf-4fc4-ad25-ab7a1a8e62eb" name="sb_2" x="210" y="140">
+            <params/>
+            <attribs>
+               <objref attributeName="data" obj="../sb_1"/>
+               <objref attributeName="wave" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="rbrt/looper/ldrive flex" uuid="b2b61bd5-a26d-4c90-a68f-844c09672372" name="ldrive_1" x="364" y="140">
+            <params>
+               <frac32.s.map name="speed" onParent="true" value="64.0"/>
+               <bool32.tgl name="1shot" onParent="true" value="0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="table/read interp" uuid="42918ec2255011ae3787cc5488c9b29980d796a8" name="read_1" x="504" y="154">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="658" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="wave" x="756" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="504" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="note_1" outlet="gate"/>
+               <dest obj="ldrive_1" inlet="play"/>
+               <dest obj="ldrive_1" inlet="r2offset"/>
+            </net>
+            <net>
+               <source obj="ldrive_1" outlet="pos"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="ldrive_1" outlet="play"/>
+               <dest obj="and_1" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="sb_2" outlet="offset"/>
+               <dest obj="ldrive_1" inlet="offset"/>
+            </net>
+            <net>
+               <source obj="sb_2" outlet="range"/>
+               <dest obj="ldrive_1" inlet="range"/>
+            </net>
+            <net>
+               <source obj="and_1" outlet="o"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="sb_2" outlet="active"/>
+               <dest obj="and_1" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="wave" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="note_1" outlet="note"/>
+               <dest obj="sb_2" inlet="slot"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>229</x>
+            <y>159</y>
+            <width>1120</width>
+            <height>566</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="rbrt/looper/sb params" uuid="98955534-5faf-4fc4-ad25-ab7a1a8e62eb" name="sb_2" x="1232" y="196">
       <params/>
       <attribs>
          <objref attributeName="data" obj="sb_1"/>
          <objref attributeName="wave" obj="rec"/>
       </attribs>
    </obj>
-   <obj type="rbrt/looper/ldrive flex" uuid="b2b61bd5-a26d-4c90-a68f-844c09672372" name="ldrive_1" x="910" y="140">
-      <params>
-         <frac32.s.map name="speed" value="64.0"/>
-         <bool32.tgl name="1shot" value="0"/>
-      </params>
-      <attribs>
-         <objref attributeName="table" obj="rec"/>
-      </attribs>
-   </obj>
-   <obj type="table/read interp" uuid="42918ec2255011ae3787cc5488c9b29980d796a8" name="read_1" x="1050" y="154">
-      <params/>
-      <attribs>
-         <objref attributeName="table" obj="rec"/>
-      </attribs>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1204" y="154">
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="start" x="1386" y="196">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1274" y="154">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1358" y="154">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="CLEAR ALL" x="238" y="224">
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="CLEAR ALL" x="392" y="210">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="has sample" x="644" y="224">
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="has sample" x="700" y="224">
       <params/>
       <attribs/>
    </obj>
-   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="1050" y="224">
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="length" x="1386" y="280">
       <params/>
       <attribs/>
    </obj>
-   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_1" x="392" y="308">
+   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_1" x="448" y="308">
       <params/>
       <attribs>
          <objref attributeName="table" obj="rec"/>
       </attribs>
    </obj>
-   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_1" x="42" y="322">
+   <comment type="patch/comment" x="966" y="308" text="check out the subpatcher!!"/>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_1" x="98" y="322">
       <params/>
       <attribs>
-         <table attributeName="str" table="sbank.raw"/>
+         <table attributeName="str" table="sbank."/>
       </attribs>
    </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="LOAD from sd" x="224" y="336">
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="LOAD from sd" x="280" y="336">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="602" y="350" text="&apos;arm&apos; will arm the recorder,"/>
-   <comment type="patch/comment" x="602" y="364" text="&apos;rec&apos; will start recording to the selected slot"/>
-   <comment type="patch/comment" x="602" y="378" text="or, when already recording,start another recording in the selected slot"/>
-   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_2" x="42" y="392">
+   <comment type="patch/comment" x="658" y="350" text="&apos;arm&apos; will arm the recorder,"/>
+   <comment type="patch/comment" x="658" y="364" text="&apos;rec&apos; will start recording to the selected slot"/>
+   <comment type="patch/comment" x="658" y="378" text="or, when already recording,start another recording in the selected slot"/>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_2" x="98" y="392">
       <params/>
       <attribs>
          <table attributeName="str" table="sbank.txt"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="224" y="392" text="...and get the end of the used"/>
-   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_2" x="392" y="392">
+   <comment type="patch/comment" x="280" y="392" text="...and get the end of the used"/>
+   <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_2" x="448" y="392">
       <params/>
       <attribs>
          <objref attributeName="table" obj="sb_1"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="602" y="392" text="when &apos;arm&apos; is 0 again,recording will stop,"/>
-   <comment type="patch/comment" x="224" y="406" text="area of the table"/>
-   <comment type="patch/comment" x="602" y="406" text="and the recorded slots can be played back"/>
-   <comment type="patch/comment" x="602" y="420" text="you cannot record into a slot that already contains sample data."/>
-   <comment type="patch/comment" x="602" y="434" text="if already recording,recording will continue in the slot you were recording to before"/>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DELETE and.." x="1344" y="434">
+   <comment type="patch/comment" x="658" y="392" text="when &apos;arm&apos; is 0 again,recording will stop,"/>
+   <comment type="patch/comment" x="280" y="406" text="area of the table"/>
+   <comment type="patch/comment" x="658" y="406" text="and the recorded slots can be played back"/>
+   <comment type="patch/comment" x="658" y="420" text="you cannot record into a slot that already contains sample data."/>
+   <comment type="patch/comment" x="658" y="434" text="if already recording,recording will continue in the slot you were recording to before"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DELETE and.." x="1400" y="434">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="196" y="448" text="&apos;getend&apos; is useful if you load a table "/>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DELETE a slot" x="1064" y="448">
+   <comment type="patch/comment" x="252" y="448" text="&apos;getend&apos; is useful if you load a table "/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DELETE a slot" x="1120" y="448">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1162" y="448">
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1218" y="448">
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="1232" y="448" text="delete a slot"/>
-   <comment type="patch/comment" x="1414" y="448" text="delete and defrag"/>
-   <comment type="patch/comment" x="196" y="462" text="that already contains some data "/>
-   <comment type="patch/comment" x="602" y="462" text="you can also delete the selected slot"/>
-   <comment type="patch/comment" x="196" y="476" text="and want to continue recording some more slots"/>
-   <comment type="patch/comment" x="602" y="476" text="this will result in an unused area inside the table,so you&apos;ll lose"/>
-   <comment type="patch/comment" x="602" y="490" text="&apos;space&apos; for new recordings"/>
-   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="rec" x="168" y="504">
+   <comment type="patch/comment" x="1288" y="448" text="delete a slot"/>
+   <comment type="patch/comment" x="1470" y="448" text="delete and defrag"/>
+   <comment type="patch/comment" x="252" y="462" text="that already contains some data "/>
+   <comment type="patch/comment" x="658" y="462" text="you can also delete the selected slot"/>
+   <comment type="patch/comment" x="252" y="476" text="and want to continue recording some more slots"/>
+   <comment type="patch/comment" x="658" y="476" text="this will result in an unused area inside the table,so you&apos;ll lose"/>
+   <comment type="patch/comment" x="658" y="490" text="&apos;space&apos; for new recordings"/>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="rec" x="224" y="504">
       <params/>
       <attribs>
          <combo attributeName="size" selection="1048576"/>
@@ -154,50 +253,50 @@
          </text>
       </attribs>
    </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="SAVE to sd" x="350" y="504">
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="SAVE to sd" x="406" y="504">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_2" x="448" y="504">
+   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_2" x="504" y="504">
       <params/>
       <attribs>
          <objref attributeName="table" obj="rec"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="602" y="518" text="BUT:"/>
-   <comment type="patch/comment" x="602" y="532" text="to &apos;defragment&apos;  the table,simply send a pulse to inlet defrag.this will re-sort the table and free unused memory"/>
-   <comment type="patch/comment" x="1218" y="532" text="defragment the table!"/>
-   <comment type="patch/comment" x="602" y="546" text="...but this action will result in a short klick in playback."/>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DEFRAG" x="1134" y="546">
+   <comment type="patch/comment" x="658" y="518" text="BUT:"/>
+   <comment type="patch/comment" x="658" y="532" text="to &apos;defragment&apos;  the table,simply send a pulse to inlet defrag.this will re-sort the table and free unused memory"/>
+   <comment type="patch/comment" x="1274" y="532" text="defragment the table!"/>
+   <comment type="patch/comment" x="658" y="546" text="...but this action will result in a short klick in playback."/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="DEFRAG" x="1190" y="546">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="602" y="560" text="so,for your safety and convenience,you have the option to just delete and defragment sometime later.."/>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_2" x="1218" y="560">
+   <comment type="patch/comment" x="658" y="560" text="so,for your safety and convenience,you have the option to just delete and defragment sometime later.."/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_2" x="1274" y="560">
       <params/>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="168" y="574" text="sample data"/>
-   <comment type="patch/comment" x="602" y="574" text="!fragmentation - information is NOT saved to SD-card!!"/>
-   <comment type="patch/comment" x="28" y="588" text="sample start/end data is stored in a table witrh the same name as the &apos;sb rec&apos; - object"/>
-   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_1" x="448" y="602">
+   <comment type="patch/comment" x="224" y="574" text="sample data"/>
+   <comment type="patch/comment" x="658" y="574" text="!fragmentation - information is NOT saved to SD-card!!"/>
+   <comment type="patch/comment" x="84" y="588" text="sample start/end data is stored in a table witrh the same name as the &apos;sb rec&apos; - object"/>
+   <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_1" x="504" y="602">
       <params/>
       <attribs>
          <objref attributeName="table" obj="sb_1"/>
       </attribs>
    </obj>
-   <comment type="patch/comment" x="602" y="602" text="anyway,watch the &apos;remainig time&apos; - dial to see how nicely you gain memory by defragmetation!"/>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_8" x="1512" y="952">
+   <comment type="patch/comment" x="658" y="602" text="anyway,watch the &apos;remainig time&apos; - dial to see how nicely you gain memory by defragmetation!"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_8" x="1568" y="952">
       <params>
          <frac32.u.map name="value" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_9" x="1512" y="1036">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_9" x="1568" y="1036">
       <params>
          <frac32.u.map name="value" value="64.0"/>
       </params>
@@ -247,56 +346,9 @@
          <dest obj="sb_1" inlet="getend"/>
       </net>
       <net>
-         <source obj="vca_1" outlet="o"/>
-         <dest obj="+_2" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="note_1" outlet="gate"/>
-         <dest obj="ldrive_1" inlet="play"/>
-         <dest obj="ldrive_1" inlet="r2offset"/>
-         <dest obj="sb_1" inlet="arm"/>
-      </net>
-      <net>
-         <source obj="note_1" outlet="note"/>
-         <dest obj="sb_2" inlet="slot"/>
-         <dest obj="sb_1" inlet="slot"/>
-      </net>
-      <net>
-         <source obj="note_1" outlet="noteOn"/>
-         <dest obj="sb_1" inlet="rec"/>
-      </net>
-      <net>
-         <source obj="ldrive_1" outlet="pos"/>
-         <dest obj="read_1" inlet="a"/>
-      </net>
-      <net>
-         <source obj="read_1" outlet="o"/>
-         <dest obj="vca_1" inlet="a"/>
-      </net>
-      <net>
-         <source obj="ldrive_1" outlet="play"/>
-         <dest obj="and_1" inlet="i1"/>
-      </net>
-      <net>
-         <source obj="sb_2" outlet="offset"/>
-         <dest obj="ldrive_1" inlet="offset"/>
-      </net>
-      <net>
-         <source obj="sb_2" outlet="range"/>
-         <dest obj="ldrive_1" inlet="range"/>
-      </net>
-      <net>
          <source obj="+_2" outlet="out"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
-      </net>
-      <net>
-         <source obj="and_1" outlet="o"/>
-         <dest obj="vca_1" inlet="v"/>
-      </net>
-      <net>
-         <source obj="sb_2" outlet="active"/>
-         <dest obj="and_1" inlet="i2"/>
       </net>
       <net>
          <source obj="DELETE a slot" outlet="o"/>
@@ -322,6 +374,31 @@
          <source obj="DELETE and.." outlet="o"/>
          <dest obj="or_1" inlet="i2"/>
          <dest obj="or_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="ldrive inside" outlet="wave"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="noteOn"/>
+         <dest obj="sb_1" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="currentGate"/>
+         <dest obj="sb_1" inlet="arm"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="currentNote"/>
+         <dest obj="sb_1" inlet="slot"/>
+         <dest obj="sb_2" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="sb_2" outlet="offset"/>
+         <dest obj="start" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sb_2" outlet="range"/>
+         <dest obj="length" inlet="in"/>
       </net>
    </nets>
    <settings>
