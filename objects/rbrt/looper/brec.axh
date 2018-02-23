@@ -16,7 +16,7 @@
    <comment type="patch/comment" x="910" y="70" text="0:start "/>
    <comment type="patch/comment" x="910" y="84" text="1:end"/>
    <comment type="patch/comment" x="910" y="98" text="2:unused"/>
-   <obj type="rbrt/midi/in/keyb zone poly" uuid="59a541ab-344b-407b-8c52-8b4156642d4e" name="keyb_1" x="196" y="112">
+   <obj type="rbrt/midi/in/note on" uuid="c096fbf5-e91c-44c2-9d14-ee9af6bfa6ef" name="note_1" x="224" y="112">
       <params/>
       <attribs>
          <spinner attributeName="startNote" value="0"/>
@@ -52,7 +52,7 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="1218" y="154" text="position in samples to &apos;in fraction of the table&apos;"/>
-   <patcher type="patch/patcher" uuid="ca5848d9-aa97-4886-b78a-276a53a28c97" name="ldrive inside" x="826" y="182">
+   <patcher type="patch/patcher" uuid="03ba9de7-de39-4136-b039-8e3a6e0e23d0" name="ldrive inside" x="826" y="182">
       <params>
          <frac32.s.map name="ldrive_1:speed" value="64.0"/>
          <bool32.tgl name="ldrive_1:1shot" value="0"/>
@@ -387,17 +387,13 @@
          <dest obj="+_2" inlet="in2"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="noteOn"/>
+         <source obj="note_1" outlet="noteOn"/>
          <dest obj="sb_1" inlet="rec"/>
       </net>
       <net>
-         <source obj="keyb_1" outlet="currentGate"/>
-         <dest obj="sb_1" inlet="arm"/>
-      </net>
-      <net>
-         <source obj="keyb_1" outlet="currentNote"/>
-         <dest obj="sb_1" inlet="slot"/>
+         <source obj="note_1" outlet="note"/>
          <dest obj="sb_2" inlet="slot"/>
+         <dest obj="sb_1" inlet="slot"/>
       </net>
       <net>
          <source obj="sb_2" outlet="offset"/>
@@ -406,6 +402,10 @@
       <net>
          <source obj="sb_2" outlet="range"/>
          <dest obj="length" inlet="in"/>
+      </net>
+      <net>
+         <source obj="note_1" outlet="gate"/>
+         <dest obj="sb_1" inlet="arm"/>
       </net>
    </nets>
    <settings>
