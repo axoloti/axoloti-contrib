@@ -1,6 +1,5 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d">
-      <sDescription></sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
       <helpPatch>PIWTgen.axh</helpPatch>
@@ -26,15 +25,18 @@ float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
   }
 }
 float tri(float x){ return tri(x,0.5f); }
-float sin1(float x){ x = tri(x); return x * (1.5f - 0.5f * x * x);      }
+float sin1(float x){ x = tri(x); return x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
 float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
 float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }]]></code.declaration>
       <code.init><![CDATA[//init
 float moy = 0.0f;
+int32_t seed = 3424655465;
 for(int i = 0; i < 256; i++){
   float x = arm::q_to_float(i, 8);
-  moy += (fv[i] = ((float)(  attr_function  )));
- // moy += (fv[i] = ((float)(  i^(i>>1)  )));
+  seed = seed * 69069 + 1;
+  float rnd = arm::q_to_float(seed, 30)-1.0f;
+  fv[i] = (float)(  attr_function  );
+  moy += fv[i];
 }
 moy *= 1/256.0f;
 float M = 0.0f;
