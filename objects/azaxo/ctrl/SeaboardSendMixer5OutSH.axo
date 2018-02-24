@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SeaboardSendMixer5OutSH" uuid="7a8dd1bd-0c22-4673-8935-15e6c76bbbb2">
+      <sDescription>5 output send K-rate mixer for Seaboard with latch function</sDescription>
+      <author>Albert van der Zee</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="Trigger"/>
+         <frac32 name="In"/>
+         <frac32.positive name="GainTimbre"/>
+         <frac32.positive name="GainColor"/>
+         <frac32.positive name="GainFrequency"/>
+         <frac32.positive name="GainReso"/>
+         <frac32.positive name="GainVCA"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="OutTimbre"/>
+         <frac32.bipolar name="OutColor"/>
+         <frac32.bipolar name="OutFrequency"/>
+         <frac32.bipolar name="OutReso"/>
+         <frac32.bipolar name="OutVCA"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;   int latch;]]></code.declaration>
+      <code.krate><![CDATA[if ((inlet_Trigger>0) && !ntrig) {latch = inlet_In; ntrig=1;}
+if (!(inlet_Trigger>0)) ntrig=0;
+
+outlet_OutTimbre = ___SMMUL(inlet_In-latch,inlet_GainTimbre)<<5;
+outlet_OutColor = ___SMMUL(inlet_In-latch,inlet_GainColor)<<5;
+outlet_OutFrequency = ___SMMUL(inlet_In-latch,inlet_GainFrequency)<<5;
+outlet_OutReso = ___SMMUL(inlet_In-latch,inlet_GainReso)<<5;
+outlet_OutVCA = ___SMMUL(inlet_In-latch,inlet_GainVCA)<<5;]]></code.krate>
+   </obj.normal>
+</objdefs>
