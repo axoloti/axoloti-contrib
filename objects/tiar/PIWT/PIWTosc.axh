@@ -3,11 +3,11 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/PIWT/gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d" name="gen_1" x="532" y="154">
+   <obj type="tiar/PIWT/gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d" name="gen_1" x="462" y="154">
       <params/>
       <attribs>
          <text attributeName="function">
-            <sText><![CDATA[i^(i>>1)]]></sText>
+            <sText><![CDATA[(((0xAA&i)>>1)|((0x55&i)<<1))^((((0xAA&i)>>1)|((0x55&i)<<1))>>1)]]></sText>
          </text>
       </attribs>
    </obj>
@@ -27,22 +27,22 @@
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="32.0"/>
-         <frac32.u.map name="s" value="4.0"/>
+         <frac32.u.map name="s" value="0.0"/>
          <frac32.s.map name="r" value="32.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="u8u_1" x="294" y="210">
       <params>
-         <frac32.u.mapvsl name="p0" value="0.0"/>
-         <frac32.u.mapvsl name="p1" value="13.0"/>
+         <frac32.u.mapvsl name="p0" value="5.5"/>
+         <frac32.u.mapvsl name="p1" value="9.5"/>
          <frac32.u.mapvsl name="p2" value="13.0"/>
-         <frac32.u.mapvsl name="p3" value="8.0"/>
-         <frac32.u.mapvsl name="p4" value="28.0"/>
-         <frac32.u.mapvsl name="p5" value="48.5"/>
-         <frac32.u.mapvsl name="p6" value="48.5"/>
-         <frac32.u.mapvsl name="p7" value="48.0"/>
-         <frac32.u.mapvsl name="p8" value="47.5"/>
+         <frac32.u.mapvsl name="p3" value="15.5"/>
+         <frac32.u.mapvsl name="p4" value="18.5"/>
+         <frac32.u.mapvsl name="p5" value="22.5"/>
+         <frac32.u.mapvsl name="p6" value="25.5"/>
+         <frac32.u.mapvsl name="p7" value="27.0"/>
+         <frac32.u.mapvsl name="p8" value="30.0"/>
       </params>
       <attribs/>
    </obj>
@@ -50,7 +50,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_1" x="532" y="210">
+   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_1" x="462" y="210">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
@@ -58,11 +58,34 @@
          <objref attributeName="piwt" obj="gen_1"/>
       </attribs>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="658" y="210">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="644" y="210">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="32.0"/>
+         <frac32.u.map name="s" value="16.5"/>
+         <frac32.s.map name="r" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="u8u_2" x="728" y="210">
+      <params>
+         <frac32.u.mapvsl name="p0" value="0.0"/>
+         <frac32.u.mapvsl name="p1" value="0.0"/>
+         <frac32.u.mapvsl name="p2" value="9.5"/>
+         <frac32.u.mapvsl name="p3" value="12.5"/>
+         <frac32.u.mapvsl name="p4" value="16.0"/>
+         <frac32.u.mapvsl name="p5" value="18.5"/>
+         <frac32.u.mapvsl name="p6" value="22.0"/>
+         <frac32.u.mapvsl name="p7" value="26.5"/>
+         <frac32.u.mapvsl name="p8" value="31.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="840" y="210">
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="714" y="210">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="896" y="210">
       <params/>
       <attribs/>
    </obj>
@@ -90,6 +113,7 @@
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
@@ -111,7 +135,6 @@
       </net>
       <net>
          <source obj="u8u_1" outlet="out"/>
-         <dest obj="vca_1" inlet="v"/>
          <dest obj="vca_2" inlet="v"/>
       </net>
       <net>
@@ -122,15 +145,23 @@
          <source obj="scope_synchro" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
       </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="u8u_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="u8u_2" outlet="out"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>1025</x>
+      <x>930</x>
       <y>17</y>
-      <width>888</width>
+      <width>983</width>
       <height>883</height>
    </windowPos>
 </patch-1.0>
