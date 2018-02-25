@@ -21,39 +21,31 @@ rnd = rnd * 1664525 + 1013904223;
 rnd = rnd * 1664525 + 1013904223;
 for(int pass = 0; pass < attr_iterations; pass++){
   float u = 0;
-  float v0 = 0;
-  float v1 = 0;
-  float v2 = 0;
-  float v3 = 0;
-  float v4 = 0;
+  float v[16];
+  for(int i=0;i<16;i++) v[i] = 0;
   rnd = rnd * 1664525 + 1013904223;
-  if(rnd>0){
+  int order = ((rnd>>24)&0x7)+7;
+  rnd = rnd * 1664525 + 1013904223;
+  bool dir = true;  
+  rnd = rnd * 1664525 + 1013904223;
+  float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
+  
+  
+  if(dir){
     rnd = rnd * 1664525 + 1013904223;
     float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
     for(int warmup = 0; warmup < 4; warmup++){
       for(int i = 255; i >= 0; i--){
-        u = attr_piwt.fv[i] + g * v2;
-        v2 = v1; v1 = v0; v0 = u;
+        u = attr_piwt.fv[i] + g * v[order];
+        for(int j = order; j > 0; j--) v[j] = v[j-1];
+        v[0] = u; 
       }
     }
     for(int i = 255; i >= 0; i--){
-      u = attr_piwt.fv[i] + g * v2;
-      attr_piwt.fv[i] = v2 - g * u;
-      v2 = v1; v1 = v0; v0 = u;
-    }
-  } else {
-    rnd = rnd * 1664525 + 1013904223;
-    float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
-    for(int warmup = 0; warmup < 4; warmup++){
-      for(int i = 0; i < 256; i++){
-        u = attr_piwt.fv[i] + g * v4;
-        v4 = v3; v3 = v2; v2 = v1; v1 = v0; v0 = u;
-      }
-    }
-    for(int i = 0; i < 256; i++){
-      u = attr_piwt.fv[i] + g * v4;
-      attr_piwt.fv[i] = v4 - g * u;
-      v4 = v3; v3 = v2; v2 = v1; v1 = v0; v0 = u;
+      u = attr_piwt.fv[i] + g * v[order];
+      attr_piwt.fv[i] = v[order] - g * u;
+      for(int j = order; j > 0; j--) v[j] = v[j-1];
+      v[0] = u; 
     }
   }
 }     
