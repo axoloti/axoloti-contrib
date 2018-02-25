@@ -1,0 +1,90 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="phi" uuid="1c13dbe5-478e-47b3-b71e-ce71ca8a1b6d">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>PIWTphi.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="piwt"/>
+         <spinner name="seed" MinValue="0" MaxValue="65536" DefaultValue="0"/>
+         <spinner name="iterations" MinValue="0" MaxValue="250" DefaultValue="0"/>
+      </attribs>
+      <code.init><![CDATA[for(int i=0;i<256;i++){
+  attr_piwt.fv[i] = arm::q_to_float(attr_piwt.v[i], 27);
+}
+int32_t rnd = attr_seed;
+rnd = rnd * 1664525 + 1013904223;
+rnd = rnd * 1664525 + 1013904223;
+rnd = rnd * 1664525 + 1013904223;
+for(int pass = 0; pass < attr_iterations; pass++){
+  float u = 0;
+  float v0 = 0;
+  float v1 = 0;
+  float v2 = 0;
+  float v3 = 0;
+  float v4 = 0;
+  rnd = rnd * 1664525 + 1013904223;
+  if(rnd>0){
+    rnd = rnd * 1664525 + 1013904223;
+    float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
+    for(int warmup = 0; warmup < 4; warmup++){
+      for(int i = 255; i >= 0; i--){
+        u = attr_piwt.fv[i] + g * v2;
+        v2 = v1; v1 = v0; v0 = u;
+      }
+    }
+    for(int i = 255; i >= 0; i--){
+      u = attr_piwt.fv[i] + g * v2;
+      attr_piwt.fv[i] = v2 - g * u;
+      v2 = v1; v1 = v0; v0 = u;
+    }
+  } else {
+    rnd = rnd * 1664525 + 1013904223;
+    float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
+    for(int warmup = 0; warmup < 4; warmup++){
+      for(int i = 0; i < 256; i++){
+        u = attr_piwt.fv[i] + g * v4;
+        v4 = v3; v3 = v2; v2 = v1; v1 = v0; v0 = u;
+      }
+    }
+    for(int i = 0; i < 256; i++){
+      u = attr_piwt.fv[i] + g * v4;
+      attr_piwt.fv[i] = v4 - g * u;
+      v4 = v3; v3 = v2; v2 = v1; v1 = v0; v0 = u;
+    }
+  }
+}     
+      //pre integrate
+float moy = 0.0f;
+for(int i = 0; i < 256; i++){
+  moy += attr_piwt.fv[i];
+}
+moy *= 1/256.0f;
+float M = 0.0f;
+for(int i = 0; i < 256; i++){
+  attr_piwt.fv[i] -= moy;
+  if(fabs(attr_piwt.fv[i]) > M) M = fabs(attr_piwt.fv[i]);
+}
+// normalise
+if(M != 0.0f){
+  M = 1.0f / M;
+  for(int i = 0; i < 256; i++){
+    attr_piwt.fv[i] *= M;
+  }
+}
+// convert
+for(int i = 0; i < 256; i++){
+  attr_piwt.v[i] = arm::float_to_q(attr_piwt.fv[i], 20);
+}
+attr_piwt.v[256] = attr_piwt.v[0]; // for easy dv: dv = v[i+1] - v[i]
+// integrate (checked)
+int32_t I1 = 0;
+for(int i = 0; i < 256; i++){
+  attr_piwt.Iv[i] = I1;
+  I1 += attr_piwt.v[i] + (attr_piwt.v[i+1] - attr_piwt.v[i])/2; 
+}]]></code.init>
+   </obj.normal>
+</objdefs>
