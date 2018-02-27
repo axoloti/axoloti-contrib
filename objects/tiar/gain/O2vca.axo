@@ -1,0 +1,25 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="O2vca" uuid="aebef0a5-8ec2-4660-8b67-0e2647690dbd">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <inlets>
+         <frac32buffer name="x1" description="audio input"/>
+         <frac32buffer name="x0"/>
+         <frac32 name="v" description="gain input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="y1" description="output"/>
+         <frac32buffer name="y0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t g = 0;
+int32_t dg;]]></code.declaration>
+      <code.krate><![CDATA[dg = (inlet_v - g) >> 5;]]></code.krate>
+      <code.srate><![CDATA[outlet_y1 =  ___SMMUL(inlet_x1, g) << 5;
+g += dg;
+outlet_y0 =  ___SMMUL(inlet_x0, g) << 5;
+g += dg;]]></code.srate>
+   </obj.normal>
+</objdefs>
