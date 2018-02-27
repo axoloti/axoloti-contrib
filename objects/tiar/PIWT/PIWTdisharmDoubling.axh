@@ -69,13 +69,13 @@
          <objref attributeName="piwt" obj="gen_1"/>
       </attribs>
    </obj>
-   <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="252" y="252">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="266" y="252">
       <params>
-         <frac32.s.map name="detHz" value="0.40999937057495117"/>
+         <frac32.u.map name="amp" value="1.179999828338623"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_2" x="350" y="252">
+   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_2" x="364" y="252">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
@@ -83,13 +83,13 @@
          <objref attributeName="piwt" obj="copy_1"/>
       </attribs>
    </obj>
-   <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_2" x="476" y="252">
+   <obj type="tiar/math/signed *c" uuid="7d51367c3bcd571ee6bbd8437ef3612125dfb225" name="signed_1" x="504" y="252">
       <params>
-         <frac32.s.map name="detHz" value="-0.6099996566772461"/>
+         <frac32.s.map name="amp" value="-0.40999937057495117"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_3" x="574" y="252">
+   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_3" x="616" y="252">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
@@ -97,11 +97,20 @@
          <objref attributeName="piwt" obj="copy_2"/>
       </attribs>
    </obj>
-   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="742" y="252">
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="756" y="252">
       <params>
          <frac32.u.map name="gain1" value="40.5"/>
          <frac32.u.map name="gain2" value="16.5"/>
          <frac32.u.map name="gain3" value="9.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="14" y="392">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="17.0"/>
+         <frac32.u.map name="s" value="1.0"/>
+         <frac32.s.map name="r" value="-21.0"/>
       </params>
       <attribs/>
    </obj>
@@ -164,9 +173,9 @@
          <source obj="keyb_1" outlet="note"/>
          <dest obj="osc_1" inlet="pitch"/>
          <dest obj="saw_1" inlet="pitch"/>
-         <dest obj="DetHz_1" inlet="pitch"/>
-         <dest obj="DetHz_2" inlet="pitch"/>
          <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="osc_2" inlet="pitch"/>
+         <dest obj="osc_3" inlet="pitch"/>
       </net>
       <net>
          <source obj="osc_1" outlet="wave"/>
@@ -180,6 +189,7 @@
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
          <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -198,10 +208,6 @@
          <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
-         <source obj="DetHz_1" outlet="pitch"/>
-         <dest obj="osc_2" inlet="pitch"/>
-      </net>
-      <net>
          <source obj="osc_2" outlet="wave"/>
          <dest obj="mix_2" inlet="in2"/>
       </net>
@@ -211,12 +217,21 @@
          <dest obj="MIDscope_1" inlet="in"/>
       </net>
       <net>
-         <source obj="DetHz_2" outlet="pitch"/>
-         <dest obj="osc_3" inlet="pitch"/>
-      </net>
-      <net>
          <source obj="osc_3" outlet="wave"/>
          <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="*c_1" inlet="in"/>
+         <dest obj="signed_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="osc_2" inlet="freq offset"/>
+      </net>
+      <net>
+         <source obj="signed_1" outlet="out"/>
+         <dest obj="osc_3" inlet="freq offset"/>
       </net>
    </nets>
    <settings>

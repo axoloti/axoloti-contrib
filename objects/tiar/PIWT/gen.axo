@@ -13,7 +13,12 @@
       <code.declaration><![CDATA[int32_t v[257]; // one more for dv
 int32_t Iv[256];
 float *fv = (float *)v; //in place
-
+static const uint32_t LENGTHPOW = 8;
+static const uint32_t LENGTH = 256;
+static const uint32_t LENGTHMASK = 255;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+int32_t *array = v;
 float mod1(float x) { return (1024+x) - ((int)(x+1024)); }
 float saw(float x){ return 2 * mod1(x) - 1; }
 float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
@@ -30,11 +35,8 @@ float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
 float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }]]></code.declaration>
       <code.init><![CDATA[//init
 float moy = 0.0f;
-int32_t seed = 3424655465;
 for(int i = 0; i < 256; i++){
   float x = arm::q_to_float(i, 8);
-  seed = seed * 69069 + 1;
-  float rnd = arm::q_to_float(seed, 30)-1.0f;
   fv[i] = (float)(  attr_function  );
   moy += fv[i];
 }

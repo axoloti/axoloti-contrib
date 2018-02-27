@@ -8,10 +8,14 @@ Experimental.
       <helpPatch>PIWTosc.axh</helpPatch>
       <inlets>
          <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="freq offset"/>
          <frac32buffer.bipolar name="pm"/>
+         <bool32 name="disable" description="disables the object"/>
+         <bool32 name="disto" description="use the waveform as a distortion"/>
+         <frac32.bipolar name="disto offset"/>
       </inlets>
       <outlets>
-         <frac32buffer.bipolar name="wave" description="selfPM wave"/>
+         <frac32buffer.bipolar name="wave"/>
       </outlets>
       <displays/>
       <params>
@@ -35,22 +39,27 @@ x1 = 1;
 I1_0 = I1_1 = 0;
 aMI = dMI = kMI = 0;
 // _____________________________________________________________________]]></code.init>
-      <code.krate><![CDATA[// _____________________________________________________________________
+      <code.krate><![CDATA[if(!inlet_disable){
+      // _____________________________________________________________________
 MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+dp += ___SMMUL(0x10000000, inlet_freq_space_offset);  //<--- adjust for 64Hz at 64.
 dp >>= 4;  // p is uq28 to let room for phase modulation
            // (need to calculate x0 - x1 even with over modulation)
 // _____________________________________________________________________
 //                                                     Audio rate loops
 for(int j = 0; j < BUFSIZE; j++){
-  p += dp; // phase increment
-  if(p >= 0x40000000){
-     p -= 0x10000000;
-    x0 -= 0x10000000;   // p, xO and x1 must be consistent
+  if(inlet_disto){
+    p = inlet_disto_space_offset << 1;
+  }else{
+    p += dp; // phase increment
+    if(p >= 0x40000000){
+       p -= 0x10000000;
+      x0 -= 0x10000000;   // p, xO and x1 must be consistent
+    }
   }
   x1 = x0;
   I1_1 = I1_0;
   x0 = p + inlet_pm[j];
-  //x1 += (x0 == x1) ? 1 : 0; // avoids ill case
 
   // differentiation part 1/3
   // we launch the float div here (14 cycles !!)
@@ -94,6 +103,10 @@ for(int j = 0; j < BUFSIZE; j++){
   	outlet_wave[j] = v;
   }
 }
-// _____________________________________________________________________]]></code.krate>
+}else{
+for(int j = 0; j < BUFSIZE; j++){
+  outlet_wave[j] = inlet_pm[j];
+}
+}]]></code.krate>
    </obj.normal>
 </objdefs>
