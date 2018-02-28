@@ -9,61 +9,119 @@
       <params/>
       <attribs>
          <text name="function"/>
+         <combo name="size">
+            <MenuEntries>
+               <string>256</string>
+               <string>512</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>IntRAM</string>
+               <string>ExtRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
       </attribs>
-      <code.declaration><![CDATA[int32_t v[257]; // one more for dv
-int32_t Iv[256];
-float *fv = (float *)v; //in place
-static const uint32_t LENGTHPOW = 8;
-static const uint32_t LENGTH = 256;
-static const uint32_t LENGTHMASK = 255;
+      <code.declaration><![CDATA[#if attr_location == 0
+	#define LOCATION
+#else
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
 static const uint32_t BITS = 32;
-static const uint32_t GAIN = 0;
-int32_t *array = v;
-float sqr(float x) {return x*x;}
-float mod1(float x) { return (1024+x) - ((int)(x+1024)); }
+static const uint32_t GAIN = 7;  // q20 to q27
+
+int32_t *v;
+float *fv; //in place
+int32_t *array;
+int32_t *Iv;
+
+float mod1(float x) { return (x + 100) - ((int)(x + 100)); }
 float saw(float x){ return 2 * mod1(x) - 1; }
+float rect(float x,float r) {x = mod1(x); return x < r ? -1 : 1;}
+float sqr(float x) {return rect(x, 0.5f); }
 float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
   x = mod1(x);
-  if(x < r)
-    return -1 + (2 * x / r);
-  else {
-    return 1 - 2 * (x - r) / (1.0f - r);
-  }
+  if(x < r) return -1 + (2 * x / r);
+  else      return 1 - 2 * (x - r) / (1.0f - r);
 }
 float tri(float x){ return tri(x,0.5f); }
 float sin1(float x){ x = tri(x); return x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
 float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
-float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }]]></code.declaration>
-      <code.init><![CDATA[//init
-float moy = 0.0f;
-for(int i = 0; i < 256; i++){
-  float x = arm::q_to_float(i, 8);
-  fv[i] = (float)(  attr_function  );
-  moy += fv[i];
-}
-moy *= 1/256.0f;
-float M = 0.0f;
-for(int i = 0; i < 256; i++){
-  fv[i] -= moy;
-  if(fabs(fv[i]) > M) M = fabs(fv[i]);
-}
-// normalise
-if(M != 0.0f){
-  M = 1.0f / M;
-  for(int i = 0; i < 256; i++){
-    fv[i] *= M;
+float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }
+float pow(float x, int N){
+  float y = 1.0f;
+  if(N >= 0)
+    for(int i = 0; i <  N; i++) y *=  x;
+  else { float _x = 1.0f / x;
+    for(int i = 0; i < -N; i++) y *= _x;  
   }
+  return y;
 }
-// convert
-for(int i = 0; i < 256; i++){
-  v[i] = arm::float_to_q(fv[i], 20);
+float cos1(float x){ return sin1(x+0.25f); }
+float hann(float x){ return 0.5f - 0.5f * cos1(x); }
+
+void prepare(void){
+  //pre integrate
+  float moy = 0.0f;
+  for(int i = 0; i < LENGTH; i++){
+    moy += fv[i];
+  }
+  moy *= 1.0f / LENGTH;
+  float M = 0.0f;
+  for(int i = 0; i < LENGTH; i++){
+    fv[i] -= moy;
+    if(fabs(fv[i]) > M) M = fabs(fv[i]);
+  }
+  // normalise
+  if(M != 0.0f){
+    M = 1.0f / M;
+    for(int i = 0; i < LENGTH; i++){
+      fv[i] *= M;
+    }
+  }
+  // convert
+  for(int i = 0; i < LENGTH; i++){
+    v[i] = arm::float_to_q(fv[i], 27-GAIN);
+  }
+  v[LENGTH] = v[0]; // for easy dv: dv = v[i+1] - v[i]
+  // integrate (checked)
+  int32_t I1 = 0;
+  for(int i = 0; i < LENGTH; i++){
+    Iv[i] = I1;
+    I1 += v[i] + (v[i+1]-v[i])/2; 
+  }
+}]]></code.declaration>
+      <code.init><![CDATA[static int32_t v_[attr_poly][LENGTH+1] LOCATION;
+static int32_t Iv_[attr_poly][LENGTH] LOCATION;
+#undef LOCATION
+v = &v_[parent->polyIndex][0];
+fv = (float *)v; //in place
+array = v;
+Iv = &Iv_[parent->polyIndex][0];
+      
+for(int i = 0; i < LENGTH; i++){
+  float x = arm::q_to_float(i, LENGTHPOW);
+  fv[i] = (float)(  attr_function  );
 }
-v[256] = v[0]; // for easy dv: dv = v[i+1] - v[i]
-// integrate (checked)
-int32_t I1 = 0;
-for(int i = 0; i < 256; i++){
-  Iv[i] = I1;
-  I1 += v[i] + (v[i+1]-v[i])/2; 
-}]]></code.init>
+prepare();]]></code.init>
    </obj.normal>
 </objdefs>

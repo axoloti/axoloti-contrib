@@ -31,7 +31,7 @@ float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
 float tri(float x){ return tri(x,0.5f); }
 float sin1(float x){ x = tri(x); return x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }]]></code.declaration>
       <code.init><![CDATA[for(int i=0;i<256;i++){
-  attr_piwt.fv[i] = arm::q_to_float(attr_piwt.v[i], 27);
+  attr_piwt.fv[i] = arm::q_to_float(attr_piwt.v[i], 27-attr_piwt.GAIN);
 }
 
 int8_t h[8] = {attr_hA, attr_hB, attr_hC, attr_hD, attr_hE, attr_hF, attr_hG, attr_hH};
@@ -42,49 +42,20 @@ if(h[harmo]==0)
 float s = 0;
 float c = 0;
 float p = 0;
-float dp = h[harmo] * (1.0f/256);
-for (int i = 0; i < 256; i++) {
-  float x = i * (1.0f/256);
+float dp = h[harmo] * (1.0f / attr_piwt.LENGTH);
+for (int i = 0; i < attr_piwt.LENGTH; i++) {
   c += attr_piwt.fv[i] * sin1(p + 0.25f);
   s += attr_piwt.fv[i] * sin1(p);
   p += dp;
 }
-c *= 1.0f/128;
-s *= 1.0f/128;
+c *= 2.0f / attr_piwt.LENGTH;
+s *= 2.0f / attr_piwt.LENGTH;
 p = 0;
-for (int i = 0; i < 256; i++) {
+for (int i = 0; i < attr_piwt.LENGTH; i++) {
     attr_piwt.fv[i] -= c * sin1(p + 0.25f) + s * sin1(p);
     p += dp;
 }
 }
-//pre integrate
-float moy = 0.0f;
-for(int i = 0; i < 256; i++){
-  moy += attr_piwt.fv[i];
-}
-moy *= 1/256.0f;
-float M = 0.0f;
-for(int i = 0; i < 256; i++){
-  attr_piwt.fv[i] -= moy;
-  if(fabs(attr_piwt.fv[i]) > M) M = fabs(attr_piwt.fv[i]);
-}
-// normalise
-if(M != 0.0f){
-  M = 1.0f / M;
-  for(int i = 0; i < 256; i++){
-    attr_piwt.fv[i] *= M;
-  }
-}
-// convert
-for(int i = 0; i < 256; i++){
-  attr_piwt.v[i] = arm::float_to_q(attr_piwt.fv[i], 20);
-}
-attr_piwt.v[256] = attr_piwt.v[0]; // for easy dv: dv = v[i+1] - v[i]
-// integrate (checked)
-int32_t I1 = 0;
-for(int i = 0; i < 256; i++){
-  attr_piwt.Iv[i] = I1;
-  I1 += attr_piwt.v[i] + (attr_piwt.v[i+1] - attr_piwt.v[i])/2; 
-}]]></code.init>
+attr_piwt.prepare();]]></code.init>
    </obj.normal>
 </objdefs>
