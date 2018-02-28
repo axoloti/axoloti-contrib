@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smux8_1" uuid="d10fdb97-631c-4fcf-8574-c8103c644a4d">
+      <sDescription>Smooth multiplexer. Works like multiple cross fades. dis0 to dis7 can be used to disable unused objects (CPU optimisation).</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>smux8_1dis.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i0"/>
+         <frac32buffer name="i1"/>
+         <frac32buffer name="i2"/>
+         <frac32buffer name="i3"/>
+         <frac32buffer name="i4"/>
+         <frac32buffer name="i5"/>
+         <frac32buffer name="i6"/>
+         <frac32buffer name="i7"/>
+         <frac32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+         <bool32 name="dis0" description="disable output for object0" />
+         <bool32 name="dis1" description="disable output for object1" />
+         <bool32 name="dis2" description="disable output for object2" />
+         <bool32 name="dis3" description="disable output for object3" />
+         <bool32 name="dis4" description="disable output for object4" />
+         <bool32 name="dis5" description="disable output for object5" />
+         <bool32 name="dis6" description="disable output for object6" />
+         <bool32 name="dis7" description="disable output for object7" />
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[
+const int32_t *s0, *s1;
+switch(sel >> (27-3)){
+  case 0:  s0 = inlet_i0;  s1 = inlet_i1; outlet_dis0 = false; outlet_dis1 = false; outlet_dis2 =  true; outlet_dis3 =  true; outlet_dis4 =  true; outlet_dis5 =  true; outlet_dis6 =  true; outlet_dis7 =  true; break;
+  case 1:  s0 = inlet_i1;  s1 = inlet_i2; outlet_dis0 =  true; outlet_dis1 = false; outlet_dis2 = false; outlet_dis3 =  true; outlet_dis4 =  true; outlet_dis5 =  true; outlet_dis6 =  true; outlet_dis7 =  true; break;
+  case 2:  s0 = inlet_i2;  s1 = inlet_i3; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 = false; outlet_dis3 = false; outlet_dis4 =  true; outlet_dis5 =  true; outlet_dis6 =  true; outlet_dis7 =  true; break;
+  case 3:  s0 = inlet_i3;  s1 = inlet_i4; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 = false; outlet_dis4 = false; outlet_dis5 =  true; outlet_dis6 =  true; outlet_dis7 =  true; break;
+  case 4:  s0 = inlet_i4;  s1 = inlet_i5; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 =  true; outlet_dis4 = false; outlet_dis5 = false; outlet_dis6 =  true; outlet_dis7 =  true; break;
+  case 5:  s0 = inlet_i5;  s1 = inlet_i6; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 =  true; outlet_dis4 =  true; outlet_dis5 = false; outlet_dis6 = false; outlet_dis7 =  true; break;
+  case 6:  s0 = inlet_i6;  s1 = inlet_i7; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 =  true; outlet_dis4 =  true; outlet_dis5 =  true; outlet_dis6 = false; outlet_dis7 = false; break;
+  case 7:  s0 = inlet_i7;  s1 = inlet_i0; outlet_dis0 = false; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 =  true; outlet_dis4 =  true; outlet_dis5 =  true; outlet_dis6 =  true; outlet_dis7 = false; break;
+} 
+int32_t a = (sel << 3) & 0x07FFFFFF;
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t _s0 = s0[i];
+  outlet_o[i] = ___SMMLA(a, s1[i] - _s0, _s0 >> 5) << 5;
+}
+      
+      ]]></code.krate>
+   </obj.normal>
+</objdefs>
