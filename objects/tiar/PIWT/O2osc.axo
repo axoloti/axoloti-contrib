@@ -28,7 +28,7 @@ Experimental.
       </attribs>
       <code.declaration><![CDATA[uint32_t p;  // phase
 int32_t dp;  // delta phase aka freq
-int32_t x0,x1,I1_0,I1_1;
+int32_t x0, x1, I1_0, I1_1;
 int32_t kMI;  // Modulation Index
 int32_t aMI, dMI;  // interp Modulation Index]]></code.declaration>
       <code.init><![CDATA[// _____________________________________________________________________
@@ -39,77 +39,88 @@ x1 = 1;
 I1_0 = I1_1 = 0;
 aMI = dMI = kMI = 0;
 // _____________________________________________________________________]]></code.init>
-      <code.krate><![CDATA[if(!inlet_disable){
-      // _____________________________________________________________________
-MTOFEXTENDED(param_pitch + inlet_pitch, dp);
-dp += ___SMMUL(0x01000000, inlet_freq_space_offset);  //<--- adjust for 64Hz at 64.
-dp >>= 5;  // p is uq28 to let room for phase modulation
-           // (need to calculate x0 - x1 even with over modulation)
-// _____________________________________________________________________
-//                                                     Audio rate loops
-for(int j = 0; j < BUFSIZE; j++){
-{
-  if(inlet_disto){
-    p = inlet_disto_space_offset << 1;
-  }else{
-    p += dp; // phase increment
-    if(p >= 0x40000000){
-       p -= 0x10000000;
-      x0 -= 0x10000000;   // p, xO and x1 must be consistent
+      <code.krate><![CDATA[
+if(!inlet_disable){
+        // _____________________________________________________________________
+  MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+  dp += ___SMMUL(0x01000000, inlet_freq_space_offset); 
+  dp >>= 32 - 20 - attr_piwt.LENGTHPOW + 1;
+             // (need to calculate x0 - x1 even with over modulation)
+  // _____________________________________________________________________
+  //                                                     Audio rate loops
+  const int rightShiftPM = 9 - attr_piwt.LENGTHPOW;
+  const int shiftDisto = attr_piwt.LENGTHPOW - 4;
+  for(int j = 0; j < BUFSIZE; j++){
+    {
+      if(inlet_disto){
+        p = (inlet_disto_space_offset >> 4) << shiftDisto;
+      }else{
+        p += dp; // phase increment
+        if(p >= 0x40000000){
+           p -= attr_piwt.LENGTH << 20; // length of one cycle
+          x0 -= attr_piwt.LENGTH << 20;   // p, xO and x1 must be consistent
+        }
+      }
+      x1 = x0;
+      I1_1 = I1_0;
+      x0 = p + ((inlet_pm1[j] << 3) >> rightShiftPM);
+      float inv = ((float)(1<<27)) / ((float)(x0 - x1));
+      int32_t a  = (x0 & 0x000FFFFF) << 11;  // 0 -> 1 q31
+      uint32_t i = (x0 & (attr_piwt.LENGTHMASK << 20)) >> 20;  // [0 attr_piwt.LENGTH-1]
+      int32_t a2_2 = ___SMMUL(a, a);
+      I1_0 = ___SMMUL( attr_piwt.v[i], a);
+      I1_0 = ___SMMLA(attr_piwt.v[i+1] - attr_piwt.v[i], a2_2, I1_0);
+      I1_0 = attr_piwt.Iv[i] + (I1_0 << 1);
+      int32_t v = ___SMMLA(a, attr_piwt.v[i+1] - attr_piwt.v[i], attr_piwt.v[i] >> 1) << (attr_piwt.GAIN + 1);
+      int32_t diff = I1_0 - I1_1;
+      if(abs(x0 - x1) > 256)
+        outlet_y1[j] = (int32_t)(diff * inv);
+      else{
+        outlet_y1[j] = v;
+      }
+    }
+  
+    {
+      if(inlet_disto){
+        p = (inlet_disto_space_offset >> 4) << shiftDisto;
+      }else{
+        p += dp; // phase increment
+        if(p >= 0x40000000){
+           p -= attr_piwt.LENGTH << 20; // length of one cycle
+          x0 -= attr_piwt.LENGTH << 20;   // p, xO and x1 must be consistent
+        }
+      }
+      x1 = x0;
+      I1_1 = I1_0;
+      x0 = p + ((inlet_pm0[j] << 3) >> rightShiftPM);
+      float inv = ((float)(1<<27)) / ((float)(x0 - x1));
+      int32_t a  = (x0 & 0x000FFFFF) << 11;  // 0 -> 1 q31
+      uint32_t i = (x0 & (attr_piwt.LENGTHMASK << 20)) >> 20;  // [0 attr_piwt.LENGTH-1]
+      int32_t a2_2 = ___SMMUL(a, a);
+      I1_0 = ___SMMUL( attr_piwt.v[i], a);
+      I1_0 = ___SMMLA(attr_piwt.v[i+1] - attr_piwt.v[i], a2_2, I1_0);
+      I1_0 = attr_piwt.Iv[i] + (I1_0 << 1);
+      int32_t v = ___SMMLA(a, attr_piwt.v[i+1] - attr_piwt.v[i], attr_piwt.v[i] >> 1) << (attr_piwt.GAIN + 1);
+      int32_t diff = I1_0 - I1_1;
+      if(abs(x0 - x1) > 256)
+        outlet_y0[j] = (int32_t)(diff * inv);
+      else{
+        outlet_y0[j] = v;
+      }
     }
   }
-  x1 = x0;
-  I1_1 = I1_0;
-  x0 = p + inlet_pm1[j];
-  float inv = ((float)(1<<27)) / ((float)(x0 - x1));
-  int32_t a  = (x0 & 0x000FFFFF) << 11;  // 0 -> 1 q31
-  uint32_t i = (x0 & 0x0FF00000) >> 20;  // [0 255]
-  int32_t a2_2 = ___SMMUL(a, a);
-  I1_0 = ___SMMUL( attr_piwt.v[i], a);
-  I1_0 = ___SMMLA(attr_piwt.v[i+1] - attr_piwt.v[i], a2_2, I1_0);
-  I1_0 = attr_piwt.Iv[i] + (I1_0 << 1);
-  int32_t v = ___SMMLA(a, attr_piwt.v[i+1] - attr_piwt.v[i], attr_piwt.v[i] >>1)<<8;
-  int32_t diff = I1_0 - I1_1;
-  if(abs(x0-x1)>256)
-    outlet_y1[j] = (int32_t) (diff * inv);
-  else{
-  	outlet_y1[j] = v;
-  }
-}
-{
+} else { //disabled
   if(inlet_disto){
-    p = inlet_disto_space_offset << 1;
+    for(int j = 0; j < BUFSIZE; j++){
+      outlet_y1[j] = inlet_pm1[j];
+      outlet_y0[j] = inlet_pm0[j];
+    }
   }else{
-    p += dp; // phase increment
-    if(p >= 0x40000000){
-       p -= 0x10000000;
-      x0 -= 0x10000000;   // p, xO and x1 must be consistent
+    for(int j = 0; j < BUFSIZE; j++){
+      outlet_y1[j] = 0;
+      outlet_y0[j] = 0;
     }
   }
-  x1 = x0;
-  I1_1 = I1_0;
-  x0 = p + inlet_pm0[j];
-  float inv = ((float)(1<<27)) / ((float)(x0 - x1));
-  int32_t a  = (x0 & 0x000FFFFF) << 11;  // 0 -> 1 q31
-  uint32_t i = (x0 & 0x0FF00000) >> 20;  // [0 255]
-  int32_t a2_2 = ___SMMUL(a, a);
-  I1_0 = ___SMMUL( attr_piwt.v[i], a);
-  I1_0 = ___SMMLA(attr_piwt.v[i+1] - attr_piwt.v[i], a2_2, I1_0);
-  I1_0 = attr_piwt.Iv[i] + (I1_0 << 1);
-  int32_t v = ___SMMLA(a, attr_piwt.v[i+1] - attr_piwt.v[i], attr_piwt.v[i] >>1)<<8;
-  int32_t diff = I1_0 - I1_1;
-  if(abs(x0-x1)>256)
-    outlet_y0[j] = (int32_t) (diff * inv);
-  else{
-  	outlet_y0[j] = v;
-  } 
-} 
-}
-}else{
-for(int j = 0; j < BUFSIZE; j++){
-  outlet_y1[j] = inlet_pm1[j];
-  outlet_y0[j] = inlet_pm0[j];
-}
 }
 // _____________________________________________________________________]]></code.krate>
    </obj.normal>

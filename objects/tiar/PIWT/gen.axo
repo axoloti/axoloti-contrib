@@ -64,7 +64,8 @@ float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
   else      return 1 - 2 * (x - r) / (1.0f - r);
 }
 float tri(float x){ return tri(x,0.5f); }
-float sin1(float x){ x = tri(x); return x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
+float cos1(float x){ x = tri(x); return -x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
+float sin1(float x){ return cos1(x-0.25f); }
 float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
 float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }
 float pow(float x, int N){
@@ -76,7 +77,18 @@ float pow(float x, int N){
   }
   return y;
 }
-float cos1(float x){ return sin1(x+0.25f); }
+static float exp1(float x) {
+  x = 1 + x * (1 / 256.0f);
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+  return x;
+}
+static float exp(float x){
+  float coef = 1;
+  while(x > 1){ x-=1.0f; coef *=     2.718281828f; }
+  while(x < 0){ x+=1.0f; coef *= 1 / 2.718281828f; }
+  return exp1(x) * coef;
+}
 float hann(float x){ return 0.5f - 0.5f * cos1(x); }
 
 void prepare(void){

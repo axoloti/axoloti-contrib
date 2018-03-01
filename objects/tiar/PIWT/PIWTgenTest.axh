@@ -3,11 +3,36 @@
       <params/>
       <attribs>
          <text attributeName="function">
-            <sText><![CDATA[saw(5*x)*hann(x)]]></sText>
+            <sText><![CDATA[((i^(i>>1))&0x7F)*exp(-2*x)]]></sText>
          </text>
-         <combo attributeName="size" selection="256"/>
+         <combo attributeName="size" selection="512"/>
          <combo attributeName="location" selection="ExtRAM"/>
       </attribs>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="406" y="14">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="17.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="532" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="126" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="238" y="154">
+      <params>
+         <frac32.u.map name="amp" value="2.5"/>
+      </params>
+      <attribs/>
    </obj>
    <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="280">
       <params/>
@@ -58,11 +83,13 @@
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="osc_1" inlet="pitch"/>
          <dest obj="saw_1" inlet="pitch"/>
+         <dest obj="sine_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="adsr_2" outlet="env"/>
@@ -76,15 +103,31 @@
          <source obj="saw_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
       </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="osc_1" inlet="pm"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>120</x>
-      <y>49</y>
+      <x>114</x>
+      <y>248</y>
       <width>1216</width>
-      <height>990</height>
+      <height>791</height>
    </windowPos>
 </patch-1.0>
