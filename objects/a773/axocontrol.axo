@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="axocontrol" uuid="751b3605-f062-4660-8406-3eb1c2b3d526">
       <sDescription>exposes the controls of the MTM axocontrol board</sDescription>
       <author>a773</author>
@@ -13,6 +13,7 @@
       <outlets>
          <frac32.bipolar name="joyx"/>
          <frac32.bipolar name="joyy"/>
+         <bool32 name="joyPress"/>
          <frac32.positive name="knob1"/>
          <frac32.positive name="knob2"/>
          <frac32.positive name="knob3"/>
@@ -26,7 +27,8 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.init><![CDATA[palSetPadMode(GPIOC,1,PAL_MODE_INPUT_PULLDOWN);
+      <code.init><![CDATA[palSetPadMode(GPIOC,0,PAL_MODE_INPUT_PULLDOWN);
+palSetPadMode(GPIOC,1,PAL_MODE_INPUT_PULLDOWN);
 palSetPadMode(GPIOC,2,PAL_MODE_INPUT_PULLDOWN);
 palSetPadMode(GPIOC,3,PAL_MODE_INPUT_PULLDOWN);
 palSetPadMode(GPIOB,0,PAL_MODE_OUTPUT_PUSHPULL);
@@ -35,6 +37,7 @@ palSetPadMode(GPIOB,8,PAL_MODE_OUTPUT_PUSHPULL);
 palSetPadMode(GPIOB,9,PAL_MODE_OUTPUT_PUSHPULL);]]></code.init>
       <code.krate><![CDATA[outlet_joyy = (adcvalues[0]-2048)<<16;
 outlet_joyx = (adcvalues[1]-2048)<<16;
+outlet_joyPress = palReadPad(GPIOC,0)<<27;
 outlet_knob4 = adcvalues[2]<<15;
 outlet_knob5 = adcvalues[3]<<15;
 outlet_knob6 = adcvalues[4]<<15;
