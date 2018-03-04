@@ -1,0 +1,174 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rndPattF16" uuid="96a0c4fd-2482-44de-98f4-157dcccfd35f">
+      <sDescription>16 channel random pattern generator with lots of goodies</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count"/>
+         <bool32 name="rnd"/>
+         <int32 name="max"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="o4"/>
+         <frac32 name="o5"/>
+         <frac32 name="o6"/>
+         <frac32 name="o7"/>
+         <frac32 name="o8"/>
+         <frac32 name="o9"/>
+         <frac32 name="o10"/>
+         <frac32 name="o11"/>
+         <frac32 name="o12"/>
+         <frac32 name="o13"/>
+         <frac32 name="o14"/>
+         <frac32 name="o15"/>
+         <frac32 name="o16"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="repeat"/>
+         <frac32.u.map name="chance"/>
+         <frac32.u.map name="change"/>
+         <frac32.u.map name="nonMemChance"/>
+         <frac32.u.map name="nonMemChange"/>
+         <frac32.u.map name="freeze"/>
+         <frac32.u.map name="maxFreeze"/>
+         <frac32.u.map name="difference"/>
+         <frac32.u.map name="errorChance"/>
+         <frac32.u.map name="errorSize"/>
+         <frac32.u.map name="glidechance"/>
+         <frac32.u.map name="gliderate"/>
+      </params>
+      <attribs>
+         <combo name="maxlength">
+            <MenuEntries>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+            </MenuEntries>
+            <CEntries>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+            </CEntries>
+         </combo>
+         <combo name="start">
+            <MenuEntries>
+               <string>rst</string>
+               <string>rnd</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTH=1<<attr_maxlength;
+static const uint32_t LENGTHMASK=LENGTH-1;
+int32_t ofs[16],C[16],cnt[16],repeat[16],R[16],tcnt[16],i,error,E[16],val[16],rate[16],RT[16];
+
+bool trg,rnd,glide[16];
+int32_t *array;
+int32_t v27=1<<27;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH<<4] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+for(i=0;i<(LENGTH<<4);i++){
+if(attr_start>0){
+array[i]=(int32_t)(GenerateRandomNumber()>>5);}
+else{array[i]=0;}
+}
+for(i=0;i<16;i++){
+	C[i]=0;
+	R[i]=(int32_t)(GenerateRandomNumber());
+	RT[i]=(int32_t)(GenerateRandomNumber());}]]></code.init>
+      <code.krate><![CDATA[for(i=0;i<16;i++){
+MTOF((param_gliderate<<1)-v27+___SMMUL(param_difference<<1,RT[i]),rate[i])
+rate[i]=rate[i]>>2;
+repeat[i]=___SMMUL(inlet_max<<5,__USAT(param_repeat+___SMMUL(R[i],param_difference),27))+1;
+tcnt[i]=inlet_count;
+tcnt[i]=tcnt[i]-tcnt[i]/repeat[i]*repeat[i];
+tcnt[i]+=tcnt[i]<0?repeat[i]:0;
+tcnt[i]=tcnt[i]&LENGTHMASK;
+}
+int32_t tmp;
+if((inlet_rnd>0)&&!rnd){
+	rnd=1;
+	for(i=0;i<(LENGTH<<4);i++){
+		array[i]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+	for(i=0;i<16;i++){
+		R[i]=(int32_t)(GenerateRandomNumber());
+		RT[i]=(int32_t)(GenerateRandomNumber());
+	}
+}
+else if(inlet_rnd<1){rnd=0;}
+for(i=0;i<16;i++)
+{
+		if(!(tcnt[i]==cnt[i])){
+		if(((int32_t)(GenerateRandomNumber()>>5))<param_glidechance){glide[i]=1;}
+		else{glide[i]=0;}
+		if(((int32_t)(GenerateRandomNumber()>>5))<param_errorChance){
+			E[i]=___SMMUL((int32_t)(GenerateRandomNumber()),___SMMUL(param_errorSize,inlet_max<<6));
+		}
+		else{E[i]=0;}
+	     if(((int32_t)(GenerateRandomNumber()>>5))<param_chance)
+		{	//R[i]=(int32_t)(GenerateRandomNumber());
+			tmp=array[(i<<4)+tcnt[i]];
+			tmp+=___SMMUL(param_change<<1,(int32_t)GenerateRandomNumber());
+			array[(i<<4)+tcnt[i]]=__USAT(tmp,27)-(tmp-__USAT(tmp,27));
+		}
+		C[i]-=C[i]>0?1:0;
+		if((((int32_t)(GenerateRandomNumber()>>5))<param_freeze)&&(C[i]==0)){
+			C[i]=___SMMUL(param_maxFreeze,(int32_t)(GenerateRandomNumber()>>21));
+		}
+	if(C[i]==0){
+	ofs[i]=0;
+		if(((int32_t)(GenerateRandomNumber()>>5))<param_nonMemChance)
+		{
+			ofs[i]=___SMMUL(param_nonMemChange<<1,(int32_t)GenerateRandomNumber());
+		}
+	tmp=ofs[i]+array[(i<<4)+((tcnt[i]+E[i])&LENGTHMASK)];
+	ofs[i]=__USAT(tmp,27)-(tmp-__USAT(tmp,27));
+	}
+	}
+}
+
+for(i=0;i<16;i++){
+	if(glide[i]>0){
+		val[i]=___SMMLA((ofs[i]-val[i])<<1,rate[i],val[i]);
+	}
+	else{val[i]=ofs[i];}
+}
+
+outlet_o1=val[0];
+outlet_o2=val[1];
+outlet_o3=val[2];
+outlet_o4=val[3];
+outlet_o5=val[4];
+outlet_o6=val[5];
+outlet_o7=val[6];
+outlet_o8=val[7];
+outlet_o9=val[8];
+outlet_o10=val[9];
+outlet_o11=val[10];
+outlet_o12=val[11];
+outlet_o13=val[12];
+outlet_o14=val[13];
+outlet_o15=val[14];
+outlet_o16=val[15];
+for(i=0;i<16;i++){
+	cnt[i]=tcnt[i];
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
