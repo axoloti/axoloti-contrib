@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scaleLIVE" uuid="aec49d38-a107-45eb-8eaf-4e913ae6dc2e">
+      <sDescription>Used together with the &quot;scalebankLIVE&quot; module.
+Uses it&apos;s internal array of allowed notes in the scale to only allow notes to play that are set as active.
+Ratio is 1:1 for octaves-&gt;no change. Notes not in the scale will just be transposed down till they meet a note that is allowed.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="note"/>
+      </inlets>
+      <outlets>
+         <int32 name="note"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="scale"/>
+      </attribs>
+      <code.declaration><![CDATA[int prv;]]></code.declaration>
+      <code.krate><![CDATA[outlet_note=inlet_note;
+int oct=inlet_note/12;
+oct-=inlet_note<0?1:0;
+int note=inlet_note-oct*12;
+if(attr_scale.notes>0){
+int A=0;
+int B=note;
+//if(!(prv==note)){
+while(A==0){
+B=B-B/12*12;
+B+=B<0?12:0;
+A=((attr_scale.array[B]<=attr_scale.NT)&&(attr_scale.array[B]>=1))?1:0;
+B-=1;
+//}
+}
+outlet_note=B+oct*12;
+}
+
+prv=note;]]></code.krate>
+   </obj.normal>
+</objdefs>

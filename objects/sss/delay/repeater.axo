@@ -1,5 +1,5 @@
-<objdefs appVersion="1.0.10">
-   <obj.normal id="repeater" uuid="74e98cd6-47c3-46a8-807f-09abea67eee3">
+<objdefs appVersion="1.0.12">
+   <obj.normal id="repeater" uuid="2889d652-ccf8-4976-8862-6f2f09202bbe">
       <sDescription>audio repeater module. Can be used in-line in your audio-chain and doesn&apos;t need an external delay write module. When input &quot;on&quot; is low, audio input is just send thru to the output.
 
 when input &quot;on&quot; goes high, starts repeating the last audio that came in.
@@ -16,6 +16,7 @@ Use the &quot;grainer&quot; module if you want pitch-control</sDescription>
          <frac32buffer name="in"/>
          <bool32 name="on"/>
          <int32 name="size" description="connect to &quot;Ksamples&quot; on my clock2timing module. Use ratioVCAI to set ratio to host tempo"/>
+         <frac32 name="Ksize"/>
          <int32 name="repeat"/>
       </inlets>
       <outlets>
@@ -87,11 +88,10 @@ int32_t ON;]]></code.declaration>
 array = &_array[parent->polyIndex][0];
    int i;
    writepos = 0;
-   for(i=0;i<LENGTH;i++) array[i] = 0;
-]]></code.init>
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
       <code.krate><![CDATA[size=param_size;
 size=___SMMUL(size<<3,size<<2);
-size=___SMMUL(size<<3,LENGTH<<2)+inlet_size;
+size=___SMMUL(__USAT(size+inlet_Ksize,27)<<3,LENGTH<<2)+inlet_size;
 repeat=inlet_repeat+param_repeat;
 outlet_rec=rec;]]></code.krate>
       <code.srate><![CDATA[//(on>0?on-rec:on)
@@ -121,7 +121,6 @@ if(on>0)
 
 aut=array[(writepos+phase-size)&LENGTHMASK]>>1;
 aut+=array[(writepos-phase)&LENGTHMASK]>>1;
-outlet_out=out+___SMMUL(ON<<3,aut<<2);
-]]></code.srate>
+outlet_out=out+___SMMUL(ON<<3,aut<<2);]]></code.srate>
    </obj.normal>
 </objdefs>
