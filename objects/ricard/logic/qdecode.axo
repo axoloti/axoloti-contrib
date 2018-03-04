@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90">
+      <sDescription>quadrature encoder decoder</sDescription>
+      <author>Ricard Wanderlof</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="a"/>
+         <bool32 name="b"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="up"/>
+         <bool32.pulse name="down"/>
+         <bool32.pulse name="step"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="rate" description="output rate">
+            <MenuEntries>
+               <string>full</string>
+               <string>half</string>
+               <string>quarter</string>
+            </MenuEntries>
+            <CEntries>
+               <string>2</string>
+               <string>1</string>
+               <string>0</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int prev_a, new_a;
+int prev_b, new_b;
+int firstcount;]]></code.declaration>
+      <code.init><![CDATA[prev_a = 0;
+prev_b = 0;
+firstcount = 2;]]></code.init>
+      <code.krate><![CDATA[new_a = inlet_a>0;
+new_b = inlet_b>0;
+outlet_up = 0;
+outlet_down = 0;
+if (new_a ^ prev_a) {
+        if (!firstcount || !firstcount--) // skip first changes
+	    if (attr_rate || new_a) // always if full or half
+	        if (new_a ^ new_b) outlet_down = 1; else outlet_up = 1;
+	prev_a = new_a;
+}
+else if (attr_rate == 2 && (new_b ^ prev_b)) { // full only
+	if (!firstcount || !firstcount--) // skip first changes
+	    if (new_a ^ !new_b) outlet_down = 1; else outlet_up = 1;
+	prev_b = new_b;
+}
+outlet_step = outlet_down | outlet_up;
+]]></code.krate>
+   </obj.normal>
+</objdefs>
