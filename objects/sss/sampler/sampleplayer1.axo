@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="sampleplayer1" uuid="7f444c53-8a65-420c-adbf-6a24ebd95271">
+   <obj.normal id="sampleplayer1" uuid="6fbbea94-fd7e-4d41-810a-6e80402998e5">
       <sDescription>complex dual sample player to use with the loadtrain modules</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -23,6 +23,8 @@
          <frac32 name="end" description="sets sample end where the sample will end if repeat is off"/>
          <int32 name="first" description="sets the sample index where sample selection may start (eg. when samples 8 to 11 are all snares, set &quot;first&quot; to 8 )"/>
          <int32 name="samples" description="sets the amount of consecutive samples that can be selected  (eg. when samples 8 to 11 are all snares, set &quot;samples&quot; to 4, as you&apos;ll load sample 8,9,10 and 11 = 4 samples)"/>
+         <frac32 name="walkUp"/>
+         <frac32 name="walkDown"/>
       </inlets>
       <outlets>
          <frac32buffer name="out" description="audio out"/>
@@ -45,7 +47,9 @@ int32_t P2;
 int32_t S1;
 int32_t S2;
 bool reverse;
-bool dir;]]></code.declaration>
+bool dir;
+bool Dir;
+int32_t ofs;]]></code.declaration>
       <code.init><![CDATA[pos1=1<<30;
 pos2=1<<30;
 Env=0;
@@ -116,7 +120,8 @@ else{Env=0;}
 
 if(inlet_repeat&&inlet_gate){
 if((P2<0)||(P2>PLE)){
-
+Dir=!Dir;
+PLS+=(Dir>0?inlet_walkUp:inlet_walkDown)<<2;
 S2=(S2+inlet_Swalk)-inlet_first;
 S2=S2-S2/inlet_samples*inlet_samples;
 if(S2<0){
