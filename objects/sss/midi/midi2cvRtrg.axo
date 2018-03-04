@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="midi2cvRtrg" uuid="cf7491d0-f555-429c-bfa5-c8a90333554c">
+      <sDescription>Monophonic MIDI keyboard note input, gate, retrigger, velocity and release velocity.
+Can select a different midichannel then main patch or follow patch midichannel.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+         <bool32 name="gate" description="key pressed, no retrigger legato"/>
+         <bool32 name="retrigger" description="key pressed, retrigger on legato"/>
+         <frac32.positive name="velocity" description="note-on velocity"/>
+         <frac32.positive name="releaseVelocity" description="note-off velocity"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="mode">
+            <MenuEntries>
+               <string>patch</string>
+               <string>selector</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+         <spinner name="highnote" MinValue="0" MaxValue="127" DefaultValue="127"/>
+         <spinner name="lownote" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t _note;
+bool _gate;
+bool _trg;
+uint8_t _velo;
+uint8_t _rvelo;
+int chn;]]></code.declaration>
+      <code.init><![CDATA[_gate = 0;
+_note = 0;
+chn=attr_mode>0?attr_channel-1:attr_midichannel;]]></code.init>
+      <code.krate><![CDATA[outlet_note= _note<<21;
+outlet_gate= _gate;
+outlet_retrigger=_trg;
+_trg=0;
+
+outlet_velocity= _velo<<20;
+outlet_releaseVelocity= _rvelo<<20;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + chn) && (data2)&&(data1>=attr_lownote)&&(data1<=attr_highnote)) {
+  _velo = data2;
+  _note = data1-64;
+  _gate = 1<<27;
+  _trg = 1;
+} else if (((status == MIDI_NOTE_ON + chn) && (!data2))||
+          (status == MIDI_NOTE_OFF + chn)) {
+  if (_note == data1-64) {
+    _rvelo = data2;
+    _gate = 0;
+  }
+} else if ((status == chn + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  _gate = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
