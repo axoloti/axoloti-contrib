@@ -53,7 +53,8 @@
 { "f_fmix:gain2", "f1 kbdtrk", F_DPOS, 1 },
 { "osc2_fmix:gain2", "osc2 detune", F_DPOS, 1 },
 { "dial_2", "osc1 modsrc", F_2, 1 },
-{ "memory_1", "patch", F_DPOS, 0 }]]></sText>
+{ "memory_1", "patch", F_DPOS, 0 },
+{ "clock_1", "bpm", F_DPOS, 1 }]]></sText>
          </text>
          <spinner attributeName="types" value="4"/>
          <text attributeName="tlist">
@@ -598,27 +599,27 @@ prev_wrtrig = inlet_write;]]></code.krate>
 { "Saved!" ,
   { NULL, NULL, NULL, NULL, NULL, NULL } },
 { "Load",
-  { "memory_1", NULL, NULL, NULL, NULL, NULL } },
+  { "patch", NULL, NULL, NULL, NULL, NULL } },
 { "Save",
-  { "memory_1", NULL, NULL, NULL, NULL, NULL } },
+  { "patch", NULL, NULL, NULL, NULL, NULL } },
 { "OSC1 Frq Bnd Snc Mod Lvl",
-  { "dial_2", "osc1_fmix:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "osc_mix:gain1" } },
+  { "dial_2", "osc1_fmix:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "osc1 lvl" } },
 { "OSC2 Frq Bnd Snc Mod Lvl",
-  { "dial_2", "osc2_fmix:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "osc_mix:gain2" } },
+  { "dial_2", "osc2 detune", "lp1:bend", "lp1:sync", "lp1:mod", "osc2 lvl" } },
 { "OSC3 Frq Bnd Snc Mod Lvl",
-  { "dial_2", "mix_3:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "lp1:level" } },
+  { "osc1 modsrc", "mix_3:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "lp1:level" } },
 { "MIX  Lv1 Lv2 Lv3",
-  { NULL, "osc_mix:gain1", "osc_mix:gain2", "lp3:level", NULL, NULL } },
+  { NULL, "osc1 lvl", "osc2 lvl", "osc3 lvl", NULL, NULL } },
 { "FILT Frq Res Env Kbd", 
-  { NULL, "lp_1:pitch","lp_1:reso","f_fmix:gain1","f_fmix:gain2",NULL } },
+  { NULL, "f1 frq","f1 q","f1 envamt","f1 kbdtrk",NULL } },
 { "FENV Atk Dec Sus Rel Val", 
-  { NULL, "f_env:a","f_env:d","f_env:s","f_env:r", "dial_1"  } },
+  { NULL, "fenv a","fenv d","fenv s","fenv r", "f1 envamt"  } },
 { "AENV Atk Dec Sus Rel Val", 
-  { NULL, "a_env:a","a_env:d","a_env:s","a_env:r", "dial_1"  } },
-{ "LFO  Frq Dtn Wav Src Lvl", 
-  { NULL, "lp_1:pitch", "mix_3:gain2", "dial_2", "dial_3", "dial_4" } },
+  { NULL, "aenv a","aenv d","aenv s","aenv r", "vol"  } },
+{ "LFO  Frq Pha Wav Dst Lvl",
+  { NULL, "lfo frq", "lfo pha", "lfo wav", "lfo dst", "lfo lvl" } },
 { "ARP  Bpm", 
-  { NULL, "clock_1", NULL, NULL, NULL, NULL } },
+  { NULL, "bpm", NULL, NULL, NULL, NULL } },
 { "GLOB Tun Voc MCh Loc Vol",
   { NULL, NULL, NULL, NULL, NULL, NULL } },
 ]]></sText>
@@ -695,11 +696,15 @@ if (first && attr_parhand.init_done) { // Wait for parhand
 			parno_matrix[menu][param] = -1;
 			if (setup[menu].keyids[param]) {
 				for (int parno = 0; parno < attr_parhand.nparams; parno++) {
-					LogTextMessage("Search param #%d (%s) for %s", parno, setup[menu].keyids[param], attr_parhand.param_setup[parno].param_name);
+					const char *setup_name = setup[menu].keyids[param];
+					const char *hash_name = attr_parhand.param_setup[parno].hash_name;
+					const char *param_name = attr_parhand.param_setup[parno].param_name;
+					LogTextMessage("Check if param #%d (%s) is %s (%s)", parno, setup_name, param_name, hash_name);
 					// Search all defined parameters for something that matches our current menu entry
 					//struct KeyValuePair *kvp = attr_parhand.param_data[kvpno].toplevel_kvpp;
-					if (strcmp(attr_parhand.param_setup[parno].param_name, setup[menu].keyids[param]) == 0) {
-						LogTextMessage("Found %s for menu #%d param #%d: 0x%08x", attr_parhand.param_setup[parno].param_name, menu, param, attr_parhand.param_data[parno].toplevel_kvpp);
+					// Check both hash_name and param_name for a match
+					if (strcmp(hash_name, setup_name) == 0 || strcmp(param_name, setup_name) == 0) {
+						LogTextMessage("Found %s (%s) for menu #%d param #%d: 0x%08x", param_name, hash_name, menu, param, attr_parhand.param_data[parno].toplevel_kvpp);
 						parno_matrix[menu][param] = parno;
 						break;
 					}
