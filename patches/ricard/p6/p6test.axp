@@ -11,7 +11,238 @@
          <spinner attributeName="qsize" value="10"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165ctrl v" uuid="0c9bfe43-cf10-4cf6-8d85-096f6c56f8d0" name="165ctrl_1" x="168" y="0">
+   <comment type="patch/comment" x="448" y="0" text="=== Please note! This patch runs on the Audiothingies P6 only! ==="/>
+   <patchobj type="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678" name="memory_1" x="826" y="0">
+      <params>
+         <frac32.u.map name="patch" value="16.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="type" selection="24C512"/>
+         <spinner attributeName="patchsize" value="1024"/>
+         <combo attributeName="bus" selection="I2C1"/>
+         <combo attributeName="altfunc" selection="AF4"/>
+         <combo attributeName="clock" selection="PB6"/>
+         <combo attributeName="data" selection="PB7"/>
+         <spinner attributeName="pinaddr" value="0"/>
+         <objref attributeName="parhand" obj="parhand_1"/>
+      </attribs>
+      <object id="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678">
+         <sDescription>Eeprom manager</sDescription>
+         <author>Ricard Wanderlof</author>
+         <license>BSD</license>
+         <inlets>
+            <bool32.rising name="read" description="Read trigger"/>
+            <bool32.rising name="write" description="Write trigger"/>
+         </inlets>
+         <outlets>
+            <bool32.pulse name="ready" description="Read ready"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="patch"/>
+         </params>
+         <attribs>
+            <combo name="type" description="EEPROM type">
+               <MenuEntries>
+                  <string>24C512</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>EEPROM_TYPE_24C512</string>
+               </CEntries>
+            </combo>
+            <spinner name="patchsize" description="Patch size" MinValue="2" MaxValue="2048" DefaultValue="512"/>
+            <combo name="bus" description="I2C bus">
+               <MenuEntries>
+                  <string>I2C1</string>
+                  <string>I2C2</string>
+                  <string>I2C3</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>I2CD1</string>
+                  <string>I2CD2</string>
+                  <string>I2CD3</string>
+               </CEntries>
+            </combo>
+            <combo name="altfunc" description="Alternate function name for the pins">
+               <MenuEntries>
+                  <string>AF4</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>4</string>
+               </CEntries>
+            </combo>
+            <combo name="clock" description="I2C clock pin">
+               <MenuEntries>
+                  <string>PB6</string>
+                  <string>PB8</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>GPIOB,6</string>
+                  <string>GPIOB,8</string>
+               </CEntries>
+            </combo>
+            <combo name="data" description="I2C data pin">
+               <MenuEntries>
+                  <string>PB7</string>
+                  <string>PB9</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>GPIOB,7</string>
+                  <string>GPIOB,9</string>
+               </CEntries>
+            </combo>
+            <spinner name="pinaddr" description="Address set by chip pins" MinValue="0" MaxValue="7" DefaultValue="0"/>
+            <objref name="parhand" description="Parameter handler "/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[#include <eeprom.h>
+int first = 1; // only execute init code once
+int prev_rdtrig;
+int prev_wrtrig;
+enum eeprom_state{ NONE, READING, READ_UNPACK, WRITE_PACK, WRITING };
+enum eeprom_state state = NONE;
+EepromStatus_t *eeprom_status_p; // status from framework
+void *handle; // handle to framework for current eprom
+int pagesize; // size of eeprom page from framework
+uint8_t *buf; // pointer to eeprom buffer, holding pagesizey bytes, from framework
+uint16_t addr; // current address
+uint16_t pageaddr; // address within current page
+unsigned int paramidx; // current parameter index]]></code.declaration>
+         <code.init><![CDATA[palSetPadMode(attr_clock, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
+palSetPadMode(attr_data, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
+handle = eeprom_setup(attr_type, &attr_bus, attr_pinaddr);
+buf = eeprom_get_pagebuf(handle, &pagesize);]]></code.init>
+         <code.dispose><![CDATA[eeprom_teardown(handle);]]></code.dispose>
+         <code.krate><![CDATA[// simple read test: rd trig always read 128 bytes of data from addr patch * 128 in memory, send memory printout over USB
+//
+if (first && attr_parhand.init_done) { // first time but wait for parhand to complete
+	first = 0;
+	// Debug: dump all known parameter exchange key-value pairs.
+	LogTextMessage("NPEXCH: %d, toplevel_kvp:", NPEXCH);
+	for (int i = 0; i < NPEXCH; i++) {
+		struct KeyValuePair *kvp = attr_parhand.param_data[i].toplevel_kvpp;
+		LogTextMessage("%d: %s: val %d, min %d, max %d, hash %u, signal %u",
+		               i, kvp->keyname, kvp->ipvp.PEx->value >> 21, kvp->ipvp.minvalue >> 21, kvp->ipvp.maxvalue >> 21, attr_parhand.hash(kvp->keyname) & 0xffffff, kvp->ipvp.PEx->signals);
+	}
+}
+// To set parameter value, use PExParameterChange(kvp->ipvp.PEx, newvalue, signals <0xFFFFFFE7>)
+#define read_data  buf
+if (inlet_read && !prev_rdtrig && state == NONE) {
+	unsigned int patch = param_patch >> 20;
+	addr = patch * attr_patchsize;
+	pageaddr = 0;
+	LogTextMessage("Read patch #%d", patch);
+	eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
+     state = READING;
+}
+if (state == READING && !eeprom_status_p->busy) {
+	// operation completed, print it
+	LogTextMessage("Status: %sbusy, %sok", eeprom_status_p->busy ? "": "not ", eeprom_status_p->ok ? "" : "not ");
+	state = READ_UNPACK;
+	//uint8_t *read_data = eeprom_get_pagebuf(handle, NULL);
+#if 1 // debug, print data
+	for (int i = 0; i < 64; i += 8)
+	LogTextMessage("Data %d: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x", i,
+	               read_data[i+0], read_data[i+1], read_data[i+2], read_data[i+3], read_data[i+4], read_data[i+5], read_data[i+6], read_data[i+7]);
+#endif
+}
+if (state == READ_UNPACK) {
+	u32 hash = buf[pageaddr++] << 16;
+	hash |= buf[pageaddr++] << 8;
+	hash |= buf[pageaddr++];
+	s32 value = ((signed char)buf[pageaddr++]) << 21;
+	//if (value & (1 << 27)) value |= 0xf0000000U; // sign extend from bit 6 in the stored parameter
+	LogTextMessage("Read: got hash 0x%08x", hash);
+	if (hash == 0) state = NONE; // done!
+	else {
+		// search for parameter!
+		for (int pidx = 0; pidx < attr_parhand.nparams; pidx++) {
+			if (((hash ^ attr_parhand.param_data[pidx].name_hash) & 0xffffff) == 0) {
+				// hashes match: found it!
+				LogTextMessage("Found parameter: %s, value %d", attr_parhand.param_data[pidx].toplevel_kvpp->keyname, value >> 21);
+				PExParameterChange(attr_parhand.param_data[pidx].toplevel_kvpp->ipvp.PEx, value, 0xFFFFFFE7);
+				break;
+			}
+		}
+	}
+	if (pageaddr >= pagesize) {
+		pageaddr = 0;
+		addr += pagesize;
+		eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
+		state = READING;
+	}
+}
+if (inlet_write && !prev_wrtrig && state == NONE) {
+	unsigned int patch = param_patch >> 20;
+	addr = patch * attr_patchsize;
+	pageaddr = 0; // start of page
+	paramidx = 0;
+	state = WRITE_PACK;
+}
+if (state == WRITE_PACK) {
+	if (paramidx < attr_parhand.nparams) {
+		if (attr_parhand.param_setup[paramidx].save) { // only save parameters with the save flag set
+			struct KeyValuePair *kvp = attr_parhand.param_data[paramidx].toplevel_kvpp;
+			uint32_t hash = attr_parhand.param_data[paramidx].name_hash;
+			buf[pageaddr++] = (hash >> 16) & 0xff; // low 24 bits of hash
+			buf[pageaddr++] = (hash >> 8) & 0xff;
+			buf[pageaddr++] = hash & 0xff;
+			buf[pageaddr++] = kvp->ipvp.PEx->value >> 21;
+			LogTextMessage("Param idx %d, hash 0x%08x, value %d", paramidx, hash, kvp->ipvp.PEx->value >> 21);
+		}
+	} else {
+		buf[pageaddr++] = 0; // end of list marker
+		buf[pageaddr++] = 0;
+		buf[pageaddr++] = 0;
+		buf[pageaddr++] = 0;
+		LogTextMessage("End of stored param data reached");
+	}
+	paramidx++;
+	if (pageaddr >= pagesize || paramidx > NPEXCH) {
+		LogTextMessage("Have %d bytes to write, now writing", pageaddr);
+		eeprom_status_p = eeprom_write_data(handle, addr, pageaddr); // trigger write
+		state = WRITING;
+		addr += pagesize; // for next page
+		pageaddr = 0; // for next page
+	}
+}
+if (state == WRITING && !eeprom_status_p->busy) { // write done
+	if (paramidx > NPEXCH)
+	     state = NONE;
+	else
+		state = WRITE_PACK;
+}
+prev_rdtrig = inlet_read;
+prev_wrtrig = inlet_write;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="./simplesynth" uuid="9d1d87e1-bfec-4cc1-8d9c-5a9f7cb343d6" name="simplesynth_1" x="1120" y="0">
+      <params>
+         <frac32.u.map name="osc_mix:gain1" value="63.0"/>
+         <frac32.u.map name="osc_mix:gain2" value="64.0"/>
+         <frac32.s.map name="lp_1:pitch" value="4.0"/>
+         <frac32.u.map name="lp_1:reso" value="21.0"/>
+         <frac32.u.map name="f_fmix:gain1" value="50.0"/>
+         <frac32.u.map name="f_fmix:gain2" value="36.0"/>
+         <frac32.s.map name="a_env:a" value="-64.0"/>
+         <frac32.s.map name="a_env:d" value="-24.0"/>
+         <frac32.u.map name="a_env:s" value="64.0"/>
+         <frac32.s.map name="a_env:r" value="-12.0"/>
+         <frac32.s.map name="f_env:a" value="-64.0"/>
+         <frac32.s.map name="f_env:d" value="-18.0"/>
+         <frac32.u.map name="f_env:s" value="13.0"/>
+         <frac32.s.map name="f_env:r" value="11.0"/>
+         <frac32.u.map name="osc2_fmix:gain2" value="1.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="6"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1246" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/165ctrl v" uuid="0c9bfe43-cf10-4cf6-8d85-096f6c56f8d0" name="165ctrl_1" x="168" y="14">
       <params/>
       <attribs>
          <combo attributeName="data" selection="PA0"/>
@@ -22,7 +253,7 @@
          <combo attributeName="rate" selection="full"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/out/595ctrl" uuid="0e1dc991-a882-4470-a263-8c1d1326f546" name="595ctrl_1" x="294" y="0">
+   <obj type="ricard/gpio/out/595ctrl" uuid="0e1dc991-a882-4470-a263-8c1d1326f546" name="595ctrl_1" x="294" y="14">
       <params/>
       <attribs>
          <combo attributeName="data" selection="PA6"/>
@@ -32,7 +263,7 @@
          <spinner attributeName="bits" value="8"/>
       </attribs>
    </obj>
-   <patchobj type="patch/object" uuid="d2dd1ce0-2a63-4425-a5b3-84bd441590e2" name="parhand_1" x="420" y="0">
+   <patchobj type="patch/object" uuid="d2dd1ce0-2a63-4425-a5b3-84bd441590e2" name="parhand_1" x="420" y="14">
       <params/>
       <attribs>
          <spinner attributeName="nparams" value="17"/>
@@ -265,241 +496,11 @@ LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);]]></c
 }]]></code.krate>
       </object>
    </patchobj>
-   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="546" y="0">
+   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="546" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="read" x="714" y="0">
-      <params/>
-      <attribs/>
-   </obj>
-   <patchobj type="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678" name="memory_1" x="826" y="0">
-      <params>
-         <frac32.u.map name="patch" value="16.5"/>
-      </params>
-      <attribs>
-         <combo attributeName="type" selection="24C512"/>
-         <spinner attributeName="patchsize" value="1024"/>
-         <combo attributeName="bus" selection="I2C1"/>
-         <combo attributeName="altfunc" selection="AF4"/>
-         <combo attributeName="clock" selection="PB6"/>
-         <combo attributeName="data" selection="PB7"/>
-         <spinner attributeName="pinaddr" value="0"/>
-         <objref attributeName="parhand" obj="parhand_1"/>
-      </attribs>
-      <object id="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678">
-         <sDescription>Eeprom manager</sDescription>
-         <author>Ricard Wanderlof</author>
-         <license>BSD</license>
-         <inlets>
-            <bool32.rising name="read" description="Read trigger"/>
-            <bool32.rising name="write" description="Write trigger"/>
-         </inlets>
-         <outlets>
-            <bool32.pulse name="ready" description="Read ready"/>
-         </outlets>
-         <displays/>
-         <params>
-            <frac32.u.map name="patch"/>
-         </params>
-         <attribs>
-            <combo name="type" description="EEPROM type">
-               <MenuEntries>
-                  <string>24C512</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>EEPROM_TYPE_24C512</string>
-               </CEntries>
-            </combo>
-            <spinner name="patchsize" description="Patch size" MinValue="2" MaxValue="2048" DefaultValue="512"/>
-            <combo name="bus" description="I2C bus">
-               <MenuEntries>
-                  <string>I2C1</string>
-                  <string>I2C2</string>
-                  <string>I2C3</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>I2CD1</string>
-                  <string>I2CD2</string>
-                  <string>I2CD3</string>
-               </CEntries>
-            </combo>
-            <combo name="altfunc" description="Alternate function name for the pins">
-               <MenuEntries>
-                  <string>AF4</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>4</string>
-               </CEntries>
-            </combo>
-            <combo name="clock" description="I2C clock pin">
-               <MenuEntries>
-                  <string>PB6</string>
-                  <string>PB8</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>GPIOB,6</string>
-                  <string>GPIOB,8</string>
-               </CEntries>
-            </combo>
-            <combo name="data" description="I2C data pin">
-               <MenuEntries>
-                  <string>PB7</string>
-                  <string>PB9</string>
-               </MenuEntries>
-               <CEntries>
-                  <string>GPIOB,7</string>
-                  <string>GPIOB,9</string>
-               </CEntries>
-            </combo>
-            <spinner name="pinaddr" description="Address set by chip pins" MinValue="0" MaxValue="7" DefaultValue="0"/>
-            <objref name="parhand" description="Parameter handler "/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[#include <eeprom.h>
-int first = 1; // only execute init code once
-int prev_rdtrig;
-int prev_wrtrig;
-enum eeprom_state{ NONE, READING, READ_UNPACK, WRITE_PACK, WRITING };
-enum eeprom_state state = NONE;
-EepromStatus_t *eeprom_status_p; // status from framework
-void *handle; // handle to framework for current eprom
-int pagesize; // size of eeprom page from framework
-uint8_t *buf; // pointer to eeprom buffer, holding pagesizey bytes, from framework
-uint16_t addr; // current address
-uint16_t pageaddr; // address within current page
-unsigned int paramidx; // current parameter index]]></code.declaration>
-         <code.init><![CDATA[palSetPadMode(attr_clock, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
-palSetPadMode(attr_data, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
-handle = eeprom_setup(attr_type, &attr_bus, attr_pinaddr);
-buf = eeprom_get_pagebuf(handle, &pagesize);]]></code.init>
-         <code.dispose><![CDATA[eeprom_teardown(handle);]]></code.dispose>
-         <code.krate><![CDATA[// simple read test: rd trig always read 128 bytes of data from addr patch * 128 in memory, send memory printout over USB
-//
-if (first && attr_parhand.init_done) { // first time but wait for parhand to complete
-	first = 0;
-	// Debug: dump all known parameter exchange key-value pairs.
-	LogTextMessage("NPEXCH: %d, toplevel_kvp:", NPEXCH);
-	for (int i = 0; i < NPEXCH; i++) {
-		struct KeyValuePair *kvp = attr_parhand.param_data[i].toplevel_kvpp;
-		LogTextMessage("%d: %s: val %d, min %d, max %d, hash %u, signal %u",
-		               i, kvp->keyname, kvp->ipvp.PEx->value >> 21, kvp->ipvp.minvalue >> 21, kvp->ipvp.maxvalue >> 21, attr_parhand.hash(kvp->keyname) & 0xffffff, kvp->ipvp.PEx->signals);
-	}
-}
-// To set parameter value, use PExParameterChange(kvp->ipvp.PEx, newvalue, signals <0xFFFFFFE7>)
-#define read_data  buf
-if (inlet_read && !prev_rdtrig && state == NONE) {
-	unsigned int patch = param_patch >> 20;
-	addr = patch * attr_patchsize;
-	pageaddr = 0;
-	LogTextMessage("Read patch #%d", patch);
-	eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
-     state = READING;
-}
-if (state == READING && !eeprom_status_p->busy) {
-	// operation completed, print it
-	LogTextMessage("Status: %sbusy, %sok", eeprom_status_p->busy ? "": "not ", eeprom_status_p->ok ? "" : "not ");
-	state = READ_UNPACK;
-	//uint8_t *read_data = eeprom_get_pagebuf(handle, NULL);
-#if 1 // debug, print data
-	for (int i = 0; i < 64; i += 8)
-	LogTextMessage("Data %d: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x", i,
-	               read_data[i+0], read_data[i+1], read_data[i+2], read_data[i+3], read_data[i+4], read_data[i+5], read_data[i+6], read_data[i+7]);
-#endif
-}
-if (state == READ_UNPACK) {
-	u32 hash = buf[pageaddr++] << 16;
-	hash |= buf[pageaddr++] << 8;
-	hash |= buf[pageaddr++];
-	s32 value = ((signed char)buf[pageaddr++]) << 21;
-	//if (value & (1 << 27)) value |= 0xf0000000U; // sign extend from bit 6 in the stored parameter
-	LogTextMessage("Read: got hash 0x%08x", hash);
-	if (hash == 0) state = NONE; // done!
-	else {
-		// search for parameter!
-		for (int pidx = 0; pidx < attr_parhand.nparams; pidx++) {
-			if (((hash ^ attr_parhand.param_data[pidx].name_hash) & 0xffffff) == 0) {
-				// hashes match: found it!
-				LogTextMessage("Found parameter: %s, value %d", attr_parhand.param_data[pidx].toplevel_kvpp->keyname, value >> 21);
-				PExParameterChange(attr_parhand.param_data[pidx].toplevel_kvpp->ipvp.PEx, value, 0xFFFFFFE7);
-				break;
-			}
-		}
-	}
-	if (pageaddr >= pagesize) {
-		pageaddr = 0;
-		addr += pagesize;
-		eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
-		state = READING;
-	}
-}
-if (inlet_write && !prev_wrtrig && state == NONE) {
-	unsigned int patch = param_patch >> 20;
-	addr = patch * attr_patchsize;
-	pageaddr = 0; // start of page
-	paramidx = 0;
-	state = WRITE_PACK;
-}
-if (state == WRITE_PACK) {
-	if (paramidx < attr_parhand.nparams) {
-		if (attr_parhand.param_setup[paramidx].save) { // only save parameters with the save flag set
-			struct KeyValuePair *kvp = attr_parhand.param_data[paramidx].toplevel_kvpp;
-			uint32_t hash = attr_parhand.param_data[paramidx].name_hash;
-			buf[pageaddr++] = (hash >> 16) & 0xff; // low 24 bits of hash
-			buf[pageaddr++] = (hash >> 8) & 0xff;
-			buf[pageaddr++] = hash & 0xff;
-			buf[pageaddr++] = kvp->ipvp.PEx->value >> 21;
-			LogTextMessage("Param idx %d, hash 0x%08x, value %d", paramidx, hash, kvp->ipvp.PEx->value >> 21);
-		}
-	} else {
-		buf[pageaddr++] = 0; // end of list marker
-		buf[pageaddr++] = 0;
-		buf[pageaddr++] = 0;
-		buf[pageaddr++] = 0;
-		LogTextMessage("End of stored param data reached");
-	}
-	paramidx++;
-	if (pageaddr >= pagesize || paramidx > NPEXCH) {
-		LogTextMessage("Have %d bytes to write, now writing", pageaddr);
-		eeprom_status_p = eeprom_write_data(handle, addr, pageaddr); // trigger write
-		state = WRITING;		
-		addr += pagesize; // for next page
-		pageaddr = 0; // for next page
-	}
-}
-if (state == WRITING && !eeprom_status_p->busy) { // write done
-	if (paramidx > NPEXCH)
-	     state = NONE;
-	else
-		state = WRITE_PACK;
-}
-prev_rdtrig = inlet_read;
-prev_wrtrig = inlet_write;]]></code.krate>
-      </object>
-   </patchobj>
-   <obj type="./simplesynth" uuid="9d1d87e1-bfec-4cc1-8d9c-5a9f7cb343d6" name="simplesynth_1" x="1120" y="0">
-      <params>
-         <frac32.u.map name="osc_mix:gain1" value="63.0"/>
-         <frac32.u.map name="osc_mix:gain2" value="64.0"/>
-         <frac32.s.map name="lp_1:pitch" value="4.0"/>
-         <frac32.u.map name="lp_1:reso" value="21.0"/>
-         <frac32.u.map name="f_fmix:gain1" value="50.0"/>
-         <frac32.u.map name="f_fmix:gain2" value="36.0"/>
-         <frac32.s.map name="a_env:a" value="-64.0"/>
-         <frac32.s.map name="a_env:d" value="-24.0"/>
-         <frac32.u.map name="a_env:s" value="64.0"/>
-         <frac32.s.map name="a_env:r" value="-12.0"/>
-         <frac32.s.map name="f_env:a" value="-64.0"/>
-         <frac32.s.map name="f_env:d" value="-18.0"/>
-         <frac32.u.map name="f_env:s" value="13.0"/>
-         <frac32.s.map name="f_env:r" value="11.0"/>
-         <frac32.u.map name="osc2_fmix:gain2" value="1.0"/>
-      </params>
-      <attribs>
-         <combo attributeName="poly" selection="6"/>
-      </attribs>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1246" y="0">
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="read" x="714" y="14">
       <params/>
       <attribs/>
    </obj>
@@ -509,7 +510,7 @@ prev_wrtrig = inlet_write;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="write" x="714" y="56">
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="write" x="714" y="70">
       <params/>
       <attribs/>
    </obj>
