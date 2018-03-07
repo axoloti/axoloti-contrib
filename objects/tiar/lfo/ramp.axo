@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ramp" uuid="8c3c12ce-5442-4dc3-aa68-494d1ae70e6e">
+      <sDescription></sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ramp.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="rate" description="rate"/>
+         <frac32.positive name="start"/>
+         <bool32.rising name="reset"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[// inlet_reset <- gate
+// inlet rate 32 -> fixe, 64 -> en avant toute, 0 -> en arrière toute
+// inlet_start est positif si inlet_start au max, freeRun
+
+bool areset = false;
+int32_t p = 0, dp;]]></code.declaration>
+      <code.krate><![CDATA[// calc dp peut être négatif
+dp = inlet_rate;
+dp = ___SMMLA(dp, ___SMMUL(dp, dp),dp>>13)>>1;
+
+if(inlet_reset && !areset && !(inlet_start >= 0x07800000))
+  p = 0;
+areset = inlet_reset;
+p += dp;
+if(p >= (1<<27)) p -= 1<<27;
+if(p <        0) p += 1<<27;
+outlet_out = (p + inlet_start) & 0x07FFFFFF;]]></code.krate>
+   </obj.normal>
+</objdefs>
