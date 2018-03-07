@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rotator8In" uuid="4529367c-fb56-4e85-bc49-7aed6e2e518e">
+      <sDescription>Adds the inputs together and when the value becomes too high or too low subtracts the maximum or minimum value</sDescription>
+      <author>Albert van der Zee</author>
+      <license>GPL</license>
+      <inlets>
+         <frac32.bipolar name="In1"/>
+         <frac32.bipolar name="In2"/>
+         <frac32.bipolar name="In3"/>
+         <frac32.bipolar name="In4" description=""/>
+         <frac32.bipolar name="In5"/>
+         <frac32.bipolar name="In6"/>
+         <frac32.bipolar name="In7"/>
+         <frac32.bipolar name="In8"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="Out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[// sum inputs
+int64_t accum = inlet_In1 + inlet_In2 + inlet_In3 + inlet_In4 +inlet_In5 + Inlet_In6 +inlet_In7 + inlet_In8 ;
+
+while (accum>134217728) accum -= 134217728;
+if (accum<0) accum = 0;
+outlet_Out= accum;]]></code.krate>
+   </obj.normal>
+</objdefs>
