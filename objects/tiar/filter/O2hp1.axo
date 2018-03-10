@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="O2hp1" uuid="bd07dac0-91db-448b-9086-03099e069021">
+      <sDescription>1st order hipass filter x2 oversampled</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="x1" description="input"/>
+         <frac32buffer name="x0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="y1" description="output"/>
+         <frac32buffer name="y0"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="freq" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t lp=0;]]></code.declaration>
+      <code.krate><![CDATA[int32_t f;
+MTOFEXTENDED(param_freq, f);]]></code.krate>
+      <code.srate><![CDATA[lp = ___SMMLA(inlet_x1 - lp, f, lp);
+outlet_y1 = inlet_x1 - lp;
+lp = ___SMMLA(inlet_x0 - lp, f, lp);
+outlet_y0 = inlet_x0 - lp;]]></code.srate>
+   </obj.normal>
+</objdefs>
