@@ -1,0 +1,129 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="permuList4" uuid="50227402-be48-4b2e-8675-3eeeeac33fd4">
+      <sDescription>Combination module based on permutation:
+Creates a full list of 4-number-combinations from the available options.
+No repetition, no importance of order.
+eg:
+1,2,3,4
+1,2,3,5
+or
+3,6,8,11 (any increasing order)
+BUT NOT:
+1,1,3,3,6 (no repetition of numbers)
+AND NOT:
+3,1,6,5 (not smaller then any value left of itself)
+
+&quot;select&quot; knob is scaled to the amount of possible combinations
+&quot;fine&quot; knob can be used when using a high option count-&gt;otherwise the stepsize would be to big to select all possible combinations.
+
+The 4 outputs give you the selected indices.
+
+This module could be used for selecting 4 out of 16 functions which may not be selected twice.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32 name="o1"/>
+         <int32 name="o2"/>
+         <int32 name="o3"/>
+         <int32 name="o4"/>
+      </outlets>
+      <displays>
+         <int32.label name="options"/>
+         <int32.label name="d1"/>
+         <int32.label name="d2"/>
+         <int32.label name="d3"/>
+         <int32.label name="d4"/>
+      </displays>
+      <params>
+         <frac32.u.map.gain name="select" description="sets the amount of options the 4 slots can choose from"/>
+         <frac32.u.map.gain name="fine" description="with high options count, you might need this knob to be able to reach all steps (eg. when using 8bit midi to control the knobs)"/>
+      </params>
+      <attribs>
+         <combo name="options">
+            <MenuEntries>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>5</string>
+               <string>15</string>
+               <string>35</string>
+               <string>70</string>
+               <string>126</string>
+               <string>210</string>
+               <string>330</string>
+               <string>495</string>
+               <string>715</string>
+               <string>1001</string>
+               <string>1365</string>
+               <string>1820</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int T[13]={1,5,15,35,70,126,210,330,495,715,1001,1365,1820};
+int options;
+int32_t q=attr_options;
+uint8_t *c;
+//int c[attr_options<<2];]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[attr_options<<2] __attribute__ ((section (".sdram")));
+c = &_array[0];
+
+for(i=0;i<13;i++){
+if(T[i]==attr_options){
+options=i+4;
+}
+}
+
+
+for(i=0;i<4;i++){
+	c[i]=i;
+}
+int j;
+for(i=1;i<q;i++){
+int k=i<<2;
+for(j=0;j<4;j++){
+	c[k+j]=c[k+j-4];
+}
+c[k+3]+=1;
+
+while((c[k+3]>=options)||(c[k+2]>=options-1)||(c[k+1]>=options-2)){
+if(c[k+3]>=options){
+c[k+2]+=1;
+c[k+3]=c[k+2]+1;
+}
+if(c[k+2]>=(options-1)){
+c[k+1]+=1;
+c[k+2]=c[k+1]+1;
+c[k+3]=c[k+2]+1;
+}
+if(c[k+1]>=(options-2)){
+c[k]+=1;
+c[k+1]=c[k+0]+1;
+c[k+2]=c[k+1]+1;
+c[k+3]=c[k+2]+1;
+}
+}
+}]]></code.init>
+      <code.krate><![CDATA[disp_options=q;
+int pst=___SMMUL(((q)<<1),__USAT((uint32_t)(param_fine>>7)+param_select,31))<<2;
+outlet_o1=disp_d1=c[pst];
+outlet_o2=disp_d2=c[pst+1];
+outlet_o3=disp_d3=c[pst+2];
+outlet_o4=disp_d4=c[pst+3];]]></code.krate>
+   </obj.normal>
+</objdefs>
