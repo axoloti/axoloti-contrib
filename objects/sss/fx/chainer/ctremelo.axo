@@ -1,0 +1,136 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ctremelo" uuid="562f657e-bf20-4d28-b3c6-19987b861c68">
+      <sDescription>pitch tremelo module to use with the chainFX effects chainer module.
+Based on sine-modulating a delayline.
+Controls can easily be editted for external control</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="volume"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map.kpitch name="rate"/>
+         <bool32.tgl name="LFO"/>
+         <frac32.u.map name="depth"/>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[//always keep these the same names, as these are the "general in/out names"
+int32_t outL,outR;
+int32_t IL,IR;
+bool bypass,solo;
+
+//I often use names like "v30" to save powers of 2, saves up some calculation time.
+uint32_t v30=(uint32_t)1<<30;
+uint32_t v26=(uint32_t)1<<26;
+uint32_t v27=(uint32_t)1<<27;
+
+//this is the code for the effect
+//Don't change the inL/inR, IL/IR outL/outR names!
+
+
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+int32_t Time;
+int32_t depth;
+int32_t phs;
+int32_t pitch;
+uint32_t writepos;
+int LFO;
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2)
+{
+	IL=inL;					// this saves the left input so the effect can be bypassed
+	IR=inR;					//  this saves the right input so the effect can be bypassed
+	// enter code below:          //here you can enter your code.  Use inL and inR to get the audio left&right input.
+							//the below code puts the calculated audio into "outL" and "outR" as output of the FX.
+	writepos=(writepos+1)&LENGTHMASK;
+	array[writepos]=__SSAT(inL>>14,16);	
+	array[writepos+LENGTH]=__SSAT(inR>>14,16);						
+	int32_t rate;
+	MTOFEXTENDED(pitch+CV1,rate)
+	rate=rate>>2+7*LFO;
+	phs+=rate;
+	int32_t s;
+	SINE2TINTERP(phs,s)
+	int32_t Depth=__SSAT(depth+CV2,28);
+	int32_t S=___SMMUL(Depth,s)+(Depth>>1);
+      uint32_t tmp_d =  __USAT(S,27);
+      uint32_t tmp_di = writepos - (tmp_d>>(27-LENGTHPOW))-1;
+      uint32_t tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = array[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      inL = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      
+      S=-___SMMUL(Depth,s)+(Depth>>1);
+      tmp_d =  __USAT(S,27);
+      tmp_di = writepos - (tmp_d>>(27-LENGTHPOW))-1;
+      tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = array[(tmp_di&LENGTHMASK)+LENGTH]<<16;
+      tmp_a2 = array[((tmp_di+1)&LENGTHMASK)+LENGTH]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      inR = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      
+
+outL=inL;						//this is the left output of the fx  (puts inL into outL)
+outR=inR;						//this is the right output of the fx (puts inR into outR)
+	if(bypass>0)
+	{
+		outL=IL;					//when bypass is on, sends IL to left output of effect function
+		outR=IR;					//when bypass is on, sends IR to right output of effect function
+	}
+};]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[LENGTH*2]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH*2;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[pitch=param_rate;
+depth=param_depth;
+LFO=param_LFO;
+bypass=param_bypass;
+solo=param_solo;]]></code.krate>
+   </obj.normal>
+</objdefs>

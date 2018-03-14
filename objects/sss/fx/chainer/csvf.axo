@@ -1,0 +1,119 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="csvf" uuid="63c3b52e-6e1a-4537-b025-1063169e0fa5">
+      <sDescription>SV-filter module to use with the chainFX effects chainer module.
+Input selects filter mode (0-3 is LP,HP,BP,NOTCH).
+When above 3, mode wraps back to 0 (LP) for left signal, but the right signal shifts 1 mode up (HP). This way, all combinations can be made with values between 0 and 15.
+Controls can easily be editted for external control</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="mode"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map name="cutoff"/>
+         <frac32.s.map name="mod"/>
+         <frac32.s.map name="rate"/>
+         <frac32.u.map name="depth"/>
+         <frac32.u.map.filterq name="reso"/>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+         <int32 name="mode">
+            <MinValue i="0"/>
+            <MaxValue i="15"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t v31=(uint32_t)1<<31;
+uint32_t v30=(uint32_t)1<<30;
+int32_t outL;
+int32_t outR;
+int32_t lowL;
+int32_t bandL;
+int32_t phs;
+int32_t lowR;
+int32_t bandR;
+int32_t rate;
+int32_t depth;
+int32_t reso;
+int32_t Mod;
+int32_t F1;
+int32_t F2;
+int32_t FD;
+int32_t pitch;
+bool bypass,solo;
+int mode;
+int32_t SOFT(int32_t in){
+	int32_t ts = __SSAT(in,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+return ts = (ts + (ts>>1) - (tsq31p3))*3>>2;
+}
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2){
+int32_t damp = (0x80<<24) - (__USAT(reso,27)<<4);
+damp = ___SMMUL(damp,damp);
+int32_t alpha;
+int32_t freq;
+
+MTOFEXTENDED(FD+CV2,rate);
+rate=rate>>8;
+phs+=rate+(___SMMUL(CV2,rate)<<4);
+SINE2TINTERP(phs,F1)
+F1=___SMMUL(depth,F1>>2);
+int32_t TP=0;
+switch(mode&3){
+case 0: TP=(12<<21);break;
+case 1: TP=-(24<<21);break;
+default:;break;
+}
+MTOFEXTENDED(pitch+(CV1>>1)+F1+TP+(___SMMUL(Mod,bandL)<<4),alpha);
+SINE2TINTERP(alpha,freq);
+
+int32_t notch = inL - (___SMMUL(damp,bandL)<<1);
+lowL = lowL + (___SMMUL(freq,bandL)<<1);
+int32_t high  = notch - lowL;
+bandL = (___SMMUL(freq,high)<<1) + bandL;
+switch(mode&3){
+case 0: outL = lowL;break;
+case 1: outL = high;break;
+case 2: outL = bandL;break;
+case 3: outL = notch;break;
+}
+TP=0;
+switch(((mode&3)+(mode>>2))&3){
+case 0: TP=(12<<21);break;
+case 1: TP=-(24<<21);break;
+default:;break;
+}
+MTOFEXTENDED(pitch+(CV1>>1)+F1+TP-(___SMMUL(Mod,bandR)<<4),alpha);
+SINE2TINTERP(alpha,freq);
+notch = inR - (___SMMUL(damp,bandR)<<1);
+lowR = lowR + (___SMMUL(freq,bandR)<<1);
+high  = notch - lowR;
+bandR = (___SMMUL(freq,high)<<1) + bandR;
+switch(((mode&3)+(mode>>2))&3){
+case 0: outR = lowR;break;
+case 1: outR = high;break;
+case 2: outR = bandR;break;
+case 3: outR = notch;break;
+}
+if(bypass>0){
+outL=inL;
+outR=inR;
+}
+};]]></code.declaration>
+      <code.init><![CDATA[lowL=0;
+bandL=0;
+lowR=0;
+bandR=0;]]></code.init>
+      <code.krate><![CDATA[depth=param_depth;
+Mod=param_mod;
+pitch=param_cutoff;
+reso=param_reso;
+FD=param_rate;
+bypass=param_bypass;
+solo=param_solo;
+mode=(param_mode+inlet_mode);]]></code.krate>
+   </obj.normal>
+</objdefs>
