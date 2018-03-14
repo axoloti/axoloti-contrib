@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="O2allpass" uuid="38b5026e-3b91-4c98-9a48-4085999ac8f6">
+      <sDescription>O2 allpass reverb section</sDescription>
+      <author>Smashed Transistors based on Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="in"/>
+         <frac32buffer name="in0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out1" description="out"/>
+         <frac32buffer name="out0"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.ratio name="g" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="delay" MinValue="1" MaxValue="10000" DefaultValue="1000"/>
+      </attribs>
+      <code.declaration><![CDATA[int16_t d[attr_delay];
+int dpos;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for (i=0;i<attr_delay;i++)
+   d[i] = 0;
+dpos = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t g2 = param_g<<4;]]></code.krate>
+      <code.srate><![CDATA[int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in1>>1);
+d[dpos++]=din>>15;
+outlet_out1 = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == attr_delay) dpos = 0;
+dout =  d[dpos]<<16;
+din = ___SMMLA(g2,dout,inlet_in0>>1);
+d[dpos++]=din>>15;
+outlet_out0 = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == attr_delay) dpos = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>
