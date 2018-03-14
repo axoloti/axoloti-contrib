@@ -1,0 +1,158 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="cFXselector" uuid="d33e28b6-10bc-4720-9247-66c75c30ff49">
+      <sDescription>Combination module based on permutation:
+Creates a full list of 4-number-combinations from the available options.
+No repetition, no importance of order.
+eg:
+1,2,3,4
+1,2,3,5
+or
+3,6,8,11 (any increasing order)
+BUT NOT:
+1,1,3,3,6 (no repetition of numbers)
+AND NOT:
+3,1,6,5 (not smaller then any value left of itself)
+
+&quot;select&quot; knob is scaled to the amount of possible combinations
+&quot;fine&quot; knob can be used when using a high option count-&gt;otherwise the stepsize would be to big to select all possible combinations.
+
+The 4 outputs give you the selected indices.
+
+This module could be used for selecting 4 out of 16 functions which may not be selected twice.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <frac32 name="select"/>
+         <frac32 name="fine"/>
+      </inlets>
+      <outlets>
+         <int32 name="o1"/>
+         <int32 name="o2"/>
+         <int32 name="o3"/>
+         <int32 name="o4"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="select"/>
+         <frac32.s.map name="fine"/>
+         <bool32.tgl name="rnd"/>
+      </params>
+      <attribs>
+         <combo name="options">
+            <MenuEntries>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>5</string>
+               <string>15</string>
+               <string>35</string>
+               <string>70</string>
+               <string>126</string>
+               <string>210</string>
+               <string>330</string>
+               <string>495</string>
+               <string>715</string>
+               <string>1001</string>
+               <string>1365</string>
+               <string>1820</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int T[13]={1,5,15,35,70,126,210,330,495,715,1001,1365,1820};
+int32_t C[4];
+int options;
+int32_t q=attr_options;
+uint8_t *c;
+//int c[attr_options<<2];
+bool rnd;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[attr_options<<2] __attribute__ ((section (".sdram")));
+c = &_array[0];
+
+for(i=0;i<13;i++){
+if(T[i]==attr_options){
+options=i+4;
+}
+}
+rnd=1;
+
+for(i=0;i<4;i++){
+	c[i]=i;
+}
+int j;
+for(i=1;i<q;i++){
+int k=i<<2;
+for(j=0;j<4;j++){
+	c[k+j]=c[k+j-4];
+}
+c[k+3]+=1;
+
+while((c[k+3]>=options)||(c[k+2]>=options-1)||(c[k+1]>=options-2)){
+if(c[k+3]>=options){
+c[k+2]+=1;
+c[k+3]=c[k+2]+1;
+}
+if(c[k+2]>=(options-1)){
+c[k+1]+=1;
+c[k+2]=c[k+1]+1;
+c[k+3]=c[k+2]+1;
+}
+if(c[k+1]>=(options-2)){
+c[k]+=1;
+c[k+1]=c[k+0]+1;
+c[k+2]=c[k+1]+1;
+c[k+3]=c[k+2]+1;
+}
+}
+}]]></code.init>
+      <code.krate><![CDATA[if(param_rnd<1){
+int pst=___SMMUL(((q)<<1),__USAT((uint32_t)(__SSAT(param_fine+inlet_fine,28)>>8)+__USAT(param_select+inlet_select,27),27)<<4)<<2;
+outlet_o1=disp_d1=c[pst];
+outlet_o2=disp_d2=c[pst+1];
+outlet_o3=disp_d3=c[pst+2];
+outlet_o4=disp_d4=c[pst+3];
+rnd=1;
+}
+else if(param_rnd>0)
+{
+	if(rnd>0)
+	{
+		rnd=0;
+		for(i=0;i<4;i++)
+		{
+			C[i]=-1;
+		}
+		bool tmp;
+		for(i=0;i<4;i++)
+		{
+			tmp=0;
+			while(tmp==0)
+			{
+				C[i]=(int32_t)(GenerateRandomNumber()%options);
+				tmp=((C[i]==C[(i+1)&3])||(C[i]==C[(i+2)&3])||(C[i]==C[(i+3)&3]))>0?0:1;
+			}
+		}
+		//int T[4];
+		//T[0]=
+	}
+	outlet_o1=C[0];
+	outlet_o2=C[1];
+	outlet_o3=C[2];
+	outlet_o4=C[3];
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
