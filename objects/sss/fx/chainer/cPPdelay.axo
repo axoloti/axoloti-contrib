@@ -1,0 +1,106 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="cPPdelay" uuid="b181eb4e-8824-43be-8d0c-ac62fe404a33">
+      <sDescription>Stereo pingpong delay module to use with the chainFX effects chainer module.
+Controls can easily be editted for external control</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="time"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="time"/>
+         <frac32.s.map name="feed"/>
+         <frac32.u.map.gain name="wet"/>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+uint32_t v31=(uint32_t)1<<31;
+uint32_t v30=(uint32_t)1<<30;
+int32_t outL;
+int32_t outR;
+int32_t lp;
+int32_t TM;
+int32_t F1;
+int32_t F2;
+int32_t FD;
+int32_t wet;
+bool bypass,solo;
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2){
+	int32_t IL=inL;
+	int32_t IR=inR;
+lp+=CV2-lp>>9;
+CV2=lp;
+CV1=CV1>0?CV1:-CV1;
+inL+=F2+___SMMUL(F1-F2<<1,CV1<<4);
+inR+=F1+___SMMUL(F2-F1<<1,CV1<<4);
+writepos = (writepos + 1)&LENGTHMASK;
+array[writepos] = __SSAT(inL>>14,16);
+array[writepos+LENGTH] = __SSAT(inR>>14,16);
+outL=array[(writepos-TM-(___SMMUL(CV2,TM)<<2))&LENGTHMASK]<<14;
+outR=array[((writepos-TM+(___SMMUL(CV2,TM)<<2))&LENGTHMASK)+LENGTH]<<14;
+
+outL=(IL+___SMMUL(wet,outR<<1));
+outR=(IR+___SMMUL(wet,outL<<1));
+F1=-___SMMUL(FD,outL)<<1;
+F2=-___SMMUL(FD,outR)<<1;
+if(bypass>0){
+outL=IL;
+outR=IR;
+}
+};]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[LENGTH*2]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH*2;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[TM=__USAT(inlet_time+param_time,27)>>27-LENGTHPOW;
+
+FD=param_feed<<4;
+wet=param_wet;
+bypass=param_bypass;
+solo=param_solo;]]></code.krate>
+   </obj.normal>
+</objdefs>
