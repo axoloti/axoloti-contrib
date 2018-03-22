@@ -75,6 +75,7 @@ t_speed =  (((inlet_speed + param_speed ) << 3) >> attr_table.LENGTHPOW) + ((inl
       if (!inlet_r2offset) rro = 0;
       if (!inlet_r2start) rrs = 0;
 
+      if (!inlet_range) play = 0;
 
 outlet_count = (inlet_play) ? count : -1;
 outlet_spos =  (((index >> 3) >> shift) > 0) ? ((index >> 3)>> shift) : 0;
@@ -88,10 +89,7 @@ outlet_speed = inlet_speed + param_speed;]]></code.krate>
       if (index <= lstart){ index = lrange;count +=add;}  
           }    
 
-outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);
-   
-   if (play) index += t_speed;
-
-   else outlet_pos = 1 << 27;]]></code.srate>
+if (play) {outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);index += t_speed;}
+else outlet_pos = 1 << 27;]]></code.srate>
    </obj.normal>
 </objdefs>

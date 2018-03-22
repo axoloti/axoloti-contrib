@@ -56,15 +56,15 @@ t_speed =  (((inlet_speed + param_speed ) << 3) >> attr_table.LENGTHPOW) + ((inl
          }  
          else if (!(inlet_play > 0)) ntrig = 0;
 
+         if (!inlet_range) play = 0;
+
 outlet_spos =  (((index >> 3) >> shift) > 0) ? ((index >> 3)>> shift) : 0;
 outlet_stotal = inlet_range >> shift;
 outlet_speed = inlet_speed + param_speed;
 outlet_play = play;]]></code.krate>
       <code.srate><![CDATA[if ((index > re)||(index < rs)) play = 0;
 
-outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);
-   
-   if (play) index += t_speed;
-   else outlet_pos = 1 << 27;]]></code.srate>
+if (play){outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);index += t_speed;}
+else outlet_pos = 1 << 27;]]></code.srate>
    </obj.normal>
 </objdefs>

@@ -1,0 +1,24 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ahd no m" uuid="854e6f52-cf3b-411d-bfee-2099235f8d15">
+      <sDescription>attack hold decay envelope with modulation inputs</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="a"/>
+         <frac32.positive name="d"/>
+         <bool32.risingfalling name="gate" description="gate"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env" description="envelope output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_gate>0) val = ___SMMLA((1<<27)-val,(1<<27)-inlet_a,val);
+   else val = ___SMMLA(val,(-1<<27)+inlet_d,val);
+   outlet_env= val;]]></code.krate>
+   </obj.normal>
+</objdefs>
