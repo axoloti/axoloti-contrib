@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pulseEnv" uuid="65752237-c1d9-40ca-b32b-d5f1b054c023">
+      <sDescription>Attack/hold/decay envelope with treshold, linear attack, exponential decay to enable square shaped envelopes.
+Added a hold stage by amplifying the envelope and clipping it.
+The treshold also amplifies the envelope, but also lowers it with the treshold level, while clipping it below zero. Enabling quick stops as if the exponential decay is partly linear.
+With hold and treshold all the way up, the envelope is almost squareshaped. In this case, the decay sets the pulse length.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env" description="envelope output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.klineartime.exp name="a"/>
+         <frac32.u.map name="h"/>
+         <frac32.s.map.kdecaytime.exp name="d"/>
+         <frac32.u.map name="t"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t stage;
+int ntrig;
+int32_t val;]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;
+val = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+   ntrig = 1;
+   stage = 1;
+} else if (!(inlet_trig>0)) {
+   ntrig = 0;
+}
+if (stage == 0){
+   val = ___SMMUL(val,param_d)<<1;
+} else {
+   if(val<param_t){val=param_t;};
+   int32_t t;
+   MTOF(-param_a,t);
+   val = val + (t>>3);
+   if (val<0) {
+      val =0x7FFFFFFF;
+      stage = 0;
+   }
+}
+int32_t env=val>>4;
+env+=___SMMUL(param_t<<3,env<<4);
+env-=param_t<<2;
+env=__USAT(env,27);
+env=__USAT(env+___SMMUL(param_h<<4,env<<4),27);
+outlet_env = env;]]></code.krate>
+   </obj.normal>
+</objdefs>
