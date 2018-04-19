@@ -6,14 +6,16 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="140" y="70">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="24.0"/>
+         <frac32.s.map name="d" value="7.0"/>
          <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="23.0"/>
+         <frac32.s.map name="r" value="8.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/noise/noisqr" uuid="558142f0-84d4-4f19-b994-7ec7de51a530" name="noisqr_1" x="294" y="70">
-      <params/>
+      <params>
+         <int32 name="nbOsc" value="5"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="448" y="70">
@@ -28,27 +30,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_1" x="280" y="140">
-      <params>
-         <frac32.s.map name="pitch" value="26.0"/>
-         <frac32.u.map name="reso" value="25.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="tiar/dist/infNoAA" uuid="ed617d91-9005-48a6-ae21-76ccc386191f" name="infNoAA_1" x="378" y="140">
-      <params/>
-      <attribs/>
-   </obj>
    <nets>
-      <net>
-         <source obj="noisqr_1" outlet="out"/>
-         <dest obj="bp_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="keyb_1" outlet="gate"/>
-         <dest obj="adsr_1" inlet="gate"/>
-         <dest obj="noisqr_1" inlet="reset"/>
-      </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
          <dest obj="vca_1" inlet="v"/>
@@ -60,11 +42,12 @@
          <dest obj="scope_1" inlet="in"/>
       </net>
       <net>
-         <source obj="bp_1" outlet="out"/>
-         <dest obj="infNoAA_1" inlet="in"/>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="noisqr_1" inlet="newSeed"/>
       </net>
       <net>
-         <source obj="infNoAA_1" outlet="out"/>
+         <source obj="noisqr_1" outlet="ring"/>
          <dest obj="vca_1" inlet="a"/>
       </net>
    </nets>
