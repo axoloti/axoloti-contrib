@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scroll" uuid="9816cddd-4331-4e3d-b2de-35df911220e6">
+      <sDescription>string scroller</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>scroll.axh</helpPatch>
+      <inlets>
+         <charptr32 name="in"/>
+         <int32 name="offset"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="out" description="string"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[char out[12];]]></code.declaration>
+      <code.init><![CDATA[out[11] = '\0';]]></code.init>
+      <code.krate><![CDATA[//lets find the length of the input string
+//max length is 80 chars
+int len = 80;
+for(int i = 0; i < 80; i++){
+  if(inlet_in[i] == '\0'){
+    len = i;
+	break;
+  }
+}
+for(int i = 0; i < 11; i++){
+  int j = i + inlet_offset;
+  out[i] = j >= 0 && j < len ? inlet_in[j] : ' ';
+}
+outlet_out = out;]]></code.krate>
+   </obj.normal>
+</objdefs>

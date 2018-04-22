@@ -7,7 +7,7 @@
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="7.0"/>
-         <frac32.u.map name="s" value="0.0"/>
+         <frac32.u.map name="s" value="5.0"/>
          <frac32.s.map name="r" value="8.0"/>
       </params>
       <attribs/>
@@ -30,25 +30,44 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="tiar/noise/noisqr" uuid="558142f0-84d4-4f19-b994-7ec7de51a530" name="noisqr_2" x="294" y="140">
+      <params>
+         <int32 name="nbOsc" value="5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="448" y="140">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="adsr_1" outlet="env"/>
          <dest obj="vca_1" inlet="v"/>
+         <dest obj="vca_2" inlet="v"/>
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
          <dest obj="out_2" inlet="left"/>
-         <dest obj="out_2" inlet="right"/>
          <dest obj="scope_1" inlet="in"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
          <dest obj="noisqr_1" inlet="newSeed"/>
+         <dest obj="noisqr_2" inlet="newSeed"/>
       </net>
       <net>
          <source obj="noisqr_1" outlet="ring"/>
          <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="noisqr_2" outlet="ring"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="out_2" inlet="right"/>
       </net>
    </nets>
    <settings>
