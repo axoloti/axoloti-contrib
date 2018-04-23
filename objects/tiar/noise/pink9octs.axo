@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pink9octs" uuid="26c493af-69c8-4d04-a326-f72d00f8a303">
+      <sDescription>pink noise</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>pink9octs.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="pink noise"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[const uint8_t * dyad(void){
+   static const uint8_t d[] = {0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4};
+   return d;
+}
+int32_t r = 0;
+int32_t accu = 0;
+int32_t a_gens[4];
+int32_t k_gens[5];
+uint8_t k_i = 0;
+
+int32_t rnd(void){
+  return (r *= 69069) >> 7;
+}]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < 4; i++){
+  a_gens[i] = 0;
+  k_gens[i] = 0;
+}
+k_gens[4] = 0;
+r = 123576 + GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[// audio rate generators
+for(uint8_t a_i = 0; a_i < 15; a_i++){
+  int32_t *a_gen; a_gen = a_gens + dyad()[a_i];
+  accu -= *a_gen;
+  outlet_out[a_i] = accu += *a_gen = rnd();
+}
+// The last slot is reserved to the krate generators
+k_i++;
+k_i &= 15;
+int32_t *k_gen; k_gen = k_gens + dyad()[k_i];
+accu -= *k_gen;
+outlet_out[15] = accu += *k_gen = rnd();
+r++;
+//for high freq noise
+for(uint8_t a_i = 0; a_i < 16; a_i++){
+   outlet_out[a_i] += rnd();
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
