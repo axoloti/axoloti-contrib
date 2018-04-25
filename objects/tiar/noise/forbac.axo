@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="forbac" uuid="2ec6c340-e522-4175-93a6-5cfcb0fecf3a">
+      <sDescription>Forward Backward noise generator</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>forbac.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="pink noise"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="cycle">
+            <MinValue i="2"/>
+            <MaxValue i="512"/>
+         </int32>
+         <int32 name="offset">
+            <MinValue i="-200"/>
+            <MaxValue i="200"/>
+         </int32>
+         <int32 name="jitter">
+            <MinValue i="0"/>
+            <MaxValue i="512"/>
+         </int32>
+         <bool32.tgl name="invert"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t inv; // -1 if invert needed
+// inv =  1  =>   F B F B
+//                / \ / \
+//
+// inv = -1  =>   F B-F-B
+//                / \
+//                    \ /
+int32_t c = 0;
+int32_t r;
+int32_t r2 = 137;
+int32_t s = 1 << (32 - 4);]]></code.declaration>
+      <code.init><![CDATA[r = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[inv = param_invert ? -1 : 1;
+int32_t resetValue =  ___SMMLA(r2 = r2*69069 + 1, param_jitter, param_cycle + param_offset);]]></code.krate>
+      <code.srate><![CDATA[c--;
+if(c <= -param_cycle){
+  c = resetValue;
+  s *= inv;
+}
+r = (c <= 0 ? -1511872763 * (r - 1) : 69069 * r + 1);
+outlet_out = ___SMMUL(s, r);]]></code.srate>
+   </obj.normal>
+</objdefs>

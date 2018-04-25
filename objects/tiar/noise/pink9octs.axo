@@ -11,41 +11,47 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[const uint8_t * dyad(void){
-   static const uint8_t d[] = {0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4};
-   return d;
+      <code.declaration><![CDATA[int32_t r = 0;
+const int32_t rnd(void){
+  return (r = r * 69069 ) >> 7;
 }
-int32_t r = 0;
-int32_t accu = 0;
-int32_t a_gens[4];
-int32_t k_gens[5];
-uint8_t k_i = 0;
 
-int32_t rnd(void){
-  return (r *= 69069) >> 7;
-}]]></code.declaration>
-      <code.init><![CDATA[for(int i = 0; i < 4; i++){
-  a_gens[i] = 0;
-  k_gens[i] = 0;
+uint8_t k_i;
+int32_t k_r[5];
+int32_t* k_rt[16] = {
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +     3,
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +       4};
+int32_t rt0 = 0, rt1 = 0, rt2 = 0, rt3 = 0;
+int32_t acc = 0;]]></code.declaration>
+      <code.init><![CDATA[for(uint8_t i = 0; i < 5; i++){
+  k_r[i] = 0;
 }
-k_gens[4] = 0;
-r = 123576 + GenerateRandomNumber();]]></code.init>
-      <code.krate><![CDATA[// audio rate generators
-for(uint8_t a_i = 0; a_i < 15; a_i++){
-  int32_t *a_gen; a_gen = a_gens + dyad()[a_i];
-  accu -= *a_gen;
-  outlet_out[a_i] = accu += *a_gen = rnd();
-}
-// The last slot is reserved to the krate generators
-k_i++;
-k_i &= 15;
-int32_t *k_gen; k_gen = k_gens + dyad()[k_i];
-accu -= *k_gen;
-outlet_out[15] = accu += *k_gen = rnd();
-r++;
-//for high freq noise
-for(uint8_t a_i = 0; a_i < 16; a_i++){
-   outlet_out[a_i] += rnd();
-}]]></code.krate>
+r = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[acc -= rt0; { outlet_out[ 0] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 1] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[ 2] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt2; { outlet_out[ 3] = rnd() + (acc += rt2 = rnd()); }
+acc -= rt0; { outlet_out[ 4] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 5] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[ 6] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt3; { outlet_out[ 7] = rnd() + (acc += rt3 = rnd()); }
+acc -= rt0; { outlet_out[ 8] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 9] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[10] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt2; { outlet_out[11] = rnd() + (acc += rt2 = rnd()); }
+acc -= rt0; { outlet_out[12] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[13] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[14] = rnd() + (acc += rt0 = rnd()); }
+acc -= *k_rt[k_i];  outlet_out[15] = rnd() + (acc += *k_rt[k_i] = rnd());
+
+k_i++; k_i &= 15;
+
+r ^= GenerateRandomNumber();]]></code.krate>
    </obj.normal>
 </objdefs>
