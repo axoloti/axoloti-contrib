@@ -5,7 +5,7 @@
    </obj>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="140" y="14">
       <params>
-         <frac32.s.map name="pitch" value="7.623682975769043"/>
+         <frac32.s.map name="pitch" value="2.643233299255371"/>
       </params>
       <attribs/>
    </obj>
@@ -13,15 +13,15 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="392" y="14">
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="364" y="14">
       <params>
-         <frac32.u.map name="amp" value="12.5"/>
+         <frac32.u.map name="amp" value="14.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/noise/forbac" uuid="2ec6c340-e522-4175-93a6-5cfcb0fecf3a" name="forbac_1" x="490" y="14">
+   <obj type="tiar/noise/forbac m" uuid="2ec6c340-e522-4175-93a6-5cfcb0fecf3a" name="forbac_1" x="490" y="14">
       <params>
-         <frac32.u.map name="cycle" value="14.0"/>
+         <frac32.u.map name="cycle" value="15.5"/>
          <int32 name="offset" value="1"/>
          <int32 name="jitter" value="0"/>
          <bool32.tgl name="invert" value="1"/>
@@ -31,9 +31,9 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="644" y="14">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="-3.0"/>
+         <frac32.s.map name="d" value="1.0"/>
          <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="0.0"/>
+         <frac32.s.map name="r" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -41,7 +41,7 @@
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="30.0"/>
-         <frac32.u.map name="s" value="9.5"/>
+         <frac32.u.map name="s" value="64.0"/>
          <frac32.s.map name="r" value="22.0"/>
       </params>
       <attribs/>
@@ -54,19 +54,21 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="980" y="14">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="994" y="14">
+      <params>
+         <frac32.u.map name="amp" value="30.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1092" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="1078" y="14">
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="1190" y="14">
       <params/>
       <attribs/>
    </obj>
    <nets>
-      <net>
-         <source obj="forbac_1" outlet="out"/>
-         <dest obj="vca_1" inlet="a"/>
-      </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="adsr_1" inlet="gate"/>
@@ -74,9 +76,7 @@
       </net>
       <net>
          <source obj="vca_1" outlet="o"/>
-         <dest obj="out_1" inlet="left"/>
-         <dest obj="out_1" inlet="right"/>
-         <dest obj="scope_1" inlet="in"/>
+         <dest obj="*c_2" inlet="in"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -100,6 +100,16 @@
          <dest obj="*_1" inlet="b"/>
       </net>
       <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="forbac_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
          <source obj="uniform_2" outlet="rand"/>
          <dest obj="*c_1" inlet="in"/>
       </net>
@@ -109,9 +119,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>47</x>
-      <y>6</y>
-      <width>1262</width>
-      <height>346</height>
+      <x>65</x>
+      <y>320</y>
+      <width>1543</width>
+      <height>485</height>
    </windowPos>
 </patch-1.0>
