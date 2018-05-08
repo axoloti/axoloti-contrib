@@ -411,13 +411,12 @@ __attribute__ ((noinline)) void printval(char *str, int par)
      if (format == F_PNFULL) i += 64;
 	if (format == F_POS || format == F_DPOS || format == F_PNFULL) {
 		digit = i / 100;
-		if (digit) { *str++ = '0' + digit; digits = 1; } else *str++ = ' ';
+		if (digit) { *str++ = '0' + digit; digits++; } else *str++ = ' ';
 		i -= digit * 100;
 	}
 	
 	digit = i / 10;
-	if (digit) { *str++ = '0' + digit; digits = 1; }
-	else if (!digits) *str++ = ' ';
+	if (digit || digits) { *str++ = '0' + digit; digits++; } else *str++ = ' ';
 	i -= digit * 10;
 	
 	*str++ = '0' + i;
