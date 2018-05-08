@@ -12,7 +12,7 @@
       </attribs>
    </obj>
    <comment type="patch/comment" x="448" y="0" text="=== Please note! This patch runs on the Audiothingies P6 only! ==="/>
-   <patchobj type="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678" name="memory_1" x="826" y="0">
+   <patchobj type="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678" name="memory_1" x="882" y="0">
       <params>
          <frac32.u.map name="patch" value="16.5"/>
       </params>
@@ -220,19 +220,19 @@ prev_wrtrig = inlet_write;]]></code.krate>
       <params>
          <frac32.u.map name="osc_mix:gain1" value="63.0"/>
          <frac32.u.map name="osc_mix:gain2" value="64.0"/>
-         <frac32.s.map name="lp_1:pitch" value="4.0"/>
-         <frac32.u.map name="lp_1:reso" value="21.0"/>
-         <frac32.u.map name="f_fmix:gain1" value="50.0"/>
-         <frac32.u.map name="f_fmix:gain2" value="36.0"/>
+         <frac32.s.map name="lp_1:pitch" value="18.0"/>
+         <frac32.u.map name="lp_1:reso" value="0.0"/>
+         <frac32.u.map name="f_fmix:gain1" value="64.0"/>
+         <frac32.u.map name="f_fmix:gain2" value="64.0"/>
          <frac32.s.map name="a_env:a" value="-64.0"/>
          <frac32.s.map name="a_env:d" value="-24.0"/>
          <frac32.u.map name="a_env:s" value="64.0"/>
          <frac32.s.map name="a_env:r" value="-12.0"/>
-         <frac32.s.map name="f_env:a" value="-57.5"/>
-         <frac32.s.map name="f_env:d" value="-19.0"/>
+         <frac32.s.map name="f_env:a" value="-64.0"/>
+         <frac32.s.map name="f_env:d" value="-64.0"/>
          <frac32.u.map name="f_env:s" value="13.0"/>
          <frac32.s.map name="f_env:r" value="11.0"/>
-         <frac32.u.map name="osc2_fmix:gain2" value="6.0"/>
+         <frac32.u.map name="osc2_fmix:gain2" value="0.0"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="12"/>
@@ -495,25 +495,34 @@ LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);]]></c
 }]]></code.krate>
       </object>
    </patchobj>
-   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="546" y="14">
+   <obj type="ricard/logic/qdecodectrl" uuid="0b7e6601-bb89-4d6d-90bb-d85b9841c833" name="qctrl_1" x="518" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="rate" selection="half"/>
+         <spinner attributeName="debounce" value="8"/>
+         <spinner attributeName="factor" value="4"/>
+         <spinner attributeName="thresh" value="50"/>
+      </attribs>
+   </obj>
+   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="658" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="read" x="714" y="14">
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="read" x="770" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="1008" y="14">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="1036" y="14">
       <params>
          <frac32.s.map name="value" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="write" x="714" y="70">
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="write" x="770" y="70">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="1008" y="98">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="1036" y="98">
       <params>
          <frac32.u.map name="value" value="2.0"/>
       </params>
@@ -529,33 +538,33 @@ LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);]]></c
    <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_1" x="182" y="140">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_1" x="280" y="140">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_1" x="322" y="140">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="10"/>
       </attribs>
    </obj>
-   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_3" x="406" y="140">
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_3" x="448" y="140">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_9" x="504" y="140">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_9" x="588" y="140">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="18"/>
       </attribs>
    </obj>
-   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_5" x="630" y="140">
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_5" x="728" y="140">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
    <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_4" x="56" y="182">
@@ -565,27 +574,34 @@ LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);]]></c
          <spinner attributeName="bit" value="3"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_2" x="280" y="182">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_2" x="322" y="182">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="11"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="1008" y="182">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="1036" y="182">
       <params>
          <frac32.u.map name="value" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_10" x="504" y="196">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_10" x="588" y="196">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="19"/>
       </attribs>
    </obj>
-   <patchobj type="patch/object" uuid="f5b0622e-53b1-4585-a994-e8f5ff429233" name="menu_1" x="798" y="238">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_5" x="56" y="252">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="6"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="f5b0622e-53b1-4585-a994-e8f5ff429233" name="menu_1" x="882" y="252">
       <params/>
       <attribs>
          <objref attributeName="lcdctrl" obj="lcdctrl_1"/>
@@ -777,49 +793,42 @@ INCDEC(4);
 INCDEC(5);]]></code.krate>
       </object>
    </patchobj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_5" x="56" y="252">
-      <params/>
-      <attribs>
-         <objref attributeName="port" obj="165ctrl_1"/>
-         <spinner attributeName="bit" value="6"/>
-      </attribs>
-   </obj>
    <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_2" x="182" y="266">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_7" x="280" y="266">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_7" x="322" y="266">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="14"/>
       </attribs>
    </obj>
-   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_4" x="406" y="266">
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_4" x="448" y="266">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_11" x="504" y="266">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_11" x="588" y="266">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="22"/>
       </attribs>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_4" x="1008" y="266">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_4" x="1036" y="266">
       <params>
          <frac32.u.map name="value" value="34.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_6" x="630" y="280">
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_6" x="728" y="280">
       <params/>
       <attribs>
-         <combo attributeName="rate" selection="full"/>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
       </attribs>
    </obj>
    <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_6" x="56" y="308">
@@ -829,21 +838,21 @@ INCDEC(5);]]></code.krate>
          <spinner attributeName="bit" value="7"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_8" x="280" y="322">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_8" x="322" y="322">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="15"/>
       </attribs>
    </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_12" x="504" y="322">
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_12" x="588" y="322">
       <params/>
       <attribs>
          <objref attributeName="port" obj="165ctrl_1"/>
          <spinner attributeName="bit" value="23"/>
       </attribs>
    </obj>
-   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="1008" y="364">
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="1036" y="364">
       <params/>
       <attribs/>
    </obj>
@@ -994,7 +1003,61 @@ else {
 }]]></code.krate>
       </object>
    </patchobj>
-   <patchobj type="patch/object" uuid="44bbf5eb-2a08-4402-a526-88ae5e2be174" name="clock_1" x="952" y="434">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_5" x="728" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_3" x="56" y="504">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PC8"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_15" x="168" y="504">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="8"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_16" x="294" y="504">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="12"/>
+      </attribs>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="742" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="644" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_2" x="56" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PC9"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_17" x="168" y="588">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="16"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_18" x="294" y="588">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="20"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="44bbf5eb-2a08-4402-a526-88ae5e2be174" name="clock_1" x="980" y="588">
       <params>
          <frac32.u.map name="bpm" value="0.0"/>
       </params>
@@ -1080,80 +1143,6 @@ outlet_pos24ppq = _pos24ppq;
 outlet_active = _active;]]></code.krate>
       </object>
    </patchobj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_5" x="728" y="448">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_3" x="56" y="504">
-      <params/>
-      <attribs>
-         <combo attributeName="pad" selection="PC8"/>
-         <combo attributeName="mode" selection="pulldown"/>
-      </attribs>
-   </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_15" x="168" y="504">
-      <params/>
-      <attribs>
-         <objref attributeName="port" obj="165ctrl_1"/>
-         <spinner attributeName="bit" value="8"/>
-      </attribs>
-   </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_16" x="294" y="504">
-      <params/>
-      <attribs>
-         <objref attributeName="port" obj="165ctrl_1"/>
-         <spinner attributeName="bit" value="12"/>
-      </attribs>
-   </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="742" y="504">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="644" y="574">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="952" y="574">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_2" x="56" y="588">
-      <params/>
-      <attribs>
-         <combo attributeName="pad" selection="PC9"/>
-         <combo attributeName="mode" selection="pulldown"/>
-      </attribs>
-   </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_17" x="168" y="588">
-      <params/>
-      <attribs>
-         <objref attributeName="port" obj="165ctrl_1"/>
-         <spinner attributeName="bit" value="16"/>
-      </attribs>
-   </obj>
-   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_18" x="294" y="588">
-      <params/>
-      <attribs>
-         <objref attributeName="port" obj="165ctrl_1"/>
-         <spinner attributeName="bit" value="20"/>
-      </attribs>
-   </obj>
-   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="812" y="602">
-      <params/>
-      <attribs>
-         <spinner attributeName="value" value="3"/>
-      </attribs>
-   </obj>
-   <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="==_1" x="1050" y="602">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_4" x="952" y="630">
-      <params/>
-      <attribs>
-         <spinner attributeName="value" value="0"/>
-      </attribs>
-   </obj>
    <obj type="logic/decode/bin 8" uuid="dfc0a6e9d7e817cec64fd01f6972f64d897863a4" name="bin_1" x="42" y="686">
       <params/>
       <attribs/>
@@ -1190,6 +1179,20 @@ outlet_active = _active;]]></code.krate>
          <spinner attributeName="bit" value="6"/>
       </attribs>
    </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="812" y="700">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="3"/>
+      </attribs>
+   </obj>
+   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="952" y="728">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="==_1" x="1050" y="756">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_2" x="294" y="770">
       <params/>
       <attribs>
@@ -1216,6 +1219,12 @@ outlet_active = _active;]]></code.krate>
       <attribs>
          <objref attributeName="port" obj="595ctrl_1"/>
          <spinner attributeName="bit" value="7"/>
+      </attribs>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_4" x="952" y="784">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
       </attribs>
    </obj>
    <nets>
@@ -1459,7 +1468,7 @@ outlet_active = _active;]]></code.krate>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>9</x>
+      <x>64</x>
       <y>25</y>
       <width>1271</width>
       <height>718</height>
