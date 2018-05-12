@@ -141,21 +141,20 @@ lfo[6]= 1.0f - inlet_lfo3*(0.02f/(1<<27));
 // DPW anti ali
 if(attr_algo == 2){
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+int i7 = minKey % 7;
 for(i = minKey; i <= maxKey; i++) {
   float _env = env[i];
   env[i] += (gates[i]>env[i]?attack:release) * (gates[i] - env[i]);
   // if(env[i]<0.01f) continue;
   float denv = (env[i] - _env) * (1.0f/BUFSIZE);
-  float _dp = dp[i]*lfo[i%7];
+  float _dp = dp[i] * lfo[i7];
+  i7++; if(i7 >= 7) i7 = 0;
   float _p = p[i];
   for(j = 0; j < BUFSIZE; j++) {
-    _env += denv;
     _p += _dp;
     // branchless code, more cpu but constant 72% for 61 notes
     _p -= (_p >1);
-    z[j] += _env * (
-    	  K * _p + C_K + (_p < r) * (K + _p * (1 + A * _p))
-    	);
+    z[j] += (K * _p + C_K + (_p < r) * (K + _p * (1 + A * _p)))*(_env += denv);
   /*  
    // code with branching => less cpu but cpu variations => glitches
    // 74% for 61+24 notes
@@ -179,16 +178,14 @@ else
 
 {
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
-int i7=0;
+int i7 = minKey % 7;
 for(i = minKey; i <= maxKey; i++) {
   float _env = env[i];
   env[i] += (gates[i]>env[i]?attack:release) * (gates[i] - env[i]);
   float denv = (env[i] - _env) * (1.0f/BUFSIZE);
   float _p = p[i];
-  float _dp = dp[i]*lfo[i7];
-  i7++;
-  if(i7 >= 7)
-    i7 = 0;
+  float _dp = dp[i] * lfo[i7];
+  i7++; if(i7 >= 7) i7 = 0;
   for(j = 0; j < BUFSIZE; j++) {
     _env += denv;
     _p += _dp;
