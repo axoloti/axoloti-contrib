@@ -1,0 +1,125 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/PIWT/gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d" name="gen_1" x="336" y="0">
+      <params/>
+      <attribs>
+         <text attributeName="function">
+            <sText><![CDATA[x<0.5f?exp(-10*x)-0.1f*exp(-60*(0.5f-x)):-0.3f*exp(-20*(1-x))+0.1f*exp(-20*(x-0.5f))]]></sText>
+         </text>
+         <combo attributeName="size" selection="512"/>
+         <combo attributeName="location" selection="IntRAM"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_1" x="658" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="546" y="28" text="1493 1877"/>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="14" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="322" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/PIWT/oscLight" uuid="6850cfa5-d3dd-4cbf-87d4-48a6d0b03706" name="oscLight_1" x="434" y="84">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="piwt" obj="gen_1"/>
+      </attribs>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="560" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="728" y="84">
+      <params>
+         <frac32.s.map name="a" value="-54.0"/>
+         <frac32.s.map name="d" value="1.0"/>
+         <frac32.u.map name="s" value="44.5"/>
+         <frac32.s.map name="r" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="826" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="882" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="574" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="644" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="scope_synchro" x="70" y="210">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="182" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="oscLight_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="scope_synchro" inlet="pitch"/>
+         <dest obj="oscLight_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="scope_synchro" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_1" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>821</x>
+      <y>42</y>
+      <width>1073</width>
+      <height>596</height>
+   </windowPos>
+</patch-1.0>

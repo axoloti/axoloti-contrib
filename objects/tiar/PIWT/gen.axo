@@ -121,6 +121,19 @@ void prepare(void){
     Iv[i] = I1;
     I1 += v[i] + (v[i+1]-v[i])/2; 
   }
+}
+// used by tiar/PIWT/oscLight
+int32_t I1p32(uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x003FFFFF) << 9;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 22)) >> 22;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  return Iv[i] + (___SMMLA(v[i+1] - v[i], ___SMMUL(a, a), ___SMMUL( v[i], a)) << 1);
 }]]></code.declaration>
       <code.init><![CDATA[static int32_t v_[attr_poly][LENGTH+1] LOCATION;
 static int32_t Iv_[attr_poly][LENGTH] LOCATION;

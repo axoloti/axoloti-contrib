@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="oscLightTri" uuid="06c61703-5a49-46d3-9da4-321b46fea096">
+      <sDescription>PIWT osc, needs to connect to a PIWT.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>PIWToscLight.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="freq offsetB"/>
+         <frac32.bipolar name="freq offsetC"/>
+         <bool32 name="disable" description="disables the object"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="piwt"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t pA = 0, dpA = 1;  // phase and delta phase aka freq
+uint32_t pB = 0, dpB = 1;  // phase and delta phase aka freq
+uint32_t pC = 0, dpC = 1;  // phase and delta phase aka freq
+int32_t I1_1 = 0;
+int32_t inv;]]></code.declaration>
+      <code.krate><![CDATA[if(!inlet_disable){
+  int32_t nextDpA;
+  MTOFEXTENDED(param_pitch + inlet_pitch, nextDpA);
+  int32_t nextDpB = ___SMMLA(0x01000000, inlet_freq_space_offsetB, nextDpA);
+  int32_t nextDpC = ___SMMLA(0x01000000, inlet_freq_space_offsetC, nextDpA);
+  nextDpA >>= 32 - 22 - attr_piwt.LENGTHPOW;
+  // the float division execs in parallel with integer operations.
+  float nextInv = (((float)(5<<12)) / arm::q_to_float(nextDpA, 32));
+  nextDpB >>= 32 - 22 - attr_piwt.LENGTHPOW;
+  nextDpC >>= 32 - 22 - attr_piwt.LENGTHPOW;
+  for(int j = 0; j < BUFSIZE; j++){
+    int32_t I1_0 = attr_piwt.I1p32(pB += dpB) + attr_piwt.I1p32(pC += dpC) - attr_piwt.I1p32(pA += dpA);
+    outlet_wave[j] = ___SMMUL(I1_0 - I1_1, inv) << 13;
+    I1_1 = I1_0;
+  }
+  dpA = nextDpA;
+  dpB = nextDpB;
+  dpC = nextDpC;
+  inv = (int32_t) nextInv;
+} else { //disabled
+  for(int j = 0; j < BUFSIZE; j++){
+    outlet_wave[j] = 0;
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

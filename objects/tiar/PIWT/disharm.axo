@@ -18,19 +18,7 @@
          <spinner name="hG" MinValue="0" MaxValue="128" DefaultValue="0"/>
          <spinner name="hH" MinValue="0" MaxValue="128" DefaultValue="0"/>
       </attribs>
-      <code.declaration><![CDATA[float mod1(float x) { return (1024+x) - ((int)(x+1024)); }
-float saw(float x){ return 2 * mod1(x) - 1; }
-float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
-  x = mod1(x);
-  if(x < r)
-    return -1 + (2 * x / r);
-  else {
-    return 1 - 2 * (x - r) / (1.0f - r);
-  }
-}
-float tri(float x){ return tri(x,0.5f); }
-float sin1(float x){ x = tri(x); return x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }]]></code.declaration>
-      <code.init><![CDATA[for(int i=0;i<256;i++){
+      <code.init><![CDATA[for(int i=0;i<attr_piwt.LENGTH;i++){
   attr_piwt.fv[i] = arm::q_to_float(attr_piwt.v[i], 27-attr_piwt.GAIN);
 }
 
@@ -44,15 +32,15 @@ float c = 0;
 float p = 0;
 float dp = h[harmo] * (1.0f / attr_piwt.LENGTH);
 for (int i = 0; i < attr_piwt.LENGTH; i++) {
-  c += attr_piwt.fv[i] * sin1(p + 0.25f);
-  s += attr_piwt.fv[i] * sin1(p);
+  c += attr_piwt.fv[i] * attr_piwt.sin1(p + 0.25f);
+  s += attr_piwt.fv[i] * attr_piwt.sin1(p);
   p += dp;
 }
 c *= 2.0f / attr_piwt.LENGTH;
 s *= 2.0f / attr_piwt.LENGTH;
 p = 0;
 for (int i = 0; i < attr_piwt.LENGTH; i++) {
-    attr_piwt.fv[i] -= c * sin1(p + 0.25f) + s * sin1(p);
+    attr_piwt.fv[i] -= c * attr_piwt.sin1(p + 0.25f) + s * attr_piwt.sin1(p);
     p += dp;
 }
 }
