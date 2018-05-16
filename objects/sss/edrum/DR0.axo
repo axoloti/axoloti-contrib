@@ -16,6 +16,7 @@ Best to trigger this with a trigger instead of a gate.</sDescription>
          <frac32 name="Ndec"/>
          <frac32 name="pitch"/>
          <frac32 name="Pamt"/>
+         <frac32 name="FM"/>
          <frac32 name="E2C"/>
          <frac32 name="sineLvl"/>
          <frac32 name="noiseLvl"/>
@@ -58,7 +59,7 @@ Best to trigger this with a trigger instead of a gate.</sDescription>
       <attribs/>
       <code.declaration><![CDATA[uint32_t phase;
 int32_t sine;
-
+int32_t v27=1<<27;
 uint32_t Penv;
 uint32_t Venv;
 uint32_t Nenv;
@@ -169,7 +170,7 @@ cut=param_LP+___SMMUL(__SSAT(param_E2C+inlet_E2C,28)<<3,VENV<<2);
 outlet_Penv=PENV;
 outlet_Venv=__USAT(VENV,27);
 int32_t Noise=(1<<28)-(__SSAT(param_cut+inlet_cut,28)+(1<<27));
-int32_t FM=___SMMUL(freq<<1,param_FM<<4);
+int32_t FM=___SMMUL(freq<<1,param_FM+inlet_FM<<3);
 
 int32_t Vstp=(VENV-PV)>>4;
 int32_t Pstp=(PENV-PP)>>4;
@@ -205,11 +206,15 @@ int32_t out;
 
 noise = out<<4;
 int32_t tmp=val;
+int32_t over=v27-(tmp>0?tmp:-tmp);
 if(param_FM<0){
-tmp=tmp>0?tmp:-tmp;
+tmp=tmp>0?over:-tmp;
+}
+else{
+tmp=tmp>0?-tmp:tmp;
 }
 hp+=tmp-hp>>9;
-phase+=freq+___SMMUL(NENV,out>>2)+___SMMUL(FM<<3,tmp-hp<<3);
+phase+=freq+___SMMUL(NENV,out>>2)+(___SMMUL(FM,tmp-hp)<<8);
 
 SINE2TINTERP(phase,sine)
 
