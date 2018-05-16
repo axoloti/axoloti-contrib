@@ -14,10 +14,10 @@ sample start-and endpoints can be accessed &apos;from the outside&apos; as a tab
          <int32.positive name="slot" description="select a slot to record into (0 - 127)"/>
          <bool32.risingfalling name="arm" description="arm the recorder or stop recording "/>
          <bool32.rising name="rec" description="a pulse will start a recording a sample in the selected slot if &apos;arm&apos; is 1 and the selected slot doesn&apos;t already contain a sample"/>
-         <bool32.rising name="getend" description="get the end of the used area inside the sample table"/>
          <bool32.rising name="delete" description="delete the current slot"/>
          <bool32.rising name="defrag" description="defragment the sample-table "/>
          <bool32.rising name="clear" description="clear "/>
+         <bool32.rising name="reinit" description="re-initialize &apos;sb rec&apos; after loading a &apos;set&apos;"/>
       </inlets>
       <outlets>
          <bool32.pulse name="rec" description="issues a pulse when a new slot is recorded"/>
@@ -71,7 +71,7 @@ if (arm){
 	if ((inlet_rec && !ntrig ) && !full) {	
 			 ntrig = 1;	
 			 array [inlet_slot << 1] = recpos;
-	if (preslot > -1)   lchunk [preslot] = recpos;
+	if (preslot > -1)   {lchunk [preslot] = recpos; array [(preslot << 1) + 1] = 1;}
 			 chunk [chunks] = inlet_slot;
 			 preslot = inlet_slot;
 			 chunks += 1;			
@@ -133,16 +133,18 @@ recpos -= slength;
  } 
 delcount = 0;
 }
-if (!inlet_defrag) ctrig = 0;
+if (!inlet_defrag)  ctrig = 0;
 
 // get end
-if (inlet_getend && !gtrig) {
+if (inlet_reinit && !gtrig) {
+	preslot = -1;
+	delcount = 0;
  recpos = 0;
  gtrig = 1;
  int i;
  for(i=0;i<256;i+= 4) if (array[i + 1] > recpos) recpos = array[i + 1];
  } 
-if (!inlet_getend) gtrig = 0;
+if (!inlet_reinit) gtrig = 0;
 
 	outlet_rec = ntrig;
   	outlet_active = full;

@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="note rec" uuid="00247a75-4fcf-4b92-ad38-168b461d1fc6">
+      <sDescription>records notes,as pitch and velocity,to a table with the same name as the object.
+after recording,the recorded notes are translated to a sequence with 512ppq resolution.
+the maximum recording length is 42 seconds,with a maxium of 512 events (or,256 notes played)
+outlet &apos;length&apos; provides the recording length,in order to drive a &apos;ktransport&apos; -object.
+use &apos;note play&apos; to play the sequence.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.risingfalling name="rec" description="start/stop recording"/>
+         <bool32.rising name="trigger" description="record next event"/>
+         <int32 name="note" description="note 0 - 127"/>
+         <int32 name="velo" description="velocity  0 -127"/>
+      </inlets>
+      <outlets>
+         <int32 name="length" description="length of recording in k-ticks"/>
+         <int32 name="index" description="last event index"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t recarray [512];
+uint32_t tc;
+uint16_t tcc;
+uint16_t count;
+bool rec;
+
+static const uint16_t LENGTHPOW = 9;
+static const uint16_t LENGTH = 1<<9;
+static const uint16_t LENGTHMASK = (1<<9)-1;
+static const uint16_t BITS = 16;
+static const uint16_t GAIN = 12;
+uint16_t array[LENGTH];
+
+uint32_t bitmask =  0b11111111111111110000000000000000;
+uint32_t bitmask2 = 0b00000000000000001111111111111111;
+
+uint16_t target;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_rec && !rec) {rec = 1;tc = 0;count = 0;}
+
+if (rec){
+	tc++;
+	tcc = tc >> 1;
+if (inlet_trigger){
+	recarray [count] = ((tcc << 16 ) + (inlet_note + (inlet_velo << 8)));
+	count += 1;	
+}	
+}
+
+outlet_length = tc;
+
+if (rec && (!inlet_rec)) {
+ rec = 0;
+ int i;
+ for(i=0;i<512;i++) array[i]=0;
+ int ii;
+ for(ii=0;ii<count;ii++) {
+ 	target = (((recarray [ii] & bitmask ) / tcc) * 512) >> 16;
+ 	while (array [target] > 0 ) target ++;
+ array[target] = recarray [ii] & bitmask2;	
+ }
+ }
+
+ outlet_index= count;]]></code.krate>
+   </obj.normal>
+</objdefs>

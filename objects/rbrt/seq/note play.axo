@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="note play" uuid="ccf421a5-178b-493d-bf07-cdeb662cad0c">
+      <sDescription>play back a sequence recorded with &apos;note rec&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32.positive name="index" description="index (0 - 512)"/>
+         <bool32.risingfalling name="play" description="start/stop"/>
+         <bool32.rising name="stopall" description="stop all active notes"/>
+      </inlets>
+      <outlets>
+         <int32 name="note" description=""/>
+         <int32 name="velocity"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint16_t v;
+uint16_t vout;
+bool play;
+uint8_t active [127];
+uint8_t note;
+uint8_t velo;
+uint8_t i;]]></code.declaration>
+      <code.init><![CDATA[i = 128;]]></code.init>
+      <code.krate><![CDATA[if (inlet_play && !play) play = 1;
+
+if (play) {
+v = attr_table.array [inlet_index];
+if (v && ( v != vout)){
+	vout = v;
+	note = vout & 127;
+	velo = vout >> 8;
+	outlet_note = note;
+	outlet_velocity = velo;
+	active [note]  = 1;
+}
+}
+if (!inlet_play && play ) {play = 0;i = 0;}
+if (inlet_stopall) i = 0;
+
+if (i < 128) {
+	if (active [i] ) {outlet_note = i;outlet_velocity = 0;active [i] = 0;}
+	i ++;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

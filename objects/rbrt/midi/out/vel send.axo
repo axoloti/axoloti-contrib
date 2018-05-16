@@ -1,15 +1,12 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="vel send 4" uuid="89799ba7-ac28-4c9a-a155-8492609fa402">
-      <sDescription>sends 4 note velocities,no gate,no bullshit.for controllers that feel like receiving them.</sDescription>
+   <obj.normal id="vel send" uuid="a630db84-96f3-4d5f-99d8-5376c1c37b9c">
+      <sDescription>sends note velocities,no gate,no bullshit.for controllers that feel like receiving them.</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
       <helpPatch>midi_out.axh</helpPatch>
       <inlets>
          <int32 name="startnote"/>
          <int32 name="v0"/>
-         <int32 name="v1"/>
-         <int32 name="v2"/>
-         <int32 name="v3"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -45,27 +42,12 @@
          <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
       </attribs>
       <code.declaration><![CDATA[uint8_t prev0;
-uint8_t prev1;
-uint8_t prev2;
-uint8_t prev3;
 uint8_t startnote;]]></code.declaration>
       <code.krate><![CDATA[startnote = param_startnote + inlet_startnote;
 
 
 if (inlet_v0 != prev0) {
 MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote,inlet_v0);  prev0 = inlet_v0;
-}
-
-if (inlet_v1 != prev1) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote + 1,inlet_v1);  prev1 = inlet_v1;
-}
-
-if (inlet_v2 != prev2) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote + 2,inlet_v2);  prev2 = inlet_v2;
-}
-
-if (inlet_v3 != prev3) {
-MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),startnote + 3,inlet_v3);  prev3 = inlet_v3;
 }]]></code.krate>
    </obj.normal>
 </objdefs>
