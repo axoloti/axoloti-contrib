@@ -13,7 +13,7 @@
       <params>
          <int32 name="Preset" noLabel="true">
             <MinValue i="0"/>
-            <MaxValue i="4"/>
+            <MaxValue i="5"/>
          </int32>
       </params>
       <attribs/>
@@ -84,7 +84,17 @@ uint8_t w = 0;]]></code.declaration>
     - d[(uint8_t)(w+((uint8_t)255))]    
     )>>3;
   }
-}else{
+} else if(param_Preset == 5){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>1)  
+    - d[(uint8_t)(w+((uint8_t)47))]
+    - d[(uint8_t)(w+((uint8_t)137))]
+    + d[(uint8_t)(w+((uint8_t)255))] ;
+
+  }
+
+} else{
   for(int i = 0; i < BUFSIZE; i++){
     w--;
     d[w] = inlet_in[i]>>2;
