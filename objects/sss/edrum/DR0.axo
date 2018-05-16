@@ -67,7 +67,7 @@ int gtrig;
 int Gtrig;
 int32_t noise;
 int32_t val;
-
+int32_t hp;
 
 int32_t count;
 
@@ -204,8 +204,12 @@ int32_t out;
 }
 
 noise = out<<4;
-
-phase+=freq+___SMMUL(NENV,out>>2)+___SMMUL(FM<<3,val<<3);
+int32_t tmp=val;
+if(param_FM<0){
+tmp=tmp>0?tmp:-tmp;
+}
+hp+=tmp-hp>>9;
+phase+=freq+___SMMUL(NENV,out>>2)+___SMMUL(FM<<3,tmp-hp<<3);
 
 SINE2TINTERP(phase,sine)
 
