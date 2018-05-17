@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="BLITstringFilter" uuid="771a61f3-03f2-4236-b59b-639317253952">
+   <obj.normal id="BLITstringFilter2" uuid="80acad60-c0ac-4d25-a504-94aa604f0402">
       <author>Smashed Transistors</author>
       <license>LGPL</license>
       <helpPatch>BLITstringFilter.axh</helpPatch>
@@ -57,11 +57,11 @@ public:
 
     int32_t ampli = env[7];  // all cycles
     if((cpt&1))  ampli+= env[6];
-    if((cpt&3)==1) ampli+= env[5];
+    if((cpt&3)==2) ampli+= env[5];
     if((cpt&7)==3) ampli+= env[4];
-    if((cpt&15)==7) ampli+= env[3];
+    if((cpt&15)==5) ampli+= env[3];
     if((cpt&31)==15) ampli+= env[2];
-   if((cpt&63)==31) ampli+= env[1];
+   if((cpt&63)==27) ampli+= env[1];
    if((cpt&127)==63) ampli+= env[0];
 
     
@@ -104,11 +104,19 @@ for(int i = 0; i < 256; i++){ d[i] = 0; }]]></code.init>
 float vib1 = inlet_vib1 * 1e-10f;
 float vib2 = inlet_vib2 * 1e-10f;
 float f = 4186.009f;
-for(int i = 0; i < 12; i+=3){
-  blit[i    ].setF(f*vib0+f);  f *= 1.059463094f;
-  blit[i + 1].setF(f*vib1+f);  f *= 1.059463094f;
-  blit[i + 2].setF(f*vib2+f);  f *= 1.059463094f;
-}
+blit[0].setF(f*vib0+f);  f *= 1.059463094f;
+blit[1].setF(f*vib1+f);  f *= 1.059463094f;
+blit[2].setF(f*vib2+f);  f *= 1.059463094f;
+blit[3].setF(-f*vib0+f);  f *= 1.059463094f;
+blit[4].setF(-f*vib1+f);  f *= 1.059463094f;
+blit[5].setF(-f*vib2+f);  f *= 1.059463094f;
+blit[6].setF(0.9f*f*vib0+f);  f *= 1.059463094f;
+blit[7].setF(-0.9f*vib1+f);  f *= 1.059463094f;
+blit[8].setF(0.8f*vib2+f);  f *= 1.059463094f;
+blit[9].setF(-f*vib0+f);  f *= 1.059463094f;
+blit[10].setF(0.7f*f*vib1+f);  f *= 1.059463094f;
+blit[11].setF(0.5*f*vib2+f); 
+
 
 
 
@@ -140,22 +148,22 @@ for(int i = 0; i <12; i++){
     w--;
 
   d[w] = y[i];
-  integ = ___SMMUL(integ, 0x7FC00000)<<1;
+  integ = ___SMMUL(integ, 0x7D000000)<<1;
   int32_t filter = d[w]
-+ d[(uint8_t)(w+(uint8_t)23)]
-- d[(uint8_t)(w+(uint8_t)80)]
-+ d[(uint8_t)(w+(uint8_t)86)]
-+ d[(uint8_t)(w+(uint8_t)91)]
-- d[(uint8_t)(w+(uint8_t)94)]
-- d[(uint8_t)(w+(uint8_t)99)]
-+ d[(uint8_t)(w+(uint8_t)146)]
-- d[(uint8_t)(w+(uint8_t)160)]
-+ d[(uint8_t)(w+(uint8_t)163)]
-- d[(uint8_t)(w+(uint8_t)172)]
-- d[(uint8_t)(w+(uint8_t)174)]
-+ d[(uint8_t)(w+(uint8_t)190)]
-- d[(uint8_t)(w+(uint8_t)224)]
-+ d[(uint8_t)(w+(uint8_t)229)]
+- d[(uint8_t)(w+(uint8_t)7)]
+- d[(uint8_t)(w+(uint8_t)15)]
++ d[(uint8_t)(w+(uint8_t)19)]
+- d[(uint8_t)(w+(uint8_t)54)]
++ d[(uint8_t)(w+(uint8_t)82)]
++ d[(uint8_t)(w+(uint8_t)136)]
++ d[(uint8_t)(w+(uint8_t)138)]
++ d[(uint8_t)(w+(uint8_t)179)]
++ d[(uint8_t)(w+(uint8_t)203)]
++ d[(uint8_t)(w+(uint8_t)208)]
+- d[(uint8_t)(w+(uint8_t)221)]
+- d[(uint8_t)(w+(uint8_t)229)]
+- d[(uint8_t)(w+(uint8_t)249)]
+- d[(uint8_t)(w+(uint8_t)251)]
 - d[(uint8_t)(w+(uint8_t)255)]
 
 ;
