@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="PTRSaw" uuid="110f80bd-22a3-46f8-9d6e-5d70deeaa877">
+      <sDescription>Low CPU Anti Aliased Sawtooth using third order Polynomial Transition Region algoiritm.</sDescription>
+      <author>Ricard Wanderlof</author>
+      <license>LGPL</license>
+      <helpPatch>PTRSaw.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="saw" description="sawtooth wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="default pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, dp, y, D;
+// Sawtooth PTR polynomials for D(0) and D(1)
+float D0(float D, float dp) {
+	return -D * D + 2 * dp * D + 1;
+}
+float D1(float D, float dp) {
+	return D * D + (2 * dp - 4) * D + 3;
+}]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(0.25f/(1<<30));]]></code.krate>
+      <code.srate><![CDATA[p += dp; p -= (p > 1);
+D = p/dp;
+if (p < dp) y = D0(D, dp);
+else if (p < 2*dp) y = D1(D, dp);
+else y = 2*p - 1;
+y -= 2 * dp; 
+outlet_saw = (int32_t) (y * (1 << 27));]]></code.srate>
+   </obj.normal>
+</objdefs>
