@@ -59,10 +59,6 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="1092" y="224">
-      <params/>
-      <attribs/>
-   </obj>
    <comment type="patch/comment" x="98" y="266" text="Three LFOs for pitch drift"/>
    <comment type="patch/comment" x="462" y="266" text="8 octave polyphony with BLIT anti aliasing"/>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_11" x="84" y="280">
@@ -158,14 +154,6 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="1134" y="602">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1218" y="602">
-      <params/>
-      <attribs/>
-   </obj>
    <comment type="patch/comment" x="910" y="700" text="Volume CC"/>
    <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_2" x="784" y="756">
       <params/>
@@ -183,8 +171,23 @@
    <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="980" y="756">
       <params>
          <frac32.s.map name="pitch" value="8.0"/>
-         <frac32.u.map name="Q" value="22.5"/>
+         <frac32.u.map name="Q" value="19.0"/>
       </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1092" y="756">
+      <params>
+         <frac32.u.map name="InGain" value="11.0"/>
+         <frac32.u.map name="OutGain" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="1204" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1288" y="756">
+      <params/>
       <attribs/>
    </obj>
    <comment type="patch/comment" x="98" y="784" text="Three LFOs for pitch drift"/>
@@ -271,10 +274,6 @@
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="sine_2" inlet="pitch"/>
-      </net>
-      <net>
-         <source obj="sine_2" outlet="wave"/>
-         <dest obj="MIDscope_1" inlet="syncIn"/>
       </net>
       <net>
          <source obj="LFO depth_" outlet="out1"/>
@@ -370,7 +369,6 @@
       </net>
       <net>
          <source obj="hp_1" outlet="out"/>
-         <dest obj="MIDscope_1" inlet="in"/>
          <dest obj="ZDF_1" inlet="x"/>
       </net>
       <net>
@@ -383,12 +381,16 @@
       </net>
       <net>
          <source obj="ZDF_1" outlet="lp12"/>
-         <dest obj="vcaST_1" inlet="a2"/>
-         <dest obj="vcaST_1" inlet="a1"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
       </net>
       <net>
          <source obj="keyb_2" outlet="gate2"/>
          <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="vcaST_1" inlet="a2"/>
+         <dest obj="vcaST_1" inlet="a1"/>
       </net>
    </nets>
    <settings>
