@@ -66,8 +66,46 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_1" x="266" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="-10.474079132080078"/>
+         <frac32.u.map name="reso" value="37.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_2" x="364" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="3.3499574661254883"/>
+         <frac32.u.map name="reso" value="47.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_3" x="462" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="17.389057636260986"/>
+         <frac32.u.map name="reso" value="43.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="784" y="238">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/bp" uuid="b83f82f9efb70107bea8d668a1652b1acfbde8b0" name="bp_4" x="266" y="350">
+      <params>
+         <frac32.s.map name="pitch" value="39.0"/>
+         <frac32.u.map name="reso" value="25.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 5" uuid="60fd43468dd62b4c6df760fdfae121797a778e82" name="mix_1" x="658" y="350">
+      <params>
+         <frac32.u.map name="gain1" value="35.0"/>
+         <frac32.u.map name="gain2" value="50.0"/>
+         <frac32.u.map name="gain3" value="49.5"/>
+         <frac32.u.map name="gain4" value="49.5"/>
+         <frac32.u.map name="gain5" value="7.5"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="462">
@@ -180,9 +218,33 @@
       </net>
       <net>
          <source obj="BLITstringFilter2_1" outlet="out"/>
-         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="bp_1" inlet="in"/>
+         <dest obj="bp_2" inlet="in"/>
+         <dest obj="bp_3" inlet="in"/>
+         <dest obj="bp_4" inlet="in"/>
+         <dest obj="mix_1" inlet="in5"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
          <dest obj="vcaST_1" inlet="a1"/>
          <dest obj="vcaST_1" inlet="a2"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bp_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="bp_2" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="bp_3" outlet="out"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="bp_4" outlet="out"/>
+         <dest obj="mix_1" inlet="in4"/>
       </net>
    </nets>
    <settings>
@@ -192,7 +254,7 @@
    <windowPos>
       <x>183</x>
       <y>74</y>
-      <width>1568</width>
+      <width>819</width>
       <height>981</height>
    </windowPos>
 </patch-1.0>

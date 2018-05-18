@@ -167,6 +167,26 @@
       <attribs/>
    </obj>
    <comment type="patch/comment" x="910" y="700" text="Volume CC"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_2" x="784" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="882" y="756">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="19.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="980" y="756">
+      <params>
+         <frac32.s.map name="pitch" value="8.0"/>
+         <frac32.u.map name="Q" value="22.5"/>
+      </params>
+      <attribs/>
+   </obj>
    <comment type="patch/comment" x="98" y="784" text="Three LFOs for pitch drift"/>
    <comment type="patch/comment" x="462" y="784" text="8 octave polyphony with BLIT anti aliasing"/>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_23" x="84" y="798">
@@ -350,13 +370,25 @@
       </net>
       <net>
          <source obj="hp_1" outlet="out"/>
-         <dest obj="vcaST_1" inlet="a1"/>
          <dest obj="MIDscope_1" inlet="in"/>
-         <dest obj="vcaST_1" inlet="a2"/>
+         <dest obj="ZDF_1" inlet="x"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="hp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="lp12"/>
+         <dest obj="vcaST_1" inlet="a2"/>
+         <dest obj="vcaST_1" inlet="a1"/>
+      </net>
+      <net>
+         <source obj="keyb_2" outlet="gate2"/>
+         <dest obj="adsr_1" inlet="gate"/>
       </net>
    </nets>
    <settings>
