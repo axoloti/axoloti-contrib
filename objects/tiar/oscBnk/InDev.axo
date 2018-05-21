@@ -55,34 +55,7 @@ public:
     if(spl == nextSpl){
     
 
-    // 1/4
-     /* 
-     * int32_t ampli = env[7];  // all cycles
-    if((cpt&1)==0)  ampli+= env[6] + env[4]/4 + env[3]/8 + env[2]/16;
-    if((cpt&1)==1)  ampli-= env[6] + env[4]/4 + env[3]/8 + env[2]/16;
-    
-    if((cpt&3)==0) ampli+= env[5] + env[3]/4 + env[2]/8 + env[1]/16;
-    if((cpt&3)==1) ampli-= env[5];
-    if((cpt&3)==2) ampli-=          env[3]/4 + env[2]/8 + env[1]/16;
-    
-    if((cpt&7)==0) ampli+= env[4] + env[2]/4 + env[1]/8 + env[0]/16;
-    if((cpt&7)==2) ampli-= env[4];
-    if((cpt&7)==4) ampli-=          env[2]/4 + env[1]/8 + env[0]/16;
-    
-    if((cpt&15)==0) ampli+= env[3] + env[1]/4 + env[0]/8;
-    if((cpt&15)==4) ampli-= env[3];
-    if((cpt&15)==8) ampli-=         env[1]/4 + env[0]/8;
-    
-    if((cpt&31)==0) ampli+= env[2] + env[0]/4;
-    if((cpt&31)==8) ampli-= env[2];
-    if((cpt&31)==16) ampli-=         env[0]/4;
-
-   if((cpt&63)==0) ampli+= env[1];
-   if((cpt&63)==16) ampli-= env[1];
-   
-   if((cpt&127)==0) ampli+= env[0];
-   if((cpt&127)==32) ampli-= env[0];*/
-    int32_t ampli = 0;// env[7]         ;  // all cycles
+    int32_t ampli = 0;
     if((cpt&1)==0)  ampli+= env[7] ;
     if((cpt&1)==1)  ampli-= env[7] ;
     
@@ -97,27 +70,35 @@ public:
     if((cpt&7)==5) ampli-= env[5]>>3;
     
     if((cpt&15)==0) ampli+= env[4];
-    if((cpt&15)==2) ampli-= (3*env[4])>>2;
-    if((cpt&15)==5) ampli-= env[4]>>3;
-    if((cpt&15)==9) ampli-= env[4]>>3;
+    if((cpt&15)==3) ampli-= (3*env[4])>>2;
+    if((cpt&15)==6) ampli-= env[4]>>3;
+    if((cpt&15)==12) ampli-= env[4]>>3;
 
     
     if((cpt&31)==0) ampli+= env[3];
     if((cpt&31)==4) ampli-= (3*env[3])>>2;
-    if((cpt&31)==9) ampli-= env[3]>>3;
-    if((cpt&31)==17) ampli-= env[3]>>3;
+    if((cpt&31)==10) ampli-= env[3]>>3;
+    if((cpt&31)==15) ampli-= env[3]>>2;
+    if((cpt&31)==17) ampli+= env[3]>>3;
 
     if((cpt&63)==0) ampli+= env[2];
-    if((cpt&63)==8) ampli-= (3*env[2])>>2;
-    if((cpt&63)==17) ampli-= env[2]>>3;
-    if((cpt&63)==33) ampli-= env[2]>>3;
+    if((cpt&63)==7) ampli-= (3*env[2])>>2;
+    if((cpt&63)==14) ampli-= env[2]>>3;
+    if((cpt&63)==32) ampli-= env[2]>>2;
+    if((cpt&63)==34) ampli+= env[2]>>3;
 
    
     if((cpt&127)==0) ampli+= env[1];
-    if((cpt&127)==16) ampli-= (3*env[1])>>2;
-    if((cpt&127)==24) ampli-= env[1]>>3;
-    if((cpt&127)==64) ampli-= env[1]>>3;
+    if((cpt&127)==9) ampli-= (3*env[1])>>2;
+    if((cpt&127)==18) ampli-= env[1]>>3;
+    if((cpt&127)==64) ampli-= env[1]>>2;
+    if((cpt&127)==69) ampli+= env[1]>>3;
 
+    if((cpt&255)==0) ampli+= env[0];
+    if((cpt&255)==13) ampli-= (3*env[0])>>2;
+    if((cpt&255)==26) ampli-= env[0]>>3;
+    if((cpt&255)==128) ampli-= env[0]>>2;
+    if((cpt&255)==133) ampli+= env[0]>>3;
 
     
     // select the band limited pulse according to subsample time since the transition
