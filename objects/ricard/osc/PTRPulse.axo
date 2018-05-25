@@ -1,0 +1,49 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="PTRPulse" uuid="7d471257-0bfc-471d-8646-7eb30f93ae3a">
+      <sDescription>Low CPU Anti Aliased Pulse Wave oscillator using third order Polynomial Transition Region algoiritm.</sDescription>
+      <author>Ricard Wanderlof</author>
+      <license>LGPL</license>
+      <helpPatch>PTRPulse.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="pw"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="pulse" description="sawtooth wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="default pitch" noLabel="true"/>
+         <frac32.s.map name="pw" description="default pulse width"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, p1, pw, dp, dp2, y, D;]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(0.25f/(1<<30));
+dp2 = dp + dp; // 2*dp
+pw = 0.5f + ((float)(param_pw + inlet_pw))/(1<<28);]]></code.krate>
+      <code.srate><![CDATA[p += dp; p -= (p > 1);
+// The caveat here is that with extremely narrow pulse widths,
+// we need to calculate the correction factors for both up- and
+// downgoing edges on the same sample. That also means we need to
+// separate the trivial wave from the antialias corrections.
+
+if (p < pw) y = -1; else y = 1; // trivial wave
+
+// start of wave, high-to-low transition always.
+if (p < dp2) {
+	if (p < dp) { D = p/dp; y += -D * D + 2; } // D0 down
+	else { D = p/dp; y += D * (D - 4) + 4; } // D1 down
+}
+
+// variable position (i.e. PW) low-to-high transition
+p1 = p - pw + (p < pw); // '+ (p < pw)' takes care of correction zone wrapping past waveform period
+if (p1 < dp2) {
+	if (p1 < dp) { D = p1/dp; y += D * D - 2; } // D0 up
+	else { D = p1/dp; y += D * (4 - D) - 4; } // D1 up
+}
+outlet_pulse = (int32_t) (y * (1 << 27));]]></code.srate>
+   </obj.normal>
+</objdefs>
