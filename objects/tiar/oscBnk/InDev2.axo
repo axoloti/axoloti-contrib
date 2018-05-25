@@ -82,7 +82,8 @@ for(int i = 0; i < 8*12; i++){
       <code.krate><![CDATA[float vib0 = inlet_vib0 * 1e-10f;
 float vib1 = inlet_vib1 * 1e-10f;
 float vib2 = inlet_vib2 * 1e-10f;
-float f = 4186.009f*2;
+//C#
+float f = 4186.009f*1.059463094f;
 blits[0].setF(f*vib0+f);  f *= 1.059463094f;
 blits[1].setF(0.5f*f*vib0+f);  f *= 1.059463094f;
 blits[2].setF(-f*vib0+f);  f *= 1.059463094f;
@@ -101,7 +102,7 @@ blits[11].setF(0.5f*f*vib2+f);
 float envTot=0;
 for(int i = 0; i <8*12; i++){
   int32_t b = envs[i];
-  if(gates[24 + i] > 10) envs[i] = ___SMMLA(0x7FFFFFFF-param_A,(100<<20)-b, b>>1)<<1; // ascending
+  if(gates[13 + i] > 10) envs[i] = ___SMMLA(0x7FFFFFFF-param_A,(100<<20)-b, b>>1)<<1; // ascending
   else if(b>param_L)     envs[i] = ___SMMUL(b, param_R1)<<1;
   else                   envs[i] = ___SMMUL(b, param_R2)<<1;
   envTot += envs[i];
@@ -182,9 +183,6 @@ for(int i = 0; i <12; i++){
     }
     coefZ *= 0.5f;
 
-
-
-    
     y0 += gy * (    blit->subSpl);
     y1 += gy * (1 - blit->subSpl);
     z0 += gz * (    blit->subSpl);
@@ -198,25 +196,20 @@ for(int i = 0; i <12; i++){
     blit->cpt++;
   }
 }
-/*totAmp = 0;
-for(int nBlit = 0; nBlit < 12; nBlit++){
-  Blit *blit = blits + nBlit;
-  for(int oct = 0;oct<8;oct++){
-  	totAmp+=blit->amp[oct];
-  }
-}*/
-Z = (Z -0.33f*DCZ + z1) ;
+
+Z = (Z + z1-0.0001f*DCZ) ;
 z1 = z0; z0 = 0;
 
-DCZ += 0.0001f*(y1 + Z - DCZ);
+DCZ += 0.01f*(y1 + Z - DCZ);
 
-Y = (Y* 0.9999f  + y1 +Z -DCZ ) ;
-DCY += 0.0001f*(Y  -DCY);
+Y = (Y*0.999999f  + y1 +Z -DCZ ) ;
+float out = Y-totAmp*0.125f;
+DCY += 0.0001f*(out  -DCY);
 
 y1 = y0; y0 = 0;
 
 
-outlet_out = arm::float_to_q(Y-DCY, 30);
+outlet_out = arm::float_to_q(out-DCY, 30);
 
 spl++;]]></code.srate>
       <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
