@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="rec wait" uuid="5ee60687-2ac5-4283-9999-5d0853324dc3">
+   <obj.normal id="rec wait" uuid="df39af67-15a3-41b3-a1eb-851288b914c8">
       <sDescription>inlet wait toggles wait-state;if waiting,a pulse at inlet go sets outlet rec to high.another pulse at inlet wait will reset rec to 0.
 when waiting,a pulse at inlet wait will reset wait to 0.</sDescription>
       <author>Robert Schirmer</author>
@@ -7,6 +7,7 @@ when waiting,a pulse at inlet wait will reset wait to 0.</sDescription>
       <inlets>
          <bool32.rising name="wait" description="toggle wait / rec"/>
          <bool32.rising name="go" description="trigger rec"/>
+         <bool32.risingfalling name="nowait" description="recording starts as soon as there&apos;s a trigger at inlet wait"/>
       </inlets>
       <outlets>
          <bool32 name="rec" description="rec state"/>
@@ -23,8 +24,9 @@ bool rec;]]></code.declaration>
 if (inlet_wait && (!wtrig)) {wtrig = 1 ;wait = 1;}
 
 
-if (wait && inlet_go) {rec = 1;wait = 0;wtrig = 1;}
+if ((wait && inlet_go)||(wait && inlet_nowait)) {rec = 1;wtrig = 1;}
 if (rec && inlet_wait) {rec = 0;}
+if (rec) wait = 0;
 
 if ((!inlet_wait) && (!rec)) wtrig = 0;
 
