@@ -1,4 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="14" y="0" text="main clock source"/>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="14">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
@@ -57,33 +58,34 @@
       </params>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="714" y="126" text="some slow panning"/>
    <obj type="sel/sel b 16 pulse" uuid="b52a026dd735305ac8ddf499e366883006aa2acf" name="sel_2" x="14" y="168">
       <params>
          <bin16 name="b16" value="13521"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="938" y="182">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="spat/pan m" uuid="f6c6c0d7224841d9d76962e64d7f779d8194b7f9" name="pan_1" x="644" y="196">
       <params/>
       <attribs/>
    </obj>
-   <obj type="TSG/fx/tapedelay" uuid="de2a6380-0605-4143-a65f-f73c762ef323" name="obj_1" x="756" y="196">
+   <obj type="TSG/fx/tapedelay" uuid="a3d0b2d9-60fa-40ed-9870-945a0b213fed" name="obj_1" x="756" y="196">
       <params>
-         <frac32.u.map name="mix" value="16.0"/>
          <frac32.u.map name="Tape age" value="12.5"/>
          <frac32.u.map name="Low End" value="64.0"/>
          <frac32.u.map name="Saturation" value="45.5"/>
-         <frac32.u.map name="Time" value="20.5"/>
+         <frac32.u.map name="Time" value="34.5"/>
          <frac32.s.map name="time symmetry" value="2.0"/>
-         <bool32.tgl name="sync to external clock" value="1"/>
+         <bool32.tgl name="sync to external clock" value="0"/>
          <frac32.u.map name="PingPong" value="64.0"/>
          <frac32.u.map name="Feedback" value="37.5"/>
-         <frac32.u.map name="Flutter" value="24.5"/>
+         <frac32.u.map name="flutter" value="0.0"/>
+         <frac32.u.map name="mix" value="16.0"/>
       </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="938" y="196">
+      <params/>
       <attribs/>
    </obj>
    <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="518" y="210">
@@ -94,6 +96,7 @@
       </params>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="280" y="224" text="a lead sound"/>
    <obj type="sel/sel fb 16" uuid="f4aa3eb141915b6fc722e576dde344a226a022ac" name="sel_1" x="14" y="238">
       <params>
          <frac32.s.mapvsl name="b0" value="0.0"/>
@@ -115,6 +118,18 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="math/&gt;c" uuid="99f2934d97d62b715a829979ef6c8abef35dcdb2" name="&gt;c_1" x="938" y="308">
+      <params>
+         <frac32.u.map name="c" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="1008" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1008" y="364" text="the phase output ramps from 0..64 in sync with the delay"/>
+   <comment type="patch/comment" x="938" y="392" text="change this to set the pulse width of the led"/>
    <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_2" x="14" y="434">
       <params>
          <int32 name="maximum" value="4"/>
@@ -127,6 +142,7 @@
       </params>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="896" y="448" text="&lt; enable for tempo sync"/>
    <obj type="osc/brds/fm" uuid="b130eca3-e411-45c2-840d-f4358a879175" name="fm_2" x="294" y="462">
       <params>
          <frac32.s.map name="pitch" value="-24.0"/>
@@ -139,6 +155,7 @@
       <params/>
       <attribs/>
    </obj>
+   <comment type="patch/comment" x="196" y="490" text="A Bass sound"/>
    <obj type="sel/sel fb 16" uuid="f4aa3eb141915b6fc722e576dde344a226a022ac" name="sel_3" x="14" y="518">
       <params>
          <frac32.s.mapvsl name="b0" value="0.0"/>
@@ -271,6 +288,14 @@
       <net>
          <source obj="obj_1" outlet="Out R"/>
          <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="phase"/>
+         <dest obj="&gt;c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="&gt;c_1" outlet="out"/>
+         <dest obj="bool_1" inlet="in"/>
       </net>
    </nets>
    <settings>
