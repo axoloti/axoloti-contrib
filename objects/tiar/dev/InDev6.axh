@@ -1,5 +1,6 @@
 <patch-1.0 appVersion="1.0.12">
    <comment type="patch/comment" x="56" y="0" text="Three LFOs for vibrato"/>
+   <comment type="patch/comment" x="560" y="14" text="outA is AR sent to chorus"/>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="42" y="28">
       <params>
          <frac32.s.map name="pitch" value="2.643233299255371"/>
@@ -44,16 +45,9 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_2" x="560" y="28">
-      <params>
-         <frac32.u.map name="gain1" value="6.0"/>
-         <frac32.u.map name="gain2" value="6.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="658" y="28">
       <params>
-         <frac32.u.map name="amp" value="64.0"/>
+         <frac32.u.map name="amp" value="7.0"/>
       </params>
       <attribs/>
    </obj>
@@ -190,9 +184,27 @@
          <spinner attributeName="delay" value="161"/>
       </attribs>
    </obj>
-   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="14" y="252">
+   <comment type="patch/comment" x="99" y="295" text="outB is Decay sent to stereo filter effect"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_5" x="28" y="322">
       <params>
-         <frac32.s.map name="pitch" value="-16.3763165473938"/>
+         <frac32.s.map name="pitch" value="-3.876316547393799"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/b4b" uuid="a01253ac-ca4b-430b-901f-cd0cabcd394c" name="b4b_1" x="154" y="322">
+      <params>
+         <frac32.s.mapvsl name="p0" value="-23.0"/>
+         <frac32.s.mapvsl name="p1" value="-16.0"/>
+         <frac32.s.mapvsl name="p2" value="5.0"/>
+         <frac32.s.mapvsl name="p3" value="19.0"/>
+         <frac32.s.mapvsl name="p4" value="45.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="238" y="322">
+      <params>
+         <frac32.s.map name="pitch" value="26.0"/>
+         <frac32.u.map name="Q" value="13.0"/>
       </params>
       <attribs/>
    </obj>
@@ -258,6 +270,12 @@
          <frac32.u.map name="gain2" value="32.0"/>
          <frac32.u.map name="gain3" value="32.0"/>
          <frac32.u.map name="gain4" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="0" y="462">
+      <params>
+         <frac32.s.map name="pitch" value="-16.3763165473938"/>
       </params>
       <attribs/>
    </obj>
@@ -398,16 +416,8 @@
          <dest obj="lp1_1" inlet="in"/>
       </net>
       <net>
-         <source obj="mix_2" outlet="out"/>
-         <dest obj="*c_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="InDev6_1" outlet="outA"/>
-         <dest obj="mix_2" inlet="in1"/>
-      </net>
-      <net>
          <source obj="InDev6_1" outlet="outB"/>
-         <dest obj="pan_1" inlet="in"/>
+         <dest obj="ZDF_1" inlet="x"/>
       </net>
       <net>
          <source obj="*c_2" outlet="out"/>
@@ -540,6 +550,22 @@
       <net>
          <source obj="sine_3" outlet="wave"/>
          <dest obj="pan_1" inlet="pan"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="lp12"/>
+         <dest obj="pan_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_5" outlet="wave"/>
+         <dest obj="b4b_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="b4b_1" outlet="out"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="InDev6_1" outlet="outA"/>
+         <dest obj="*c_1" inlet="in"/>
       </net>
    </nets>
    <settings>
