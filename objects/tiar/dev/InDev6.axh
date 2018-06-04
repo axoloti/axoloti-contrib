@@ -26,21 +26,21 @@
    </obj>
    <obj type="tiar/dev/InDev6" uuid="1a435fe9-0cbf-4d5d-9983-b36213f60796" name="InDev6_1" x="434" y="28">
       <params>
-         <frac32.u.map name="L2A" value="43.5"/>
-         <frac32.s.map name="A2A" value="-64.0"/>
+         <frac32.u.map name="L2A" value="54.0"/>
+         <frac32.s.map name="A2A" value="17.0"/>
          <frac32.s.map name="R2A" value="33.0"/>
-         <frac32.u.map name="L4A" value="38.5"/>
-         <frac32.s.map name="A4A" value="29.0"/>
-         <frac32.s.map name="R4A" value="52.0"/>
-         <frac32.u.map name="L8A" value="27.5"/>
-         <frac32.s.map name="A8A" value="-64.0"/>
-         <frac32.s.map name="R8A" value="17.0"/>
+         <frac32.u.map name="L4A" value="34.0"/>
+         <frac32.s.map name="A4A" value="-15.0"/>
+         <frac32.s.map name="R4A" value="44.0"/>
+         <frac32.u.map name="L8A" value="28.0"/>
+         <frac32.s.map name="A8A" value="14.0"/>
+         <frac32.s.map name="R8A" value="36.0"/>
          <frac32.u.map name="L2B" value="64.0"/>
          <frac32.s.map name="D2B" value="44.0"/>
-         <frac32.u.map name="L4B" value="0.0"/>
-         <frac32.s.map name="D4B" value="-64.0"/>
+         <frac32.u.map name="L4B" value="21.0"/>
+         <frac32.s.map name="D4B" value="33.0"/>
          <frac32.u.map name="L8B" value="0.0"/>
-         <frac32.s.map name="D8B" value="-62.0"/>
+         <frac32.s.map name="D8B" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -190,18 +190,10 @@
          <spinner attributeName="delay" value="161"/>
       </attribs>
    </obj>
-   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="42" y="252">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="14" y="252">
       <params>
-         <frac32.s.map name="pitch" value="7.623682975769043"/>
+         <frac32.s.map name="pitch" value="-16.3763165473938"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_1" x="140" y="252">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="266" y="252">
-      <params/>
       <attribs/>
    </obj>
    <obj type="math/inv" uuid="565521d3699b36d8095aa1c79b9ad0046fb133ce" name="inv_1" x="532" y="364">
@@ -269,16 +261,34 @@
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="224" y="518" text="Volume CC"/>
-   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="210" y="532">
+   <obj type="tiar/spat/pan m" uuid="32ac1138-0263-4773-b00b-48cd84a9869c" name="pan_1" x="238" y="476">
+      <params>
+         <frac32.s.map name="pan" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="56" y="560" text="Volume CC"/>
+   <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="42" y="574">
       <params/>
       <attribs>
          <spinner attributeName="cc" value="7"/>
          <spinner attributeName="default" value="82"/>
       </attribs>
    </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="294" y="532">
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="126" y="574">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_3" x="252" y="574">
+      <params>
+         <frac32.u.map name="gain1" value="6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_6" x="336" y="574">
+      <params>
+         <frac32.u.map name="gain1" value="6.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="sss/gain/vcaST" uuid="82f6d1d8-7fb6-413a-994e-96fdf4b98ee7" name="vcaST_1" x="630" y="574">
@@ -397,7 +407,7 @@
       </net>
       <net>
          <source obj="InDev6_1" outlet="outB"/>
-         <dest obj="vca_1" inlet="a"/>
+         <dest obj="pan_1" inlet="in"/>
       </net>
       <net>
          <source obj="*c_2" outlet="out"/>
@@ -476,8 +486,8 @@
       </net>
       <net>
          <source obj="mix_5" outlet="out"/>
-         <dest obj="vcaST_1" inlet="a1"/>
-         <dest obj="vcaST_1" inlet="a2"/>
+         <dest obj="mix_3" inlet="bus_in"/>
+         <dest obj="mix_6" inlet="bus_in"/>
       </net>
       <net>
          <source obj="read_4" outlet="out"/>
@@ -512,16 +522,24 @@
          <dest obj="allpass_4" inlet="in"/>
       </net>
       <net>
+         <source obj="mix_6" outlet="out"/>
+         <dest obj="vcaST_1" inlet="a2"/>
+      </net>
+      <net>
+         <source obj="mix_3" outlet="out"/>
+         <dest obj="vcaST_1" inlet="a1"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="left"/>
+         <dest obj="mix_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="right"/>
+         <dest obj="mix_6" inlet="in1"/>
+      </net>
+      <net>
          <source obj="sine_3" outlet="wave"/>
-         <dest obj="bipolar2unipolar_1" inlet="i"/>
-      </net>
-      <net>
-         <source obj="bipolar2unipolar_1" outlet="o"/>
-         <dest obj="vca_1" inlet="v"/>
-      </net>
-      <net>
-         <source obj="vca_1" outlet="o"/>
-         <dest obj="mix_2" inlet="in2"/>
+         <dest obj="pan_1" inlet="pan"/>
       </net>
    </nets>
    <settings>
