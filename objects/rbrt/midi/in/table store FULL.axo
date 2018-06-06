@@ -13,6 +13,7 @@ the data is written to the table starting at &apos;offset&apos;.</sDescription>
       </inlets>
       <outlets>
          <bool32.pulse name="chtrig" description="pulse if any cc value changes"/>
+         <int32 name="index" description="index written to"/>
       </outlets>
       <displays/>
       <params>
@@ -26,25 +27,6 @@ the data is written to the table starting at &apos;offset&apos;.</sDescription>
          <objref name="table"/>
          <spinner name="startcc" MinValue="0" MaxValue="127" DefaultValue="0"/>
          <spinner name="length" MinValue="1" MaxValue="128" DefaultValue="1"/>
-         <combo name="blocksize">
-            <MenuEntries>
-               <string>1</string>
-               <string>4</string>
-               <string>8</string>
-               <string>16</string>
-               <string>32</string>
-               <string>64</string>
-            </MenuEntries>
-            <CEntries>
-               <string>0</string>
-               <string>2</string>
-               <string>3</string>
-               <string>4</string>
-               <string>5</string>
-               <string>6</string>
-               <string>7</string>
-            </CEntries>
-         </combo>
       </attribs>
       <code.declaration><![CDATA[int8_t cc;
 int32_t cv;
@@ -67,7 +49,8 @@ offset = (inlet_offset + param_offset);
 if (((cc >= start) && (cc < end)) && (inlet_active || param_active)) {
 
 if ((cv != prevcv)||(cc != prevcc)){
-      attr_table.array[((cc - start) << attr_blocksize) + offset]= __SSAT(cv,28)>>attr_table.GAIN;
+	outlet_index = (cc - start)+ offset;
+      attr_table.array[outlet_index]= __SSAT(cv,28)>>attr_table.GAIN;
       prevcv = cv; 
       prevcc = cc;
       chtrig = 1;   

@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="env ahd attr" uuid="ae48125d-05f7-4334-a772-2f855dad3d82">
+      <sDescription>mod of attack/hold/decay envelope, linear ramps.
+attack/decay times can be scaled with the attributes &apos;a&apos; and &apos;d&apos;.
+&apos;state&apos; reflects the envelope&apos;s state.
+an attack time of 0 will result in NO attack-curve.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="gate" description="trigger"/>
+         <frac32.positive name="a"/>
+         <frac32.positive name="d"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env" description="envelope output"/>
+         <bool32 name="state"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="ascale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+         <spinner name="dscale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t val;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_gate > 0) {
+  int32_t t;
+MTOF(-inlet_a,t);
+val += (inlet_a ) ? t>>attr_ascale : 1<<27;
+}
+else {
+  int32_t t;
+  MTOF(-inlet_d,t);
+  val -= t>>attr_dscale;
+}
+val = __USAT(val,27);
+outlet_env = val;
+outlet_state = val;]]></code.krate>
+   </obj.normal>
+</objdefs>

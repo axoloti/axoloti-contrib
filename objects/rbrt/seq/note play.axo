@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="note play" uuid="ccf421a5-178b-493d-bf07-cdeb662cad0c">
+   <obj.normal id="note play" uuid="eff229f9-0e64-462f-94bb-2b4898d3220e">
       <sDescription>play back a sequence recorded with &apos;note rec&apos;</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
@@ -18,10 +18,10 @@
       <attribs>
          <objref name="table"/>
       </attribs>
-      <code.declaration><![CDATA[uint32_t v;
-uint32_t vout;
+      <code.declaration><![CDATA[uint16_t v;
+uint16_t vout;
 bool play;
-uint8_t active [127];
+uint8_t active [128];
 uint8_t note;
 uint8_t velo;
 uint8_t i;]]></code.declaration>
@@ -32,10 +32,8 @@ if (play) {
 v = attr_table.array [inlet_index];
 if (v && ( v != vout)){
 	vout = v;
-	note = vout & 127;
+	note = (vout & 127) -1;
 	velo = vout >> 8;
-	outlet_note = note;
-	outlet_velocity = velo;
 	active [note]  = 1;
 }
 }
@@ -43,8 +41,10 @@ if (!inlet_play && play ) {play = 0;i = 0;}
 if (inlet_stopall) i = 0;
 
 if (i < 128) {
-	if (active [i] ) {outlet_note = i;outlet_velocity = 0;active [i] = 0;}
+	if (active [i] > 0 ) {note = i;velo = 0;active [i] = 0;}
 	i ++;
-}]]></code.krate>
+}
+outlet_note = note;
+outlet_velocity = velo;]]></code.krate>
    </obj.normal>
 </objdefs>

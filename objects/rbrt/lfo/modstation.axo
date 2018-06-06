@@ -1,0 +1,122 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="modstation" uuid="153096dd-f1e0-47e4-b9a3-91ca57bc6212">
+      <sDescription>mod of an object by dr.j
+added an envelope as sixth option.
+removed some other stuff.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.bipolar name="pitch" description="Pitch input"/>
+         <int32.bipolar name="wave" description="Waveform, added to wave parameter"/>
+         <bool32.rising name="reset" description="Reset phase"/>
+         <bool32.risingfalling name="gate"/>
+         <frac32.positive name="attack"/>
+         <frac32.positive name="decay"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="Output"/>
+         <bool32 name="state"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch" description="Pitch" noLabel="false"/>
+         <bool32.tgl name="unipolar" description="Unipolar output" noLabel="false"/>
+         <int32 name="wave" description="1-5 = tri, sine, saw+, saw-, square" noLabel="false">
+            <MinValue i="1"/>
+            <MaxValue i="6"/>
+         </int32>
+         <frac32.u.map name="attack"/>
+         <frac32.u.map name="decay"/>
+      </params>
+      <attribs>
+         <spinner name="ascale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+         <spinner name="dscale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+      int32_t  old_reset;
+
+     __attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___ABS (int32_t op1 )
+      {
+        int32_t result;
+        __ASM volatile ( "movs  %0, %1\n"
+                         "it    mi\n"
+                         "rsbmi %0, %0, #0"
+                         : "=r" (result)
+                         : "r" (op1)
+                       );
+        return(result);
+      };
+
+      int32_t val;]]></code.declaration>
+      <code.init><![CDATA[phase = 0;
+      old_reset = 0;]]></code.init>
+      <code.krate><![CDATA[if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t pitch;
+          pitch = param_pitch + inlet_pitch;
+          if( pitch > 0x07FFFFFF )
+            pitch = 0x07FFFFFF;
+          //pitch = __SSAT( pitch, 28 );
+          MTOFEXTENDED( pitch, pitch );
+          phase += pitch>>2;
+        }
+      old_reset = inlet_reset;
+
+      uint32_t phase1 = phase ;
+
+      switch( param_wave + inlet_wave )
+        {
+          default:
+           case 1 :
+            // Sine
+            SINE2TINTERP( phase1, outlet_out )
+            outlet_out = (outlet_out>>5) + (1<<26);
+            break;
+          case 2 :
+            // Triangle
+            outlet_out  = (phase1>>4) - (1<<27);
+            outlet_out  = (1<<27) - ___ABS(outlet_out);
+            break;
+          case 3 :
+            // Saw rising
+            outlet_out  = (phase1>>5);
+            break;
+          case 4 :
+            // Saw falling
+            outlet_out  = (1<<27) - (phase1>>5);
+            break;
+          case 5 :
+            // Square
+           outlet_out =( (phase1>>5) > (1 <<26) ) ? 0 : (1<<27)-1;
+           break;
+           case 6 :
+           //linear envelope
+           if (inlet_gate > 0) {
+           int32_t t;
+           MTOF(-(inlet_attack + param_attack),t);
+           val += (inlet_attack + param_attack) ? t>>attr_ascale : 1<<27;
+			}
+          else {
+          int32_t t;
+  		MTOF(-(inlet_decay + param_decay),t);
+  		val -= t>>attr_dscale;
+			}
+			val = __USAT(val,27);
+			outlet_out = val;
+			outlet_state = val;
+			break;
+
+        }
+
+      if( !param_unipolar )
+        {
+          outlet_out = (outlet_out<<1) - (1<<27);
+        }
+
+     outlet_out = __SSAT( ___SMMUL( (1 << 27) << 3, outlet_out << 2 ), 28 );]]></code.krate>
+   </obj.normal>
+</objdefs>

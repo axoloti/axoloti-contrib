@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="note rec" uuid="00247a75-4fcf-4b92-ad38-168b461d1fc6">
+   <obj.normal id="note rec" uuid="61e30e48-3119-4410-9b06-cf0988486222">
       <sDescription>records notes,as pitch and velocity,to a table with the same name as the object.
 after recording,the recorded notes are translated to a sequence with 512ppq resolution.
 the maximum recording length is 42 seconds,with a maxium of 512 events (or,256 notes played)
@@ -29,9 +29,9 @@ bool rec;
 static const uint16_t LENGTHPOW = 9;
 static const uint16_t LENGTH = 1<<9;
 static const uint16_t LENGTHMASK = (1<<9)-1;
-static const uint16_t BITS = 32;
+static const uint16_t BITS = 16;
 static const uint16_t GAIN = 12;
-uint32_t array[LENGTH];
+uint16_t array[LENGTH];
 
 uint32_t bitmask =  0b11111111111111110000000000000000;
 uint32_t bitmask2 = 0b00000000000000001111111111111111;
@@ -43,7 +43,7 @@ if (rec){
 	tc++;
 	tcc = tc >> 1;
 if (inlet_trigger){
-	recarray [count] = ((tcc << 16 ) + (inlet_note + (inlet_velo << 8)));
+	recarray [count] = ((tcc << 16 ) + ((inlet_note + 1) + (inlet_velo << 8)));
 	count += 1;	
 }	
 }
