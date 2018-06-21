@@ -1,0 +1,765 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="28" y="0">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="yellow" uuid="13998bf0-c6c1-420c-81ff-832beed7823d" name="obj_1" x="28" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="175aaa26-39f8-42c5-a0c1-4f5e0685fd09" name="patcher_1" x="168" y="70">
+      <params>
+         <frac32.s.map name="ahd_1:a" value="-60.0"/>
+         <frac32.s.map name="ahd_1:d" MidiCC="1" value="36.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="3"/>
+         <combo attributeName="midichannel" selection="1"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="182" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/csaw" uuid="28778e96-5d2f-4b8a-8fcf-3eec1c081da2" name="csaw_1" x="308" y="126">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" value="0.0"/>
+               <frac32.u.map name="color" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="420" y="126">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-20.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="532" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="658" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="timbre" x="210" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="color" x="210" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="csaw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="ahd_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="timbre" outlet="inlet"/>
+               <dest obj="csaw_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="csaw_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="color" outlet="inlet"/>
+               <dest obj="csaw_1" inlet="color"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="ahd_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>953</width>
+            <height>526</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="294" y="70">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="2f458dc4-8b90-4472-93ca-0eabc0256f08" name="patcher_3" x="406" y="70">
+      <params>
+         <frac32.s.map name="ahd_1:a" value="-59.0"/>
+         <frac32.s.map name="ahd_1:d" MidiCC="2" value="9.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="3"/>
+         <combo attributeName="midichannel" selection="2"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="154" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/sawswarm" uuid="d4155ab7-62eb-4c58-9417-5ad409177b66" name="sawswarm_1" x="266" y="126">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" value="0.0"/>
+               <frac32.u.map name="color" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="406" y="126">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-20.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="532" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="658" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="timbre" x="182" y="238">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="color" x="182" y="280">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="sawswarm_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="ahd_1" inlet="gate"/>
+               <dest obj="sawswarm_1" inlet="strike"/>
+            </net>
+            <net>
+               <source obj="timbre" outlet="inlet"/>
+               <dest obj="sawswarm_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="sawswarm_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="ahd_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="color" outlet="inlet"/>
+               <dest obj="sawswarm_1" inlet="color"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>953</width>
+            <height>526</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="532" y="70">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="b3ac2c02-a348-472c-af50-57c51b58ac19" name="patcher_2" x="644" y="70">
+      <params>
+         <frac32.s.map name="ahd_1:a" value="-56.0"/>
+         <frac32.s.map name="ahd_1:d" MidiCC="3" value="16.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="3"/>
+         <combo attributeName="midichannel" selection="3"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="182" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/trianglefold" uuid="8e4b08de-947e-4c8b-940d-48e51aa96e94" name="trianglefold_1" x="294" y="126">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="420" y="126">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-20.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="532" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="658" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="timbre" x="210" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="trianglefold_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="ahd_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="timbre" outlet="inlet"/>
+               <dest obj="trianglefold_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="trianglefold_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="ahd_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>953</width>
+            <height>526</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <patcher type="patch/patcher" uuid="8b42d115-f3b4-4898-be4d-dd6f1f9e5cd8" name="patcher_4" x="770" y="70">
+      <params>
+         <frac32.s.map name="ahd_1:a" value="-64.0"/>
+         <frac32.s.map name="ahd_1:d" MidiCC="4" value="-36.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="3"/>
+         <combo attributeName="midichannel" selection="4"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="182" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/square" uuid="9fe639b7-264e-4152-90be-49c8d82cc03b" name="square_1" x="294" y="126">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="420" y="126">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-20.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="532" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="658" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="timbre" x="210" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="square_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="ahd_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="timbre" outlet="inlet"/>
+               <dest obj="square_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="square_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="ahd_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>953</width>
+            <height>526</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_3" x="896" y="70">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_5" x="1064" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/click hold" uuid="18efd892-468b-4395-a455-47ea981ad016" name="click_1" x="1260" y="182">
+      <params/>
+      <attribs>
+         <spinner attributeName="short" value="600"/>
+         <spinner attributeName="long" value="2000"/>
+         <spinner attributeName="cancel" value="9999"/>
+      </attribs>
+   </obj>
+   <obj type="patch/load" uuid="634bf1f8c313920d7f19fc402ba937fd1ee27802" name="load_1" x="1414" y="252">
+      <params/>
+      <attribs>
+         <table attributeName="filename" table="/start.bin"/>
+      </attribs>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="756" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="812" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_3" x="924" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_4" x="980" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1036" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1106" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_3" x="1176" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="350" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_2" x="490" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_3" x="630" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="1064" y="350">
+      <params>
+         <frac32.u.map name="amount" value="7.5"/>
+         <frac32.u.map name="time" value="21.5"/>
+         <frac32.u.map name="diffusion" value="32.0"/>
+         <frac32.u.map name="gain" value="9.5"/>
+         <frac32.u.map name="lowpass" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1176" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/string/remind4" uuid="198cb9de-7b6b-4c8e-87ee-760eec6b6e2f" name="remind4_1" x="322" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="prefix0" table="Timbre"/>
+         <table attributeName="prefix1" table="Color"/>
+         <table attributeName="prefix2" table="VCF"/>
+         <table attributeName="prefix3" table="res"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/string/remind4" uuid="198cb9de-7b6b-4c8e-87ee-760eec6b6e2f" name="remind4_2" x="490" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="prefix0" table="Timbre"/>
+         <table attributeName="prefix1" table="Color"/>
+         <table attributeName="prefix2" table="VCF"/>
+         <table attributeName="prefix3" table="res"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/string/remind4" uuid="198cb9de-7b6b-4c8e-87ee-760eec6b6e2f" name="remind4_4" x="658" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="prefix0" table="Fold"/>
+         <table attributeName="prefix1" table="Timbre"/>
+         <table attributeName="prefix2" table="LPF"/>
+         <table attributeName="prefix3" table="Goodbye"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/string/remind4" uuid="198cb9de-7b6b-4c8e-87ee-760eec6b6e2f" name="remind4_3" x="826" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="prefix0" table="VolSaw"/>
+         <table attributeName="prefix1" table="VolSSaw"/>
+         <table attributeName="prefix2" table="VolFold"/>
+         <table attributeName="prefix3" table="VolSqr"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="obj_1" outlet="outlet_1"/>
+         <dest obj="remind4_1" inlet="i0"/>
+         <dest obj="patcher_1" inlet="timbre"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_2"/>
+         <dest obj="remind4_1" inlet="i1"/>
+         <dest obj="patcher_1" inlet="color"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="+_3" outlet="out"/>
+         <dest obj="obj_1" inlet="inlet_5"/>
+         <dest obj="reverb_1" inlet="l"/>
+         <dest obj="reverb_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_3"/>
+         <dest obj="remind4_1" inlet="i2"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_4"/>
+         <dest obj="remind4_1" inlet="i3"/>
+         <dest obj="vcf3_1" inlet="reso"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_5"/>
+         <dest obj="remind4_2" inlet="i0"/>
+         <dest obj="patcher_3" inlet="timbre"/>
+      </net>
+      <net>
+         <source obj="patcher_3" outlet="outlet_1"/>
+         <dest obj="vcf3_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_4" outlet="outlet_1"/>
+         <dest obj="vcf3_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="+_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="vca_3" outlet="o"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="vca_4" outlet="o"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="+_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="+_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_9"/>
+         <dest obj="vca_1" inlet="v"/>
+         <dest obj="remind4_3" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_10"/>
+         <dest obj="vca_2" inlet="v"/>
+         <dest obj="remind4_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_11"/>
+         <dest obj="vca_3" inlet="v"/>
+         <dest obj="remind4_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_12"/>
+         <dest obj="vca_4" inlet="v"/>
+         <dest obj="remind4_3" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="obj_1" inlet="mode"/>
+      </net>
+      <net>
+         <source obj="remind4_1" outlet="chainTrig"/>
+         <dest obj="remind4_2" inlet="chainTrig"/>
+      </net>
+      <net>
+         <source obj="remind4_1" outlet="out"/>
+         <dest obj="remind4_2" inlet="chainIn"/>
+      </net>
+      <net>
+         <source obj="remind4_2" outlet="chainTrig"/>
+         <dest obj="remind4_4" inlet="chainTrig"/>
+      </net>
+      <net>
+         <source obj="remind4_2" outlet="out"/>
+         <dest obj="remind4_4" inlet="chainIn"/>
+      </net>
+      <net>
+         <source obj="remind4_3" outlet="out"/>
+         <dest obj="obj_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_6"/>
+         <dest obj="remind4_2" inlet="i1"/>
+         <dest obj="patcher_3" inlet="color"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_8"/>
+         <dest obj="remind4_2" inlet="i2"/>
+         <dest obj="vcf3_2" inlet="reso"/>
+      </net>
+      <net>
+         <source obj="remind4_4" outlet="chainTrig"/>
+         <dest obj="remind4_3" inlet="chainTrig"/>
+      </net>
+      <net>
+         <source obj="remind4_4" outlet="out"/>
+         <dest obj="remind4_3" inlet="chainIn"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_15"/>
+         <dest obj="remind4_4" inlet="i0"/>
+         <dest obj="patcher_2" inlet="timbre"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_16"/>
+         <dest obj="remind4_2" inlet="i3"/>
+         <dest obj="patcher_4" inlet="timbre"/>
+      </net>
+      <net>
+         <source obj="and_5" outlet="o"/>
+         <dest obj="click_1" inlet="gate"/>
+         <dest obj="remind4_4" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="click_1" outlet="long"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_13"/>
+         <dest obj="and_5" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_14"/>
+         <dest obj="and_5" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_7"/>
+         <dest obj="unipolar2bipolar_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vcf3_2" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vcf3_3" outlet="out"/>
+         <dest obj="vca_4" inlet="a"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="patcher_2" outlet="outlet_1"/>
+         <dest obj="vca_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_2" outlet="o"/>
+         <dest obj="vcf3_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_3" outlet="o"/>
+         <dest obj="vcf3_3" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_17"/>
+         <dest obj="unipolar2bipolar_3" inlet="i"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>2576</width>
+      <height>1456</height>
+   </windowPos>
+</patch-1.0>
