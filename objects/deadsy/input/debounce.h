@@ -76,7 +76,7 @@ static void debounce_krate1(struct debounce_state *s,	//
 	}
 
 	uint32_t output = s->output;
-	*o0 = ((output >> 0) & 1) << 27;
+	*o0 = (output >> 0) & 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -95,8 +95,8 @@ static void debounce_krate2(struct debounce_state *s,	//
 	}
 
 	uint32_t output = s->output;
-	*o0 = ((output >> 0) & 1) << 27;
-	*o1 = ((output >> 1) & 1) << 27;
+	*o0 = (output >> 0) & 1;
+	*o1 = (output >> 1) & 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -117,10 +117,10 @@ static void debounce_krate4(struct debounce_state *s,	//
 	}
 
 	uint32_t output = s->output;
-	*o0 = ((output >> 0) & 1) << 27;
-	*o1 = ((output >> 1) & 1) << 27;
-	*o2 = ((output >> 2) & 1) << 27;
-	*o3 = ((output >> 3) & 1) << 27;
+	*o0 = (output >> 0) & 1;
+	*o1 = (output >> 1) & 1;
+	*o2 = (output >> 2) & 1;
+	*o3 = (output >> 3) & 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -147,14 +147,14 @@ static void debounce_krate8(struct debounce_state *s,	//
 	}
 
 	uint32_t output = s->output;
-	*o0 = ((output >> 0) & 1) << 27;
-	*o1 = ((output >> 1) & 1) << 27;
-	*o2 = ((output >> 2) & 1) << 27;
-	*o3 = ((output >> 3) & 1) << 27;
-	*o4 = ((output >> 4) & 1) << 27;
-	*o5 = ((output >> 5) & 1) << 27;
-	*o6 = ((output >> 6) & 1) << 27;
-	*o7 = ((output >> 7) & 1) << 27;
+	*o0 = (output >> 0) & 1;
+	*o1 = (output >> 1) & 1;
+	*o2 = (output >> 2) & 1;
+	*o3 = (output >> 3) & 1;
+	*o4 = (output >> 4) & 1;
+	*o5 = (output >> 5) & 1;
+	*o6 = (output >> 6) & 1;
+	*o7 = (output >> 7) & 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -193,22 +193,22 @@ static void debounce_krate16(struct debounce_state *s,	//
 	}
 
 	uint32_t output = s->output;
-	*o0 = ((output >> 0) & 1) << 27;
-	*o1 = ((output >> 1) & 1) << 27;
-	*o2 = ((output >> 2) & 1) << 27;
-	*o3 = ((output >> 3) & 1) << 27;
-	*o4 = ((output >> 4) & 1) << 27;
-	*o5 = ((output >> 5) & 1) << 27;
-	*o6 = ((output >> 6) & 1) << 27;
-	*o7 = ((output >> 7) & 1) << 27;
-	*o8 = ((output >> 8) & 1) << 27;
-	*o9 = ((output >> 9) & 1) << 27;
-	*o10 = ((output >> 10) & 1) << 27;
-	*o11 = ((output >> 11) & 1) << 27;
-	*o12 = ((output >> 12) & 1) << 27;
-	*o13 = ((output >> 13) & 1) << 27;
-	*o14 = ((output >> 14) & 1) << 27;
-	*o15 = ((output >> 15) & 1) << 27;
+	*o0 = (output >> 0) & 1;
+	*o1 = (output >> 1) & 1;
+	*o2 = (output >> 2) & 1;
+	*o3 = (output >> 3) & 1;
+	*o4 = (output >> 4) & 1;
+	*o5 = (output >> 5) & 1;
+	*o6 = (output >> 6) & 1;
+	*o7 = (output >> 7) & 1;
+	*o8 = (output >> 8) & 1;
+	*o9 = (output >> 9) & 1;
+	*o10 = (output >> 10) & 1;
+	*o11 = (output >> 11) & 1;
+	*o12 = (output >> 12) & 1;
+	*o13 = (output >> 13) & 1;
+	*o14 = (output >> 14) & 1;
+	*o15 = (output >> 15) & 1;
 }
 
 //-----------------------------------------------------------------------------
