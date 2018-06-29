@@ -242,11 +242,36 @@ static void mpr121_dispose(struct mpr121_state *s) {
 	chThdWait(s->thd);
 }
 
-static void mpr121_krate(struct mpr121_state *s, int32_t * touch) {
+// krate with integer output
+static void mpr121_krate_int(struct mpr121_state *s, int32_t * touch) {
 	// get the current touch status
 	chSysLock();
 	*touch = s->touch;
 	chSysUnlock();
+}
+
+// krate with boolean output
+static void mpr121_krate_bool(struct mpr121_state *s,	//
+			      bool * o0, bool * o1, bool * o2, bool * o3,	//
+			      bool * o4, bool * o5, bool * o6, bool * o7,	//
+			      bool * o8, bool * o9, bool * o10, bool * o11	//
+    ) {
+	// get the current touch status
+	chSysLock();
+	int32_t touch = s->touch;
+	chSysUnlock();
+	*o0 = (touch >> 0) & 1;
+	*o1 = (touch >> 1) & 1;
+	*o2 = (touch >> 2) & 1;
+	*o3 = (touch >> 3) & 1;
+	*o4 = (touch >> 4) & 1;
+	*o5 = (touch >> 5) & 1;
+	*o6 = (touch >> 6) & 1;
+	*o7 = (touch >> 7) & 1;
+	*o8 = (touch >> 8) & 1;
+	*o9 = (touch >> 9) & 1;
+	*o10 = (touch >> 10) & 1;
+	*o11 = (touch >> 11) & 1;
 }
 
 //-----------------------------------------------------------------------------
