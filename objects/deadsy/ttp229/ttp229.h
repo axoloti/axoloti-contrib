@@ -65,6 +65,20 @@ static void *ttp229_malloc(size_t size) {
 }
 
 //-----------------------------------------------------------------------------
+
+// reverse the bit order of a value
+static uint32_t revbit(uint32_t data) {
+	uint32_t result;
+	__ASM volatile ("rbit %0, %1":"=r" (result):"r"(data));
+	return result;
+}
+
+// 16 bit endian swap
+static uint16_t swap16(uint16_t val) {
+	return (uint16_t) __builtin_bswap16(val);
+}
+
+//-----------------------------------------------------------------------------
 // i2c read routine (the device is read only)
 
 // read a 16 bit value
@@ -113,10 +127,12 @@ static msg_t ttp229_thread(void *arg) {
 	while (!chThdShouldTerminate()) {
 		// read the touch status
 		ttp229_rd16(s, &val);
+		// make the bit order match the electrode naming
+		val = swap16(revbit(val) >> 16);
 		chSysLock();
 		s->touch = val;
 		chSysUnlock();
-		chThdSleepMilliseconds(32);	// 8 Hz per pin configuration
+		chThdSleepMilliseconds(TTP229_PERIOD);
 	}
 
  exit:
