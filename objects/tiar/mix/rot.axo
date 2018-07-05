@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344">
+      <sDescription>cos sin rotation</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>rot.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r"/>
+         <frac32buffer name="i"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="r"/>
+         <frac32buffer name="i"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
+  int32_t a = (p & ((1<<20)-1)) << 8; //q28
+  uint32_t i = p >> 20;
+  return ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+}
+int32_t cos2t_q27(uint32_t p){
+  return sin2t_q27(p + (1UL << 30));
+}]]></code.declaration>
+      <code.krate><![CDATA[uint32_t a = (param_theta & 0x07FFFFFF) << 5;
+int32_t c = cos2t_q27(a);
+int32_t s = sin2t_q27(a);]]></code.krate>
+      <code.srate><![CDATA[outlet_r = ___SMMLS(inlet_i, s, ___SMMUL(inlet_r, c)) << 5;
+outlet_i = ___SMMLA(inlet_i, c, ___SMMUL(inlet_r, s)) << 5;]]></code.srate>
+   </obj.normal>
+</objdefs>
