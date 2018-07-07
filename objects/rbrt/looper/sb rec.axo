@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="sb rec" uuid="635f45be-ffac-4ced-9cc4-13516b9f5b6a">
+   <obj.normal id="sb rec" uuid="e4235b15-ac62-4c89-917d-6d85aa57a63b">
       <sDescription>&apos;arm&apos; will arm the recorder,
 &apos;rec&apos; will start recording to the selected slot or, when already recording,start another recording in a selected slot.
 when &apos;arm&apos; is 0 again,recording will stop,and the recorded slots can be played back.
@@ -69,7 +69,7 @@ preslot = -1;]]></code.init>
 
 if (inlet_arm && !arm) arm = 1;
 if (arm){
-	if ((inlet_rec && !ntrig ) && !full) {	
+	if (((inlet_rec && !ntrig ) && !full)&& (inlet_slot < 127)) {	
 			 ntrig = 1;	
 			 array [inlet_slot << 1] = recpos;
 	if (preslot > -1)   {lchunk [preslot] = recpos; array [(preslot << 1) + 1] = 1;}
@@ -82,8 +82,7 @@ if (!inlet_rec) ntrig = 0;
 
 if (!inlet_arm && arm) {
 	arm = 0;
-	if (rec) lchunk [preslot] = recpos;
-	rec = 0;
+	if (rec) {rec = 0;lchunk [preslot] = recpos;array [255] = recpos;}
 	preslot = -1;
 	int i;
   for(i=0;i<chunks;i++) array [(chunk [i] << 1 ) + 1] = lchunk [chunk[i]];
@@ -107,7 +106,7 @@ if (inlet_delete && !dtrig) {
 	delcount += 2;
 	}
 }
-if (!inlet_delete) dtrig = 0;
+if (!inlet_delete && !ctrig) dtrig = 0;
 
 //compact
 if (inlet_defrag && !ctrig) {
@@ -133,18 +132,17 @@ if (del[shift_chunks] >= send ) {del [shift_chunks] -=slength;del [shift_chunks 
 recpos -= slength;
  } 
 delcount = 0;
+array [255] = recpos;
 }
-if (!inlet_defrag)  ctrig = 0;
+if (!inlet_defrag && !delcount) ctrig = 0;
 
 // get end
 if (inlet_reinit && !gtrig) {
 	preslot = -1;
 	delcount = 0;
- recpos = 0;
- gtrig = 1;
- int i;
- for(i=0;i<256;i+= 4) if (array[i + 1] > recpos) recpos = array[i + 1];
- } 
+     recpos = array [255];
+     gtrig = 1;
+}
 if (!inlet_reinit) gtrig = 0;
 
 	outlet_rec = ntrig;
