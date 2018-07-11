@@ -27,6 +27,14 @@ device on a given i2c bus.
 
 //-----------------------------------------------------------------------------
 
+#if CH_KERNEL_MAJOR == 2
+#define THD_WORKING_AREA_SIZE THD_WA_SIZE
+#define MSG_OK RDY_OK
+#define THD_FUNCTION(tname, arg) msg_t tname(void *arg)
+#endif
+
+//-----------------------------------------------------------------------------
+
 #define TTP229_I2C_ADR 0x57	// Only 1 supported i2c address :-(
 #define TTP229_PERIOD 32	// polling period in ms (8Hz)
 #define TTP229_I2C_TIMEOUT 30	// chibios ticks
@@ -35,7 +43,7 @@ device on a given i2c bus.
 
 // ttp229 state variables
 struct ttp229_state {
-	stkalign_t thd_wa[THD_WA_SIZE(512) / sizeof(stkalign_t)];	// thread working area
+	stkalign_t thd_wa[THD_WORKING_AREA_SIZE(512) / sizeof(stkalign_t)];	// thread working area
 	Thread *thd;		// thread pointer
 	I2CDriver *dev;		// i2c bus driver
 	i2caddr_t adr;		// i2c device address
@@ -87,7 +95,7 @@ static int ttp229_rd16(struct ttp229_state *s, uint16_t * val) {
 	msg_t rc = i2cMasterReceiveTimeout(s->dev, s->adr, s->rx, 2, TTP229_I2C_TIMEOUT);
 	i2cReleaseBus(s->dev);
 	*val = *(uint16_t *) s->rx;
-	return (rc == RDY_OK) ? 0 : -1;
+	return (rc == MSG_OK) ? 0 : -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -104,7 +112,7 @@ static void ttp229_error(struct ttp229_state *s, const char *msg) {
 	}
 }
 
-static msg_t ttp229_thread(void *arg) {
+static THD_FUNCTION(ttp229_thread, arg) {
 	struct ttp229_state *s = (struct ttp229_state *)arg;
 	int rc = 0;
 	uint16_t val;

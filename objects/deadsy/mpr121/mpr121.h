@@ -30,6 +30,14 @@ IRQ - interrupt request (nc - we poll it)
 
 //-----------------------------------------------------------------------------
 
+#if CH_KERNEL_MAJOR == 2
+#define THD_WORKING_AREA_SIZE THD_WA_SIZE
+#define MSG_OK RDY_OK
+#define THD_FUNCTION(tname, arg) msg_t tname(void *arg)
+#endif
+
+//-----------------------------------------------------------------------------
+
 // registers
 #define MPR121_TOUCH_STATUS_L       0x00
 #define MPR121_TOUCH_STATUS_H       0x01
@@ -95,7 +103,7 @@ struct mpr121_cfg {
 
 // mpr121 state variables
 struct mpr121_state {
-	stkalign_t thd_wa[THD_WA_SIZE(512) / sizeof(stkalign_t)];	// thread working area
+	stkalign_t thd_wa[THD_WORKING_AREA_SIZE(512) / sizeof(stkalign_t)];	// thread working area
 	Thread *thd;		// thread pointer
 	const struct mpr121_cfg *cfg;	// register configuration
 	I2CDriver *dev;		// i2c bus driver
@@ -134,7 +142,7 @@ static int mpr121_rd8(struct mpr121_state *s, uint8_t reg, uint8_t * val) {
 	msg_t rc = i2cMasterTransmitTimeout(s->dev, s->adr, s->tx, 1, s->rx, 1, MPR121_I2C_TIMEOUT);
 	i2cReleaseBus(s->dev);
 	*val = *(uint8_t *) s->rx;
-	return (rc == RDY_OK) ? 0 : -1;
+	return (rc == MSG_OK) ? 0 : -1;
 }
 
 // read a 16 bit value from a register
@@ -144,7 +152,7 @@ static int mpr121_rd16(struct mpr121_state *s, uint8_t reg, uint16_t * val) {
 	msg_t rc = i2cMasterTransmitTimeout(s->dev, s->adr, s->tx, 1, s->rx, 2, MPR121_I2C_TIMEOUT);
 	i2cReleaseBus(s->dev);
 	*val = *(uint16_t *) s->rx;
-	return (rc == RDY_OK) ? 0 : -1;
+	return (rc == MSG_OK) ? 0 : -1;
 }
 
 // write an 8 bit value to a register
@@ -154,7 +162,7 @@ static int mpr121_wr8(struct mpr121_state *s, uint8_t reg, uint8_t val) {
 	i2cAcquireBus(s->dev);
 	msg_t rc = i2cMasterTransmitTimeout(s->dev, s->adr, s->tx, 2, NULL, 0, MPR121_I2C_TIMEOUT);
 	i2cReleaseBus(s->dev);
-	return (rc == RDY_OK) ? 0 : -1;
+	return (rc == MSG_OK) ? 0 : -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -171,7 +179,7 @@ static void mpr121_error(struct mpr121_state *s, const char *msg) {
 	}
 }
 
-static msg_t mpr121_thread(void *arg) {
+static THD_FUNCTION(mpr121_thread, arg) {
 	struct mpr121_state *s = (struct mpr121_state *)arg;
 	int rc = 0;
 	int idx = 0;
