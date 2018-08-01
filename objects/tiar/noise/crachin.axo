@@ -1,0 +1,70 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="crachin" uuid="0835bae2-154c-45f6-a486-85d6f53b045b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>crachin.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="impulses"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="randCycle"/>
+         <frac32.u.map name="cycle"/>
+         <frac32.u.map name="numSeeds"/>
+         <frac32.u.map name="ampMod"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[//const int32_t a = 69069;    
+//const int32_t b = 0;
+const int32_t a = 1664525;    
+const int32_t b = 1013904223;
+int32_t seeds[8] = {0xF13A6753, 0x5E2F53A2, 0x3A69E302, 0x927DA392, 0xE63A1E53, 0x6B2F5A12, 0x2A59E302, 0x837AC372};
+uint32_t rand1 = 0xA4351354;
+int32_t rand2;
+int32_t c = 1;
+
+int32_t cG = 1;
+int32_t randG = 1;
+int32_t g = 0x7FFFFFFF;
+int32_t dg;
+int32_t cG2 = 1;
+int32_t g2 = 0x7FFFFFFF;
+int32_t dg2;]]></code.declaration>
+      <code.srate><![CDATA[// random selection of seed
+c--;
+if(c <= 0){
+  rand1 = rand1 * 69069 + 1;
+  //               q31                 q27            q26
+  c = ___SMMLA(rand1 & 0x7FFFFFFF, param_randCycle, param_cycle >> 1) >> 18;
+  rand1 = rand1 * 69069 + 1;
+  //                           q31              q27       q26
+  rand2 = seeds[___SMMUL(rand1 & 0x7FFFFFFF, param_numSeeds) >> (26-3)];
+}
+// random amplitude modulation
+cG--;
+if(cG <= 0){
+  randG = randG * 69069 + 1;
+  int32_t ng = (randG & 0x7FFFFFFF) >> 3; //q28
+  //                 q27         q28          q23    q28
+  ng = ___SMMLA(param_ampMod, ng - (1<<28)  , 1<<23) << 4;
+  cG = 1<<10;
+  dg = (ng - g) >> 10;
+}
+// random amplitude modulation
+cG2--;
+if(cG2 <= 0){
+  randG = randG * 69069 + 1;
+  int32_t ng2 = (randG & 0x7FFFFFFF) >> 3; //q28
+  //                 q27         q28          q23    q28
+  ng2 = ___SMMLA(param_ampMod, ng2 - (1<<28)  , 1<<23) << 3;
+  cG2 = 1<<9;
+  dg2 = (ng2 - g2) >> 9;
+}
+//                                q31           q28  q27
+outlet_out = ___SMMUL(rand2 = rand2 * 69069 + 1, g+g2);
+
+g += dg;
+g2 += dg2;]]></code.srate>
+   </obj.normal>
+</objdefs>
