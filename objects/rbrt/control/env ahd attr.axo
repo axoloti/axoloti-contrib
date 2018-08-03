@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="env ahd attr" uuid="ae48125d-05f7-4334-a772-2f855dad3d82">
+   <obj.normal id="env ahd attr" uuid="05f33b84-fcdb-424a-891a-d986ff01fa72">
       <sDescription>mod of attack/hold/decay envelope, linear ramps.
 attack/decay times can be scaled with the attributes &apos;a&apos; and &apos;d&apos;.
 &apos;state&apos; reflects the envelope&apos;s state.
@@ -17,19 +17,18 @@ an attack time of 0 will result in NO attack-curve.</sDescription>
          <bool32 name="state"/>
       </outlets>
       <displays/>
-      <params>
-         <bool32.tgl name="noa" noLabel="true"/>
-      </params>
+      <params/>
       <attribs>
          <spinner name="ascale" MinValue="0" MaxValue="8" DefaultValue="4"/>
          <spinner name="dscale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+         <spinner name="declick" MinValue="0" MaxValue="4" DefaultValue="2"/>
       </attribs>
       <code.declaration><![CDATA[int32_t val;]]></code.declaration>
       <code.init><![CDATA[val = 0;]]></code.init>
       <code.krate><![CDATA[if (inlet_gate > 0) {
   int32_t t;
 MTOF(-inlet_a,t);
-val += ((inlet_a )|| (!param_noa)) ? t>>attr_ascale : 1<<27;
+val += (inlet_a ) ? t>>attr_ascale : 1<<(27 - attr_declick);
 }
 else {
   int32_t t;
