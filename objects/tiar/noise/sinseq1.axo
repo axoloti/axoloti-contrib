@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sinseq" uuid="1917aae2-154c-a5f6-a986-85d6f53b045b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>sinseq1.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t seq[4][5] = {
+  { 1, 8, 2, 4, 8},
+  { 1, 4, 2, 8, 8},
+  { 1, 8, 2, 4, 8},
+  { 1, 2, 4, 8, 8}
+};
+int32_t rat[4][5];           
+uint8_t cseq = 0;
+uint8_t nseq = 0;
+int32_t dp0, dp;
+uint32_t p=0;
+uint32_t r = 137;]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < 4; i++){
+  for(int j = 0; j < 5; j++){
+    rat[i][j] = arm::float_to_q(seq[i][j] / (float)seq[i][(j-1+5)%5], 25);
+  }
+}]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(param_pitch + inlet_pitch + 12, dp0);
+dp = seq[nseq][cseq] * dp0;]]></code.krate>
+      <code.srate><![CDATA[p += dp;
+if(p < dp){
+  cseq++;
+  if(cseq >= 5){
+    cseq = 0;
+    // random swap
+    r = r * 69069 + 1;
+    // odds : 1/2
+    if(r > 0){
+      nseq = (r>>25)&3;
+    }
+  }
+  dp = seq[nseq][cseq] * dp0;
+  // corrects the phase as if dp was changed when it crossed zero 
+  p = ___SMMUL(p, rat[nseq][cseq]) << 7;  
+}
+
+outlet_out = sine2t[(p + (1<<30UL))>>(32-12)] >> (31-27);]]></code.srate>
+   </obj.normal>
+</objdefs>
