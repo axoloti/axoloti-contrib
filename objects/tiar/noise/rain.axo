@@ -12,9 +12,11 @@
       <attribs/>
       <code.declaration><![CDATA[int32_t r;      // audio random
 int32_t rdir;   // random direction
-int32_t rdirf;  // lp filtered random direction]]></code.declaration>
+int32_t rdirf;  // lp filtered random direction
+int32_t rs;]]></code.declaration>
       <code.init><![CDATA[r = GenerateRandomNumber();
-rdir = GenerateRandomNumber();]]></code.init>
+rdir = GenerateRandomNumber();
+rs = GenerateRandomNumber();]]></code.init>
       <code.srate><![CDATA[//rdirf = 0;
 
 rdir = rdir * 69069 + 1;
@@ -29,7 +31,9 @@ if(rdirf > 0){
   outlet_out = -r >> 4;
 }
 if(rdir>0x50000000){
-	r=1;
+  if(rdir>0x70000000)
+    rs = rs * 69069 + 1;
+  r=rs;
 }]]></code.srate>
    </obj.normal>
 </objdefs>
