@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="radio" uuid="09720a73-5eef-41d5-ba77-5bcba24f6140">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>radio.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="spectrum"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="noisiness"/>
+         <frac32.u.map name="spectrum"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t r,v;
+int32_t c5=3, sh5=0;]]></code.declaration>
+      <code.init><![CDATA[r = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[int32_t prob = 0x7FFF0000-(param_noisiness<<4);
+int32_t spectrum = __USAT(param_spectrum + inlet_spectrum, 27) + 0x00100000;]]></code.krate>
+      <code.srate><![CDATA[if((r=r*69069 + 1)<prob)
+  v += spectrum;
+int32_t out = ((v^(v>>1)^(v>>2)) & 0x0FFFFFFF)-(1<<27);
+c5++;
+if(c5>=4){
+  c5 = 0;
+  sh5 = out;
+}
+outlet_out = (out + sh5)>>1;]]></code.srate>
+   </obj.normal>
+</objdefs>
