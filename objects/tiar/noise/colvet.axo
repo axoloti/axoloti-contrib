@@ -21,9 +21,15 @@ int32_t dp=1<<30;         // delta phase
 int32_t r = 137;  // sign and delta phase random gen
 int32_t r2 = 137; // color rand gen
 int32_t nextR2 = 137; // color slide
-int32_t env=1<<27; // decay exp env]]></code.declaration>
+int32_t env=1<<27; // decay exp env
+uint8_t c = 0;]]></code.declaration>
       <code.krate><![CDATA[int32_t basePitch = param_pitch + inlet_pitch;
-int32_t mod = param_randomness + inlet_randomness;  // pitch rand mod depth]]></code.krate>
+int32_t mod = param_randomness + inlet_randomness;  // pitch rand mod depth
+c++;
+if(c>=64){
+  c = 0;
+  nextR2 = nextR2 * 69069 + 1;
+}]]></code.krate>
       <code.srate><![CDATA[p += dp;
 if(p < dp){ // p have just wrapped to zero
   // reset env with random sign
@@ -34,12 +40,11 @@ if(p < dp){ // p have just wrapped to zero
   MTOFEXTENDED(pitch, dp);
   //"color" slide
   r2 = nextR2;
-  nextR2 = nextR2 * 69069 + 1;
 }
 outlet_out = ___SMMUL(r2, env);
 //color pseudo rand seq
 r2 = r2 * 69069 + 1;
 //color env 
-env = ___SMMUL(env,63<<25)<<1;]]></code.srate>
+env = ___SMMUL(env,127<<24)<<1;]]></code.srate>
    </obj.normal>
 </objdefs>
