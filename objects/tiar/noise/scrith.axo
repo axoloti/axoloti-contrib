@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scrith" uuid="767fe8e8-576c-40de-81c8-e7ff42bbc88b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>scrith.axh</helpPatch>
+      <inlets>
+         <frac32 name="bright"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="bright" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t r = 137;
+uint32_t dp = 1<<30;
+uint32_t p = 0;
+int32_t dir = -1;]]></code.declaration>
+      <code.init><![CDATA[r = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[int32_t bright;
+MTOFEXTENDED(__SSAT(param_bright + inlet_bright, 28), bright);]]></code.krate>
+      <code.srate><![CDATA[if(dp < bright){
+  dir = +1;
+} else if(dp > (3<<29)){
+  dir = -1;
+}
+
+r = r * 69069 + 1;
+dp = ___SMMUL(dp, (1<<30) + dir * (r>>5)) << 2;
+p += dp;
+
+//outlet_out = sine2t[p>>20]>>4;
+outlet_out = __SSAT((abs((int32_t)p)>>2)-(1<<28),28);]]></code.srate>
+   </obj.normal>
+</objdefs>
