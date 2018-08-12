@@ -1,0 +1,206 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="d19d6278-6dce-4f5d-9081-5fa2122244c3" name="patcher_1" x="14" y="14">
+      <params>
+         <frac32.u.map name="Filter_Env" value="41.5"/>
+         <frac32.s.map name="Filter:pitch" value="22.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="5"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="42">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/scriii" uuid="135bdb40-8e45-400d-8280-f479d10ab31b" name="scriii_1" x="140" y="42">
+            <params>
+               <frac32.s.map name="pitch" value="-12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="238" y="42">
+            <params>
+               <frac32.s.map name="detHz" value="2.369999885559082"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/scriii" uuid="135bdb40-8e45-400d-8280-f479d10ab31b" name="scriii_2" x="336" y="42">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_2" x="448" y="42">
+            <params>
+               <frac32.s.map name="detHz" value="-1.169999599456787"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/scriii" uuid="135bdb40-8e45-400d-8280-f479d10ab31b" name="scriii_3" x="546" y="42">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="644" y="42">
+            <params>
+               <frac32.u.map name="gain1" value="64.0"/>
+               <frac32.u.map name="gain2" value="64.0"/>
+               <frac32.u.map name="gain3" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="112" y="238">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="13.0"/>
+               <frac32.u.map name="s" value="8.5"/>
+               <frac32.s.map name="r" value="12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="Filter_Env" x="322" y="238">
+            <params>
+               <frac32.u.map name="gain1" onParent="true" value="40.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/filter/Smaog" uuid="e1963f89-06d5-4185-91de-5786a342a1d7" name="Filter" x="448" y="238">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="19.0"/>
+               <frac32.u.map name="reso" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="560" y="238">
+            <params>
+               <frac32.u.map name="InGain" value="64.0"/>
+               <frac32.u.map name="OutGain" value="12.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="700" y="238">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="17.0"/>
+               <frac32.u.map name="s" value="26.0"/>
+               <frac32.s.map name="r" value="24.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="798" y="238">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="896" y="238">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+               <dest obj="adsr_2" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="DCA_1" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="scriii_1" inlet="pitch"/>
+               <dest obj="DetHz_1" inlet="pitch"/>
+               <dest obj="DetHz_2" inlet="pitch"/>
+               <dest obj="Filter_Env" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="scriii_1" outlet="out"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="DPSoftClip_1" outlet="out"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="scriii_2" outlet="out"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="Filter" inlet="in"/>
+            </net>
+            <net>
+               <source obj="DetHz_1" outlet="pitch"/>
+               <dest obj="scriii_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="DetHz_2" outlet="pitch"/>
+               <dest obj="scriii_3" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="scriii_3" outlet="out"/>
+               <dest obj="mix_1" inlet="in3"/>
+            </net>
+            <net>
+               <source obj="Filter" outlet="_24dB"/>
+               <dest obj="DPSoftClip_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="adsr_2" outlet="env"/>
+               <dest obj="Filter_Env" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="Filter_Env" outlet="out"/>
+               <dest obj="Filter" inlet="pitch"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>0</NPresets>
+            <NPresetEntries>0</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Author></Author>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1259</width>
+            <height>758</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="126" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="238" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="scope_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>601</x>
+      <y>236</y>
+      <width>1280</width>
+      <height>716</height>
+   </windowPos>
+</patch-1.0>
