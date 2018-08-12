@@ -55,14 +55,14 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="924" y="0">
-      <params/>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_4" x="924" y="0">
+      <params>
+         <frac32.s.map name="freq" value="55.0"/>
+      </params>
       <attribs/>
    </obj>
-   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_4" x="1008" y="0">
-      <params>
-         <frac32.s.map name="freq" value="60.0"/>
-      </params>
+   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="1022" y="0">
+      <params/>
       <attribs/>
    </obj>
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="168" y="224">
@@ -110,13 +110,13 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_5" x="322" y="336">
       <params>
-         <frac32.s.map name="pitch" value="-44.58999967575073"/>
+         <frac32.s.map name="pitch" value="-48.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="420" y="336">
       <params>
-         <frac32.u.map name="amp" value="7.5"/>
+         <frac32.u.map name="amp" value="14.0"/>
       </params>
       <attribs/>
    </obj>
@@ -147,13 +147,13 @@
    </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_6" x="322" y="448">
       <params>
-         <frac32.s.map name="pitch" value="-27.859999656677246"/>
+         <frac32.s.map name="pitch" value="-51.859999656677246"/>
       </params>
       <attribs/>
    </obj>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="420" y="448">
       <params>
-         <frac32.u.map name="amp" value="4.5"/>
+         <frac32.u.map name="amp" value="4.0"/>
       </params>
       <attribs/>
    </obj>
@@ -215,35 +215,41 @@
    </obj>
    <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_1" x="910" y="560">
       <params>
-         <frac32.u.map name="theta" value="5.0"/>
+         <frac32.u.map name="theta" value="7.5"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_2" x="980" y="560">
       <params>
-         <frac32.u.map name="theta" value="5.0"/>
+         <frac32.u.map name="theta" value="9.5"/>
       </params>
       <attribs/>
    </obj>
    <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_3" x="1050" y="560">
       <params>
-         <frac32.u.map name="theta" value="4.5"/>
+         <frac32.u.map name="theta" value="6.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_5" x="1120" y="560">
+   <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_6" x="1162" y="560">
+      <params>
+         <frac32.u.map name="theta" value="8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_5" x="1260" y="560">
       <params>
          <frac32.u.map name="theta" value="61.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_4" x="1204" y="560">
+   <obj type="tiar/mix/rot" uuid="13c838a7-a7de-4c03-ad05-137f17497344" name="rot_4" x="1344" y="560">
       <params>
-         <frac32.u.map name="theta" value="4.0"/>
+         <frac32.u.map name="theta" value="5.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1302" y="560">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1498" y="560">
       <params/>
       <attribs/>
    </obj>
@@ -252,21 +258,18 @@
    <comment type="patch/comment" x="1008" y="700" text="Feedback &quot;matrix&quot; made of rotators"/>
    <nets>
       <net>
-         <source obj="saw_1" outlet="wave"/>
-         <dest obj="DCA_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="keyb_1" outlet="gate"/>
          <dest obj="DCA_1" inlet="gain"/>
          <dest obj="adsr_1" inlet="gate"/>
       </net>
       <net>
          <source obj="DCA_1" outlet="out"/>
-         <dest obj="lp1_4" inlet="in"/>
+         <dest obj="rot_4" inlet="r"/>
+         <dest obj="rot_6" inlet="r"/>
       </net>
       <net>
          <source obj="rot_4" outlet="i"/>
-         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -319,10 +322,6 @@
       <net>
          <source obj="*c_1" outlet="out"/>
          <dest obj="read_1" inlet="mod"/>
-      </net>
-      <net>
-         <source obj="lp1_4" outlet="out"/>
-         <dest obj="rot_4" inlet="r"/>
       </net>
       <net>
          <source obj="read_1" outlet="out"/>
@@ -402,8 +401,7 @@
       </net>
       <net>
          <source obj="rot_3" outlet="r"/>
-         <dest obj="rot_5" inlet="r"/>
-         <dest obj="out_1" inlet="left"/>
+         <dest obj="rot_6" inlet="i"/>
       </net>
       <net>
          <source obj="rot_3" outlet="i"/>
@@ -421,15 +419,31 @@
          <source obj="rot_5" outlet="i"/>
          <dest obj="write_4" inlet="in"/>
       </net>
+      <net>
+         <source obj="lp1_4" outlet="out"/>
+         <dest obj="DCA_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="lp1_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rot_6" outlet="r"/>
+         <dest obj="rot_5" inlet="r"/>
+      </net>
+      <net>
+         <source obj="rot_6" outlet="i"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>330</x>
-      <y>88</y>
-      <width>1437</width>
+      <x>48</x>
+      <y>46</y>
+      <width>1834</width>
       <height>896</height>
    </windowPos>
 </patch-1.0>
