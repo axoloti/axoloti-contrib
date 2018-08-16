@@ -1,9 +1,9 @@
-﻿<objdefs appVersion="1.0.12">
+<objdefs appVersion="1.0.12">
    <obj.normal id="rot44" uuid="44c838a7-a7de-4c03-ad05-137f17497344">
       <sDescription>4x4 fixed rotation matrix</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch>rot.axh</helpPatch>
+      <helpPatch>rot44.axh</helpPatch>
       <inlets>
          <frac32buffer name="in0"/>
          <frac32buffer name="in1"/>
@@ -18,9 +18,10 @@
       </outlets>
       <displays/>
       <params/>
-      <attribs/>
-      <code.declaration><![CDATA[
-//local
+      <attribs>
+         <text name="rotations"/>
+      </attribs>
+      <code.declaration><![CDATA[//local
 static const int N = 4;
 int32_t M[N][N];
 int32_t tmp[N][N];
@@ -35,17 +36,19 @@ int32_t cos2t_q27(uint32_t p){
   return sin2t_q27(p + (1UL << 30));
 }
 //M q27;
-void setR(int axis1, int axis2, float angle){
+void setR(int axis1, int axis2, uint32_t ia){
   for(int j = 0; j < N; j++){
     for(int i = 0; i < N; i++){
-      R[j][i] = 0;
+      R[j][i] = i == j ? 1<<27 : 0;
     }
   }
-  uint32_t ia = (uint32_t)(angle * 11930464.71f);// (2^32)/360
-  int32_t c = cos2t_q27(a);
-  int32_t s = sin2t_q27(a);
-  R[axis1][axis1]=c; R[axis1][axis2]=-s;
-  R[axis2][axis1]=s; R[axis2][axis2]= c;
+  int32_t c = cos2t_q27(ia);
+  int32_t s = sin2t_q27(ia);
+  R[axis1][axis1] = c; R[axis1][axis2] = -s;
+  R[axis2][axis1] = s; R[axis2][axis2] =  c;
+}
+void setR(int axis1, int axis2, float angle){
+  setR(axis1, axis2, (uint32_t)(angle * 11930464.71f));// (2^32)/360
 }
 
 void MxR(void){
@@ -67,28 +70,29 @@ void rot(int axis1, int axis2, float angle){
   setR(axis1, axis2, angle);
   MxR();
 }
-
-//move to init
-for(int j = 0; j < N; j++){
+void randR(uint32_t seed){
+  uint32_t r = seed * 69069 + 1;
+  for(int k = 0; k < 4; k++){
+    for(int j = 0; j < N; j++){
+      for(int i = 0; i < N; i++){
+        if(i != j){
+          setR(i, j, r = r * 69069 + 1);
+          MxR();
+        }
+      }
+    }
+  }
+}]]></code.declaration>
+      <code.init><![CDATA[for(int j = 0; j < N; j++){
   for(int i = 0; i < N; i++){
     M[j][i] = (i == j) ? 1<<27 : 0;
   }
 }
-rot(0, 1, 45.0f);
-rot(2, 3, 45.0f);
-
-
-
-]]></code.declaration>
-      <code.krate><![CDATA[uint32_t a = (param_theta & 0x07FFFFFF) << 5;
-int32_t c = cos2t_q27(a);
-int32_t s = sin2t_q27(a);]]></code.krate>
-      <code.srate><![CDATA[
-int32_t *m;
+{attr_rotations}]]></code.init>
+      <code.srate><![CDATA[int32_t *m;
 m = M[0]; outlet_out0 = ___SMMLA(inlet_in0, m[0], ___SMMLA(inlet_in1, m[1], ___SMMLA(inlet_in2, m[2], ___SMMUL(inlet_in3, m[3]))))<<5; 
 m = M[1]; outlet_out1 = ___SMMLA(inlet_in0, m[0], ___SMMLA(inlet_in1, m[1], ___SMMLA(inlet_in2, m[2], ___SMMUL(inlet_in3, m[3]))))<<5; 
 m = M[2]; outlet_out2 = ___SMMLA(inlet_in0, m[0], ___SMMLA(inlet_in1, m[1], ___SMMLA(inlet_in2, m[2], ___SMMUL(inlet_in3, m[3]))))<<5; 
-m = M[3]; outlet_out3 = ___SMMLA(inlet_in0, m[0], ___SMMLA(inlet_in1, m[1], ___SMMLA(inlet_in2, m[2], ___SMMUL(inlet_in3, m[3]))))<<5; 
-]]></code.srate>
+m = M[3]; outlet_out3 = ___SMMLA(inlet_in0, m[0], ___SMMLA(inlet_in1, m[1], ___SMMLA(inlet_in2, m[2], ___SMMUL(inlet_in3, m[3]))))<<5;]]></code.srate>
    </obj.normal>
 </objdefs>
