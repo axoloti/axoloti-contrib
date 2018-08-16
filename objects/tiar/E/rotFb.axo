@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rotFb" uuid="33b50feb-74c5-49bd-b173-d96e7114eb18">
+      <sDescription>cos sin rotation</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>rotFb.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r"/>
+         <frac32 name="theta" description="rotation angle"/>
+         <frac32 name="mod r" description="modulation of theta by input"/>
+         <frac32 name="mod i" description="modulation of theta by feedback signal"/>
+         <frac32 name="fb cutoff" description="feedback cutoff frequency"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="r" description="output signal"/>
+         <frac32buffer name="i" description="feedback signal"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta" description="rotation angle"/>
+         <frac32.s.map name="mod r" description="modulation of theta by input"/>
+         <frac32.s.map name="mod i" description="modulation of theta by feedback signal"/>
+         <frac32.s.map name="fb cutoff" description="feedback cutoff frequency"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
+  int32_t a = (p & ((1<<20)-1)) << 8; //q28
+  uint32_t i = p >> 20;
+  return ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+}
+int32_t cos2t_q27(uint32_t p){
+  return sin2t_q27(p + (1UL << 30));
+}
+int32_t in_i = 0;]]></code.declaration>
+      <code.krate><![CDATA[int32_t lpCoeff;
+int32_t cutoff = param_fb_space_cutoff + inlet_fb_space_cutoff;
+if(cutoff > 64<<21) cutoff = 64<<21;
+MTOFEXTENDED(cutoff, lpCoeff);]]></code.krate>
+      <code.srate><![CDATA[uint32_t a = (
+(
+  ( ___SMMLA(   in_i, param_mod_space_i + inlet_mod_space_i, 
+    ___SMMUL(inlet_r, param_mod_space_r + inlet_mod_space_r)<<1)<<6
+  )
+  + param_theta + inlet_theta
+)
+  & 0x07FFFFFF) << 5;
+int32_t c = cos2t_q27(a);
+int32_t s = sin2t_q27(a);
+outlet_r = ___SMMLS(in_i, s, ___SMMUL(inlet_r, c)) << 5;
+outlet_i = ___SMMLA(in_i, c, ___SMMUL(inlet_r, s)) << 5;
+//feedback through LP filter
+in_i = ___SMMLA(lpCoeff, (outlet_i - in_i) << 1, in_i);]]></code.srate>
+   </obj.normal>
+</objdefs>

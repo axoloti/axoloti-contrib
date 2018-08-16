@@ -15,22 +15,24 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="theta" noLabel="true"/>
+         <frac32.u.map name="theta"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
-  int32_t a = (p & ((1<<20)-1)) << 8; //q28
-  uint32_t i = p >> 20;
-  return ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
-}
-int32_t cos2t_q27(uint32_t p){
-  return sin2t_q27(p + (1UL << 30));
-}
-      int32_t c = 0x7FFFFFFF;
+      <code.declaration><![CDATA[
+int32_t c = 0x7FFFFFFF;
 int32_t s = 0;]]></code.declaration>
-      <code.krate><![CDATA[uint32_t a = ((param_theta + inlet_theta) & 0x07FFFFFF) << 5;
-int32_t dc = (cos2t_q27(a) - c) >> 4;
-int32_t ds = (sin2t_q27(a) - s) >> 4;]]></code.krate>
+      <code.krate><![CDATA[
+int32_t ds, dc;
+{      
+  uint32_t t = ((param_theta + inlet_theta) & 0x07FFFFFF) << 5;
+  int32_t a = (t & ((1<<20)-1)) << 8; //q28
+  uint32_t i = t >> 20;
+  //     q27    q28    q31                            q27    q27   16steps   
+  ds = (___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4) - s) >> 4;
+  i = (i + 1024) & 4095;
+  dc = (___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4) - c) >> 4;
+}
+]]></code.krate>
       <code.srate><![CDATA[c += dc;
 s += ds;
 outlet_r = ___SMMLS(inlet_i, s, ___SMMUL(inlet_r, c)) << 5;

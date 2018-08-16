@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rot m" uuid="57c358b7-a7de-4c03-ad05-137f17497344">
+      <sDescription>cos sin rotation with audio rate modulation</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>rot m ar.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r"/>
+         <frac32buffer name="i"/>
+         <frac32buffer name="theta"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="r"/>
+         <frac32buffer name="i"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta"/>
+      </params>
+      <attribs/>
+      <code.declaration/>
+      <code.krate/>
+      <code.srate><![CDATA[
+//                              q27         modulo q27  q32
+uint32_t t = ((param_theta + inlet_theta) & 0x07FFFFFF) << 5;
+int32_t a = (t & ((1<<20)-1)) << 8; //q28
+uint32_t i = t >> 20;
+//     q27          q28    q31                            q27
+int32_t s = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+i = (i + 1024) & 4095;
+int32_t c = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+//             q22   q27    q27     q22   q27    q27   q27
+outlet_r = ___SMMLS(inlet_i, s, ___SMMUL(inlet_r, c)) << 5;
+outlet_i = ___SMMLA(inlet_i, c, ___SMMUL(inlet_r, s)) << 5;
+]]></code.srate>
+   </obj.normal>
+</objdefs>
