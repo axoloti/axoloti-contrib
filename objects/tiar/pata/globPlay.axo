@@ -6,7 +6,8 @@
       <helpPatch>globPlay.axh</helpPatch>
       <inlets>
          <frac32buffer name="r"/>
-         <frac32 name="theta" description="rotation angle"/>
+         <frac32buffer name="theta ar"/>
+         <frac32 name="theta kr" description="rotation angle"/>
          <frac32 name="mod r" description="modulation of theta by input"/>
          <frac32 name="mod i" description="modulation of theta by feedback signal"/>
          <frac32 name="LP" description="feedback low pass cutoff"/>
@@ -41,6 +42,7 @@ int32_t d[256];
 uint8_t dc=0;
 int32_t in_i = 0;
 int32_t modI = 0, modR = 0, theta = 1<<28;
+int32_t a_r=0;
 int32_t LPCoeff = 1<<28, lp = 0;
 int32_t HPCoeff = 1<<28, hp = 0;]]></code.declaration>
       <code.krate><![CDATA[int delay = param_delay - 1;  
@@ -55,13 +57,24 @@ MTOFEXTENDED(cutoff, nHPCoeff);
 //deltas for linear interpolations at audio rate
 int32_t dLPCoeff = (nLPCoeff - LPCoeff)>>4;
 int32_t dHPCoeff = (nHPCoeff - HPCoeff)>>4;
-int32_t dModI = ( param_mod_space_i + inlet_mod_space_i -  modI)>>4;
-int32_t dModR = ( param_mod_space_r + inlet_mod_space_r -  modR)>>4;
-int32_t dTheta = (param_theta       + inlet_theta       - theta)>>4;]]></code.krate>
-      <code.srate><![CDATA[theta += dTheta;
+int32_t nModI = param_mod_space_i + inlet_mod_space_i;
+int32_t nModR = param_mod_space_r + inlet_mod_space_r;
+int32_t dTheta = (param_theta  + inlet_theta_space_kr   - theta)>>4;
+//jump
+if(abs(dTheta)>(1<<19)){
+  theta = param_theta  + inlet_theta_space_kr;
+  dTheta = 0;
+}]]></code.krate>
+      <code.srate><![CDATA[// update modulation on zero crossings
+if(a_r > 0 != inlet_r > 0)
+  modR = nModR;
+a_r = inlet_r;
+ 
+theta += dTheta;
 uint32_t a = theta;
-a += ___SMMLA(    in_i, modI += dModI, 
-      ___SMMUL(inlet_r, modR += dModR))<<6;
+a += ___SMMLA(    in_i, modI, 
+      ___SMMUL(inlet_r, modR))<<6;
+a += inlet_theta_space_ar;
 a &= 0x07FFFFFF;
 a <<= 5;
 
@@ -78,6 +91,9 @@ dc--;
 d[dc] = outlet_i - hp;
 lp = ___SMMLA(LPCoeff += dLPCoeff, (d[(uint8_t)(dc + delay)] - lp) << 1, lp);
 lp = __SSAT(lp, 29);
+// update modulation on zero crossings
+if(in_i > 0 != lp > 0)
+  modI = nModI;
 in_i = lp;]]></code.srate>
    </obj.normal>
 </objdefs>
