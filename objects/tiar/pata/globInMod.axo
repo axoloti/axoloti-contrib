@@ -1,12 +1,14 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="rotg" uuid="19a857b7-a7de-4c03-ad05-137f18a97344">
-      <sDescription>cos sin rotation</sDescription>
+   <obj.normal id="globInMod" uuid="58b50feb-74c5-49bd-b173-d96e7114eb18">
+      <sDescription>input modulated globulator</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch>rotg.axh</helpPatch>
+      <helpPatch>globInMod.axh</helpPatch>
       <inlets>
          <frac32buffer name="r"/>
          <frac32buffer name="i"/>
+         <frac32 name="mod r"/>
+         <frac32 name="mod i"/>
       </inlets>
       <outlets>
          <frac32buffer name="r"/>
@@ -14,8 +16,8 @@
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="theta"/>
-         <frac32.u.map name="gain"/>
+         <frac32.s.map name="mod r"/>
+         <frac32.s.map name="mod i"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
@@ -25,12 +27,15 @@
 }
 int32_t cos2t_q27(uint32_t p){
   return sin2t_q27(p + (1UL << 30));
-}]]></code.declaration>
-      <code.krate><![CDATA[uint32_t a = (param_theta & 0x07FFFFFF) << 5;
-int32_t g = param_gain;
-int32_t c = ___SMMUL(g, cos2t_q27(a)) << 5;
-int32_t s = ___SMMUL(g, sin2t_q27(a)) << 5;]]></code.krate>
-      <code.srate><![CDATA[outlet_r = ___SMMLS(inlet_i, s, ___SMMUL(inlet_r, c)) << 5;
+}
+      int32_t c = 0x7FFFFFFF;
+int32_t s = 0;]]></code.declaration>
+      <code.srate><![CDATA[uint32_t a = ((
+___SMMLA(inlet_i, param_mod_space_i + inlet_mod_space_i, 
+___SMMUL(inlet_r, param_mod_space_r + inlet_mod_space_r))<<6) & 0x07FFFFFF) << 5;
+int32_t c = cos2t_q27(a);
+int32_t s = sin2t_q27(a);
+outlet_r = ___SMMLS(inlet_i, s, ___SMMUL(inlet_r, c)) << 5;
 outlet_i = ___SMMLA(inlet_i, c, ___SMMUL(inlet_r, s)) << 5;]]></code.srate>
    </obj.normal>
 </objdefs>

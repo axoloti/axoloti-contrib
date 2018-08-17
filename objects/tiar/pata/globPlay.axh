@@ -19,9 +19,9 @@
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="308" y="140">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="44.0"/>
-         <frac32.u.map name="s" value="38.5"/>
-         <frac32.s.map name="r" value="32.0"/>
+         <frac32.s.map name="d" value="49.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -29,12 +29,21 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/E/rotFb" uuid="33b50feb-74c5-49bd-b173-d96e7114eb18" name="rotFb_1" x="546" y="140">
+   <obj type="tiar/pata/rotFb" uuid="33b50feb-74c5-49bd-b173-d96e7114eb18" name="rotFb_1" x="476" y="140">
       <params>
-         <frac32.u.map name="theta" value="22.5"/>
-         <frac32.s.map name="mod r" value="29.0"/>
-         <frac32.s.map name="mod i" value="28.0"/>
-         <frac32.s.map name="fb cutoff" value="38.0"/>
+         <frac32.u.map name="theta" value="54.0"/>
+         <frac32.s.map name="mod r" value="26.0"/>
+         <frac32.s.map name="mod i" value="-9.0"/>
+         <frac32.s.map name="LP" value="20.0"/>
+         <frac32.s.map name="HP" value="4.0"/>
+         <int32 name="delay" value="40"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="574" y="140">
+      <params>
+         <frac32.u.map name="InGain" value="7.5"/>
+         <frac32.u.map name="OutGain" value="15.5"/>
       </params>
       <attribs/>
    </obj>
@@ -46,16 +55,31 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="tiar/env/rms meter" uuid="19a127f7-a7de-4c03-ad05-137f17497344" name="rms_1" x="252" y="420">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="350" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/env/rms meter" uuid="19a127f7-a7de-4c03-ad05-137f17497344" name="rms_2" x="252" y="518">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_2" x="350" y="518">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="sine_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
          <dest obj="vca_1" inlet="a"/>
-      </net>
-      <net>
-         <source obj="keyb_1" outlet="note"/>
-         <dest obj="sine_1" inlet="pitch"/>
-         <dest obj="rotFb_1" inlet="fb cutoff"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
@@ -68,12 +92,32 @@
       <net>
          <source obj="vca_1" outlet="o"/>
          <dest obj="rotFb_1" inlet="r"/>
+         <dest obj="rms_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="rms_1" inlet="pitch"/>
+         <dest obj="rms_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
       </net>
       <net>
          <source obj="rotFb_1" outlet="r"/>
-         <dest obj="out_1" inlet="right"/>
-         <dest obj="MIDscope_1" inlet="in"/>
-         <dest obj="out_1" inlet="left"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
+         <dest obj="rms_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rms_1" outlet="rms"/>
+         <dest obj="dial_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rms_2" outlet="rms"/>
+         <dest obj="dial_2" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -81,8 +125,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>434</x>
-      <y>11</y>
+      <x>376</x>
+      <y>26</y>
       <width>1467</width>
       <height>969</height>
    </windowPos>

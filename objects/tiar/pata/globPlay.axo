@@ -1,0 +1,83 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="globPlay" uuid="33b50feb-74c5-49bd-b173-d96e7114eb18">
+      <sDescription>Playful Globulator !</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>globPlay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r"/>
+         <frac32 name="theta" description="rotation angle"/>
+         <frac32 name="mod r" description="modulation of theta by input"/>
+         <frac32 name="mod i" description="modulation of theta by feedback signal"/>
+         <frac32 name="LP" description="feedback low pass cutoff"/>
+         <frac32 name="HP" description="feedback high pass cutoff"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="r" description="output signal"/>
+         <frac32buffer name="i" description="feedback signal"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta" description="rotation angle"/>
+         <frac32.s.map name="mod r" description="modulation of theta by input"/>
+         <frac32.s.map name="mod i" description="modulation of theta by feedback signal"/>
+         <frac32.s.map name="LP" description="feedback cutoff frequency"/>
+         <frac32.s.map name="HP" description="feedback cutoff frequency"/>
+         <int32 name="delay">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
+  int32_t a = (p & ((1<<20)-1)) << 8; //q28
+  uint32_t i = p >> 20;
+  return ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+}
+int32_t cos2t_q27(uint32_t p){
+  return sin2t_q27(p + (1UL << 30));
+}
+int32_t d[256];
+uint8_t dc=0;
+int32_t in_i = 0;
+int32_t modI = 0, modR = 0, theta = 1<<28;
+int32_t LPCoeff = 1<<28, lp = 0;
+int32_t HPCoeff = 1<<28, hp = 0;]]></code.declaration>
+      <code.krate><![CDATA[int delay = param_delay - 1;  
+int32_t cutoff = param_LP + inlet_LP;
+if(cutoff > 64<<21) cutoff = 64<<21;
+int32_t nLPCoeff;
+MTOFEXTENDED(cutoff, nLPCoeff);
+cutoff = param_HP + inlet_HP;
+if(cutoff > 64<<21) cutoff = 64<<21;
+int32_t nHPCoeff;
+MTOFEXTENDED(cutoff, nHPCoeff);
+//deltas for linear interpolations at audio rate
+int32_t dLPCoeff = (nLPCoeff - LPCoeff)>>4;
+int32_t dHPCoeff = (nHPCoeff - HPCoeff)>>4;
+int32_t dModI = ( param_mod_space_i + inlet_mod_space_i -  modI)>>4;
+int32_t dModR = ( param_mod_space_r + inlet_mod_space_r -  modR)>>4;
+int32_t dTheta = (param_theta       + inlet_theta       - theta)>>4;]]></code.krate>
+      <code.srate><![CDATA[theta += dTheta;
+uint32_t a = theta;
+a += ___SMMLA(    in_i, modI += dModI, 
+      ___SMMUL(inlet_r, modR += dModR))<<6;
+a &= 0x07FFFFFF;
+a <<= 5;
+
+int32_t c = cos2t_q27(a);
+int32_t s = sin2t_q27(a);
+outlet_r = ___SMMLS(in_i, s, ___SMMUL(inlet_r, c)) << 5;
+outlet_i = ___SMMLA(in_i, c, ___SMMUL(inlet_r, s)) << 5;
+
+//feedback through filters and delay
+hp = ___SMMLA(HPCoeff += dHPCoeff, (outlet_i - hp) << 1, hp);
+// delay
+dc--;
+// hp is actually 'outlet_i - hp' 
+d[dc] = outlet_i - hp;
+lp = ___SMMLA(LPCoeff += dLPCoeff, (d[(uint8_t)(dc + delay)] - lp) << 1, lp);
+lp = __SSAT(lp, 29);
+in_i = lp;]]></code.srate>
+   </obj.normal>
+</objdefs>
