@@ -20,10 +20,12 @@
       <code.declaration><![CDATA[
 int32_t theta = 0;
       ]]></code.declaration>
-      <code.krate><![CDATA[
-int32_t dTheta = (inlet_theta_space_kr - theta)>>4;
-      ]]></code.krate>
-
+      <code.krate><![CDATA[int32_t dTheta = (inlet_theta_space_kr - theta)>>4;
+//jump
+if(abs(dTheta)>(1<<19)){
+  theta = inlet_theta_space_kr;
+  dTheta = 0;
+}]]></code.krate>
       <code.srate><![CDATA[
 // linear interpolation of control rate theta
 theta += dTheta;
