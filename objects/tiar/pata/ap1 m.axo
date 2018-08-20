@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ap1 m" uuid="12350feb-74c5-59bd-b173-d96e7114ef18">
+      <sDescription>
+</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ap1 m.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32buffer name="theta ar"/>
+         <frac32 name="theta kr" description="rotation angle"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output signal"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta" description="rotation angle" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+int32_t theta = 0;
+
+int32_t Z_1 = 0;
+]]></code.declaration>
+      <code.krate><![CDATA[
+int32_t dTheta = (inlet_theta_space_kr + param_theta - theta)>>4;
+//jump
+if(abs(dTheta)>(1<<19)){
+  theta = inlet_theta_space_kr;
+  dTheta = 0;
+}
+ ]]></code.krate>
+      <code.srate><![CDATA[//linear interpolation of krate theta
+theta += dTheta;      
+      
+uint32_t t = ((uint32_t)(inlet_theta_space_ar + theta)) << 5;
+int32_t a = (t & ((1<<20)-1)) << 8; //q28
+uint32_t i = t >> 20;
+int32_t s = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+i = (i + 1024) & 4095;
+int32_t c = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+
+outlet_out = ___SMMLS(Z_1, s, ___SMMUL(inlet_in, c)) << 5;
+Z_1      = ___SMMLA(Z_1, c, ___SMMUL(inlet_in, s)) << 5;]]></code.srate>
+   </obj.normal>
+</objdefs>
