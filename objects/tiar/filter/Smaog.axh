@@ -7,11 +7,13 @@
       <params/>
       <attribs>
          <text attributeName="function">
-            <sText><![CDATA[saw(x)]]></sText>
+            <sText><![CDATA[x-0.5f - (x>0.5f?0.0625f:-0.0625f)]]></sText>
          </text>
+         <combo attributeName="size" selection="512"/>
+         <combo attributeName="location" selection="IntRAM"/>
       </attribs>
    </obj>
-   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_1" x="252" y="0">
+   <obj type="tiar/PIWT/oscLight" uuid="6850cfa5-d3dd-4cbf-87d4-48a6d0b03706" name="oscLight_1" x="252" y="0">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
       </params>
@@ -19,46 +21,46 @@
          <objref attributeName="piwt" obj="gen_1"/>
       </attribs>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="392" y="0">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="490" y="0">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
-         <frac32.s.map name="d" value="43.0"/>
+         <frac32.s.map name="d" value="25.0"/>
          <frac32.u.map name="s" value="0.0"/>
-         <frac32.s.map name="r" value="-29.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="518" y="0">
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="616" y="0">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/filter/Smaog" uuid="e1963f89-06d5-4185-91de-5786a342a1d7" name="Smaog_1" x="644" y="0">
+   <obj type="tiar/filter/Smaog" uuid="e1963f89-06d5-4185-91de-5786a342a1d7" name="Smaog_1" x="742" y="0">
       <params>
-         <frac32.s.map name="pitch" value="18.0"/>
-         <frac32.u.map name="reso" value="56.5"/>
+         <frac32.s.map name="pitch" value="14.0"/>
+         <frac32.u.map name="reso" value="16.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="756" y="0">
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="854" y="0">
       <params/>
       <attribs/>
    </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="840" y="0">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="938" y="0">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="54.0"/>
          <frac32.u.map name="s" value="64.0"/>
-         <frac32.s.map name="r" value="-29.0"/>
+         <frac32.s.map name="r" value="-28.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="938" y="0">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1036" y="0">
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="994" y="0">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1092" y="0">
       <params/>
       <attribs/>
    </obj>
@@ -68,7 +70,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="i_1" x="644" y="154">
+   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="i_1" x="742" y="154">
       <params>
          <int32.vradio name="value" value="0"/>
       </params>
@@ -97,8 +99,8 @@
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="scope_synchro" inlet="pitch"/>
-         <dest obj="osc_1" inlet="pitch"/>
          <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="oscLight_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="scope_synchro" outlet="wave"/>
@@ -110,7 +112,7 @@
          <dest obj="vca_1" inlet="v"/>
       </net>
       <net>
-         <source obj="osc_1" outlet="wave"/>
+         <source obj="oscLight_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="in"/>
          <dest obj="Smaog_1" inlet="in"/>
       </net>
