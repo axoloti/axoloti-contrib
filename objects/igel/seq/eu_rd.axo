@@ -1,0 +1,102 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="eu_rd" uuid="b407d176-e452-40ee-b502-2d7de5caedc3">
+      <sDescription>reads values from the eueu_table allocation objects which represent binary patterns of euclidean rhytmic sequences. i created that table with sptnk&apos;s euclidean sequencer by saving all possible outputs in that table. maximum length and steps are 32.
+====================================
+inlet_length and inlet_steps are addressing the table like this:
+
+length = 8
+steps = 3
+output = 73 (xooxooxo)
+index = (length*32)+steps
+======================================
+length = 17
+steps = 7
+output = 43593 (xooxoxoxoxoxoxoxoxoxoxo)
+======================================</sDescription>
+      <author>Remco van der Most *modified by igel</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32 name="length"/>
+         <int32 name="steps"/>
+         <int32.positive name="count"/>
+         <bool32.rising name="rotate"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="enc"/>
+         <bool32.pulse name="step"/>
+      </outlets>
+      <displays>
+         <int32.label name="value" noLabel="true"/>
+         <int32.label name="index "/>
+         <int32.label name="lengthTEMP"/>
+         <int32.label name="stepsTEMP"/>
+         <int32.label name="rotate"/>
+      </displays>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t bits [32];
+uint32_t mask [32];
+int32_t temp_length;
+int32_t temp_steps;
+int32_t temp;
+int32_t length;
+int32_t steps;
+int32_t index;
+uint32_t enc;
+int rotate;]]></code.declaration>
+      <code.init><![CDATA[for(uint32_t i=0;i<32;i++) {
+	bits[i]= ((1 << i) + 0);
+	mask[i]= ((0x80000000 >> i) + 0);
+}
+
+temp_length=0;
+temp_steps=0;
+temp=0;
+length=0;
+steps=0;
+index=0;
+enc=0;
+rotate=0;]]></code.init>
+      <code.krate><![CDATA[if( inlet_length != temp_length | inlet_steps != temp_steps ){
+	
+	length = inlet_length;
+	steps = inlet_steps;
+
+	
+	if( length < steps ) {
+		length ^= steps;
+		steps ^= length;
+		length ^= steps;	
+	};
+	
+		temp_length = length;
+		temp_steps = steps; 
+			
+		index = ( length * 32 + steps )&1023;
+		enc = attr_table.array[ __USAT( index,attr_table.LENGTHPOW ) ];		
+};
+
+if((inlet_rotate>0) && !rotate){
+	if(((enc>>1)&1)>0){
+		enc<<=1;
+		enc=(1<<length)|enc;
+	}else{
+		enc<<=1;
+		enc=(1<<length)&enc;
+		};rotate=1;
+}else if(!(inlet_rotate>0)) rotate=0;	
+
+
+outlet_enc = enc;
+outlet_step=(enc & bits[inlet_count]);
+
+disp_value=enc;
+disp_index=index;
+disp_lengthTEMP = temp_length;
+disp_stepsTEMP = temp_steps;
+disp_rotate=bits[rotate];]]></code.krate>
+   </obj.normal>
+</objdefs>
