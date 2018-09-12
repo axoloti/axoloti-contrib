@@ -1,0 +1,113 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/ADD16/amp" uuid="53c7bb32-3349-44c5-a22c-298698ebc5ed" name="amp_1" x="14" y="14">
+      <params>
+         <frac32.u.mapvsl name="a1" value="25.0"/>
+         <frac32.u.mapvsl name="a2" value="24.5"/>
+         <frac32.u.mapvsl name="a3" value="26.0"/>
+         <frac32.u.mapvsl name="a4" value="0.0"/>
+         <frac32.u.mapvsl name="a5" value="23.5"/>
+         <frac32.u.mapvsl name="a6" value="19.5"/>
+         <frac32.u.mapvsl name="a7" value="26.5"/>
+         <frac32.u.mapvsl name="a8" value="3.0"/>
+         <frac32.u.mapvsl name="a9" value="28.0"/>
+         <frac32.u.mapvsl name="a10" value="4.0"/>
+         <frac32.u.mapvsl name="a11" value="6.0"/>
+         <frac32.u.mapvsl name="a12" value="6.5"/>
+         <frac32.u.mapvsl name="a13" value="6.5"/>
+         <frac32.u.mapvsl name="a14" value="29.0"/>
+         <frac32.u.mapvsl name="a15" value="31.5"/>
+         <frac32.u.mapvsl name="a16" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="224" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/ADD16/sl16s" uuid="5316bb32-3349-16c5-a22c-298e98ebcfed" name="sl16s_1" x="14" y="168">
+      <params>
+         <frac32.s.mapvsl name="h1" value="26.0"/>
+         <frac32.s.mapvsl name="h2" value="34.0"/>
+         <frac32.s.mapvsl name="h3" value="22.0"/>
+         <frac32.s.mapvsl name="h4" value="46.0"/>
+         <frac32.s.mapvsl name="h5" value="34.0"/>
+         <frac32.s.mapvsl name="h6" value="19.0"/>
+         <frac32.s.mapvsl name="h7" value="40.0"/>
+         <frac32.s.mapvsl name="h8" value="64.0"/>
+         <frac32.s.mapvsl name="h9" value="35.0"/>
+         <frac32.s.mapvsl name="h10" value="64.0"/>
+         <frac32.s.mapvsl name="h11" value="54.0"/>
+         <frac32.s.mapvsl name="h12" value="48.0"/>
+         <frac32.s.mapvsl name="h13" value="46.0"/>
+         <frac32.s.mapvsl name="h14" value="16.0"/>
+         <frac32.s.mapvsl name="h15" value="25.0"/>
+         <frac32.s.mapvsl name="h16" value="14.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/ADD16/decay" uuid="de16bb32-3349-44c5-a22c-298698ebc5ed" name="decay_1" x="224" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="ctlAmp" obj="amp_1"/>
+         <objref attributeName="sl16s" obj="sl16s_1"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/ADD16/pitch" uuid="53c7cc32-3349-44c5-a22c-298698ebc5ed" name="pitch_1" x="364" y="182">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/ADD16/osc" uuid="181f139c-ac57-4f15-a551-dc821a6bb46f" name="osc_1" x="462" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="ctlAmp" obj="decay_1"/>
+         <objref attributeName="ctlPch" obj="pitch_1"/>
+      </attribs>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="588" y="182">
+      <params>
+         <frac32.u.map name="amp" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="686" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="238" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="decay_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="osc_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="*c_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="pitch_1" inlet="pitch"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>37</x>
+      <y>371</y>
+      <width>978</width>
+      <height>650</height>
+   </windowPos>
+</patch-1.0>

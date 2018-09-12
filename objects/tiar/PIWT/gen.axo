@@ -54,22 +54,46 @@ float *fv; //in place
 int32_t *array;
 int32_t *Iv;
 
-float rnd(float x) {return (((((int32_t)(x))*69069+1)*69069+1)*69069)>0 ? 1 : -1;}
-float mod1(float x) { return (x + 100) - ((int)(x + 100)); }
-float saw(float x){ return 2 * mod1(x) - 1; }
-float rect(float x,float r) {x = mod1(x); return x < r ? -1 : 1;}
-float sqr(float x) {return rect(x, 0.5f); }
-float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
+static float rnd(float x) {return (((((int32_t)(x))*69069+1)*69069+1)*69069)>0 ? 1 : -1;}
+static float rndf(float x) {return arm::q_to_float(((arm::float_to_q(x,31)*69069+1)*69069+1)*69069,31);}
+static float mod1(float x) { return (x + 128) - ((int)(x + 128)); }
+static float saw(float x){ return 2 * mod1(x) - 1; }
+static float rect(float x,float r) {x = mod1(x); return x < r ? -1 : 1;}
+static float sqr(float x) {return rect(x, 0.5f); }
+static float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
   x = mod1(x);
   if(x < r) return -1 + (2 * x / r);
   else      return 1 - 2 * (x - r) / (1.0f - r);
 }
-float tri(float x){ return tri(x,0.5f); }
-float cos1(float x){ x = tri(x); return -x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
-float sin1(float x){ return cos1(x-0.25f); }
-float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
-float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }
-float pow(float x, int N){
+static float tri(float x){ return tri(x,0.5f); }
+static float cos1(float x){ x = tri(x); return -x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
+static float sin1(float x){ return cos1(x-0.25f); }
+
+//additive Synth from 3 to 10 harmonics
+//ex: addSynth(x, 0.2f,0.5f,0.33f,0.25f,0.2f,0.1667f, 1.0f, 0.125f)
+static float addSynth(float x, float h1, float h2, float h3){
+  return h1 * sin1(x) + h2 * sin1(2*x) + h3 * sin1(3*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4){
+  return addSynth(x,h1,h2,h3) + h4 * sin1(4*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5){
+  return addSynth(x,h1,h2,h3,h4) + h5 * sin1(5*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6){
+  return addSynth(x,h1,h2,h3,h4,h5) + h6 * sin1(6*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7){
+  return addSynth(x,h1,h2,h3,h4,h5,h6) + h7 * sin1(7*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7) + h8 * sin1(8*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8, float h9){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7,h8) + h9 * sin1(9*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8, float h9, float h10){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7,h8,h9) + h10 * sin1(10*x);}
+  
+
+  
+  
+static float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
+static float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }
+static float pow(float x, int N){
   float y = 1.0f;
   if(N >= 0)
     for(int i = 0; i <  N; i++) y *=  x;
@@ -90,7 +114,7 @@ static float exp(float x){
   while(x < 0){ x+=1.0f; coef *= 1 / 2.718281828f; }
   return exp1(x) * coef;
 }
-float hann(float x){ return 0.5f - 0.5f * cos1(x); }
+static float hann(float x){ return 0.5f - 0.5f * cos1(x); }
 
 void prepare(void){
   //pre integrate

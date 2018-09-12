@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="decay" uuid="de16bb32-3349-44c5-a22c-298698ebc5ed">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <bool32.rising name="trig"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="ctlAmp"/>
+         <objref name="sl16s"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t NBH = 16;
+
+int32_t g[NBH];
+int32_t gf[NBH];
+uint32_t dp = 1<<27;
+bool atrig = false;
+
+
+uint32_t getGain(int h){
+    return gf[h];
+}]]></code.declaration>
+      <code.init><![CDATA[for(int h = 0; h < NBH; h++){ 
+  g[h] = gf[h] = 0;
+  
+  }]]></code.init>
+      <code.krate><![CDATA[if(inlet_trig && !atrig){
+  for(int h = 0; h < NBH; h++){
+    g[h] = attr_ctlAmp.getGain(h);
+  }
+}
+atrig = inlet_trig;       
+/*
+            int32_t in = - inlet_d - param_d;
+      int32_t c;
+      MTOFEXTENDED(in, c);
+      c = 0x7FFFFFFF - (c >> 2);
+      val = ___SMMUL(val, c)<<1;
+*/
+int32_t f;
+for(int h = 0; h < NBH; h++){
+  MTOFEXTENDED(-attr_sl16s.get(h), f);
+  g[h]  = ___SMMLS(g[h]  , f, g[h]);
+  gf[h] = ___SMMLA(g[h]-gf[h],0x40000000,gf[h]); // simple LP to limit clicks
+}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

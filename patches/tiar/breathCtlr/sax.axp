@@ -1,8 +1,8 @@
 <patch-1.0 appVersion="1.0.12">
    <comment type="patch/comment" x="42" y="14" text="T.Rochebois 2018"/>
-   <patcher type="patch/patcher" uuid="2fc2b2b0-872a-4a44-a4f2-b1906935a31c" name="patcher_1" x="42" y="42">
+   <patcher type="patch/patcher" uuid="85351317-ce43-4b71-9814-8ac8e2a75f89" name="patcher_1" x="42" y="42">
       <params>
-         <frac32.u.map name="velocity" value="64.0"/>
+         <frac32.u.map name="velocity" value="0.0"/>
          <frac32.u.map name="aftertouch" value="64.0"/>
          <frac32.s.map name="adsr_1:a" value="-15.0"/>
          <frac32.s.map name="adsr_1:d" value="39.0"/>
@@ -17,11 +17,18 @@
          <combo attributeName="poly" selection="8"/>
       </attribs>
       <subpatch appVersion="1.0.12">
-         <obj type="tiar/midi/in/mpe sbrd rise" uuid="B4323477e6476a10b9332922e5dfcd2705641af1" name="mpe_1" x="28" y="70">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="56">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="pressure" x="224" y="70">
+         <obj type="midi/in/cc" uuid="6096d217701cbdf251a9ab6ba029af78c5722a56" name="cc_1" x="126" y="56">
+            <params/>
+            <attribs>
+               <spinner attributeName="cc" value="2"/>
+               <spinner attributeName="default" value="0"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="pressure" x="238" y="56">
             <params/>
             <attribs/>
          </obj>
@@ -33,15 +40,6 @@
          </obj>
          <obj type="math/max" uuid="12440f9565ca6f036f087665b49fb708062e90d0" name="max_2" x="518" y="140">
             <params/>
-            <attribs/>
-         </obj>
-         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="84" y="238">
-            <params>
-               <frac32.s.map name="a" value="-19.0"/>
-               <frac32.s.map name="d" value="0.0"/>
-               <frac32.u.map name="s" value="64.0"/>
-               <frac32.s.map name="r" value="-22.0"/>
-            </params>
             <attribs/>
          </obj>
          <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="196" y="238">
@@ -75,26 +73,6 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/kfunc/b8u" uuid="a01253ac-ca4b-430b-901f-cd378aad394c" name="b8u_6" x="70" y="504">
-            <params>
-               <frac32.u.mapvsl name="p0" value="0.0"/>
-               <frac32.u.mapvsl name="p1" value="0.0"/>
-               <frac32.u.mapvsl name="p2" value="35.0"/>
-               <frac32.u.mapvsl name="p3" value="64.0"/>
-               <frac32.u.mapvsl name="p4" value="64.0"/>
-               <frac32.u.mapvsl name="p5" value="64.0"/>
-               <frac32.u.mapvsl name="p6" value="33.5"/>
-               <frac32.u.mapvsl name="p7" value="0.0"/>
-               <frac32.u.mapvsl name="p8" value="0.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="tiar/tuning/s quant m" uuid="380f5a7c-54d8-463a-b912-e1926bc111fc" name="s_1" x="182" y="504">
-            <params/>
-            <attribs/>
-         </obj>
-         <comment type="patch/comment" x="182" y="560" text="Smooth pitch quantifier controlled by &quot;slide&quot;"/>
-         <comment type="patch/comment" x="182" y="574" text="The middle of keywaves are more quantified than upper and lower channels"/>
          <comment type="patch/comment" x="224" y="658" text="Exciter"/>
          <comment type="patch/comment" x="770" y="658" text="Rotations preserve signal energy"/>
          <comment type="patch/comment" x="1036" y="658" text="Velocity control of brilliance"/>
@@ -230,10 +208,6 @@
                <dest obj="outlet_1" inlet="outlet"/>
             </net>
             <net>
-               <source obj="mpe_1" outlet="gate2"/>
-               <dest obj="adsr_1" inlet="gate"/>
-            </net>
-            <net>
                <source obj="glob_1" outlet="r"/>
                <dest obj="DPSoftClip_1" inlet="in"/>
             </net>
@@ -246,42 +220,8 @@
                <dest obj="u8u_1" inlet="in"/>
             </net>
             <net>
-               <source obj="adsr_2" outlet="env"/>
-               <dest obj="*_2" inlet="b"/>
-            </net>
-            <net>
-               <source obj="b8u_6" outlet="out"/>
-               <dest obj="s_1" inlet="quant"/>
-            </net>
-            <net>
-               <source obj="mpe_1" outlet="timbre"/>
-               <dest obj="b8u_6" inlet="in"/>
-            </net>
-            <net>
-               <source obj="mpe_1" outlet="pitch"/>
-               <dest obj="s_1" inlet="pitch"/>
-            </net>
-            <net>
-               <source obj="mpe_1" outlet="pressure"/>
-               <dest obj="*_2" inlet="a"/>
-               <dest obj="pressure" inlet="outlet"/>
-            </net>
-            <net>
-               <source obj="mpe_1" outlet="gate"/>
-               <dest obj="adsr_2" inlet="gate"/>
-            </net>
-            <net>
-               <source obj="s_1" outlet="pitch"/>
-               <dest obj="sine_1" inlet="pitch"/>
-               <dest obj="mix_1" inlet="in1"/>
-            </net>
-            <net>
                <source obj="max_2" outlet="out"/>
                <dest obj="u4b_2" inlet="in"/>
-            </net>
-            <net>
-               <source obj="mpe_1" outlet="velocity"/>
-               <dest obj="velocity" inlet="in"/>
             </net>
             <net>
                <source obj="max_1" outlet="out"/>
@@ -305,14 +245,37 @@
                <dest obj="max_2" inlet="in1"/>
                <dest obj="*_1" inlet="b"/>
             </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="*_2" inlet="b"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="velocity" inlet="in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="sine_1" inlet="pitch"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="cc_1" outlet="midiCC"/>
+               <dest obj="pressure" inlet="outlet"/>
+               <dest obj="*_2" inlet="a"/>
+            </net>
          </nets>
          <settings>
-            <subpatchmode>polyexpression</subpatchmode>
+            <subpatchmode>polyphonic</subpatchmode>
             <MidiChannel>1</MidiChannel>
             <NPresets>0</NPresets>
             <NPresetEntries>0</NPresetEntries>
             <NModulationSources>0</NModulationSources>
             <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Author></Author>
             <Saturate>true</Saturate>
          </settings>
          <notes><![CDATA[]]></notes>
@@ -335,7 +298,13 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="196" y="210">
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_1" x="210" y="168">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="3"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="350" y="182">
       <params/>
       <attribs/>
    </obj>
@@ -358,16 +327,20 @@
          <dest obj="DPSoftClip_1" inlet="in"/>
       </net>
       <net>
-         <source obj="patcher_1" outlet="pressure"/>
-         <dest obj="dial_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="pgm_1" outlet="o"/>
          <dest obj="load_1" inlet="i"/>
       </net>
       <net>
          <source obj="pgm_1" outlet="trig"/>
          <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="&gt;&gt;_1" outlet="result"/>
+         <dest obj="dial_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="pressure"/>
+         <dest obj="&gt;&gt;_1" inlet="a"/>
       </net>
    </nets>
    <settings>
