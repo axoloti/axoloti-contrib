@@ -1,14 +1,10 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="b0df41c0-4e92-4f6b-9e6e-6805f01f6b2a" name="patcher_1" x="14" y="14">
+   <patcher type="patch/patcher" uuid="2a5e5cf6-c571-4171-a2eb-c70cbc5f20d3" name="patcher_1" x="14" y="14">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="6"/>
       </attribs>
       <subpatch appVersion="1.0.12">
-         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="70">
-            <params/>
-            <attribs/>
-         </obj>
          <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="140" y="70">
             <params/>
             <attribs/>
@@ -27,13 +23,12 @@
          </obj>
          <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="448" y="70">
             <params>
-               <frac32.u.map name="gain1" value="0.07999999821186066"/>
+               <frac32.u.map name="gain1" value="0.07999992370605469"/>
             </params>
             <attribs/>
          </obj>
          <obj type="tiar/ADD16/amp" uuid="53c7bb32-3349-44c5-a22c-298698ebc5ed" name="amp_1" x="588" y="70">
             <params>
-               <frac32.s.map name="pitch" value="0.0"/>
                <frac32.u.mapvsl name="a1" value="11.0"/>
                <frac32.u.mapvsl name="a2" value="32.5"/>
                <frac32.u.mapvsl name="a3" value="19.5"/>
@@ -51,6 +46,10 @@
                <frac32.u.mapvsl name="a15" value="13.5"/>
                <frac32.u.mapvsl name="a16" value="45.0"/>
             </params>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="84" y="140">
+            <params/>
             <attribs/>
          </obj>
          <obj type="tiar/ADD16/decay" uuid="dd16bb32-3349-44c5-a22c-298698ebc5ed" name="decay_1" x="686" y="238">
@@ -73,17 +72,24 @@
                <frac32.s.mapvsl name="d16" value="-20.0"/>
             </params>
             <attribs>
-               <objref attributeName="controller" obj="amp_1"/>
+               <objref attributeName="ctlAmp" obj="amp_1"/>
             </attribs>
          </obj>
          <obj type="tiar/ADD16/osc" uuid="181f139c-ac57-4f15-a551-dc821a6bb46f" name="osc_1" x="896" y="238">
             <params/>
             <attribs>
-               <objref attributeName="controller" obj="decay_1"/>
+               <objref attributeName="ctlAmp" obj="decay_1"/>
+               <objref attributeName="ctlPch" obj="pitch_1"/>
             </attribs>
          </obj>
          <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1064" y="238">
             <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/ADD16/pitch" uuid="53c7cc32-3349-44c5-a22c-298698ebc5ed" name="pitch_1" x="364" y="266">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
             <attribs/>
          </obj>
          <nets>
@@ -105,16 +111,16 @@
                <dest obj="mix_1" inlet="in1"/>
             </net>
             <net>
-               <source obj="mix_1" outlet="out"/>
-               <dest obj="amp_1" inlet="pitch"/>
-            </net>
-            <net>
                <source obj="uniform_1" outlet="rand"/>
                <dest obj="*c_1" inlet="in"/>
             </net>
             <net>
                <source obj="*c_1" outlet="out"/>
                <dest obj="sine_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="pitch_1" inlet="pitch"/>
             </net>
          </nets>
          <settings>
@@ -124,7 +130,6 @@
             <NPresetEntries>0</NPresetEntries>
             <NModulationSources>0</NModulationSources>
             <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
-            <Author></Author>
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
