@@ -1,0 +1,118 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="blepmodsaw" uuid="debbfd21-c029-4a48-84e4-e88bf7b1b000">
+      <sDescription>Modified Saw wave oscillator
+Bandwith limited
+Added:
+A phase-input, though this is computed as a linear, not-thru-zero fm response freq=freq+(input-previous).
+A saw-wave multiplier, adding more saws-per-cycle.
+A sine-wave adder, AM-modulated by the phase.
+Internal or external sync:
+-when external sync is on, without an input-signal, it will un-couple the internal sync, making the saw &quot;walk&quot; during a cyle which will create a morphing saw. With an input signal, it will lock both internal phase-generators onto the incoming signal.
+-when external sync is off, the &quot;sync&quot; algorithm will use an internal phase generator as sync, creating a &quot;fixed&quot; waveform.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>saw sync.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="phase"/>
+         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
+         <frac32buffer name="phase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map.gain16 name="morph"/>
+         <frac32.s.map name="string"/>
+         <frac32.u.map.gain16 name="tone"/>
+         <bool32.tgl name="extsync"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t osc_p;
+int32_t prv;
+bool snc;
+  static const int blepvoices = 4;
+  int16_t *oscp[blepvoices];
+  int32_t vgain[blepvoices];
+  uint32_t nextvoice;
+  int32_t i0;
+  int32_t k0;
+  int32_t phs;
+  int32_t Phs;
+  int32_t s;
+  int32_t hp;
+  int p;]]></code.declaration>
+      <code.init><![CDATA[int j;
+    for(j=0;j<blepvoices;j++)
+      oscp[j] = &blept[BLEPSIZE-1];   nextvoice = 0;  i0 = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+  int j;
+  int16_t *lastblep = &blept[BLEPSIZE-1];
+  for(j=0;j<BUFSIZE;j++){
+    int i;
+    phs+=freq;
+    if((inlet_sync[j]>0)&&!snc){
+    	snc=1;
+    	phs=-0;
+    }
+    else if(inlet_sync[j]<0){snc=0;}
+    
+    
+    
+    SINE2TINTERP(___SMMUL((uint32_t)phs>>1,param_tone)<<8,s)
+
+
+    int32_t Freq;
+      MTOFEXTENDED(__SSAT(param_pitch + inlet_pitch+__SSAT(___SMMUL(param_string<<1,s),28),28),Freq);
+    
+    int32_t frq=(int64_t)Freq+(___SMMUL((___SMMUL((uint32_t)phs>>1,freq)<<1),param_morph)<<6)+(inlet_phase[j]-prv<<3);
+    frq=frq>0?frq:-frq;
+    osc_p += frq;
+    
+    int i1 = param_extsync>0?inlet_sync[j]>>2:(phs>>6);
+    
+    
+    if ((i1>0)&&!(i0>0)){   // phase reset
+      nextvoice = (nextvoice+1)&(blepvoices-1);
+      int32_t x = 64-((-i0<<6)/(i1-i0));
+      oscp[nextvoice] = &blept[x];
+      vgain[nextvoice] = vgain[nextvoice] = (((x * (frq>>7)) + (((uint32_t)p)>>1)))>>18;
+      osc_p = x * (frq>>6);
+    }
+    /*
+    else if ((k1>0)&&!(k0>0)){   // phase reset
+      nextvoice = (nextvoice+1)&(blepvoices-1);
+      int32_t x = 64-((-k0<<6)/(k1-k0));
+      oscp[nextvoice] = &blept[x];
+      vgain[nextvoice] = vgain[nextvoice] = (((x * (frq>>7)) + (((uint32_t)p)>>1)))>>18;
+      osc_p = x * (frq>>6);
+    } 
+    */
+    else if ((osc_p>0)&&!(p>0)){   // dispatch
+      nextvoice = (nextvoice+1)&(blepvoices-1);
+      int32_t x = osc_p/(frq>>6);
+      oscp[nextvoice] = &blept[x];
+      vgain[nextvoice] = 1<<13;
+    }
+    i0 = i1;
+
+    int32_t sum=0;
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[i];
+      sum+=(16384-(*t))*vgain[i];
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      oscp[i]=t;
+    }
+    //sum = -sum;
+    uint32_t g = osc_p;
+    outlet_wave[j]=(g>>5)+sum-(1<<26);
+    outlet_phase[j]=(phs>>4);
+    p = osc_p;
+    prv=inlet_phase[j];
+  }]]></code.krate>
+   </obj.normal>
+</objdefs>
