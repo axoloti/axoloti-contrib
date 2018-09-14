@@ -62,7 +62,7 @@ int32_t in[16];]]></code.declaration>
       <code.krate><![CDATA[int32_t rate;
 MTOFEXTENDED(param_rate,rate)
 rate=rate;
-phase+=rate;
+//phase+=rate;
 
 
 in[0]=inlet_i1;
@@ -88,8 +88,11 @@ if ((phase>0) && !ntrig)
 	MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_channel-1),chnl,__USAT(in[chnl]>>20,7));  ntrig=1;
 }
 if (phase<0) {ntrig=0;}
-*/]]></code.krate>
-      <code.midihandler><![CDATA[chnl=(chnl+1)&15;
-MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_channel-1),chnl,__USAT(in[chnl]>>20,7));]]></code.midihandler>
+*/
+phase=(phase+1)&3;
+if(phase==0){
+chnl=(chnl+1)&15;
+MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_channel-1),chnl,__USAT(in[chnl]>>20,7));
+}]]></code.krate>
    </obj.normal>
 </objdefs>
