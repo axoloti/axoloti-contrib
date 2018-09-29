@@ -31,7 +31,6 @@ sample start-and endpoints can be accessed &apos;from the outside&apos; as a tab
          <objref name="table" description="table to record to "/>
       </attribs>
       <code.declaration><![CDATA[bool rec;
-bool arm;
 uint32_t recpos;
 uint32_t rec_max;
 uint8_t shift;
@@ -67,9 +66,8 @@ shift =     (27-attr_table.LENGTHPOW);
 preslot = -1;]]></code.init>
       <code.krate><![CDATA[full = array [(inlet_slot << 1) + 1];
 
-if (inlet_arm && !arm) arm = 1;
-if (arm){
-	if (((inlet_rec && !ntrig ) && !full)&& (inlet_slot < 127)) {	
+if (inlet_arm && !full){
+	if ((inlet_rec && !ntrig) && (inlet_slot < 127)) {	
 			 ntrig = 1;	
 			 array [inlet_slot << 1] = recpos;
 	if (preslot > -1)   {lchunk [preslot] = recpos; array [(preslot << 1) + 1] = 1;}
@@ -80,8 +78,7 @@ if (arm){
 }
 if (!inlet_rec) ntrig = 0;
 
-if (!inlet_arm && arm) {
-	arm = 0;
+if (!inlet_arm ) {
 	if (rec) {rec = 0;lchunk [preslot] = recpos;array [255] = recpos;}
 	preslot = -1;
 	int i;
@@ -136,7 +133,7 @@ array [255] = recpos;
 }
 if (!inlet_defrag && !delcount) ctrig = 0;
 
-// get end
+// re-init
 if (inlet_reinit && !gtrig) {
 	preslot = -1;
 	delcount = 0;
