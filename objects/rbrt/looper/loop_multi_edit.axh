@@ -71,7 +71,7 @@
          <spinner attributeName="offset" value="0"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="55aff800-b45b-456f-a82d-c23e99cd671b" name="scale transport tempo" x="1316" y="140">
+   <patcher type="patch/patcher" uuid="6134b982-b42f-4480-97a1-60998f57757a" name="scale transport tempo" x="1316" y="140">
       <params/>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -140,6 +140,10 @@
             <params/>
             <attribs/>
          </obj>
+         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="outlet_1" x="1260" y="518">
+            <params/>
+            <attribs/>
+         </obj>
          <nets>
             <net>
                <source obj="and_1" outlet="o"/>
@@ -180,6 +184,7 @@
             <net>
                <source obj="object_1" outlet="o1"/>
                <dest obj="sphasor_1" inlet="smps"/>
+               <dest obj="outlet_1" inlet="outlet"/>
             </net>
             <net>
                <source obj="inlet_2" outlet="inlet"/>
@@ -440,12 +445,87 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_3" x="1106" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="tsave.raw"/>
+      </attribs>
+   </obj>
    <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_2" x="308" y="672">
       <params/>
       <attribs>
          <table attributeName="str" table="../4track.txt"/>
       </attribs>
    </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_2" x="952" y="672">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="8a86a5f4-5fa1-4975-b29d-10530995909c" name="tsave_1" x="1302" y="672">
+      <params/>
+      <attribs>
+         <objref attributeName="wave" obj="rec"/>
+      </attribs>
+      <object id="patch/object" uuid="8a86a5f4-5fa1-4975-b29d-10530995909c">
+         <sDescription>save table to sdcard</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <charptr32 name="filename" description="file name"/>
+            <bool32.rising name="trig" description="trigger"/>
+            <int32 name="start"/>
+            <int32 name="length"/>
+         </inlets>
+         <outlets>
+            <int32 name="test"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="wave"/>
+         </attribs>
+         <includes>
+            <include>chibios/ext/fatfs/src/ff.h</include>
+         </includes>
+         <depends>
+            <depend>fatfs</depend>
+         </depends>
+         <code.declaration><![CDATA[int ntrig;
+WORKING_AREA(waThreadSD, 800);]]></code.declaration>
+         <code.init><![CDATA[ntrig = 0;]]></code.init>
+         <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    codec_clearbuffer();
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,inlet_filename); return;}
+    //int rem_sz = sizeof(*attr_table.array)*attr_table.LENGTH;
+    int rem_sz = inlet_length << 1;
+    outlet_test = rem_sz;
+    int offset = inlet_start << 1;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&attr_wave.array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&attr_wave.array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,inlet_filename);
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,inlet_filename);
+  }
+  else if (!(inlet_trig>0)) ntrig=0;]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_2" x="476" y="700">
       <params/>
       <attribs>
@@ -458,6 +538,33 @@
          <objref attributeName="table" obj="data"/>
       </attribs>
    </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="826" y="742">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="5b1df804-0464-41e1-9a3d-fbddc0d0f520" name="object_1" x="1106" y="742">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+      </attribs>
+      <object id="patch/object" uuid="5b1df804-0464-41e1-9a3d-fbddc0d0f520">
+         <inlets>
+            <frac32.positive name="i1"/>
+         </inlets>
+         <outlets>
+            <int32 name="o1"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.krate><![CDATA[outlet_o1 = inlet_i1 >> (27-attr_table.LENGTHPOW);]]></code.krate>
+      </object>
+   </patchobj>
    <nets>
       <net>
          <source obj="in_1" outlet="wave"/>
@@ -704,6 +811,26 @@
       <net>
          <source obj="SCALE UP" outlet="out"/>
          <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="scale transport tempo" outlet="outlet_1"/>
+         <dest obj="tsave_1" inlet="length"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="o1"/>
+         <dest obj="tsave_1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="c_3" outlet="out"/>
+         <dest obj="tsave_1" inlet="filename"/>
+      </net>
+      <net>
+         <source obj="button_2" outlet="o"/>
+         <dest obj="tsave_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="object_1" inlet="i1"/>
       </net>
    </nets>
    <settings>
