@@ -1,0 +1,233 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sampleloader2" uuid="3c8fcf70-5154-45c5-b9fb-a7a403170820">
+      <sDescription>load table from sdcard</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="select">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <bool32.mom name="load1"/>
+         <int32 name="index">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <bool32.mom name="load2"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <table name="prefix01"/>
+         <table name="prefix02"/>
+         <table name="prefix03"/>
+         <table name="prefix04"/>
+         <table name="prefix05"/>
+         <table name="prefix06"/>
+         <table name="prefix07"/>
+         <table name="prefix08"/>
+         <table name="prefix09"/>
+         <table name="prefix10"/>
+         <table name="prefix11"/>
+         <table name="prefix12"/>
+         <table name="prefix13"/>
+         <table name="prefix14"/>
+         <table name="prefix15"/>
+         <table name="prefix16"/>
+         <table name="voice"/>
+         <table name="suffix"/>
+         <spinner name="notechannel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="CCchannel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[int ntrig1;int ntrig2;
+char c[128];
+int Offset;
+int pval;
+int ofs;
+int j,y;
+bool load1,load2;
+bool ALL;
+bool rnd;
+bool copym;
+int note;
+int sel;]]></code.declaration>
+      <code.init><![CDATA[ntrig1 = 0;
+ntrig2 = 0;
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[//sel=param_select-1;
+
+if((param_load1>0)&&!ntrig1){
+	ntrig1=1;
+	load1=1;
+}
+else if(param_load1<1){ntrig1=0;}
+if((param_load2>0)&&!ntrig2){
+	ntrig2=1;
+	load2=1;
+}
+else if(param_load2<1){ntrig2=0;}
+
+
+if ((load1>0)) {
+	
+	for(j=0;j<(ALL>0?16:1);j++){
+		if(ALL>0){
+		sel=j;}
+	for(y=0;y<attr_table.LNG;y++){
+		attr_table.array2[y+sel*attr_table.LNG]=0;
+	}
+		
+   switch(sel){
+   case 0:	strcpy(&c[0],"attr_prefix01000attr_suffix");Offset = strlen("attr_prefix01");break;
+   case 1:	strcpy(&c[0],"attr_prefix02000attr_suffix");Offset = strlen("attr_prefix02");break;
+   case 2:	strcpy(&c[0],"attr_prefix03000attr_suffix");Offset = strlen("attr_prefix03");break;
+   case 3:	strcpy(&c[0],"attr_prefix04000attr_suffix");Offset = strlen("attr_prefix04");break;
+   case 4:	strcpy(&c[0],"attr_prefix05000attr_suffix");Offset = strlen("attr_prefix05");break;
+   case 5:	strcpy(&c[0],"attr_prefix06000attr_suffix");Offset = strlen("attr_prefix06");break;
+   case 6:	strcpy(&c[0],"attr_prefix07000attr_suffix");Offset = strlen("attr_prefix07");break;
+   case 7:	strcpy(&c[0],"attr_prefix08000attr_suffix");Offset = strlen("attr_prefix08");break;
+   case 8:	strcpy(&c[0],"attr_prefix09000attr_suffix");Offset = strlen("attr_prefix09");break;
+   case 9:	strcpy(&c[0],"attr_prefix10000attr_suffix");Offset = strlen("attr_prefix10");break;
+   case 10:	strcpy(&c[0],"attr_prefix11000attr_suffix");Offset = strlen("attr_prefix11");break;
+   case 11:	strcpy(&c[0],"attr_prefix12000attr_suffix");Offset = strlen("attr_prefix12");break;
+   case 12:	strcpy(&c[0],"attr_prefix13000attr_suffix");Offset = strlen("attr_prefix13");break;
+   case 13:	strcpy(&c[0],"attr_prefix14000attr_suffix");Offset = strlen("attr_prefix14");break;
+   case 14:	strcpy(&c[0],"attr_prefix15000attr_suffix");Offset = strlen("attr_prefix15");break;
+   case 15:	strcpy(&c[0],"attr_prefix16000attr_suffix");Offset = strlen("attr_prefix16");break;
+   
+   }
+   
+   int i = (int32_t)(GenerateRandomNumber()&127);   int i0 = i/10;
+   c[Offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[Offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[Offset+0] = '0'+i-10*i0;
+
+	
+    
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, &c[0], FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;}
+    int rem_sz = sizeof(*attr_table.array2)*attr_table.LNG;
+    int offset = 0;
+    ofs=attr_table.LNG*sel;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0)break;
+        memcpy((char *)(&attr_table.array2[ofs]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_table.array2[ofs]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+   if((j<4)||(j>14))
+   {
+   	int OF=0;
+   	int z=attr_table.LNG;
+	while((OF==0)&&(z>=0))
+	{
+		z-=1;
+		if(!(attr_table.array2[attr_table.LNG*sel+z]==0)){
+			OF=1;
+		}
+	}
+	for(int x=0;x<128;x++){
+		attr_table.array2[attr_table.LNG*sel+z-x]=0;
+	}
+   }
+}
+	load1=0;
+	ALL=0;
+}
+
+
+  
+if ((load2>0)) {
+	
+for(j=0;j<2;j++){
+	for(y=0;y<attr_table.L3G;y++){
+		attr_table.array3[y+attr_table.L3G*j]=0;
+	}
+		
+
+strcpy(&c[0],"attr_voice0000attr_suffix");Offset = strlen("attr_voice");
+   
+   int i = (int32_t)(GenerateRandomNumber()&511);   int i0 = i/10;
+   c[Offset+3] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[Offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[Offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[Offset+0] = '0'+i-10*i0;
+
+	
+    
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, &c[0], FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;}
+    int rem_sz = sizeof(*attr_table.array3)*attr_table.L3G;
+    int offset = 0;
+    ofs=attr_table.L3G*j;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&attr_table.array3[ofs]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_table.array3[ofs]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+}
+	load2=0;
+	ALL=0;
+  }]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON +attr_notechannel-1 )&&((data1 == 63))){
+	ALL=1;
+	load1=1;
+	load2=1;
+}
+
+if ((status == attr_CCchannel-1 + MIDI_CONTROL_CHANGE)&&(data1 == 71)) { rnd=data2>0?1:0;}
+if ((status == attr_CCchannel-1 + MIDI_CONTROL_CHANGE)&&(data1 == 73)) { copym = data2>0?1:0;}
+
+if ((status == MIDI_NOTE_ON +attr_notechannel-1 )&& (data2)&&(rnd)) { 
+if ((data1 >= 36)&&(data1 <= 51-(int)copym*10))
+{sel=(data1-36)&15;
+if(copym>0){
+	load2=1;
+}
+else{load1=1;}
+}
+
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
