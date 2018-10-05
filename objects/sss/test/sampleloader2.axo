@@ -12,12 +12,11 @@
             <MinValue i="1"/>
             <MaxValue i="16"/>
          </int32>
-         <bool32.mom name="load1"/>
+         <bool32.mom name="load"/>
          <int32 name="index">
             <MinValue i="0"/>
             <MaxValue i="64"/>
          </int32>
-         <bool32.mom name="load2"/>
       </params>
       <attribs>
          <objref name="table"/>
@@ -37,7 +36,6 @@
          <table name="prefix14"/>
          <table name="prefix15"/>
          <table name="prefix16"/>
-         <table name="voice"/>
          <table name="suffix"/>
          <spinner name="notechannel" MinValue="1" MaxValue="16" DefaultValue="0"/>
          <spinner name="CCchannel" MinValue="1" MaxValue="16" DefaultValue="0"/>
@@ -65,16 +63,12 @@ ntrig2 = 0;
 pval = 0;]]></code.init>
       <code.krate><![CDATA[//sel=param_select-1;
 
-if((param_load1>0)&&!ntrig1){
+if((param_load>0)&&!ntrig1){
 	ntrig1=1;
 	load1=1;
 }
-else if(param_load1<1){ntrig1=0;}
-if((param_load2>0)&&!ntrig2){
-	ntrig2=1;
-	load2=1;
-}
-else if(param_load2<1){ntrig2=0;}
+else if(param_load<1){ntrig1=0;}
+
 
 
 if ((load1>0)) {
@@ -157,59 +151,7 @@ if ((load1>0)) {
 }
 	load1=0;
 	ALL=0;
-}
-
-
-  
-if ((load2>0)) {
-	
-for(j=0;j<2;j++){
-	for(y=0;y<attr_table.L3G;y++){
-		attr_table.array3[y+attr_table.L3G*j]=0;
-	}
-		
-
-strcpy(&c[0],"attr_voice0000attr_suffix");Offset = strlen("attr_voice");
-   
-   int i = (int32_t)(GenerateRandomNumber()&511);   int i0 = i/10;
-   c[Offset+3] = '0'+i-10*i0;
-   i = i0; i0 = i/10;
-   c[Offset+2] = '0'+i-10*i0;
-   i = i0; i0 = i/10;
-   c[Offset+1] = '0'+i-10*i0;
-   i = i0; i0 = i/10;
-   c[Offset+0] = '0'+i-10*i0;
-
-	
-    
-    FIL FileObject;
-    FRESULT err;
-    UINT bytes_read;
-    codec_clearbuffer();
-    err = f_open(&FileObject, &c[0], FA_READ | FA_OPEN_EXISTING);
-    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;}
-    int rem_sz = sizeof(*attr_table.array3)*attr_table.L3G;
-    int offset = 0;
-    ofs=attr_table.L3G*j;
-    while (rem_sz>0) {
-      if (rem_sz>sizeof(fbuff)) {
-        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
-        if (bytes_read == 0) break;
-        memcpy((char *)(&attr_table.array3[ofs]) + offset,(char *)fbuff,bytes_read);
-        rem_sz -= bytes_read;
-        offset += bytes_read;
-      } else {
-        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
-        memcpy((char *)(&attr_table.array3[ofs]) + offset,(char *)fbuff,bytes_read);
-        rem_sz = 0;
-      }
-    }    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
-    err = f_close(&FileObject);
-    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
-}
-	load2=0;
-	ALL=0;
-  }]]></code.krate>
+}]]></code.krate>
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON +attr_notechannel-1 )&&((data1 == 63))){
 	ALL=1;
 	load1=1;
