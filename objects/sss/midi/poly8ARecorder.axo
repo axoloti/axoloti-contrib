@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="poly8ARecorder" uuid="c72af715-9725-4175-9682-a60852453d62">
       <sDescription>Midi 8-voice input recorder with polyphonic aftertouch record.
 Aftertouch is recorded at the same rate of the count input.
@@ -134,7 +134,7 @@ int lastnote[8];
 int fast;
 int note;
 int find;
-int gtrig;
+int gtrig[8];
 int POLYINDEX;]]></code.declaration>
       <code.init><![CDATA[static int8_t _array[LENGTH] __attribute__ ((section (".sdram")));
 array = &_array[0];
@@ -253,14 +253,14 @@ if(!(pchannel==midichannelIn)){
 
 if(param_rec>0){
 if(G[index]){
-	gtrig=1;
+	gtrig[index]=1;
 	array[cntSlow+(index)*attr_size]=G[index];
 	array[cntSlow+(index+8)*attr_size]=N[index];
 	array[cntSlow+(index+16)*attr_size]=V[index];
 	array[cntFast+(index*6+24)*attr_size]=T[index];}
-else if((G[index]==0)&&(gtrig)){
+else if((G[index]==0)&&(gtrig[index])){
 	array[cntSlow+(index)*attr_size]=G[index];
-	gtrig=0;
+	gtrig[index]=0;
 }
 }
 
