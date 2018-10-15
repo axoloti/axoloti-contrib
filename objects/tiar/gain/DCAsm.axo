@@ -1,0 +1,36 @@
+﻿<objdefs appVersion="1.0.12">
+   <obj.normal id="DCAsm" uuid="39132bac-a14b-430b-901f-cdecf31d394c">
+      <sDescription>De clicked and smooth &quot;Digital&quot; Controlled Amplifier:
+      multiplies &quot;in&quot; and &quot;gain&quot; inputs.
+      The gain input is shortly interpolated, DCA is &quot;anti &quot;clicked by updating gain at zero crossings of the input.
+      The update is smoothed by two fast filters.
+      This allows very sharp attack transients without additional clicks.
+      </sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>DCAsm.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32 name="gain" description="gain input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[
+      int32_t _in = 0, g = 0, fg = 0, ffg = 0;
+      
+      ]]></code.declaration>
+      <code.srate><![CDATA[
+      
+if( (inlet_in > 0) != (_in > 0) ){
+  g = inlet_gain;
+}
+ fg = ( g+ fg)>>1;
+ffg = (fg+ffg)>>1;
+outlet_out = ___SMMUL(_in, ffg) << 5;
+_in = inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>
