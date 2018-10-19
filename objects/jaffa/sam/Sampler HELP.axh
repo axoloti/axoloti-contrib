@@ -1,0 +1,156 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="154" y="14" text="Set table size"/>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="Wav" x="84" y="42">
+      <params>
+         <int32 name="value" onParent="true" value="24"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="table/tablecombo3" uuid="507461ca-8035-49b3-90f1-1bd63d54e7da" name="alloc_1" x="154" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="2097152"/>
+         <table attributeName="prefix" table="/Wav/Audio/Audio"/>
+         <table attributeName="suffix" table=".raw"/>
+         <combo attributeName="volfade" selection="Immediate"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="322" y="210" text="A simple table/play based sampleplayer"/>
+   <obj type="lfo/saw r" uuid="6f79e6694e3e4b26c8732e836e54962eaf88dd1a" name="saw_1" x="28" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="-32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="timer/pulselength" uuid="ca68725237d8ba8407773340801660a9fd9b0dba" name="pulselength_1" x="154" y="238">
+      <params>
+         <frac32.s.map name="delay" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sam/simsam1" uuid="7cf56d49-d881-405f-bd26-73f250196145" name="simsam1_1" x="322" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="position" value="0.0"/>
+         <bool32.tgl name="envon" value="1"/>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-5.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="t" obj="alloc_1"/>
+      </attribs>
+   </obj>
+   <obj type="sam/simsam2" uuid="85423952-6097-4e6c-9afc-50df473557ad" name="simsam2_1" x="448" y="238">
+      <params>
+         <bool32.tgl name="envon" value="1"/>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="position" value="0.0"/>
+         <frac32.s.map name="d" value="36.0"/>
+         <frac32.u.map name="vol" value="32.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="t" obj="alloc_1"/>
+      </attribs>
+   </obj>
+   <obj type="sam/simsam3" uuid="4706f4da-e1be-4560-9851-4311ddaea92c" name="simsam3_1" x="560" y="238">
+      <params>
+         <bool32.tgl name="envon" value="1"/>
+         <bool32.tgl name="lpon" value="0"/>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="position" value="15.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="freq" value="64.0"/>
+         <frac32.u.map name="vol" value="32.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="t" obj="alloc_1"/>
+      </attribs>
+   </obj>
+   <obj type="sam/simsam4" uuid="6483e5e7-7bac-4506-907b-cfc68c8f0fc5" name="simsam4_1" x="672" y="238">
+      <params>
+         <bool32.tgl name="envon" value="1"/>
+         <bool32.tgl name="lpon" value="0"/>
+         <bool32.tgl name="hpon" value="0"/>
+         <bool32.tgl name="inv" value="0"/>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="position" value="0.0"/>
+         <frac32.s.map name="decay" value="32.0"/>
+         <frac32.u.map name="lp" value="64.0"/>
+         <frac32.u.map name="hp" value="64.0"/>
+         <frac32.u.map name="vol" value="32.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="t" obj="alloc_1"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="784" y="238">
+      <params>
+         <int32 name="value" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="854" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="938" y="238">
+      <params>
+         <frac32.u.map name="volume" value="8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="simsam1_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="sync"/>
+         <dest obj="simsam2_1" inlet="trig"/>
+         <dest obj="simsam3_1" inlet="trig"/>
+         <dest obj="simsam4_1" inlet="trig"/>
+         <dest obj="pulselength_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="simsam2_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="simsam3_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="simsam4_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="Wav" outlet="out"/>
+         <dest obj="alloc_1" inlet="index"/>
+      </net>
+      <net>
+         <source obj="pulselength_1" outlet="pulse"/>
+         <dest obj="simsam1_1" inlet="trig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>27</x>
+      <y>23</y>
+      <width>1155</width>
+      <height>733</height>
+   </windowPos>
+</patch-1.0>

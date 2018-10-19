@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mm6db" uuid="e0d7e6f8-6187-4edc-acd6-ad31a81aa636">
+      <sDescription>1st order multimode X1 (6db). Lp,Bp,Hp.</sDescription>
+      <author>Jaffasplaffa (Original by Johannes Taelman)</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freq" description="cutoff frequency"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <frac32.u.map name="freq" noLabel="true"/>
+         <int32.hradio name="type" description="LP,BP,HP">
+            <MaxValue i="3"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t valLP;
+int32_t valHP;]]></code.declaration>
+      <code.init><![CDATA[valLP = 0;
+valHP = 0;]]></code.init>
+      <code.krate><![CDATA[// LP //
+int32_t fLP;
+   MTOF(param_freq+inlet_freq,fLP);
+
+
+// HP //
+int32_t fHP;
+   MTOF(param_freq+inlet_freq,fHP);]]></code.krate>
+      <code.srate><![CDATA[// LP //
+valLP = ___SMMLA((inlet_in-valLP)<<1,fLP,valLP);
+
+
+int32_t SWITCHOUT;
+   switch(param_type>0?param_type:0){
+      case 0: SWITCHOUT= 0;break;
+      case 1: SWITCHOUT= valLP;break;
+      case 2: SWITCHOUT= inlet_in;break;
+}
+
+// HP //
+valHP = ___SMMLA((SWITCHOUT-valHP)<<1,fHP,valHP);
+
+int32_t SWITCHOUT2;
+   switch(param_type>0?param_type:0){
+      case 0: SWITCHOUT2= valLP;break;
+      case 1: SWITCHOUT2= valHP;break; //LP is routed thorugh the HP //
+      case 2: SWITCHOUT2= SWITCHOUT-valHP;break;
+}
+
+outlet_out = (param_on)?SWITCHOUT2:inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

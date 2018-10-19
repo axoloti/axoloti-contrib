@@ -1,0 +1,127 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="note4" uuid="6eed53c8-ff43-47e1-8e66-88877d60d328">
+      <sDescription>Midi note output</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="note1" description="note (-64..63)"/>
+         <frac32.positive name="velo1" description="velocity"/>
+         <bool32.rising name="trig1" description="trigger"/>
+         <frac32.bipolar name="note2"/>
+         <frac32.positive name="velo2"/>
+         <bool32.rising name="trig2"/>
+         <frac32.bipolar name="note3"/>
+         <frac32.positive name="velo3"/>
+         <bool32.rising name="trig3"/>
+         <frac32.bipolar name="note4"/>
+         <frac32.positive name="velo4"/>
+         <bool32.rising name="trig4"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="ch1">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="ch2">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="ch3">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="ch4">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="d">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig1;
+int lastnote1;
+
+int ntrig2;
+int lastnote2;
+
+int ntrig3;
+int lastnote3;
+
+int ntrig4;
+int lastnote4;]]></code.declaration>
+      <code.init><![CDATA[ntrig1=0;
+
+ntrig2=0;
+
+ntrig3=0;
+
+ntrig4=0;]]></code.init>
+      <code.krate><![CDATA[// Ch1 //
+{
+if ((inlet_trig1>0) && !ntrig1) {
+lastnote1 = (64+(inlet_note1>>21))&0x7F;
+MidiSend3((midi_device_t) attr_d, MIDI_NOTE_ON + (param_ch1-1),lastnote1,inlet_velo1>>20);  ntrig1=1;
+}
+if (!(inlet_trig1>0) && ntrig1) {MidiSend3((midi_device_t) attr_d, MIDI_NOTE_OFF + (param_ch1-1),lastnote1,__USAT(inlet_velo1>>20,7)); ntrig1=0;}
+}
+
+
+
+// Ch2 //
+{
+if ((inlet_trig2>0) && !ntrig2) {
+lastnote2 = (64+(inlet_note2>>21))&0x7F;
+MidiSend3((midi_device_t) attr_d, MIDI_NOTE_ON + (param_ch2-1),lastnote2,inlet_velo2>>20);  ntrig2=1;
+}
+if (!(inlet_trig2>0) && ntrig2) {MidiSend3((midi_device_t) attr_d, MIDI_NOTE_OFF + (param_ch2-1),lastnote2,__USAT(inlet_velo2>>20,7)); ntrig2=0;}
+}
+
+
+
+
+// Ch3 //
+{
+if ((inlet_trig3>0) && !ntrig3) {
+lastnote3 = (64+(inlet_note3>>21))&0x7F;
+MidiSend3((midi_device_t) attr_d, MIDI_NOTE_ON + (param_ch3-1),lastnote3,inlet_velo3>>20);  ntrig3=1;
+}
+if (!(inlet_trig3>0) && ntrig3) {MidiSend3((midi_device_t) attr_d, MIDI_NOTE_OFF + (param_ch3-1),lastnote3,__USAT(inlet_velo3>>20,7)); ntrig3=0;}
+}
+
+
+
+
+// Ch4 //
+{
+if ((inlet_trig4>0) && !ntrig4) {
+lastnote4 = (64+(inlet_note4>>21))&0x7F;
+MidiSend3((midi_device_t) attr_d, MIDI_NOTE_ON + (param_ch4-1),lastnote4,inlet_velo4>>20);  ntrig4=1;
+}
+if (!(inlet_trig4>0) && ntrig4) {MidiSend3((midi_device_t) attr_d, MIDI_NOTE_OFF + (param_ch4-1),lastnote4,__USAT(inlet_velo4>>20,7)); ntrig4=0;}
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

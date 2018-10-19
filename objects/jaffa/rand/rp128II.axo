@@ -1,0 +1,132 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rp128II" uuid="12345b06-bf10-44d2-9659-80744b802dba">
+      <sDescription>Random pattern player. NB. USES FILES FROM SD-CARD- REMEMBER TO DOWNLOAD THEM FROM MY CONTRIBUTORS PAGE. 
+
+Features:
+Select pattern, offset &amp; length control for the pattern. 128 random values in each of the patterns. Values are between 0-64.
+
+(New pattrns created 20-4-2017)</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>RANDHELP.axh</helpPatch>
+      <inlets>
+         <int32.positive name="in" description="ppq"/>
+         <int32 name="rp" description="ranpattern"/>
+         <int32 name="off" description="offset"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="pattern out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <int32 name="pattrn" description="Selects pattern from SD-card location 0:/Tab/Rnd/128/128II000.tab">
+            <MinValue i="1"/>
+            <MaxValue i="50"/>
+         </int32>
+         <int32 name="length" description="Sets length of the pattern.">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <int32 name="offset" description="Offsets the pattern.">
+            <MinValue i="0"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 7; 	
+static const uint32_t LENGTH = 128;	
+
+static const uint32_t BITS = 8;
+static const uint32_t GAIN = 20;
+int8_t *array;
+
+int ntrig;
+
+char c[64];
+int offset;
+int pval;
+
+   int ptrig;
+   int32_t pvalLC;
+   int32_t LOGICCHANGE;]]></code.declaration>
+      <code.init><![CDATA[static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}
+
+
+ntrig = 0;
+
+strcpy(&c[0],"0:/Tab/Rnd/128I/NEW000.TAB");
+offset = strlen("0:/Tab/Rnd/128I/NEW");
+pval = 0;
+
+
+ptrig = 0;
+pvalLC = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_rp+param_pattrn != pval){   pval = inlet_rp+param_pattrn;
+   int i = inlet_rp+param_pattrn;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+}
+
+if ((pvalLC != inlet_rp+param_pattrn)&(!ptrig)) { 
+  LOGICCHANGE = 1;
+  pvalLC = inlet_rp+param_pattrn;
+  ptrig = 1;
+} else {
+  ptrig = 0;
+  LOGICCHANGE = 0;
+}
+
+if ((LOGICCHANGE>0) && !ntrig) {
+    char* filename = &c[0]; 
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+  }
+  else if (!(LOGICCHANGE>0)) ntrig=0;
+
+int32_t DIVNEW = inlet_in/param_length;
+int32_t LENGTH = inlet_in-DIVNEW*param_length;
+
+     if(param_on){
+     outlet_out= array[__USAT(LENGTH+param_offset,LENGTHPOW)]<<GAIN;}
+     else{
+     outlet_out = 0;
+     }]]></code.krate>
+   </obj.normal>
+</objdefs>

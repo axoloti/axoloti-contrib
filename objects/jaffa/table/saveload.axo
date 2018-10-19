@@ -1,0 +1,133 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="saveload" uuid="9c1d0871-3205-46cf-bd2e-34450fe8ab27">
+      <sDescription>Load from table and save to table, Uses same location for both save and load. Use save inlet to save to sd-card.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="index" description="Select which destination to save to and load from."/>
+         <bool32.rising name="save" description="Use a button to trigger save function."/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <table name="prefix"/>
+         <table name="suffix"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[// Trigger load/save //
+int ntrig;
+int ntrigLOAD;
+
+// String/index //
+char c[64];
+int offset;
+int pval;
+
+
+// Logic/change //
+   int ptrig;
+   int32_t pvalLC;
+   int32_t LOGICCHANGE;]]></code.declaration>
+      <code.init><![CDATA[// Trigger load/save //
+ntrig = 0;
+ntrigLOAD = 0;
+
+// String/index //
+strcpy(&c[0],"attr_prefix000attr_suffix");
+offset = strlen("attr_prefix");
+pval = 0;
+
+// Logic/change //
+ptrig = 0;
+pvalLC = 0;]]></code.init>
+      <code.krate><![CDATA[// String index //
+if (inlet_index != pval){   pval = inlet_index;
+   int i = inlet_index;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+}
+
+// Logic/chnage //
+if ((pvalLC != inlet_index)&(!ptrig)) { 
+  LOGICCHANGE = 1;
+  pvalLC = inlet_index;
+  ptrig = 1;
+} else {
+  ptrig = 0;
+  LOGICCHANGE = 0;
+}
+
+// Table/save //
+if ((inlet_save>0) && !ntrig) {
+    char* filename = &c[0]; // filename internally //
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    codec_clearbuffer();
+    err = f_open(&FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,filename); return;}
+    int rem_sz = sizeof(*attr_table.array)*attr_table.LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&attr_table.array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&attr_table.array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,filename);
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,filename);
+  }
+  else if (!(inlet_save>0)) ntrig=0;
+
+
+
+
+
+// Table/load //
+if ((LOGICCHANGE>0) && !ntrigLOAD) {
+    char* filename = &c[0]; // filename internally //
+    ntrigLOAD=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;}
+    int rem_sz = sizeof(*attr_table.array)*attr_table.LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+  }
+  else if (!(LOGICCHANGE>0)) ntrigLOAD=0;]]></code.krate>
+   </obj.normal>
+</objdefs>

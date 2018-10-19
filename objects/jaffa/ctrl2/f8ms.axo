@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="f8ms" uuid="629ad7d3-5093-42f1-8b09-7bcdc42582cb">
+      <sDescription>8 bipolar fractional controls fed into a muxer. This one also has a build in selector for the muxer. Use input or selector to select which one of the 8 fractional values to output. Nr output shows which integer value is currently selected.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <inlets>
+         <int32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o"/>
+         <int32 name="nr"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="sel">
+            <MinValue i="1"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.s.map name="1"/>
+         <frac32.s.map name="2"/>
+         <frac32.s.map name="3"/>
+         <frac32.s.map name="4"/>
+         <frac32.s.map name="5"/>
+         <frac32.s.map name="6"/>
+         <frac32.s.map name="7"/>
+         <frac32.s.map name="8"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[switch(inlet_s+param_sel>0?inlet_s+param_sel-1:0){
+      case 0: outlet_o= param_1;break;
+      case 1: outlet_o= param_2;break;
+      case 2: outlet_o= param_3;break;
+      case 3: outlet_o= param_4;break;
+      case 4: outlet_o= param_5;break;
+      case 5: outlet_o= param_6;break;
+      case 6: outlet_o= param_7;break;
+      case 7: outlet_o= param_8;break;
+      default: outlet_o= param_8;break;
+}
+outlet_nr= inlet_s+param_sel;]]></code.krate>
+   </obj.normal>
+</objdefs>

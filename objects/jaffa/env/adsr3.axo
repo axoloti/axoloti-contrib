@@ -1,0 +1,86 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="adsr3" uuid="dcd9a895-ed1f-4a4a-98a9-c9309b7e06dc">
+      <sDescription>Attack/decay/sustain/release envelope with modulation inputs and build in vca. 
+
+&quot;On&quot; button turn envelope on. When &quot;off&quot; input is passed through with no gate.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i"/>
+         <bool32.risingfalling name="g" description="gate"/>
+         <frac32.bipolar name="a" description="attack time modulation"/>
+         <frac32.bipolar name="d" description="decay time modulation"/>
+         <frac32.bipolar name="s" description="sustail level modulation"/>
+         <frac32.bipolar name="r" description="release time modulation"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <frac32.s.map name="a"/>
+         <frac32.s.map name="d"/>
+         <frac32.u.map name="s"/>
+         <frac32.s.map name="r"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;
+    int32_t step;
+
+int8_t stage;
+int ntrig;
+int32_t val;
+int32_t Loopval;]]></code.declaration>
+      <code.init><![CDATA[stage = 0;
+ntrig = 0;
+val = 0;]]></code.init>
+      <code.krate><![CDATA[// vca
+   step = (Loopval - prev)>>4;
+   int32_t i = prev;
+   prev = Loopval;
+
+   //env
+if ((inlet_g>0) && !ntrig) {
+   stage = 1;
+   ntrig = 1;
+}
+if (!(inlet_g>0) && ntrig) {
+   stage = 0;
+   ntrig = 0;
+}
+if (stage == 0){
+   int32_t r1;
+   int32_t r2;
+   MTOF(- param_r - inlet_r, r1);
+   r1 = 0x7FFFFFFF - (r1 >> 2);
+   val = ___SMMUL(val,r1)<<1;
+} else if (stage == 1){
+   int32_t a;
+   MTOF(- param_a - inlet_a,a);
+   a = a >> 2;
+   val = val + a;
+   if (val<0) {
+      val =0x7FFFFFFF;
+      stage = 2;
+   }
+} else if (stage == 2) {
+   int32_t s = __USAT(param_s + inlet_s, 27);
+   int32_t d;
+   MTOF(- param_d - inlet_d, d);
+   d = 0x7FFFFFFF - (d >> 2);
+   val = (s<<4) + (___SMMUL(val - (s<<4),d)<<1);
+}
+Loopval = val>>4;]]></code.krate>
+      <code.srate><![CDATA[//Env off
+outlet_o = inlet_i;
+
+   //Env on
+   if(param_on){
+
+   outlet_o =  ___SMMUL(inlet_i,i)<<5;
+   i += step;
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>

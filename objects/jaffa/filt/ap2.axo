@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ap2" uuid="7f013add-ec4e-4ab9-a1aa-1f9c288080cb">
+      <sDescription>Allpass reverb section. This version uses SD-ram!!!! The factory version that uses SRAM, can maximum load 23 with 1000 samples delay. This version I loaded more than 100 with 1000 samples delay and the patch still compiled. Awesome. Besides that, it is identical to the factory allpass filter.</sDescription>
+      <author>Johannes Taelman - Edited by Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>allpass.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="in"/>
+         <frac32 name="g" description="mod input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.ratio name="g" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="delay" MinValue="1" MaxValue="10000" DefaultValue="1000"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t *d;
+// int16_t d[attr_delay];
+int dpos;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[attr_poly][attr_delay]  __attribute__ ((section (".sdram")));
+d = &_array[parent->polyIndex][0];
+int i;
+for (i=0;i<attr_delay;i++)
+   d[i] = 0;
+dpos = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t g2 = inlet_g+param_g<<4;]]></code.krate>
+      <code.srate><![CDATA[int32_t dout =  d[dpos]<<16;
+int32_t din = ___SMMLA(g2,dout,inlet_in>>1);
+d[dpos++]=din>>15;
+outlet_out = ___SMMLS(g2,din<<1,dout>>1)<<1;
+if (dpos == attr_delay) dpos = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,138 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="allpass int 1" uuid="21759d51-02f7-4a6e-9d46-68d0159ded41">
+      <sDescription>A modulatable 32bit schroeder allpass filter with different types of interpolation (for reverbs and diffusers)</sDescription>
+      <author>Jaffasplaffa (Original by Johannes Elliesen)</author>
+      <license>none yet</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32.positive name="time"/>
+         <frac32.bipolar name="timemod"/>
+         <frac32.positive name="gain"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="buffsize">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+            </CEntries>
+         </combo>
+         <combo name="interpol">
+            <MenuEntries>
+               <string>none</string>
+               <string>2pt</string>
+               <string>3pt</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>IntRAM</string>
+               <string>ExtRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[#if attr_location == 0
+	#define LOCATION
+#else
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+static const uint32_t LENGTHPOW = (attr_buffsize);
+static const uint32_t LENGTH = (1<<attr_buffsize);
+static const uint32_t LENGTHMASK = ((1<<attr_buffsize)-1);
+
+int32_t* delayline;
+int wptr;]]></code.declaration>
+      <code.init><![CDATA[static int32_t array_[attr_poly][LENGTH] LOCATION;
+delayline = &array_[parent->polyIndex][0];
+
+for (int i = 0; i < LENGTH; i++)
+	delayline[i] = 0;
+wptr = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t g2 = inlet_gain<<3;
+
+int32_t time = ___SMMUL(inlet_time, inlet_timemod) + inlet_time;
+int32_t readOffset_ls8 = ___SMMUL(LENGTH<<10, time<<3);
+
+if (readOffset_ls8 < (8<<8))
+	readOffset_ls8 = (8<<8); // never less delay than 8 samples
+
+#if attr_interpol > 0
+	int32_t rint = readOffset_ls8>>8;			// integral part of delay time
+	int32_t rfrac = readOffset_ls8 & 0x000000FF; // fractional part of delay time in Q8 notation
+#endif
+
+// pre-calculate coefficients for 3pt interpolation
+#if attr_interpol == 2
+	// basic formula: y = ax^2 + bx + c
+	// a = 1/2*y3 - y2 + 1/2*y1
+	// b = -1/2*y3 + 2*y2 - 3/1*y1
+	// c = y1
+	// optimized formula (with c1..c3 = const for each block of samples):
+	// y = y1*c1 + y2*c2 + y3*c3
+	// c1 = 1 + 1/2*x^2 - 3/2*x
+	// c2 = -x^2 + 2x
+	// c3 = 1/2*x^2 - 1/2*x
+	int32_t x2 = (rfrac*rfrac); // x^2 in Q16 notation
+	// in Q16 notation
+	int32_t c1 = (1<<16) + (x2>>1) - (rfrac<<7) - (rfrac<<8);
+	int32_t c2 = -x2 + (rfrac<<9);
+	int32_t c3 = (x2>>1) - (rfrac<<7);
+#endif]]></code.krate>
+      <code.srate><![CDATA[// no interpolation
+#if attr_interpol == 0
+	int32_t rptr = wptr - (readOffset_ls8>>8);
+	int32_t dout = delayline[rptr&LENGTHMASK];
+// linear (2pt) interpolation
+#elif attr_interpol == 1
+	int32_t rptr1 = wptr - rint;
+	int32_t rptr2 = rptr1 + 1;
+	int32_t dout1 = delayline[rptr2&LENGTHMASK]>>1;
+	int32_t dout2 = delayline[rptr1&LENGTHMASK]>>1;
+	int32_t dout = ___SMMLA(rfrac<<23, (dout2 - dout1)<<1, dout1)<<1;
+// qubic (3pt) interpolation
+#elif attr_interpol == 2
+	int32_t rptr1 = wptr - rint;
+	int32_t rptr2 = rptr1 + 1;
+	int32_t rptr3 = rptr1 + 2;
+	
+	int32_t dout1 = delayline[rptr3&LENGTHMASK];
+	int32_t dout2 = delayline[rptr2&LENGTHMASK];
+	int32_t dout3 = delayline[rptr1&LENGTHMASK];
+	int32_t douttmp1 = ___SMMUL(dout1,c1<<14);
+	int32_t douttmp2 = ___SMMLA(dout2, c2<<14, douttmp1);
+	int32_t dout = ___SMMLA(dout3, c3<<14, douttmp2)<<2;
+#endif
+
+int32_t din = ___SMMLA(g2,dout,inlet_in>>2)<<1;
+delayline[wptr]=din;
+outlet_out = ___SMMLS(g2,din,dout>>1)<<2;
+wptr = (wptr+1)&LENGTHMASK;]]></code.srate>
+   </obj.normal>
+</objdefs>
