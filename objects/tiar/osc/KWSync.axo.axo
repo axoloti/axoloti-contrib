@@ -20,21 +20,24 @@
       <attribs/>
       <code.declaration><![CDATA[//dissym picky sqr
 float F(float p){
-float x = p + 16;
-x = (x - ((int)x) - 0.5f); //  x[-0.5, 0.5]
-float x2 = x * x;
-if(x > 0){
-  if(x <  0.25f) return x2 * ( 3 - 8 * x2);
-  else           return  0.3125f - 0.625f * x;
-} else {
-  if(x > -0.25f) return x2 * (-3 + 8 * x2);
-  else           return -0.3125f - 0.625f * x;
+  float x = p + 16;
+  x = (x - ((int)x) - 0.5f); //  x[-0.5, 0.5]
+  float x2 = x * x;
+  if(x > 0){
+    if(x <  0.25f) return x2 * ( 3 - 8 * x2);
+    else           return  0.3125f - 0.625f * x;
+  } else {
+    if(x > -0.25f) return x2 * (-3 + 8 * x2);
+    else           return -0.3125f - 0.625f * x;
+  }
 }
-}
+
+float pM, pS, dpM, _dpM, dpS, _dpS, f, FpS;]]></code.declaration>
+<code.init><![CDATA[
+pM = 0; pS = 0; FpS = 0;
+]]></code.init>
 
 
-
-float pM = 0, pS = 0, dpM, _dpM, dpS, _dpS, f, FpS=0;]]></code.declaration>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch_space_slave + inlet_pitch_space_slave, idp);
 dpS = (idp*(0.25f/(1<<30)));

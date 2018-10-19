@@ -48,6 +48,24 @@ static const uint32_t LENGTH = 1<<attr_size;
 static const uint32_t LENGTHMASK = (1<<attr_size)-1;
 static const uint32_t BITS = 32;
 static const uint32_t GAIN = 7;  // q20 to q27
+uint32_t const TSAL[16]={
+              0x0000FFFFU,
+              0xFF00FF00U,
+              0x0FF0F00FU,
+              0xF0F0F0F0U,
+  0b00111100001111001100001111000011U,
+  0b11000011001111001100001100111100U,
+  0b00110011110011001100110000110011U,
+  0b11001100110011001100110011001100U,
+  0b01100110011001101001100110011001U,
+  0b10011001011001101001100101100110U,
+  0b01101001100101101001011001101001U,
+  0b10010110100101101001011010010110U,
+  0b01011010010110101010010110100101U,
+  0b10100101010110101010010101011010U,
+  0b01010101101010101010101001010101U,
+  0b10101010101010101010101010101010U
+};
 
 int32_t *v;
 float *fv; //in place
@@ -66,7 +84,8 @@ static float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
   else      return 1 - 2 * (x - r) / (1.0f - r);
 }
 static float tri(float x){ return tri(x,0.5f); }
-static float cos1(float x){ x = tri(x); return -x * (1.5708f + x*x * (-0.6422f +0.0714 * x*x));      }
+static float cos1(float x, float r){ x = tri(x, r); return -x * (1.5708f + x*x * (-0.6422f +0.0714f * x*x));      }
+static float cos1(float x){ return cos1(x, 0.5f);      }
 static float sin1(float x){ return cos1(x-0.25f); }
 
 //additive Synth from 3 to 10 harmonics
@@ -115,6 +134,107 @@ static float exp(float x){
   return exp1(x) * coef;
 }
 static float hann(float x){ return 0.5f - 0.5f * cos1(x); }
+static float quant(float x, float step) {     
+  return (((int)(x / step + 100.5f)) - 100) * step;
+}
+/*
+ xfade(w, tri(x*(1+5*w)), sin1(x*(1+5*w)))
+ higher order can be used for segments
+ xfade(x,1,0.1f,0,0,0) // pulsaw
+*/
+static float xf(float x, float v0, float v1){
+  return v0 + x * (v1 - v0);
+}
+static float xfade(float x, float v0, float v1){
+  if(x<=0) return v0;
+  if(x>=1) return v1;
+  return v0 + x * (v1 - v0);
+}
+static float xfade(float x, float v0, float v1, float v2){
+  if(x<=0) return v0;
+  if(x>=1) return v2;
+  return x < 0.5f ? 
+  xf( x      *2, v0, v1)
+: xf((x-0.5f)*2, v1, v2);
+}
+static float xfade(float x, float v0, float v1, float v2, float v3){
+  if(x<=0) return v0;
+  if(x>=1) return v3;
+return 
+x < 1.0f/3 ? 
+  xf(x*3, v0, v1)
+: (x < 2.0f/3 ?
+     xf((x-1.0f/3)*3, v1, v2)
+   : xf((x-2.0f/3)*3, v2, v3));
+}
+static float xfade(float x, float v0, float v1, float v2, float v3, float v4){
+  if(x<=0) return v0;
+  if(x>=1) return v4;
+  if(x < 0.25f) return xf( x          * 4, v0, v1);
+  if(x < 0.50f) return xf((x - 0.25f) * 4, v1, v2);
+  if(x < 0.75f) return xf((x - 0.50f) * 4, v2, v3);
+  return               xf((x - 0.75f) * 4, v3, v4);
+}
+static float xfade(float x, float v0, float v1, float v2, float v3, float v4, float v5){
+  if(x<=0) return v0;
+  if(x>=1) return v5;
+  if(x < 0.2f) return xf( x         * 5, v0, v1);
+  if(x < 0.4f) return xf((x - 0.2f) * 5, v1, v2);
+  if(x < 0.6f) return xf((x - 0.4f) * 5, v2, v3);
+  if(x < 0.8f) return xf((x - 0.6f) * 5, v3, v4);
+  return              xf((x - 0.8f) * 5, v4, v5);
+}
+static float bt(float x, uint32_t bin){
+  return ((bin>>(arm::float_to_q(x, 5) & 31)) & 1) == 0 ? -1 : 1;
+}
+// n [1,16]
+float sal(float x, int n){ 
+  if(n > 16) n = 16;
+  else if(n < 1) n = 1;
+  return bt(x, TSAL[n - 1]); 
+}
+float sal(float x,float a1, float a2,float a3,float a4,float a5,float a6,float a7,float a8){
+  int o = arm::float_to_q(x, 5) & 31;
+  float a;
+  a  = ((TSAL[0]>>o)&1) == 0 ? -a1 : a1;
+  a += ((TSAL[1]>>o)&1) == 0 ? -a2 : a2;
+  a += ((TSAL[2]>>o)&1) == 0 ? -a3 : a3;
+  a += ((TSAL[3]>>o)&1) == 0 ? -a4 : a4;
+  a += ((TSAL[4]>>o)&1) == 0 ? -a5 : a5;
+  a += ((TSAL[5]>>o)&1) == 0 ? -a6 : a6;
+  a += ((TSAL[6]>>o)&1) == 0 ? -a7 : a7;
+  a += ((TSAL[7]>>o)&1) == 0 ? -a8 : a8;
+  return a;
+}
+float sal(float x,
+float a1, float a2,float a3,float a4,float a5,float a6,float a7,float a8,
+float a9, float a10,float a11,float a12,float a13,float a14,float a15,float a16
+){
+  int o = arm::float_to_q(x, 5) & 31;
+  float a;
+  a  = ((TSAL[ 0]>>o)&1) == 0 ? -a1  : a1;
+  a += ((TSAL[ 1]>>o)&1) == 0 ? -a2  : a2;
+  a += ((TSAL[ 2]>>o)&1) == 0 ? -a3  : a3;
+  a += ((TSAL[ 3]>>o)&1) == 0 ? -a4  : a4;
+  a += ((TSAL[ 4]>>o)&1) == 0 ? -a5  : a5;
+  a += ((TSAL[ 5]>>o)&1) == 0 ? -a6  : a6;
+  a += ((TSAL[ 6]>>o)&1) == 0 ? -a7  : a7;
+  a += ((TSAL[ 7]>>o)&1) == 0 ? -a8  : a8;
+  a += ((TSAL[ 8]>>o)&1) == 0 ? -a9  : a9;
+  a += ((TSAL[ 9]>>o)&1) == 0 ? -a10 : a10;
+  a += ((TSAL[10]>>o)&1) == 0 ? -a11 : a11;
+  a += ((TSAL[11]>>o)&1) == 0 ? -a12 : a12;
+  a += ((TSAL[12]>>o)&1) == 0 ? -a13 : a13;
+  a += ((TSAL[13]>>o)&1) == 0 ? -a14 : a14;
+  a += ((TSAL[14]>>o)&1) == 0 ? -a15 : a15;
+  a += ((TSAL[15]>>o)&1) == 0 ? -a16 : a16;
+  return a;
+}
+
+//usage
+//sal(x,(int)(w*16+1.0f))
+//        1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16
+//sal(x, 16,   8,   0,   4,   0,   0,   0,   2,   0,   0,   0,   0, 3*w,   0,   0,   1)
 
 void prepare(void){
   //pre integrate

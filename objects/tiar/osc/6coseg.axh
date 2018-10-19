@@ -12,22 +12,22 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="364" y="14">
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="364" y="14">
       <params/>
       <attribs/>
    </obj>
    <obj type="tiar/osc/6coseg" uuid="85014db3-2158-413b-acb3-37e7a5aca477" name="6coseg_1" x="252" y="70">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
-         <frac32.u.map name="R0" value="48.5"/>
-         <frac32.u.map name="R1" value="32.0"/>
-         <frac32.u.map name="R2" value="16.0"/>
-         <frac32.s.map name="l0" value="0.0"/>
+         <frac32.u.map name="R0" value="58.5"/>
+         <frac32.u.map name="R1" value="3.5"/>
+         <frac32.u.map name="R2" value="58.5"/>
+         <frac32.s.map name="l0" value="38.0"/>
          <frac32.s.map name="l1" value="64.0"/>
-         <frac32.s.map name="l2" value="0.0"/>
-         <frac32.s.map name="l3" value="-32.0"/>
+         <frac32.s.map name="l2" value="-16.0"/>
+         <frac32.s.map name="l3" value="64.0"/>
          <frac32.s.map name="l4" value="-64.0"/>
-         <frac32.s.map name="l5" value="64.0"/>
+         <frac32.s.map name="l5" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -39,23 +39,29 @@
    </obj>
    <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="126" y="210">
       <params>
-         <frac32.u.map name="gain1" value="0.15000000000000002"/>
+         <frac32.u.map name="gain1" value="0.14999961853027344"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="364" y="210">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="364" y="252">
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="420" y="210">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="420" y="252">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="28" y="322">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
       <attribs/>
    </obj>
    <nets>
       <net>
          <source obj="6coseg_1" outlet="wave"/>
          <dest obj="vca_1" inlet="a"/>
-         <dest obj="scope_2" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="in"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
@@ -81,6 +87,11 @@
       <net>
          <source obj="mix_1" outlet="out"/>
          <dest obj="6coseg_1" inlet="pitch"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
       </net>
    </nets>
    <settings>

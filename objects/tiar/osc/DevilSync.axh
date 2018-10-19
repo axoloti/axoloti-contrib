@@ -39,11 +39,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="686" y="42">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="854" y="42">
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="672" y="42">
       <params>
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="22.0"/>
@@ -52,18 +48,28 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="952" y="42">
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="770" y="42">
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1008" y="42">
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="826" y="42">
       <params>
          <frac32.u.map name="InGain" value="20.0"/>
          <frac32.u.map name="OutGain" value="23.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1134" y="42">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="952" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="126" y="280">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="252" y="280">
       <params/>
       <attribs/>
    </obj>
@@ -81,6 +87,7 @@
          <source obj="keyb_1" outlet="note"/>
          <dest obj="mix_1" inlet="bus_in"/>
          <dest obj="DevilSync_1" inlet="pitch master"/>
+         <dest obj="sine_2" inlet="pitch"/>
       </net>
       <net>
          <source obj="*c_1" outlet="out"/>
@@ -92,8 +99,8 @@
       </net>
       <net>
          <source obj="DevilSync_1" outlet="out"/>
-         <dest obj="scope_1" inlet="in"/>
          <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_1" inlet="in"/>
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
@@ -112,14 +119,18 @@
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
       </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>443</x>
-      <y>113</y>
+      <x>231</x>
+      <y>104</y>
       <width>1451</width>
       <height>866</height>
    </windowPos>

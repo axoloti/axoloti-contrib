@@ -69,7 +69,7 @@ CHARGEPUMP          = 0x8D, // Enable charge pump seq: 0x8D, 0x14, 0xAF (Charge 
 EXTERNALVCC         = 0x1,
 SWITCHCAPVCC        = 0x2,
 };
-uint8_t nibbleToByte[16]={
+uint8_t const nibbleToByte[16]={
 0b00000000,
 0b00000011,
 0b00001100,
@@ -88,18 +88,13 @@ uint8_t nibbleToByte[16]={
 0b11111111};
 
 
-uint8_t cpt = 0;
+uint8_t cpt;
 uint8_t *txbuf;
 uint8_t *rxbuf;
 int32_t mode;
 
 
-uint8_t text[11*4] = {
-  ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
-  ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
-  ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',
-  ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '
-};
+uint8_t text[11*4];
 uint8_t tY[128];
 
     // SETUP
@@ -151,7 +146,7 @@ void calcTextPage(int page, uint8_t tPage[128]){
 // opt function draw
 
 //LSB up
-uint8_t tBar[9]={
+uint8_t const tBar[9]={
 0b00000000,
 0b10000000,
 0b11000000,
@@ -288,7 +283,13 @@ static msg_t ThreadX(void *arg) {
 
 WORKING_AREA(waThreadX, 1024);
 Thread *Thd;]]></code.declaration>
-      <code.init><![CDATA[// setup the pins
+      <code.init><![CDATA[cpt = 0;
+for(int i = 0; i < 11 * 4; i++){
+  text[i] = ' ';
+}
+
+
+// setup the pins
 palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4)|PAL_STM32_PUDR_PULLUP|PAL_STM32_OTYPE_OPENDRAIN);// SCL
 palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4)|PAL_STM32_PUDR_PULLUP|PAL_STM32_OTYPE_OPENDRAIN);// SDA
 static const I2CConfig i2cfg = {

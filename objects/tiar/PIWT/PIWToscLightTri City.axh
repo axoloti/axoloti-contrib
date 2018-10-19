@@ -25,8 +25,8 @@
       <params>
          <frac32.s.mapvsl name="p0" value="1.0"/>
          <frac32.s.mapvsl name="p1" value="2.0"/>
-         <frac32.s.mapvsl name="p2" value="2.1429998874664307"/>
-         <frac32.s.mapvsl name="p3" value="3.8399999141693115"/>
+         <frac32.s.mapvsl name="p2" value="2.1429996490478516"/>
+         <frac32.s.mapvsl name="p3" value="3.8399996757507324"/>
          <frac32.s.mapvsl name="p4" value="4.869999885559082"/>
          <frac32.s.mapvsl name="p5" value="5.699999809265137"/>
          <frac32.s.mapvsl name="p6" value="6.5"/>
@@ -38,7 +38,7 @@
    <obj type="tiar/kfunc/b8b" uuid="a01253ac-ca4b-430b-901f-cd0cfaad394c" name="b8b_2" x="448" y="154">
       <params>
          <frac32.s.mapvsl name="p0" value="-1.5"/>
-         <frac32.s.mapvsl name="p1" value="-1.7599999904632568"/>
+         <frac32.s.mapvsl name="p1" value="-1.7599997520446777"/>
          <frac32.s.mapvsl name="p2" value="-1.5"/>
          <frac32.s.mapvsl name="p3" value="-2.130000114440918"/>
          <frac32.s.mapvsl name="p4" value="-5.0"/>
@@ -85,7 +85,7 @@
    </obj>
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="224" y="546">
       <params>
-         <frac32.s.map name="a" value="14.0"/>
+         <frac32.s.map name="a" value="-15.0"/>
          <frac32.s.map name="d" value="64.0"/>
          <frac32.u.map name="s" value="39.0"/>
          <frac32.s.map name="r" value="5.0"/>
@@ -281,7 +281,13 @@
          </text>
       </attribs>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1148" y="1036">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_5" x="1134" y="1036">
+      <params>
+         <frac32.u.map name="amp" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="1260" y="1036">
       <params/>
       <attribs/>
    </obj>
@@ -306,10 +312,10 @@
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="scope_synchro" inlet="pitch"/>
-         <dest obj="mix_1" inlet="in1"/>
          <dest obj="b8b_1" inlet="in"/>
          <dest obj="b8b_2" inlet="in"/>
          <dest obj="oscLightTri_1" inlet="pitch"/>
+         <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
          <source obj="scope_synchro" outlet="wave"/>
@@ -436,11 +442,6 @@
          <dest obj="write_4" inlet="in"/>
       </net>
       <net>
-         <source obj="rot5_1" outlet="out0"/>
-         <dest obj="out_2" inlet="left"/>
-         <dest obj="out_2" inlet="right"/>
-      </net>
-      <net>
          <source obj="b8b_1" outlet="out"/>
          <dest obj="oscLightTri_1" inlet="freq offsetB"/>
       </net>
@@ -456,15 +457,24 @@
          <source obj="read_1" outlet="out"/>
          <dest obj="hp1_1" inlet="in"/>
       </net>
+      <net>
+         <source obj="*c_5" outlet="out"/>
+         <dest obj="out_2" inlet="left"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="rot5_1" outlet="out0"/>
+         <dest obj="*c_5" inlet="in"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>585</x>
-      <y>0</y>
-      <width>1212</width>
+      <x>99</x>
+      <y>8</y>
+      <width>1471</width>
       <height>1001</height>
    </windowPos>
 </patch-1.0>

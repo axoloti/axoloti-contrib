@@ -20,12 +20,20 @@
          <frac32.u.map name="mod"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[float p = 32, dp;
+      <code.declaration><![CDATA[float p, dp;
 float x0 = 0, x1;
-float y0Saw = 0, y1Saw;
-float y0Sqr = 0, y1Sqr;
-float y0Tri = 0, y1Tri;
-float y0Sin = 0, y1Sin;]]></code.declaration>
+float y0Saw, y1Saw;
+float y0Sqr, y1Sqr;
+float y0Tri, y1Tri;
+float y0Sin, y1Sin;]]></code.declaration>
+      <code.init><![CDATA[
+p = 32;
+x0 = 0;
+y0Saw = 0;
+y0Sqr = 0;
+y0Tri = 0;
+y0Sin = 0;
+]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(param_pitch + inlet_pitch, idp);
 dp = idp*(0.25f/(1<<30));]]></code.krate>
@@ -45,12 +53,12 @@ pm -= (int32_t)pm;
 float saw = pm * 2 - 1;
 y0Saw = saw * saw;
 float sqr = saw > 0 ? 1.0f : -1.0f;
-y0Sqr = 2 * fabs(saw) - 1; //tri
+y0Sqr = 2 * fabsf(saw) - 1; //tri
 y0Tri = y0Sqr * y0Sqr * sqr - sqr; //sine
 float xs = pm <= 0.5f ? pm : 1.0f - pm;
 y0Sin = xs * xs * (4 - (16/3.0f) * xs);
 float x1_x0 = x1 - x0;
-if(fabs(x1_x0) > 0.0001f){
+if(fabsf(x1_x0) > 0.0001f){
   float _x1_x0 = 1.0f / x1_x0;
   outlet_saw = arm::float_to_q((y1Saw - y0Saw) * _x1_x0, 27-2);
   outlet_sqr = arm::float_to_q((y1Sqr - y0Sqr) * _x1_x0, 27-2);

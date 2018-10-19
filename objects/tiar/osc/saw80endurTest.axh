@@ -1,0 +1,66 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="lfo/saw down" uuid="d831d6b82b3d559c3ba7b1b487fb292d7998fd08" name="saw_1" x="0" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="-26.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="98" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="0" y="112">
+      <params>
+         <frac32.u.map name="amp" value="44.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/saw80" uuid="1B2e1953-40d1-4480-aa27-c7e712752e53" name="saw80_1" x="112" y="112">
+      <params>
+         <frac32.s.map name="pitch" value="16.0"/>
+         <frac32.s.map name="HP" value="-64.0"/>
+         <frac32.u.map name="pulse" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="210" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="0" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="saw80_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="out_2" inlet="left"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="saw80_1" inlet="pitch"/>
+         <dest obj="saw80_1" inlet="HP"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>19</x>
+      <y>153</y>
+      <width>999</width>
+      <height>516</height>
+   </windowPos>
+</patch-1.0>

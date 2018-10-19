@@ -15,9 +15,8 @@
       </attribs>
       <code.declaration><![CDATA[static const uint32_t NBH = 16;
 //              0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15
-int dest[NBH]={ 1, 0, 3, 2, 6, 8,15, 9,10,13,14, 4, 7,12,11, 5};
-int32_t alphaAmp = 0;
-int32_t alphaPch = 0;
+const int dest[NBH]={ 1, 0, 3, 2, 6, 8,15, 9,10,13,14, 4, 7,12,11, 5};
+int32_t alphaAmp, alphaPch = 0;
 
 uint32_t getDp(int h){
   uint32_t dp0 = attr_ctlPch.getDp(h);
@@ -30,6 +29,9 @@ uint32_t getGain(int h){
   uint32_t g1 = attr_ctlAmp.getGain(dest[h]);
   return ___SMMLA(alphaAmp, g1 - g0, g0 >> 5) << 5;
 }]]></code.declaration>
+<code.init><![CDATA[
+alphaAmp = alphaPch = 0;
+]]></code.init>
       <code.krate><![CDATA[//a2*(3-2*a) // sigmoid
 //a2*(1.5-a)*2
 alphaAmp = __USAT(inlet_alphaAmp, 27);

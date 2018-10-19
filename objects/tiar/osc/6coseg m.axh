@@ -1,4 +1,10 @@
 <patch-1.0 appVersion="1.0.12">
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="588" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="-0.009999999776482582"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="14">
       <params/>
       <attribs/>
@@ -24,7 +30,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="910" y="28">
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="784" y="56">
       <params/>
       <attribs/>
    </obj>
@@ -201,9 +207,9 @@
    <nets>
       <net>
          <source obj="6coseg_1" outlet="wave"/>
-         <dest obj="scope_1" inlet="in"/>
          <dest obj="mix_6" inlet="in1"/>
          <dest obj="mix_7" inlet="in1"/>
+         <dest obj="MIDscope_1" inlet="in"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="gate"/>
@@ -225,6 +231,7 @@
          <source obj="mix_1" outlet="out"/>
          <dest obj="6coseg_1" inlet="pitch"/>
          <dest obj="6coseg_2" inlet="pitch"/>
+         <dest obj="sine_2" inlet="pitch"/>
       </net>
       <net>
          <source obj="triphase_vlfo_1" outlet="phi 0"/>
@@ -385,6 +392,10 @@
          <source obj="*_3" outlet="result"/>
          <dest obj="vcaST_1" inlet="v"/>
          <dest obj="dial_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
       </net>
    </nets>
    <settings>
