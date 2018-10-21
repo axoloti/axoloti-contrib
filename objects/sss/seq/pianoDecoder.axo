@@ -1,0 +1,119 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pianoDecoder" uuid="d0818188-dcbb-4227-a890-5f22836cbbb7">
+      <sDescription>Decodes the polyphonic &quot;pianobar&quot; sequencer and sends the data as midi internally or externally.
+Each velocity-step can be set to it&apos;s own velocity and midi-channel.
+Useful to write three polyphonic melody lines in a single sequencer, mixable/automatable using the three velocity inputs.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="clock"/>
+         <frac32 name="vel1"/>
+         <frac32 name="vel2"/>
+         <frac32 name="vel3"/>
+         <frac32buffer name="notes"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="vel1"/>
+         <frac32.u.map name="vel2"/>
+         <frac32.u.map name="vel3"/>
+         <int32 name="channel1">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="channel2">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="channel3">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="lownote">
+            <MinValue i="0"/>
+            <MaxValue i="55"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int32_t prv[72];
+int32_t gate[72];
+bool trg[72],clk;
+int32_t vel[4];
+int channel[4];]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<72;i++){
+	gate[i]=0;
+	prv[i]=0;
+}
+
+channel[0]=0;
+vel[0]=0;]]></code.init>
+      <code.krate><![CDATA[vel[1]=__USAT(param_vel1+inlet_vel1,27);
+vel[2]=__USAT(param_vel2+inlet_vel2,27);
+vel[3]=__USAT(param_vel3+inlet_vel3,27);
+
+channel[1]=param_channel1-1;
+channel[2]=param_channel2-1;
+channel[3]=param_channel3-1;
+
+if((inlet_clock>0)&&!clk)
+{
+	clk=1;
+
+	for(i=0;i<6;i++)
+	{
+		int k=i*12;
+		for(int j=0;j<12;j++)
+		{
+			gate[k+j]=(inlet_notes[j]>>(i<<1))&1;
+			gate[k+j]+=((inlet_notes[j]>>((i<<1)+1))&1)<<1;
+		}
+	}
+	
+	for(i=0;i<72;i++)
+	{
+		if(!(prv[i]==gate[i]))
+		{
+			int tg=gate[i];
+			int tp=prv[i];
+			int lastnote=i+param_lownote;
+			if(tg>0)
+			{	
+				MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + channel[tg],lastnote,vel[tg]>>20);
+			}
+			else if(tg<1)
+			{
+				MidiSend3((midi_device_t) attr_device, MIDI_NOTE_OFF + channel[tp],lastnote,vel[tp]>>20);
+			}
+			prv[i]=gate[i];
+		}
+	}
+}
+else if(inlet_clock<1){clk=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>
