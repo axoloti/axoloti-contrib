@@ -1,16 +1,16 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="e88dac27-fec0-445a-ab0c-e73f68f04ae1" name="patcher_1" x="0" y="14">
+   <patcher type="patch/patcher" uuid="b7c1ddc6-c963-4e69-bb53-168863280331" name="patcher_1" x="0" y="14">
       <params>
-         <frac32.u.map name="VIBRATO" value="64.0"/>
+         <frac32.u.map name="VIBRATO" value="29.0"/>
          <frac32.s.map name="saw80_1:pitch" value="0.0"/>
-         <frac32.u.map name="saw80_1:pulse" value="31.5"/>
-         <frac32.s.map name="cutoffEnv:a" value="10.0"/>
+         <frac32.u.map name="saw80_1:pulse" value="20.0"/>
+         <frac32.s.map name="cutoffEnv:a" value="5.0"/>
          <frac32.s.map name="cutoffEnv:d" value="64.0"/>
          <frac32.u.map name="cutoffEnv:s" value="31.0"/>
-         <frac32.s.map name="cutoffEnv:r" value="52.0"/>
-         <frac32.u.map name="HP Mod" value="7.5"/>
+         <frac32.s.map name="cutoffEnv:r" value="36.0"/>
+         <frac32.u.map name="HP Mod" value="9.5"/>
          <frac32.s.map name="HPF:pitch" value="0.8631367683410645"/>
-         <frac32.u.map name="HPF:Q" value="0.0"/>
+         <frac32.u.map name="HPF:Q" value="13.5"/>
          <frac32.u.map name="LP Mod" value="50.0"/>
          <frac32.s.map name="LPF:pitch" value="-6.0"/>
          <frac32.u.map name="LPF:Q" value="5.5"/>
@@ -47,7 +47,13 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/osc/saw80" uuid="1B2e1953-40d1-4480-aa27-c7e712752e53" name="saw80_1" x="476" y="42">
+         <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="504" y="42">
+            <params>
+               <frac32.s.map name="detHz" value="-4.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/saw80" uuid="1B2e1953-40d1-4480-aa27-c7e712752e53" name="saw80_1" x="602" y="42">
             <params>
                <frac32.s.map name="pitch" onParent="true" value="0.0"/>
                <frac32.s.map name="HP" value="-27.0"/>
@@ -55,7 +61,7 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="math/&gt;&gt;" uuid="5d748ad90476b3ecc3970cde6622af97cf3cf4ac" name="&gt;&gt;_1" x="588" y="42">
+         <obj type="math/&gt;&gt;" uuid="5d748ad90476b3ecc3970cde6622af97cf3cf4ac" name="&gt;&gt;_1" x="714" y="42">
             <params/>
             <attribs>
                <spinner attributeName="shift" value="2"/>
@@ -152,8 +158,250 @@
                <dest obj="uniform_1" inlet="trig"/>
             </net>
             <net>
-               <source obj="mix_1" outlet="out"/>
+               <source obj="adsr_3" outlet="env"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="HPF" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="uniform_1" outlet="rand"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="VIBRATO" outlet="out"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="VIBRATO" inlet="in"/>
+            </net>
+            <net>
+               <source obj="gainNoSat_1" outlet="out"/>
+               <dest obj="HP Mod" inlet="in"/>
+               <dest obj="LP Mod" inlet="in"/>
+            </net>
+            <net>
+               <source obj="LEVEL" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="LEVEL" inlet="in"/>
+            </net>
+            <net>
+               <source obj="HPF" outlet="hp12"/>
+               <dest obj="LPF" inlet="x"/>
+            </net>
+            <net>
+               <source obj="&gt;&gt;_1" outlet="result"/>
+               <dest obj="HPF" inlet="x"/>
+            </net>
+            <net>
+               <source obj="LPF" outlet="lp12"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="cutoffEnv" outlet="env"/>
+               <dest obj="gainNoSat_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="HP Mod" outlet="out"/>
+               <dest obj="+_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="LP Mod" outlet="out"/>
+               <dest obj="+_2" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="LPF" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="DetHz_1" outlet="pitch"/>
                <dest obj="saw80_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="DetHz_1" inlet="pitch"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>0</NPresets>
+            <NPresetEntries>0</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1556</width>
+            <height>715</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <patcher type="patch/patcher" uuid="21a17ce9-e44f-4e4b-b0eb-083c42c3bafb" name="patcher_2" x="126" y="14">
+      <params>
+         <frac32.u.map name="VIBRATO" value="64.0"/>
+         <frac32.s.map name="saw80_1:pitch" value="12.0"/>
+         <frac32.u.map name="saw80_1:pulse" value="22.0"/>
+         <frac32.s.map name="cutoffEnv:a" value="30.0"/>
+         <frac32.s.map name="cutoffEnv:d" value="64.0"/>
+         <frac32.u.map name="cutoffEnv:s" value="17.0"/>
+         <frac32.s.map name="cutoffEnv:r" value="43.0"/>
+         <frac32.u.map name="HP Mod" value="24.0"/>
+         <frac32.s.map name="HPF:pitch" value="0.8631367683410645"/>
+         <frac32.u.map name="HPF:Q" value="11.5"/>
+         <frac32.u.map name="LP Mod" value="50.0"/>
+         <frac32.s.map name="LPF:pitch" value="-16.0"/>
+         <frac32.u.map name="LPF:Q" value="12.5"/>
+         <frac32.u.map name="LEVEL" value="64.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="140" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="154" y="42">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="VIBRATO" x="266" y="42">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="392" y="42">
+            <params>
+               <frac32.u.map name="gain1" value="0.14999961853027344"/>
+               <frac32.u.map name="gain2" value="0.014999866485595703"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="518" y="42">
+            <params>
+               <frac32.s.map name="detHz" value="3.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/saw80" uuid="1B2e1953-40d1-4480-aa27-c7e712752e53" name="saw80_1" x="700" y="42">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.s.map name="HP" value="-27.0"/>
+               <frac32.u.map name="pulse" onParent="true" value="33.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/&gt;&gt;" uuid="5d748ad90476b3ecc3970cde6622af97cf3cf4ac" name="&gt;&gt;_1" x="812" y="42">
+            <params/>
+            <attribs>
+               <spinner attributeName="shift" value="2"/>
+            </attribs>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="cutoffEnv" x="0" y="210">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="33.0"/>
+               <frac32.s.map name="d" onParent="true" value="51.0"/>
+               <frac32.u.map name="s" onParent="true" value="25.5"/>
+               <frac32.s.map name="r" onParent="true" value="19.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/math/gainNoSat" uuid="f6232b94-425e-4798-ab4d-1c8b12190052" name="gainNoSat_1" x="98" y="210">
+            <params>
+               <frac32.u.map name="amp" value="6.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="HP Mod" x="210" y="210">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="57.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="308" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="HPF" x="378" y="210">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="23.0"/>
+               <frac32.u.map name="Q" onParent="true" value="11.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="LP Mod" x="490" y="210">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="57.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_2" x="588" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="LPF" x="658" y="210">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="23.0"/>
+               <frac32.u.map name="Q" onParent="true" value="11.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="770" y="210">
+            <params>
+               <frac32.s.map name="a" value="-47.0"/>
+               <frac32.s.map name="d" value="1.0"/>
+               <frac32.u.map name="s" value="64.0"/>
+               <frac32.s.map name="r" value="17.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="868" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="LEVEL" x="924" y="210">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="37.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1036" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw80_1" outlet="out"/>
+               <dest obj="&gt;&gt;_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="saw80_1" inlet="HP"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+               <dest obj="+_1" inlet="in1"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="cutoffEnv" inlet="gate"/>
+               <dest obj="adsr_3" inlet="gate"/>
+               <dest obj="uniform_1" inlet="trig"/>
             </net>
             <net>
                <source obj="adsr_3" outlet="env"/>
@@ -216,6 +464,14 @@
                <source obj="+_2" outlet="out"/>
                <dest obj="LPF" inlet="pitch"/>
             </net>
+            <net>
+               <source obj="DetHz_1" outlet="pitch"/>
+               <dest obj="saw80_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="DetHz_1" inlet="pitch"/>
+            </net>
          </nets>
          <settings>
             <subpatchmode>polyphonic</subpatchmode>
@@ -235,6 +491,10 @@
          </windowPos>
       </subpatch>
    </patcher>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="252" y="14">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="280" y="154">
       <params/>
       <attribs>
@@ -317,7 +577,7 @@
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="DryWet" x="1022" y="308">
       <params>
-         <frac32.u.map name="value" value="64.0"/>
+         <frac32.u.map name="value" value="49.5"/>
       </params>
       <attribs/>
    </obj>
@@ -407,19 +667,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/&lt;&lt;" uuid="3c89a8ac22f44350a3366284704535e257aea35f" name="&lt;&lt;_1" x="1176" y="448">
-      <params/>
-      <attribs>
-         <spinner attributeName="shift" value="1"/>
-      </attribs>
-   </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_5" x="1260" y="448">
-      <params>
-         <frac32.u.map name="amp" value="64.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_3" x="1358" y="448">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_3" x="1176" y="448">
       <params/>
       <attribs/>
    </obj>
@@ -528,7 +776,7 @@
          <dest obj="hp1_1" inlet="in"/>
       </net>
       <net>
-         <source obj="*c_5" outlet="out"/>
+         <source obj="xfade2_1" outlet="o"/>
          <dest obj="out_3" inlet="left"/>
          <dest obj="out_3" inlet="right"/>
       </net>
@@ -542,16 +790,16 @@
       </net>
       <net>
          <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="patcher_2" outlet="outlet_1"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
          <dest obj="rot5_1" inlet="in0"/>
          <dest obj="xfade2_1" inlet="i1"/>
-      </net>
-      <net>
-         <source obj="&lt;&lt;_1" outlet="result"/>
-         <dest obj="*c_5" inlet="in"/>
-      </net>
-      <net>
-         <source obj="xfade2_1" outlet="o"/>
-         <dest obj="&lt;&lt;_1" inlet="a"/>
       </net>
    </nets>
    <settings>
