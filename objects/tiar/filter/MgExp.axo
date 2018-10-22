@@ -19,10 +19,14 @@
       <attribs/>
       <code.declaration><![CDATA[float a, b, c, d, e, f, g, h, k;
 const int iter = 6;
-float yA = 0, yB = 0, yC = 0, yD = 0;]]></code.declaration>
+float yA, yB, yC, yD;]]></code.declaration>
+<code.init><![CDATA[
+yA = yB = yC = yD = 0;
+]]></code.init>
+
       <code.krate><![CDATA[float ne, nf, ng, nh;
 int32_t idp;
-MTOFEXTENDED(param_pitch + inlet_pitch-(12<<21), idp);
+MTOFEXTENDED(param_pitch + inlet_pitch - (12<<21), idp);
 float ff = idp * (1.0f/(1<<30));
 float w = 3.1415926535f * ff / ((float)(1<<iter)); //* pow(2, -iter);
 k = arm::q_to_float(param_reso + inlet_reso, 25);
@@ -39,12 +43,11 @@ for (int i = 0; i < iter; i++) {
   float ne = k * (-2 * f * h - g * g) + e * e;
   float nf = 2 * (e * f - g * h * k);
   float ng = -h * h * k + 2 * e * g + f * f;
-  float nh = 2 * (e * h + f * g);
+         h = 2 * (e * h + f * g);
 
   e = ne;
   f = nf;
   g = ng;
-  h = nh;
 }
 
 d = (1 - e - f - g - h) / (k + 1);

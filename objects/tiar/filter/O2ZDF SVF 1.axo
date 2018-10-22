@@ -58,11 +58,14 @@ float da, db, dc;    // deltas for srate interpolation
 float D;             // used for hp
 float x; //input
 float lp, bp; // state variables/outputs
-float TRF_coef = (820.0f/(1<<27)) * 2 * 3.1415926535f / (128 * 48000);]]></code.declaration>
+float TRF_coef;]]></code.declaration>
       <code.init><![CDATA[D = x = lp = bp = 0;
 update(  1.0f, 0.1f/32 ); 
 a = na; b = nb; c = nc;
-da = db = dc = 0;]]></code.init>
+da = db = dc = 0;
+TRF_coef = (820.0f/(1<<27)) * 2 * 3.1415926535f / (128 * 48000);
+
+]]></code.init>
       <code.krate><![CDATA[float q = __USAT(param_Q + inlet_reso, 27) * (1.0f/(1<<27));
 q = 0.25f + q * (1 + q *q* (18.75f + q*60));  //0.25 -> 80
 

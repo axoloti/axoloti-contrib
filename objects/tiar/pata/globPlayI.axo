@@ -39,12 +39,27 @@ int32_t cos2t_q27(uint32_t p){
   return sin2t_q27(p + (1UL << 30));
 }
 int32_t d[256];
-uint8_t dc=0;
-int32_t in_i = 0;
-int32_t modI = 0, modR = 0, theta = 1<<28;
-int32_t a_r=0;
-int32_t LPCoeff = 1<<28, lp = 0;
-int32_t HPCoeff = 1<<28, hp = 0;]]></code.declaration>
+uint8_t dc;
+int32_t in_i;
+int32_t modI, modR, theta;
+int32_t a_r;
+int32_t LPCoeff, lp;
+int32_t HPCoeff, hp;
+]]></code.declaration>
+<code.init><![CDATA[
+dc = 0;
+in_i = 0;
+modI = 0; modR = 0; theta = 1<<28;
+a_r = 0;
+LPCoeff = 1<<28; lp = 0;
+HPCoeff = 1<<28; hp = 0;
+for(int i = 0; i < 256; i++)
+  d[i] = 0;
+]]></code.init>
+
+
+
+
       <code.krate><![CDATA[int delay = param_delay - 1;  
 int32_t cutoff = param_LP + inlet_LP;
 if(cutoff > 64<<21) cutoff = 64<<21;

@@ -15,7 +15,8 @@
       <attribs/>
       <code.declaration><![CDATA[uint8_t k_i;
 int32_t k_r[5];
-int32_t* k_rt[16] = {
+int32_t* k_rt[16]; 
+/*
 k_r, k_r + 1,
 k_r, k_r +   2,
 k_r, k_r + 1,
@@ -23,12 +24,24 @@ k_r, k_r +     3,
 k_r, k_r + 1,
 k_r, k_r +   2,
 k_r, k_r + 1,
-k_r, k_r +       4};
-int32_t rt0 = 0, rt1 = 0, rt2 = 0, rt3 = 0;
-int32_t acc = 0;]]></code.declaration>
-      <code.init><![CDATA[for(uint8_t i = 0; i < 5; i++){
+k_r, k_r +       4
+*/
+int32_t rt0, rt1, rt2, rt3, acc = 0;]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < 16;i += 2){
+  k_rt[i] = k_r;
+}
+for(int i = 1; i < 16;i += 4){
+  k_rt[i] = k_r + 1;
+}
+for(int i = 3; i < 16;i += 8){
+  k_rt[i] = k_r + 2;
+}
+k_rt[7] = k_r + 3;
+k_rt[15] = k_r + 4;
+for(uint8_t i = 0; i < 5; i++){
   k_r[i] = 0;
-}]]></code.init>
+}
+rt0 = rt1 = rt2 = rt3 = acc = 0;]]></code.init>
       <code.krate><![CDATA[acc -= rt0; { outlet_out[ 0] = acc += rt0 = inlet_in[ 0]>>3; }
 acc -= rt1; { outlet_out[ 1] = acc += rt1 = inlet_in[ 1]>>3; }
 acc -= rt0; { outlet_out[ 2] = acc += rt0 = inlet_in[ 2]>>3; }

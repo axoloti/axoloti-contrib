@@ -1,10 +1,14 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="2a5e5cf6-c571-4171-a2eb-c70cbc5f20d3" name="patcher_1" x="14" y="14">
+   <patcher type="patch/patcher" uuid="2a413884-6835-4797-882e-ad02b484deb4" name="patcher_1" x="14" y="14">
       <params/>
       <attribs>
          <combo attributeName="poly" selection="6"/>
       </attribs>
       <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="70">
+            <params/>
+            <attribs/>
+         </obj>
          <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="140" y="70">
             <params/>
             <attribs/>
@@ -27,69 +31,28 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/ADD16/amp" uuid="53c7bb32-3349-44c5-a22c-298698ebc5ed" name="amp_1" x="588" y="70">
-            <params>
-               <frac32.u.mapvsl name="a1" value="11.0"/>
-               <frac32.u.mapvsl name="a2" value="32.5"/>
-               <frac32.u.mapvsl name="a3" value="19.5"/>
-               <frac32.u.mapvsl name="a4" value="11.0"/>
-               <frac32.u.mapvsl name="a5" value="5.0"/>
-               <frac32.u.mapvsl name="a6" value="16.0"/>
-               <frac32.u.mapvsl name="a7" value="2.5"/>
-               <frac32.u.mapvsl name="a8" value="16.0"/>
-               <frac32.u.mapvsl name="a9" value="2.0"/>
-               <frac32.u.mapvsl name="a10" value="11.0"/>
-               <frac32.u.mapvsl name="a11" value="64.0"/>
-               <frac32.u.mapvsl name="a12" value="5.0"/>
-               <frac32.u.mapvsl name="a13" value="49.0"/>
-               <frac32.u.mapvsl name="a14" value="14.0"/>
-               <frac32.u.mapvsl name="a15" value="13.5"/>
-               <frac32.u.mapvsl name="a16" value="45.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="84" y="140">
+         <obj type="tiar/ADD16/decay" uuid="de16bb32-3349-44c5-a22c-298698ebc5ed" name="decay_1" x="56" y="196">
             <params/>
-            <attribs/>
-         </obj>
-         <obj type="tiar/ADD16/decay" uuid="dd16bb32-3349-44c5-a22c-298698ebc5ed" name="decay_1" x="686" y="238">
-            <params>
-               <frac32.s.mapvsl name="d1" value="35.0"/>
-               <frac32.s.mapvsl name="d2" value="49.0"/>
-               <frac32.s.mapvsl name="d3" value="44.0"/>
-               <frac32.s.mapvsl name="d4" value="17.0"/>
-               <frac32.s.mapvsl name="d5" value="21.0"/>
-               <frac32.s.mapvsl name="d6" value="43.0"/>
-               <frac32.s.mapvsl name="d7" value="25.0"/>
-               <frac32.s.mapvsl name="d8" value="32.0"/>
-               <frac32.s.mapvsl name="d9" value="19.0"/>
-               <frac32.s.mapvsl name="d10" value="45.0"/>
-               <frac32.s.mapvsl name="d11" value="-4.0"/>
-               <frac32.s.mapvsl name="d12" value="16.0"/>
-               <frac32.s.mapvsl name="d13" value="-10.0"/>
-               <frac32.s.mapvsl name="d14" value="9.0"/>
-               <frac32.s.mapvsl name="d15" value="6.0"/>
-               <frac32.s.mapvsl name="d16" value="-20.0"/>
-            </params>
             <attribs>
-               <objref attributeName="ctlAmp" obj="amp_1"/>
+               <objref attributeName="ctlAmp" obj="../amp_1"/>
+               <objref attributeName="sl16s" obj="../sl16s_1"/>
             </attribs>
          </obj>
-         <obj type="tiar/ADD16/osc" uuid="181f139c-ac57-4f15-a551-dc821a6bb46f" name="osc_1" x="896" y="238">
+         <obj type="tiar/ADD16/pitch" uuid="53c7cc32-3349-44c5-a22c-298698ebc5ed" name="pitch_1" x="196" y="196">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/ADD16/osc" uuid="181f139c-ac57-4f15-a551-dc821a6bb46f" name="osc_1" x="308" y="196">
             <params/>
             <attribs>
                <objref attributeName="ctlAmp" obj="decay_1"/>
                <objref attributeName="ctlPch" obj="pitch_1"/>
             </attribs>
          </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1064" y="238">
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="448" y="196">
             <params/>
-            <attribs/>
-         </obj>
-         <obj type="tiar/ADD16/pitch" uuid="53c7cc32-3349-44c5-a22c-298698ebc5ed" name="pitch_1" x="364" y="266">
-            <params>
-               <frac32.s.map name="pitch" value="0.0"/>
-            </params>
             <attribs/>
          </obj>
          <nets>
@@ -99,8 +62,8 @@
             </net>
             <net>
                <source obj="keyb_1" outlet="gate"/>
-               <dest obj="decay_1" inlet="trig"/>
                <dest obj="uniform_1" inlet="trig"/>
+               <dest obj="decay_1" inlet="trig"/>
             </net>
             <net>
                <source obj="osc_1" outlet="out"/>
@@ -135,14 +98,14 @@
          <windowPos>
             <x>0</x>
             <y>0</y>
-            <width>1249</width>
-            <height>866</height>
+            <width>1175</width>
+            <height>550</height>
          </windowPos>
       </subpatch>
    </patcher>
    <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="112" y="14">
       <params>
-         <frac32.u.map name="amp" value="64.0"/>
+         <frac32.u.map name="amp" value="31.0"/>
       </params>
       <attribs/>
    </obj>
@@ -150,8 +113,50 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="56" y="140">
+   <obj type="tiar/ADD16/amp" uuid="53c7bb32-3349-44c5-a22c-298698ebc5ed" name="amp_1" x="546" y="14">
+      <params>
+         <frac32.u.mapvsl name="a1" value="25.0"/>
+         <frac32.u.mapvsl name="a2" value="52.5"/>
+         <frac32.u.mapvsl name="a3" value="14.0"/>
+         <frac32.u.mapvsl name="a4" value="27.5"/>
+         <frac32.u.mapvsl name="a5" value="9.5"/>
+         <frac32.u.mapvsl name="a6" value="19.0"/>
+         <frac32.u.mapvsl name="a7" value="7.5"/>
+         <frac32.u.mapvsl name="a8" value="15.0"/>
+         <frac32.u.mapvsl name="a9" value="36.5"/>
+         <frac32.u.mapvsl name="a10" value="0.0"/>
+         <frac32.u.mapvsl name="a11" value="6.5"/>
+         <frac32.u.mapvsl name="a12" value="13.5"/>
+         <frac32.u.mapvsl name="a13" value="19.5"/>
+         <frac32.u.mapvsl name="a14" value="50.5"/>
+         <frac32.u.mapvsl name="a15" value="49.0"/>
+         <frac32.u.mapvsl name="a16" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="0" y="140">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/ADD16/sl16s" uuid="5316bb32-3349-16c5-a22c-298e98ebcfed" name="sl16s_1" x="546" y="168">
+      <params>
+         <frac32.s.mapvsl name="h1" value="55.0"/>
+         <frac32.s.mapvsl name="h2" value="16.0"/>
+         <frac32.s.mapvsl name="h3" value="47.0"/>
+         <frac32.s.mapvsl name="h4" value="25.0"/>
+         <frac32.s.mapvsl name="h5" value="42.0"/>
+         <frac32.s.mapvsl name="h6" value="12.0"/>
+         <frac32.s.mapvsl name="h7" value="37.0"/>
+         <frac32.s.mapvsl name="h8" value="37.0"/>
+         <frac32.s.mapvsl name="h9" value="37.0"/>
+         <frac32.s.mapvsl name="h10" value="27.0"/>
+         <frac32.s.mapvsl name="h11" value="14.0"/>
+         <frac32.s.mapvsl name="h12" value="12.0"/>
+         <frac32.s.mapvsl name="h13" value="10.0"/>
+         <frac32.s.mapvsl name="h14" value="-24.0"/>
+         <frac32.s.mapvsl name="h15" value="-36.0"/>
+         <frac32.s.mapvsl name="h16" value="-25.0"/>
+      </params>
       <attribs/>
    </obj>
    <nets>
@@ -172,9 +177,9 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>642</x>
-      <y>266</y>
-      <width>1445</width>
+      <x>1124</x>
+      <y>208</y>
+      <width>800</width>
       <height>632</height>
    </windowPos>
 </patch-1.0>

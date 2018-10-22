@@ -16,14 +16,14 @@ Low CPU (~740 cycles) and acceptable aliasing.</sDescription>
          <frac32.u.map name="OutGain"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[float x0,x1,I0,I1,out,inGain,outGain,outGain_2;
+      <code.declaration><![CDATA[float x0, x1, I0, I1, out, inGain, outGain, outGain_2;
 int32_t old_in;
 int32_t outMax;]]></code.declaration>
-      <code.init><![CDATA[x0=x1=I0=I1=out=0;
+      <code.init><![CDATA[x0 = x1 = I0 = I1 = out = 0;
 old_in = 0;]]></code.init>
-      <code.krate><![CDATA[inGain = param_InGain*(1.0f/(1<<25))*(1.0f/(1<<27));
+      <code.krate><![CDATA[inGain = param_InGain * (1.0f/(1<<25))*(1.0f/(1<<27));
 outGain_2 = (float)param_OutGain;
-outGain = 2.0f*param_OutGain;
+outGain = 2.0f * param_OutGain;
 outMax = param_OutGain<<1;]]></code.krate>
       <code.srate><![CDATA[// precedent value of input
 x1 = x0;
@@ -42,7 +42,7 @@ if(I0 < 1){
 // if the precendent and current input are different enough
 // we use the differenciation trick (ie mean on the [x1 x0] interval)
 if(inlet_in & 0xFFFFF000 != old_in & 0xFFFFF000){
-  outlet_out = (int32_t)(outGain*(I0 - I1) / (x0 - x1));
+  outlet_out = (int32_t)(outGain * (I0 - I1) / (x0 - x1));
 }else{
 // if the precedent and current values are close, we simply calculate
 // the value of the soft clip

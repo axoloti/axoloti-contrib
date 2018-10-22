@@ -18,16 +18,22 @@
       <attribs>
          <objref name="delayname"/>
       </attribs>
-      <code.declaration><![CDATA[//16 step cos (0..15) q31
-int32_t fade[16] = {
-  0x00000000, 0x013ad060, 0x04df2861, 0x0ac933ad,
-  0x12bec333, 0x1c71898c, 0x27821d59, 0x3383a3e1,
-  0x3fffffff, 0x4c7c5c1e, 0x587de2a6, 0x638e7673,
-  0x6d413ccc, 0x7536cc52, 0x7b20d79e, 0x7ec52f9f};
+      <code.declaration><![CDATA[
+//16 step cos (0..15) q31
+int32_t fade[16];
 // "a" fade out
 // "b" fade in (new values)
-int32_t a_alpha  = 0, b_alpha  = 0;
-int32_t a_rp = 100, b_rp = 100;]]></code.declaration>
+int32_t a_alpha, b_alpha;
+int32_t a_rp, b_rp;
+]]></code.declaration>
+<code.init><![CDATA[
+fade[ 0] = 0x00000000; fade[ 1] = 0x013ad060; fade[ 2] = 0x04df2861; fade[ 3] = 0x0ac933ad; 
+fade[ 4] = 0x12bec333; fade[ 5] = 0x1c71898c; fade[ 6] = 0x27821d59; fade[ 7] = 0x3383a3e1; 
+fade[ 8] = 0x3fffffff; fade[ 9] = 0x4c7c5c1e; fade[10] = 0x587de2a6; fade[11] = 0x638e7673; 
+fade[12] = 0x6d413ccc; fade[13] = 0x7536cc52; fade[14] = 0x7b20d79e; fade[15] = 0x7ec52f9f;
+a_alpha = b_alpha = 0;
+a_rp = b_rp = 100;
+]]></code.init>
       <code.krate><![CDATA[{
   int32_t per_q16;
   int32_t pitch = param_pitch+inlet_pitch;
