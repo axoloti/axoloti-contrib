@@ -1,0 +1,49 @@
+﻿<objdefs>
+   <obj.normal id="oldFloat" uuid="af2e19ff-43d1-4580-aa27-c7e732252e53">
+      <sDescription>A quantifier that simulates limited accuracy float formats as found on early digital synthesizers.      Not anti aliased.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="resolution">
+            <MenuEntries>
+               <string>5 bits</string>
+               <string>6 bits</string>
+               <string>7 bits</string>
+               <string>8 bits</string>
+               <string>2 bits</string>
+               <string>3 bits</string>
+               <string>4 bits</string>
+            </MenuEntries>
+            <CEntries>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration/>
+      <code.init/>
+      <code.srate><![CDATA[
+// __CLZ counts leading zeros
+int32_t offset = 32 - __CLZ(abs(inlet_in)) - attr_resolution;
+if(offset <= 0){
+  outlet_out = inlet_in;
+} else {
+  //erases some low bits depending of leading zeros and resolution
+  outlet_out = (inlet_in >> offset) << offset;
+}
+]]></code.srate>
+   </obj.normal>
+</objdefs>
