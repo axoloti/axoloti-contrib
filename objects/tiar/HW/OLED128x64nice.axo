@@ -4,6 +4,7 @@
       needs a single foactory/gpio/i2c/config object
       </sDescription>
       <license>GPL</license>
+      <helpPatch>OLED128x64nice.axh</helpPatch>
       <inlets>
          <charptr32 name="line1"/>
          <charptr32 name="line2"/>
@@ -232,17 +233,18 @@ void sendTextPage(int page){
     i2cReleaseBus(&I2CD1);
  } else if(mode == 1){
     if(page == 1){
-      /*
-      chSysLock();
+
+      //chSysLock();
       memcpy(tY, attr_scope.t, 128);
-      chSysUnlock();
+      //chSysUnlock();
+      int8_t* stY = (int8_t*)tY;
       for(int i = 0; i < 128; i++){
-	      tY[i]=((tY[i] + 64) * 3 ) >> 3;
+	      tY[i]=((stY[i] + 64) * 3 ) >> 3;
       }
-      */
-      for(int i = 0; i < 128; i++){
+      
+      /*for(int i = 0; i < 128; i++){
 	      tY[i]=((attr_scope.t[i]+64)*3 )>>3;
-      }
+      }*/
     }
     calcScopePage(page, txbuf+1);
     i2cAcquireBus(&I2CD1);
@@ -293,16 +295,16 @@ msg_t ThreadX2()
   while (!chThdShouldTerminate()) {
     sendTextPage(0);
     sendTextPage(1);
-    chThdSleepMilliseconds(1);
+   // chThdSleepMilliseconds(1);
     sendTextPage(2);
     sendTextPage(3);
-    chThdSleepMilliseconds(1);
+    //chThdSleepMilliseconds(1);
     sendTextPage(4);
     sendTextPage(5);
-    chThdSleepMilliseconds(1);
+    //chThdSleepMilliseconds(1);
     sendTextPage(6);
     sendTextPage(7);
-    chThdSleepMilliseconds(25);
+    chThdSleepMilliseconds(33);
   }
   chThdExit((msg_t)0);
 }
@@ -313,20 +315,14 @@ static msg_t ThreadX(void *arg) {
 
 WORKING_AREA(waThreadX, 256);
 Thread *Thd;]]></code.declaration>
-      <code.init><![CDATA[
-cpt = 0;
+      <code.init><![CDATA[cpt = 0;
 for(int i = 0; i < 11 * 4; i++){
   text[i] = textBuf[i] = ' ';
 }
-Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX), NORMALPRIO, ThreadX, (void *)this);
-]]></code.init>
-      <code.dispose><![CDATA[
-chThdTerminate( Thd );
-chThdWait( Thd );
-]]></code.dispose>
-      <code.krate><![CDATA[
-            
-mode = inlet_mode;
+Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX), NORMALPRIO, ThreadX, (void *)this);]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate( Thd );
+chThdWait( Thd );]]></code.dispose>
+      <code.krate><![CDATA[mode = inlet_mode;
 if(inlet_line1 != NULL){
   int i = 0;
   while(i < 11 & inlet_line1[i] != '\0'){
