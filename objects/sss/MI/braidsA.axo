@@ -12,7 +12,9 @@
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
       </outlets>
-      <displays/>
+      <displays>
+         <int32.label name="d1" noLabel="true"/>
+      </displays>
       <params>
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
          <frac32.u.map name="timbre">
@@ -22,14 +24,38 @@
             <DefaultValue v="32.0"/>
          </frac32.u.map>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="mode">
+            <MenuEntries>
+               <string>harmonic</string>
+               <string>chaoticFM</string>
+               <string>feedFM</string>
+               <string>FM</string>
+               <string>3ring</string>
+               <string>waveline</string>
+               <string>wavemap</string>
+               <string>wavetab</string>
+            </MenuEntries>
+            <CEntries>
+               <string>braids_digital_deriv::Harmonics osc</string>
+               <string>braids_digital_deriv::ChaoticFeedbackFm osc</string>
+               <string>braids_digital_deriv::FeedbackFm osc;</string>
+               <string>braids_digital_deriv::Fm osc</string>
+               <string>braids_digital_deriv::TripleRingMod osc</string>
+               <string>braids_digital_deriv::WaveLine osc</string>
+               <string>braids_digital_deriv::WaveMap osc</string>
+               <string>braids_digital_deriv::Wavetables osc</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <includes>
          <include>./brds_digital.h</include>
       </includes>
-      <code.declaration><![CDATA[braids_digital_deriv::Harmonics osc;]]></code.declaration>
+      <code.declaration><![CDATA[attr_mode;]]></code.declaration>
       <code.init><![CDATA[osc.Init();]]></code.init>
       <code.krate><![CDATA[osc.set_parameters(__USAT((inlet_timbre+param_timbre)>>12,15),__USAT((inlet_color+param_color)>>12,15));
 osc.set_pitch((64<<7)+((param_pitch + inlet_pitch)>>14));
-osc.Render(0,&outlet_wave[0],BUFSIZE);]]></code.krate>
+osc.Render(0,&outlet_wave[0],BUFSIZE);
+disp_d1=(int32_t) "attr_mode";]]></code.krate>
    </obj.normal>
 </objdefs>
