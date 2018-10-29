@@ -5,7 +5,7 @@
    </obj>
    <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_2" x="266" y="0">
       <params>
-         <int32.hradio name="value" value="0"/>
+         <int32.hradio name="value" value="3"/>
       </params>
       <attribs/>
    </obj>
@@ -75,6 +75,12 @@
          <table attributeName="str" table="TITLE 1"/>
       </attribs>
    </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_4" x="714" y="266">
+      <params>
+         <frac32.s.map name="pitch" value="-32.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_3" x="14" y="280">
       <params>
          <frac32.s.map name="pitch" value="-62.0"/>
@@ -105,6 +111,12 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="tiar/HW/strbar" uuid="19acb9de-7b6b-4c8e-87ee-75013c6b6e2f" name="strbar_1" x="700" y="378">
+      <params/>
+      <attribs>
+         <table attributeName="prefix" table="LFO--"/>
+      </attribs>
+   </obj>
    <obj type="tiar/osc/Steps/SixBLISync" uuid="57ed4042-b950-4049-bd9b-ca568480c278" name="SixStepsBLISync_1" x="126" y="392">
       <params>
          <frac32.s.map name="pitch slave" value="12.0"/>
@@ -120,8 +132,8 @@
    </obj>
    <obj type="tiar/filter/ZDF SVF 1" uuid="f6cd89ac-2ff5-4c22-82d9-e487e9c85e9f" name="ZDF_1" x="322" y="392">
       <params>
-         <frac32.s.map name="pitch" value="31.0"/>
-         <frac32.u.map name="Q" value="19.0"/>
+         <frac32.s.map name="pitch" value="-6.0"/>
+         <frac32.u.map name="Q" value="0.0"/>
       </params>
       <attribs/>
    </obj>
@@ -129,11 +141,9 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_6" x="490" y="588">
+   <obj type="tiar/HW/bar" uuid="29bab9de-7b6b-4c8e-87ee-75013c6b6e2f" name="bar_1" x="784" y="462">
       <params/>
-      <attribs>
-         <table attributeName="str" table="BeforeFlt"/>
-      </attribs>
+      <attribs/>
    </obj>
    <obj type="tiar/HW/OLED128x64nice" uuid="5bde8c3d-fe37-40b3-848e-edb113767bc8" name="OLED128x64nice_2" x="700" y="588">
       <params/>
@@ -150,7 +160,7 @@
    <comment type="patch/comment" x="854" y="630" text="&lt;-- Another OLED on i2c 0X3D"/>
    <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_3" x="518" y="686">
       <params>
-         <int32.hradio name="value" value="1"/>
+         <int32.hradio name="value" value="0"/>
       </params>
       <attribs/>
    </obj>
@@ -213,17 +223,11 @@
       <net>
          <source obj="c_3" outlet="out"/>
          <dest obj="mux4_1" inlet="i1"/>
-         <dest obj="OLED128x64nice_2" inlet="line2"/>
       </net>
       <net>
          <source obj="c_4" outlet="out"/>
          <dest obj="mux4_1" inlet="i2"/>
          <dest obj="OLED128x64nice_2" inlet="line3"/>
-      </net>
-      <net>
-         <source obj="c_5" outlet="out"/>
-         <dest obj="mux4_1" inlet="i3"/>
-         <dest obj="OLED128x64nice_2" inlet="line4"/>
       </net>
       <net>
          <source obj="SixStepsBLISync_1" outlet="out"/>
@@ -239,8 +243,19 @@
          <dest obj="OLED128x64nice_2" inlet="mode"/>
       </net>
       <net>
-         <source obj="c_6" outlet="out"/>
+         <source obj="strbar_1" outlet="out"/>
          <dest obj="OLED128x64nice_2" inlet="line1"/>
+         <dest obj="OLED128x64nice_2" inlet="line4"/>
+         <dest obj="mux4_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="sine_4" outlet="wave"/>
+         <dest obj="strbar_1" inlet="in"/>
+         <dest obj="bar_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bar_1" outlet="out"/>
+         <dest obj="OLED128x64nice_2" inlet="line2"/>
       </net>
    </nets>
    <settings>
@@ -248,8 +263,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>55</x>
-      <y>19</y>
+      <x>353</x>
+      <y>34</y>
       <width>1479</width>
       <height>913</height>
    </windowPos>

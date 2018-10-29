@@ -1,9 +1,9 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="OLED128x64nice" uuid="5bde8c3d-fe37-40b3-848e-edb113767bc8">
-      <sDescription>OLED 128x64 SSD1306 on I2C. PB8=SCL PB9=SDA
+      <sDescription>OLED 128x64 SSD1306 or SH1106 on I2C. PB8=SCL PB9=SDA
       needs a single foactory/gpio/i2c/config object
       </sDescription>
-      <license>GPL</license>
+      <license>LGPL</license>
       <helpPatch>OLED128x64nice.axh</helpPatch>
       <inlets>
          <charptr32 name="line1"/>
@@ -45,8 +45,7 @@
          <depend>SD1</depend>
          <depend>I2CD1</depend>
       </depends>
-      <code.declaration><![CDATA[// add include tiar_font5x8
-enum SSD1306 {
+      <code.declaration><![CDATA[enum SSD1306 {
 LCDWIDTH            = 128,
 LCDHEIGHT           = 64,
 SETCONTRAST         = 0x81, // 2byte cmd,256 contrast steps, reset = 7F
@@ -69,7 +68,7 @@ SETPRECHARGE        = 0xD9, // 2 byte cmd, precharge period A[3:0] phase1 A[7:4]
 SETVCOMDETECT       = 0xDB, // 2 byte Vcomh deselect level A[6:4] 000b 0.65xVcc 010b 0.77(reset) 011b 0.83
 CHARGEPUMP          = 0x8D, // Enable charge pump seq: 0x8D, 0x14, 0xAF (Charge pump setting, enable charge pump, display on)
 EXTERNALVCC         = 0x1,
-SWITCHCAPVCC        = 0x2,
+SWITCHCAPVCC        = 0x2
 };
 uint8_t const nibbleToByte[16]={
 0b00000000,
@@ -89,38 +88,34 @@ uint8_t const nibbleToByte[16]={
 0b11111100,
 0b11111111};
 
-
-uint8_t cpt;
 uint8_t *txbuf;
 uint8_t *rxbuf;
 int32_t mode;
 
-
-uint8_t text[11*4];
-uint8_t textBuf[11*4];
-uint8_t tY[128];
+uint8_t text[11*4];    // text inputs
+uint8_t textBuf[11*4]; // text inputs copy (to avoid flicker)
+uint8_t tY[128];       // scope input copied and rescaled
 
     // SETUP
     // ------------------
 void cmd(uint8_t c){
   txbuf[0] = 0;
   txbuf[1] = c;
-  i2cMasterTransmitTimeout(
-  &I2CD1, attr_I2CADDR, txbuf, 2, rxbuf, 0, 30);
- // chThdSleepMilliseconds(1);
+  i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 2, rxbuf, 0, 30);
 }
+void cmd(uint8_t c1, uint8_t c2){  cmd(c1);  cmd(c2);}
+void cmd(uint8_t c1, uint8_t c2, uint8_t c3){  cmd(c1, c2);  cmd(c3);}
 
 // _____________________________________________________________________
 void fill(uint8_t v){
   i2cAcquireBus(&I2CD1);
-  cmd(COLUMNADDR);  cmd(0); cmd(127); // Column start end
-  cmd(PAGEADDR);    cmd(0); cmd(  7); // Page start end
+  cmd(COLUMNADDR, 0, 127); // Column start end
+  cmd(PAGEADDR,   0,   7); // Page start end
   txbuf[0] = 0x40;
   for(int i = 1; i < 129; i++)
     txbuf[i] = v;
   for(int p = 0; p < 8; p++){
      i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 129, rxbuf, 0, 30);
-  	//chThdSleepMilliseconds(1);
   }
   i2cReleaseBus(&I2CD1);
 }
@@ -130,22 +125,76 @@ void fill(uint8_t v){
 void calcTextPage(int page, uint8_t tPage[128]){
   int i = 0;
   int tLine = page/2;
-  for(int nc = 0; nc < 11; nc++){
-    int ascii_32 = textBuf[nc + 11 * tLine]-' ';
-    const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
-    for(int slice = 0; slice < 5; slice++){
-      uint8_t s;
-      if((page & 1) == 0){
-         s = nibbleToByte[ adChar[slice]       & 15];  // low nibble
-      } else {
-         s = nibbleToByte[(adChar[slice] >> 4) & 15]; // high nibble
+  uint8_t *tb = textBuf + 11*tLine;
+  if(tb[0] >= ' '){  // full text line
+    for(int nc = 0; nc < 11; nc++){
+      int ascii_32 = tb[nc] - ' ';
+      const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
+      for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
+        uint8_t s;
+        if((page & 1) == 0){
+           s = nibbleToByte[ adChar[slice]       & 15];  // low nibble
+        } else {
+           s = nibbleToByte[(adChar[slice] >> 4) & 15]; // high nibble
+        }
+        tPage[i] = s; i++; // two pixel wide
+        tPage[i] = s; i++;
       }
-      tPage[i] = s; i++;
-      tPage[i] = s; i++;
+      tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
     }
-    tPage[i] = 0; i++; // separator space
-  }
-  while(i<128){ tPage[i] = 0;   i++;  } // space padding
+    while(i < 128){tPage[i] = 0; i++;} // space padding
+  } else if(tb[0] == 1 ){ //strbar
+    uint8_t filledBar = ((page & 1) == 0) ? 0b11100000 : 0b00111111;
+    for(int nc = 0; nc < 5; nc++){
+      int ascii_32 = tb[nc + 2] - ' ';
+      const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
+      for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
+        uint8_t s;
+        if((page & 1) == 0){
+           s = nibbleToByte[ adChar[slice]       & 15];  // low nibble
+        } else {
+           s = nibbleToByte[(adChar[slice] >> 4) & 15]; // high nibble
+        }
+        tPage[i] = s; i++; // two pixel wide
+        tPage[i] = s; i++;
+      }
+      tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
+    }
+    while(i < 63){tPage[i] = 0; i++;} // space padding
+    if(tb[1] < 128){ //positive value => filled bar
+      tPage[i] = 0; i++;
+      for(i = 64; i < 63 + tb[1] && i < 128; i++){
+        tPage[i] = filledBar;
+      }
+    } else {  //negative value => hollow bar
+      tPage[i] = filledBar; i++;
+      uint8_t hollowBar = ((page & 1) == 0) ? 0b00100000 : 0b00100000;
+      for(i = 64; i < 63 + 256 - tb[1] && i < 127; i++){
+        tPage[i] = hollowBar;
+      }
+      tPage[i] = filledBar;
+      i++;
+    }
+    while(i < 128){tPage[i] = 0; i++;} // space padding
+  } else if(tb[0] == 2 ){ //bar
+    uint8_t filledBar = ((page & 1) == 0) ? 0b11100000 : 0b00111111;
+    if(tb[1] <= 128){ //positive value => filled bar
+      tPage[i] = 0; i++;
+      for(i = 0; i < tb[1]; i++){
+        tPage[i] = filledBar;
+      }
+    } else {  //negative value => hollow bar
+      tPage[i] = filledBar; i++;
+      uint8_t hollowBar = ((page & 1) == 0) ? 0b00100000 : 0b00100000;
+      for(; i < 256 - tb[1]; i++){
+        tPage[i] = hollowBar;
+      }
+      tPage[i] = filledBar;
+      i++;
+    }
+    while(i < 128){tPage[i] = 0; i++;} // space padding
+  } 
+  
 }
 // _____________________________________________________________________
 // opt function draw
@@ -171,51 +220,48 @@ page0
 */
 
 uint8_t vBar(uint8_t val, int page){
-  uint8_t _page =  7-(val / 8);
+  uint8_t _page =  7 - (val / 8);
   if(page > _page) return 0b11111111;  // below => light
   else if(page < _page) return 0;      // above => dark
-  else return tBar[val&7];
+  else return tBar[val & 7];
 }
-void _calcScopePage(int page, uint8_t tPage[128]){
-  for(int i=0;i<128;i++){
-  	uint16_t y = ((attr_scope.t[i]+64)*3 )/8;
-    tPage[i] = vBar(y,page);
-  }
-}
+
+
+// on the Oled display, a "page" is a 128x8 stripe of pixels
+// described by 128 bytes. The 128x64 OLED consists of 8 "pages"
+// I calculate and transmit one page at a time.
+// It saves memory as small buffers are enough to transmit them.
 void calcScopePage(int page, uint8_t tPage[128]){
-  if(page<2){
-  	calcTextPage(page, tPage);
-  }else{
-    uint16_t y0 = tY[0];
-    uint16_t y1 = tY[1];
-    uint16_t y2;
-    for(int i = 0; i < 128; i++){
-      if(i < 127) y2 = tY[i + 1];
-      uint16_t yM, ym;
-      yM = ym = y1;
-      uint16_t y = (y0 + y1) >> 1;
-      yM = y > yM ? y : yM;
-      ym = y < ym ? y : ym;
-      y = (y2 + y1) >> 1;
-      yM = y > yM ? y : yM;
-      ym = y < ym ? y : ym;
-      if(ym == yM) if(yM > 0) ym--; else yM++;
-      tPage[i] = vBar(yM, page) & ~vBar(ym, page);
-      y0 = y1;
-      y1 = y2;
-    }
+  uint16_t y0 = tY[0];
+  uint16_t y1 = tY[1];
+  uint16_t y2;
+  for(int i = 0; i < 128; i++){
+    if(i < 127) y2 = tY[i + 1];
+    uint16_t yM, ym;
+    yM = ym = y1;
+    uint16_t y = (y0 + y1) >> 1;
+    yM = y > yM ? y : yM;
+    ym = y < ym ? y : ym;
+    y = (y2 + y1) >> 1;
+    yM = y > yM ? y : yM;
+    ym = y < ym ? y : ym;
+    if(ym == yM) if(yM > 0) ym--; else yM++;
+    tPage[i] = vBar(yM, page) & ~vBar(ym, page);
+    y0 = y1;
+    y1 = y2;
   }
 }
 // _____________________________________________________________________
-void sendTextPage(int page){
-  if(page == 0){
-    memcpy(textBuf, text, 11*4);
-  }
+void sendPage(int page){
+  /*
+    Note: I consider that having a little flickering is not a big deal
+    (compared to potential audio glitches).
+    So, i do not use the chSysLock() chSysUnlock to protect the memcpy.
+  */
   i2cAcquireBus(&I2CD1);
-  cmd(COLUMNADDR);  cmd(0);    cmd(127);   // Column start end
-  cmd(PAGEADDR);    cmd(page); cmd(page);  // Page start end
-
-
+  //prepare transmission to the "page"
+  cmd(COLUMNADDR, 0, 127);   // Column start end
+  cmd(PAGEADDR, page, page);  // Page start end
   if(attr_type == 1106){
     cmd(0xB0 + page);//set page address
     cmd(2 & 0xf);//set lower column address
@@ -225,53 +271,76 @@ void sendTextPage(int page){
 
 
   
-  txbuf[0] = 0x40;
-  if(mode == 0){
+  if(mode == 0){ // 4 text lines
+    //on the beginning of drawing (page 0) we update the buffers
+    if(page == 0){
+      memcpy(textBuf, text, 11*4);
+    }
     calcTextPage(page, txbuf+1);
-    i2cAcquireBus(&I2CD1);
-    i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 129, rxbuf, 0, 30);
-    i2cReleaseBus(&I2CD1);
- } else if(mode == 1){
-    if(page == 1){
-
+ } else if(mode == 1){ //Title and scope
+    //on the beginning of drawing (page 0) we update the buffers
+    if(page == 0){
       //chSysLock();
+      //update the textBuffer
+      memcpy(textBuf, text, 11*4);
+      //update scope buffer 
       memcpy(tY, attr_scope.t, 128);
       //chSysUnlock();
+      //scale for the display
       int8_t* stY = (int8_t*)tY;
       for(int i = 0; i < 128; i++){
-	      tY[i]=((stY[i] + 64) * 3 ) >> 3;
+	      tY[i] = ((stY[i] + 64) * 3 ) >> 3;
       }
-      
-      /*for(int i = 0; i < 128; i++){
-	      tY[i]=((attr_scope.t[i]+64)*3 )>>3;
-      }*/
+    }
+    if(page < 2){
+  	  calcTextPage(page, txbuf + 1);
+    }else{
+      calcScopePage(page, txbuf + 1);
+    }
+  } else if(mode == 2){ //full screen scope
+    //on the beginning of drawing (page 0) we update the buffers
+    if(page == 0){
+      //chSysLock();
+      //update scope buffer 
+      memcpy(tY, attr_scope.t, 128);
+      //chSysUnlock();
+      //scale for the display
+      int8_t* stY = (int8_t*)tY;
+      for(int i = 0; i < 128; i++){
+	      tY[i] = (stY[i] + 64) >> 1;
+      }
     }
     calcScopePage(page, txbuf+1);
-    i2cAcquireBus(&I2CD1);
-    i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 129, rxbuf, 0, 30);
-    i2cReleaseBus(&I2CD1);
   }
+  //transmission of the page
+
+  //transmit the page
+  txbuf[0] = 0x40;
+  i2cAcquireBus(&I2CD1);
+  i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 129, rxbuf, 0, 30);
+  i2cReleaseBus(&I2CD1);
 }
 // _____________________________________________________________________
 void init(){
   i2cAcquireBus(&I2CD1);
   // Init sequence
   cmd(DISPLAYOFF);
-
-  // 2 byte cmd, low nibble A[3:0]+1 = div ratio, high nibble A[7:4] freq, reset 1000b 
-  cmd(SETDISPLAYCLOCKDIV); cmd(0x80);
-  cmd(SETMULTIPLEX);  cmd(LCDHEIGHT - 1);
-  cmd(SETDISPLAYOFFSET);  cmd(attr_type == 1306 ? 0x00 : 0x01);
+  // 2 byte cmd,
+  //  low nibble A[3:0]+1 = div ratio, 
+  //  high nibble A[7:4] freq  reset 1000b 
+  cmd(SETDISPLAYCLOCKDIV, 0x80);
+  cmd(SETMULTIPLEX, LCDHEIGHT - 1);
+  cmd(SETDISPLAYOFFSET, attr_type == 1306 ? 0x00 : 0x01);
   cmd(SETSTARTLINE_0);
-  cmd(CHARGEPUMP);     cmd(0x14);
-  cmd(MEMORYMODE);     cmd(0x00);
+  cmd(CHARGEPUMP, 0x14);
+  cmd(MEMORYMODE, 0x00); //horizontal
   cmd(SEGREMAP | 0x1);
   cmd(COMSCANDEC);
 // 128 x 64
-  cmd(SETCOMPINS);     cmd(0x12);
-  cmd(SETCONTRAST);    cmd(0xCF);
-  cmd(SETPRECHARGE);   cmd(0xF1);
-  cmd(SETVCOMDETECT);  cmd(0x40);
+  cmd(SETCOMPINS, 0x12);
+  cmd(SETCONTRAST, 0xCF);
+  cmd(SETPRECHARGE, 0xF1);
+  cmd(SETVCOMDETECT, 0x40);
   cmd(DISPLAYALLON_RESUME);
   cmd(NORMALDISPLAY);
   cmd(DEACTIVATE_SCROLL);
@@ -280,7 +349,7 @@ void init(){
 }
 // _____________________________________________________________________
 void setup(){
-  static uint8_t _txbuf[129] __attribute__ ((section (".sram2")));
+  static uint8_t _txbuf[132] __attribute__ ((section (".sram2")));
   static uint8_t _rxbuf[8]   __attribute__ ((section (".sram2")));
   txbuf = _txbuf;
   rxbuf = _rxbuf;
@@ -293,18 +362,10 @@ msg_t ThreadX2()
 {
   setup();
   while (!chThdShouldTerminate()) {
-    sendTextPage(0);
-    sendTextPage(1);
-   // chThdSleepMilliseconds(1);
-    sendTextPage(2);
-    sendTextPage(3);
-    //chThdSleepMilliseconds(1);
-    sendTextPage(4);
-    sendTextPage(5);
-    //chThdSleepMilliseconds(1);
-    sendTextPage(6);
-    sendTextPage(7);
-    chThdSleepMilliseconds(33);
+    for(int i = 0; i < 8; i++){
+      sendPage(i);
+    }
+    chThdSleepMilliseconds(32);
   }
   chThdExit((msg_t)0);
 }
@@ -313,23 +374,25 @@ static msg_t ThreadX(void *arg) {
   ((attr_parent *)arg)->ThreadX2();
 }
 
-WORKING_AREA(waThreadX, 256);
+// 128 is not enough, try 192 <-----------
+WORKING_AREA(waThreadX, 192);
 Thread *Thd;]]></code.declaration>
-      <code.init><![CDATA[cpt = 0;
+      <code.init><![CDATA[
 for(int i = 0; i < 11 * 4; i++){
   text[i] = textBuf[i] = ' ';
 }
 Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX), NORMALPRIO, ThreadX, (void *)this);]]></code.init>
       <code.dispose><![CDATA[chThdTerminate( Thd );
 chThdWait( Thd );]]></code.dispose>
-      <code.krate><![CDATA[mode = inlet_mode;
+      <code.krate><![CDATA[
+mode = inlet_mode;
 if(inlet_line1 != NULL){
   int i = 0;
   while(i < 11 & inlet_line1[i] != '\0'){
   	text[i] = inlet_line1[i];
   	i++;
   }
-  while(i < 11 ){text[i] = ' ';i++;}
+  while(i < 11 ){text[i] = ' '; i++;}
 }
 if(mode == 0){
   if(inlet_line2 != NULL){
