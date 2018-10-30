@@ -13,7 +13,7 @@
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="a0a355f3-22f8-45df-bf51-e881f31121f8" name="patcher_1" x="0" y="168">
+   <patcher type="patch/patcher" uuid="5fd3b0e5-18e3-4bf7-a994-5d76ed8ed85a" name="patcher_1" x="0" y="168">
       <params>
          <frac32.u.map name="VIBRATO" value="29.0"/>
          <frac32.s.map name="saw80_1:pitch" value="0.0"/>
@@ -31,7 +31,7 @@
          <frac32.u.map name="LEVEL" value="27.5"/>
       </params>
       <attribs>
-         <combo attributeName="poly" selection="8"/>
+         <combo attributeName="poly" selection="7"/>
       </attribs>
       <subpatch appVersion="1.0.12">
          <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="0">
@@ -291,7 +291,7 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <patcher type="patch/patcher" uuid="ba8d11f9-7170-4095-8d11-4f58eb1cb5c2" name="patcher_2" x="126" y="168">
+   <patcher type="patch/patcher" uuid="34668025-6362-4de5-b143-f305ee27c0d2" name="patcher_2" x="126" y="168">
       <params>
          <frac32.u.map name="VIBRATO" value="64.0"/>
          <frac32.s.map name="saw80_1:pitch" value="12.0"/>
@@ -309,7 +309,7 @@
          <frac32.u.map name="LEVEL" value="64.0"/>
       </params>
       <attribs>
-         <combo attributeName="poly" selection="8"/>
+         <combo attributeName="poly" selection="7"/>
       </attribs>
       <subpatch appVersion="1.0.12">
          <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="0">
@@ -606,7 +606,7 @@
    </obj>
    <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="812" y="308">
       <params>
-         <frac32.s.map name="freq" value="-24.0"/>
+         <frac32.s.map name="freq" value="-11.0"/>
       </params>
       <attribs/>
    </obj>
@@ -745,7 +745,14 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_3" x="1176" y="602">
+   <obj type="tiar/dist/DPSoftClip" uuid="4664e423-ca15-4925-952a-6d150aa652da" name="DPSoftClip_1" x="1176" y="602">
+      <params>
+         <frac32.u.map name="InGain" value="38.0"/>
+         <frac32.u.map name="OutGain" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_3" x="1302" y="602">
       <params/>
       <attribs/>
    </obj>
@@ -854,11 +861,6 @@
          <dest obj="hp1_1" inlet="in"/>
       </net>
       <net>
-         <source obj="xfade2_1" outlet="o"/>
-         <dest obj="out_3" inlet="left"/>
-         <dest obj="out_3" inlet="right"/>
-      </net>
-      <net>
          <source obj="rot5_1" outlet="out0"/>
          <dest obj="xfade2_1" inlet="i2"/>
       </net>
@@ -887,6 +889,15 @@
          <source obj="b4b_1" outlet="out"/>
          <dest obj="patcher_1" inlet="bend"/>
          <dest obj="patcher_2" inlet="bend"/>
+      </net>
+      <net>
+         <source obj="DPSoftClip_1" outlet="out"/>
+         <dest obj="out_3" inlet="left"/>
+         <dest obj="out_3" inlet="right"/>
+      </net>
+      <net>
+         <source obj="xfade2_1" outlet="o"/>
+         <dest obj="DPSoftClip_1" inlet="in"/>
       </net>
    </nets>
    <settings>

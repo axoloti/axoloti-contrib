@@ -3,6 +3,7 @@
       <sDescription>string and bar for OLED</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
+      <helpPatch>bar.axh</helpPatch>
       <inlets>
          <frac32 name="in"/>
       </inlets>
@@ -14,20 +15,14 @@
       <attribs>
          <table name="prefix" description="five char prefix"/>
       </attribs>
-      <code.declaration><![CDATA[
-char c[2 + strlen("attr_prefix")];
-]]></code.declaration>
-      <code.init><![CDATA[
-strcpy(&c[2], "attr_prefix");
-c[0] = 1;                         //string bar mode
-   ]]></code.init>
-      <code.krate><![CDATA[
-int32_t v = __SSAT(inlet_in,28)>>21;
+      <code.declaration><![CDATA[char c[2 + strlen("attr_prefix")];]]></code.declaration>
+      <code.init><![CDATA[strcpy(&c[2], "attr_prefix");
+c[0] = 1;                         //string bar mode]]></code.init>
+      <code.krate><![CDATA[int32_t v = __SSAT(inlet_in,28)>>21;
 if(v >= 0)
   c[1] = (uint8_t)(v + 1); // must not be zero !
 else 
   c[1] = (uint8_t)(256 + v); 
-outlet_out = c;
-]]></code.krate>
+outlet_out = c;]]></code.krate>
    </obj.normal>
 </objdefs>

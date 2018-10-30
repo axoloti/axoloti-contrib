@@ -11,6 +11,7 @@
          <charptr32 name="line3"/>
          <charptr32 name="line4"/>
          <int32.positive name="mode"/>
+         <bool32 name="disable"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -95,7 +96,7 @@ int32_t mode;
 uint8_t text[11*4];    // text inputs
 uint8_t textBuf[11*4]; // text inputs copy (to avoid flicker)
 uint8_t tY[128];       // scope input copied and rescaled
-
+bool disable;
     // SETUP
     // ------------------
 void cmd(uint8_t c){
@@ -119,6 +120,27 @@ void fill(uint8_t v){
   }
   i2cReleaseBus(&I2CD1);
 }
+
+/* returns i
+*/
+int drawTxt(int i, int NBC, uint8_t *tb, int page, uint8_t *tPage){
+  for(int nc = 0; nc < NBC; nc++){
+    int ascii_32 = tb[nc] - ' ';
+    const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
+    for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
+      uint8_t s;
+      if((page & 1) == 0){
+         s = nibbleToByte[ adChar[slice]       & 15];  // low nibble
+      } else {
+         s = nibbleToByte[(adChar[slice] >> 4) & 15]; // high nibble
+      }
+      tPage[i] = s; i++; // two pixel wide
+      tPage[i] = s; i++;
+    }
+    tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
+  }
+  return i;
+}
 // _____________________________________________________________________
 // scaled x2 text
 // returns a page to be sent to the SSD1306 based on contents of text
@@ -127,7 +149,8 @@ void calcTextPage(int page, uint8_t tPage[128]){
   int tLine = page/2;
   uint8_t *tb = textBuf + 11*tLine;
   if(tb[0] >= ' '){  // full text line
-    for(int nc = 0; nc < 11; nc++){
+    i = drawTxt(i, 11, tb, page, tPage);
+    /*for(int nc = 0; nc < 11; nc++){
       int ascii_32 = tb[nc] - ' ';
       const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
       for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
@@ -141,11 +164,12 @@ void calcTextPage(int page, uint8_t tPage[128]){
         tPage[i] = s; i++;
       }
       tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
-    }
-    while(i < 128){tPage[i] = 0; i++;} // space padding
+      
+    }*/
   } else if(tb[0] == 1 ){ //strbar
     uint8_t filledBar = ((page & 1) == 0) ? 0b11100000 : 0b00111111;
-    for(int nc = 0; nc < 5; nc++){
+    i = drawTxt(i, 5, tb + 2, page, tPage);
+   /* for(int nc = 0; nc < 5; nc++){
       int ascii_32 = tb[nc + 2] - ' ';
       const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
       for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
@@ -159,7 +183,7 @@ void calcTextPage(int page, uint8_t tPage[128]){
         tPage[i] = s; i++;
       }
       tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
-    }
+    }*/
     while(i < 63){tPage[i] = 0; i++;} // space padding
     if(tb[1] < 128){ //positive value => filled bar
       tPage[i] = 0; i++;
@@ -175,7 +199,6 @@ void calcTextPage(int page, uint8_t tPage[128]){
       tPage[i] = filledBar;
       i++;
     }
-    while(i < 128){tPage[i] = 0; i++;} // space padding
   } else if(tb[0] == 2 ){ //bar
     uint8_t filledBar = ((page & 1) == 0) ? 0b11100000 : 0b00111111;
     if(tb[1] <= 128){ //positive value => filled bar
@@ -192,8 +215,60 @@ void calcTextPage(int page, uint8_t tPage[128]){
       tPage[i] = filledBar;
       i++;
     }
-    while(i < 128){tPage[i] = 0; i++;} // space padding
+  } else if(tb[0] == 3 ){ //strbar2
+    uint8_t filledBar = ((page & 1) == 0) ? 0b11110000 : 0b01111000;
+    i = drawTxt(i, 5, tb + 3, page, tPage);
+   /* for(int nc = 0; nc < 5; nc++){
+      int ascii_32 = tb[nc + 3] - ' ';
+      const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
+      for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
+        uint8_t s;
+        if((page & 1) == 0){
+           s = nibbleToByte[ adChar[slice]       & 15];  // low nibble
+        } else {
+           s = nibbleToByte[(adChar[slice] >> 4) & 15]; // high nibble
+        }
+        tPage[i] = s; i++; // two pixel wide
+        tPage[i] = s; i++;
+      }
+      tPage[i] = 0; i++;
+    }*/
+    for(;i < 63; i++){tPage[i] = 0; } // space padding
+    int v = tb[1 + (page & 1)];
+    if(v < 128){ //positive value => filled bar
+      tPage[i] = 0; i++;
+      for(i = 64; i < 63 + v && i < 128; i++){
+        tPage[i] = filledBar;
+      }
+    } else {  //negative value => hollow bar
+      tPage[i] = filledBar; i++;
+      uint8_t hollowBar = ((page & 1) == 0) ? 0b10010000 : 0b01001000;
+      for(i = 64; i < 63 + 256 - v && i < 127; i++){
+        tPage[i] = hollowBar;
+      }
+      tPage[i] = filledBar;
+      i++;
+    }
   } 
+  //_______________________________________________________
+  else if(tb[0] == 4 ){ //bar dble
+    uint8_t filledBar = ((page & 1) == 0) ? 0b11110000 : 0b01111000;
+    int v = tb[1 + (page & 1)];
+    if(v <= 128){ //positive value => filled bar
+      for(i = 0; i < v; i++){
+        tPage[i] = filledBar;
+      }
+    } else {  //negative value => hollow bar
+      tPage[i] = filledBar; i++;
+      uint8_t hollowBar = ((page & 1) == 0) ? 0b10010000 : 0b01001000;
+      for(; i < 256 - v; i++){
+        tPage[i] = hollowBar;
+      }
+      tPage[i] = filledBar;
+      i++;
+    }
+  } 
+  for(; i < 128; i++){tPage[i] = 0;} // space padding
   
 }
 // _____________________________________________________________________
@@ -362,8 +437,10 @@ msg_t ThreadX2()
 {
   setup();
   while (!chThdShouldTerminate()) {
-    for(int i = 0; i < 8; i++){
-      sendPage(i);
+    if(!disable){
+      for(int i = 0; i < 8; i++){
+        sendPage(i);
+      }
     }
     chThdSleepMilliseconds(32);
   }
@@ -385,6 +462,7 @@ Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX), NORMALPRIO, ThreadX, (void
       <code.dispose><![CDATA[chThdTerminate( Thd );
 chThdWait( Thd );]]></code.dispose>
       <code.krate><![CDATA[
+disable = inlet_disable; // can be useful when playing with future modules targetting the same display
 mode = inlet_mode;
 if(inlet_line1 != NULL){
   int i = 0;
