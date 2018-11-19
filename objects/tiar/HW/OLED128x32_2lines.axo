@@ -1,0 +1,229 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="OLED128x32_2lines" uuid="32de8c3d-fe37-40b3-848e-edb113767bc8">
+      <sDescription>Experimental 2 text lines OLED 128x32 SSD1306 or SH1106 on I2C. PB8=SCL PB9=SDA
+      needs a single factory/gpio/i2c/config object
+      </sDescription>
+      <license>LGPL</license>
+      <helpPatch>OLED128x32_2lines.axh</helpPatch>
+      <inlets>
+         <charptr32 name="line1"/>
+         <charptr32 name="line2"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="type">
+            <MenuEntries>
+               <string>SSD1306</string>
+               <string>SH1106</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1306</string>
+               <string>1106</string>
+            </CEntries>
+         </combo>
+         <combo name="I2CADDR">
+            <MenuEntries>
+               <string>0x3C</string>
+               <string>0x3D</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0x3C</string>
+               <string>0x3D</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <includes>
+         <include>./tiar_font5x8.h</include>
+      </includes>
+      <depends>
+         <depend>SD1</depend>
+         <depend>I2CD1</depend>
+      </depends>
+      <code.declaration><![CDATA[enum SSD1306 {
+LCDWIDTH            = 128,
+LCDHEIGHT           = 64,
+SETCONTRAST         = 0x81, // 2byte cmd,256 contrast steps, reset = 7F
+DISPLAYON           = 0xAF, // entire display on
+DISPLAYOFF          = 0xAE, // entire display off
+DISPLAYALLON_RESUME = 0xA4,
+NORMALDISPLAY       = 0xA6, // invert = 0xA7
+DEACTIVATE_SCROLL   = 0x2E, // stop control scroll conf by 26 27 29 2A
+MEMORYMODE          = 0x20, // 2byte cmd, 0 horizontal, 1 vertical, 2 page addressing, 3 invalid
+COLUMNADDR          = 0x21, // 3bytes, start, end (included) valid in horizontal or vertical mode
+PAGEADDR            = 0x22, // 3bytes, start, end (included) valid in horizontal or vertical mode
+SETSTARTLINE_0      = 0x40, // set display RAM start line at 0
+SEGREMAP            = 0xA0, // segment remap 0 mapped to SEG0
+SETMULTIPLEX        = 0xA8, // 2 byte cmd, set mux ratio 
+COMSCANDEC          = 0xC8, // scan from COM[N-1] to COM[0] (0xC0 is COM0 to COM[N-1])
+SETDISPLAYOFFSET    = 0xD3, // 2 byte cmd, vertical shift
+SETCOMPINS          = 0xDA, // 2 byte cmd, seq com pin conf, left right remap
+SETDISPLAYCLOCKDIV  = 0xD5, // 2 byte cmd, low nibble A[3:0]+1 = div ratio, high nibble A[7:4] freq, reset 1000b
+SETPRECHARGE        = 0xD9, // 2 byte cmd, precharge period A[3:0] phase1 A[7:4] phase2, reset:2
+SETVCOMDETECT       = 0xDB, // 2 byte Vcomh deselect level A[6:4] 000b 0.65xVcc 010b 0.77(reset) 011b 0.83
+CHARGEPUMP          = 0x8D, // Enable charge pump seq: 0x8D, 0x14, 0xAF (Charge pump setting, enable charge pump, display on)
+EXTERNALVCC         = 0x1,
+SWITCHCAPVCC        = 0x2
+};
+
+uint8_t const dibbleToByte[4]={
+0b00000000,
+0b00001111,
+0b11110000,
+0b11111111
+};
+
+uint8_t *txbuf;
+uint8_t *rxbuf;
+
+uint8_t text[11*2];    // text inputs
+uint8_t textBuf[11*2]; // text inputs copy (to avoid flicker)
+    // SETUP
+    // ------------------
+void cmd(uint8_t c){
+  txbuf[0] = 0;
+  txbuf[1] = c;
+  i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 2, rxbuf, 0, 30);
+}
+void cmd(uint8_t c1, uint8_t c2){  cmd(c1);  cmd(c2);}
+void cmd(uint8_t c1, uint8_t c2, uint8_t c3){  cmd(c1, c2);  cmd(c3);}
+
+// _____________________________________________________________________
+
+
+/* returns i
+*/
+int drawTxt(int i, int NBC, uint8_t *tb, int page, uint8_t *tPage){
+  for(int nc = 0; nc < NBC; nc++){
+    int ascii_32 = tb[nc] - ' ';
+    const uint8_t *adChar = tiar_font5x8 + ascii_32 * 5;
+    for(int slice = 0; slice < 5; slice++){ //slices are two pixel wide
+      uint8_t s = dibbleToByte[(adChar[slice] >> ((page & 3) * 2)) & 3];
+      tPage[i] = s; i++; // two pixel wide
+      tPage[i] = s; i++;
+    }
+    tPage[i] = 0; i++; // separator space 1 pixel wide => 11 pixels per char
+  }
+  return i;
+}
+// _____________________________________________________________________
+// scaled horiz x 2  vertic x 4 text
+// returns a page to be sent to the SSD1306 based on contents of text
+void calcTextPage(int page, uint8_t tPage[128]){
+  int i = 0;
+  int tLine = page / 4; //4 pages per text line
+  uint8_t *tb = textBuf + 11*tLine;
+  if(tb[0] >= ' '){  // full text line
+    i = drawTxt(i, 11, tb, page, tPage);
+  }  
+  for(; i < 128; i++){tPage[i] = 0;} // space padding
+}
+// _____________________________________________________________________
+void sendPage(int page){
+  i2cAcquireBus(&I2CD1);
+  //prepare transmission to the "page"
+  cmd(COLUMNADDR, 0, 127);   // Column start end
+  cmd(PAGEADDR, page, page);  // Page start end
+  if(attr_type == 1106){
+    cmd(0xB0 + page);//set page address
+    cmd(2 & 0xf);//set lower column address
+    cmd(0x10 | (2 >> 4));//set higher column address
+  }
+  i2cReleaseBus(&I2CD1);
+
+  //on the beginning of drawing (page 0) we update the buffers
+  if(page == 0){
+    memcpy(textBuf, text, 11*2);
+  }
+  calcTextPage(page, txbuf+1);
+
+  //transmit the page
+  txbuf[0] = 0x40;
+  i2cAcquireBus(&I2CD1);
+  i2cMasterTransmitTimeout(&I2CD1, attr_I2CADDR, txbuf, 129, rxbuf, 0, 30);
+  i2cReleaseBus(&I2CD1);
+}
+// _____________________________________________________________________
+void init(){
+  i2cAcquireBus(&I2CD1);
+  // Init sequence
+  cmd(DISPLAYOFF);
+  // 2 byte cmd,
+  //  low nibble A[3:0]+1 = div ratio, 
+  //  high nibble A[7:4] freq  reset 1000b 
+  cmd(SETDISPLAYCLOCKDIV, 0x80);
+  cmd(SETMULTIPLEX, LCDHEIGHT - 1);
+  cmd(SETDISPLAYOFFSET, attr_type == 1306 ? 0x00 : 0x01);
+  cmd(SETSTARTLINE_0);
+  cmd(CHARGEPUMP, 0x14);
+  cmd(MEMORYMODE, 0x00); //horizontal
+  cmd(SEGREMAP | 0x1);
+  cmd(COMSCANDEC);
+// 128 x 64
+  cmd(SETCOMPINS, 0x12);
+  cmd(SETCONTRAST, 0xCF);
+  cmd(SETPRECHARGE, 0xF1);
+  cmd(SETVCOMDETECT, 0x40);
+  cmd(DISPLAYALLON_RESUME);
+  cmd(NORMALDISPLAY);
+  cmd(DEACTIVATE_SCROLL);
+  cmd(DISPLAYON);
+  i2cReleaseBus(&I2CD1);
+}
+// _____________________________________________________________________
+void setup(){
+  static uint8_t _txbuf[132] __attribute__ ((section (".sram2")));
+  static uint8_t _rxbuf[8]   __attribute__ ((section (".sram2")));
+  txbuf = _txbuf;
+  rxbuf = _rxbuf;
+  init();
+}
+
+// _____________________________________________________________________
+// THREADS
+msg_t ThreadX2()
+{
+  setup();
+  while (!chThdShouldTerminate()) {
+    for(int i = 0; i < 8; i++){
+      sendPage(i);
+    }
+    chThdSleepMilliseconds(32);
+  }
+  chThdExit((msg_t)0);
+}
+
+static msg_t ThreadX(void *arg) {
+  ((attr_parent *)arg)->ThreadX2();
+}
+
+// 128 is not enough, try 192 <-----------
+WORKING_AREA(waThreadX, 192);
+Thread *Thd;]]></code.declaration>
+      <code.init><![CDATA[
+for(int i = 0; i < 11 * 2; i++){
+  text[i] = textBuf[i] = ' ';
+}
+Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX), NORMALPRIO, ThreadX, (void *)this);]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate( Thd );
+chThdWait( Thd );]]></code.dispose>
+      <code.krate><![CDATA[
+if(inlet_line1 != NULL){
+  int i;
+  for(i = 0; i < 11 & inlet_line1[i] != '\0'; i++){
+  	text[i] = inlet_line1[i];
+  }
+  for(;i < 11; i++){text[i] = ' ';}
+}
+if(inlet_line2 != NULL){
+  int i;
+  for(i = 0; i < 11 & inlet_line2[i] != '\0'; i++){
+  	text[i+11] = inlet_line2[i];
+  }
+  for(;i < 11; i++){text[i+11] = ' ';}
+}
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

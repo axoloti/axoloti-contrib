@@ -1,0 +1,69 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="gpio/i2c/config" uuid="b095a33e56de5fcd23740a7d983bc0bafb315d81" name="config_1" x="14" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="126" y="0" text="&lt;-- MANDATORY !!!"/>
+   <comment type="patch/comment" x="126" y="14" text="/!\ with the new &quot;nice&quot;  OLED object /!\"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="14" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/conv/f_to_c" uuid="a16394eb-0588-4449-abdc-bc73587f1b71" name="f_to_c_1" x="112" y="42">
+      <params/>
+      <attribs>
+         <table attributeName="prefix" table="LFO1:"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/HW/OLED128x32_2lines" uuid="32de8c3d-fe37-40b3-848e-edb113767bc8" name="OLED128x32_2lines_1" x="364" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="type" selection="SH1106"/>
+         <combo attributeName="I2CADDR" selection="0x3C"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="518" y="56" text="&lt;-- An OLED on i2c 0X3C"/>
+   <comment type="patch/comment" x="504" y="70" text="/!\ This is the new &quot;nice&quot; OLED object /!\"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="14" y="126">
+      <params>
+         <frac32.s.map name="pitch" value="-59.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/conv/f_to_c" uuid="a16394eb-0588-4449-abdc-bc73587f1b71" name="f_to_c_2" x="112" y="126">
+      <params/>
+      <attribs>
+         <table attributeName="prefix" table="LFO2:"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="f_to_c_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="f_to_c_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="f_to_c_1" outlet="o"/>
+         <dest obj="OLED128x32_2lines_1" inlet="line1"/>
+      </net>
+      <net>
+         <source obj="f_to_c_2" outlet="o"/>
+         <dest obj="OLED128x32_2lines_1" inlet="line2"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>604</x>
+      <y>34</y>
+      <width>1228</width>
+      <height>913</height>
+   </windowPos>
+</patch-1.0>
