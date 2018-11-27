@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="makenote" uuid="4a8a7017-a491-476d-9a7d-bbe28fbaeb53">
+      <sDescription>Makenote, an object the handles the 3 parameters associated with standard midi playback, note, velocity and notelength. Its a bit like Pure Data&apos;s makenote object, hence the name. There is midi port selector and midi channel build into the object, to make it simple to work with.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="tr" description="trigger"/>
+         <frac32.bipolar name="l" description="delay"/>
+         <frac32.bipolar name="t"/>
+         <frac32.positive name="v"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="t"/>
+         <frac32.positive name="v"/>
+         <bool32 name="gate" description="pulse output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="channel">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <bool32.mom name="Trigger"/>
+         <frac32.s.map.klineartime.exp name="Length">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map.klineartime.exp>
+         <frac32.s.map name="Transpose">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map>
+         <frac32.u.map name="Velocity">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <combo name="d">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;
+
+
+// drj/midi/note_tx
+int ntrigmidi;
+      int lastnote;]]></code.declaration>
+      <code.init><![CDATA[val = 0;
+ntrig = 0;
+ntrigmidi = 0;]]></code.init>
+      <code.krate><![CDATA[bool Trigger = inlet_tr||param_Trigger;
+bool Gate;
+if ((Trigger > 0) && !ntrig) {
+  val = 1 << 30;
+  ntrig = 1;
+  Gate = 1;
+}
+else {
+  if (!(Trigger > 0))
+    ntrig = 0;
+  if (val>0) {
+    int32_t t;
+    MTOF(-param_Length-inlet_l,t);
+     val -= t>>3;
+     if (val<=0) Gate = 0;
+     else Gate = 1;
+  } else Gate = 0;
+}
+
+outlet_gate = Gate;
+int32_t Transpose = inlet_t + param_Transpose;
+int32_t Velocity  = inlet_v + param_Velocity;
+
+
+if ((Gate>0) && !ntrigmidi)
+        {
+          lastnote = (64+(Transpose>>21))&0x7F;
+          MidiSend3((midi_device_t) attr_d, MIDI_NOTE_ON + (param_channel-1),lastnote,Velocity>>20);
+          ntrigmidi=1;
+        }
+      if (!(Gate>0) && ntrigmidi)
+        {
+          MidiSend3((midi_device_t) attr_d, MIDI_NOTE_OFF + (param_channel-1),lastnote,__USAT(Velocity>>20,7));
+          ntrigmidi=0;
+        }]]></code.krate>
+   </obj.normal>
+</objdefs>
