@@ -1,0 +1,83 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="basePatt" uuid="ecfda10d-6ec1-4a2f-9df8-8ee81763ce5b">
+      <sDescription>Pattern generator that normally outputs the &quot;base&quot; value and having a chance that it&apos;s randomly changed. This can be either as a random-pattern (count input) or ongoing randomly generated.
+Amount of different random values can be set as well as a difference size (offset from base).
+Checking the &quot;nonseed&quot; box will use non-repeating random values instead the randomised pattern, basically setting the &quot;differents&quot; to unlimited.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32 name="count"/>
+         <bool32 name="rnd"/>
+         <frac32 name="base"/>
+         <frac32 name="diffchance"/>
+      </inlets>
+      <outlets>
+         <int32 name="index"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="length"/>
+         <frac32.u.map name="base"/>
+         <frac32.u.map name="diffchance"/>
+         <frac32.u.map name="differents"/>
+         <frac32.u.map name="diffsize"/>
+         <bool32.tgl name="nonseed"/>
+      </params>
+      <attribs>
+         <spinner name="max" MinValue="0" MaxValue="8192" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (6);
+static const uint32_t LENGTH = (1<<6);
+static const uint32_t LENGTHMASK = ((1<<6)-1);
+static const uint32_t BITS = 8;
+static const uint32_t GAIN = 20;
+int sz=attr_max+1;
+uint8_t *a1,*a2;
+uint16_t *a3;
+int val,i,pos,prv;
+bool rnd;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _a1[LENGTH] __attribute__ ((section (".sdram")));
+a1 = &_a1[0];
+static uint8_t _a2[LENGTH] __attribute__ ((section (".sdram")));
+a2 = &_a2[0];
+static uint16_t _a3[LENGTH] __attribute__ ((section (".sdram")));
+a3 = &_a3[0];
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++){
+  	a1[i]=(uint8_t)GenerateRandomNumber();
+  	a2[i]=(uint8_t)GenerateRandomNumber();
+  	a3[i]=(uint16_t)GenerateRandomNumber();
+  }
+}]]></code.init>
+      <code.krate><![CDATA[if((inlet_rnd>0)&&!rnd){
+	rnd=1;
+	for(i=0;i<LENGTH;i++){
+	a1[i]=(uint8_t)GenerateRandomNumber();
+  	a2[i]=(uint8_t)GenerateRandomNumber();
+  	a3[i]=(uint16_t)GenerateRandomNumber();
+	}
+}
+else if(inlet_rnd<1){rnd=0;}
+
+if(!(inlet_count==prv)){
+int length=param_length>>21;
+length=length>0?length:1;
+int cnt=inlet_count;
+cnt=cnt-cnt/length*length;
+cnt+=cnt<0?length:0;
+cnt=cnt&63;
+int base=___SMMUL(__USAT(param_base+inlet_base,27)<<4,sz-1<<1);
+val=base;
+
+if((param_nonseed<1?a2[cnt]:(uint8_t)(GenerateRandomNumber()))<(__USAT(param_diffchance+inlet_diffchance,27)>>19)){
+val+=___SMMUL(___SMMUL((int32_t)a3[___SMMUL((param_nonseed<1?a1[cnt]:(uint8_t)(GenerateRandomNumber())<<1),param_differents<<2)]<<13,param_diffsize)<<5,sz<<2)+1;
+}
+val=val-val/sz*sz;
+val+=(val<0?sz:0);
+}
+outlet_index=val;
+prv=inlet_count;]]></code.krate>
+   </obj.normal>
+</objdefs>
