@@ -1,15 +1,16 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="rot5" uuid="55c838a7-a7de-4c03-ad05-137f17497344">
-      <sDescription>5x5 fixed rotation matrix</sDescription>
+   <obj.normal id="orth6" uuid="66c838a7-a7de-4c03-ad05-137f17497344">
+      <sDescription>6x6 fixed orthogonal matrix</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch>rot5.axh</helpPatch>
+      <helpPatch>orth6.axh</helpPatch>
       <inlets>
          <frac32buffer name="in0"/>
          <frac32buffer name="in1"/>
          <frac32buffer name="in2"/>
          <frac32buffer name="in3"/>
          <frac32buffer name="in4"/>
+         <frac32buffer name="in5"/>
       </inlets>
       <outlets>
          <frac32buffer name="out0"/>
@@ -17,6 +18,7 @@
          <frac32buffer name="out2"/>
          <frac32buffer name="out3"/>
          <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
       </outlets>
       <displays/>
       <params/>
@@ -24,7 +26,7 @@
          <text name="rotations"/>
       </attribs>
       <code.declaration><![CDATA[//local
-static const int N = 5;
+static const int N = 6;
 int32_t M[N][N];
 int32_t tmp[N][N];
 int32_t R[N][N];
@@ -72,14 +74,49 @@ void rot(int axis1, int axis2, float angle){
   setR(axis1 % N, axis2 % N, angle);
   MxR();
 }
+void negLine(int j){
+  for(int i = 0; i < N; i++){
+      M[j][i] = -M[j][i];
+  }
+}
+void negCol(int i){
+  for(int j = 0; j < N; j++){
+      M[j][i] = -M[j][i];
+  }
+}
 void randR(uint32_t seed){
   uint32_t r = seed * 69069 + 1;
   for(int k = 0; k < 4; k++){
     for(int j = 0; j < N; j++){
-      for(int i = j+1; i < N; i++){
+      for(int i = j + 1; i < N; i++){
         setR(i, j, r = r * 69069 + 1);
         MxR();
       }
+    }
+  }
+}
+void randO(uint32_t seed){
+  uint32_t r = seed * 69069 + 1;
+  for(int k = 0; k < 4; k++){
+    for(int j = 0; j < N; j++){
+      for(int i = j + 1; i < N; i++){
+        setR(i, j, r = r * 69069 + 1);
+        MxR();
+      }
+      r = r * 69069 + 1;
+      negLine((r>>24)%N);
+    }
+  }
+}
+void transpose(void){
+  for(int j = 0; j < N; j++){
+    for(int i = 0; i < N; i++){ 
+      tmp[j][i] = M[j][i];
+    }
+  }
+  for(int j = 0; j < N; j++){
+    for(int i = 0; i < N; i++){ 
+      M[j][i] = tmp[i][j];
     }
   }
 }]]></code.declaration>
@@ -88,7 +125,9 @@ void randR(uint32_t seed){
     M[j][i] = (i == j) ? 1<<27 : 0;
   }
 }
-{attr_rotations}]]></code.init>
+{
+attr_rotations
+}]]></code.init>
       <code.krate><![CDATA[
 int32_t *out[N];
 out[0] = outlet_out0;
@@ -96,6 +135,7 @@ out[1] = outlet_out1;
 out[2] = outlet_out2;
 out[3] = outlet_out3;
 out[4] = outlet_out4;
+out[5] = outlet_out5;
 for(int ni = 0; ni < N; ni++){
   int32_t *o = out[ni];
   int32_t *m = M[ni];
@@ -106,9 +146,9 @@ for(int ni = 0; ni < N; ni++){
     }
   }
   {
-    int32_t m3 = m[3]; int32_t m4 = m[4];
+    int32_t m3 = m[3]; int32_t m4 = m[4]; int32_t m5 = m[5];
     for(int i = 0; i < BUFSIZE; i++){
-      o[i] = ___SMMLA(inlet_in4[i], m4, ___SMMLA(inlet_in3[i], m3, o[i]))<<5 ;
+      o[i] = ___SMMLA(inlet_in5[i], m5, ___SMMLA(inlet_in4[i], m4, ___SMMLA(inlet_in3[i], m3, o[i])))<<5 ;
     }
   }
 }
