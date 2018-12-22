@@ -1,0 +1,91 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="cplOp" uuid="e7813135-5cea-4711-aedf-2e2af1a00733">
+      <sDescription>delay coupling operator</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>cplOp.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="theta"/>
+         <frac32.bipolar name="LPA"/>
+         <frac32.bipolar name="LPB"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta"/>
+         <int32 name="posA">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+         <frac32.u.map name="LPA"/>
+         <int32 name="posB">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+         <frac32.u.map name="LPB"/>
+      </params>
+      <attribs>
+         <objref name="delayNameA"/>
+         <objref name="delayNameB"/>
+         <combo name="invA">
+            <MenuEntries>
+               <string>direct</string>
+               <string>negate</string>
+            </MenuEntries>
+            <CEntries>
+               <string>false</string>
+               <string>true</string>
+            </CEntries>
+         </combo>
+         <combo name="invB">
+            <MenuEntries>
+               <string>direct</string>
+               <string>negate</string>
+            </MenuEntries>
+            <CEntries>
+               <string>false</string>
+               <string>true</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[void sinCos_q27(uint32_t theta, int32_t &c, int32_t &s){
+  int32_t a = (theta & ((1<<20)-1)) << 8; //q28
+  uint32_t i = theta >> 20;
+  s = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+  i = (i + 1024) & 4095; 
+  c = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+}
+int32_t coefA = attr_invA ? 1<<14 : -1<<14;
+int32_t coefB = attr_invB ? 1<<14 : -1<<14;
+int32_t lpA, lpB;]]></code.declaration>
+      <code.init><![CDATA[lpA=lpB=0;]]></code.init>
+      <code.krate><![CDATA[int32_t c, s;
+{
+  uint32_t theta = ((param_theta+inlet_theta) & 0x07FFFFFF) << 5;
+  sinCos_q27(theta, c, s);
+}
+int32_t cLPA;
+MTOFEXTENDED(param_LPA+inlet_LPA,cLPA);
+cLPA = __USAT(cLPA,30);
+int32_t cLPB;
+MTOFEXTENDED(param_LPB+inlet_LPB,cLPB);
+cLPB = __USAT(cLPB,30);
+
+
+// note: read/write indexes are set BUFSIZE samples back as we will process a batch of BUFSIZE samples
+// so beware of overlappings when param_delays defer by less than 16 samples 
+int32_t a_rw = (attr_delayNameA.writepos - (BUFSIZE - 1) - param_posA) & attr_delayNameA.LENGTHMASK;
+int32_t b_rw = (attr_delayNameB.writepos - (BUFSIZE - 1) - param_posB) & attr_delayNameB.LENGTHMASK;
+     
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+for(int i = 0; i < BUFSIZE; i++){
+//                           q27                            q30   q25	                          
+  lpA = ___SMMLA((attr_delayNameA.array[a_rw] * coefA-lpA),cLPA,lpA>>2)<<2;
+  lpB = ___SMMLA((attr_delayNameB.array[b_rw] * coefB-lpB),cLPB,lpB>>2)<<2;
+  attr_delayNameA.array[a_rw] = __SSAT(___SMMLS(lpB, s, ___SMMUL(lpA, c))>>(14-5), 16);
+  attr_delayNameB.array[b_rw] = __SSAT(___SMMLA(lpB, c, ___SMMUL(lpA, s))>>(14-5), 16);
+  a_rw = (a_rw + 1) & attr_delayNameA.LENGTHMASK;
+  b_rw = (b_rw + 1) & attr_delayNameB.LENGTHMASK;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
