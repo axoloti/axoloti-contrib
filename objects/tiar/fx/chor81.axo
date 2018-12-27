@@ -1,0 +1,138 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="chor81" uuid="9d159638-70bf-4215-acbf-ccc2b95cd788">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>chor81.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in0" description="input"/>
+         <frac32buffer name="in1"/>
+         <frac32.bipolar name="rate"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out0" description="output"/>
+         <frac32buffer name="out1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="rate" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[class D64{
+  public:
+  int32_t v[64];
+  int ind;
+  void init(void){
+    for(int i = 0; i < 64; i++)
+      v[i] = 0;
+    ind = 0;
+  }
+  void aProc(int32_t &x, int32_t d_q21){
+    ind--; ind &= 63;
+    v[ind] = x;
+    int32_t i0 = ((d_q21 >> 21) + ind) & 63;
+    //                                            q21                q31
+    x = ___SMMLA(v[(i0 + 1) & 63] - v[i0], (d_q21 & ((1<<21)-1))<<(31-21), v[i0] >> 1) << 1;
+  }
+};
+void rot(int32_t &x, int32_t &y, int32_t c, int32_t s){
+  int32_t t = ___SMMLS(y,s,___SMMUL(x,c))<<1;
+  y = ___SMMLA(y,c,___SMMUL(x,s))<<1;
+  x = t;
+}
+
+
+int32_t d0[256], d1[256];
+int32_t c[16], s[16];
+uint8_t ind0[16], ind1[16];
+D64 dA,dB,dC,dD,dE,dF;
+int32_t rnd;
+uint32_t p, dp;
+
+uint8_t i;]]></code.declaration>
+      <code.init><![CDATA[rnd = GenerateRandomNumber();
+
+for(int r = 0; r < 16; r++){
+  ind0[r] = (rnd = rnd * 69069 + 1)>>24;
+  ind1[r] = (rnd = rnd * 69069 + 1)>>24; 
+}
+
+
+
+for(int j = 0; j < 256; j++){
+  d0[j] = d1[j] = 0;
+}
+dA.init();
+dB.init();
+dC.init();
+dD.init();
+dE.init();
+dF.init();]]></code.init>
+      <code.krate><![CDATA[dp = __USAT((inlet_rate + param_rate +(1<<27))>>1, 27);
+dp = ___SMMLA(dp,dp,dp>>5)>>4;
+p += dp;
+
+for(int r = 0; r < 16; r++){
+  if(p < dp){
+    ind0[r] = (rnd = rnd * 69069 + 1)>>25;
+    ind1[r] = ((rnd = rnd * 69069 + 1)>>25)+128;
+  }
+  // 360/8 = 22.5°
+  int a = p>>(32-9); //[0 1<<9]
+  if(a > (1<<8)){
+    a = (1<<9) - a;
+  } 
+  s[r] = sine2t[a];
+  c[r] = sine2t[a + 1024]; 
+  p += 1<<28;
+}
+
+uint32_t p8 = p<<3;
+int32_t lfo;
+SINE2TINTERP(p8, lfo)
+lfo>>=4;
+
+int32_t modA = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modB = ___SMMUL((1<<27) - lfo,62<<25);
+SINE2TINTERP(p8 + 715827882UL, lfo)
+lfo>>=4;
+int32_t modC = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modD = ___SMMUL((1<<27) - lfo,62<<25);
+SINE2TINTERP(p8 + 1431655765UL, lfo)
+lfo>>=4;
+int32_t modE = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modF = ___SMMUL((1<<27) - lfo,62<<25);]]></code.krate>
+      <code.srate><![CDATA[d0[i] = inlet_in0;
+d1[i] = inlet_in1;
+i--;
+
+
+int ind=0;
+for(int r = 0; r < 4; r++){
+  rot(d0[(uint8_t)(i+ind0[ind])], 
+      d0[(uint8_t)(i+ind1[ind])],
+      c[ind], s[ind]);
+      ind +=5; ind &= 15;
+}
+for(int r = 4; r < 8; r++){
+  rot(d1[(uint8_t)(i+ind0[ind])], 
+      d1[(uint8_t)(i+ind1[ind])],
+      c[ind], s[ind]);
+      ind +=5; ind &= 15;
+}
+for(int r = 8; r < 16; r++){
+  rot(d0[(uint8_t)(i+ind0[ind])], 
+      d1[(uint8_t)(i+ind1[ind])],
+      c[ind], s[ind]);
+      ind +=5; ind &= 15;
+}
+
+dA.aProc(d0[(uint8_t)(i+35)],modA);
+dB.aProc(d1[(uint8_t)(i+43)],modB);
+dC.aProc(d0[(uint8_t)(i+100)],modC);
+dD.aProc(d1[(uint8_t)(i+91)],modD);
+dE.aProc(d0[(uint8_t)(i+190)],modE);
+dF.aProc(d1[(uint8_t)(i+170)],modF);
+outlet_out0 = d0[i];
+outlet_out1 = d1[i];]]></code.srate>
+   </obj.normal>
+</objdefs>
