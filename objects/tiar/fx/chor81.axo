@@ -68,7 +68,7 @@ dD.init();
 dE.init();
 dF.init();]]></code.init>
       <code.krate><![CDATA[dp = __USAT((inlet_rate + param_rate +(1<<27))>>1, 27);
-dp = ___SMMLA(dp,dp,dp>>5)>>4;
+dp = ___SMMLA(dp,dp,dp>>5)>>3;
 p += dp;
 
 for(int r = 0; r < 16; r++){
@@ -77,27 +77,35 @@ for(int r = 0; r < 16; r++){
     ind1[r] = ((rnd = rnd * 69069 + 1)>>25)+128;
   }
   // 360/8 = 22.5°
-  int a = p>>(32-9); //[0 1<<9]
-  if(a > (1<<8)){
-    a = (1<<9) - a;
+  int32_t a = p>>(32-29); //[0 1<<29[
+  if(a > (1<<28)){
+    a = (1<<29) - a;
   } 
-  s[r] = sine2t[a];
-  c[r] = sine2t[a + 1024]; 
+  //[0 1<<28]
+  
+
+  int32_t tmp;
+  SINE2TINTERP(a, tmp)
+  s[r] = tmp;
+  a+=1<<30;
+  SINE2TINTERP(a, tmp)
+  c[r] = tmp; 
+   
   p += 1<<28;
 }
 
-uint32_t p8 = p<<3;
+uint32_t p4 = p<<2;
 int32_t lfo;
-SINE2TINTERP(p8, lfo)
+SINE2TINTERP(p4, lfo)
 lfo>>=4;
 
 int32_t modA = ___SMMUL((1<<27) + lfo,62<<25);
 int32_t modB = ___SMMUL((1<<27) - lfo,62<<25);
-SINE2TINTERP(p8 + 715827882UL, lfo)
+SINE2TINTERP(p4 + 715827882UL, lfo)
 lfo>>=4;
 int32_t modC = ___SMMUL((1<<27) + lfo,62<<25);
 int32_t modD = ___SMMUL((1<<27) - lfo,62<<25);
-SINE2TINTERP(p8 + 1431655765UL, lfo)
+SINE2TINTERP(p4 + 1431655765UL, lfo)
 lfo>>=4;
 int32_t modE = ___SMMUL((1<<27) + lfo,62<<25);
 int32_t modF = ___SMMUL((1<<27) - lfo,62<<25);]]></code.krate>
@@ -106,24 +114,10 @@ d1[i] = inlet_in1;
 i--;
 
 
-int ind=0;
-for(int r = 0; r < 4; r++){
-  rot(d0[(uint8_t)(i+ind0[ind])], 
-      d0[(uint8_t)(i+ind1[ind])],
-      c[ind], s[ind]);
-      ind +=5; ind &= 15;
-}
-for(int r = 4; r < 8; r++){
-  rot(d1[(uint8_t)(i+ind0[ind])], 
-      d1[(uint8_t)(i+ind1[ind])],
-      c[ind], s[ind]);
-      ind +=5; ind &= 15;
-}
-for(int r = 8; r < 16; r++){
-  rot(d0[(uint8_t)(i+ind0[ind])], 
-      d1[(uint8_t)(i+ind1[ind])],
-      c[ind], s[ind]);
-      ind +=5; ind &= 15;
+for(int r = 0; r < 16; r++){
+  rot(d0[(uint8_t)(i+ind0[r])], 
+      d1[(uint8_t)(i+ind1[r])],
+      c[r], s[r]);
 }
 
 dA.aProc(d0[(uint8_t)(i+35)],modA);
@@ -131,7 +125,7 @@ dB.aProc(d1[(uint8_t)(i+43)],modB);
 dC.aProc(d0[(uint8_t)(i+100)],modC);
 dD.aProc(d1[(uint8_t)(i+91)],modD);
 dE.aProc(d0[(uint8_t)(i+190)],modE);
-dF.aProc(d1[(uint8_t)(i+170)],modF);
+dF.aProc(d1[(uint8_t)(i+173)],modF);
 outlet_out0 = d0[i];
 outlet_out1 = d1[i];]]></code.srate>
    </obj.normal>
