@@ -16,7 +16,20 @@
       <params>
          <frac32.s.map name="rate" noLabel="true"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="depth">
+            <MenuEntries>
+               <string>full</string>
+               <string>mid</string>
+               <string>low</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>128</string>
+               <string>64</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[class D64{
   public:
   int32_t v[64];
@@ -99,16 +112,16 @@ int32_t lfo;
 SINE2TINTERP(p4, lfo)
 lfo>>=4;
 
-int32_t modA = ___SMMUL((1<<27) + lfo,62<<25);
-int32_t modB = ___SMMUL((1<<27) - lfo,62<<25);
+int32_t modE = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modC = ___SMMUL((1<<27) - lfo,62<<25);
 SINE2TINTERP(p4 + 715827882UL, lfo)
 lfo>>=4;
-int32_t modC = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modF = ___SMMUL((1<<27) + lfo,62<<25);
 int32_t modD = ___SMMUL((1<<27) - lfo,62<<25);
 SINE2TINTERP(p4 + 1431655765UL, lfo)
 lfo>>=4;
-int32_t modE = ___SMMUL((1<<27) + lfo,62<<25);
-int32_t modF = ___SMMUL((1<<27) - lfo,62<<25);]]></code.krate>
+int32_t modA = ___SMMUL((1<<27) + lfo,62<<25);
+int32_t modB = ___SMMUL((1<<27) - lfo,62<<25);]]></code.krate>
       <code.srate><![CDATA[d0[i] = inlet_in0;
 d1[i] = inlet_in1;
 i--;
@@ -118,6 +131,10 @@ for(int r = 0; r < 16; r++){
   rot(d0[(uint8_t)(i+ind0[r])], 
       d1[(uint8_t)(i+ind1[r])],
       c[r], s[r]);
+  r++;
+  rot(d1[(uint8_t)(i+ind1[r])], 
+      d0[(uint8_t)(i+ind0[r])],
+      c[r], s[r]);
 }
 
 dA.aProc(d0[(uint8_t)(i+35)],modA);
@@ -126,7 +143,7 @@ dC.aProc(d0[(uint8_t)(i+100)],modC);
 dD.aProc(d1[(uint8_t)(i+91)],modD);
 dE.aProc(d0[(uint8_t)(i+190)],modE);
 dF.aProc(d1[(uint8_t)(i+173)],modF);
-outlet_out0 = d0[i];
-outlet_out1 = d1[i];]]></code.srate>
+outlet_out0 = d0[(uint8_t)(i+attr_depth)];
+outlet_out1 = d1[(uint8_t)(i+attr_depth)];]]></code.srate>
    </obj.normal>
 </objdefs>
