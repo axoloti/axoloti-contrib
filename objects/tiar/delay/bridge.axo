@@ -7,7 +7,9 @@
       <inlets>
          <frac32.bipolar name="theta"/>
          <frac32.bipolar name="LPA"/>
+         <frac32.bipolar name="attenA"/>
          <frac32.bipolar name="LPB"/>
+         <frac32.bipolar name="attenB"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -18,11 +20,13 @@
             <MaxValue i="65536"/>
          </int32>
          <frac32.u.map name="LPA"/>
+         <frac32.u.map name="attenA"/>
          <int32 name="posB">
             <MinValue i="0"/>
             <MaxValue i="65536"/>
          </int32>
          <frac32.u.map name="LPB"/>
+         <frac32.u.map name="attenB"/>
       </params>
       <attribs>
          <objref name="delayNameA"/>
@@ -55,11 +59,18 @@
   i = (i + 1024) & 4095; 
   c = ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
 }
-int32_t coefA = attr_invA ? 1<<14 : -1<<14;
-int32_t coefB = attr_invB ? 1<<14 : -1<<14;
+
 int32_t lpA, lpB;]]></code.declaration>
       <code.init><![CDATA[lpA=lpB=0;]]></code.init>
-      <code.krate><![CDATA[int32_t c, s;
+      <code.krate><![CDATA[
+      
+int32_t coefA = __USAT((1<<27) - param_attenA - inlet_attenA, 27)>>(27-14);
+coefA = attr_invA ? coefA : -coefA;
+
+int32_t coefB = __USAT((1<<27) - param_attenB - inlet_attenB, 27)>>(27-14);
+coefB = attr_invB ? coefB : -coefB;
+      
+int32_t c, s;
 {
   uint32_t theta = ((param_theta+inlet_theta) & 0x07FFFFFF) << 5;
   sinCos_q27(theta, c, s);
@@ -73,18 +84,19 @@ cLPB = __USAT(cLPB,30);
 
 
 // note: read/write indexes are set BUFSIZE samples back as we will process a batch of BUFSIZE samples
-// so beware of overlappings when param_delays defer by less than 16 samples 
+// so beware of overlappings when param_delays differ by less than 16 samples 
 int32_t a_rw = (attr_delayNameA.writepos - (BUFSIZE - 1) - param_posA) & attr_delayNameA.LENGTHMASK;
 int32_t b_rw = (attr_delayNameB.writepos - (BUFSIZE - 1) - param_posB) & attr_delayNameB.LENGTHMASK;
      
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 for(int i = 0; i < BUFSIZE; i++){
-//                           q27                            q30   q25	                          
-  lpA = ___SMMLA((attr_delayNameA.array[a_rw] * coefA-lpA),cLPA,lpA>>2)<<2;
-  lpB = ___SMMLA((attr_delayNameB.array[b_rw] * coefB-lpB),cLPB,lpB>>2)<<2;
-  attr_delayNameA.array[a_rw] = __SSAT(___SMMLS(lpB, s, ___SMMUL(lpA, c))>>(14-5), 16);
-  attr_delayNameB.array[b_rw] = __SSAT(___SMMLA(lpB, c, ___SMMUL(lpA, s))>>(14-5), 16);
+//                              q15              q14    q29   q29     q27	                          
+  lpA = ___SMMLA((attr_delayNameA.array[a_rw] * coefA - lpA), cLPA, lpA>>2)<<2;
+  lpB = ___SMMLA((attr_delayNameB.array[b_rw] * coefB - lpB), cLPB, lpB>>2)<<2;
+  //                                      q24   q29 q27                     24-15
+  attr_delayNameA.array[a_rw] = __SSAT(___SMMLS(lpB, s, ___SMMUL(lpA, c))>>(24-15), 16);
   a_rw = (a_rw + 1) & attr_delayNameA.LENGTHMASK;
+  attr_delayNameB.array[b_rw] = __SSAT(___SMMLA(lpB, c, ___SMMUL(lpA, s))>>(24-15), 16);
   b_rw = (b_rw + 1) & attr_delayNameB.LENGTHMASK;
 }]]></code.krate>
    </obj.normal>

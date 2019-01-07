@@ -72,11 +72,11 @@ int32_t b_rw = (attr_delayNameB.writepos - (BUFSIZE - 1) - param_posB) & attr_de
      
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 for(int i = 0; i < BUFSIZE; i++){
-  int32_t xA = attr_delayNameA.array[a_rw];
-  int32_t xB = attr_delayNameB.array[b_rw];
-  attr_delayNameA.array[a_rw] = __SSAT(___SMMLS(xB, s, ___SMMUL(xA, c))>>(14-5), 16);
-  attr_delayNameB.array[b_rw] = __SSAT(___SMMLA(xB, c, ___SMMUL(xA, s))>>(14-5), 16);
+  int32_t xA = attr_delayNameA.array[a_rw]<<14;
+  int32_t xB = attr_delayNameB.array[b_rw]<<14;
+  attr_delayNameA.array[a_rw] = __SSAT(___SMMLS(xB, s, ___SMMUL(xA, c))>>(24-15), 16);
   a_rw = (a_rw + 1) & attr_delayNameA.LENGTHMASK;
+  attr_delayNameB.array[b_rw] = __SSAT(___SMMLA(xB, c, ___SMMUL(xA, s))>>(24-15), 16);
   b_rw = (b_rw + 1) & attr_delayNameB.LENGTHMASK;
 }]]></code.krate>
    </obj.normal>

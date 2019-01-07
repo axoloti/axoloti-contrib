@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="quintphase" uuid="c5ee2ec2-064a-4805-a37d-3e0db695511e">
+      <sDescription>72° separated outputs</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>quintphase_lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="phi 0" description="0° sine"/>
+         <frac32.bipolar name="phi 72" description="72° sine"/>
+         <frac32.bipolar name="phi 144" description="144° sine"/>
+         <frac32.bipolar name="phi 216" description="216° sine"/>
+         <frac32.bipolar name="phi 288" description="288° sine"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t p;]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t dp;
+MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+p += dp>>2;
+uint32_t pp = p;
+int32_t r;
+SINE2TINTERP(pp, r)
+outlet_phi_space_0 = r>>4;
+pp += 858993459UL;
+
+SINE2TINTERP(pp, r)
+outlet_phi_space_72 = r>>4;
+pp += 858993459UL;
+
+SINE2TINTERP(pp, r)
+outlet_phi_space_144 = r>>4;
+pp += 858993459UL;
+
+SINE2TINTERP(pp, r)
+outlet_phi_space_216 = r>>4;
+pp += 858993459UL;
+
+SINE2TINTERP(pp, r)
+outlet_phi_space_288 = r>>4;]]></code.krate>
+   </obj.normal>
+</objdefs>
