@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="AH6" uuid="a6a6f8a7-a7de-4c03-ada5-137f1a497344">
+      <sDescription>6x6 Almost Hadamard matrix</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>AH6.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in0"/>
+         <frac32buffer name="in1"/>
+         <frac32buffer name="in2"/>
+         <frac32buffer name="in3"/>
+         <frac32buffer name="in4"/>
+         <frac32buffer name="in5"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out0"/>
+         <frac32buffer name="out1"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="out3"/>
+         <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+	  <code.declaration><![CDATA[
+// 1/3sqrt2 
+ 
+// -1  2  2   -1  2  2
+//  2 -1  2    2 -1  2
+//  2  2 -1    2  2 -1
+ 
+// -1  2  2    1 -2 -2
+//  2 -1  2   -2  1 -2
+//  2  2 -1   -2 -2  1
+
+// -0.2357
+//  0.4714
+// 16+ 8*
+void AH6(int32_t  x0, int32_t  x1,  int32_t  x2, int32_t  x3, int32_t  x4,  int32_t  x5,
+         int32_t &y0, int32_t &y1,  int32_t &y2, int32_t &y3, int32_t &y4,  int32_t &y5){
+  int32_t yA = ___SMMUL(x0 + x1 + x2, 1431655765)<<1;  //2/3
+  int32_t yB = ___SMMUL(x3 + x4 + x5, 1431655765)<<1;
+    //coef = (2^31)/sqrt(2) 
+  int32_t coef = 1518500249;
+  
+  int32_t a = yA - x0;
+  int32_t b = yB - x3;
+  y0 = ___SMMUL(a + b, coef)<<1; 
+  y3 = ___SMMUL(a - b, coef)<<1;
+  
+  a = yA - x1;
+  b = yB - x4;
+  y1 = ___SMMUL(a + b, coef)<<1;
+  y4 = ___SMMUL(a - b, coef)<<1;
+  
+  a = yA - x2;  
+  b = yB - x5;
+  y2 = ___SMMUL(a + b, coef)<<1;
+  y5 = ___SMMUL(a - b, coef)<<1;
+}	  
+]]></code.declaration>
+      <code.srate><![CDATA[
+
+
+AH6(inlet_in0, inlet_in1, inlet_in2, inlet_in3, inlet_in4, inlet_in5,
+outlet_out0, outlet_out1, outlet_out2, outlet_out3, outlet_out4, outlet_out5);
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

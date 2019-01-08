@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="AH7" uuid="a7a7f8a7-a7de-4c03-ada5-137f1a497344">
+      <sDescription>7x7 Almost Hadamard matrix</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>AH7.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in0"/>
+         <frac32buffer name="in1"/>
+         <frac32buffer name="in2"/>
+         <frac32buffer name="in3"/>
+         <frac32buffer name="in4"/>
+         <frac32buffer name="in5"/>
+         <frac32buffer name="in6"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out0"/>
+         <frac32buffer name="out1"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="out3"/>
+         <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
+         <frac32buffer name="out6"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[// A=-0,26120387496374144251476820691706
+// B = 0,4459029062228060818860761551878
+
+// truncated Hadamard form
+
+//   0 1 2   3 4 5 6
+// 0 B A B   A B A B
+// 1 A B B   A A B B
+// 2 B B A   A B B A
+// 3 A A A   B B B B
+
+// 4 B A B   B A B A
+// 5 A B B   B B A A
+// 6 B B A   B A A B
+
+//14* 35+
+void AH7(int32_t  x0, int32_t  x1,  int32_t  x2, int32_t  x3, int32_t  x4, int32_t  x5, int32_t  x6,
+         int32_t &y0, int32_t &y1,  int32_t &y2, int32_t &y3, int32_t &y4, int32_t &y5, int32_t &y6){
+
+int32_t A = -1121862100;
+int32_t B =  1915138399;
+y0 = ___SMMLA(x1+x3+x5, A, ___SMMUL(x0+x2+x4+x6, B));
+y1 = ___SMMLA(x0+x3+x4, A, ___SMMUL(x1+x2+x5+x6, B));
+y2 = ___SMMLA(x2+x3+x6, A, ___SMMUL(x0+x1+x4+x5, B));
+y3 = ___SMMLA(x0+x1+x2, A, ___SMMUL(x3+x4+x5+x6, B));
+
+y4 = ___SMMLA(x1+x4+x6, A, ___SMMUL(x0+x2+x3+x5, B));
+y5 = ___SMMLA(x0+x5+x6, A, ___SMMUL(x1+x2+x3+x4, B));
+y6 = ___SMMLA(x2+x4+x5, A, ___SMMUL(x0+x1+x3+x6, B));
+}]]></code.declaration>
+      <code.srate><![CDATA[
+
+
+AH7(inlet_in0, inlet_in1, inlet_in2, inlet_in3, inlet_in4, inlet_in5, inlet_in6,
+outlet_out0, outlet_out1, outlet_out2, outlet_out3, outlet_out4, outlet_out5, outlet_out6);
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>
