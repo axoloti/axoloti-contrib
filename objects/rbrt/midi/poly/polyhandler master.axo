@@ -1,0 +1,202 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="polyhandler master" uuid="97629e76-3ef1-460c-9388-c8555dacf303">
+      <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>poly.axh</helpPatch>
+      <inlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+         <int32.positive name="note2stop" description="note number to stop"/>
+         <bool32.rising name="stop" description="stop it!"/>
+      </inlets>
+      <outlets>
+         <int32 name="target" description="target (to polyphonic subpatch)"/>
+         <int32 name="note"/>
+         <int32 name="velo"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="polyphony">
+            <MenuEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+            </CEntries>
+         </combo>
+         <objref name="playmode" description="..where,in the parameter-table,to find if a note is set to latch"/>
+         <combo name="blocksize" description="blocksize of that table">
+            <MenuEntries>
+               <string>1</string>
+               <string> 2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+         <spinner name="index" description="index of the latch-parameter in a block" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t _note;
+int8_t _note2;
+uint8_t _velo;
+uint8_t _velo2;
+uint8_t count;
+uint8_t pren;
+uint8_t prev;
+uint8_t prenSEQ;
+uint8_t prevSEQ;
+bool trig;
+bool trigoff;
+bool stop;
+int i;
+
+bool doit;
+uint8_t target;
+
+bool mode;
+
+static const uint8_t LENGTH = attr_polyphony;
+static const uint8_t BITS = 16;
+static const uint8_t GAIN = 20;
+uint8_t array [LENGTH];]]></code.declaration>
+      <code.init><![CDATA[_note = 0;
+_note2 = 0;]]></code.init>
+      <code.krate><![CDATA[trig = 0;
+trigoff = 0;
+doit = 0;
+
+count = 0;
+for ( i = 0; i < LENGTH; i ++) if (array [i]) count ++;
+
+
+if ((inlet_note != pren) || (inlet_velo != prev)){
+	_note = inlet_note;	
+	pren = inlet_note;
+	prev = inlet_velo;
+	if (inlet_velo) {	
+		trig = 1;
+		_velo = inlet_velo;
+		}
+		else {
+			trigoff = 1;
+			_velo = 0;
+			}
+}
+
+mode = attr_playmode.array [(_note << attr_blocksize ) + attr_index];
+trig = trig && (count < LENGTH);
+
+//retrigger / toggle
+if (trig) {
+	for (i = 0;i < LENGTH;i ++){
+	if (!mode){
+		if ((array [i] == (_note + 129)) || (array [i] == (_note + 1)))	{
+			target = i;
+			doit = 1;
+		}
+	}
+			if (mode){
+				if (array [i] == (_note + 1)) {
+				target = i;
+				_velo = 0;
+				doit = 1;
+				}
+				if (array [i] == (_note + 129)) {
+				target = i;
+				doit = 1;
+				}
+			}
+		}	
+	//trigger on
+	if (!doit){
+	for (i = 0;i < LENGTH;i ++){
+		if (!array [i]) {
+			target = i;
+			doit = 1;
+			break;		
+			}
+		}	
+	}
+}
+
+	//trigger off
+if (!mode) {
+	if (trigoff) {
+		for (i = 0;i < LENGTH;i ++){
+			if ((array [i] == (_note + 1))|| (array [i] == (_note + 129))){
+				target = i;
+				doit = 1;
+				break;
+			}
+			}
+	}
+}
+
+if (inlet_stop && (!stop)){
+	doit = 0;
+	stop = 1;
+	for (i = 0;i < LENGTH;i ++){
+		if ((array [i] == (inlet_note2stop + 1))|| (array [i] == (inlet_note2stop + 129))) {
+			target = i;
+			_note = inlet_note2stop;
+			_velo = 0;
+			doit = 1;
+			break;
+		}
+	}	
+}
+if (!inlet_stop) stop = 0;
+
+
+if (doit) {
+	outlet_target = target;
+	outlet_note = _note;
+	outlet_velo = _velo;
+
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

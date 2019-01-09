@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="midimux 3" uuid="922fd3e8-cd04-4110-bec0-406547cdf8b1">
+      <sDescription>collects 3 midi-streams into one.
+each stream can be muted.
+buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream or muted or only note-ons.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>patching.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="mute1"/>
+         <int32.positive name="note1"/>
+         <int32.positive name="velo1"/>
+         <bool32.risingfalling name="mute2"/>
+         <int32.positive name="note2"/>
+         <int32.positive name="velo2"/>
+         <bool32.risingfalling name="mute3"/>
+         <int32.positive name="note3"/>
+         <int32.positive name="velo3"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="muteNoteOnOnly1" description="lets note-off messages pass through"/>
+         <bool32.tgl name="muteNoteOnOnly2" description="lets note-off messages pass through"/>
+         <bool32.tgl name="muteNoteOnOnly3"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t pren1;
+uint8_t prev1;
+uint8_t pren2;
+uint8_t prev2;
+uint8_t pren3;
+uint8_t prev3;
+uint8_t note;
+uint8_t velo;]]></code.declaration>
+      <code.krate><![CDATA[if ((inlet_note1 != pren1) || (inlet_velo1 != prev1)){
+	if (!inlet_mute1) {
+	note = inlet_note1;
+	pren1 = inlet_note1;
+	velo = inlet_velo1;
+	prev1 = inlet_velo1;
+	}
+	else if ((!inlet_velo1 ) && param_muteNoteOnOnly1) {
+			note = inlet_note1;
+	 		pren1 = inlet_note1;
+			velo = inlet_velo1;
+			prev1 = inlet_velo1;	
+		}
+	}
+if ((inlet_note2 != pren2) || (inlet_velo2 != prev2)){
+	if (!inlet_mute2) {
+	note = inlet_note2;
+	pren2 = inlet_note2;
+	velo = inlet_velo2;
+	prev2 = inlet_velo2;
+	}
+	else if ((!inlet_velo2)&& param_muteNoteOnOnly2) {
+			note = inlet_note2;
+	 		pren2 = inlet_note2;
+			velo = inlet_velo2;
+			prev2 = inlet_velo2;	
+		}
+		
+	}
+
+if ((inlet_note3 != pren3) || (inlet_velo3 != prev3)){
+	if (!inlet_mute3) {
+	note = inlet_note3;
+	pren3 = inlet_note3;
+	velo = inlet_velo3;
+	prev3 = inlet_velo3;
+	}
+	else if ((!inlet_velo3)&& param_muteNoteOnOnly3) {
+			note = inlet_note3;
+	 		pren3 = inlet_note3;
+			velo = inlet_velo3;
+			prev3 = inlet_velo3;	
+		}
+		
+	}
+
+outlet_note= note;
+outlet_velo = velo;]]></code.krate>
+   </obj.normal>
+</objdefs>

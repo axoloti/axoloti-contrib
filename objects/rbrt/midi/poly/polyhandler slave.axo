@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="polyhandler slave" uuid="a755644f-8b21-411c-99e3-fff96daaf38d">
+      <sDescription>works only inside a polyphonic sub-patch.
+routes note and velocity to a specific voice,
+and gives feedback to the &apos;mother-object&apos; about the current playback state of that voice.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <int32.positive name="target" description=""/>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+         <bool32.risingfalling name="envstate" description=""/>
+         <bool32.rising name="stop" description="stops a playing note"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+         <bool32 name="gate"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="polyhandler"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t pren;
+uint8_t prev;
+bool gate;
+uint8_t state;
+uint8_t index;
+bool stop;
+bool trigon;
+bool trigoff;]]></code.declaration>
+      <code.krate><![CDATA[trigon = 0;
+trigoff = 0;
+state  = 0;
+
+index = parent->polyIndex;
+
+if (inlet_target == index) {
+	if ((inlet_note != pren) || (inlet_velo != prev)) {
+	pren = inlet_note;
+	prev = inlet_velo;
+	if (inlet_velo > 0) trigon = 1;
+	else  trigoff = 1;
+	if ((!gate) && trigon) gate = 1;
+	if (gate && trigoff) gate = 0;
+	}
+}
+
+if (inlet_stop && (!stop)) {
+	gate = 0;
+	stop = 1;
+}
+if (!inlet_stop) stop = 0;
+
+
+outlet_note = pren;
+outlet_velo = prev;
+outlet_gate = gate;
+
+if (gate) state = outlet_note +1;
+else if (inlet_envstate) state = outlet_note +129;
+attr_polyhandler.array [index] = state;]]></code.krate>
+   </obj.normal>
+</objdefs>
