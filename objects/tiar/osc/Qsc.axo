@@ -17,19 +17,28 @@
          <frac32.u.map name="res"/>
          <frac32.s.map name="brill"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="Qres">
+            <MenuEntries>
+               <string>normal</string>
+               <string>drive</string>
+               <string>sat</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[uint32_t pC;
 int32_t dpC;
 int32_t res;
-float skew;
+float skew, _1skew, _skew;
 float pMast;
 float dpMast, _dpMast;]]></code.declaration>
-<code.init><![CDATA[
-pC = 0;
-pMast = 0;
-]]></code.init>
-
-
+      <code.init><![CDATA[pC = 0;
+pMast = 0;]]></code.init>
       <code.krate><![CDATA[int32_t idp;
 MTOFEXTENDED(inlet_pitch + param_pitch, idp);
 dpMast = arm::q_to_float(idp, 32);
@@ -41,29 +50,43 @@ if(pBrill + inlet_pitch + param_pitch > (40<<21)){
 }
 int32_t iBrill;
 MTOFEXTENDED(-pBrill, iBrill);
-skew = arm::q_to_float(iBrill, 27);
-if(skew > 0.5f) skew = 0.5f;
-float _skew = 1.0f / skew;
+float newSkew = arm::q_to_float(iBrill, 27);
+if(newSkew > 0.5f) newSkew = 0.5f;
+float new_skew = 1.0f / newSkew;
 float res = arm::q_to_float(inlet_res + param_res,27);
 if(res <0.0f) res = 0.0f;
-float dpCf = 0.5f * 4294967296.0f * dpMast * _skew;
+float dpCf = 0.5f * 4294967296.0f * dpMast * new_skew;
 dpC = (int32_t)dpCf;
-float _1skew = 1.0f / (1 - skew);]]></code.krate>
+float new_1skew = 1.0f / (1 - newSkew);]]></code.krate>
       <code.srate><![CDATA[// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 pMast += dpMast;
 if(pMast > 1){
   pMast -= 1;
-  pC = (uint32_t)(pMast * _dpMast * dpCf);
+  pC = (uint32_t)(pMast * _dpMast * dpCf-(1<<31));
+  skew = newSkew;
+  _1skew = new_1skew;
+  _skew = new_skew;
 }
-int32_t y = sine2t[pC>>20]>>5;
+
+//simulated resonance signal is a slave sine oscillator
+float y = arm::q_to_float(sine2t[pC>>20],31);
+
 pC += dpC;
 
 //skewed triangle
 float e = pMast >= skew ? (1 - pMast) * _1skew : pMast * _skew;
-
+y*=e;
+#if attr_Qres==1
+y=y*(1.5f-0.5f*y*y);
+#elif attr_Qres==2
+y=y*(1.5f-0.5f*y*y);
+y=y*(1.5f-0.5f*y*y);
+#endif
 //waveshaper
 float es = e * e * (6 - 4 * e) - 1;
-outlet_out = (int32_t)(es * ((1<<27) + res * ( e * y - (1<<27))));]]></code.srate>
+//outlet_out = (int32_t)(es * ((1<<27) + res * ( e * y - (1<<27))));
+//outlet_out = (int32_t)(e*y);
+outlet_out = arm::float_to_q(es + res * (y - es), 27);]]></code.srate>
    </obj.normal>
 </objdefs>
