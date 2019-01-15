@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="D10" uuid="dab8faa7-a7de-4c03-ada5-137f1a497344">
+      <sDescription>10x10 dispersion matrix
+This matrix is symetrical</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>D10 DelayVerb.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in0"/>
+         <frac32buffer name="in1"/>
+         <frac32buffer name="in2"/>
+         <frac32buffer name="in3"/>
+         <frac32buffer name="in4"/>
+         <frac32buffer name="in5"/>
+         <frac32buffer name="in6"/>
+         <frac32buffer name="in7"/>
+         <frac32buffer name="in8"/>
+         <frac32buffer name="in9"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out0"/>
+         <frac32buffer name="out1"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="out3"/>
+         <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
+         <frac32buffer name="out6"/>
+         <frac32buffer name="out7"/>
+         <frac32buffer name="out8"/>
+         <frac32buffer name="out9"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[//T.Rochebois 2018
+      // 0   1   2   3   4    5   6   7   8   9
+   // 0  0  -1  -1   1   1   -1   1   1   1   1
+   // 1 -1   0   1   1  -1    1  -1   1   1   1
+   // 2 -1   1   0  -1   1    1   1  -1   1   1
+   // 3  1   1  -1   0  -1    1   1   1  -1   1
+   // 4  1  -1   1  -1   0    1   1   1   1  -1
+
+   // 5 -1   1   1   1   1    0   1   1  -1  -1
+   // 6  1  -1   1   1   1    1   0  -1  -1   1
+   // 7  1   1  -1   1   1    1  -1   0   1  -1
+   // 8  1   1   1  -1   1   -1  -1   1   0   1
+   // 9  1   1   1   1  -1   -1   1  -1   1   0
+   
+//50+ 10*
+int32_t coef = 1431655765; // 1/3 q32
+int32_t t = inlet_in5+inlet_in6+inlet_in7+inlet_in8+inlet_in9;
+outlet_out0 = ___SMMUL(coef, t+inlet_in3+inlet_in4-inlet_in1-inlet_in2-(inlet_in5<<1));
+int32_t t2 = inlet_in3-inlet_in4;
+int32_t t3 = t-inlet_in0;
+outlet_out1 = ___SMMUL(coef, t3+t2+inlet_in2-(inlet_in6<<1));
+outlet_out2 = ___SMMUL(coef, t3-t2+inlet_in1-(inlet_in7<<1));
+t2 = inlet_in1-inlet_in2;
+t3 = t+inlet_in0;
+outlet_out3 = ___SMMUL(coef, t3+t2-inlet_in4-(inlet_in8<<1));
+outlet_out4 = ___SMMUL(coef, t3-t2-inlet_in3-(inlet_in9<<1));
+
+t = inlet_in0+inlet_in1+inlet_in2+inlet_in3+inlet_in4;
+t2 = inlet_in7-inlet_in9;
+t3=t-inlet_in8;
+outlet_out5 = ___SMMUL(coef, t3+t2+inlet_in6-(inlet_in0<<1));
+outlet_out6 = ___SMMUL(coef, t3-t2+inlet_in5-(inlet_in1<<1));
+t2 = inlet_in5-inlet_in9;
+t3=t-inlet_in6;
+
+outlet_out9 = ___SMMUL(coef, t+inlet_in6+inlet_in8-inlet_in5-inlet_in7-(inlet_in4<<1));
+outlet_out7 = ___SMMUL(coef, t3+t2+inlet_in8-(inlet_in2<<1));
+outlet_out8 = ___SMMUL(coef, t3-t2+inlet_in7-(inlet_in3<<1));;]]></code.srate>
+   </obj.normal>
+</objdefs>
