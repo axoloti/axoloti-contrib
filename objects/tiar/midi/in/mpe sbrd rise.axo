@@ -22,7 +22,18 @@
       </outlets>
       <displays/>
       <params/>
-      <attribs/>
+      <attribs>
+         <combo name="initTimbreMode">
+            <MenuEntries>
+               <string>pre NoteOn</string>
+               <string>post NoteOn</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>false</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[
 int8_t _note;
 int32_t _gate;
@@ -61,7 +72,7 @@ outlet_releaseVelocity= _rvelo;
 outlet_pressure = _pressure;
 outlet_bend = _bend;
 outlet_timbre = _timbre;
-outlet_initTimbre = _initTimbre;
+outlet_initTimbre = _initTimbre != 0x7FFFFFFF ? _initTimbre : 0;
 outlet_pitch = _pitch;]]></code.krate>
       <code.midihandler><![CDATA[
 if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
@@ -70,7 +81,11 @@ if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
   _gate = 1<<27;
   _gate2 = 0;
   _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
-  _initTimbre = _timbre;
+  if(attr_initTimbreMode){
+    _initTimbre = _timbre;  // "pre Note On" mode, we take the current _timbre
+  }else{
+    _initTimbre = 0x7FFFFFFF; // "post Note On" mode, we wait for initTimbre
+  }
 } else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
           (status == MIDI_NOTE_OFF + attr_midichannel)) {
   if (_note == data1-64) {
@@ -86,6 +101,10 @@ if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
 } else if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {
   if (data1 == MIDI_C_TIMBRE) {
     _timbre = (((int)(data2<<7)-0x2000)<<14) + _yl;
+    // if we are waiting for the first timbre CC (post noteOn mode)
+    if(_initTimbre == 0x7FFFFFFF){
+      _initTimbre = _timbre;
+    }
   } else if (data1 == zccl) {   _zl = data2 << 13;  // press LSB
   } else if (data1 == xccl) {   _xl = data2 << 7;   // bend LLSB
   } else if (data1 == yccl) {   _yl = data2 << 14;  // timbre LSB

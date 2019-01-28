@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="procCC74" uuid="cc749235-5516-4640-9979-2f39ecccb608">
+      <sDescription>MPE: moves the &quot;pre-noteOn&quot; CC74 to first &quot;post-noteOn&quot;.
+      Use it with &quot;tiar/midi/mpe sbrd rise&quot; (initTimbreMode:post noteOn) in a patcher/patch with midi selector set to internal device set to the corresponding port.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[
+      uint8_t CC74[16];
+]]></code.declaration>
+      <code.init><![CDATA[
+for(int c = 0; c < 16; c++)
+  CC74[c] = 0;
+]]></code.init>
+      <code.midihandler><![CDATA[if(dev != (midi_device_t)MIDI_DEVICE_INTERNAL){
+int channel = status & 0x0F;
+// remember the latest CC74 for every channel
+if((status & 0xF0) == MIDI_CONTROL_CHANGE && data1 == 74) {
+  CC74[channel] = data2;
+}
+// Midi thru
+if(status) {
+  PatchMidiInHandler((midi_device_t) attr_device, status, data1, data2);
+}
+// on note on, send the CC74 immediately after
+if((status & 0xF0) == MIDI_NOTE_ON && data2 != 0){
+//	LogTextMessage("NoteOn ->CtrlChange ch%2D n%3D v%3D", 1 + channel, 74, CC74[channel]);
+  PatchMidiInHandler((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + channel, 74, CC74[channel]);
+}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

@@ -18,15 +18,20 @@
 }]]></code.declaration>
       <code.krate><![CDATA[float a = arm::q_to_float(inlet_pitch & 0x001FFFFF, 21);
 float q = arm::q_to_float(__USAT(inlet_quant, 27), 27);
-if(q < 1/3.0f){
-  a += 3 * q * (s(a) - a);
-} else if(q < 2/3.0f) {
+if(q < 1/4.0f){
+  a += 4 * q * (s(a) - a);
+} else if(q < 2/4.0f) {
   a = s(a);
-  a += 3 * (q - 1/3.0f) * (s(a) - a);  
+  a += 4 * (q - 1/4.0f) * (s(a) - a);  
+} else if(q < 3/4.0f) {
+  a = s(a);
+  a = s(a);
+  a += 4 * (q - 2/4.0f) * (s(a) - a);
 } else {
   a = s(a);
   a = s(a);
-  a += 3 * (q - 2/3.0f) * (s(a) - a);
+  a = s(a);
+  a += 4 * (q - 3/4.0f) * (s(a) - a);
 }
 outlet_pitch = arm::float_to_q(a, 21) + (inlet_pitch & 0xFFE00000);]]></code.krate>
    </obj.normal>
