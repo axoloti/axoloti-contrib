@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led value u" uuid="8f9d9857-b003-4884-9c6a-351b879f20c4">
+      <license>GPL</license>
+      <inlets>
+         <int32 name="row"/>
+         <frac32.positive name="v0"/>
+         <frac32.positive name="v1"/>
+         <frac32.positive name="v2"/>
+         <frac32.positive name="v3"/>
+         <frac32.positive name="v4"/>
+         <frac32.positive name="v5"/>
+         <frac32.positive name="v6"/>
+         <frac32.positive name="v7"/>
+         <bool32.risingfalling name="mute"/>
+         <bool32.rising name="redraw"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool trig;
+bool busy;
+char text[77];
+uint8_t data [77] = {240, 71, 127, 21};
+
+int8_t fb;
+int16_t nb;
+
+uint8_t celloffset [8] = {0,9,17,26,34,43,51,60};
+int32_t in [8];
+int32_t prev [8];
+int32_t v;
+
+int i;
+bool doit;]]></code.declaration>
+      <code.init><![CDATA[#define BARS_ONE_L  0x03
+#define BARS_ONE_R  0x04
+#define BARS_TWO    0x05
+#define BARS_NONE   0x06
+	data [5] = 0;
+	data [6] = 69;
+	data [7] = 0;
+	data [76] = 247;]]></code.init>
+      <code.krate><![CDATA[if (!inlet_mute) {
+in [0] = inlet_v0;
+in [1] = inlet_v1;
+in [2] = inlet_v2;
+in [3] = inlet_v3;
+in [4] = inlet_v4;
+in [5] = inlet_v5;
+in [6] = inlet_v6;
+in [7] = inlet_v7;
+
+if (!doit){
+for (i = 0;i < 8; i ++) if (in[i] != prev[i]) {prev[i] = in [i];doit = 1;}
+}
+if (inlet_redraw && !trig) {trig = 1;doit = 1;}
+if (!inlet_redraw && !doit) trig = 0;
+
+	if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
+		doit = 0;
+		data [4] = inlet_row + 24;
+		for (i = 0;i < 8;i ++){
+			v = in[i];
+			if (v <= 0) v = 0;
+			memset(text + celloffset [i],BARS_NONE,8);
+			nb = (((v>>20)+1) << 4) >> 7;
+			fb = nb >> 1;
+			memset(text + celloffset [i],BARS_TWO,fb);
+			if(nb%2) text[fb + celloffset [i]] = BARS_ONE_L;	
+			}
+			for (i = 0 ; i < 68;i ++) data [i + 8] =  text [i] ? text [i] : 32;
+			MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);	
+}
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

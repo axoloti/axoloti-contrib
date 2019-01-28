@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="holdmap" uuid="52013462-6b4a-4468-8ccf-2a6fef3a6985">
+   <obj.normal id="holdmap" uuid="5ea4f611-87d1-4b65-8eca-eaf2ad153bae">
       <sDescription>creates a table named like the object that can be referenced in the patcher and creates a &apos;map&apos; of all notes currently held down,including velocities.
 no &apos;aftertouch&apos;.</sDescription>
       <author>robert schirmer</author>
@@ -20,8 +20,14 @@ static const uint8_t LENGTHPOW = 7;
 static const uint8_t LENGTH = 1<<7;
 static const uint8_t LENGTHMASK = (1<<7)-1;
 static const uint8_t BITS = 8;
-static const uint8_t GAIN = 20;
-int8_t array [LENGTH];]]></code.declaration>
+static const uint8_t GAIN = 0;
+uint8_t *array;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}]]></code.init>
       <code.krate><![CDATA[if ((inlet_note != pren) || (inlet_velo != prev)) {
 	array[__USAT((inlet_note),LENGTHPOW)]= inlet_velo;
 	pren = inlet_note;

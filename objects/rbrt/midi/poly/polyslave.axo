@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polyhandler slave" uuid="a83a5422-625a-4a09-a437-fe2d71fead9c">
+   <obj.normal id="polyslave" uuid="b703ad10-54d3-495a-85f4-0fb958a7bfea">
       <sDescription>works only inside a polyphonic sub-patch.
 routes note and velocity to a specific voice,
 and gives feedback to the &apos;mother-object&apos; about the current playback state of that voice.
@@ -13,13 +13,15 @@ otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
          <int32.positive name="target" description=""/>
          <int32.positive name="note"/>
          <int32.positive name="velo"/>
+         <bool32.rising name="reset"/>
+         <bool32.rising name="stop"/>
          <frac32.positive name="envstate"/>
-         <bool32.rising name="stop" description="stops a playing note"/>
       </inlets>
       <outlets>
          <int32.positive name="note"/>
-         <int32.positive name="velo"/>
+         <int32.positive name="velon"/>
          <bool32 name="gate"/>
+         <bool32.pulse name="reset"/>
       </outlets>
       <displays/>
       <params/>
@@ -29,7 +31,6 @@ otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
       <code.declaration><![CDATA[uint8_t pren;
 uint8_t prev;
 bool gate;
-uint8_t state;
 uint8_t index;
 bool stop;
 bool trigon;
@@ -37,33 +38,32 @@ bool trigoff;]]></code.declaration>
       <code.init><![CDATA[index = parent->polyIndex;
 pren = 0;
 prev = 0;]]></code.init>
-      <code.krate><![CDATA[trigon = 0;
+      <code.krate><![CDATA[outlet_reset = 0;
+trigon = 0;
 trigoff = 0;
 
 if (inlet_target == index) {
-	if ((inlet_note != pren) || (inlet_velo != prev)) {
+	if (inlet_reset) outlet_reset = 1;
+	if ((inlet_note != pren) || (inlet_velo != prev)){
 	pren = inlet_note;
 	prev = inlet_velo;
-	if (inlet_velo) trigon = 1;
-	else  trigoff = 1;
+	if (prev) {trigon = 1;outlet_velon = prev;}
+	else trigoff = 1;
 	}
 }
-gate = bool (prev);
-if (inlet_stop && (!stop)) {
-	gate = 0;
-	stop = 1;
-}
+
+if (trigon && !gate) gate = 1;
+if (trigoff && gate) gate = 0;
+if (inlet_stop && !stop) gate = 0;
 if (!inlet_stop) stop = 0;
 
 if (gate) attr_polyhandler.array [index] = pren + 1;
 else attr_polyhandler.array [index] = 0;
 
-if (inlet_envstate > 0) attr_polyhandler.array [index + attr_polyhandler.LENGTH] = pren + 1;
-else attr_polyhandler.array [index + attr_polyhandler.LENGTH] = 0;
+if (inlet_envstate) attr_polyhandler.array [index + attr_polyhandler.POLY] = pren + 1;
+else attr_polyhandler.array [index + attr_polyhandler.POLY] = 0;
 
-
-outlet_note = pren;
-outlet_velo = prev;
-outlet_gate = gate;]]></code.krate>
+outlet_gate = gate;
+outlet_note = pren;]]></code.krate>
    </obj.normal>
 </objdefs>

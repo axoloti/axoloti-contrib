@@ -1,0 +1,100 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="enc 1 to 8 u table multipad" uuid="8eaf8534-163e-4991-b31c-a8488b30b7ae">
+      <sDescription>Receives Midi Continuous Controller messages from any CC number and channel.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset"/>
+         <bool32 name="fine"/>
+         <bool32 name="copyToAll"/>
+         <bool32 name="holdOnly"/>
+         <bool32 name="excludeSelected"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="pads" MinValue="1" MaxValue="64" DefaultValue="64"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </CEntries>
+         </combo>
+         <objref name="holdmap"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t vel;
+uint32_t offset;
+int32_t ntrig;
+int inc;
+int32_t op;
+uint32_t fine;
+uint32_t adr;
+uint8_t enc;
+uint32_t vindex;
+uint32_t pos;
+
+// clamp the value to the correct range
+int32_t vrange (int32_t value,int32_t low,int32_t high)
+{
+	int result;
+	result = value;
+	if (value >= (high))  result = high -1;
+	if (value <=  (low))  result = low  +1;
+	return result;
+}]]></code.declaration>
+      <code.init><![CDATA[vel = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if (attr_table.BITS == 32) {op = 1 <<27;fine = 32 << 12;}
+if (attr_table.BITS == 16) {op = 1<<15;fine = 16 << 2;}
+if (attr_table.BITS == 8)  {op = 1<<7;fine = 1;}
+
+if (ntrig) {
+	if (!inlet_fine) inc = (vel << (21 - attr_table.GAIN));
+	else inc = (vel > 0) ?  fine  : (fine * -1);
+	vindex  = inlet_offset + enc;
+		if (inlet_copyToAll){
+ 		offset = vindex - ((vindex / attr_blocksize) * attr_blocksize);
+ 		int i;
+ 		for(i=0;i<attr_pads;i +=1){ 
+ 			pos = (i * attr_blocksize) + offset;
+ 			if (pos != vindex){
+				if (inlet_holdOnly) {
+					if (attr_holdmap.array [i]) attr_table.array [pos]=  vrange (attr_table.array [pos] + inc,0,op);
+					}
+				else attr_table.array [pos] = vrange (attr_table.array [pos] + inc,0,op);
+ 				}
+ 			}
+		}
+if (!inlet_excludeSelected) attr_table.array[vindex] = vrange (attr_table.array [vindex] + inc,0,op);
+	}
+ntrig = 0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
+
+if ((data1 >= 71 ) && (data1 <= 78)){
+	if (data2 & 0x40) vel =  (128 - data2) * -1;
+     else vel = data2;
+  enc = data1  - 71;
+  ntrig = 1;
+}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

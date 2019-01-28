@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led text" uuid="034910b4-dd7b-4322-844d-89c5f6204f62">
+      <license>GPL</license>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="row"/>
+         <charptr32 name="text0"/>
+         <charptr32 name="text1"/>
+         <charptr32 name="text2"/>
+         <charptr32 name="text3"/>
+         <charptr32 name="text4"/>
+         <charptr32 name="text5"/>
+         <charptr32 name="text6"/>
+         <charptr32 name="text7"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool trig;
+char text[68];
+uint8_t data [77] = {240, 71, 127, 21};
+bool doit;
+int i;]]></code.declaration>
+      <code.init><![CDATA[data [5] = 0;
+	data [6] = 69;
+	data [7] = 0;
+	data [76] = 247;]]></code.init>
+      <code.krate><![CDATA[if (inlet_trig && !trig) {trig = 1;doit = 1;}
+if (!inlet_trig && !doit) trig = 0;
+				
+		if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
+		doit = 0;
+		data [4] = inlet_row + 24;
+		for (i = 0 ; i < 68;i ++) text [i] = 32;
+		strcpy(&text[0],inlet_text0);
+		strcpy(&text[9],inlet_text1);
+		strcpy(&text[17],inlet_text2);
+		strcpy(&text[26],inlet_text3);
+		strcpy(&text[34],inlet_text4);
+		strcpy(&text[43],inlet_text5);
+		strcpy(&text[51],inlet_text6);
+		strcpy(&text[60],inlet_text7);	
+		for (i = 0 ; i < 68;i ++) data [i + 8] =  text [i] ? text [i] : 32 ;
+		MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);
+		}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="midimux 3" uuid="922fd3e8-cd04-4110-bec0-406547cdf8b1">
+   <obj.normal id="midimux 3" uuid="1807bc22-1ee9-4634-add9-434eacf3aa90">
       <sDescription>collects 3 midi-streams into one.
 each stream can be muted.
 buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream or muted or only note-ons.</sDescription>
@@ -28,61 +28,73 @@ buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream o
          <bool32.tgl name="muteNoteOnOnly3"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[uint8_t pren1;
-uint8_t prev1;
-uint8_t pren2;
-uint8_t prev2;
-uint8_t pren3;
-uint8_t prev3;
-uint8_t note;
-uint8_t velo;]]></code.declaration>
-      <code.krate><![CDATA[if ((inlet_note1 != pren1) || (inlet_velo1 != prev1)){
-	if (!inlet_mute1) {
-	note = inlet_note1;
-	pren1 = inlet_note1;
-	velo = inlet_velo1;
-	prev1 = inlet_velo1;
+      <code.declaration><![CDATA[uint8_t nin [3];
+uint8_t vin [3];
+
+uint8_t pren [3];
+uint8_t prev [3];
+
+uint8_t nstack [16] = {0};
+uint8_t vstack [16] = {0};
+int8_t stacklength;
+uint8_t thin;
+
+uint8_t noteout;
+uint8_t veloout;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_mute1) {
+	nin [0] = inlet_note1;
+	vin [0] = inlet_velo1;
 	}
 	else if ((!inlet_velo1 ) && param_muteNoteOnOnly1) {
-			note = inlet_note1;
-	 		pren1 = inlet_note1;
-			velo = inlet_velo1;
-			prev1 = inlet_velo1;	
+			nin [0] = inlet_note1;
+			vin [0] = 0;
 		}
+
+if (!inlet_mute2) {
+	nin [1] = inlet_note2;
+	vin [1] = inlet_velo2;
 	}
-if ((inlet_note2 != pren2) || (inlet_velo2 != prev2)){
-	if (!inlet_mute2) {
-	note = inlet_note2;
-	pren2 = inlet_note2;
-	velo = inlet_velo2;
-	prev2 = inlet_velo2;
-	}
-	else if ((!inlet_velo2)&& param_muteNoteOnOnly2) {
-			note = inlet_note2;
-	 		pren2 = inlet_note2;
-			velo = inlet_velo2;
-			prev2 = inlet_velo2;	
+	else if ((!inlet_velo1 ) && param_muteNoteOnOnly2) {
+			nin [1] = inlet_note2;
+			vin [1] = 0;
 		}
 		
+if (!inlet_mute3) {
+	nin [2] = inlet_note3;
+	vin [2] = inlet_velo3;
 	}
-
-if ((inlet_note3 != pren3) || (inlet_velo3 != prev3)){
-	if (!inlet_mute3) {
-	note = inlet_note3;
-	pren3 = inlet_note3;
-	velo = inlet_velo3;
-	prev3 = inlet_velo3;
-	}
-	else if ((!inlet_velo3)&& param_muteNoteOnOnly3) {
-			note = inlet_note3;
-	 		pren3 = inlet_note3;
-			velo = inlet_velo3;
-			prev3 = inlet_velo3;	
+	else if ((!inlet_velo3 ) && param_muteNoteOnOnly3) {
+			nin [2] = inlet_note3;
+			vin [2] = 0;
 		}
-		
-	}
 
-outlet_note= note;
-outlet_velo = velo;]]></code.krate>
+int i;
+for (i = 0;i < 3;i ++) {
+if ((nin [i] != pren [i]) || (vin [i] != prev [i])) {
+stacklength ++;
+nstack [stacklength] = nin [i];
+vstack [stacklength] = vin [i];
+pren [i] = nin [i];
+prev [i] = vin [i];	
+}
+}
+
+if (thin == 3) {
+  thin = 0;
+	if (stacklength) {
+		noteout = nstack [1];
+		veloout = vstack [1];
+		int ii;
+		for (ii = 0;ii < stacklength;ii ++){
+			nstack [ii] = nstack [ii+1];
+			vstack [ii] = vstack [ii+1];		
+		}
+	stacklength --;
+	}
+}
+else thin ++;
+
+	outlet_note = noteout;
+	outlet_velo = veloout;]]></code.krate>
    </obj.normal>
 </objdefs>

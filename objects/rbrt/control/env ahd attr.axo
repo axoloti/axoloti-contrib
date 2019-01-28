@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="env ahd attr" uuid="05f33b84-fcdb-424a-891a-d986ff01fa72">
+   <obj.normal id="env ahd attr" uuid="6f52456d-ed77-4641-a18a-7e8417680476">
       <sDescription>mod of attack/hold/decay envelope, linear ramps.
 attack/decay times can be scaled with the attributes &apos;a&apos; and &apos;d&apos;.
 &apos;state&apos; reflects the envelope&apos;s state.
@@ -11,6 +11,7 @@ if &apos;attack&apos; is zero,a very short slope defined by &apos;declick&apos; 
          <bool32.risingfalling name="gate" description="trigger"/>
          <frac32.positive name="a"/>
          <frac32.positive name="d"/>
+         <bool32.rising name="reset"/>
       </inlets>
       <outlets>
          <frac32.positive name="env" description="envelope output"/>
@@ -36,7 +37,8 @@ else {
   val -= t>>attr_dscale;
 }
 val = __USAT(val,27);
+if (inlet_reset) val = 0;
 outlet_env = val;
-outlet_state = val;]]></code.krate>
+outlet_state = bool (val);]]></code.krate>
    </obj.normal>
 </objdefs>

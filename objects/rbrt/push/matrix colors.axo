@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="matrix colors" uuid="0765ae89-85fb-4793-82f5-f24f37681d67">
+      <license>GPL</license>
+      <inlets>
+         <int32.positive name="color"/>
+         <int32.positive name="brightness"/>
+      </inlets>
+      <outlets>
+         <int32 name="color"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="colors">
+            <MenuEntries>
+               <string>0-black</string>
+               <string>1-white</string>
+               <string>2-red</string>
+               <string>3-amber</string>
+               <string>4-yellow</string>
+               <string>5-lime</string>
+               <string>6-green</string>
+               <string>7-spring</string>
+               <string>8-turquoise</string>
+               <string>9-cyan</string>
+               <string>10-sky</string>
+               <string>11-ocean</string>
+               <string>12-blue</string>
+               <string>13-orchid</string>
+               <string>14-magenta</string>
+               <string>15-pink </string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>5</string>
+               <string>9</string>
+               <string>13</string>
+               <string>17</string>
+               <string>21</string>
+               <string>25</string>
+               <string>29</string>
+               <string>33</string>
+               <string>37</string>
+               <string>41</string>
+               <string>45</string>
+               <string>49</string>
+               <string>53</string>
+               <string>57</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t map [16] = {0,1,5,9,13,17,21,25,29,33,37,41,45,49,53,57};
+uint8_t brightness;
+uint8_t color;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_color){
+if (inlet_color > 1) brightness = (2-(inlet_brightness%3));
+else  brightness = inlet_brightness%3;
+}
+else brightness = 0;
+
+outlet_color = (map [inlet_color%16] + attr_colors) + brightness;]]></code.krate>
+   </obj.normal>
+</objdefs>
