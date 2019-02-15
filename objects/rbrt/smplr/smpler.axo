@@ -1,0 +1,136 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smpler" uuid="68eaee4b-cd61-475d-a95e-dc8608e92c23">
+      <sDescription>&apos;arm&apos; will arm the recorder,
+&apos;rec&apos; will start recording to the selected slot or, when already recording,start another recording in a selected slot.
+when &apos;arm&apos; is 0 again,recording will stop,and the recorded slots can be played back.
+you cannot record into a slot that already contains sample data.
+if already recording,recording will continue in the slot you were recording to before.
+sample start-and endpoints can be accessed &apos;from the outside&apos; as a table named as the recorder-object.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>brec.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="wave" description="audio in"/>
+         <int32.positive name="slot" description="select a slot to record into (0 - 127)"/>
+         <bool32.risingfalling name="arm"/>
+         <bool32.rising name="rec" description="a pulse will start a recording a sample in the selected slot if &apos;arm&apos; is 1 and the selected slot doesn&apos;t already contain a sample"/>
+         <int32.positive name="playmode"/>
+         <frac32 name="Aux"/>
+         <bool32.risingfalling name="DISABLE"/>
+         <bool32.rising name="clear"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="recstart" description="issues a pulse when a new slot is recorded"/>
+         <bool32 name="recstate" description="recording status"/>
+         <bool32 name="fadestate"/>
+         <int32.positive name="recslot"/>
+         <frac32.positive name="remain" description="remaining recording-time"/>
+         <bool32 name="slotFull" description="&apos;1&apos; if a slot already contains a sample"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.kdecaytime.exp name="attack">
+            <DefaultValue v="-64.0"/>
+         </frac32.s.map.kdecaytime.exp>
+         <frac32.s.map.kdecaytime.exp name="release">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map.kdecaytime.exp>
+      </params>
+      <attribs>
+         <objref name="wave" description="table to record to "/>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+bool recstate;
+bool fadetrig;
+bool rtrig;
+uint32_t fadepos;
+uint32_t recstart;
+uint32_t recend;
+uint32_t rec_max;
+uint8_t shift;
+int32_t env;
+
+uint8_t mslot;
+uint8_t preslot;
+uint8_t recslot;
+
+static const uint8_t LENGTHPOW = 9;
+static const uint16_t LENGTH = 1<<9;
+static const uint16_t LENGTHMASK = (1<<9)-1;
+static const uint8_t BITS = 32;
+static const uint8_t GAIN = 0;
+uint32_t array [LENGTH];
+
+
+bool full;
+bool rectrig;
+uint32_t &recpos = array [511];]]></code.declaration>
+      <code.init><![CDATA[rec_max = attr_wave.LENGTH ;
+shift =     (27-attr_wave.LENGTHPOW);
+{
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[outlet_recstart = 0;
+
+mslot = (inlet_slot % 126);
+full = array [(mslot << 2) + 2];
+
+	if (inlet_arm && !inlet_DISABLE){
+			if (!full && (inlet_rec && !rectrig)) {
+				rectrig = 1;
+				recslot = mslot;
+				if (rec) array [(preslot << 2) + 1] = recpos;
+				rec = 1;
+				recstate = 1;
+				outlet_recstart = 1;
+				fadetrig = 0;
+				recstart = recpos;
+				array [recslot << 2] = recpos; 	
+				array [(recslot << 2)+2]  =  (inlet_playmode) ? inlet_playmode : 1;		
+	 			array [(recslot << 2)+3]  = __SSAT(inlet_Aux,28);
+				preslot = recslot;			      
+			 }		
+	}
+
+if (!inlet_rec) rectrig = 0;
+
+if (!inlet_arm && rec)  {
+	rec = 0;
+	array [(recslot << 2) + 1] = recpos;
+	}	
+//fades
+   if (rec) env = (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
+   else{ env = ___SMMUL(env,param_release)<<1;
+   if (!fadetrig) {fadetrig = 1;recend = recpos;fadepos = recstart;}
+   }
+   recstate = env;
+
+    // clear
+if (inlet_clear && !rtrig) {
+	rtrig = 1;
+ int i;
+ for(i=0;i<LENGTH;i++) array[i]=0;
+ } 
+if (!inlet_clear) rtrig = 0;
+
+  	outlet_slotFull = full;
+  	outlet_remain = (rec_max - recpos )<< shift;
+  	outlet_recstate = rec;
+  	outlet_fadestate = recstate;
+  	outlet_recslot = recslot;]]></code.krate>
+      <code.srate><![CDATA[//record   
+
+if (recstate) {
+     if (rec) {
+     	attr_wave.array[recpos] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_wave.GAIN;
+     	if (recpos < rec_max) recpos ++;
+     	else recpos = recstart;
+     	}
+     else {attr_wave.array[fadepos] =(__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_wave.array [fadepos] << attr_wave.GAIN))>>attr_wave.GAIN;
+     fadepos ++;
+     if (fadepos >= recend) fadepos = recstart;
+              }
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

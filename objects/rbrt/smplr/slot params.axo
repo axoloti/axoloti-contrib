@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slot params" uuid="bc46c6e2-44c9-42d5-9f5c-e9d7d9066d66">
+      <sDescription>translates sample start-and end information created by &apos;sb rec&apos; -objects
+from samples into fraction of a table,to be used by &apos;ldrive&apos; - objects</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>brec.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="offset" description="sample start in fraction of the table"/>
+         <frac32.positive name="range" description="sample length in fraction of the table"/>
+         <int32.positive name="playmode"/>
+         <frac32 name="Aux"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+         <objref name="wave"/>
+      </attribs>
+      <code.declaration><![CDATA[bool full;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_wave.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[outlet_offset  = attr_smplr.array [inlet_slot << 2] << shift;
+outlet_range  = (attr_smplr.array [(inlet_slot << 2) + 1] - attr_smplr.array [inlet_slot << 2]) << shift;
+outlet_playmode = attr_smplr.array [(inlet_slot << 2 )+ 2] ;
+outlet_Aux = attr_smplr.array [(inlet_slot << 2 )+ 3] ;]]></code.krate>
+   </obj.normal>
+</objdefs>

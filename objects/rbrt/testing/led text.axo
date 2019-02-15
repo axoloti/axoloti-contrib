@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led text 8 cells" uuid="14bff2c0-c883-4edd-aeb9-7f36403ceee2">
+   <obj.normal id="led text" uuid="8d484e7a-86f6-4915-8192-262a7dccf436">
       <license>GPL</license>
       <inlets>
          <bool32 name="trig"/>
@@ -20,29 +20,28 @@
       <code.declaration><![CDATA[bool trig;
 char text[68];
 uint8_t data [77] = {240, 71, 127, 21};
-bool doit;
-int i;]]></code.declaration>
+bool doit;]]></code.declaration>
       <code.init><![CDATA[data [5] = 0;
 	data [6] = 69;
 	data [7] = 0;
 	data [76] = 247;]]></code.init>
       <code.krate><![CDATA[if (inlet_trig && !trig) {trig = 1;doit = 1;}
-if (!inlet_trig && !doit) trig = 0;
+if (!inlet_trig) trig = 0;
 				
 		if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
-		doit = 0;
 		data [4] = inlet_row + 24;
-		for (i = 0 ; i < 68;i ++) text [i] = 32;
-		strcpy(&text[0],inlet_text0);
-		strcpy(&text[9],inlet_text1);
-		strcpy(&text[17],inlet_text2);
-		strcpy(&text[26],inlet_text3);
-		strcpy(&text[34],inlet_text4);
-		strcpy(&text[43],inlet_text5);
-		strcpy(&text[51],inlet_text6);
-		strcpy(&text[60],inlet_text7);	
+		int i;
+		for (i = 0;i < 8;i ++) text [i] = inlet_text0[i];
+		for (i = 0;i < 8;i ++) text [i+9] = inlet_text1[i];
+		for (i = 0;i < 8;i ++) text [i+17] = inlet_text2[i];
+		for (i = 0;i < 8;i ++) text [i+26] = inlet_text3[i];
+		for (i = 0;i < 8;i ++) text [i+34] = inlet_text4[i];
+		for (i = 0;i < 8;i ++) text [i+43] = inlet_text5[i];
+		for (i = 0;i < 8;i ++) text [i+51] = inlet_text6[i];
+		for (i = 0;i < 8;i ++) text [i+60] = inlet_text7[i];
 		for (i = 0 ; i < 68;i ++) data [i + 8] =  text [i] ? text [i] : 32 ;
 		MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);
+		doit = 0;
 		}]]></code.krate>
    </obj.normal>
 </objdefs>

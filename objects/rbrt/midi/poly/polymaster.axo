@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polymaster" uuid="e3ebc37b-3ec7-45fc-b75a-82416388ceb1">
+   <obj.normal id="polymaster" uuid="a7b898dd-4929-4bd9-b973-8e9c509baa18">
       <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;
 unlike a &apos;normal&apos; polyphonic subpatch, starting a note that is already playing will re-trigger that note,instead of playing that note with another voice.
 if &apos;kill&apos; is enabled,notes that are on release will be stopped.
@@ -24,11 +24,11 @@ playback mode 2 = &apos;latch&apos; , a note-on will toggle between &apos;play&a
          <int32 name="target" description="target (to polyphonic subpatch)"/>
          <int32 name="note"/>
          <int32 name="velo"/>
-         <bool32.pulse name="reset"/>
+         <bool32.pulse name="retrig"/>
       </outlets>
       <displays/>
       <params>
-         <bool32.tgl name="kill" description="kill notes on release" noLabel="true"/>
+         <bool32.tgl name="kill" description="kill notes on release"/>
          <bool32.tgl name="stopHard"/>
       </params>
       <attribs>
@@ -95,9 +95,11 @@ _velo = 0;
 for ( i = 0;i < (POLY << 1);i ++) array [i] = 0;
 stop = 0;
 start = 0;]]></code.init>
-      <code.krate><![CDATA[trig = 0;
+      <code.krate><![CDATA[top:
+doit = 0;
+trig = 0;
 trigoff = 0;
-outlet_reset = 0;
+outlet_retrig = 0;
 
 if ((inlet_note != pren) || (inlet_velo != prev)){
 	pren = inlet_note;
@@ -111,36 +113,30 @@ if ((inlet_note != pren) || (inlet_velo != prev)){
 if (trig) {
 	//retrig
 	for (i = 0;i < POLY;i ++){
-		if (array [i + POLY] == (_note + 1))	{
+		if (array [i + POLY] == (_note + 1)){
 			target = i;
-			doit = 1;
-			outlet_reset = 1;	
+			doit = 1;	
+			outlet_retrig = 1;
 			}
+		
 		}	
 	//trigger on
 	if (!doit){
-	for (i = 0;i < POLY;i ++){
-			if ((!array [i] ) && (!array [i +POLY])) {target = i; doit = 1;}
-			}			
+	for (i = 0;i < POLY;i ++) if ((!array [i]) && (!array [i +POLY])) {target = i; doit = 1;}	
 		}
 	//kill
 	if (!doit && param_kill){
-	for (i = 0;i < POLY;i ++){
-			if (!array [i] ) {target = i; doit = 1;}
-			}			
-		}
+	for (i = 0;i < POLY;i ++) if (!array [i] ) {target = i; doit = 1;}
+	}
+						
 }
 //trigger off
 if (trigoff) {
-	for (i = 0;i < POLY;i ++){
-		if (array [i] == (_note + 1)){
-			target = i;
-			doit = 1;			
-			}
-		}
+	for (i = 0;i < POLY;i ++)if (array [i] == (_note + 1)){target = i;doit = 1;}
 	}
 
 	//start/stop
+//stop
 if  (inlet_stop && (!stop)) {
 	stop = 1;
 	for (i = 0;i < POLY;i ++){
@@ -149,15 +145,15 @@ if  (inlet_stop && (!stop)) {
 			_note = inlet_stopnote;
 			_velo = 0;
 			doit = 1;
-		if (param_stopHard)	outlet_reset = 1;
+			if (param_stopHard) outlet_retrig = 1;
 		}
 	}		
 }
 	if  (!inlet_stop) stop = 0;
-
 //start
-	if  (inlet_start && (!start)) {
-		start = 1;
+if  (inlet_start && (!start)) {
+	start = 1;
+	for (i = 0;i < POLY;i ++) if (array [i] == inlet_startnote + 1) goto top;						
 	for (i = 0;i < POLY;i ++){
 		if (!array [i + POLY]) {
 			target = i;
@@ -167,15 +163,15 @@ if  (inlet_stop && (!stop)) {
 		}
 	}
 	if (!doit && param_kill){
-	for (i = 0;i < POLY;i ++){
+		for (i = 0;i < POLY;i ++){
 			if (!array [i] ) {
 				target = i;
 				doit = 1;
 				_note = inlet_startnote;
 				_velo = 127;
 				}
-			}			
-		}		
+		}
+	}						
 }
 	if  (!inlet_start) start = 0;
 	
@@ -183,7 +179,6 @@ if (doit) {
 	outlet_note = _note;
 	outlet_velo = _velo;
 	outlet_target = target;
-	doit = 0;
 }]]></code.krate>
    </obj.normal>
 </objdefs>

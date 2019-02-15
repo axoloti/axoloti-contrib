@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="enc 1 to 8 u table multipad" uuid="8eaf8534-163e-4991-b31c-a8488b30b7ae">
+   <obj.normal id="enc 1 to 8 u table multipad" uuid="5a3a3325-c82c-48f8-95b8-6b4cc79a4d15">
       <sDescription>Receives Midi Continuous Controller messages from any CC number and channel.</sDescription>
       <author>Johannes Taelman</author>
       <license>BSD</license>
@@ -8,8 +8,8 @@
          <int32.positive name="offset"/>
          <bool32 name="fine"/>
          <bool32 name="copyToAll"/>
+         <bool32 name="excludeHold"/>
          <bool32 name="holdOnly"/>
-         <bool32 name="excludeSelected"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -43,14 +43,16 @@
       </attribs>
       <code.declaration><![CDATA[int8_t vel;
 uint32_t offset;
-int32_t ntrig;
 int inc;
 int32_t op;
 uint32_t fine;
 uint32_t adr;
 uint8_t enc;
-uint32_t vindex;
+uint32_t index;
+uint32_t preindex;
+int32_t vindex;
 uint32_t pos;
+
 
 // clamp the value to the correct range
 int32_t vrange (int32_t value,int32_t low,int32_t high)
@@ -60,41 +62,57 @@ int32_t vrange (int32_t value,int32_t low,int32_t high)
 	if (value >= (high))  result = high -1;
 	if (value <=  (low))  result = low  +1;
 	return result;
-}]]></code.declaration>
-      <code.init><![CDATA[vel = 0;
-ntrig = 0;]]></code.init>
-      <code.krate><![CDATA[if (attr_table.BITS == 32) {op = 1 <<27;fine = 32 << 12;}
-if (attr_table.BITS == 16) {op = 1<<15;fine = 16 << 2;}
-if (attr_table.BITS == 8)  {op = 1<<7;fine = 1;}
+}
 
-if (ntrig) {
+uint8_t ccstack [8] = { 0};
+int8_t cvstack [8] = {0};
+int8_t stacklength;]]></code.declaration>
+      <code.init><![CDATA[vel = 0;
+stacklength = 0;
+
+if (attr_table.BITS == 32) {op = 1 <<27;fine = 32 << 12;}
+if (attr_table.BITS == 16) {op = 1<<15;fine = 16 << 2;}
+if (attr_table.BITS == 8)  {op = 1<<7;fine = 1;}]]></code.init>
+      <code.krate><![CDATA[if (stacklength) {
+		enc = ccstack [1];
+		vel = cvstack [1];
+		int i;
+		for (i = 0;i < stacklength;i ++){
+			ccstack [i] = ccstack [i+1];
+			cvstack [i] = cvstack [i+1];		
+		}
+	stacklength --;
+
 	if (!inlet_fine) inc = (vel << (21 - attr_table.GAIN));
 	else inc = (vel > 0) ?  fine  : (fine * -1);
-	vindex  = inlet_offset + enc;
-		if (inlet_copyToAll){
- 		offset = vindex - ((vindex / attr_blocksize) * attr_blocksize);
- 		int i;
- 		for(i=0;i<attr_pads;i +=1){ 
- 			pos = (i * attr_blocksize) + offset;
- 			if (pos != vindex){
-				if (inlet_holdOnly) {
-					if (attr_holdmap.array [i]) attr_table.array [pos]=  vrange (attr_table.array [pos] + inc,0,op);
-					}
-				else attr_table.array [pos] = vrange (attr_table.array [pos] + inc,0,op);
- 				}
- 			}
-		}
-if (!inlet_excludeSelected) attr_table.array[vindex] = vrange (attr_table.array [vindex] + inc,0,op);
+	index  = inlet_offset + enc;
+	if (index != preindex) {
+		vindex = attr_table.array [index];
+		preindex = index;
 	}
-ntrig = 0;]]></code.krate>
+	vindex = vrange (vindex + inc,0,op);
+	
+	if (inlet_copyToAll){
+	offset = index - ((index / attr_blocksize) * attr_blocksize);
+	int i;
+	for(i=0;i<attr_pads;i +=1){ 
+ 		if (!inlet_excludeHold || !attr_holdmap.array[i]){
+ 		pos = (i * attr_blocksize) + offset;
+			if (inlet_holdOnly) {
+				if (attr_holdmap.array [i]) attr_table.array [pos]=  vindex;
+				}
+				else attr_table.array [pos] = vindex;		
+			}
+ 		}
+	}
+	else  attr_table.array[index] = vindex;
+}]]></code.krate>
       <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
-
-if ((data1 >= 71 ) && (data1 <= 78)){
-	if (data2 & 0x40) vel =  (128 - data2) * -1;
-     else vel = data2;
-  enc = data1  - 71;
-  ntrig = 1;
-}
+	if ((data1 >= 71 ) && (data1 <= 78)){
+	stacklength ++;
+    	ccstack [stacklength] = data1  - 71;
+     cvstack [stacklength] = (data2 & 0x40)? (128 - data2) * -1:data2;
+	}
 }]]></code.midihandler>
    </obj.normal>
 </objdefs>

@@ -1,0 +1,144 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="edit+" uuid="05800637-f152-4ebb-b04c-fd1e113241e5">
+      <license>GPL</license>
+      <inlets>
+         <int32.positive name="slot"/>
+         <bool32.rising name="trig"/>
+         <bool32.risingfalling name="copy"/>
+         <bool32.risingfalling name="move"/>
+         <bool32.risingfalling name="delete"/>
+         <bool32.rising name="defrag"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="delete"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+         <objref name="wave"/>
+         <objref name="params"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool ctrig;
+bool dtrig;
+bool cpytrig;
+bool cpytemptrig;
+bool del;
+
+
+bool move;
+
+bool mtrig;
+uint8_t mslot;
+uint8_t srcslot;
+
+bool deletetrig;
+bool copytrig;
+
+uint32_t sstart;
+uint32_t send;
+uint32_t slength;
+
+uint32_t slottemp [4];
+int32_t paramtemp [1 << attr_blocksize];]]></code.declaration>
+      <code.krate><![CDATA[mslot = inlet_slot % 126;
+outlet_delete = 0;
+
+//delete
+if (inlet_delete && inlet_trig && !dtrig) {
+attr_smplr.array[(mslot << 2) + 2] = 0;	
+dtrig = 1;
+outlet_delete = 1;
+}
+
+//compact
+if (inlet_defrag && !ctrig) {
+	ctrig = 1;
+	int i;
+	for (i = 0; i < 126;i++){		
+		send =  attr_smplr.array [(i << 2) +1];	
+		if (!attr_smplr.array [(i << 2) + 2] && send){
+		sstart = attr_smplr.array  [(i << 2)];
+		slength = (send - sstart);	
+		attr_smplr.array [i << 2] = 0;
+		attr_smplr.array [(i << 2) + 1] = 0;
+		
+ 		bool check = 0;
+ 		int ii;
+		for (ii = 0;ii < 127; ii ++) if (attr_smplr.array [(ii << 2) +1] == send) check = 1;	
+		
+			if (!check){
+				int shift_index;
+				for(shift_index=0;shift_index<508;shift_index += 4)
+				if (attr_smplr.array[shift_index] >= send) {
+					attr_smplr.array[shift_index] -= slength;
+					attr_smplr.array[shift_index + 1] -= slength;
+					}
+				
+				int move_samples;
+				for(move_samples=send;move_samples < (attr_smplr.array [511]);move_samples++) 
+				attr_wave.array [move_samples - slength] = attr_wave.array [move_samples];	
+							
+				attr_smplr.array [511] -= slength;
+			}
+		}
+	}
+}
+if (!inlet_defrag) ctrig = 0;
+
+//paste
+if (!attr_smplr.array[(mslot << 2) + 2]) {
+	if (inlet_trig && cpytemptrig && !cpytrig && (inlet_copy || move)){
+	cpytrig = 1;
+	if (move) move = 0;	
+	int i;
+	for (i = 0;i < 4 ;i ++) attr_smplr.array [(mslot << 2)+ i] = slottemp[i];
+	for (i = 0;i < (1 << attr_blocksize);i ++) attr_params.array [(mslot << attr_blocksize) + i] = paramtemp [i];
+	}
+}
+//copy	
+if (inlet_trig && !cpytemptrig && (inlet_copy || move)){
+	cpytemptrig = 1;
+	srcslot = mslot;
+	int i;
+	for (i = 0;i < 4 ;i ++ ) slottemp [i] = attr_smplr.array [(mslot << 2)+ i];
+	for (i = 0;i < (1 << attr_blocksize);i ++)paramtemp [i] = attr_params.array [(mslot << attr_blocksize) + i];
+		if (move) {
+			attr_smplr.array[(srcslot << 2) + 2] = 0;	
+			outlet_delete = 1;		
+		}
+}
+
+//move
+if (inlet_move && !mtrig){
+	mtrig = 1;
+	move = 1;	
+}
+	
+if (!inlet_copy && !inlet_move) cpytemptrig = 0;
+if (!inlet_move) {mtrig = 0;move = 0;}
+if (!inlet_trig) {cpytrig = 0;dtrig = 0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

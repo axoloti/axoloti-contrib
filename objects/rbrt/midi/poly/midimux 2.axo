@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="midimux 3" uuid="63e950a0-cc8f-4aff-852f-48966b5bf18d">
+   <obj.normal id="midimux 2" uuid="616336dc-9ac2-44cd-964a-34bf9c942c42">
       <sDescription>collects 3 midi-streams into one.
 each stream can be muted.
 buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream or muted or only note-ons.</sDescription>
@@ -15,10 +15,6 @@ buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream o
          <bool32.risingfalling name="muteOnOnly2"/>
          <int32.positive name="note2"/>
          <int32.positive name="velo2"/>
-         <bool32.risingfalling name="mute3"/>
-         <bool32.risingfalling name="muteOnOnly3"/>
-         <int32.positive name="note3"/>
-         <int32.positive name="velo3"/>
       </inlets>
       <outlets>
          <int32.positive name="note"/>
@@ -27,11 +23,11 @@ buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream o
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[uint8_t nin [3];
-uint8_t vin [3];
+      <code.declaration><![CDATA[uint8_t nin [2];
+uint8_t vin [2];
 
-uint8_t pren [3];
-uint8_t prev [3];
+uint8_t pren [2];
+uint8_t prev [2];
 
 uint8_t nstack [16] = {0};
 uint8_t vstack [16] = {0};
@@ -58,17 +54,9 @@ if (!inlet_mute2) {
 			vin [1] = 0;
 		}
 		
-if (!inlet_mute3) {
-	nin [2] = inlet_note3;
-	vin [2] = inlet_velo3;
-	}
-	else if ((!inlet_velo3 ) && inlet_muteOnOnly3) {
-			nin [2] = inlet_note3;
-			vin [2] = 0;
-		}
 
 int i;
-for (i = 0;i < 3;i ++) {
+for (i = 0;i < 2;i ++) {
 if ((nin [i] != pren [i]) || (vin [i] != prev [i])) {
 stacklength ++;
 nstack [stacklength] = nin [i];

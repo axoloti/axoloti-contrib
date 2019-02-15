@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tcopy paste" uuid="87f0cb3d-decc-44ab-9062-ae5b0652e260">
+      <license>GPL</license>
+      <inlets>
+         <int32.positive name="src"/>
+         <bool32.rising name="copy"/>
+         <int32.positive name="dst"/>
+         <bool32.rising name="paste"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="range" MinValue="1" MaxValue="127" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[bool ctrig;
+bool ptrig;
+int32_t cdata [attr_range];]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_copy && !ctrig){
+	ctrig = 1;
+	int i;
+	for (i = 0;i < attr_range;i++) cdata [i] = attr_table.array [i + inlet_src];
+}
+if (!inlet_copy) ctrig = 0;
+
+if (inlet_paste && !ptrig){
+	ptrig = 1;
+	int i;
+	for (i = 0;i < attr_range;i++) attr_table.array [i + inlet_dst] = cdata [i];
+}
+if (!inlet_paste) ptrig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

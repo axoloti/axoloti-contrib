@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polymaster latch" uuid="46dd9057-47ed-410f-9608-6f6103a42c23">
+   <obj.normal id="polymaster smplr" uuid="cadeb5e2-e718-435c-92eb-d76d42eca3b0">
       <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;
 unlike a &apos;normal&apos; polyphonic subpatch, starting a note that is already playing will re-trigger that note,instead of playing that note with another voice.
 if &apos;kill&apos; is enabled,notes that are on release will be stopped.
@@ -30,7 +30,6 @@ note-offs are ignored.
       <params>
          <bool32.tgl name="kill" description="kill notes on release"/>
          <bool32.tgl name="stopHard"/>
-         <bool32.tgl name="ignoreZeroSlots"/>
       </params>
       <attribs>
          <combo name="polyphony">
@@ -71,31 +70,8 @@ note-offs are ignored.
                <string>16</string>
             </CEntries>
          </combo>
-         <objref name="playmode"/>
+         <objref name="smplr"/>
          <spinner name="loopFlag" MinValue="1" MaxValue="5" DefaultValue="3"/>
-         <combo name="blocksize">
-            <MenuEntries>
-               <string>1</string>
-               <string>2</string>
-               <string>4</string>
-               <string>8</string>
-               <string>16</string>
-               <string>32</string>
-               <string>64</string>
-               <string>128</string>
-            </MenuEntries>
-            <CEntries>
-               <string>0</string>
-               <string>1</string>
-               <string>2</string>
-               <string>3</string>
-               <string>4</string>
-               <string>5</string>
-               <string>6</string>
-               <string>7</string>
-            </CEntries>
-         </combo>
-         <spinner name="index" MinValue="0" MaxValue="127" DefaultValue="2"/>
       </attribs>
       <code.declaration><![CDATA[int8_t _note;
 uint8_t _velo;
@@ -134,8 +110,8 @@ if ((inlet_note != pren) || (inlet_velo != prev)){
 	prev = inlet_velo;
 	_velo = inlet_velo;
 	_note = inlet_note;
-	mode = (attr_playmode.array [(_note << attr_blocksize) + attr_index] ) == attr_loopFlag;
-	if (_velo && (attr_playmode.array [(_note << attr_blocksize) + attr_index] || !param_ignoreZeroSlots))trig = 1;	
+	mode = (attr_smplr.array [(_note << 2) + 2]) == attr_loopFlag;
+	if (_velo && (attr_smplr.array [(_note << 2) + 2])) trig = 1;	
 	if (!mode && !_velo) trigoff = 1;	
 }
 

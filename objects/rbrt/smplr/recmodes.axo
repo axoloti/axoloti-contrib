@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="recmodes" uuid="91a8fd96-e874-4f87-a197-38ef4af89822">
+      <license>GPL</license>
+      <inlets>
+         <int32.positive name="slot"/>
+         <bool32.risingfalling name="loopRec"/>
+         <bool32.risingfalling name="sliceArm"/>
+         <bool32.rising name="sliceRec"/>
+      </inlets>
+      <outlets>
+         <int32 name="slot"/>
+         <bool32 name="arm"/>
+         <bool32.pulse name="rec"/>
+         <int32.positive name="playmode"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+         <spinner name="loopFlag" MinValue="1" MaxValue="10" DefaultValue="3"/>
+         <spinner name="sliceFlag" MinValue="1" MaxValue="10" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[bool srec;
+uint8_t slot;
+bool rec;
+bool lrec;]]></code.declaration>
+      <code.krate><![CDATA[outlet_rec = 0;
+
+if (inlet_loopRec && !lrec){
+	lrec = 1;
+	outlet_playmode = attr_loopFlag;
+	if (attr_smplr.array[(inlet_slot << 2) +2]){
+	slot = 255;
+	int i;
+	for (i = 0;i < 126;i++) if (!attr_smplr.array[(i << 2) +2]){slot = i; break;}
+	}
+	else slot = inlet_slot;
+	if (slot != 255) {
+		rec = 1;
+		outlet_rec = 1;	
+		}	
+}
+
+if (!lrec){	
+if (inlet_sliceArm && !rec) {srec = 1;rec = 1;}
+if (srec) {outlet_rec = inlet_sliceRec;slot = inlet_slot;outlet_playmode = attr_sliceFlag;}
+}
+
+if (!inlet_loopRec && lrec) {rec = 0;lrec = 0;}
+if (!inlet_sliceArm && srec) {srec = 0;rec = 0;}
+
+outlet_slot = slot;
+outlet_arm = rec;]]></code.krate>
+   </obj.normal>
+</objdefs>
