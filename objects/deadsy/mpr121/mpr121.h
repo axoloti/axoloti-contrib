@@ -118,7 +118,7 @@ struct mpr121_state {
 // Allocate a 32-bit aligned buffer of size bytes from sram2.
 // The memory pool is big enough for 4 concurrent devices.
 static void *mpr121_malloc(size_t size) {
-	static uint8_t pool[32] __attribute__ ((section(".sram2")));
+	static uint8_t pool[32] __attribute__ ((section(".sram2.mpr121")));
 	static uint32_t free = 0;
 	void *ptr = NULL;
 	// round up to 32-bit alignment

@@ -58,7 +58,7 @@ struct ttp229_state {
 // Note: this isn't strictly necessary since we only support a
 // single device on the I2C1 bus, but in the future that may change.
 static void *ttp229_malloc(size_t size) {
-	static uint8_t pool[16] __attribute__ ((section(".sram2")));
+	static uint8_t pool[16] __attribute__ ((section(".sram2.ttp229")));
 	static uint32_t free = 0;
 	void *ptr = NULL;
 	// round up to 32-bit alignment
