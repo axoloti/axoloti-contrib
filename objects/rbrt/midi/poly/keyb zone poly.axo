@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="keyb zone poly" uuid="85af7415-fe69-4a3c-90cb-43dbdfca279e">
+   <obj.normal id="keyb zone poly" uuid="0bd90e4b-0047-49cc-b148-6e9e81ec5b34">
       <sDescription>useful for polyphonic midi.
 noteOn issues a pulse whenever a note-on occurs,
 note returns the note number, with &apos;noteshift&apos; added (or substracted)
@@ -32,30 +32,29 @@ uint8_t _velo;
 uint8_t pren;
 uint8_t prev;
 
-uint8_t nstack [16] = { 0};
-uint8_t vstack [16] = {0};
-int8_t stacklength;
+uint8_t nstack [8] = {0};
+uint8_t vstack [8] = {0};
+uint8_t slength;
+uint8_t sread;
+uint8_t swrite;
 
 uint8_t thin;]]></code.declaration>
-      <code.init><![CDATA[stacklength = 0;
+      <code.init><![CDATA[slength = 0;
 _note = 0;
 _velo = 0;]]></code.init>
       <code.krate><![CDATA[outlet_noteOn = 0;
 outlet_noteOff = 0;
-//thin seems to work without hanging notes at '6' which is 2 ms right
+
 if (thin == 3) {
   thin = 0;
-	if (stacklength) {
-		_note = nstack [1];
-		_velo = vstack [1];
-			if (_velo) outlet_noteOn = 1;
+	if (slength) {
+		_note = nstack [sread];
+		_velo = vstack [sread];
+		if (_velo) outlet_noteOn = 1;
 			else outlet_noteOff = 1;
-		int i;
-		for (i = 0;i < stacklength;i ++){
-			nstack [i] = nstack [i+1];
-			vstack [i] = vstack [i+1];		
-		}
-	stacklength --;
+		sread ++;
+		sread = sread %8;
+		slength --;
 	}
 }
 else thin ++;
@@ -67,9 +66,11 @@ else thin ++;
       <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + (attr_channel -1)) && (data2)) {
   if ((data1 >= attr_startNote)&&(data1 <= attr_endNote))
   {
-  	stacklength ++;
-    	nstack [stacklength] = data1 + attr_noteshift;
-     vstack [stacklength] = data2;
+    	nstack [swrite] = data1 + attr_noteshift;
+     vstack [swrite] = data2;
+     slength ++;
+  	swrite ++;
+  	swrite = swrite %8;
      count ++;   
   }
 }
@@ -77,15 +78,17 @@ if (((status == MIDI_NOTE_ON +  (attr_channel -1)) && (!data2))||(status == MIDI
 {
  if ((data1 >= attr_startNote)&&(data1 <= attr_endNote))
 {
-	stacklength ++;
-    nstack [stacklength] = data1 + attr_noteshift;
-    vstack [stacklength] = 0;
-	count --;
+    	nstack [swrite] = data1 + attr_noteshift;
+     vstack [swrite] = 0;
+     slength ++;
+    	swrite ++;
+  	swrite = swrite %8;
+if (count) count --;
     
 }
  }
 else if ((status ==  (attr_channel -1) + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
-  _velo = 0;count = 0;stacklength = 0;
+  _velo = 0;count = 0;slength = 0;
 }]]></code.midihandler>
    </obj.normal>
 </objdefs>

@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="edit+" uuid="05800637-f152-4ebb-b04c-fd1e113241e5">
+   <obj.normal id="edit+" uuid="bd72c3bb-e2ce-4d5b-94b3-d75954436ad8">
       <license>GPL</license>
       <inlets>
          <int32.positive name="slot"/>
@@ -68,7 +68,9 @@ outlet_delete = 0;
 
 //delete
 if (inlet_delete && inlet_trig && !dtrig) {
-attr_smplr.array[(mslot << 2) + 2] = 0;	
+attr_smplr.array[(mslot << 2) + 2] = 0;
+int i;
+for (i = 0;i < (1 << attr_blocksize);i++) attr_params.array [(mslot << attr_blocksize) + i] = 0;
 dtrig = 1;
 outlet_delete = 1;
 }
@@ -126,7 +128,8 @@ if (inlet_trig && !cpytemptrig && (inlet_copy || move)){
 	for (i = 0;i < 4 ;i ++ ) slottemp [i] = attr_smplr.array [(mslot << 2)+ i];
 	for (i = 0;i < (1 << attr_blocksize);i ++)paramtemp [i] = attr_params.array [(mslot << attr_blocksize) + i];
 		if (move) {
-			attr_smplr.array[(srcslot << 2) + 2] = 0;	
+			attr_smplr.array[(srcslot << 2) + 2] = 0;
+			for (i = 0;i < (1 << attr_blocksize);i++) attr_params.array [(srcslot << attr_blocksize) + i] = 0;
 			outlet_delete = 1;		
 		}
 }

@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led value u 2 bar" uuid="4c7b0463-625e-4200-ab00-adf247a07a20">
+      <license>GPL</license>
+      <inlets>
+         <frac32.positive name="in"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[char out [9];
+int32_t v;
+int32_t prev;
+int8_t fb;
+int16_t nb;]]></code.declaration>
+      <code.init><![CDATA[#define BARS_ONE_L  0x03
+#define BARS_ONE_R  0x04
+#define BARS_TWO    0x05
+#define BARS_NONE   0x06]]></code.init>
+      <code.krate><![CDATA[v = inlet_in;
+if (v != prev) {
+			if (v <= 0) v = 0;
+			prev = v;
+			memset(out,BARS_NONE,8);
+			nb = (((v>>20)+1) << 4) >> 7;
+			fb = nb >> 1;
+			memset(out,BARS_TWO,fb);
+			if(nb%2) out[fb] = BARS_ONE_L;
+}
+			outlet_out = out;]]></code.krate>
+   </obj.normal>
+</objdefs>

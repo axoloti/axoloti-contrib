@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="enc 1 to 8 u table" uuid="df67db2e-4d4a-4da4-8dd9-c6f90bbf30c5">
+   <obj.normal id="enc 1 to 8 u table" uuid="1882ef00-b293-43c2-bf87-5945a6a5df74">
       <sDescription>Receives Midi Continuous Controller messages from any CC number and channel.</sDescription>
       <author>Johannes Taelman</author>
       <license>BSD</license>
@@ -16,35 +16,44 @@
       </attribs>
       <code.declaration><![CDATA[int8_t vel;
 uint8_t offset;
-int32_t ntrig;
 int inc;
 uint8_t op;
 uint32_t fine;
-uint32_t adr;]]></code.declaration>
-      <code.init><![CDATA[vel = 0;
-ntrig = 0;]]></code.init>
+uint32_t adr;
+
+uint8_t ccstack [8] = { 0};
+int8_t cvstack [8] = {0};
+uint8_t slength;
+uint8_t sread;
+uint8_t swrite;]]></code.declaration>
+      <code.init><![CDATA[vel = 0;]]></code.init>
       <code.krate><![CDATA[if (attr_table.BITS == 32) {op = 28;fine = 32 << 12;}
 if (attr_table.BITS == 16) {op = 16;fine = 16 << 2;}
 if (attr_table.BITS == 8)  {op = 8;fine = 1;}
 
-if (ntrig) {
-	if (!inlet_fine) inc = (vel << (21 - attr_table.GAIN));
-	else inc = (vel > 0) ?  fine  : (fine * -1);
-	adr = inlet_offset + offset;
-	if (adr < attr_table.LENGTH) {
-		attr_table.array [adr] =  __SSAT ((attr_table.array [adr] + inc),op) ;
-		if (attr_table.array [adr] < 0) attr_table.array [adr] = 0;
-	}
-	}
-ntrig = 0;]]></code.krate>
-      <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
 
-if ((data1 >= 71 ) && (data1 <= 78)){
-	if (data2 & 0x40) vel =  (128 - data2) * -1;
-     else vel = data2;
-  offset = data1  - 71;
-  ntrig = 1;
-}
+if (slength) {
+		offset = ccstack [sread];
+		vel = cvstack [sread];
+		if (!inlet_fine) inc = (vel << (21 - attr_table.GAIN));
+			else inc = (vel > 0) ?  fine  : (fine * -1);
+		adr = inlet_offset + offset;
+		if (adr < attr_table.LENGTH) {
+			attr_table.array [adr] =  __SSAT ((attr_table.array [adr] + inc),op) ;
+			if (attr_table.array [adr] < 0) attr_table.array [adr] = 0;
+		}
+		slength --;
+		sread ++;
+		sread = sread %8;
+}]]></code.krate>
+      <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
+	if ((data1 >= 71 ) && (data1 <= 78)){
+    	ccstack [swrite] = data1  - 71;
+     cvstack [swrite] = (data2 & 0x40)? (128 - data2) * -1:data2;
+     slength ++;
+     swrite ++;
+     swrite = swrite %8;
+		}
 }]]></code.midihandler>
    </obj.normal>
 </objdefs>

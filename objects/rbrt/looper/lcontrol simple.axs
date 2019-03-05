@@ -11,15 +11,19 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="280" y="84">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="play" x="574" y="84">
       <params/>
       <attribs/>
    </obj>
-   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="168" y="140">
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="308" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="stop" x="28" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="phi/logic/or 4" uuid="5dc5a7c1fb7809522171638f755fead71cbe14ea" name="or_1" x="168" y="140">
       <params/>
       <attribs/>
    </obj>
@@ -65,6 +69,10 @@
       <net>
          <source obj="t2p_1" outlet="pulse"/>
          <dest obj="reset" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="stop" outlet="inlet"/>
+         <dest obj="or_1" inlet="i3"/>
       </net>
    </nets>
    <settings>

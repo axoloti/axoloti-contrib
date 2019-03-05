@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polyslave" uuid="6835ce2a-ff00-4896-963c-34a607b06e88">
+   <obj.normal id="polyslave ahd" uuid="a2cad690-3839-4045-ac0a-d871f9647126">
       <sDescription>works only inside a polyphonic sub-patch.
 routes note and velocity to a specific voice,
 and gives feedback to the &apos;mother-object&apos; about the current playback state of that voice.
@@ -11,18 +11,34 @@ otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
       <helpPatch>midi_out.axh</helpPatch>
       <inlets>
          <bool32.rising name="stop"/>
-         <frac32.positive name="envstate"/>
+         <frac32.positive name="attack"/>
+         <frac32.positive name="release"/>
       </inlets>
       <outlets>
          <int32.positive name="note"/>
          <int32.positive name="velo"/>
          <bool32 name="gate"/>
          <bool32.pulse name="retrig"/>
+         <frac32.positive name="env"/>
+         <bool32 name="state"/>
       </outlets>
       <displays/>
       <params/>
       <attribs>
          <objref name="polyhandler"/>
+         <combo name="retrigger">
+            <MenuEntries>
+               <string>on</string>
+               <string>off</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>0</string>
+            </CEntries>
+         </combo>
+         <spinner name="ascale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+         <spinner name="rscale" MinValue="0" MaxValue="8" DefaultValue="4"/>
+         <spinner name="dclick" MinValue="0" MaxValue="4" DefaultValue="2"/>
       </attribs>
       <code.declaration><![CDATA[uint8_t pren;
 uint8_t prev;
@@ -33,10 +49,12 @@ bool stop;
 bool trigon;
 bool trigoff;
 uint8_t note;
-uint8_t velo;]]></code.declaration>
+uint8_t velo;
+int32_t val;]]></code.declaration>
       <code.init><![CDATA[index = parent->polyIndex;
 pren = 0;
-prev = 0;]]></code.init>
+prev = 0;
+val = 0;]]></code.init>
       <code.krate><![CDATA[outlet_retrig = 0;
 trigon = 0;
 trigoff = 0;
@@ -50,7 +68,7 @@ velo = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index + attr_polyh
 	if (prev) {
 	trigon = 1;
 	velon = prev;
-	if (inlet_envstate) outlet_retrig = 1;
+	if (val) outlet_retrig = 1;
 	}
 	else trigoff = 1;
 	}
@@ -64,11 +82,26 @@ if (inlet_stop && !stop) {
 	attr_polyhandler.array [index] = 0;
 	}
 
-if (inlet_envstate) attr_polyhandler.array [index + attr_polyhandler.POLY] = pren + 1;
+if (gate > 0) {
+  	int32_t t;
+	MTOF(-inlet_attack,t);
+	val += (inlet_attack ) ? t>>attr_ascale : 1<<(27 - attr_dclick);
+	}
+else {
+  	int32_t t;
+  	MTOF(-inlet_release,t);
+  	val -= t>>attr_rscale;
+}
+val = __USAT(val,27);
+if (outlet_retrig && attr_retrigger) val = 0;
+
+if (val) attr_polyhandler.array [index + attr_polyhandler.POLY] = pren + 1;
 else attr_polyhandler.array [index + attr_polyhandler.POLY] = 0;
 
 outlet_gate = gate;
 outlet_note = pren;
-outlet_velo = velon;]]></code.krate>
+outlet_velo = velon;
+outlet_env = val;
+outlet_state = bool (val);]]></code.krate>
    </obj.normal>
 </objdefs>
