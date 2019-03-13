@@ -1,0 +1,241 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="xtor manager" uuid="9e8edc15-c4c2-44c1-9926-211098ec2c2c">
+      <sDescription>This object manages presets of special xtorable objects and stores them in .xtor files in the sdcard. To use it, write the name of this object as a reference in xtorable controls. The name of the files will be prefix000.xtor, where 000 is the prefix number.
+
+Preset inlet selects preset number, from 0 to 999.
+Prefix inlet selects an optional string prefix for the file names.
+Save and load are self explanatory.
+
+Params atribute selects the max number of params you plan to store. You can change it later and the preset files will still work. Also, you can leave it bigger than you need, but the smaller it is, the less memory it occupies.</sDescription>
+      <author>Oscar Abraham</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="preset"/>
+         <charptr32 name="prefix"/>
+         <bool32.rising name="save"/>
+         <bool32.rising name="load"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <int32.label name="current" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+      </params>
+      <attribs>
+         <spinner name="params" MinValue="0" MaxValue="256" DefaultValue="16"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[//#define DEBUGF LogTextMessage
+//#define DEBUGF_THREAD LogTextMessage
+#define DEBUGF(...) {}
+#define DEBUGF_THREAD(...) {}
+
+uint8_t indexArray[attr_params];
+uint32_t hashArray[attr_params];
+int32_t paramLength = 0;
+int32_t currentPreset = 0;
+
+bool saveBtn = false;
+bool loadBtn = false;
+bool saveExt = false;
+bool loadExt = false;
+uint8_t initializationStep = 0;
+
+void registerParam(int PExchIndex, const char *name){
+	if(paramLength <= attr_params){
+		indexArray[paramLength] = PExchIndex;
+		hashArray[paramLength] = CalcCRC32((uint8_t*) name, strlen(name));
+	}
+	paramLength++;
+}
+
+void prepareFileName( char *filename, int buflen, const char *prefix, int pnum){
+	int offset = 0;
+	if( prefix != NULL ){
+		strncpy( filename, prefix, buflen );
+		offset = strlen( filename );
+	}
+	if( buflen >= offset + 4 ){
+		filename[offset++] = '0' + (pnum / 100) % 10;
+		filename[offset++] = '0' + (pnum / 10) % 10;
+		filename[offset++] = '0' + pnum % 10;
+		filename[offset]   = 0;
+	}
+	strncpy( filename + offset, ".xtor", buflen - offset );
+	filename[buflen-1]   = 0;
+}
+
+int file_error( FIL *FileObject, FRESULT err, const char *filename )
+      {
+        if( err != FR_OK )
+          report_fatfs_error( err, filename );
+        if( FileObject != NULL )
+          f_close( FileObject );
+        return -1;
+      }
+
+int save(const char *prefix, int pnum){
+	FRESULT       err;
+     unsigned int  bytes_written;
+     uint32_t pair[2];
+     FIL           FileObject;
+     char          filename[64];
+
+	prepareFileName(filename, 64, prefix, pnum);
+	
+     err = f_open( &FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS );
+     if( err != FR_OK ){
+     	return file_error( &FileObject, err, filename );
+     }
+
+     err = f_write( &FileObject, (uint8_t *) "XTO1", 4, &bytes_written );
+     if( err != FR_OK ){
+     	return file_error( &FileObject, err, filename );
+     }
+
+     err = f_write( &FileObject, (uint8_t *) &paramLength, sizeof(int32_t), &bytes_written );
+	if( err != FR_OK ){
+     	return file_error( &FileObject, err, filename );
+     }
+
+     for(int i = 0; i < paramLength; i++){
+     	pair[0] = parent->PExch[indexArray[i]].value;
+     	pair[1] = hashArray[i];
+     	err = f_write( &FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_written );
+     	if( err != FR_OK ){
+	     	return file_error( &FileObject, err, filename );
+	     }
+     }
+
+     err = f_close( &FileObject );
+     if( err != FR_OK ){
+     	return file_error( &FileObject, err, filename );
+     }
+     return 1;
+}
+
+int load(const char *prefix, int pnum){
+	
+	FRESULT       err;
+     FIL           FileObject;
+     unsigned int  bytes_read;
+     int           n_params;
+     char          filename[64];
+
+	prepareFileName(filename, 64, prefix, pnum);
+
+	err = f_open( &FileObject, filename, FA_READ | FA_OPEN_EXISTING );
+	
+	if( err != FR_OK ){
+		return file_error( &FileObject, err, filename );
+	}
+	
+	f_lseek( &FileObject, 4 );
+	err = f_read( &FileObject, (uint8_t *) &n_params, sizeof( int32_t ), &bytes_read );
+	if( err != FR_OK ){
+		return file_error( &FileObject, err, filename );
+	}
+	
+	for( int param_i = 0; param_i < n_params; param_i++ ){
+		uint32_t  pair[2];
+		err = f_read( &FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_read );
+		if( err != FR_OK ){
+			return file_error( &FileObject, err, filename );
+		}
+		for(int i = 0; i < paramLength; i++){
+			if(pair[1] == hashArray[i]){ //if names coincide
+				PExParameterChange(&parent->PExch[indexArray[i]],pair[0],0xFFFD);
+				continue;
+			}
+		}
+	}
+
+	err = f_close( &FileObject );
+	if( err != FR_OK ){
+		file_error( &FileObject, err, filename );
+		return -1;
+	}
+
+	return 1;
+	
+}
+
+WORKING_AREA(waThreadX, 1024);
+Thread      *Thd;
+const char  *th_prefix;
+int         th_preset_no;
+int         th_mode;
+
+msg_t ThreadX2(){
+	if( th_mode == 0 ){
+		load( th_prefix, th_preset_no );
+		DEBUGF_THREAD( "xtor load done" );
+	}
+	else{
+		save( th_prefix, th_preset_no );
+		DEBUGF_THREAD( "xtor save done" );
+	}
+}
+
+static msg_t ThreadX(void *arg){
+	((attr_parent *)arg)->ThreadX2();
+}
+
+void th_start( int mode, const char *prefix, int preset_no ){
+	if( Thd != NULL ){
+		chThdWait( Thd );
+	}
+	th_prefix    = prefix;
+	th_preset_no = preset_no;
+	th_mode      = mode;
+	Thd = chThdCreateStatic(  waThreadX,
+                               sizeof(waThreadX),
+                               NORMALPRIO,
+                               ThreadX,
+                               (void *)this
+                             );
+	DEBUGF_THREAD("Thread started..." );
+}
+
+int th_preset_load( const char *prefix, int preset_no ){
+	DEBUGF_THREAD("Load, waiting..." );
+	th_start( 0, prefix, preset_no );
+	return FR_OK;
+}
+
+int th_preset_save( const char *prefix, int preset_no ){
+	DEBUGF_THREAD("Save, waiting..." );
+	th_start( 1, prefix, preset_no );
+	return FR_OK;
+}]]></code.declaration>
+      <code.dispose><![CDATA[if( Thd != NULL ){
+	chThdTerminate(Thd);
+	chThdWait(Thd);
+}]]></code.dispose>
+      <code.krate><![CDATA[if(initializationStep <= 0){
+	//give time for the params to be registered
+	initializationStep++;
+}
+else{
+	if((param_save && !saveBtn) || (inlet_save && !saveExt)){
+		currentPreset = inlet_preset;
+		th_preset_save(inlet_prefix, currentPreset);
+	}
+	
+	if(param_load && !loadBtn || (inlet_load && !loadExt)){
+		currentPreset = inlet_preset;
+		th_preset_load(inlet_prefix, currentPreset);
+	}
+}
+
+saveBtn = param_save;
+loadBtn = param_load;
+saveExt = inlet_save;
+loadExt =inlet_load;
+disp_current=currentPreset;]]></code.krate>
+   </obj.normal>
+</objdefs>
