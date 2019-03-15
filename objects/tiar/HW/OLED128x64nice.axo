@@ -22,10 +22,12 @@
             <MenuEntries>
                <string>SSD1306</string>
                <string>SH1106</string>
+               <string>SSD1309</string>
             </MenuEntries>
             <CEntries>
                <string>1306</string>
                <string>1106</string>
+               <string>1309</string>
             </CEntries>
          </combo>
          <combo name="I2CADDR">
@@ -399,27 +401,60 @@ void sendPage(int page){
 void init(){
   i2cAcquireBus(&I2CD1);
   // Init sequence
-  cmd(DISPLAYOFF);
-  // 2 byte cmd,
-  //  low nibble A[3:0]+1 = div ratio, 
-  //  high nibble A[7:4] freq  reset 1000b 
-  cmd(SETDISPLAYCLOCKDIV, 0x80);
-  cmd(SETMULTIPLEX, LCDHEIGHT - 1);
-  cmd(SETDISPLAYOFFSET, attr_type == 1306 ? 0x00 : 0x01);
-  cmd(SETSTARTLINE_0);
-  cmd(CHARGEPUMP, 0x14);
-  cmd(MEMORYMODE, 0x00); //horizontal
-  cmd(SEGREMAP | 0x1);
-  cmd(COMSCANDEC);
-// 128 x 64
-  cmd(SETCOMPINS, 0x12);
-  cmd(SETCONTRAST, 0xCF);
-  cmd(SETPRECHARGE, 0xF1);
-  cmd(SETVCOMDETECT, 0x40);
-  cmd(DISPLAYALLON_RESUME);
-  cmd(NORMALDISPLAY);
-  cmd(DEACTIVATE_SCROLL);
-  cmd(DISPLAYON);
+  if(attr_type == 1106 || attr_type == 1306){
+    cmd(DISPLAYOFF);
+    // 2 byte cmd,
+    //  low nibble A[3:0]+1 = div ratio, 
+    //  high nibble A[7:4] freq  reset 1000b 
+    cmd(SETDISPLAYCLOCKDIV, 0x80);
+    cmd(SETMULTIPLEX, LCDHEIGHT - 1);
+    cmd(SETDISPLAYOFFSET, attr_type == 1306 ? 0x00 : 0x01);
+    cmd(SETSTARTLINE_0);
+    cmd(CHARGEPUMP, 0x14);
+    cmd(MEMORYMODE, 0x00); //horizontal
+    cmd(SEGREMAP | 0x1);
+    cmd(COMSCANDEC);
+  // 128 x 64
+    cmd(SETCOMPINS, 0x12);
+    cmd(SETCONTRAST, 0xCF);
+    cmd(SETPRECHARGE, 0xF1);
+    cmd(SETVCOMDETECT, 0x40);
+    cmd(DISPLAYALLON_RESUME);
+    cmd(NORMALDISPLAY);
+    cmd(DEACTIVATE_SCROLL);
+    cmd(DISPLAYON);
+  } else {
+    	                
+    cmd(DISPLAYOFF);
+	    cmd(SETDISPLAYCLOCKDIV, 0x0a0);// vs 80
+	    cmd(SETMULTIPLEX, 0x03f);	 //vs not in comment 
+	    cmd(SETSTARTLINE_0);		       //idem
+	    cmd(MEMORYMODE, 0x00);        //02 vs00		/* page addressing mode vs line addressing mode*/
+	      
+	    cmd(SEGREMAP | 0x1);           //idem
+	    cmd(COMSCANDEC);               //idem	
+	      // Flipmode
+	      // U8X8_C(0x0a0),				/* segment remap a0/a1*/
+	      // U8X8_C(0x0c0),				/* c0: scan dir normal, c8: reverse */
+	      
+	    cmd(SETCOMPINS, 0x012);   //idem		/* com pin HW config, sequential com pin config (bit 4), disable left/right remap (bit 5) */
+	
+	    cmd(SETCONTRAST, 0x06f);    //vs 0xCF 		/* [2] set contrast control */
+	    cmd(SETPRECHARGE, 0x0d3);   //vs 0xF1 		/* [2] pre-charge period 0x022/f1*/
+	    cmd(SETVCOMDETECT, 0x020);  //vs 0x40 		/* vcomh deselect level */  
+	      // if vcomh is 0, then this will give the biggest range for contrast control issue #98
+	      // restored the old values for the noname constructor, because vcomh=0 will not work for all OLEDs, #116
+	      
+	    cmd(DEACTIVATE_SCROLL);      //idem				/* Deactivate scroll */ 
+    cmd(DISPLAYALLON_RESUME);    //idem				/* output ram to display */
+    cmd(NORMALDISPLAY);          //idem				/* none inverted normal display mode */
+    cmd(DISPLAYON);
+    
+  }
+  
+  
+  
+  
   i2cReleaseBus(&I2CD1);
 }
 // _____________________________________________________________________
