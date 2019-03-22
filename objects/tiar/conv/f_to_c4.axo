@@ -14,9 +14,7 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[
-char c[21];
-]]></code.declaration>
+      <code.declaration><![CDATA[char c[21];]]></code.declaration>
       <code.init><![CDATA[
 ]]></code.init>
       <code.krate><![CDATA[c[20] = '\0';
@@ -27,27 +25,34 @@ in[2] = inlet_i2;
 in[3] = inlet_i3;
 for(int i = 0; i < 4; i++){
   char *p = c + i*5;
-  float f = in[i] * (1.0f/(1<<21));
-  if(in[i] > 0)       p[0] = ' ';
-  else if(in[i] < 0) {p[0] = '-'; f = -f; }
-  else p[0] = ' ';
+  float f = arm::q_to_float(in[i], 21);
+  //sign
+  if(in[i] >= 0)   p[0] = ' ';
+  else           { p[0] = '-'; f = -f; }
+
   if(f >= 100){
-    p[1]=127;p[2]=127;p[3]=127;
+    //overflow
+    p[1] = 127; p[2] = 127; p[3] = 127; p[4] = ' ';
   } else {
-    {
-      int diz=(int)(f*0.1f);
-      if(diz == 0) p[1] = ' '; else p[1]='0' + diz;
-      f -= diz * 10;
+    { // decades
+      int decades = (int)(f*0.1f);
+      if(decades == 0) {
+        p[1] = p[0];
+        p[0] = ' ';
+      } else { 
+        p[1] = '0' + decades;
+      }
+      f -= decades * 10;
     }
-    {
-      int un = (int)(f);
-      p[2] = '0' + un;
-      f -= un * 1;
+    { //units
+      int units = (int)(f);
+      p[2] = '0' + units;
+      f -= units * 1;
       p[3] = '.';
     }
-    {
-      int diz = (int)(f*10);
-      p[4] = '0'+diz;
+    { //tenths
+      int tenths = (int)(f*10);
+      p[4] = '0' + tenths;
     }
   }
 }
