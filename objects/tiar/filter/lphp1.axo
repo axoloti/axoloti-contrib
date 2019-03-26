@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lphp1" uuid="279d7a6c-732b-4817-b098-481818bd7827">
+      <sDescription>1st order lowpass filter and high pass filter.
+Based on scale and square discretization (better HP filter).	  
+	  </sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>lphp1.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32.bipolar name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="lp" description="output"/>
+         <frac32buffer name="hp"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t lp;]]></code.declaration>
+      <code.init><![CDATA[lp = 0;]]></code.init>
+      <code.krate><![CDATA[//krate
+uint32_t F;
+MTOFEXTENDED(param_pitch+inlet_pitch, F);
+
+int32_t a = (1<<30) - (F>>(2+4));
+for(int i = 0; i < 6; i++){
+  a = ___SMMUL(a, a) << 2;
+}
+a = (1<<30) - a;]]></code.krate>
+      <code.srate><![CDATA[outlet_lp = lp = ___SMMLA(a, inlet_in - lp, lp>>2)<<2;
+outlet_hp = inlet_in - lp;]]></code.srate>
+   </obj.normal>
+</objdefs>

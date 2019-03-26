@@ -1,0 +1,75 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ZDF HP" uuid="22f2d514-6eff-4b4f-8ab7-dfdc8c16ebff">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ZDF SK.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="x" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="hp12" description="filter output"/>
+         <frac32buffer name="lp12"/>
+         <frac32buffer name="bp6"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Q"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t u, v;]]></code.declaration>
+      <code.init><![CDATA[u = v = 0;]]></code.init>
+      <code.krate><![CDATA[float Q = __USAT(param_Q + inlet_reso, 27) * (15.0f/(1<<27));
+Q = 2.0f-1.0f/(0.1*Q*Q+0.5)  +0.000015f*Q*Q*Q;
+
+
+
+uint32_t alpha;
+MTOFEXTENDED(param_pitch + inlet_pitch-(545<<14), alpha);
+float Freq = arm::q_to_float(alpha,32);
+Freq *= (1.0f/32);
+
+
+
+float a = Freq*(1-Q);
+float b = 1+Freq*(Q-1);
+float c = Freq * Q;
+float d = Freq;
+float e = -Freq;
+float f = 1-Freq;
+
+for(int i = 0; i < 8; i++){
+  float t = a * (1 + b) + d * c;
+  d = d * (1 + f) + a * e;
+  a = t;
+
+  float ce = c * e;
+  float bf = b + f;
+  c = c * bf;
+  e = e * bf;
+  b = b * b + ce;
+  f = f * f + ce;
+}
+int32_t A = arm::float_to_q(a, 27);
+int32_t B = arm::float_to_q(b, 27);
+int32_t C = arm::float_to_q(c, 27);
+int32_t D = arm::float_to_q(d, 27);
+int32_t E = arm::float_to_q(e, 27);
+int32_t F = arm::float_to_q(f, 27);
+
+for(int i = 0; i < BUFSIZE; i++){
+  u = __SSAT(u,30);
+  v = __SSAT(v,30);
+  int32_t nu = ___SMMLA(A, inlet_x[i], ___SMMLA(B, u, ___SMMUL(C, v))) << 5;
+           v = ___SMMLA(D, inlet_x[i], ___SMMLA(E, u, ___SMMUL(F, v))) << 5;
+  u = nu;
+
+
+  outlet_lp12[i] = u;
+  outlet_bp6[i] = v;
+  outlet_hp12[i] = inlet_x[i]-u- v;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
