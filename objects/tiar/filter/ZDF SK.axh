@@ -5,7 +5,7 @@
    </obj>
    <obj type="tiar/lfo/triphase" uuid="c5ee2ec2-064a-4803-a37d-3e0db693311e" name="triphase_1" x="546" y="56">
       <params>
-         <frac32.s.map name="pitch" value="-44.0"/>
+         <frac32.s.map name="pitch" value="-54.0"/>
       </params>
       <attribs/>
    </obj>
@@ -57,7 +57,7 @@
    </obj>
    <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="392" y="252">
       <params>
-         <frac32.s.map name="a" value="20.0"/>
+         <frac32.s.map name="a" value="51.0"/>
          <frac32.s.map name="d" value="54.0"/>
          <frac32.u.map name="s" value="24.0"/>
          <frac32.s.map name="r" value="24.0"/>
@@ -111,7 +111,7 @@
       <params>
          <frac32.s.map name="a" value="-13.0"/>
          <frac32.s.map name="d" value="34.0"/>
-         <frac32.u.map name="s" value="31.5"/>
+         <frac32.u.map name="s" value="46.0"/>
          <frac32.s.map name="r" value="54.0"/>
       </params>
       <attribs/>
@@ -128,6 +128,82 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="84" y="728">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8192 (170ms)"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="210" y="728">
+      <params>
+         <frac32.u.map name="value" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="280" y="728">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_1"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="448" y="728">
+      <params>
+         <frac32.s.map name="freq" value="-7.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_2" x="84" y="826">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="16384 (341ms)"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="210" y="826">
+      <params>
+         <frac32.u.map name="value" value="45.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="280" y="826">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_2"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_3" x="84" y="924">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="32768 (682ms)"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="210" y="924">
+      <params>
+         <frac32.u.map name="value" value="50.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_3" x="280" y="924">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_3"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_3" x="448" y="924">
+      <params>
+         <frac32.s.map name="freq" value="50.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/FDN/A4" uuid="a4c8f8a7-a7de-4c03-ada5-137f1a497344" name="A4_1" x="574" y="924">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="490" y="1022" text="filters"/>
+   <comment type="patch/comment" x="574" y="1022" text="Feedback matrix"/>
+   <comment type="patch/comment" x="238" y="1036" text="Modulated delay lines"/>
    <nets>
       <net>
          <source obj="ZDF_1" outlet="hp12"/>
@@ -190,8 +266,7 @@
       </net>
       <net>
          <source obj="DCA_1" outlet="out"/>
-         <dest obj="out_1" inlet="left"/>
-         <dest obj="out_1" inlet="right"/>
+         <dest obj="A4_1" inlet="in0"/>
       </net>
       <net>
          <source obj="adsr_1" outlet="env"/>
@@ -219,6 +294,55 @@
          <source obj="triphase_1" outlet="phi 120"/>
          <dest obj="mix_3" inlet="in2"/>
       </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="read_1" inlet="time"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="read_3" inlet="time"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="read_2" inlet="time"/>
+      </net>
+      <net>
+         <source obj="lp1_3" outlet="out"/>
+         <dest obj="A4_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="A4_1" outlet="out1"/>
+         <dest obj="write_1" inlet="in"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="A4_1" outlet="out2"/>
+         <dest obj="write_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="A4_1" outlet="out3"/>
+         <dest obj="write_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="hp1_1" outlet="out"/>
+         <dest obj="A4_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="read_2" outlet="out"/>
+         <dest obj="A4_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="read_3" outlet="out"/>
+         <dest obj="lp1_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="out"/>
+         <dest obj="hp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="A4_1" outlet="out0"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
    </nets>
    <settings>
       <subpatchmode>no</subpatchmode>
@@ -228,6 +352,6 @@
       <x>7</x>
       <y>47</y>
       <width>1052</width>
-      <height>837</height>
+      <height>991</height>
    </windowPos>
 </patch-1.0>
