@@ -19,8 +19,10 @@
          <frac32.u.map name="Q"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[int32_t u, v;]]></code.declaration>
-      <code.init><![CDATA[u = v = 0;]]></code.init>
+      <code.declaration><![CDATA[int32_t u, v,av;
+int32_t A,B,C,D,E,F;
+int32_t x;]]></code.declaration>
+      <code.init><![CDATA[u = v = A = B = C = D = E = F = x = av = 0;]]></code.init>
       <code.krate><![CDATA[float Q = __USAT(param_Q + inlet_reso, 27) * (15.0f/(1<<27));
 Q = 2.0f-1.0f/(0.1*Q*Q+0.5)  +0.000015f*Q*Q*Q;
 
@@ -52,24 +54,31 @@ for(int i = 0; i < 8; i++){
   b = b * b + ce;
   f = f * f + ce;
 }
-int32_t A = arm::float_to_q(a, 27);
-int32_t B = arm::float_to_q(b, 27);
-int32_t C = arm::float_to_q(c, 27);
-int32_t D = arm::float_to_q(d, 27);
-int32_t E = arm::float_to_q(e, 27);
-int32_t F = arm::float_to_q(f, 27);
+
 
 for(int i = 0; i < BUFSIZE; i++){
-  u = __SSAT(u,30);
-  v = __SSAT(v,30);
-  int32_t nu = ___SMMLA(A, inlet_x[i], ___SMMLA(B, u, ___SMMUL(C, v))) << 5;
-           v = ___SMMLA(D, inlet_x[i], ___SMMLA(E, u, ___SMMUL(F, v))) << 5;
+
+  x = inlet_x[i];
+  u = (__SSAT(u,30)+__SSAT(u,28))>>1;
+  v = (__SSAT(v,30)+__SSAT(v,28))>>1;
+  int32_t nu = ___SMMLA(A, x, ___SMMLA(B, u, ___SMMUL(C, v))) << 5;
+           v = ___SMMLA(D, x, ___SMMLA(E, u, ___SMMUL(F, v))) << 5;
   u = nu;
 
 
   outlet_lp12[i] = u;
   outlet_bp6[i] = v;
-  outlet_hp12[i] = inlet_x[i]-u- v;
+  outlet_hp12[i] = x-u- v;
+  
+  if((av<=0) && (v>=0)){
+    A = arm::float_to_q(a, 27);
+    B = arm::float_to_q(b, 27);
+    C = arm::float_to_q(c, 27);
+    D = arm::float_to_q(d, 27);
+    E = arm::float_to_q(e, 27);
+    F = arm::float_to_q(f, 27);  	
+  }
+  av=v;
 }]]></code.krate>
    </obj.normal>
 </objdefs>
