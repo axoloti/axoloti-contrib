@@ -88,7 +88,7 @@
    <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_3" x="812" y="308">
       <params>
          <frac32.u.map name="gain1" value="54.5"/>
-         <frac32.u.map name="gain2" value="13.5"/>
+         <frac32.u.map name="gain2" value="17.0"/>
       </params>
       <attribs/>
    </obj>
@@ -151,7 +151,15 @@
          <spinner attributeName="delay" value="247"/>
       </attribs>
    </obj>
-   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="560" y="784">
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_5" x="546" y="784">
+      <params>
+         <frac32.s.map name="g" value="49.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="293"/>
+      </attribs>
+   </obj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="658" y="784">
       <params>
          <frac32.s.map name="freq" value="-7.0"/>
       </params>
@@ -184,6 +192,12 @@
          <spinner attributeName="delay" value="223"/>
       </attribs>
    </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="546" y="882">
+      <params>
+         <frac32.u.map name="amp" value="62.5"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_3" x="84" y="980">
       <params/>
       <attribs>
@@ -209,7 +223,7 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="tiar/FDN/A4" uuid="a4c8f8a7-a7de-4c03-ada5-137f1a497344" name="A4_1" x="574" y="980">
+   <obj type="tiar/FDN/A4" uuid="a4c8f8a7-a7de-4c03-ada5-137f1a497344" name="A4_1" x="672" y="980">
       <params/>
       <attribs/>
    </obj>
@@ -356,16 +370,24 @@
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="allpass_3" outlet="out"/>
+         <source obj="read_2" outlet="out"/>
+         <dest obj="allpass_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="allpass_5" outlet="out"/>
          <dest obj="hp1_1" inlet="in"/>
       </net>
       <net>
-         <source obj="allpass_4" outlet="out"/>
+         <source obj="allpass_3" outlet="out"/>
+         <dest obj="allpass_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
          <dest obj="A4_1" inlet="in2"/>
       </net>
       <net>
-         <source obj="read_2" outlet="out"/>
-         <dest obj="allpass_4" inlet="in"/>
+         <source obj="allpass_4" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
       </net>
    </nets>
    <settings>
