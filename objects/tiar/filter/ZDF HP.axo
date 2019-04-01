@@ -2,7 +2,7 @@
    <obj.normal id="ZDF HP" uuid="22f2d514-6eff-4b4f-8ab7-dfdc8c16ebff">
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch>ZDF SK.axh</helpPatch>
+      <helpPatch>ZDF HP.axh</helpPatch>
       <inlets>
          <frac32buffer name="x" description="filter input"/>
          <frac32 name="pitch" description="pitch"/>
@@ -35,25 +35,19 @@ Freq *= (1.0f/32);
 
 
 
-float a = Freq*(1-Q);
 float b = 1+Freq*(Q-1);
 float c = Freq * Q;
-float d = Freq;
 float e = -Freq;
-float f = 1-Freq;
-
 for(int i = 0; i < 8; i++){
-  float t = a * (1 + b) + d * c;
-  d = d * (1 + f) + a * e;
-  a = t;
-
   float ce = c * e;
-  float bf = b + f;
+  float bf = b + b - c;
   c = c * bf;
   e = e * bf;
   b = b * b + ce;
-  f = f * f + ce;
 }
+float a = 1-b;
+float d = -e;
+float f = b-c;
 
 
 for(int i = 0; i < BUFSIZE; i++){
