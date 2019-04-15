@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sphasor scaled" uuid="f518c941-8a6a-4ed5-b6f1-adc9a1e6eb3c">
+      <sDescription>48000 at &apos;inlet_smps&apos; will result in a 1 hz-saw-wave.
+&apos;1barLength&apos; defines the maximum length of 1 bar in seconds,
+longer inputs at &apos;inlet_smps&apos; will scale up the speed.
+a pulse at &apos;rphase&apos; will reset the phase,
+a pulse at &apos;rspeed&apos; will recalculate the speed.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <int32 name="smps" description="samples in"/>
+         <bool32.rising name="rphase"/>
+         <bool32.rising name="rspeed" description="reset phase"/>
+         <int32.positive name="1barLength"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="wave" description="phase"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint64_t freq;
+bool rphase;
+bool rspeed;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_rspeed && !rspeed){
+		freq = (int)((281474976710656.f/(inlet_smps * (128<<3))) * ((((unsigned int)inlet_smps)/(inlet_1barLength * 48000)) + 1));
+		rspeed = 1;
+		}
+if (inlet_rphase && !rphase) {
+         Phase = 0;
+         rphase = 1;
+      } 
+Phase += freq>>2;
+outlet_wave= (Phase>>5) & ((1<<27)-1);
+
+if (!inlet_rphase) rphase = 0;
+if (!inlet_rspeed) rspeed = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

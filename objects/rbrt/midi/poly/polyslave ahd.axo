@@ -62,6 +62,7 @@ trigoff = 0;
 note = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index] -1;
 velo = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index + attr_polyhandler.POLY];
 	if ((note != pren) ||(velo != prev) || (stop && velo)){
+	if (note != pren) val = 0;
 	stop = 0;
 	pren = note;
 	prev = velo;
@@ -72,7 +73,8 @@ velo = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index + attr_polyh
 	}
 	else trigoff = 1;
 	}
-	
+
+if (outlet_retrig && attr_retrigger) val = 0;
 if (trigon && !gate) gate = 1;
 if (trigoff && gate) gate = 0;
 if (inlet_stop && !stop) {
@@ -93,7 +95,7 @@ else {
   	val -= t>>attr_rscale;
 }
 val = __USAT(val,27);
-if (outlet_retrig && attr_retrigger) val = 0;
+
 
 if (val) attr_polyhandler.array [index + attr_polyhandler.POLY] = pren + 1;
 else attr_polyhandler.array [index + attr_polyhandler.POLY] = 0;

@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="text edit" uuid="c90ddc3a-8193-4cd1-9bfb-191499a8a91f">
+      <sDescription>constant string</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="left"/>
+         <bool32.rising name="right"/>
+         <bool32.rising name="inc"/>
+         <bool32.rising name="dec"/>
+         <bool32.rising name="delete"/>
+         <bool32.rising name="clear"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="display" description="string"/>
+         <charptr32 name="string"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[char c[9];
+char cout[9];
+bool out;
+bool trig;
+uint8_t pos;
+uint8_t prepos;
+uint8_t val = 0;
+uint8_t outval = 0;
+uint8_t preval;
+uint16_t count;
+uint8_t map [37];]]></code.declaration>
+      <code.init><![CDATA[int i;
+for (i = 0;i<10;i++) map[i] = i+48;
+map [10] = 95;
+for (i = 0;i<26;i++) map [i + 11] = i+65;]]></code.init>
+      <code.krate><![CDATA[if (inlet_left && !trig) {
+	trig = 1;
+	pos --;
+}
+if (inlet_right && !trig) {
+	trig = 1;
+	pos ++;
+}
+if (inlet_inc && !trig) {
+	trig = 1;
+	val ++;
+}
+if (inlet_dec && !trig) {
+	trig = 1;
+	val --;
+}
+
+if (inlet_clear && !trig) {
+	trig = 1;
+	memset (c,0,8);
+	memset (cout,0,8);
+	pos = 0;
+}
+
+if (inlet_delete && !trig){
+	trig = 1;
+	if (strlen (c) > 1){
+
+	memmove (&c[pos],&c[pos+1] ,(8-pos));
+	strcpy (cout,c);
+		pos --;
+
+	}	
+}
+
+if (!inlet_left && !inlet_right && !inlet_inc && !inlet_dec && !inlet_delete && !inlet_clear) trig = 0;
+
+pos = pos %8;
+val = val %37;
+outval = map[val];
+
+if (outval != preval){
+c[pos] = outval;
+strcpy (cout,c);
+preval = outval;
+}
+
+if (count) count --;
+else {
+	count = 2000;
+	out = !out;
+	if (out) cout[pos] = 29;
+	else cout [pos]= c[pos];
+}
+
+if (pos != prepos){
+	prepos = pos;
+	strcpy (cout,c);	
+}
+
+outlet_display = &cout[0];
+outlet_string = &c[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

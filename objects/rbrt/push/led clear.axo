@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led clear" uuid="eefc78be-6e0d-4d5c-b51a-e36ec409e972">
+   <obj.normal id="led clear" uuid="e97ab949-6920-4851-af23-93f0598391bd">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="clear"/>
@@ -9,40 +9,31 @@
       <outlets/>
       <displays/>
       <params/>
-      <attribs/>
+      <attribs>
+         <objref name="LED"/>
+      </attribs>
       <code.declaration><![CDATA[bool trig;
 bool dorow;
 bool trigall;
 bool doall;
-bool bufx;
-uint8_t data [77] = {240, 71, 127, 21};
-int i;]]></code.declaration>
-      <code.init><![CDATA[data [5] = 0;
-data [6] = 69;
-data [7] = 0;
-data [76] = 247;
-int i;
-for (i = 0;i < 68;i ++) data [i + 8] = 32;]]></code.init>
-      <code.krate><![CDATA[bufx = MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST);
-
-
-if (inlet_clear && ( !trig && !i)) {trig = 1;dorow = 1;}
-
-if (dorow && !bufx){
-	data [4] = inlet_row + 24;
-	MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);
+uint8_t count;
+uint16_t outrowMUL;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_clear && ( !trig && !count)) {trig = 1;dorow = 1;}
+if (dorow && !attr_LED.ROW){
+	outrowMUL = inlet_row * 68;
 	dorow = 0;
+	memset(attr_LED.array,32,68);
+	attr_LED.ROW = inlet_row + 1;
 	}	
 if (!inlet_clear && !dorow) trig = 0;
 
-
-
-if (inlet_clearAll && !trigall) {trigall = 1;i = 4;}
-if (i && !bufx){
-	data [4] = i + 23;
-	MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);
-	i --;
+if (inlet_clearAll && !trigall) {trigall = 1;count = 4;}
+if (count && !attr_LED.ROW){
+	outrowMUL = (count -1) * 68;
+	memset(attr_LED.array + outrowMUL,32,68);
+	attr_LED.ROW = count;
+	count --;	
 	}
-	if (!inlet_clearAll && !i) trigall = 0;]]></code.krate>
+	if (!inlet_clearAll && !count) trigall = 0;]]></code.krate>
    </obj.normal>
 </objdefs>

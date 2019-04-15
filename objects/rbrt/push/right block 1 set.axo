@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="right block 1 set" uuid="39fa363a-2411-43b0-b5cb-bcd5ef27711c">
+   <obj.normal id="right block 1 set" uuid="391ebd25-2e1d-4700-a261-389c1692b680">
       <license>GPL</license>
       <inlets>
          <int32.positive name="b0"/>
@@ -11,15 +11,15 @@
       <attribs/>
       <code.declaration><![CDATA[int32_t in [2];
 int32_t prev [2];
+uint8_t doit;
 int i;
-uint8_t doit;]]></code.declaration>
+uint8_t count;]]></code.declaration>
       <code.krate><![CDATA[in [0] = inlet_b0;
 in [1] = inlet_b1;
 
-if (!doit) {
+if (!doit && !count) {
 	for (i = 0;i < 2; i ++){
 		if (in[i] != prev[i]) {
-			prev[i] = in [i];
 			doit = i + 1;
 			break;
 			}	
@@ -27,8 +27,12 @@ if (!doit) {
 }
 
 	if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
-		MidiSend3(MIDI_DEVICE_USB_HOST,2, MIDI_CONTROL_CHANGE,doit + 27,prev [doit -1]);
-		doit = 0; 		
-		}]]></code.krate>
+		MidiSend3(MIDI_DEVICE_USB_HOST,2, MIDI_CONTROL_CHANGE,doit + 27,in [doit -1]);
+		prev [doit-1] = in [doit -1];
+		doit = 0; 
+		count = 50;		
+		}
+
+if (count) count --;]]></code.krate>
    </obj.normal>
 </objdefs>

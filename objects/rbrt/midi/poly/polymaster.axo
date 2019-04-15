@@ -85,8 +85,7 @@ _note = 0;
 _velo = 0;
 for ( i = 0;i < (POLY << 1);i ++) array [i] = 0;
 stop = 0;]]></code.init>
-      <code.krate><![CDATA[top:
-doit = 0;
+      <code.krate><![CDATA[doit = 0;
 trig = 0;
 trigoff = 0;
 
@@ -98,7 +97,7 @@ if ((inlet_note != pren) || (inlet_velo != prev)){
 	if (_velo) trig = 1;	
 		else trigoff = 1;		
 }
-
+TRIGGER:
 if (trig) {
 	//retrig
 	for (i = 0;i < POLY;i ++){
@@ -126,15 +125,13 @@ if (trigoff) {
 
 //stop
 if  (inlet_stop && (!stop)) {
-	stop = 1;
-	for (i = 0;i < POLY;i ++){
-		if ((array [i] == (inlet_stopnote + 1)) ||( array [i +POLY] == (inlet_stopnote + 1))) {
-			target = i;
 			_note = inlet_stopnote;
 			_velo = 0;
-			doit = 1;
-		}
-	}		
+			pren = _note;
+			prev = _velo;
+			stop = 1;
+			trigoff = 1;
+			goto TRIGGER;				
 }
 	if  (!inlet_stop) stop = 0;
 

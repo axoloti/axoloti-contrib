@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led master" uuid="ff59964e-6ddc-40ec-b0a5-70ce7fe75f6d">
+   <obj.normal id="led master" uuid="f7043770-f1d3-4566-ba46-0cb3837928cf">
       <license>GPL</license>
       <inlets/>
       <outlets/>
@@ -9,27 +9,27 @@
          <spinner name="thin" MinValue="1" MaxValue="100" DefaultValue="10"/>
       </attribs>
       <code.declaration><![CDATA[uint8_t count;
-bool DIRTY;
-uint8_t row;
-char array [273];
+uint8_t ROW;
+uint16_t outrowMUL;
+uint8_t *array;
 uint8_t data [77] = {240, 71, 127, 21,0,0,69,0};
 uint8_t CELLOFFSET [8] = {0,9,17,26,34,43,51,60};]]></code.declaration>
-      <code.init><![CDATA[data [76] = 247;]]></code.init>
-      <code.krate><![CDATA[if (DIRTY && !count){
-	count = attr_thin;
-		if (row < 4){
-		data [4] = row + 24;
-		int i;
-		for (i = 0 ; i < 68;i ++) data [i + 8] =  array [i + (row * 68)] ? array [i + (row * 68)] : 32;	
-		if (!MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)) {
+      <code.init><![CDATA[data [76] = 247;
+static uint8_t _array[attr_poly][273]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<273;i++) array[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[if ((ROW && !count) && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){	
+			outrowMUL = (ROW -1) * 68;
+			data [4] = ROW + 23;			
+			int i;
+			for (i = 0 ; i < 68;i ++) data [i + 8] =  array [i + (outrowMUL)] ? array [i + (outrowMUL)] : 32;		
 			MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,data,77);
-			row ++;
-		}
-
-		}
-		else {DIRTY = 0;row = 0;}
-	}
-	
+			ROW = 0;
+			count = attr_thin;
+	}	
 if (count) count --;]]></code.krate>
    </obj.normal>
 </objdefs>

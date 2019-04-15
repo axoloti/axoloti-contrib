@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led cell text" uuid="62beeca5-a601-400d-b0fb-3e9975b11de9">
+   <obj.normal id="led cell text" uuid="74a69241-1ee1-42e6-ad87-cf44479b4cf2">
       <license>GPL</license>
       <inlets>
          <charptr32 name="text"/>
@@ -26,11 +26,10 @@ int16_t nb;]]></code.declaration>
 	int i;
 	for (i = 0;i < 8;i++) if (inlet_text [i] !=pre [i]) {pre[i] = inlet_text[i];doit = 1;}	
 	if (!inlet_mute && !mtrig) {mtrig = 1;doit = 1;}
-	if (doit) {
-			memset(&attr_LED.array[(attr_row * 68)+attr_LED.CELLOFFSET[attr_column]],32,8);
-			strcpy(&attr_LED.array[(attr_row * 68)+attr_LED.CELLOFFSET[attr_column]],inlet_text);
+	if (doit && !attr_LED.ROW) {
+			memcpy(&attr_LED.array[(attr_row * 68)+attr_LED.CELLOFFSET[attr_column]],inlet_text,8);
 			doit = 0;	
-			attr_LED.DIRTY = 1;			
+			attr_LED.ROW = attr_row + 1;		
 	}
 }
 if (inlet_mute) mtrig = 0;]]></code.krate>

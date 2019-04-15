@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led cell value u" uuid="44beade7-4010-4eaf-8fa4-bf52b409799b">
+   <obj.normal id="led cell value u" uuid="597ef6d2-5873-499f-8894-29da1f268e43">
       <license>GPL</license>
       <inlets>
          <frac32.positive name="in"/>
@@ -27,7 +27,7 @@ int16_t nb;]]></code.declaration>
 	v = inlet_in;
 	if (!inlet_mute && !mtrig) {mtrig = 1;doit = 1;}
 	if (v != prev) doit = 1;
-	if (doit) {
+	if (doit && !attr_LED.ROW) {
 			if (v <= 0) v = 0;
 			prev = v;
 			doit = 0;
@@ -36,7 +36,7 @@ int16_t nb;]]></code.declaration>
 			fb = nb >> 1;
 			memset(attr_LED.array + attr_LED.CELLOFFSET [attr_column]+(attr_row * 68),BARS_TWO,fb);
 			if(nb%2) attr_LED.array[fb + attr_LED.CELLOFFSET [attr_column]+(attr_row * 68)] = BARS_ONE_L;		
-			attr_LED.DIRTY = 1;		
+			attr_LED.ROW = attr_row + 1;	
 	}
 }
 if (inlet_mute) mtrig = 0;]]></code.krate>

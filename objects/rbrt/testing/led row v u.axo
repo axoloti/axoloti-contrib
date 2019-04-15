@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led row value u" uuid="439587bd-6247-4ae2-96f7-2a68a7450302">
+   <obj.normal id="led row v u" uuid="9da80c0a-e2f4-4a05-af53-be343fe742ba">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="redraw"/>
@@ -34,8 +34,8 @@ int32_t prev [8];
 int32_t v;
 
 int i;
-bool doit;
-uint16_t outrowMUL;]]></code.declaration>
+int ii;
+bool doit;]]></code.declaration>
       <code.init><![CDATA[#define BARS_ONE_L  0x03
 #define BARS_ONE_R  0x04
 #define BARS_TWO    0x05
@@ -55,19 +55,18 @@ uint16_t outrowMUL;]]></code.declaration>
 	if (!inlet_mute && !mtrig) {mtrig = 1;doit = 1;}
 	if (inlet_row != prerow) {doit = 1;prerow = inlet_row;}
 
-	if (doit && !attr_LED.ROW){
+	if (doit && !attr_LED.BUSY){
 		doit = 0;
-		outrowMUL = inlet_row * 68;
 		for (i = 0;i < 8;i ++){
 			v = in[i];
 			if (v <= 0) v = 0;
-			memset(attr_LED.array + attr_LED.CELLOFFSET [i ] +  outrowMUL,BARS_NONE,8);
+			for (ii = 0;ii < 8;ii ++) attr_LED.array [ii+ attr_LED.CELLOFFSET [i] +  (inlet_row * 68) ]= BARS_NONE;
 			nb = (((v>>20)+1) << 4) >> 7;
 			fb = nb >> 1;
-			memset(attr_LED.array + attr_LED.CELLOFFSET [i ]+outrowMUL,BARS_TWO,fb);
-			if(nb%2) attr_LED.array[fb + attr_LED.CELLOFFSET [i ]+outrowMUL] = BARS_ONE_L;
-			attr_LED.ROW = inlet_row + 1;	
+			for (ii = 0;ii < fb;ii ++)attr_LED.array [ii+ attr_LED.CELLOFFSET [i] +  (inlet_row * 68) ] = BARS_TWO;
+			if(nb%2) attr_LED.array[fb + attr_LED.CELLOFFSET [i ]+(inlet_row * 68)] = BARS_ONE_L;	
 			}
+			attr_LED.DIRTY = 1;
 	}
 	count ++;
 	count = count %8;

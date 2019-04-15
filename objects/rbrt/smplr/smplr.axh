@@ -1,0 +1,1031 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="rbrt/smplr/slot params" uuid="b92b3345-9449-4bf6-9b46-c4f25aede2f5" name="slot_3" x="1176" y="14">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="smplr"/>
+         <objref attributeName="wave" obj="rec"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="6e7f9f82-d567-48b0-bf60-a5d787492b4e" name="lrec_1" x="1526" y="14">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <bool32.tgl name="hard" value="0"/>
+         <frac32.s.map name="release" value="0.0"/>
+         <bool32.tgl name="nofade" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+         <combo attributeName="slots" selection="1"/>
+      </attribs>
+      <object id="patch/object" uuid="6e7f9f82-d567-48b0-bf60-a5d787492b4e">
+         <sDescription>records audio to a table with nice fade-ins and -outs.
+the table can be divided into 1,2,4 or 8 slots.
+when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
+and after &apos;rec&apos; is zero,recording will continue until the starting point is reached.
+after recording is done,the length if the recording in samples is sent out,
+as well as the length of the recording (in fraction of the table&apos;s size).
+meanwhile,the input signal is overdubbed and faded out ,so NO CLICKS!
+set the length of the fade-out/overdub period with &apos;release&apos;,
+the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <helpPatch>loop_multi.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="wave" description="audio in"/>
+            <int32 name="slot" description="select slot to record into"/>
+            <bool32.risingfalling name="rec" description="record,set tempo"/>
+            <frac32.positive name="phase" description="position inlet for sync-mode"/>
+            <bool32.risingfalling name="sync"/>
+         </inlets>
+         <outlets>
+            <frac32.positive name="offset" description="offset inside the table"/>
+            <frac32.positive name="range" description="length of recording in fraction of the table"/>
+            <frac32 name="startpoint" description="startpoint  when recording in sync"/>
+            <int32 name="smps" description="length of recording in samples"/>
+            <bool32 name="rec" description="recording state,pre - fadeout"/>
+            <bool32 name="fade" description="recording state,post - fadeout"/>
+            <frac32.positive name="remain" description="remaining recording-time for the selected slot"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.kdecaytime.exp name="attack" description="fade-in time">
+               <DefaultValue v="-64.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <bool32.tgl name="hard" description="if &apos;hard&apos; is on,there will be NO fade-in"/>
+            <frac32.s.map.kdecaytime.exp name="release" description="fade-out time">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <bool32.tgl name="nofade" description="disable fades"/>
+         </params>
+         <attribs>
+            <objref name="table" description="table to record to "/>
+            <combo name="slots" description="number of slots in the table">
+               <MenuEntries>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>4</string>
+                  <string>8</string>
+                  <string>16</string>
+                  <string>32 </string>
+                  <string>64</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>0</string>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>3 </string>
+                  <string>4</string>
+                  <string>5 </string>
+                  <string>6</string>
+               </CEntries>
+            </combo>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[bool rec;
+uint32_t recpos;
+uint32_t offset;
+uint32_t rec_offset;
+uint32_t rec_max;
+uint8_t shift;
+uint32_t start;
+uint32_t starthold;
+bool mode;
+
+bool recstate;
+uint32_t shold;
+uint32_t rhold;
+int32_t env;
+
+int32_t _ap;
+int32_t phase;]]></code.declaration>
+         <code.init><![CDATA[rec_max = attr_table.LENGTH >> attr_slots;
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+         <code.krate><![CDATA[if ((inlet_rec) && !rec) {
+	 recpos = 0;
+      rec = 1;
+      recstate = 1;
+      start = inlet_phase;
+      shold = 1 << 27;
+      rhold = 1 << 27;
+      starthold = 0;
+      mode = inlet_sync;
+      offset = (((inlet_slot  ) << 21) >> attr_slots) << 6;
+      rec_offset = (__USAT(offset,27)>>(27-attr_table.LENGTHPOW));
+     } 
+
+//fades
+if (!param_nofade){
+   if (rec) env = (param_hard) ? (1<<27) : (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
+   else env = ___SMMUL(env,param_release)<<1;
+  recstate = env;
+}else {recstate = rec;env = rec<<27;}
+       
+  //rec stopped-> wait for rollover if sync is on 
+if ((!inlet_rec) && rec) {
+ 	if (mode)	{
+ 		phase = (inlet_phase - start) & ((1<<27)-1);
+         if ((phase - _ap) <= 0)  {rec = 0;shold = recpos - 16;rhold =shold << shift;recpos = 0;starthold = start;} 
+         _ap = phase;
+        } 
+        else {rec = 0;shold = recpos;rhold =shold << shift;recpos = 0;starthold = 0;}
+   }
+
+        outlet_rec = rec;
+        outlet_fade = recstate;
+        outlet_offset = offset;
+        outlet_range = rhold;
+        outlet_smps = shold;
+        outlet_startpoint = starthold;
+        if (rec)  outlet_remain = ((rec_max - recpos) << shift) << attr_slots;]]></code.krate>
+         <code.srate><![CDATA[//record   
+
+if (recstate) {
+ if ((recpos >= rec_max)||(recpos >= shold)) recpos = 0;
+           	
+ if (rec) attr_table.array[recpos + rec_offset] = 
+ __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
+              else attr_table.array[recpos + rec_offset] = 
+(__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos + rec_offset] << attr_table.GAIN))>>attr_table.GAIN;
+
+ recpos ++;    
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_2" x="756" y="28">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/smplr/slot length" uuid="50b66df7-03f5-4871-be00-ccfb24c27ce5" name="slot_1" x="868" y="28">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="smplr"/>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="rec" x="238" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="2097152"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_9" x="1036" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_2" x="1330" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="params" x="616" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="128"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="238" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="350" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/smplr/slot length" uuid="50b66df7-03f5-4871-be00-ccfb24c27ce5" name="slot_2" x="868" y="126">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="smplr"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/lfo/sphasor" uuid="bd13316a-40ec-4772-92f8-d2e462f55e20" name="sphasor_1" x="1120" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="1330" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_1" x="126" y="168">
+      <params>
+         <int32.hradio name="value" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="1036" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="0" y="182">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop1" x="406" y="210">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop2" x="490" y="210">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop3" x="574" y="210">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop4" x="658" y="210">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/timepoint" uuid="4aa7200d-f2bb-41f9-82cb-e7a6447d091c" name="timepoint_1" x="896" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/smplr/edit" uuid="d5f2f2ab-178b-4d74-8253-eee6209e6b2d" name="edit_1" x="364" y="308">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="smplr"/>
+         <objref attributeName="wave" obj="rec"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="455b9639-36f5-476b-94a5-7c1cdf0217fd" name="smplr" x="686" y="322">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <frac32.s.map name="release" value="-64.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="wave" obj="rec"/>
+      </attribs>
+      <object id="patch/object" uuid="455b9639-36f5-476b-94a5-7c1cdf0217fd">
+         <sDescription>&apos;arm&apos; will arm the recorder,
+&apos;rec&apos; will start recording to the selected slot or, when already recording,start another recording in a selected slot.
+you cannot record into a slot that already contains sample data.
+if already recording,recording will continue in the slot you were recording to before.
+when &apos;arm&apos; is 0 again,recording will stop.
+sample start-and endpoints can be accessed &apos;from the outside&apos; via the recorder-objects name.</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <helpPatch>smplr.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="wave" description="audio in"/>
+            <int32.positive name="slot" description="select a slot to record into (0 - 127)"/>
+            <bool32.risingfalling name="arm" description="arm the recorder"/>
+            <bool32.rising name="rec" description="a pulse will start a recording a sample in the selected slot if &apos;arm&apos; is 1 and the selected slot doesn&apos;t already contain a sample"/>
+            <int32.positive name="playmode" description="playback mode the currently recording slot will be set to"/>
+            <frac32 name="Aux" description="additional data,for example timepoint of the recording start"/>
+            <bool32.risingfalling name="DISABLE" description="disable the recorder"/>
+            <bool32.rising name="clear" description="clear the recorders data"/>
+         </inlets>
+         <outlets>
+            <bool32.pulse name="recstart" description="issues a pulse when a new slot is recorded"/>
+            <bool32 name="recstate" description="recording status"/>
+            <bool32 name="fadestate" description="rec status &amp;&amp; fade status"/>
+            <int32.positive name="recslot" description="slot currently recording to"/>
+            <frac32.positive name="remain" description="remaining recording-time"/>
+            <bool32 name="slotFull" description="&apos;1&apos; if a slot already contains a sample"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.kdecaytime.exp name="attack">
+               <DefaultValue v="-64.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <frac32.s.map.kdecaytime.exp name="release">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+         </params>
+         <attribs>
+            <objref name="wave" description="table to record to "/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[bool rec;
+bool recstate;
+bool fadetrig;
+bool rtrig;
+uint32_t fadepos;
+uint32_t recstart;
+uint32_t recend;
+uint32_t rec_max;
+uint8_t shift;
+int32_t env;
+
+uint8_t mslot;
+uint8_t preslot;
+uint8_t recslot;
+
+static const uint16_t LENGTH = 512;
+uint32_t *array;
+
+bool full;
+bool rectrig;]]></code.declaration>
+         <code.init><![CDATA[rec_max = attr_wave.LENGTH ;
+shift =     (27-attr_wave.LENGTHPOW);
+static uint32_t _array[attr_poly][512]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<512;i++) array[i]=0;
+}]]></code.init>
+         <code.krate><![CDATA[outlet_recstart = 0;
+
+mslot = (inlet_slot % 126);
+full = array [(mslot << 2) + 2];
+
+	if (inlet_arm && !inlet_DISABLE){
+			if (!full && (inlet_rec && !rectrig)) {
+				rectrig = 1;
+				recslot = mslot;
+				if (rec) array [(preslot << 2) + 1] = array[511];
+				rec = 1;
+				recstate = 1;
+				outlet_recstart = 1;
+				fadetrig = 0;
+				recstart = array[511];
+				array [recslot << 2] = array[511];	
+				array [(recslot << 2)+2]  =  (inlet_playmode) ? inlet_playmode : 1;		
+	 			array [(recslot << 2)+3]  = __SSAT(inlet_Aux,28);
+				preslot = recslot;			      
+			 }		
+	}
+
+if (!inlet_rec) rectrig = 0;
+
+if (!inlet_arm && rec)  {
+	rec = 0;
+	array [(recslot << 2) + 1] = array[511];
+	}
+
+//fades
+if (rec) {
+	env = (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
+}
+   	else{ 
+   	env = ___SMMUL(env,param_release)<<1;
+   		if (!fadetrig) {
+   			fadetrig = 1;
+   			recend = array[511];
+   			fadepos = recstart;
+   			}
+   	}
+recstate = env;
+
+    // clear
+if (inlet_clear && !rtrig) {
+	rtrig = 1;
+ int i;
+ for(i=0;i<512;i++) array[i]=0;
+ } 
+if (!inlet_clear) rtrig = 0;
+
+  	outlet_slotFull = full;
+  	outlet_remain = (rec_max - array [511]) << shift;
+  	outlet_recstate = rec;
+  	outlet_fadestate = recstate;
+  	outlet_recslot = recslot;]]></code.krate>
+         <code.srate><![CDATA[//record   
+
+if (recstate) {
+     if (rec) {
+     	attr_wave.array[array [511]] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_wave.GAIN;
+     	if (array[511] < rec_max) array[511] ++;
+     	else array [511] = recstart;
+     	}
+     else {attr_wave.array[fadepos] =(__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_wave.array [fadepos] << attr_wave.GAIN))>>attr_wave.GAIN;
+     fadepos ++;
+     if (fadepos >= recend) fadepos = recstart;
+              }
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="rbrt/smplr/recmodes" uuid="358b67c1-7813-4923-ae94-eb92a9a10878" name="recmodes_1" x="532" y="336">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="smplr"/>
+         <spinner attributeName="loopFlag" value="3"/>
+         <spinner attributeName="sliceFlag" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/t2p inv" uuid="6a8a7c63-345c-4cd5-a1e8-12b25eb4f47e" name="t2p_1" x="840" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="demux/demux 4" uuid="2d85d32578993f1b062c98cb91f49ff3f0f4be47" name="demux_1" x="966" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1120" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_5" x="1274" y="378">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="868" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/midi/poly/midimux 4" uuid="6142a85b-c97b-4caf-8d2f-d9adc57e8bf5" name="midimux_1" x="1400" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/midi/poly/polymaster smplr" uuid="2de68bbc-e649-4866-9084-1e332c0465d8" name="poly" x="1582" y="406">
+      <params>
+         <bool32.tgl name="kill" value="1"/>
+      </params>
+      <attribs>
+         <combo attributeName="polyphony" selection="4"/>
+         <objref attributeName="smplr" obj="smplr"/>
+         <spinner attributeName="loopFlag" value="3"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="83025897-7013-45f7-af1a-f92f741605a2" name="patcher_1" x="1764" y="406">
+      <params/>
+      <attribs>
+         <combo attributeName="poly" selection="4"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="rbrt/midi/poly/polyslave" uuid="6835ce2a-ff00-4896-963c-34a607b06e88" name="polyslave_1" x="70" y="84">
+            <params/>
+            <attribs>
+               <objref attributeName="polyhandler" obj="../poly"/>
+            </attribs>
+         </obj>
+         <obj type="rbrt/smplr/slot params" uuid="b92b3345-9449-4bf6-9b46-c4f25aede2f5" name="slot_1" x="406" y="98">
+            <params/>
+            <attribs>
+               <objref attributeName="smplr" obj="../smplr"/>
+               <objref attributeName="wave" obj="../rec"/>
+            </attribs>
+         </obj>
+         <patchobj type="patch/object" uuid="45629287-cffb-42c3-8656-79c88744f8cd" name="ldrive_1" x="588" y="98">
+            <params>
+               <frac32.s.map name="speed" value="64.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+            <object id="patch/object" uuid="45629287-cffb-42c3-8656-79c88744f8cd">
+               <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+               <author>robert schirmer</author>
+               <license>BSD</license>
+               <helpPatch>ldrive.axh</helpPatch>
+               <inlets>
+                  <frac32.positive name="offset" description="offset inside the table"/>
+                  <frac32.positive name="range" description="length of the area to index,or loop end"/>
+                  <frac32.positive name="startpoint" description="position inside range on reset"/>
+                  <frac32.positive name="loopstart" description="loopstart inside range"/>
+                  <frac32.bipolar name="speed" description="speed modulation"/>
+                  <bool32.risingfalling name="play" description="toggle playback"/>
+                  <bool32.rising name="r2offset" description="reset to &apos;offset&apos;"/>
+                  <bool32.rising name="r2start" description="reset to &apos;startpoint&apos;"/>
+               </inlets>
+               <outlets>
+                  <frac32buffer.positive name="pos" description="relative position inside table"/>
+                  <int32 name="count" description="loop count since reset"/>
+                  <int32 name="spos" description="playhead position inside range in samples"/>
+                  <int32 name="stotal" description="length of range in samples"/>
+                  <int32 name="sloop" description="length of loop in samples"/>
+                  <frac32.bipolar name="speed" description="total speed"/>
+               </outlets>
+               <displays/>
+               <params>
+                  <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true">
+                     <DefaultValue v="64.0"/>
+                  </frac32.s.map>
+               </params>
+               <attribs>
+                  <objref name="table"/>
+               </attribs>
+               <includes/>
+               <code.declaration><![CDATA[int32_t index;
+bool rrs;
+bool rro;
+uint8_t shift;
+
+int ntrig;
+
+int32_t t_speed;
+int32_t re;
+int32_t rs;
+
+int32_t start;
+int32_t loopstart;
+int32_t lrange;
+int32_t lstart;
+
+uint32_t count;
+bool add;
+bool play;
+bool mode;]]></code.declaration>
+               <code.init><![CDATA[shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+               <code.krate><![CDATA[loopstart = ___SMMUL(inlet_range,inlet_loopstart)<<5;
+add = inlet_range;
+//scale ranges up 8 times to achieve decent resolution for parameter speed
+lrange = inlet_range << 3;
+lstart = loopstart << 3;
+start = ___SMMUL(inlet_range,inlet_startpoint)<< 8;
+t_speed =  (((inlet_speed + param_speed ) << 3) >> attr_table.LENGTHPOW) + ((inlet_speed + param_speed ) > 0);
+
+
+ play = inlet_play;
+      if (inlet_r2start && (!rrs)) {
+         index = start;
+         rrs = 1;
+         count = 0;
+      }
+      if (inlet_r2offset && (!rro)) {
+         index = 0;
+         rro = 1;
+         count = 0;
+      }
+      if (!inlet_r2offset) rro = 0;
+      if (!inlet_r2start) rrs = 0;
+
+      if (!inlet_range) play = 0;
+
+outlet_count = (inlet_play) ? count : -1;
+outlet_spos =  (((index >> 3) >> shift) > 0) ? ((index >> 3)>> shift) : 0;
+outlet_stotal = inlet_range >> shift;
+outlet_sloop = (inlet_range - loopstart)>>shift;
+outlet_speed = inlet_speed + param_speed;]]></code.krate>
+               <code.srate><![CDATA[if (t_speed > 0){
+      if (index >= lrange){index = lstart;count += add;} 
+      } 
+      else{
+      if (index <= lstart){ index = lrange;count +=add;}  
+          }    
+
+if (play) {outlet_pos =  __USAT(((index >> 3) + inlet_offset),27);index += t_speed;}
+else outlet_pos = 1 << 27;]]></code.srate>
+            </object>
+         </patchobj>
+         <obj type="table/read" uuid="57c0d2f661ccce53e64e9d4653918bc7a74f311e" name="read_1" x="770" y="98">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="audio" x="910" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="slot_1" outlet="offset"/>
+               <dest obj="ldrive_1" inlet="offset"/>
+            </net>
+            <net>
+               <source obj="slot_1" outlet="range"/>
+               <dest obj="ldrive_1" inlet="range"/>
+            </net>
+            <net>
+               <source obj="ldrive_1" outlet="pos"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="audio" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="polyslave_1" outlet="note"/>
+               <dest obj="slot_1" inlet="slot"/>
+            </net>
+            <net>
+               <source obj="polyslave_1" outlet="gate"/>
+               <dest obj="ldrive_1" inlet="play"/>
+               <dest obj="ldrive_1" inlet="r2offset"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>48</x>
+            <y>74</y>
+            <width>1295</width>
+            <height>668</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="1862" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1960" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_2" x="1120" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="140" y="434">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_2" x="252" y="448">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_6" x="1274" y="448">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_3" x="1120" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_2" x="266" y="518">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_7" x="1274" y="518">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="2"/>
+      </attribs>
+   </obj>
+   <obj type="conv/nointerp" uuid="5e7389d61f8cd8945790bb71f1670b3a0904c15b" name="nointerp_1" x="1876" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_4" x="1120" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_8" x="1274" y="588">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="3"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="6e7f9f82-d567-48b0-bf60-a5d787492b4e" name="lrec_2" x="476" y="630">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <frac32.s.map name="release" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+         <combo attributeName="slots" selection="1"/>
+      </attribs>
+      <object id="patch/object" uuid="6e7f9f82-d567-48b0-bf60-a5d787492b4e">
+         <sDescription>records audio to a table with nice fade-ins and -outs.
+the table can be divided into 1,2,4 or 8 slots.
+when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
+and after &apos;rec&apos; is zero,recording will continue until the starting point is reached.
+after recording is done,the length if the recording in samples is sent out,
+as well as the length of the recording (in fraction of the table&apos;s size).
+meanwhile,the input signal is overdubbed and faded out ,so NO CLICKS!
+set the length of the fade-out/overdub period with &apos;release&apos;,
+the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <helpPatch>loop_multi.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="wave" description="audio in"/>
+            <int32 name="slot" description="select slot to record into"/>
+            <bool32.risingfalling name="rec" description="record,set tempo"/>
+            <int32.positive name="playmode"/>
+            <frac32.positive name="phase" description="position inlet for sync-mode"/>
+            <bool32.risingfalling name="sync"/>
+         </inlets>
+         <outlets>
+            <frac32.positive name="offset" description="offset inside the table"/>
+            <frac32.positive name="range" description="length of recording in fraction of the table"/>
+            <frac32 name="startpoint" description="startpoint  when recording in sync"/>
+            <int32 name="smps" description="length of recording in samples"/>
+            <bool32 name="rec" description="recording state,pre - fadeout"/>
+            <bool32 name="fade" description="recording state,post - fadeout"/>
+            <frac32.positive name="remain" description="remaining recording-time for the selected slot"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.kdecaytime.exp name="attack" description="fade-in time">
+               <DefaultValue v="-64.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <frac32.s.map.kdecaytime.exp name="release" description="fade-out time">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+         </params>
+         <attribs>
+            <objref name="table" description="table to record to "/>
+            <combo name="slots" description="number of slots in the table">
+               <MenuEntries>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>4</string>
+                  <string>8</string>
+                  <string>16</string>
+                  <string>32 </string>
+                  <string>64</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>0</string>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>3 </string>
+                  <string>4</string>
+                  <string>5 </string>
+                  <string>6</string>
+               </CEntries>
+            </combo>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[bool rec;
+uint32_t recpos;
+uint32_t offset;
+uint32_t rec_offset;
+uint32_t rec_max;
+uint8_t shift;
+uint32_t start;
+uint32_t starthold;
+bool mode;
+
+bool recstate;
+uint32_t shold;
+uint32_t rhold;
+int32_t env;
+
+int32_t _ap;
+int32_t phase;
+
+static const uint16_t LENGTH = (1 << attr_slots) << 2;
+uint32_t array [LENGTH];]]></code.declaration>
+         <code.init><![CDATA[rec_max = attr_table.LENGTH >> attr_slots;
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+         <code.krate><![CDATA[if ((inlet_rec) && !rec) {
+      rec = 1;
+      start = inlet_phase;
+      mode = inlet_sync;
+      offset = ((inlet_slot << 21) >> attr_slots) << 6;
+      recpos = (__USAT(offset,27)>>shift);
+	 array [inlet_slot << 2] = recpos;
+	 array [(inlet_slot << 2)+2]  =  (inlet_playmode) ? inlet_playmode : 1;		
+	 array [(inlet_slot << 2)+3]  = __SSAT(inlet_phase,28);
+     } 
+
+//fades
+
+   if (rec) env = (1<<27) - (___SMMUL((1<<27)-env,param_attack)<<1);
+   else env = ___SMMUL(env,param_release)<<1;
+  recstate = env;
+
+       
+  //rec stopped-> wait for rollover if sync is on 
+if ((!inlet_rec) && rec) {
+ 	if (mode)	{
+ 		phase = (inlet_phase - start) & ((1<<27)-1);
+         if ((phase - _ap) <= 0)  {rec = 0;shold = recpos - 16;rhold =shold << shift;recpos = 0;starthold = start;} 
+         _ap = phase;
+        } 
+        else {rec = 0;shold = recpos;rhold =shold << shift;recpos = 0;starthold = 0;}
+   }
+
+        outlet_rec = rec;
+        outlet_fade = recstate;
+        outlet_offset = offset;
+        outlet_range = rhold;
+        outlet_smps = shold;
+        outlet_startpoint = starthold;
+        if (rec)  outlet_remain = ((rec_max - recpos) << shift) << attr_slots;]]></code.krate>
+         <code.srate><![CDATA[//record   
+
+if (recstate) {
+ if ((recpos >= rec_max)||(recpos >= shold)) recpos = 0;
+           	
+ if (rec) attr_table.array[recpos] = 
+ __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_table.GAIN;
+              else attr_table.array[recpos] = 
+(__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_table.array [recpos] << attr_table.GAIN))>>attr_table.GAIN;
+
+ recpos ++;    
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_3" x="1092" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="recmodes_1" outlet="slot"/>
+         <dest obj="smplr" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="recmodes_1" outlet="arm"/>
+         <dest obj="smplr" inlet="arm"/>
+      </net>
+      <net>
+         <source obj="recmodes_1" outlet="rec"/>
+         <dest obj="smplr" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="recmodes_1" outlet="playmode"/>
+         <dest obj="smplr" inlet="playmode"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="left"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="right"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="+_2" inlet="in1"/>
+         <dest obj="smplr" inlet="wave"/>
+      </net>
+      <net>
+         <source obj="midimux_1" outlet="velo"/>
+         <dest obj="poly" inlet="velo"/>
+      </net>
+      <net>
+         <source obj="midimux_1" outlet="note"/>
+         <dest obj="poly" inlet="note"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="demux_1" inlet="s"/>
+         <dest obj="recmodes_1" inlet="slot"/>
+         <dest obj="slot_2" inlet="slot"/>
+         <dest obj="slot_3" inlet="slot"/>
+         <dest obj="edit_1" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="recmodes_1" inlet="loopRec"/>
+         <dest obj="edit_1" inlet="trig"/>
+         <dest obj="edit_1" inlet="delete"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="audio"/>
+         <dest obj="+_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="i_5" outlet="out"/>
+         <dest obj="midimux_1" inlet="note1"/>
+      </net>
+      <net>
+         <source obj="i_6" outlet="out"/>
+         <dest obj="midimux_1" inlet="note2"/>
+      </net>
+      <net>
+         <source obj="i_7" outlet="out"/>
+         <dest obj="midimux_1" inlet="note3"/>
+      </net>
+      <net>
+         <source obj="i_8" outlet="out"/>
+         <dest obj="midimux_1" inlet="note4"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="smplr" outlet="recstart"/>
+         <dest obj="poly" inlet="stop"/>
+      </net>
+      <net>
+         <source obj="smplr" outlet="recslot"/>
+         <dest obj="poly" inlet="stopnote"/>
+      </net>
+      <net>
+         <source obj="or_1" outlet="o"/>
+         <dest obj="midimux_1" inlet="velo1"/>
+      </net>
+      <net>
+         <source obj="smplr" outlet="recstate"/>
+         <dest obj="t2p_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="t2p_1" outlet="pulse"/>
+         <dest obj="demux_1" inlet="i"/>
+         <dest obj="sphasor_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="or_2" outlet="o"/>
+         <dest obj="midimux_1" inlet="velo2"/>
+      </net>
+      <net>
+         <source obj="loop1" outlet="o"/>
+         <dest obj="or_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="loop2" outlet="o"/>
+         <dest obj="or_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="loop3" outlet="o"/>
+         <dest obj="or_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="loop4" outlet="o"/>
+         <dest obj="or_4" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o0"/>
+         <dest obj="or_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o1"/>
+         <dest obj="or_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o2"/>
+         <dest obj="or_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o3"/>
+         <dest obj="or_4" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="or_3" outlet="o"/>
+         <dest obj="midimux_1" inlet="velo3"/>
+      </net>
+      <net>
+         <source obj="or_4" outlet="o"/>
+         <dest obj="midimux_1" inlet="velo4"/>
+      </net>
+      <net>
+         <source obj="smplr" outlet="remain"/>
+         <dest obj="dial_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="edit_1" inlet="defrag"/>
+      </net>
+      <net>
+         <source obj="button_2" outlet="o"/>
+         <dest obj="edit_1" inlet="clear"/>
+      </net>
+      <net>
+         <source obj="slot_1" outlet="smps"/>
+         <dest obj="i_9" inlet="in"/>
+         <dest obj="sphasor_1" inlet="smps"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="slot_1" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="slot_2" outlet="smps"/>
+         <dest obj="i_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="toggle_2" outlet="o"/>
+         <dest obj="recmodes_1" inlet="sync"/>
+      </net>
+      <net>
+         <source obj="sphasor_1" outlet="wave"/>
+         <dest obj="recmodes_1" inlet="phase"/>
+         <dest obj="smplr" inlet="Aux"/>
+         <dest obj="dial_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="slot_3" outlet="Aux"/>
+         <dest obj="dial_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

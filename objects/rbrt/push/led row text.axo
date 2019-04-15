@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led row text" uuid="fd40ee73-ddc2-4b91-9edd-4d75ab3c4a9e">
+   <obj.normal id="led row text" uuid="1fc77254-3abb-4305-aa2c-3fae7049e267">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="redraw"/>
@@ -25,27 +25,26 @@
       <code.declaration><![CDATA[bool trig;
 bool mtrig;
 bool doit;
-uint8_t prerow;]]></code.declaration>
+uint8_t prerow;
+uint16_t outrowMUL;]]></code.declaration>
       <code.krate><![CDATA[if (!inlet_mute){
 		if (inlet_redraw && !trig){trig = 1;doit = 1;}
 		if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
 		if (inlet_row != prerow) {doit = 1;prerow = inlet_row;}			
-		if (doit) {
+		if (doit && !attr_LED.ROW) {
 			doit = 0;
-			attr_LED.DIRTY = 1;
-			int i;
-			for(i=0;i< 68;i++) attr_LED.array[i + (inlet_row * 68)] = 32;
-				strcpy(&attr_LED.array[0 + (inlet_row * 68)],inlet_text0);
-				strcpy(&attr_LED.array[9 + (inlet_row * 68)],inlet_text1);
-				strcpy(&attr_LED.array[17+ (inlet_row * 68)],inlet_text2);
-				strcpy(&attr_LED.array[26+ (inlet_row * 68)],inlet_text3);
-				strcpy(&attr_LED.array[34+ (inlet_row * 68)],inlet_text4);
-				strcpy(&attr_LED.array[43+ (inlet_row * 68)],inlet_text5);
-				strcpy(&attr_LED.array[51+ (inlet_row * 68)],inlet_text6);
-				strcpy(&attr_LED.array[60+ (inlet_row * 68)],inlet_text7);
-			}	
+			outrowMUL = inlet_row * 68;
+			memcpy(&attr_LED.array[0 + outrowMUL],inlet_text0,8);
+			memcpy(&attr_LED.array[9 + outrowMUL],inlet_text1,8);
+			memcpy(&attr_LED.array[17+ outrowMUL],inlet_text2,8);
+			memcpy(&attr_LED.array[26+ outrowMUL],inlet_text3,8);
+			memcpy(&attr_LED.array[34+ outrowMUL],inlet_text4,8);
+			memcpy(&attr_LED.array[43+ outrowMUL],inlet_text5,8);
+			memcpy(&attr_LED.array[51+ outrowMUL],inlet_text6,8);
+			memcpy(&attr_LED.array[60+ outrowMUL],inlet_text7,8);
+			attr_LED.ROW = inlet_row + 1;
+		}	
 }
-
 if (inlet_mute) mtrig = 0;
 if (!inlet_redraw) trig = 0;]]></code.krate>
    </obj.normal>
