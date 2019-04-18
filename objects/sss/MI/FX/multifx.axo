@@ -1,0 +1,286 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="multifx" uuid="86d76784-3b74-44c8-9ad3-b31a74bfbb75">
+      <sDescription>chorus effect from the rings dsp code open sourced by mutable instruments.
+any bugs/issues you find are our own, report on the axoloti forum.
+
+Thanks to Olivier Gillet from Mutable Instruments for open sourcing their code.
+http://mutable-instruments.com</sDescription>
+      <license>GPL</license>
+      <inlets>
+         <frac32buffer name="l"/>
+         <frac32buffer name="r"/>
+         <int32 name="order"/>
+         <frac32 name="Cmix"/>
+         <frac32 name="Pmix"/>
+         <frac32 name="Emix"/>
+         <frac32 name="Rmix"/>
+         <frac32 name="Pfrequency"/>
+         <frac32 name="Pshift"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="l"/>
+         <frac32buffer name="r"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="Cmix" description="mix amount chorus"/>
+         <frac32.u.map name="Pmix" description="mix amount phaser/delay"/>
+         <frac32.u.map name="Emix" description="mix amount ensemble"/>
+         <frac32.u.map name="Rmix" description="mix amount reverb"/>
+         <int32 name="order">
+            <MinValue i="0"/>
+            <MaxValue i="23"/>
+         </int32>
+         <frac32.u.map name="Camount"/>
+         <frac32.u.map name="Cdepth"/>
+         <frac32.s.map name="Pfrequency"/>
+         <frac32.s.map name="Pshift"/>
+         <frac32.u.map name="Pfeedback"/>
+         <frac32.u.map name="Eamount"/>
+         <frac32.u.map name="Edepth"/>
+         <frac32.u.map name="Ramount"/>
+         <frac32.u.map name="Rtime"/>
+         <frac32.u.map name="Rdiffusion"/>
+         <frac32.u.map name="Rgain"/>
+         <frac32.u.map name="Rlowpass"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <includes>
+         <include>./rings_fx.h</include>
+      </includes>
+      <code.declaration><![CDATA[rings_fx::Chorus chorus;
+rings_fx::Ensemble ensemble;
+rings_fx::Reverb reverb;
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *a1;
+int16_t *a2;
+uint32_t writepos;
+int32_t cm,pm,em,rm;
+int32_t TM1,TM2,FD,f1,f2,prv1,prv2,stp1,stp2,T1,T2;
+int32_t L[4][BUFSIZE],R[4][BUFSIZE];
+int i;
+int SL;
+int sel[24][4]=
+{
+	{0,1,2,3},
+	{0,1,3,2},
+	{0,2,1,3},
+	{0,2,3,1},
+	{0,3,1,2},
+	{0,3,2,1},
+	{1,0,2,3},
+	{1,0,3,2},
+	{1,2,0,3},
+	{1,2,3,0},
+	{1,3,0,2},
+	{1,3,2,0},
+	{2,0,1,3},
+	{2,0,3,1},
+	{2,1,0,3},
+	{2,1,3,0},
+	{2,3,0,1},
+	{2,3,1,0},
+	{3,0,1,2},
+	{3,0,2,1},
+	{3,1,0,2},
+	{3,1,2,0},
+	{3,2,0,1},
+	{3,2,1,0}
+};
+int32_t Chorus(int I){
+static float left[BUFSIZE];
+static float right[BUFSIZE];
+for(i=0;i<BUFSIZE;i++){
+	left[i] = q27_to_float(L[I][i]);
+	right[i] = q27_to_float(R[I][i]);
+}
+chorus.Process(left,right,BUFSIZE);
+for(i=0;i<BUFSIZE;i++){
+	L[I][i] += ___SMMUL((float_to_q27(left[i]))-L[I][i],cm)<<1;
+	R[I][i] += ___SMMUL((float_to_q27(right[i]))-R[I][i],cm)<<1;
+}
+}
+
+
+
+int32_t Ensemble(int I){
+static float left[BUFSIZE];
+static float right[BUFSIZE];
+for(i=0;i<BUFSIZE;i++){
+	left[i] = q27_to_float(L[I][i]);
+	right[i] = q27_to_float(R[I][i]);
+}
+
+ensemble.Process(left,right,BUFSIZE);
+
+for(i=0;i<BUFSIZE;i++){
+	L[I][i] += ___SMMUL((float_to_q27(left[i]))-L[I][i],em)<<1;
+	R[I][i] += ___SMMUL((float_to_q27(right[i]))-R[I][i],em)<<1;
+}
+}
+
+int32_t Reverb(int I){
+static float left[BUFSIZE];
+static float right[BUFSIZE];
+for(i=0;i<BUFSIZE;i++){
+	left[i] = q27_to_float(L[I][i]);
+	right[i] = q27_to_float(R[I][i]);
+}
+reverb.Process(left,right,BUFSIZE);
+for(i=0;i<BUFSIZE;i++){
+	L[I][i] += ___SMMUL((float_to_q27(left[i]))-L[I][i],rm)<<1;
+	R[I][i] += ___SMMUL((float_to_q27(right[i]))-R[I][i],rm)<<1;
+}
+}
+
+int32_t Phaser(int I){
+for(i=0;i<BUFSIZE;i++){
+	writepos=(writepos+1)&LENGTHMASK;
+	a1[writepos]=__SSAT(L[I][i]+f2>>14,16);
+	a2[writepos]=__SSAT(R[I][i]+f1>>14,16);
+	
+      uint32_t tmp_di = writepos - (T1>>(27-LENGTHPOW)) -1;
+      uint32_t tmp_w1 = (T1<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = a1[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = a1[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f1 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+	
+	 tmp_di = writepos - (T2>>(27-LENGTHPOW)) -1;
+      tmp_w1 = (T2<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = a1[tmp_di&LENGTHMASK]<<16;
+      tmp_a2 = a1[(tmp_di+1)&LENGTHMASK]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f2 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      f1=___SMMUL(FD,f1)<<5;
+      f2=___SMMUL(FD,f2)<<5;
+      L[I][i]+=___SMMUL(f2-L[I][i]<<1,pm);
+      R[I][i]+=___SMMUL(f1-R[I][i]<<1,pm);
+	T1+=stp1;
+	T2+=stp2;
+}
+}
+
+int32_t COPY(int I){
+	for(i=0;i<BUFSIZE;i++){
+	L[I+1][i]=__SSAT(L[I][i],28);
+	R[I+1][i]=__SSAT(R[I][i],28);
+	}
+}
+
+int32_t SEL(int I){
+switch(sel[SL][I]){
+case 0: Chorus(I);break;
+case 1: Phaser(I);break;
+case 2: Ensemble(I);break;
+case 3: Reverb(I);break;
+}
+}]]></code.declaration>
+      <code.init><![CDATA[static int16_t _a1[1<<attr_size]  __attribute__ ((section (".sdram")));
+a1 = &_a1[0];
+static int16_t _a2[1<<attr_size]  __attribute__ ((section (".sdram")));
+a2 = &_a2[0];
+writepos = 0;
+for(i=0;i<LENGTH;i++){ a1[i] = 0;a2[i]=0;}
+
+chorus.Init((uint16_t*) sdram_malloc(32768));
+
+reverb.Init((uint16_t*) sdram_malloc(32768));
+
+
+ensemble.Init((uint16_t*) sdram_malloc(32768));]]></code.init>
+      <code.krate><![CDATA[for(i=0;i<BUFSIZE;i++){
+	L[0][i]=inlet_l[i];
+	R[0][i]=inlet_r[i];
+}
+cm=__USAT(param_Cmix+inlet_Cmix,27)<<4;
+pm=__USAT(param_Pmix+inlet_Pmix,27)<<4;
+em=__USAT(param_Emix+inlet_Emix,27)<<4;
+rm=__USAT(param_Rmix+inlet_Rmix,27)<<4;
+chorus.set_amount(q27_to_float(param_Camount));
+chorus.set_depth(q27_to_float(param_Cdepth));
+
+MTOF(-param_Pfrequency-inlet_Pfrequency,TM1)
+TM1=TM1>>1;
+int32_t Pshift=__SSAT(param_Pshift+inlet_Pshift,28);
+TM2=TM1+(___SMMUL(Pshift,TM1)<<5);
+TM1=TM1-(___SMMUL(Pshift,TM1)<<5);
+TM1=__USAT(TM1,27);
+TM2=__USAT(TM2,27);
+
+stp1=TM1-prv1>>4;
+T1=prv1;
+prv1=TM1;
+stp2=TM2-prv2>>4;
+T2=prv2;
+prv2=TM2;
+
+FD=param_Pfeedback;
+
+ensemble.set_amount(q27_to_float(param_Eamount));
+ensemble.set_depth(q27_to_float(param_Edepth));
+
+reverb.set_amount(q27_to_float(param_Ramount));
+reverb.set_input_gain(q27_to_float(param_Rgain));
+reverb.set_time(q27_to_float(param_Rtime));
+reverb.set_diffusion(q27_to_float(param_Rdiffusion));
+reverb.set_lp(q27_to_float(param_Rlowpass));
+
+SL=param_order+inlet_order;
+SL=SL-SL/24*24;
+SL+=SL<0?24:0;
+ 
+	SEL(0);
+	COPY(0);
+	SEL(1);
+	COPY(1);
+	SEL(2);
+	COPY(2);
+	SEL(3);
+
+
+for(i=0;i<BUFSIZE;i++){
+	outlet_l[i]=L[3][i]<<1;
+	outlet_r[i]=R[3][i]<<1;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
