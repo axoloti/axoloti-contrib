@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="find empty slot" uuid="cc4190ea-ccbf-449e-aed1-5e24106a9c1e">
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>smplr.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="findEmpty"/>
+         <int32.positive name="slot"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="found"/>
+         <int32.positive name="slot"/>
+         <bool32 name="full"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="lpr"/>
+      </attribs>
+      <code.declaration><![CDATA[bool strig;
+uint8_t slot;
+bool full;]]></code.declaration>
+      <code.krate><![CDATA[outlet_found = 0;
+if (inlet_findEmpty && !strig){
+	full = 1;
+	strig = 1;
+	if (!attr_lpr.array [(inlet_slot<<2) +2]) {
+		slot = inlet_slot;
+		outlet_found = 1;
+		full = 0;
+		}
+	else {
+		int i;
+			for (i = 0;i < attr_lpr.LENGTH;i +=4) if (!attr_lpr.array [i+2]) {
+			slot = i >> 2;
+			outlet_found = 1;
+			full = 0;
+			break;		
+			}
+		}
+}
+
+if (!inlet_findEmpty) strig = 0;
+outlet_full = full;
+outlet_slot = slot;]]></code.krate>
+   </obj.normal>
+</objdefs>

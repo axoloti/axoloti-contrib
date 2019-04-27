@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dial p set" uuid="c631aafe-9e1c-41ab-9680-79d3f846b04d">
+      <sDescription>positive integer control, horizontal radio buttons
+inlet &apos;reset&apos; resets control to zero</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="v"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="value" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t prev;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_v != prev){
+     prev = inlet_v;
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],prev, 0xFFFD);
+}
+outlet_out = param_value;]]></code.krate>
+   </obj.normal>
+</objdefs>

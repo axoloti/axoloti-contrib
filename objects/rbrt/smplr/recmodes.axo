@@ -1,12 +1,12 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="recmodes" uuid="358b67c1-7813-4923-ae94-eb92a9a10878">
+   <obj.normal id="recmodes" uuid="198db6cb-a19c-4cee-9711-1f477ea7ac29">
       <sDescription>a helper for different recording modes for &apos;smplr&apos;.
 &apos;loopRec&apos; will record into the selected slot,as long as &apos;loopRec&apos; is high,
 no new slices will be created.
 in addition,&apos;loopRec&apos; will check if the selected slot is empty.if not,
 the object will search for the next empty slot.
 &apos;sliceArm&apos; will arm &apos;smplr&apos; to record to the selected slot,
-&apos;sliceRec&apos; will start recording to that slot.</sDescription>
+&apos;sliceRec&apos; will start recording to that slot if it&apos;s empty.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>smplr.axh</helpPatch>
@@ -17,6 +17,7 @@ the object will search for the next empty slot.
          <frac32.positive name="phase"/>
          <bool32.risingfalling name="sliceArm"/>
          <bool32.rising name="sliceRec"/>
+         <bool32.risingfalling name="DISABLE"/>
       </inlets>
       <outlets>
          <int32 name="slot"/>
@@ -38,14 +39,17 @@ bool lrec;
 
 uint32_t start;
 int32_t _ap;
-int32_t phase;]]></code.declaration>
+int32_t phase;
+bool full;]]></code.declaration>
       <code.krate><![CDATA[outlet_rec = 0;
+full = attr_smplr.array[(inlet_slot << 2) +2];
 
+if (!inlet_DISABLE){
 if (inlet_loopRec && !lrec){
 	lrec = 1;
 	start = inlet_phase;
 	outlet_playmode = attr_loopFlag;
-	if (attr_smplr.array[(inlet_slot << 2) +2]){
+	if (full){
 	slot = 255;
 	int i;
 	for (i = 0;i < 126;i++) if (!attr_smplr.array[(i << 2) +2]){slot = i; break;}
@@ -55,12 +59,6 @@ if (inlet_loopRec && !lrec){
 		rec = 1;
 		outlet_rec = 1;	
 		}	
-}
-
-if (!lrec){	
-if (inlet_sliceArm && !rec) {srec = 1;rec = 1;}
-if (srec) {outlet_rec = inlet_sliceRec;slot = inlet_slot;outlet_playmode = attr_sliceFlag;}
-if (!inlet_sliceArm && srec) {srec = 0;rec = 0;}
 }
 
 if (!inlet_loopRec && lrec) {
@@ -79,7 +77,21 @@ if (!inlet_loopRec && lrec) {
         	}
 }
 
+if (!lrec){	
+	if ((inlet_sliceArm && !rec)&& !full) {
+			srec = 1;
+			rec = 1;
+		}
+		if (srec) {
+			outlet_rec = inlet_sliceRec;
+			if (!full) slot = inlet_slot;
+			outlet_playmode = attr_sliceFlag;
+		}
+	if (!inlet_sliceArm && srec) {srec = 0;rec = 0;}
+}
+
+outlet_arm = rec;
 outlet_slot = slot;
-outlet_arm = rec;]]></code.krate>
+}]]></code.krate>
    </obj.normal>
 </objdefs>

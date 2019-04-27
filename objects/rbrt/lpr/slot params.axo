@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slot params" uuid="08a36fe5-f6ea-4ef7-a6e5-5da76d06a2f9">
+      <sDescription>reference sample information created by &apos;smplr&apos;.
+&apos;slot&apos; sets the sample bank slot to refer to.
+&apos;offset&apos; returns the start of the slot in fraction of the table&apos;s size,
+&apos;range&apos; returns the length.
+&apos;playmode&apos; returns the playmode the slot has been recorded with.
+&apos;Aux&apos; returns auxiliary information,like the recording startpoint.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>lpr.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="offset" description="sample start in fraction of the table"/>
+         <frac32.positive name="range" description="sample length in fraction of the table"/>
+         <int32.positive name="playmode" description="playmode"/>
+         <frac32.positive name="startpoint"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="lpr"/>
+         <objref name="wave"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_wave.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[outlet_offset  = attr_lpr.array [inlet_slot << 2] << shift;
+outlet_range  = (attr_lpr.array [(inlet_slot << 2) + 1] - attr_lpr.array [inlet_slot << 2]) << shift;
+outlet_playmode = attr_lpr.array [(inlet_slot << 2 )+ 2] ;
+outlet_startpoint = attr_lpr.array [(inlet_slot << 2 )+ 3] ;]]></code.krate>
+   </obj.normal>
+</objdefs>

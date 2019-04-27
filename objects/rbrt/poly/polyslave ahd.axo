@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polyslave ahd" uuid="a2cad690-3839-4045-ac0a-d871f9647126">
+   <obj.normal id="polyslave ahd" uuid="10456e33-7321-4118-89e9-07aea78a0211">
       <sDescription>works only inside a polyphonic sub-patch.
 routes note and velocity to a specific voice,
 and gives feedback to the &apos;mother-object&apos; about the current playback state of that voice.
@@ -8,7 +8,7 @@ release-envelope if there is one.
 otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
       <author>robert schirmer</author>
       <license>BSD</license>
-      <helpPatch>midi_out.axh</helpPatch>
+      <helpPatch>poly.axh</helpPatch>
       <inlets>
          <bool32.rising name="stop"/>
          <frac32.positive name="attack"/>
@@ -25,7 +25,7 @@ otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
       <displays/>
       <params/>
       <attribs>
-         <objref name="polyhandler"/>
+         <objref name="polymaster"/>
          <combo name="retrigger">
             <MenuEntries>
                <string>on</string>
@@ -59,8 +59,8 @@ val = 0;]]></code.init>
 trigon = 0;
 trigoff = 0;
 
-note = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index] -1;
-velo = attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index + attr_polyhandler.POLY];
+note = attr_polymaster.Snote [index] -1;
+velo = attr_polymaster.Svelo [index];
 	if ((note != pren) ||(velo != prev) || (stop && velo)){
 	if (note != pren) val = 0;
 	stop = 0;
@@ -80,8 +80,8 @@ if (trigoff && gate) gate = 0;
 if (inlet_stop && !stop) {
 	gate = 0;
 	stop = 1;
-	attr_polyhandler.array [(attr_polyhandler.POLY << 1) + index + attr_polyhandler.POLY] = 0;
-	attr_polyhandler.array [index] = 0;
+	attr_polymaster.Svelo [index] = 0;
+	attr_polymaster.Rhold [index] = 0;
 	}
 
 if (gate > 0) {
@@ -97,8 +97,8 @@ else {
 val = __USAT(val,27);
 
 
-if (val) attr_polyhandler.array [index + attr_polyhandler.POLY] = pren + 1;
-else attr_polyhandler.array [index + attr_polyhandler.POLY] = 0;
+if (val) attr_polymaster.Rrelease [index] = pren + 1;
+else attr_polymaster.Rrelease [index] = 0;
 
 outlet_gate = gate;
 outlet_note = pren;

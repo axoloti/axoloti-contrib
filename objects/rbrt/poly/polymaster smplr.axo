@@ -1,12 +1,12 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polymaster" uuid="2c3a4ddd-a3e7-4030-94c8-16dc413f5e3c">
+   <obj.normal id="polymaster smplr" uuid="1771493d-a722-476c-80ac-d56580beaeb5">
       <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;
 unlike a &apos;normal&apos; polyphonic subpatch, starting a note that is already playing will re-trigger that note,instead of playing that note with another voice.
 if &apos;kill&apos; is enabled,notes that are on release will be stopped.
 &apos;polyhandler latch&apos; references a table with information about the &apos;playback mode&apos;.
-playback mode 0 or 1 = &apos;normal&apos; , a note-on is sent when you press a key,a note-off on release.
-playback mode 2 = &apos;latch&apos; , a note-on will toggle between &apos;play&apos; or &apos;stop&apos; (great for loops!!)
-
+&apos;latchFlag&apos; sets which value in that table defines the &apos;latch - mode&apos;.
+in latch-mode,note-ons will toggle the respective note on and off,
+note-offs are ignored.
 &apos;blocksize&apos; refers how big a block of parameters is for each voice,
 &apos;index&apos; sets where inside that block the information about the &apos;playback mode&apos; is stored</sDescription>
       <author>Robert Schirmer</author>
@@ -17,11 +17,17 @@ playback mode 2 = &apos;latch&apos; , a note-on will toggle between &apos;play&a
          <int32.positive name="velo"/>
          <int32.positive name="stopnote" description="note number to stop"/>
          <bool32.rising name="stop" description="stop it!"/>
+         <int32.positive name="startnote"/>
+         <bool32.rising name="start"/>
       </inlets>
-      <outlets/>
+      <outlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+         <int32.positive name="target"/>
+      </outlets>
       <displays/>
       <params>
-         <bool32.tgl name="kill" description="kill notes on release" noLabel="true"/>
+         <bool32.tgl name="steal" description="kill notes on release" noLabel="true"/>
       </params>
       <attribs>
          <combo name="polyphony">
@@ -62,6 +68,8 @@ playback mode 2 = &apos;latch&apos; , a note-on will toggle between &apos;play&a
                <string>16</string>
             </CEntries>
          </combo>
+         <objref name="smplr"/>
+         <spinner name="loopFlag" MinValue="1" MaxValue="5" DefaultValue="3"/>
       </attribs>
       <code.declaration><![CDATA[int8_t _note;
 uint8_t _velo;
@@ -70,38 +78,64 @@ uint8_t prev;
 bool trig;
 bool trigoff;
 bool stop;
+bool start;
 uint8_t i;
 bool doit;
 uint8_t target;
+bool latch;
 
 static const uint8_t LENGTHPOW = 5;
 static const uint8_t POLY = attr_polyphony;
 static const uint8_t BITS = 8;
 static const uint8_t GAIN = 20;
-uint8_t array [POLY << 2];]]></code.declaration>
+
+uint8_t Rhold [POLY];
+uint8_t Rrelease [POLY];
+uint8_t Snote [POLY];
+uint8_t Svelo [POLY];
+
+uint8_t old_voice [POLY << 1];
+uint8_t old_voice_length;]]></code.declaration>
       <code.init><![CDATA[pren = 0;
 prev = 0;
 _note = 0;
 _velo = 0;
-for ( i = 0;i < (POLY << 1);i ++) array [i] = 0;
-stop = 0;]]></code.init>
+stop = 0;
+start = 0;]]></code.init>
       <code.krate><![CDATA[doit = 0;
 trig = 0;
 trigoff = 0;
+
+for (i = 0;i < old_voice_length;i++) if (!Rrelease [old_voice [i] -1 ] || !old_voice [i]) {
+		old_voice_length --;
+		memmove (&old_voice [i],&old_voice [i +1],old_voice_length);
+		}
 
 if ((inlet_note != pren) || (inlet_velo != prev)){
 	pren = inlet_note;
 	prev = inlet_velo;
 	_velo = inlet_velo;
 	_note = inlet_note;
-	if (_velo) trig = 1;	
-		else trigoff = 1;		
+	latch = (attr_smplr.array [(_note << 2) + 2]) >= attr_loopFlag;
+	if (_velo && (attr_smplr.array [(_note << 2) + 2])) trig = 1;	
+	if (!latch && !_velo) trigoff = 1;	
 }
 TRIGGER:
 if (trig) {
 	//retrig
 	for (i = 0;i < POLY;i ++){
-		if (array [i + POLY] == (_note + 1)){
+			if (latch) {
+			if (Rhold [i] == (_note +1)) {
+					target = i;
+					_velo = 0;
+					doit = 1;
+				}
+				if (Rrelease[i] == (_note +1)) {
+					target = i;
+					doit = 1;
+				}
+			}
+		else if (Rrelease [i] == (_note + 1)){
 			target = i;
 			doit = 1;	
 			}
@@ -109,19 +143,20 @@ if (trig) {
 		}	
 	//trigger on
 	if (!doit){
-	for (i = 0;i < POLY;i ++) if ((!array [i]) && (!array [i +POLY])) {target = i; doit = 1;}	
+	for (i = 0;i < POLY;i ++) if ((!Rhold [i]) && (!Rrelease [i])) {target = i; doit = 1;}	
 		}
 	//kill
-	if (!doit && param_kill){
-	for (i = 0;i < POLY;i ++) if (!array [i] ) {target = i; doit = 1;}
+	if ((!doit && param_steal)&& old_voice_length){
+		target = old_voice [0] -1;
+		old_voice [0] = 0;
+		doit = 1;
 	}
 						
 }
 //trigger off
 if (trigoff) {
-	for (i = 0;i < POLY;i ++)if (array [i] == (_note + 1)){target = i;doit = 1;}
+	for (i = 0;i < POLY;i ++)if (Rhold [i] == (_note + 1)){target = i;doit = 1;}
 	}
-
 
 //stop
 if  (inlet_stop && (!stop)) {
@@ -131,16 +166,34 @@ if  (inlet_stop && (!stop)) {
 			prev = _velo;
 			stop = 1;
 			trigoff = 1;
-			goto TRIGGER;				
+			goto TRIGGER;			
 }
 	if  (!inlet_stop) stop = 0;
-
+//start
+if  (inlet_start && (!start)) {	
+			_note = inlet_startnote;
+			_velo = 127;
+			pren = _note;
+			prev = _velo;
+			start = 1;
+			trig = 1;
+			goto TRIGGER;			
+}
+	if  (!inlet_start) start = 0;
 	
 if (doit) {
-array [(POLY << 1) + target ] = _note + 1;
-array [(POLY << 1) + target + POLY] = _velo;
-if (_velo) array [target] = _note +1;
-else array [target] = 0;
-}]]></code.krate>
+Snote [target] = _note + 1;
+Svelo [target] = _velo;
+if (_velo) Rhold [target] = _note +1;
+	else {
+		Rhold [target] = 0;
+		for (i = 0;i < old_voice_length;i++) if (old_voice [i] == (target +1)) old_voice [i] = 0;
+		old_voice [old_voice_length] = target +1;
+		old_voice_length ++;
+	}
+}
+outlet_note = _note;
+outlet_velo = _velo;
+outlet_target = target;]]></code.krate>
    </obj.normal>
 </objdefs>

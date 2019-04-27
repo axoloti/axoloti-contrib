@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="midimux 2" uuid="181727ee-08ef-4ba3-a425-f9293b7c764c">
+   <obj.normal id="midimux 4" uuid="6142a85b-c97b-4caf-8d2f-d9adc57e8bf5">
       <sDescription>collects 3 midi-streams into one.
 each stream can be muted.
 buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream or muted or only note-ons.</sDescription>
@@ -15,6 +15,14 @@ buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream o
          <bool32.risingfalling name="muteOnOnly2"/>
          <int32.positive name="note2"/>
          <int32.positive name="velo2"/>
+         <bool32.risingfalling name="mute3"/>
+         <bool32.risingfalling name="muteOnOnly3"/>
+         <int32.positive name="note3"/>
+         <int32.positive name="velo3"/>
+         <bool32.risingfalling name="mute4"/>
+         <bool32.risingfalling name="muteOnOnly4"/>
+         <int32.positive name="note4"/>
+         <int32.positive name="velo4"/>
       </inlets>
       <outlets>
          <int32.positive name="note"/>
@@ -23,18 +31,17 @@ buttons &apos;muteNoteOnOnly&apos; set whether all messages of an input stream o
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[uint8_t nin [2];
-uint8_t vin [2];
+      <code.declaration><![CDATA[uint8_t nin [4];
+uint8_t vin [4];
 
-uint8_t pren [2];
-uint8_t prev [2];
+uint8_t pren [4];
+uint8_t prev [4];
 
 uint8_t nstack [8] = {0};
 uint8_t vstack [8] = {0};
 uint8_t slength;
 uint8_t swrite;
 uint8_t sread;
-uint8_t thin;
 
 uint8_t noteout;
 uint8_t veloout;]]></code.declaration>
@@ -56,22 +63,37 @@ if (!inlet_mute2) {
 			vin [1] = 0;
 		}
 		
+if (!inlet_mute3) {
+	nin [2] = inlet_note3;
+	vin [2] = inlet_velo3;
+	}
+	else if ((!inlet_velo3 ) && inlet_muteOnOnly3) {
+			nin [2] = inlet_note3;
+			vin [2] = 0;
+		}
+
+if (!inlet_mute4) {
+	nin [3] = inlet_note4;
+	vin [3] = inlet_velo4;
+	}
+	else if ((!inlet_velo4 ) && inlet_muteOnOnly4) {
+			nin [3] = inlet_note4;
+			vin [3] = 0;
+		}
 
 int i;
-for (i = 0;i < 2;i ++) {
+for (i = 0;i < 4;i ++) {
 if ((nin [i] != pren [i]) || (vin [i] != prev [i])) {
-nstack [swrite] = nin [i];
-vstack [swrite] = vin [i];
-pren [i] = nin [i];
-prev [i] = vin [i];	
-slength ++;
-swrite ++;
-swrite = swrite %8;
-}
+	nstack [swrite] = nin [i];
+	vstack [swrite] = vin [i];
+	pren [i] = nin [i];
+	prev [i] = vin [i];	
+	slength ++;
+	swrite ++;
+	swrite = swrite %8;
+	}
 }
 
-if (thin == 3) {
-  thin = 0;
 	if (slength) {
 		noteout = nstack [sread];
 		veloout = vstack [sread];
@@ -79,8 +101,7 @@ if (thin == 3) {
 		sread = sread %8;
 		slength --;
 	}
-}
-else thin ++;
+
 
 	outlet_note = noteout;
 	outlet_velo = veloout;]]></code.krate>

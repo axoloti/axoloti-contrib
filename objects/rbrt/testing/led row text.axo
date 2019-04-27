@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led row text" uuid="7f8f306c-6fa9-46d7-bcbc-e95d640e16b3">
+   <obj.normal id="led row text" uuid="4f7abee2-7b87-48c9-877b-8a44fc0217aa">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="redraw"/>
@@ -20,8 +20,7 @@
       <displays/>
       <params/>
       <attribs>
-         <objref name="LEDmaster"/>
-         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+         <objref name="LED"/>
       </attribs>
       <code.declaration><![CDATA[bool trig;
 bool mtrig;
@@ -31,17 +30,17 @@ uint8_t prerow;]]></code.declaration>
 		if (inlet_redraw && !trig){trig = 1;doit = 1;}
 		if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
 		if (inlet_row != prerow) {doit = 1;prerow = inlet_row;}			
-		if (doit && !attr_LEDmaster.ROW) {
+		if (doit && !attr_LED.ROW) {
 			doit = 0;
-			memcpy(&attr_LEDmaster.array[8],inlet_text0,8);
-			memcpy(&attr_LEDmaster.array[17],inlet_text1,8);
-			memcpy(&attr_LEDmaster.array[25],inlet_text2,8);
-			memcpy(&attr_LEDmaster.array[34],inlet_text3,8);
-			memcpy(&attr_LEDmaster.array[42],inlet_text4,8);
-			memcpy(&attr_LEDmaster.array[51],inlet_text5,8);
-			memcpy(&attr_LEDmaster.array[59],inlet_text6,8);
-			memcpy(&attr_LEDmaster.array[68],inlet_text7,8);
-			attr_LEDmaster.ROW = ((inlet_row + attr_row) + 1) %5;
+			memcpy(&attr_LED.array[8],inlet_text0,8);
+			memcpy(&attr_LED.array[17],inlet_text1,8);
+			memcpy(&attr_LED.array[25],inlet_text2,8);
+			memcpy(&attr_LED.array[34],inlet_text3,8);
+			memcpy(&attr_LED.array[42],inlet_text4,8);
+			memcpy(&attr_LED.array[51],inlet_text5,8);
+			memcpy(&attr_LED.array[59],inlet_text6,8);
+			memcpy(&attr_LED.array[68],inlet_text7,8);
+			attr_LED.ROW = inlet_row + 1;
 		}	
 }
 if (inlet_mute) mtrig = 0;

@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="prefix 000" uuid="879f7941-83c3-4d5d-820d-d61e67c7d6cc">
+      <sDescription>generates string: prefix000suffix</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="index" description="index"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="out" description="string"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="prefix"/>
+         <spinner name="maxLength" MinValue="1" MaxValue="32" DefaultValue="8"/>
+      </attribs>
+      <code.declaration><![CDATA[char c[attr_maxLength];
+int offset;
+int pval;]]></code.declaration>
+      <code.init><![CDATA[strcpy(&c[0],"attr_prefix000");
+offset = strlen("attr_prefix");
+pval = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_index != pval){   pval = inlet_index;
+   int i = inlet_index;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+}
+outlet_out = &c[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

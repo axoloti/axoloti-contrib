@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <objdefs appVersion="1.0.12">
    <obj.normal id="matrix get" uuid="3eba908d-b4ab-4328-bd57-0077c7f05c49">
       <sDescription>useful for polyphonic midi.
@@ -8,40 +9,36 @@ hold is 1 if any keys are on hold.
 gate is true when velocity &gt; 0</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
-      <helpPatch>poly.axh</helpPatch>
-      <inlets/>
+      <helpPatch>push buttons.axh</helpPatch>
+      <inlets></inlets>
       <outlets>
-         <int32.positive name="pad" description="note number +/- &apos;noteshift&apos;"/>
-         <int32.positive name="velo" description="velocity"/>
-         <bool32 name="gate" description="status of current note"/>
-         <bool32.pulse name="padOn" description="pulse on note-on"/>
-         <bool32.pulse name="padOff" description="pulse on note-off"/>
-         <bool32 name="hold" description="any notes on hold?"/>
+         <int32.positive name="pad" description="note number +/- &apos;noteshift&apos;"></int32.positive>
+         <int32.positive name="velo" description="velocity"></int32.positive>
+         <bool32 name="gate" description="status of current note"></bool32>
+         <bool32.pulse name="padOn" description="pulse on note-on"></bool32.pulse>
+         <bool32.pulse name="padOff" description="pulse on note-off"></bool32.pulse>
+         <bool32 name="hold" description="any notes on hold?"></bool32>
       </outlets>
-      <displays/>
-      <params/>
-      <attribs/>
+      <displays></displays>
+      <params></params>
+      <attribs></attribs>
       <code.declaration><![CDATA[uint8_t _note;
 int8_t count;
 uint8_t _velo;
 uint8_t pren;
 uint8_t prev;
 
-uint8_t nstack [8] = {0};
-uint8_t vstack [8] = {0};
+uint8_t nstack [4] = {0};
+uint8_t vstack [4] = {0};
 uint8_t slength;
 uint8_t sread;
-uint8_t swrite;
-
-uint8_t thin;]]></code.declaration>
+uint8_t swrite;]]></code.declaration>
       <code.init><![CDATA[slength = 0;
 _note = 0;
 _velo = 0;]]></code.init>
       <code.krate><![CDATA[outlet_padOn = 0;
 outlet_padOff = 0;
 
-if (thin == 3) {
-  thin = 0;
 	if (slength) {
 		_note = nstack [sread];
 		_velo = vstack [sread];
@@ -54,11 +51,9 @@ if (thin == 3) {
 				count --;
 			}
 		sread ++;
-		sread = sread %8;
+		sread = sread %4;
 		slength --;
 	}
-}
-else thin ++;
 
 	if (count < 0) count = 0;
 	outlet_gate = bool (_velo);
@@ -72,7 +67,7 @@ else thin ++;
      vstack [swrite] = data2;
      slength ++;
   	swrite ++;
-  	swrite = swrite %8; 
+  	swrite = swrite %4; 
   }
 }
 if (((status == MIDI_NOTE_ON) && (!data2))||(status == MIDI_NOTE_OFF)) 
@@ -83,7 +78,7 @@ if (((status == MIDI_NOTE_ON) && (!data2))||(status == MIDI_NOTE_OFF))
      vstack [swrite] = 0;
      slength ++;
     	swrite ++;
-  	swrite = swrite %8;    
+  	swrite = swrite %4;    
 }
  }
 else if ((status ==  MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {

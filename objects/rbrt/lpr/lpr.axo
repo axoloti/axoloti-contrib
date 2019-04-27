@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="lpr" uuid="3ffc5387-ea6a-4297-abaa-b5d5e8eebc36">
+   <obj.normal id="lpr" uuid="997c98cc-fcf7-4c85-a84a-35b8dff0422f">
       <sDescription>records audio to a table with nice fade-ins and -outs.
 the table can be divided into 1,2,4 or 8 slots.
 when &apos;sync&apos; is enabled,recording will be synced to phase of the signal connected to &apos;pos&apos;,
@@ -11,7 +11,7 @@ set the length of the fade-out/overdub period with &apos;release&apos;,
 the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
       <author>Robert Schirmer</author>
       <license>BSD</license>
-      <helpPatch>loop_multi.axh</helpPatch>
+      <helpPatch>lpr.axh</helpPatch>
       <inlets>
          <frac32buffer name="wave" description="audio in"/>
          <int32 name="slot" description="select slot to record into"/>
@@ -34,7 +34,7 @@ the length of the fade-in of the recording with &apos;attack&apos;.</sDescriptio
             <DefaultValue v="-64.0"/>
          </frac32.s.map.kdecaytime.exp>
          <frac32.s.map.kdecaytime.exp name="release" description="fade-out time">
-            <DefaultValue v="0.0"/>
+            <DefaultValue v="-32.0"/>
          </frac32.s.map.kdecaytime.exp>
       </params>
       <attribs>
@@ -114,7 +114,7 @@ if ((!inlet_rec) && rec) {
  	if (mode)	{
  		postrec = 1;
  		phase = (inlet_phase - start) & ((1<<27)-1);
-         		if ((phase - _ap) <= 1)  {
+         		if ((phase - _ap) <= 0)  {
          			recpos -= 16;
  				stopMainRec();
          		} 
