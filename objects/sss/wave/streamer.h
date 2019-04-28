@@ -1,4 +1,5 @@
-
+#ifndef STREAMER_H
+#define STREAMER_H
 #define SDREADFILEPINGPONGSIZE 256
 typedef struct {
   union {
@@ -319,3 +320,4 @@ void sdStopStreamer(sdReadFilePingpong *s) {
   }
   s->pThreadSD = 0;
 }
+#endif

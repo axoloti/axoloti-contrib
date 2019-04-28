@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="mostfilter2nd" uuid="31558a0c-1e48-4f43-be4b-17fe7f848324">
+   <obj.normal id="mostfilter2nd" uuid="c044d46b-3cb9-4995-9085-3f34f6473f35">
       <sDescription>2nd order &quot;most&quot; filter with continuous mode selection lp-&gt;bp-&gt;hp</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -9,6 +9,7 @@
          <frac32.bipolar name="freq" description="cutoff frequency"/>
          <frac32.bipolar name="damp" description="resonance/damp amount"/>
          <frac32.positive name="mode" description="continuous lp/bp/hp mode selection"/>
+         <frac32 name="tame"/>
       </inlets>
       <outlets>
          <frac32buffer name="out" description="audio output"/>
@@ -18,10 +19,12 @@
          <frac32.s.map.pitch name="freq" description="cutoff frequency"/>
          <frac32.s.map name="damp" description="resonance/damping amount"/>
          <frac32.u.map name="mode" description="continuous lp/bp/hp mode selection"/>
+         <frac32.u.map name="tame"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t val1,val2;
-int32_t r1,r2;]]></code.declaration>
+int32_t r1,r2;
+int32_t prv1,prv2,stp1,stp2,tm,md;]]></code.declaration>
       <code.init><![CDATA[r1=r2=val2=val1 = 0;]]></code.init>
       <code.krate><![CDATA[int32_t f;
 int32_t pitch=param_freq+inlet_freq;
@@ -31,20 +34,34 @@ int32_t pitch=param_freq+inlet_freq;
    MTOF(__SSAT(-damp+pitch-(1<<25),28),damp)
    damp=damp;
    int32_t mode=__USAT(param_mode+inlet_mode,27);
-   int32_t mix1=__USAT(mode,26);
-   int32_t mix2=mode-mix1<<4;
-   mix1=mix1<<4;]]></code.krate>
-      <code.srate><![CDATA[r1+=___SMMUL(inlet_in-val1<<1,f);
+   
+   int32_t tame=__USAT(param_tame+inlet_tame,27);
+
+   stp1=tame-prv1>>4;
+   tm=prv1;
+   prv1=tame;
+   stp2=mode-prv2>>4;
+   md=prv2;
+   prv2=mode;]]></code.krate>
+      <code.srate><![CDATA[int32_t in=inlet_in;
+int32_t mix1=__USAT(md,26);
+   int32_t mix2=md-mix1<<4;
+   mix1=mix1<<4;
+in+=___SMMUL(__SSAT(val1+val2,28),tm)<<3;
+
+r1+=___SMMUL(in-val1<<1,f);
    r1-=___SMMUL(r1,damp)<<1;
    r1-=r1>>7;
    val1 = ___SMMLA(r1,f,val1);
-   int32_t tmp=val1-(___SMMUL(inlet_in,mix2)<<2);
+   int32_t tmp=val1-(___SMMUL(in,mix2)<<2);
    r2+=___SMMUL(tmp-val2,f)<<1;
    r2-=___SMMUL(r2,damp)<<1;
    r2-=r2>>7;
    val2 = ___SMMLA(r2,f,val2);
    outlet_out= val2-(___SMMUL(mix1,tmp)<<2);
    val1=__SSAT(val1,28);
-   val2=__SSAT(val2,28);]]></code.srate>
+   val2=__SSAT(val2,28);
+   tm+=stp1;
+   md+=stp2;]]></code.srate>
    </obj.normal>
 </objdefs>
