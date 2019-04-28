@@ -32,17 +32,20 @@ uint8_t _velo;
 uint8_t pren;
 uint8_t prev;
 
-uint8_t nstack [4] = {0};
-uint8_t vstack [4] = {0};
+uint8_t nstack [16] = {0};
+uint8_t vstack [16] = {0};
 uint8_t slength;
 uint8_t sread;
-uint8_t swrite;]]></code.declaration>
+uint8_t swrite;
+uint8_t thin;]]></code.declaration>
       <code.init><![CDATA[slength = 0;
 _note = 0;
 _velo = 0;]]></code.init>
       <code.krate><![CDATA[outlet_noteOn = 0;
 outlet_noteOff = 0;
 
+if (!thin){
+	thin = 2;
 	if (slength) {
 		_note = nstack [sread];
 		_velo = vstack [sread];
@@ -55,11 +58,11 @@ outlet_noteOff = 0;
 				count --;
 			}
 		sread ++;
-		sread = sread %4;
+		sread = sread %16;
 		slength --;
 	}
+}else thin --;
 
-	if (count < 0) count = 0;
 	outlet_gate = bool (_velo);
 	outlet_hold = bool (count);
 	outlet_note = _note;
@@ -71,7 +74,7 @@ outlet_noteOff = 0;
      vstack [swrite] = data2;
      slength ++;
   	swrite ++;
-  	swrite = swrite %4; 
+  	swrite = swrite %16; 
   }
 }
 if (((status == MIDI_NOTE_ON +  (attr_channel -1)) && (!data2))||(status == MIDI_NOTE_OFF + (attr_channel -1))) 
@@ -82,7 +85,7 @@ if (((status == MIDI_NOTE_ON +  (attr_channel -1)) && (!data2))||(status == MIDI
      vstack [swrite] = 0;
      slength ++;
     	swrite ++;
-  	swrite = swrite %4;    
+  	swrite = swrite %16;    
 }
  }
 else if ((status ==  (attr_channel -1) + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
