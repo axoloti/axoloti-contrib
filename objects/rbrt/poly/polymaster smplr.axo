@@ -80,6 +80,7 @@ bool trigoff;
 bool stop;
 bool start;
 uint8_t i;
+uint8_t ii;
 bool doit;
 uint8_t target;
 bool latch;
@@ -94,7 +95,7 @@ uint8_t Rrelease [POLY];
 uint8_t Snote [POLY];
 uint8_t Svelo [POLY];
 
-uint8_t old_voice [POLY << 1];
+uint8_t old_voice [POLY];
 uint8_t old_voice_length;]]></code.declaration>
       <code.init><![CDATA[pren = 0;
 prev = 0;
@@ -102,10 +103,9 @@ _note = 0;
 _velo = 0;
 stop = 0;
 start = 0;]]></code.init>
-      <code.krate><![CDATA[doit = 0;
-trig = 0;
+      <code.krate><![CDATA[trig = 0;
 trigoff = 0;
-
+//remove empty entries in the old voices list,and remove voices that are finished playing
 for (i = 0;i < old_voice_length;i++) if (!Rrelease [old_voice [i] -1 ] || !old_voice [i]) {
 		old_voice_length --;
 		memmove (&old_voice [i],&old_voice [i +1],old_voice_length);
@@ -116,47 +116,63 @@ if ((inlet_note != pren) || (inlet_velo != prev)){
 	prev = inlet_velo;
 	_velo = inlet_velo;
 	_note = inlet_note;
-	latch = (attr_smplr.array [(_note << 2) + 2]) >= attr_loopFlag;
-	if (_velo && (attr_smplr.array [(_note << 2) + 2])) trig = 1;	
+	latch = (attr_smplr.array [(_note <<2)+2]) >= attr_loopFlag;
+	if (_velo && (attr_smplr.array [(_note <<2)+2])) trig = 1;	
 	if (!latch && !_velo) trigoff = 1;	
 }
 TRIGGER:
 if (trig) {
-	//retrig
+	//FIRST,check if this is a retrigger-event or a latched note that's being toggled
 	for (i = 0;i < POLY;i ++){
-			if (latch) {
+		//is this note latched?
+		if (latch) {
 			if (Rhold [i] == (_note +1)) {
 					target = i;
 					_velo = 0;
 					doit = 1;
-				}
-				if (Rrelease[i] == (_note +1)) {
+			}
+			if (Rrelease[i] == (_note +1)) {
 					target = i;
 					doit = 1;
-				}
 			}
-		else if (Rrelease [i] == (_note + 1)){
-			target = i;
-			doit = 1;	
-			}
-		
-		}	
-	//trigger on
-	if (!doit){
-	for (i = 0;i < POLY;i ++) if ((!Rhold [i]) && (!Rrelease [i])) {target = i; doit = 1;}	
 		}
-	//kill
+		//is this note on release an will be retriggered?
+		else if (Rrelease [i] == (_note + 1)){
+				target = i;
+				//remove this voice from the old voices list
+				for (ii = 0;ii < old_voice_length;ii++) if (old_voice [ii] == (target +1)) old_voice [ii] = 0;
+				doit = 1;	
+			}
+	}	
+	//if it's NOT a retrigger or a toggle-event,try to start a 'normal' voice..
+	if (!doit){
+		for (i = 0;i < POLY;i ++) if ((!Rhold [i]) && (!Rrelease [i])){
+			target = i;
+			doit = 1;
+			}	
+	}
+	//if there are no empty voices available,try to STEAL a voice that's on release 
 	if ((!doit && param_steal)&& old_voice_length){
+		//set the target to the oldest voice
 		target = old_voice [0] -1;
+		//remove that voice from the old voices list
 		old_voice [0] = 0;
 		doit = 1;
-	}
-						
+	}						
 }
 //trigger off
 if (trigoff) {
-	for (i = 0;i < POLY;i ++)if (Rhold [i] == (_note + 1)){target = i;doit = 1;}
+	for (i = 0;i < POLY;i ++)
+	if (Rhold [i] == (_note + 1)){
+		target = i;
+		doit = 1;
+		if (!latch){
+			//add the voice to the old voices list if it's NOT a loop
+			old_voice [old_voice_length] = target +1;
+			old_voice_length ++;
+		}
 	}
+}
 
 //stop
 if  (inlet_stop && (!stop)) {
@@ -177,21 +193,19 @@ if  (inlet_start && (!start)) {
 			prev = _velo;
 			start = 1;
 			trig = 1;
+			latch = 0;
 			goto TRIGGER;			
 }
 	if  (!inlet_start) start = 0;
 	
 if (doit) {
-Snote [target] = _note + 1;
-Svelo [target] = _velo;
-if (_velo) Rhold [target] = _note +1;
-	else {
-		Rhold [target] = 0;
-		for (i = 0;i < old_voice_length;i++) if (old_voice [i] == (target +1)) old_voice [i] = 0;
-		old_voice [old_voice_length] = target +1;
-		old_voice_length ++;
-	}
+	doit = 0;
+	Snote [target] = _note + 1;
+	Svelo [target] = _velo;
+	if (_velo) Rhold [target] = _note +1;
+		else Rhold [target] = 0;		
 }
+
 outlet_note = _note;
 outlet_velo = _velo;
 outlet_target = target;]]></code.krate>
