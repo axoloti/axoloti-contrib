@@ -13,6 +13,7 @@
       </outlets>
       <displays>
          <bool32 name="load" noLabel="true"/>
+         <int32.label name="length"/>
       </displays>
       <params/>
       <attribs>
@@ -107,7 +108,9 @@ static const uint32_t GAIN = 12;
 int16_t *array;
 static const int32_t SAMPLES=1<<attr_samples;
 int32_t sample;
-bool em,load;]]></code.declaration>
+int sm;
+bool em,load;
+int32_t *END;]]></code.declaration>
       <code.init><![CDATA[static sdReadFilePingpong s[attr_poly] __attribute__ ((section (".data")));
 // unmap from aliased memory for DMA
 stream = (sdReadFilePingpong *)(0x20000000 | (int)&s[parent->polyIndex]);
@@ -122,6 +125,8 @@ stream->pThreadSD = chThdCreateStatic(waThreadSD, sizeof(waThreadSD),
 
 static int16_t _array[LENGTH*SAMPLES] __attribute__ ((section (".sdram")));
 array = &_array[0];
+static int32_t _END[SAMPLES] __attribute__ ((section (".sdram")));
+END = &_END[0];
 { 
   int i;
   if(attr_init>0){
@@ -135,9 +140,9 @@ bool start=inlet_load;
 
      if ((start>0) && !starttrig) {
      	cnt=0;
-     	em=0;
+     	
      	sample=inlet_sample;
-          sample=sample&(SAMPLES-1);
+          sm=sample=sample&(SAMPLES-1);
 		sample=sample*LENGTH;
         sdOpenStream(stream,inlet_filename);
         sdSeekStream(stream,0);
@@ -149,17 +154,40 @@ bool start=inlet_load;
    //  int16_t *q = 0;
      p=sdReadStream(stream);
      if (p) {
+     	em=0;
      	load=1;
         for(i=0;i<BUFSIZE;i++){
         	if(cnt<LENGTH){   
            array[cnt+sample] = (*(p++));
            cnt+=1;
         	}
+        	//else{em=0;}
         }
 
      }
-     else {if(!em){for(int i=cnt;i<LENGTH;i++){array[i+sample]=0;} em=1;} load=0;}
+     else {
+     	if(!em)
+     	{
+     		END[sm]=cnt;
+     		disp_length=cnt;
+     		for(int i=0;i<16;i++){
+     			array[i]=___SMMUL(array[i],i<<27)<<1;
+     		}
+     		for(int i=0;i<129;i++)
+     		{
+     			int k=__USAT(i-129+cnt,LENGTHPOW)+sample;
+     			array[k]=___SMMUL(array[k],(128-i)<<25)<<1;
+     		}
+     		for(int i=cnt;i<LENGTH;i++)
+     		{
+     			array[i+sample]=0;
+     		}
+     	em=1;
+     	}
+     	load=0;
+     	}
      disp_load=load;
+     
      outlet_ended=!load;]]></code.krate>
    </obj.normal>
 </objdefs>
