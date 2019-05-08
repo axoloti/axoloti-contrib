@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="change b" uuid="422f213c-b766-4ac6-bb47-596ab63f9751">
+      <sDescription>Generates a single pulse at &apos;change&apos; when the input changes;
+if there&apos;s a transition from 0 to 1, outlet &apos;0to1&apos; will produce a pulse,
+else, outlet &apos;1to0&apos;.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>pulselength.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="bool"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="change"/>
+         <bool32.pulse name="0to1"/>
+         <bool32.pulse name="1to0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+bool ontrig;
+bool offtrig;]]></code.declaration>
+      <code.init><![CDATA[offtrig = 1;]]></code.init>
+      <code.krate><![CDATA[outlet_0to1 = 0;
+outlet_1to0 = 0;
+outlet_change = 0;
+if (inlet_bool && !ontrig) {
+  ontrig = 1;
+  outlet_0to1 = 1;
+  outlet_change = 1;
+}
+
+if (!inlet_bool) ontrig = 0;
+
+if (!inlet_bool && !offtrig) {
+  offtrig = 1;
+  outlet_1to0 = 1;
+  outlet_change = 1;
+}
+
+if (inlet_bool) offtrig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

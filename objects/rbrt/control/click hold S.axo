@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="click hold S" uuid="104f42eb-7502-4f0a-bca3-556eba2af505">
+   <obj.normal id="click hold S" uuid="99efc8b8-7803-4f15-8ab2-8d0adace10c6">
       <sDescription>detect how long a momentary button is held down;
 3 stages,no hold,short hold,long hold.
 outputs a pulse at the respective outlet on release of the button and the current stage (1 - short hold , 2 - long hold ) out of  &apos;stage&apos;</sDescription>
@@ -26,12 +26,11 @@ outlet_long = 0;
 if (inlet_gate) {
 	tc ++;
 	if (tc < attr_long) outlet_stage = 1;
-	if (tc >= attr_long) {
-		outlet_stage= 2;
-		outlet_long = 1;
-		}
+	else outlet_stage= 2;
+	if (tc == attr_long) outlet_long = 1;
 	}
 else outlet_stage = 0;
+
 if (!inlet_gate && tc){
 if (tc < attr_long) outlet_short = 1;
 tc = 0;

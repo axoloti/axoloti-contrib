@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="polymaster" uuid="d692e2a4-c9b1-4232-89dc-19eabad38a6c">
+   <obj.normal id="polymaster" uuid="4d749897-a473-4b0b-9f4f-86f2647f740a">
       <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;
 unlike a &apos;normal&apos; polyphonic subpatch, starting a note that is already playing will re-trigger that note,instead of playing that note with another voice.
 if &apos;kill&apos; is enabled,notes that are on release will be stopped.
@@ -24,6 +24,7 @@ note-offs are ignored.
          <int32.positive name="note"/>
          <int32.positive name="velo"/>
          <int32.positive name="target"/>
+         <int32 name="test"/>
       </outlets>
       <displays/>
       <params>
@@ -102,10 +103,11 @@ stop = 0;
 start = 0;]]></code.init>
       <code.krate><![CDATA[trig = 0;
 trigoff = 0;
-
+// 'thin' the old voice list if voices are done with release or got stolen
 for (i = 0;i < old_voice_length;i++) if (!Rrelease [old_voice [i] -1 ] || !old_voice [i]) {
 		old_voice_length --;
-		memmove (&old_voice [i],&old_voice [i +1],old_voice_length);
+		for (ii=i;ii<old_voice_length;ii++) old_voice [ii] = old_voice [ii+1];
+		break;
 		}
 
 if ((inlet_note != pren) || (inlet_velo != prev)){
@@ -188,6 +190,7 @@ if (doit) {
 
 outlet_note = _note;
 outlet_velo = _velo;
-outlet_target = target;]]></code.krate>
+outlet_target = target;
+outlet_test = old_voice_length;]]></code.krate>
    </obj.normal>
 </objdefs>

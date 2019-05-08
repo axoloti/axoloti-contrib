@@ -1,11 +1,98 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_6" x="434" y="280">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="state" x="1190" y="0">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="128"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="RECORD" x="210" y="70">
       <params>
          <bool32.mom name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/poly/keyb zone poly" uuid="0bd90e4b-0047-49cc-b148-6e9e81ec5b34" name="keyb_1" x="0" y="308">
+   <obj type="rbrt/patching/loadbang" uuid="45d1f29d-ac62-4e5b-86f8-2201d2f6c689" name="loadbang_1" x="1036" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="7a84ab3a-bf26-4f46-934d-80d7e93082b7" name="matrix_1" x="1526" y="70">
+      <params/>
+      <attribs>
+         <objref attributeName="holdmap" obj="state"/>
+         <spinner attributeName="thin" value="10"/>
+      </attribs>
+      <object id="patch/object" uuid="7a84ab3a-bf26-4f46-934d-80d7e93082b7">
+         <sDescription>sends a note / a velocity when either changes</sDescription>
+         <author>robert schirmer</author>
+         <license>BSD</license>
+         <helpPatch>midi_out.axh</helpPatch>
+         <inlets>
+            <bool32.risingfalling name="select"/>
+            <int32 name="pad"/>
+            <int32.positive name="onClr"/>
+            <int32.positive name="offClr"/>
+            <int32.positive name="selClr"/>
+            <bool32.rising name="redraw"/>
+            <bool32.risingfalling name="mute"/>
+         </inlets>
+         <outlets/>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="holdmap"/>
+            <spinner name="thin" MinValue="0" MaxValue="20" DefaultValue="10"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[uint8_t out [64];
+uint8_t preout [64];
+uint8_t counter;
+bool trig;
+uint8_t thin;]]></code.declaration>
+         <code.krate><![CDATA[if (!inlet_mute){
+if (inlet_redraw && !trig){
+	trig = 1;
+	int i;
+	for (i = 0;i < 64;i++) preout [i] = 128;
+}
+if (!inlet_redraw) trig = 0;
+
+if (attr_holdmap.array [counter]) out [counter] = inlet_onClr;
+else out [counter]  = inlet_offClr;
+
+//override the selected pad
+if (inlet_select) out [inlet_pad] = inlet_selClr;	
+
+// send output map 
+if (!thin){
+	if ((out[counter] != preout [counter]) && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
+				MidiSend3(MIDI_DEVICE_USB_HOST,2, MIDI_NOTE_ON,counter + 36,out [counter]);
+				thin = attr_thin;
+				preout [counter] = out [counter];
+		}	
+}
+else thin --;
+
+	counter ++;
+	counter = counter %64;
+}]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="PLAY" x="350" y="84">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/push/matrix colors" uuid="574714c7-49e0-4e38-83d6-9f7835d93cdf" name="matrix_2" x="1358" y="98">
+      <params/>
+      <attribs>
+         <combo attributeName="colors" selection="13-orchid"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/poly/keyb zone poly" uuid="0bd90e4b-0047-49cc-b148-6e9e81ec5b34" name="keyb_1" x="0" y="140">
       <params/>
       <attribs>
          <spinner attributeName="startNote" value="0"/>
@@ -14,305 +101,376 @@
          <spinner attributeName="noteshift" value="-36"/>
       </attribs>
    </obj>
-   <obj type="rbrt/poly/holdmap" uuid="05ffaf70-22e4-420f-b99a-779cb5c84a60" name="hold" x="168" y="308">
+   <obj type="rbrt/poly/holdmap" uuid="05ffaf70-22e4-420f-b99a-779cb5c84a60" name="hold" x="182" y="140">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="308" y="336">
+   <obj type="rbrt/control/rec wait" uuid="df39af67-15a3-41b3-a1eb-851288b914c8" name="rec_1" x="308" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/looper/lcontrol simple" uuid="93b35817-b8ce-439e-860a-9b7b503d2b5f" name="obj_1" x="476" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/change b" uuid="422f213c-b766-4ac6-bb47-596ab63f9751" name="change_1" x="658" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_2" x="1134" y="154">
       <params>
          <bool32.tgl name="b" value="1"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/mloop/del step" uuid="a7b10769-6996-4562-a7f6-d9e2d927c320" name="del_2" x="1050" y="364">
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_3" x="1246" y="154">
+      <params>
+         <int32 name="value" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/mloop/del note" uuid="42b836e0-2c24-45f2-aad7-8658fe215f39" name="del_1" x="952" y="168">
       <params/>
       <attribs>
-         <objref attributeName="seq" obj="seq"/>
+         <objref attributeName="seq" obj="mloop"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="CLEAR NOTE" x="868" y="182">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/mloop/del step" uuid="a7b10769-6996-4562-a7f6-d9e2d927c320" name="del_2" x="1134" y="238">
+      <params/>
+      <attribs>
+         <objref attributeName="seq" obj="mloop"/>
          <objref attributeName="hold" obj="hold"/>
       </attribs>
    </obj>
-   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="1316" y="364">
+   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="disp_1" x="448" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="disp_3" x="658" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="952" y="280">
       <params>
-         <int32 name="value" value="48"/>
+         <bool32.tgl name="b" value="1"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="rbrt/mloop/write 16" uuid="f39653f5-8ce3-42f4-ab85-f63cdbb8d56b" name="write_1" x="1400" y="364">
-      <params>
-         <bool32.tgl name="clear" value="0"/>
-      </params>
-      <attribs>
-         <objref attributeName="seq" obj="seq"/>
-         <spinner attributeName="a1" value="8"/>
-         <spinner attributeName="a2" value="9"/>
-         <spinner attributeName="a3" value="10"/>
-         <spinner attributeName="a4" value="11"/>
-         <spinner attributeName="a5" value="12"/>
-         <spinner attributeName="a6" value="13"/>
-         <spinner attributeName="a7" value="14"/>
-         <spinner attributeName="a8" value="15"/>
-         <spinner attributeName="b1" value="0"/>
-         <spinner attributeName="b2" value="1"/>
-         <spinner attributeName="b3" value="2"/>
-         <spinner attributeName="b4" value="3"/>
-         <spinner attributeName="b5" value="4"/>
-         <spinner attributeName="b6" value="5"/>
-         <spinner attributeName="b7" value="6"/>
-         <spinner attributeName="b8" value="7"/>
-      </attribs>
-   </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_5" x="1302" y="420">
-      <params>
-         <bool32.mom name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="disp_3" x="616" y="448">
+   <obj type="rbrt/poly/midimux 2" uuid="181727ee-08ef-4ba3-a425-f9293b7c764c" name="midimux_1" x="1330" y="322">
       <params/>
       <attribs/>
    </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_2" x="196" y="462">
-      <params>
-         <bool32.mom name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_4" x="504" y="490">
-      <params>
-         <bool32.mom name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="70" y="532">
-      <params>
-         <bool32.mom name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/control/rec wait" uuid="df39af67-15a3-41b3-a1eb-851288b914c8" name="rec_1" x="154" y="532">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/looper/lcontrol simple" uuid="c6082d55-45b8-40d9-a84d-c36c802b67e7" name="obj_1" x="336" y="532">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_3" x="42" y="602">
-      <params>
-         <bool32.tgl name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <patchobj type="patch/object" uuid="a32cca4f-bb2c-41d5-9d5d-35df18043827" name="clocker_1" x="812" y="686">
-      <params/>
-      <attribs>
-         <spinner attributeName="reset" value="10000"/>
-      </attribs>
-      <object id="patch/object" uuid="a32cca4f-bb2c-41d5-9d5d-35df18043827">
-         <sDescription>while &apos;toggle&apos; is true, &apos;clocker&apos; is counting and 
-spits out the current clock.
-if &apos;toggle&apos; is false , &apos;clocker&apos; puts out 0.</sDescription>
-         <author>robert schirmer</author>
-         <license>who cares</license>
-         <helpPatch>timeri.axh</helpPatch>
-         <inlets>
-            <bool32.rising name="tap"/>
-            <int32.positive name="kticksIn"/>
-            <bool32.rising name="set"/>
-         </inlets>
-         <outlets>
-            <int32.positive name="kticks"/>
-         </outlets>
-         <displays/>
-         <params/>
-         <attribs>
-            <spinner name="reset" MinValue="1" MaxValue="100000" DefaultValue="16000"/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[uint32_t  tc;
-uint32_t  out;
-uint32_t  prev;
-uint32_t  out_old;
-bool tap;
-bool set;
-bool ext;
-uint8_t go;]]></code.declaration>
-         <code.init><![CDATA[tc = attr_reset;
-go = 0;]]></code.init>
-         <code.krate><![CDATA[if (inlet_tap && !tap) {
-	out = tc;
-	tc = 0;
-	ext = 0;
-	tap = 1;
-	go ++;
-	}
-	
-tc = tc +=4;
-if ((tc > attr_reset) && (!ext)) {
-	tc = attr_reset;
-	go = 0;
-	out_old = out;
-	}
-	
-if (inlet_set && !set) {
-	out,out_old = inlet_kticksIn;
-	ext = 1;
-}
-
-if (go > 1) outlet_kticks = out;
-else outlet_kticks = out_old;
-
-if (!inlet_set) set = 0;
-if (!inlet_tap) tap = 0;]]></code.krate>
-      </object>
-   </patchobj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_7" x="910" y="686">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/mloop/rec n sdram" uuid="64e67584-2f63-4c51-92bc-3032fac78686" name="seq" x="672" y="700">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/control/t2p inv" uuid="6a8a7c63-345c-4cd5-a1e8-12b25eb4f47e" name="t2p_1" x="518" y="728">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/seq/ktransport" uuid="fe6c2bcf-f893-4eb2-bb14-cabb30026d49" name="ktransport_1" x="910" y="770">
-      <params>
-         <int32 name="factor" value="1"/>
-         <bool32.tgl name="mode" value="0"/>
-      </params>
-      <attribs>
-         <combo attributeName="steps" selection="512"/>
-      </attribs>
-   </obj>
-   <obj type="rbrt/poly/midicheck" uuid="f1a57730-52ee-4e65-b9dc-9e7b0eb27a53" name="midicheck_1" x="1162" y="770">
-      <params/>
-      <attribs>
-         <objref attributeName="holdmap" obj="hold"/>
-      </attribs>
-   </obj>
-   <obj type="rbrt/poly/midimux 2" uuid="181727ee-08ef-4ba3-a425-f9293b7c764c" name="midimux_1" x="1316" y="770">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="rbrt/poly/polymaster" uuid="d692e2a4-c9b1-4232-89dc-19eabad38a6c" name="poly" x="1484" y="770">
+   <patchobj type="patch/object" uuid="fc8c9717-0761-423b-aa2c-a41740309c31" name="poly" x="1498" y="322">
       <params>
          <bool32.tgl name="steal" value="1"/>
       </params>
       <attribs>
          <combo attributeName="polyphony" selection="8"/>
       </attribs>
-   </obj>
-   <obj type="rbrt/mloop/play n" uuid="65386957-c344-49fa-befc-c52624a6db38" name="play_1" x="1036" y="784">
-      <params/>
-      <attribs>
-         <objref attributeName="seq" obj="seq"/>
-      </attribs>
-   </obj>
-   <obj type="rbrt/mloop/del note" uuid="42b836e0-2c24-45f2-aad7-8658fe215f39" name="del_1" x="672" y="840">
-      <params/>
-      <attribs>
-         <objref attributeName="seq" obj="seq"/>
-      </attribs>
-   </obj>
-   <patcher type="patch/patcher" uuid="e78d1d29-0622-403e-bd1d-2b0b0d7b3b4a" name="patcher_1" x="1358" y="924">
+      <object id="patch/object" uuid="fc8c9717-0761-423b-aa2c-a41740309c31">
+         <sDescription>controls a polyphonic subpatch,and receives information about the current state of all voices inside that patch via &apos;polyhandler slave&apos;
+unlike a &apos;normal&apos; polyphonic subpatch, starting a note that is already playing will re-trigger that note,instead of playing that note with another voice.
+if &apos;kill&apos; is enabled,notes that are on release will be stopped.
+&apos;polyhandler latch&apos; references a table with information about the &apos;playback mode&apos;.
+&apos;latchFlag&apos; sets which value in that table defines the &apos;latch - mode&apos;.
+in latch-mode,note-ons will toggle the respective note on and off,
+note-offs are ignored.
+&apos;blocksize&apos; refers how big a block of parameters is for each voice,
+&apos;index&apos; sets where inside that block the information about the &apos;playback mode&apos; is stored</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <helpPatch>poly.axh</helpPatch>
+         <inlets>
+            <int32.positive name="note"/>
+            <int32.positive name="velo"/>
+            <int32.positive name="stopnote" description="note number to stop"/>
+            <bool32.rising name="stop" description="stop it!"/>
+            <int32.positive name="startnote"/>
+            <bool32.rising name="start"/>
+         </inlets>
+         <outlets>
+            <int32.positive name="note"/>
+            <int32.positive name="velo"/>
+            <int32.positive name="target"/>
+            <int32 name="test"/>
+         </outlets>
+         <displays/>
+         <params>
+            <bool32.tgl name="steal" description="kill notes on release" noLabel="true"/>
+         </params>
+         <attribs>
+            <combo name="polyphony">
+               <MenuEntries>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>3</string>
+                  <string>4</string>
+                  <string>5</string>
+                  <string>6</string>
+                  <string>7</string>
+                  <string>8</string>
+                  <string>9</string>
+                  <string>10</string>
+                  <string>11</string>
+                  <string>12</string>
+                  <string>13</string>
+                  <string>14</string>
+                  <string>15</string>
+                  <string>16</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>1</string>
+                  <string>2</string>
+                  <string>3</string>
+                  <string>4</string>
+                  <string>5</string>
+                  <string>6</string>
+                  <string>7</string>
+                  <string>8</string>
+                  <string>9</string>
+                  <string>10</string>
+                  <string>11</string>
+                  <string>12</string>
+                  <string>13</string>
+                  <string>14</string>
+                  <string>15</string>
+                  <string>16</string>
+               </CEntries>
+            </combo>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int8_t _note;
+uint8_t _velo;
+uint8_t pren;
+uint8_t prev;
+bool trig;
+bool trigoff;
+bool stop;
+bool start;
+uint8_t i;
+uint8_t ii;
+bool doit;
+uint8_t target;
+
+static const uint8_t LENGTHPOW = 5;
+static const uint8_t POLY = attr_polyphony;
+static const uint8_t BITS = 8;
+static const uint8_t GAIN = 20;
+
+uint8_t Rhold [POLY];
+uint8_t Rrelease [POLY];
+uint8_t Snote [POLY];
+uint8_t Svelo [POLY];
+
+uint8_t old_voice [POLY];
+uint8_t old_voice_length;]]></code.declaration>
+         <code.init><![CDATA[pren = 0;
+prev = 0;
+_note = 0;
+_velo = 0;
+stop = 0;
+start = 0;]]></code.init>
+         <code.krate><![CDATA[trig = 0;
+trigoff = 0;
+// 'thin' the old voice list if voices are done with release or got stolen
+for (i = 0;i < old_voice_length;i++) if (!Rrelease [old_voice [i] -1 ] || !old_voice [i]) {
+		old_voice_length --;
+		for (ii=i;ii<old_voice_length;ii++) old_voice [ii] = old_voice [ii+1];
+		}
+
+if ((inlet_note != pren) || (inlet_velo != prev)){
+	pren = inlet_note;
+	prev = inlet_velo;
+	_velo = inlet_velo;
+	_note = inlet_note;
+	if (_velo) trig = 1;	
+	else trigoff = 1;	
+}
+TRIGGER:
+if (trig) {
+	//retrig
+	for (i = 0;i < POLY;i ++){
+	 	if (Rrelease [i] == (_note + 1)){
+			target = i;
+			//remove this voice from the old voices list
+			for (ii = 0;ii < old_voice_length;ii++) if (old_voice [ii] == (target +1)) old_voice [ii] = 0;
+			doit = 1;	
+			}	
+		}	
+	//if it's NOT a retrigger or a toggle-event,try to start a 'normal' voice..
+	if (!doit){
+		for (i = 0;i < POLY;i ++) if ((!Rhold [i]) && (!Rrelease [i])){
+			target = i;
+			doit = 1;
+			}	
+	}
+		//if there are no empty voices available,try to STEAL a voice that's on release 
+	if ((!doit && param_steal)&& old_voice_length){
+		//set the target to the oldest voice
+		target = old_voice [0] -1;
+		//remove that voice from the old voices list
+		old_voice [0] = 0;
+		doit = 1;
+	}							
+}
+//trigger off
+if (trigoff) {
+	for (i = 0;i < POLY;i ++)
+	if (Rhold [i] == (_note + 1)){
+		target = i;
+		doit = 1;
+		//add the voice to the old voices list
+		old_voice [old_voice_length] = target +1;
+		old_voice_length ++;	
+	}
+}
+
+//stop
+if  (inlet_stop && (!stop)) {
+			_note = inlet_stopnote;
+			_velo = 0;
+			pren = _note;
+			prev = _velo;
+			stop = 1;
+			trigoff = 1;
+			goto TRIGGER;			
+}
+	if  (!inlet_stop) stop = 0;
+//start
+if  (inlet_start && (!start)) {	
+			_note = inlet_startnote;
+			_velo = 127;
+			pren = _note;
+			prev = _velo;
+			start = 1;
+			trig = 1;
+			goto TRIGGER;			
+}
+	if  (!inlet_start) start = 0;
+	
+if (doit) {
+	doit = 0;
+	Snote [target] = _note + 1;
+	Svelo [target] = _velo;
+	if (_velo) Rhold [target] = _note +1;
+		else Rhold [target] = 0;		
+}
+
+outlet_note = _note;
+outlet_velo = _velo;
+outlet_target = target;
+outlet_test = old_voice_length;]]></code.krate>
+      </object>
+   </patchobj>
+   <patcher type="patch/patcher" uuid="662af91f-fdeb-47ef-8f7f-1bf53ae8f448" name="patcher_1" x="1638" y="322">
       <params>
-         <frac32.u.map name="attack" value="7.5"/>
-         <frac32.u.map name="release" value="57.5"/>
-         <frac32.s.map name="sine_1" value="23.0"/>
+         <frac32.u.map name="attack" value="0.0"/>
+         <frac32.u.map name="release" value="62.5"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="8"/>
       </attribs>
       <subpatch appVersion="1.0.12">
-         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="attack" x="28" y="28">
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="attack" x="56" y="70">
             <params>
                <frac32.u.map name="value" onParent="true" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="rbrt/poly/polyslave ahd" uuid="10456e33-7321-4118-89e9-07aea78a0211" name="polyslave_1" x="154" y="98">
+         <obj type="rbrt/poly/polyslave ahd" uuid="10456e33-7321-4118-89e9-07aea78a0211" name="polyslave_1" x="196" y="112">
             <params/>
             <attribs>
                <objref attributeName="polymaster" obj="../poly"/>
                <combo attributeName="retrigger" selection="on"/>
                <spinner attributeName="ascale" value="4"/>
-               <spinner attributeName="rscale" value="4"/>
+               <spinner attributeName="rscale" value="5"/>
                <spinner attributeName="dclick" value="2"/>
             </attribs>
          </obj>
-         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="release" x="28" y="112">
+         <obj type="rbrt/poly/translate" uuid="9cd00ed8-7ebe-44b5-8871-08247192c27c" name="translate_1" x="364" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="release" x="56" y="154">
             <params>
                <frac32.u.map name="value" onParent="true" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="rbrt/poly/translate" uuid="9cd00ed8-7ebe-44b5-8871-08247192c27c" name="translate_1" x="350" y="112">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="602" y="182">
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="812" y="196">
             <params>
-               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.s.map name="pitch" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="728" y="196">
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="952" y="196">
             <params/>
             <attribs/>
          </obj>
-         <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="826" y="196">
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="audio" x="1064" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="574" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/gain" uuid="6b4dd3da49f98e54900f6c20031f38f4624fa364" name="gain_1" x="658" y="252">
             <params>
-               <frac32.u.map name="amp" value="0.6499996185302734"/>
+               <frac32.u.map name="amp" value="0.34999990463256836"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="938" y="196">
+         <obj type="rbrt/poly/envstate" uuid="a6831ec4-2523-4ac5-9682-2eb30024b2cd" name="envstate_1" x="700" y="392">
             <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="532" y="210">
-            <params/>
-            <attribs/>
+            <attribs>
+               <objref attributeName="statemap" obj="../state"/>
+            </attribs>
          </obj>
          <nets>
             <net>
-               <source obj="sine_1" outlet="wave"/>
-               <dest obj="DCA_1" inlet="in"/>
-            </net>
-            <net>
-               <source obj="*_1" outlet="result"/>
-               <dest obj="DCA_1" inlet="gain"/>
-            </net>
-            <net>
-               <source obj="translate_1" outlet="note"/>
-               <dest obj="sine_1" inlet="pitch"/>
-            </net>
-            <net>
-               <source obj="gain_1" outlet="out"/>
-               <dest obj="outlet_1" inlet="outlet"/>
-            </net>
-            <net>
-               <source obj="translate_1" outlet="velo"/>
-               <dest obj="*_1" inlet="a"/>
-            </net>
-            <net>
                <source obj="polyslave_1" outlet="note"/>
                <dest obj="translate_1" inlet="note"/>
-            </net>
-            <net>
-               <source obj="DCA_1" outlet="out"/>
-               <dest obj="gain_1" inlet="in"/>
+               <dest obj="envstate_1" inlet="note"/>
             </net>
             <net>
                <source obj="polyslave_1" outlet="velo"/>
                <dest obj="translate_1" inlet="velo"/>
             </net>
             <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+            <net>
                <source obj="polyslave_1" outlet="env"/>
                <dest obj="*_1" inlet="b"/>
+               <dest obj="envstate_1" inlet="envstate"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="audio" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="translate_1" outlet="note"/>
+               <dest obj="sine_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="translate_1" outlet="velo"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="gain_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="gain_1" outlet="out"/>
+               <dest obj="DCA_1" inlet="gain"/>
             </net>
             <net>
                <source obj="attack" outlet="out"/>
@@ -333,126 +491,94 @@ if (!inlet_tap) tap = 0;]]></code.krate>
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>195</x>
-            <y>33</y>
-            <width>1286</width>
-            <height>918</height>
+            <x>221</x>
+            <y>48</y>
+            <width>1243</width>
+            <height>691</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1470" y="924">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1736" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="disp_2" x="448" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/mloop/rec n sdram" uuid="c27a0ef9-5797-4520-9293-f5a0f4374023" name="mloop" x="686" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/ktransport" uuid="fe6c2bcf-f893-4eb2-bb14-cabb30026d49" name="ktransport_1" x="840" y="350">
+      <params>
+         <int32 name="factor" value="1"/>
+         <bool32.tgl name="mode" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="512"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/poly/midicheck" uuid="f1a57730-52ee-4e65-b9dc-9e7b0eb27a53" name="midicheck_1" x="1148" y="350">
+      <params/>
+      <attribs>
+         <objref attributeName="holdmap" obj="hold"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/mloop/play n" uuid="65386957-c344-49fa-befc-c52624a6db38" name="play_1" x="994" y="364">
+      <params/>
+      <attribs>
+         <objref attributeName="seq" obj="mloop"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="OVERDUB" x="588" y="392">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="1134" y="462">
       <params/>
       <attribs/>
    </obj>
    <nets>
       <net>
-         <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="out_1" inlet="left"/>
-         <dest obj="out_1" inlet="right"/>
-      </net>
-      <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="hold" inlet="note"/>
-         <dest obj="midimux_1" inlet="note2"/>
-         <dest obj="poly" inlet="stopnote"/>
-         <dest obj="seq" inlet="note"/>
+         <dest obj="midimux_1" inlet="note1"/>
+         <dest obj="mloop" inlet="note"/>
          <dest obj="del_1" inlet="note"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="velo"/>
          <dest obj="hold" inlet="velo"/>
-         <dest obj="midimux_1" inlet="velo2"/>
-         <dest obj="seq" inlet="velo"/>
+         <dest obj="midimux_1" inlet="velo1"/>
+         <dest obj="mloop" inlet="velo"/>
       </net>
       <net>
          <source obj="ktransport_1" outlet="step"/>
+         <dest obj="i_1" inlet="in"/>
+         <dest obj="mloop" inlet="index"/>
+         <dest obj="del_2" inlet="index"/>
          <dest obj="play_1" inlet="index"/>
-         <dest obj="seq" inlet="index"/>
       </net>
       <net>
-         <source obj="midimux_1" outlet="note"/>
-         <dest obj="poly" inlet="note"/>
-      </net>
-      <net>
-         <source obj="midimux_1" outlet="velo"/>
-         <dest obj="poly" inlet="velo"/>
-      </net>
-      <net>
-         <source obj="button_1" outlet="o"/>
-         <dest obj="rec_1" inlet="wait"/>
+         <source obj="rec_1" outlet="rec"/>
+         <dest obj="disp_1" inlet="in"/>
+         <dest obj="mloop" inlet="rec"/>
+         <dest obj="obj_1" inlet="rec"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="noteOn"/>
          <dest obj="rec_1" inlet="go"/>
       </net>
       <net>
-         <source obj="rec_1" outlet="rec"/>
-         <dest obj="obj_1" inlet="rec"/>
-         <dest obj="t2p_1" inlet="trig"/>
-         <dest obj="seq" inlet="rec"/>
-      </net>
-      <net>
-         <source obj="obj_1" outlet="play"/>
-         <dest obj="play_1" inlet="play"/>
-      </net>
-      <net>
-         <source obj="button_2" outlet="o"/>
-         <dest obj="obj_1" inlet="toggle"/>
-      </net>
-      <net>
-         <source obj="midicheck_1" outlet="note"/>
-         <dest obj="midimux_1" inlet="note1"/>
-      </net>
-      <net>
-         <source obj="midicheck_1" outlet="velo"/>
-         <dest obj="midimux_1" inlet="velo1"/>
+         <source obj="RECORD" outlet="o"/>
+         <dest obj="rec_1" inlet="wait"/>
       </net>
       <net>
          <source obj="rec_1" outlet="waitstate"/>
-         <dest obj="disp_3" inlet="in"/>
-      </net>
-      <net>
-         <source obj="button_4" outlet="o"/>
-         <dest obj="poly" inlet="stop"/>
-         <dest obj="del_1" inlet="delNote"/>
-      </net>
-      <net>
-         <source obj="midicheck_1" outlet="used"/>
-         <dest obj="midimux_1" inlet="mute1"/>
-      </net>
-      <net>
-         <source obj="button_6" outlet="o"/>
-         <dest obj="play_1" inlet="stopall"/>
-         <dest obj="clocker_1" inlet="tap"/>
-      </net>
-      <net>
-         <source obj="clocker_1" outlet="kticks"/>
-         <dest obj="ktransport_1" inlet="kticks"/>
-         <dest obj="i_7" inlet="in"/>
-      </net>
-      <net>
-         <source obj="obj_1" outlet="reset"/>
-         <dest obj="ktransport_1" inlet="reset"/>
-      </net>
-      <net>
-         <source obj="t2p_1" outlet="pulse"/>
-         <dest obj="clocker_1" inlet="set"/>
-      </net>
-      <net>
-         <source obj="button_5" outlet="o"/>
-         <dest obj="write_1" inlet="trig"/>
-      </net>
-      <net>
-         <source obj="i_2" outlet="out"/>
-         <dest obj="write_1" inlet="startNote"/>
-      </net>
-      <net>
-         <source obj="toggle_3" outlet="o"/>
-         <dest obj="rec_1" inlet="nowait"/>
-      </net>
-      <net>
-         <source obj="seq" outlet="length"/>
-         <dest obj="clocker_1" inlet="kticksIn"/>
+         <dest obj="disp_2" inlet="in"/>
       </net>
       <net>
          <source obj="play_1" outlet="note"/>
@@ -463,8 +589,75 @@ if (!inlet_tap) tap = 0;]]></code.krate>
          <dest obj="midicheck_1" inlet="velo"/>
       </net>
       <net>
+         <source obj="patcher_1" outlet="audio"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="midimux_1" outlet="note"/>
+         <dest obj="poly" inlet="note"/>
+      </net>
+      <net>
+         <source obj="midimux_1" outlet="velo"/>
+         <dest obj="poly" inlet="velo"/>
+      </net>
+      <net>
+         <source obj="mloop" outlet="length"/>
+         <dest obj="ktransport_1" inlet="kticks"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="play"/>
+         <dest obj="change_1" inlet="bool"/>
+         <dest obj="disp_3" inlet="in"/>
+         <dest obj="play_1" inlet="play"/>
+      </net>
+      <net>
+         <source obj="PLAY" outlet="o"/>
+         <dest obj="obj_1" inlet="toggle"/>
+      </net>
+      <net>
+         <source obj="midicheck_1" outlet="note"/>
+         <dest obj="midimux_1" inlet="note2"/>
+      </net>
+      <net>
+         <source obj="midicheck_1" outlet="velo"/>
+         <dest obj="midimux_1" inlet="velo2"/>
+      </net>
+      <net>
+         <source obj="midicheck_1" outlet="used"/>
+         <dest obj="midimux_1" inlet="mute2"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="1to0"/>
+         <dest obj="play_1" inlet="stopall"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="0to1"/>
+         <dest obj="ktransport_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="OVERDUB" outlet="o"/>
+         <dest obj="mloop" inlet="dub"/>
+      </net>
+      <net>
+         <source obj="CLEAR NOTE" outlet="o"/>
+         <dest obj="del_1" inlet="delNote"/>
+      </net>
+      <net>
          <source obj="toggle_1" outlet="o"/>
-         <dest obj="seq" inlet="dub"/>
+         <dest obj="del_2" inlet="delete"/>
+      </net>
+      <net>
+         <source obj="loadbang_1" outlet="pulse"/>
+         <dest obj="matrix_1" inlet="redraw"/>
+      </net>
+      <net>
+         <source obj="matrix_2" outlet="color"/>
+         <dest obj="matrix_1" inlet="onClr"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="matrix_2" inlet="brightness"/>
       </net>
    </nets>
    <settings>

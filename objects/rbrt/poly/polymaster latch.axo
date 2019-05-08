@@ -129,10 +129,11 @@ stop = 0;
 start = 0;]]></code.init>
       <code.krate><![CDATA[trig = 0;
 trigoff = 0;
-//remove empty entries in the old voices list,and remove voices that are finished playing
+
 for (i = 0;i < old_voice_length;i++) if (!Rrelease [old_voice [i] -1 ] || !old_voice [i]) {
 		old_voice_length --;
-		memmove (&old_voice [i],&old_voice [i +1],old_voice_length);
+		for (ii=i;ii<old_voice_length;ii++) old_voice [ii] = old_voice [ii+1];
+		break;
 		}
 
 if ((inlet_note != pren) || (inlet_velo != prev)){
