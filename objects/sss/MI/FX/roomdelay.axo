@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="multifx" uuid="86d76784-3b74-44c8-9ad3-b31a74bfbb75">
+   <obj.normal id="roomdelay" uuid="12d3caf9-ae92-48c1-9761-d4e9f05380c6">
       <sDescription>chorus effect from the rings dsp code open sourced by mutable instruments.
 any bugs/issues you find are our own, report on the axoloti forum.
 
@@ -101,7 +101,7 @@ uint32_t writepos,wp;
 int32_t cm,pm,em,rm;
 int32_t TM1,TM2,FD,f1,f2,prv1,prv2,stp1,stp2,T1,T2,fd1[BUFSIZE],fd2[BUFSIZE];
 int32_t L[4][BUFSIZE],R[4][BUFSIZE];
-int32_t hp1,hp2;
+int32_t hp1,hp2,hp3,hp4,lp1,lp2;
 int i;
 int SL;
 int sel[24][4]=
@@ -240,8 +240,8 @@ reverb.Init((uint16_t*) sdram_malloc(32768));
 
 ensemble.Init((uint16_t*) sdram_malloc(32768));]]></code.init>
       <code.krate><![CDATA[for(i=0;i<BUFSIZE;i++){
-	L[0][i]=__SSAT(inlet_l[i]+(param_pingpong>0?fd2[i]:fd1[i]),28);
-	R[0][i]=__SSAT(inlet_r[i]+(param_pingpong>0?fd1[i]:fd2[i]),28);
+	L[0][i]=__SSAT((param_pingpong>0?fd2[i]:fd1[i]),28);
+	R[0][i]=__SSAT((param_pingpong>0?fd1[i]:fd2[i]),28);
 }
 cm=__USAT(param_Cmix+inlet_Cmix,27)<<4;
 pm=__USAT(param_Pmix+inlet_Pmix,27)<<4;
@@ -262,8 +262,8 @@ int32_t at1,at2;
 MTOF(-param_Alltime,at1)
 at1=at1>>1;
 int32_t Ashift=___SMMUL(__SSAT(param_Allshift,28),at1)<<5;
-at2=__USAT(at1+Ashift,27);
-at1=__USAT(at1-Ashift,27);
+at2=__USAT(at1+Ashift,27)>>27-LENGTHPOW;
+at1=__USAT(at1-Ashift,27)>>27-LENGTHPOW;
 
 
 
@@ -300,15 +300,23 @@ SL+=SL<0?24:0;
 
 for(i=0;i<BUFSIZE;i++){
 	int32_t tl,tr;
-	tl=L[3][i];
-	tr=R[3][i];
+	tl=(L[3][i]<<1);
+	tr=(R[3][i]<<1);
+	lp1+=tl-lp1>>1;
+	lp2+=tr-lp2>>1;
+	hp3=lp1-hp3>>3;
+	hp4=lp2-hp4>>3;
+	tl=lp1-(hp3>>4);
+	tr=lp2-(hp3>>4);
+	tl=__SSAT(inlet_l[i]+tl,28);
+	tr=__SSAT(inlet_r[i]+tr,28);
 	
-	hp1+=tl-hp1>>9;
-	hp2+=tr-hp2>>9;
+	hp1+=tl-hp1>>8;
+	hp2+=tr-hp2>>8;
 	tl-=hp1;
 	tr-=hp2;
-	outlet_l[i]=tl<<1;
-	outlet_r[i]=tr<<1;
+	outlet_l[i]=tl;
+	outlet_r[i]=tr;
 	wp=(wp+1)&LENGTHMASK;
 	a3[wp]=__SSAT(tl>>14,15);
 	a4[wp]=__SSAT(tr>>14,15);

@@ -1,0 +1,85 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="frqshift" uuid="74971ad3-ab41-4459-b407-4ab0835371e7">
+      <sDescription>frequency shifter based on Johannes Taelman&apos;s iq-split
+
+Converts an audio signal into an &quot;analytic pair&quot; of In-phase (I) and Quadrature-phase (Q) signals.
+This is not a Hilbert filter, a Hilbert genertates the Q signal from an I signal.
+Applications include frequency shifting, and envelope following.
+
+The filter is a fixed point implementation of the design by Olli Niemitalo.
+http://dsp.stackexchange.com/questions/26966/oscillations-on-hilbert-envelope</sDescription>
+      <author>Remco van der Most</author>
+      <license>GPL</license>
+      <helpPatch>iqsplit.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="high"/>
+         <frac32buffer name="low"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="shift" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t s_mid_t1[9];
+int32_t s_mid_t2[9];
+
+int32_t *mid_t1;
+int32_t *mid_t2;
+int32_t phs;
+int32_t v30=1<<30;]]></code.declaration>
+      <code.init><![CDATA[mid_t1 = &s_mid_t1[0];
+mid_t2 = &s_mid_t2[0];]]></code.init>
+      <code.krate><![CDATA[int32_t shift=___SMMUL(param_shift<<3,param_shift<<2);
+shift=___SMMUL(shift<<3,shift<<2);]]></code.krate>
+      <code.srate><![CDATA[phs+=shift;
+int32_t SIN,COS;
+SINE2TINTERP(phs,SIN)
+SINE2TINTERP(phs+v30,COS)
+int32_t in_t1 = inlet_in;
+
+int32_t mid0_t=___SMMLA(0.4794008656*UINT32_MAX,in_t1+mid_t2[0],mid_t2[8]);
+int32_t s1 = mid0_t+mid_t2[1];
+int32_t mid1_t=___SMMLS(UINT32_MAX*(1-0.8762184935),s1,s1-mid_t2[0]);
+int32_t s2 = mid1_t+mid_t2[2];
+int32_t mid2_t=___SMMLS(UINT32_MAX*(1-0.9765975895),s2,s2-mid_t2[1]);
+int32_t s3 = mid2_t+mid_t2[6];
+int32_t out0_t=___SMMLS(UINT32_MAX*(1-0.9974992559),s3,s3-mid_t2[2]);
+
+int32_t mid3_t=___SMMLA(0.1617584983*UINT32_MAX,in_t1+mid_t2[3],mid_t1[8]);
+int32_t s4 = mid3_t+mid_t2[4];
+int32_t mid4_t=___SMMLS(UINT32_MAX*(1-0.7330289323),s4,s4-mid_t2[3]);
+int32_t s5 = mid4_t+mid_t2[5];
+int32_t mid5_t=___SMMLS(UINT32_MAX*(1-0.9453497003),s5,s5-mid_t2[4]);
+int32_t s6 = mid5_t+mid_t2[7];
+int32_t out1_t=___SMMLS(UINT32_MAX*(1-0.9905991567),s6,s6-mid_t2[5]);
+
+//outlet_i = out0_t;
+//outlet_q = out1_t;
+int32_t t1,t2;
+t1=___SMMUL(out0_t,SIN)<<1;
+t2=___SMMUL(out1_t,COS)<<1;
+int32_t low=t1+t2;
+int32_t high=t1-t2;
+//outlet_out=low+(___SMMUL(-high-low,param_mix)<<5);
+outlet_low=low;
+outlet_high=-high;
+// swap
+int32_t *tmp;
+tmp = mid_t2;
+mid_t2 = mid_t1;
+mid_t1 = tmp;
+
+mid_t1[0] = mid0_t;
+mid_t1[1] = mid1_t;
+mid_t1[2] = mid2_t;
+mid_t1[3] = mid3_t;
+mid_t1[4] = mid4_t;
+mid_t1[5] = mid5_t;
+mid_t1[6] = out0_t;
+mid_t1[7] = out1_t;
+mid_t1[8] = -in_t1;]]></code.srate>
+   </obj.normal>
+</objdefs>

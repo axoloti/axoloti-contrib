@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="multifx" uuid="86d76784-3b74-44c8-9ad3-b31a74bfbb75">
+   <obj.normal id="roomdelay" uuid="1ad0179e-440f-4e31-8047-272d257ba5c5">
       <sDescription>chorus effect from the rings dsp code open sourced by mutable instruments.
 any bugs/issues you find are our own, report on the axoloti forum.
 
@@ -240,8 +240,8 @@ reverb.Init((uint16_t*) sdram_malloc(32768));
 
 ensemble.Init((uint16_t*) sdram_malloc(32768));]]></code.init>
       <code.krate><![CDATA[for(i=0;i<BUFSIZE;i++){
-	L[0][i]=__SSAT(inlet_l[i]+(param_pingpong>0?fd2[i]:fd1[i]),28);
-	R[0][i]=__SSAT(inlet_r[i]+(param_pingpong>0?fd1[i]:fd2[i]),28);
+	L[0][i]=__SSAT((param_pingpong>0?fd2[i]:fd1[i]),28);
+	R[0][i]=__SSAT((param_pingpong>0?fd1[i]:fd2[i]),28);
 }
 cm=__USAT(param_Cmix+inlet_Cmix,27)<<4;
 pm=__USAT(param_Pmix+inlet_Pmix,27)<<4;
@@ -300,8 +300,8 @@ SL+=SL<0?24:0;
 
 for(i=0;i<BUFSIZE;i++){
 	int32_t tl,tr;
-	tl=L[3][i];
-	tr=R[3][i];
+	tl=L[3][i]+inlet_l[i]+;
+	tr=R[3][i]+inlet_r[i]+;
 	
 	hp1+=tl-hp1>>9;
 	hp2+=tr-hp2>>9;
