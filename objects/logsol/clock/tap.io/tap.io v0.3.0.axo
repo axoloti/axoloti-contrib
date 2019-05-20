@@ -1,0 +1,159 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tap.io v0.3.0" uuid="f239b79b-c55c-4a03-b9fd-38e03a27d469">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="reset"/>
+         <bool32 name="master"/>
+         <int32 name="samples" description="set clock by samples of 1 bar (only on change)"/>
+         <int32 name="factor"/>
+      </inlets>
+      <outlets>
+         <bool32 name="slave"/>
+         <int32 name="bpm"/>
+         <bool32.pulse name="24ppq"/>
+         <bool32 name="start"/>
+         <int32.positive name="24ppqsmp"/>
+         <int32.positive name="barsamples"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int isClockIncoming;
+
+// measure
+int16_t timer;
+int lastInletReset;
+int32_t lastInletSamples;
+int32_t lastInletFactor;
+const int averageSteps = 96;
+int16_t averagePool[96];
+int averagePoolWriteIndex;
+float currentAverage;
+int shouldTrigger24Ppq;
+int midiStartTrigger;
+int forceMaster;
+int barsamples;
+
+// osc
+int32_t Phase;
+int32_t oldPhase;
+
+void calculateCurrentAverage (bool samplesUpdateNeeded, int inl_samples, bool factorUpdateNeeded, int inl_factor) {
+	inl_factor = inl_factor ? inl_factor : 16;
+	if ((inl_samples > 0 && samplesUpdateNeeded) || factorUpdateNeeded) {
+		currentAverage = (inl_samples / 24.0 / 4.0) * (inl_factor / 16.0);
+		barsamples = inl_samples * (inl_factor / 16.0);
+	}
+}
+
+void onMidi(int status) {
+	if (!forceMaster) {
+		if (status == MIDI_TIMING_CLOCK) {
+			measureClock();
+			shouldTrigger24Ppq = true;
+			Phase = 0;
+		}
+		if (status == MIDI_STOP) {
+			isClockIncoming = false;
+		}
+		if (status == MIDI_START) {
+			midiStartTrigger = true;
+		}
+	}
+}
+
+// Measure samples since last call and calculate average
+void measureClock() {
+	isClockIncoming = true;
+	averagePool[averagePoolWriteIndex] = timer;
+	//LogTextMessage("timer %d", timer);
+	timer = 0;
+	averagePoolWriteIndex = (averagePoolWriteIndex >= averageSteps) ? 0 : averagePoolWriteIndex+1;
+     currentAverage = 0;
+
+	for (int i=0; i<averageSteps; i++) {
+		currentAverage += averagePool[i];
+	}
+	barsamples = currentAverage * lastInletFactor;
+	currentAverage /= averageSteps;
+}
+
+// Return current calculated BPM from currentAverage (samples)
+float getBpm() {
+	//LogTextMessage("average %f", currentAverage);
+	return 48000.0 / currentAverage * 2.5;
+}
+
+/** 
+ * For (1431655.7653 = 1hz) see http://community.axoloti.com/t/generate-square-wave-from-milliseconds-or-hz/391/2
+ * x in samples  samples per second    convert to ms      24ppq     to get 16th in ms
+ * 1000          / 48000               * 1000             * 24      / 4				= 125ms
+ * 1000 / 125 to get hz = 8
+ */
+bool get24ppq(bool reset) {
+	// internal oscillator
+
+	if (getStart(reset)) {
+		Phase = 0;
+	} else {
+		double freq;
+		freq = 1000.0 / (currentAverage / 48.0);
+		Phase += int (1431655.7653 * freq);
+	}
+
+	int internalOscPulse = (oldPhase<=0 && Phase>0);
+	oldPhase = Phase;
+	bool result = !forceMaster && isClockIncoming ? shouldTrigger24Ppq : internalOscPulse;
+	shouldTrigger24Ppq = false;
+	return result;
+}
+
+bool getStart(bool inl_reset) {
+	return midiStartTrigger || inl_reset;
+}]]></code.declaration>
+      <code.init><![CDATA[averagePoolWriteIndex = 0;
+currentAverage = 1000;
+isClockIncoming = false;
+shouldTrigger24Ppq = false;
+midiStartTrigger = false;
+forceMaster = false;
+
+lastInletReset = false;
+lastInletSamples = 0;
+lastInletFactor = 0;
+
+// set default exisiting average to 120 bpm
+for (int i=0; i<averageSteps; i++) {
+	averagePool[i] = currentAverage;
+}
+barsamples = 48000 * 2; // 120bpm]]></code.init>
+      <code.krate><![CDATA[bool reset = inlet_reset && !lastInletReset;
+bool samplesUpdateNeeded = inlet_samples != lastInletSamples;
+bool factorUpdateNeeded = inlet_factor != lastInletFactor;
+
+forceMaster = inlet_master;
+calculateCurrentAverage(samplesUpdateNeeded, inlet_samples, factorUpdateNeeded, inlet_factor);
+
+outlet_bpm = (int) (getBpm() + 0.5);
+outlet_slave = isClockIncoming;
+outlet_24ppq = get24ppq(reset);
+outlet_start = getStart(reset);
+outlet_24ppqsmp = (int) currentAverage;
+outlet_barsamples = barsamples;
+
+lastInletReset = inlet_reset;
+lastInletSamples = inlet_samples;
+lastInletFactor = inlet_factor;
+
+midiStartTrigger = false;]]></code.krate>
+      <code.srate><![CDATA[if(isClockIncoming) {
+	timer++;
+} else {
+	timer = 0;
+}
+if(timer >= 12000) {
+	isClockIncoming = false;
+}]]></code.srate>
+      <code.midihandler><![CDATA[onMidi(status);]]></code.midihandler>
+   </obj.normal>
+</objdefs>
