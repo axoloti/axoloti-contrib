@@ -191,6 +191,7 @@
       uint32_t  last_ktime;
       uint32_t  phase;
       float     base_freq;
+      uint32_t  mul;
       uint32_t  div;
       uint32_t  old_phase;
       uint32_t  old_inlet_tap;
@@ -229,6 +230,14 @@
           last_ktime  = ktimer;
         }
 
+      if( inlet_mul < 1 )
+        {
+          mul = 1;
+        }
+      else
+        {
+          mul = inlet_mul;
+        }
       if( inlet_div < 1 )
         {
           div = 1;
@@ -237,7 +246,7 @@
         {
           div = inlet_div;
         }
-      float freq  = (base_freq * (float) inlet_mul) / (float) div;
+      float freq  = (base_freq * (float) mul) / (float) div;
       phase += (uint32_t) freq;
 
       outlet_clock = 0;
