@@ -1,0 +1,56 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fractum" uuid="12741d58-0ec5-4153-8cc1-e23b49a18850">
+      <sDescription></sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="rate"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="saw wave, non-anti-aliased"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="rate"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t pitchS;
+uint32_t dpS, _dpS;
+uint32_t pS;
+float dpM, _dpM, pM;]]></code.declaration>
+      <code.init><![CDATA[pitchS = 0;
+pS = 0;
+pM = 0.0f;]]></code.init>
+      <code.krate><![CDATA[int32_t idpM;
+MTOFEXTENDED(inlet_pitch + param_pitch, idpM)
+dpM = arm::q_to_float(idpM, 32);
+_dpM = 1.0f / dpM;
+
+pitchS += (inlet_rate + param_rate)/(3000);  // /s
+if(pitchS >= (12<<21)) {pitchS -= (12<<21); pS/=2; }
+if(pitchS <         0) {pitchS += (12<<21); pS*=2; }
+
+MTOFEXTENDED( pitchS,  dpS)
+MTOFEXTENDED(-pitchS, _dpS)
+dpS>>=7;
+uint32_t dpS_8 = dpS>>3;]]></code.krate>
+      <code.srate><![CDATA[pM += dpM;
+//hard sync
+if(pM >= 1.0f){
+  pM -= 1.0f;
+  pS = (int32_t)((pM * _dpM) * dpS);
+}
+
+uint32_t accu = 0;
+for(int i = 0; i < 8; i++){
+  pS += dpS_8;
+  int32_t m = ___SMMUL(pS, idpM);
+  accu += (m^(m>>1));
+
+}
+outlet_wave = (int32_t)((___SMMUL(accu<<5, _dpS<<3)-pM*3500000.0f) * (1.0f - pM)*128.0f);]]></code.srate>
+   </obj.normal>
+</objdefs>
