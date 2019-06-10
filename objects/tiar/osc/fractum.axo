@@ -1,9 +1,7 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="fractum" uuid="12741d58-0ec5-4153-8cc1-e23b49a18850">
-      <sDescription></sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch></helpPatch>
       <inlets>
          <frac32.bipolar name="pitch" description="pitch"/>
          <frac32.bipolar name="rate"/>
@@ -16,25 +14,70 @@
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
          <frac32.s.map name="rate"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="type">
+            <MenuEntries>
+               <string>Simple</string>
+               <string>Double</string>
+               <string>Squarish</string>
+               <string>33%</string>
+               <string>1/7</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[int32_t pitchS;
 uint32_t dpS, _dpS;
 uint32_t pS;
-float dpM, _dpM, pM;]]></code.declaration>
+float dpM, _dpM, pM;
+
+#if attr_type > 1
+uint32_t pS2;
+float pM2;
+#endif]]></code.declaration>
       <code.init><![CDATA[pitchS = 0;
 pS = 0;
-pM = 0.0f;]]></code.init>
+pM = 0.0f;
+#if attr_type > 1
+pM2 = attr_type == 5 ? 0.142857f : attr_type == 4 ? 0.3333333f : 0.5f;
+pS2 = 0;
+#endif]]></code.init>
       <code.krate><![CDATA[int32_t idpM;
+#if attr_type == 2
+MTOFEXTENDED(inlet_pitch + param_pitch-(12<<21), idpM)
+#else
 MTOFEXTENDED(inlet_pitch + param_pitch, idpM)
+#endif
+
 dpM = arm::q_to_float(idpM, 32);
 _dpM = 1.0f / dpM;
 
 pitchS += (inlet_rate + param_rate)/(3000);  // /s
-if(pitchS >= (12<<21)) {pitchS -= (12<<21); pS/=2; }
-if(pitchS <         0) {pitchS += (12<<21); pS*=2; }
+if(pitchS >= (12<<21)) {pitchS -= (12<<21); pS/=2; 
+#if attr_type > 1
+pS2/=2; 
+#endif
+}
+if(pitchS <         0) {pitchS += (12<<21); pS*=2; 
+#if attr_type > 1
+pS2*=2; 
+#endif
+}
 
+#if attr_type==2
+MTOFEXTENDED( pitchS-(12<<21),  dpS)
+MTOFEXTENDED(-pitchS+(12<<21), _dpS)
+#else
 MTOFEXTENDED( pitchS,  dpS)
 MTOFEXTENDED(-pitchS, _dpS)
+#endif
+
 dpS>>=7;
 uint32_t dpS_8 = dpS>>3;]]></code.krate>
       <code.srate><![CDATA[pM += dpM;
@@ -49,8 +92,29 @@ for(int i = 0; i < 8; i++){
   pS += dpS_8;
   int32_t m = ___SMMUL(pS, idpM);
   accu += (m^(m>>1));
-
 }
-outlet_wave = (int32_t)((___SMMUL(accu<<5, _dpS<<3)-pM*3500000.0f) * (1.0f - pM)*128.0f);]]></code.srate>
+outlet_wave = (int32_t)((___SMMUL(accu<<5, _dpS<<3)-pM*3500000.0f) * (1.0f - pM)*128.0f);
+
+#if attr_type >= 2
+  uint32_t accu2 = 0;
+  pM2 += dpM;
+  //hard sync
+  if(pM2 >= 1.0f){
+    pM2 -= 1.0f;
+    pS2 = (int32_t)((pM2 * _dpM) * dpS);
+  }
+  accu = 0;
+  for(int i = 0; i < 8; i++){
+    pS2 += dpS_8;
+    int32_t m = ___SMMUL(pS2, idpM);
+    accu2 += (m^(m>>1));
+  }
+  #if attr_type == 2
+  outlet_wave += (int32_t)((___SMMUL(accu2<<5, _dpS<<3)-pM2*3500000.0f) * (1.0f - pM2)*128.0f);
+  #endif
+  #if  attr_type > 2
+  outlet_wave -= (int32_t)((___SMMUL(accu2<<5, _dpS<<3)-pM2*3500000.0f) * (1.0f - pM2)*128.0f);
+  #endif
+#endif]]></code.srate>
    </obj.normal>
 </objdefs>
