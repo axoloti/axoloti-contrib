@@ -87,6 +87,16 @@
                <string>0</string>
             </CEntries>
          </combo>
+         <combo name="fade">
+            <MenuEntries>
+               <string>off</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
       </attribs>
       <includes>
          <include>./streamer.h</include>
@@ -137,16 +147,17 @@ em=0;]]></code.init>
       <code.dispose><![CDATA[sdStopStreamer(stream);]]></code.dispose>
       <code.krate><![CDATA[int32_t i;
 bool start=inlet_load;
-
+sample=inlet_sample;
+sm=sample=sample&(SAMPLES-1);
+sample=sample*LENGTH;
      if ((start>0) && !starttrig) {
-     	cnt=0;
      	
-     	sample=inlet_sample;
-          sm=sample=sample&(SAMPLES-1);
-		sample=sample*LENGTH;
+     	
+     	
         sdOpenStream(stream,inlet_filename);
         sdSeekStream(stream,0);
         starttrig=1;
+        cnt=0;
      } else if ((!(start>0)) && starttrig) {        starttrig=0;
      }
 
@@ -168,6 +179,7 @@ bool start=inlet_load;
      else {
      	if(!em)
      	{
+     		if(attr_fade>0){
      		END[sm]=cnt;
      		disp_length=cnt;
      		for(int i=0;i<16;i++){
@@ -181,6 +193,7 @@ bool start=inlet_load;
      		for(int i=cnt;i<LENGTH;i++)
      		{
      			array[i+sample]=0;
+     		}
      		}
      	em=1;
      	}

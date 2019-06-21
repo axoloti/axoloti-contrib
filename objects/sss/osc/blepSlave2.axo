@@ -8,8 +8,9 @@ Bandwith limited</sDescription>
       <inlets>
          <frac32.bipolar name="pitch1" description="pitch"/>
          <frac32 name="fm1"/>
-         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
+         <frac32buffer name="pwm"/>
          <frac32buffer name="mod"/>
+         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
          <int32 name="wave1"/>
          <frac32 name="pitch2"/>
          <frac32 name="fm2"/>
@@ -22,21 +23,27 @@ Bandwith limited</sDescription>
       </outlets>
       <displays/>
       <params>
-         <frac32.s.map.pitch name="pitch1" noLabel="true"/>
-         <int32.hradio name="wave1">
-            <MaxValue i="4"/>
-         </int32.hradio>
-         <frac32.s.map name="fm1"/>
          <bool32.tgl name="snc1"/>
-         <bool32.tgl name="track"/>
-         <frac32.s.map.pitch name="pitch2"/>
-         <int32.hradio name="wave2">
-            <MaxValue i="4"/>
+         <int32.hradio name="wave1">
+            <MaxValue i="5"/>
          </int32.hradio>
-         <frac32.s.map name="fm2"/>
-         <bool32.tgl name="selectM"/>
+         <frac32.s.map.pitch name="pitch1" noLabel="true"/>
+         <frac32.s.map name="pw1" description="pulse width for pulse oscillator mode (5)"/>
+         <frac32.s.map name="pwm1" description="pulse width modulation width for pulse oscillator mode (5)"/>
+         <frac32.s.map name="fm1"/>
+         <int32.hradio name="wave2">
+            <MaxValue i="5"/>
+         </int32.hradio>
+         <bool32.tgl name="track" description="link to pitch1 input"/>
+         <bool32.tgl name="link" description="link to pitch1 parameter"/>
+         <bool32.tgl name="selectP" description="on=external"/>
+         <bool32.tgl name="selectM" description="on=external"/>
+         <bool32.tgl name="selectS" description="on=external"/>
          <bool32.tgl name="snc2"/>
-         <bool32.tgl name="selectS"/>
+         <frac32.s.map.pitch name="pitch2"/>
+         <frac32.s.map name="pw2" description="pulse width for pulse oscillator mode (5)"/>
+         <frac32.s.map name="pwm2" description="pulse width modulation width for pulse oscillator mode (5)"/>
+         <frac32.s.map name="fm2"/>
          <frac32.u.map name="mix"/>
       </params>
       <attribs>
@@ -49,11 +56,13 @@ uint32_t uosc_p[2];
   int16_t *oscp[2][blepvoices];
   int32_t vgain[2][blepvoices];
   uint32_t nextvoice[2];
+  int32_t pwmp[2];
   int32_t i0[2];
   int32_t sync[BUFSIZE];
   int i;
   int k;
   int wave[2];
+  int32_t hp[2];
   int32_t pitch[2];
   bool snc[2];
   int32_t fm[2];
@@ -72,38 +81,49 @@ return (int)aif;
       nextvoice[i] = 0; 
       i0[i] = 0;
       }}]]></code.init>
-      <code.krate><![CDATA[wave[0]=(param_wave1+inlet_wave1)&3;
-wave[1]=(param_wave2+inlet_wave2)&3;
+      <code.krate><![CDATA[wave[0]=(param_wave1+inlet_wave1);
+wave[1]=(param_wave2+inlet_wave2);
 pitch[0]=param_pitch1+inlet_pitch1;
-pitch[1]=param_pitch2+inlet_pitch2+(param_track>0?inlet_pitch1:0);
+pitch[1]=param_pitch2+inlet_pitch2+(param_track>0?inlet_pitch1:0)+(param_link>0?param_pitch1:0);
 snc[0]=param_snc1;
 snc[1]=param_snc2;
-fm[0]=param_fm1+inlet_fm1<<3;
-fm[1]=param_fm2+inlet_fm2<<3;
+fm[0]=__SSAT(param_fm1+inlet_fm1,28)<<3;
+fm[1]=__SSAT(param_fm2+inlet_fm2,28)<<3;
 int32_t mix=__USAT(param_mix+inlet_mix,27);
 int32_t imix=v27-mix;
 imix=SQRT(imix)<<3;
 mix=SQRT(mix)<<3;
+int32_t pwm[2];
+
+pwm[0]=param_pw1;
+pwm[1]=param_pw2;
 for(k=0;k<2;k++){
 for(i=0;i<blepvoices;i++){
 	attr_core.oscp[i]=oscp[k][i];
 	attr_core.uoscp[i]=uoscp[k][i];
 	attr_core.vgain[i]=vgain[k][i];
+
 }
 for(i=0;i<BUFSIZE;i++){
 	attr_core.sync[i]=snc[k]>0?(k>0?sync[i]:inlet_sync[i]):0;
-	attr_core.mod[i]=___SMMUL((k>0?(param_selectM>0?inlet_mod[i]:attr_core.wave[i]):inlet_mod[i])<<2,fm[k]);
+	int32_t md=___SMMUL((k>0?(param_selectM>0?inlet_mod[i]:attr_core.wave[i]):inlet_mod[i])<<2,fm[k]);
+	hp[k]+=md-hp[k]>>8;
+	attr_core.mod[i]=md-hp[k];
+	if(wave[k]==4){
+	attr_core.Pwm[i]=pwm[k]+___SMMUL(((k>0?(param_selectP>0?inlet_pwm[i]:attr_core.wave[i]):inlet_pwm[i]))<<1,(k>0?param_pwm2:param_pwm1)<<4);}
 }
 attr_core.i0=i0[k];
 attr_core.osc_p=osc_p[k];
 attr_core.uosc_p=uosc_p[k];
 attr_core.nextvoice=nextvoice[k];
 
+attr_core.pwmp=pwmp[k];
 switch(wave[k]){
 case 0: attr_core.OSC_SIN(pitch[k]);	break;
 case 1: attr_core.OSC_TRI(pitch[k]);	break;
 case 2: attr_core.OSC_SAW(pitch[k]);	break;
 case 3: attr_core.OSC_SQR(pitch[k]);	break;
+case 4: attr_core.OSC_PLS(pitch[k]);	break;
 }
 for(i=0;i<BUFSIZE;i++){
 		if(k==0){
@@ -123,6 +143,7 @@ i0[k]=attr_core.i0;
 osc_p[k]=attr_core.osc_p;
 uosc_p[k]=attr_core.uosc_p;
 nextvoice[k]=attr_core.nextvoice;
+pwmp[k]=attr_core.pwmp;
 }
 outlet_pitch=param_pitch1+inlet_pitch1;]]></code.krate>
    </obj.normal>

@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="crusher" uuid="db6298ef-5a92-4390-a0f8-67791e4bb8c9">
       <sDescription>heavy crushing distortion module
 
@@ -17,6 +17,7 @@
          <frac32.bipolar name="diffmax"/>
          <frac32.bipolar name="LP"/>
          <frac32.bipolar name="HP"/>
+         <frac32 name="feed"/>
       </inlets>
       <outlets>
          <frac32buffer name="out"/>
@@ -63,6 +64,7 @@ int32_t Diffmax=	param_diffmax+inlet_diffmax;
 Diffmax		=	Diffmax>0?Diffmax:-Diffmax;
 int32_t LP	=	param_LP+inlet_LP;
 int32_t HP	=	param_HP+inlet_HP;
+int32_t FD	=	__USAT(param_feedback+inlet_feed,27);
 
 int32_t F;
 int32_t G;
@@ -75,7 +77,7 @@ stepMin		=	(Min-prevMin)>>4;
 stepDiffmax	=	(Diffmax-prevDiffmax)>>4;
 stepF		=	(F-prevF)>>4;
 stepG		=	(G-prevG)>>4;
-stepfb		=	(param_feedback-prevfb)>>4;
+stepfb		=	(FD-prevfb)>>4;
 
 int32_t max		=prevMax;
 int32_t bias		=prevBias;
@@ -91,7 +93,7 @@ prevMin		=Min;
 prevDiffmax	=Diffmax;
 prevF		=F;
 prevG		=G;
-prevfb		=param_feedback;]]></code.krate>
+prevfb		=FD;]]></code.krate>
       <code.srate><![CDATA[int32_t in=inlet_in+bias+___SMMUL(feedback<<4,temp<<3);
 in=in>max?max:in;
 in=in<min?min:in;

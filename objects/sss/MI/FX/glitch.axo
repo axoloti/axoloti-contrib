@@ -22,6 +22,7 @@ http://mutable-instruments.com</sDescription>
       <displays/>
       <params>
          <frac32.u.map.gain name="mix" noLabel="true"/>
+         <frac32.s.map name="rate"/>
       </params>
       <attribs>
          <combo name="size">
@@ -63,7 +64,6 @@ http://mutable-instruments.com</sDescription>
          <include>./rings_fx.h</include>
       </includes>
       <code.declaration><![CDATA[rings_fx::Chorus chorus;
-rings_fx::Ensemble ensemble;
 rings_fx::Reverb reverb;
 static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
@@ -105,37 +105,14 @@ for(i=0;i<BUFSIZE;i++){
 	L[i] = (float_to_q27(left[i]));
 	R[i] = (float_to_q27(right[i]));
 }
-}
+};
 
 
 
-int32_t Ensemble(int32_t m1,int32_t m2,int32_t m3){
-static float left[BUFSIZE];
-static float right[BUFSIZE];
-ensemble.set_amount(q27_to_float(m1));
-ensemble.set_depth(q27_to_float(m2));
-m3-=(1<<26);
-m3=m3>>LENGTHPOW-3;
-if(m3>0){
-	m1=(m3>>27-LENGTHPOW)+BUFSIZE+1;
-	m2=BUFSIZE+1;
-}
-else{
-	m1=BUFSIZE+1;
-	m2=(-m3>>27-LENGTHPOW)+BUFSIZE+1;
-}
-for(i=0;i<BUFSIZE;i++){
-	left[i] = q27_to_float(a1[(writepos-m1+i)&LENGTHMASK]<<14);
-	right[i] = q27_to_float(a2[(writepos-m2+i)&LENGTHMASK]<<14);
-}
 
-ensemble.Process(left,right,BUFSIZE);
 
-for(i=0;i<BUFSIZE;i++){
-	L[i] = (float_to_q27(left[i]));
-	R[i] = (float_to_q27(right[i]));
-}
-}
+
+
 
 int32_t Reverb(int32_t m1,int32_t m2,int32_t m3){
 static float left[BUFSIZE];
@@ -156,6 +133,40 @@ for(i=0;i<BUFSIZE;i++){
 	R[i] = (float_to_q27(right[i]));
 }
 }
+int32_t RT;
+int32_t Retrig(int32_t m1,int32_t m2,int32_t m3){
+int32_t mx;
+int32_t N[2]={0,4};
+int32_t stp,oct;
+stp=m2>>23;
+oct=stp>>1;
+stp=stp&1;
+MTOF(((-N[stp]-oct*12)<<21)-RT,m2)
+m2=m2>>27-LENGTHPOW;
+int stack;
+int32_t mix;
+stack=m3>>24;
+mix=m3-(stack<<24)<<7;
+stack+=1;
+
+for(i=0;i<BUFSIZE;i++){
+int32_t tmp1,tmp2;
+for(int k=0;k<stack;k++){
+tmp1=___SMMUL(a1[(writepos-BUFSIZE+i-k*m2)&LENGTHMASK]<<14,m1)<<5;
+tmp2=___SMMUL(a2[(writepos-BUFSIZE+i-k*m2)&LENGTHMASK]<<14,m1)<<5;
+if(k<(stack-1)){
+L[i]=__SSAT(tmp1+L[i],28);
+R[i]=__SSAT(tmp2+R[i],28);
+}
+else{
+L[i]=__SSAT(___SMMUL(mix,tmp1<<1)+L[i],28);
+R[i]=__SSAT(___SMMUL(mix,tmp2<<1)+R[i],28);
+}
+
+}
+}
+};
+
 
 int32_t Phaser(int32_t m1,int32_t m2,int32_t m3){
 MTOF((1<<27)-(m2<<1),TM1)
@@ -351,7 +362,7 @@ int32_t Sample(int32_t m1,int32_t m2,int32_t m3){
     }
     IN[k]=(sum+acc[k])<<1;
     LP[k]=___SMMLA(IN[k]-LP[k]<<1,m3,LP[k]);
-    IN[k]=LP[k];
+    IN[k]=__SSAT(LP[k],26)<<2;
   }
   L[j]=IN[0];
   R[j]=IN[1];
@@ -436,7 +447,7 @@ int32_t SEL(int I){
 switch(I){
 case 0: Chorus(mod1,mod2,mod3);break;
 case 1: Phaser(mod1,mod2,mod3);break;
-case 2: Ensemble(mod1,mod2,mod3);break;
+case 2: Retrig(mod1,mod2,mod3);break;
 case 3: Reverb(mod1,mod2,mod3);break;
 case 4: Timemod(mod1,mod2,mod3);break;
 case 5: Graingrap(mod1,mod2,mod3);break;//no grab but continuous
@@ -461,8 +472,6 @@ chorus.Init((uint16_t*) sdram_malloc(32768));
 reverb.Init((uint16_t*) sdram_malloc(32768));
 
 
-ensemble.Init((uint16_t*) sdram_malloc(32768));
-
   int j;
   int i;
   for(i=0;i<2;i++){
@@ -479,7 +488,7 @@ mid_t2[k] = &s_mid_t2[k][0];}]]></code.init>
       <code.krate><![CDATA[mod1=inlet_mod1;
 mod2=inlet_mod2;
 mod3=inlet_mod3;
-
+RT=param_rate;
 if(inlet_gate&&!trg){
 	trg=1;
 	phs=0;
