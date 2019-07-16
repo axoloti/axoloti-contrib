@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="enc left 2" uuid="fda92209-e99f-4384-be11-da9f8d3f71df">
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.positive name="v"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t vel;
+int32_t ntrig;
+int inc;
+int32_t out;]]></code.declaration>
+      <code.init><![CDATA[vel = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if (ntrig) {
+	inc = (vel << 21);
+	out = __SSAT ((out+ inc),28);
+	if (out  < 0) out = 0;
+	}	
+outlet_v= out;
+ntrig = 0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
+
+if (data1 == 15) {
+	if (data2 & 0x40) vel =  (128 - data2) * -1;
+     else vel = data2;
+ 	 ntrig = 1;
+	}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
