@@ -1,0 +1,153 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="frequencyAnalyser" uuid="76f80c69-cc0b-4f3b-b612-390cfae3984e">
+      <sDescription>low cpu frequency analyser scope (55hz-14k)
+scans regions at a low rate to preserve cpu load (one band at time, gliding from high to low frequency)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>scope.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32buffer.bipolar name="in" description="input"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <int8array128.vbar name="1" noLabel="true"/>
+         <int8array128.vbar name="2" noLabel="true"/>
+         <int8array128.vbar name="3" noLabel="true"/>
+         <int8array128.vbar name="4" noLabel="true"/>
+         <int8array128.vbar name="5" noLabel="true"/>
+         <int8array128.vbar name="6" noLabel="true"/>
+         <int8array128.vbar name="7" noLabel="true"/>
+         <int8array128.vbar name="8" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.s.map.pitch name="rate" description="around 24 is a nice update rate without too many errors"/>
+         <int32.hradio name="poles" description="selects the amount of poles for the band (2,3 or4), set to the right for the finest result (everytime cpu load is 1% extra)">
+            <MaxValue i="3"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs[8];biquad_coefficients bc;
+uint32_t phs,prv;
+int32_t accu,bandL,bandH,FrqL,FrqH;
+int32_t hp[4];
+int i;
+int32_t SQRT(int32_t IN){
+	int32_t ai = IN;
+float aif = ai;
+aif *= (1<<27);
+aif = _VSQRTF(aif);
+int32_t Out= (int)aif;
+return Out;
+
+}
+int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+
+
+int32_t FTOM(int32_t freq){
+	int32_t ptch;
+	int32_t mid;
+MTOFEXTENDED(0,mid);
+
+mid=frac_log(mid);
+
+int32_t to;
+to=frac_log(freq);
+return ptch=((to-mid>>1)*3)>>3;
+};]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs[0]);
+biquad_clearstate(&bs[1]);
+biquad_clearstate(&bs[2]);
+biquad_clearstate(&bs[3]);
+accu=(514<<10);
+phs=0;
+hp[0]=0;
+hp[1]=0;
+hp[2]=0;
+hp[3]=0;
+bandL=132120576;
+bandH=133861216;
+FrqL=-31<<21;
+FrqH=1<<27;]]></code.init>
+      <code.krate><![CDATA[//readposition
+int32_t frq,freq;
+MTOF(param_rate,freq);
+phs+=-freq>>10;
+//clear when restart
+/*
+if((phs>>1)>(prv>>1))
+{
+      biquad_clearstate(&bs[0]);
+      biquad_clearstate(&bs[1]);
+      biquad_clearstate(&bs[3]);
+      biquad_clearstate(&bs[4]);
+      accu=0;
+      phs=0;
+      prv=0;
+      bandL=(1<<21);
+	 bandH=(1<<21);
+}
+*/
+//convert phase to frequency, bandwidth (bandL->bandH) and display position
+uint32_t p2;
+p2=phs>>1;
+uint32_t p1=(p2>>21)&1023;
+MTOF(___SMMUL(p2,FrqH-FrqL<<1)+FrqL+(12<<21),frq)
+//calculate biquad coëfficients
+biquad_bp_coefs(&bc,frq,INT_MAX - (__USAT(bandL+(___SMMUL(phs>>1,bandH-bandL)<<1),27)<<4));
+//calculate biquad filters
+int32_t out[BUFSIZE];
+biquad_dsp(&bs[0],&bc,inlet_in,out);
+for(int k=1;k<param_poles+1;k++)
+{
+      biquad_dsp(&bs[k],&bc,out,out);	
+}
+//get amplitude of filtered band
+int sabs = 0;
+for(i=0;i<BUFSIZE;i++)
+{
+	int32_t v = out[i];
+     sabs += v>0?v:-v;
+}
+//envelope follower of amplitude
+accu -= accu>>3;
+accu += sabs>>5;
+int32_t Accu=FTOM((frac_log(accu>(514<<10)?accu:(514<<10))));
+Accu+=(20<<18);
+//put frequency amplitudes in displays
+if(p1<128)
+{
+  disp_1[p1]=Accu>>18;
+}
+  else if(p1<256){
+  disp_2[p1-128]=Accu>>18;
+  }
+   else if(p1<384){
+  disp_3[p1-256]=Accu>>18;
+  }
+  else if(p1<512){
+  disp_4[p1-384]=Accu>>18;
+  }
+  else if(p1<640){
+  disp_5[p1-512]=Accu>>18;
+  }
+  else if(p1<768){
+  disp_6[p1-640]=Accu>>18;
+  }
+  else if(p1<896){
+  disp_7[p1-768]=Accu>>18;
+  }
+  else {
+  disp_8[p1-896]=Accu>>18;
+  }
+
+prv=phs;]]></code.krate>
+   </obj.normal>
+</objdefs>
