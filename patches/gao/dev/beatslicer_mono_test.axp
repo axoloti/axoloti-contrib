@@ -1,0 +1,872 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="518" y="0" text="turing + euclid sequencer"/>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbuf" x="14" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/inconfig" uuid="9a80ef3c19f2a8f81da3a3b7c1c44d18126b97d9" name="inconfig_1" x="154" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="gain" selection="12dB"/>
+         <combo attributeName="boost" selection="0dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_3" x="378" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_4" x="476" y="14">
+      <params>
+         <frac32.u.map name="random" value="0.0"/>
+         <int32 name="rotation" value="1"/>
+         <int32 name="length" value="8"/>
+         <int32 name="hits" value="5"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
+         <sDescription>Turing Machine Random Looping Sequencer</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <helpPatch>turing.axh</helpPatch>
+         <inlets>
+            <bool32.rising name="trig" description=""/>
+         </inlets>
+         <outlets>
+            <int32 name="buffer"/>
+            <frac32.bipolar name="note"/>
+            <bool32.pulse name="trig"/>
+            <int32.positive name="euclid"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="random"/>
+            <int32 name="rotation">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="length">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="hits">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint8_t ntrig;
+uint8_t buffer;
+uint8_t newbit;
+uint8_t counter;
+int32_t note;
+int32_t buf;
+int32_t o;
+
+int32_t penta3oct[16] = {
+				// Axo / midi / note
+	0xFE000000, 	// -16 / 48 / Do 
+	0xFE400000, 	// -14 / 50 / Ré
+	0xFE800000,	// -12 / 52 / Mi 
+	0xFEE00000,	// -9  / 55 / Sol
+	0XFF200000,	// -7  / 57 / La
+	0xFF800000,	// -4  / 60 / Do
+	0xFFC00000,	// -2  / 62 / Ré
+	0x00000000,	// 0   / 64 / Mi
+	0x00600000,	// 3   / 67 / Sol
+	0x00A00000,	// 5   / 69 / La
+	0x01000000,	// 8   / 72 / Do
+	0x01400000,	// 10  / 74 / Ré
+	0x01800000,	// 12  / 76 / Mi
+	0x01E00000,	// 15  / 79 / Sol
+	0x02200000,	// 17  / 81 / La
+	0x02800000	// 20  / 84 / Do
+};
+
+// For display
+int32_t sv;
+int32_t param_rotation_prev;
+int32_t param_hits_prev;
+int32_t param_length_prev;]]></code.declaration>
+         <code.init><![CDATA[ntrig = 0;
+buffer = 1;
+counter = 0;
+buf = 0;
+note = 0;
+o = 0;
+sv = 0;]]></code.init>
+         <code.krate><![CDATA[o = 0;
+
+if(inlet_trig > 0 && !ntrig){
+	ntrig = 1;
+
+    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
+     	newbit = ~buffer & 0x1;
+    	} else {
+        	newbit = buffer & 0x1;
+    	}
+    	buffer = (buffer >> 1) | (newbit << 7);
+
+	// display
+	if(
+		(param_hits != param_hits_prev) ||
+		(param_rotation != param_rotation_prev) ||
+		(param_length != param_length_prev)) {
+		sv = 0;
+		param_hits_prev = param_hits;
+		param_rotation_prev = param_rotation;
+		param_length_prev = param_length;
+	}
+	// end display
+    
+	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
+		buf = buffer;
+		note = penta3oct[buffer%16];
+		o = 1;
+		sv |= 1<<(counter%param_length); // display
+    }
+}
+outlet_euclid = sv; //display
+
+
+if(!(inlet_trig > 0)) ntrig = 0;
+
+outlet_note = note;
+outlet_buffer = buf;
+outlet_trig = o;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_2" x="630" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="49.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_3" x="728" y="14">
+      <params>
+         <frac32.u.map name="random" value="20.5"/>
+         <int32 name="rotation" value="1"/>
+         <int32 name="length" value="8"/>
+         <int32 name="hits" value="5"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
+         <sDescription>Turing Machine Random Looping Sequencer</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <helpPatch>turing.axh</helpPatch>
+         <inlets>
+            <bool32.rising name="trig" description=""/>
+         </inlets>
+         <outlets>
+            <int32 name="buffer"/>
+            <frac32.bipolar name="note"/>
+            <bool32.pulse name="trig"/>
+            <int32.positive name="euclid"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="random"/>
+            <int32 name="rotation">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="length">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="hits">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint8_t ntrig;
+uint8_t buffer;
+uint8_t newbit;
+uint8_t counter;
+int32_t note;
+int32_t buf;
+int32_t o;
+
+int32_t penta3oct[16] = {
+				// Axo / midi / note
+	0xFE000000, 	// -16 / 48 / Do 
+	0xFE400000, 	// -14 / 50 / Ré
+	0xFE800000,	// -12 / 52 / Mi 
+	0xFEE00000,	// -9  / 55 / Sol
+	0XFF200000,	// -7  / 57 / La
+	0xFF800000,	// -4  / 60 / Do
+	0xFFC00000,	// -2  / 62 / Ré
+	0x00000000,	// 0   / 64 / Mi
+	0x00600000,	// 3   / 67 / Sol
+	0x00A00000,	// 5   / 69 / La
+	0x01000000,	// 8   / 72 / Do
+	0x01400000,	// 10  / 74 / Ré
+	0x01800000,	// 12  / 76 / Mi
+	0x01E00000,	// 15  / 79 / Sol
+	0x02200000,	// 17  / 81 / La
+	0x02800000	// 20  / 84 / Do
+};
+
+// For display
+int32_t sv;
+int32_t param_rotation_prev;
+int32_t param_hits_prev;
+int32_t param_length_prev;]]></code.declaration>
+         <code.init><![CDATA[ntrig = 0;
+buffer = 1;
+counter = 0;
+buf = 0;
+note = 0;
+o = 0;
+sv = 0;]]></code.init>
+         <code.krate><![CDATA[o = 0;
+
+if(inlet_trig > 0 && !ntrig){
+	ntrig = 1;
+
+    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
+     	newbit = ~buffer & 0x1;
+    	} else {
+        	newbit = buffer & 0x1;
+    	}
+    	buffer = (buffer >> 1) | (newbit << 7);
+
+	// display
+	if(
+		(param_hits != param_hits_prev) ||
+		(param_rotation != param_rotation_prev) ||
+		(param_length != param_length_prev)) {
+		sv = 0;
+		param_hits_prev = param_hits;
+		param_rotation_prev = param_rotation;
+		param_length_prev = param_length;
+	}
+	// end display
+    
+	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
+		buf = buffer;
+		note = penta3oct[buffer%16];
+		o = 1;
+		sv |= 1<<(counter%param_length); // display
+    }
+}
+outlet_euclid = sv; //display
+
+
+if(!(inlet_trig > 0)) ntrig = 0;
+
+outlet_note = note;
+outlet_buffer = buf;
+outlet_trig = o;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="826" y="14">
+      <params>
+         <int32 name="value" value="7"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="882" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="952" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="disp/chart b" uuid="d2bdf496f96ee521628490a038411210fbe29b15" name="chart_1" x="434" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/chart b" uuid="d2bdf496f96ee521628490a038411210fbe29b15" name="chart_2" x="504" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="854" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="1022" y="140">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="-22.0"/>
+         <frac32.u.map name="s" value="41.0"/>
+         <frac32.s.map name="r" value="-9.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="294" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_4" x="672" y="224">
+      <params>
+         <frac32.s.map name="value" value="-37.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="reverse" x="742" y="266">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="RESET ALL" x="434" y="322">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="644" y="322">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_3" x="798" y="322">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="28" y="350" text="A good beatslicer configuration (for me)"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="28" y="378">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_1" x="98" y="378">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="4"/>
+      </attribs>
+   </obj>
+   <obj type="disp/hex" uuid="87617898f70d90033f8add921438bf0d11721fdd" name="hex_1" x="182" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="83e2f688-3873-45de-b879-8ab79efe3999" name="beatslicer" x="434" y="378">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+      <object id="patch/object" uuid="83e2f688-3873-45de-b879-8ab79efe3999">
+         <sDescription>description</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <helpPatch>beatslicer.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="in"/>
+            <bool32.rising name="reset"/>
+            <frac32 name="attack"/>
+            <frac32 name="decay"/>
+            <frac32 name="silence"/>
+         </inlets>
+         <outlets>
+            <bool32 name="detection"/>
+            <frac32 name="diff"/>
+            <frac32 name="rms"/>
+         </outlets>
+         <displays>
+            <bool32 name="detection"/>
+         </displays>
+         <params/>
+         <attribs>
+            <objref name="slicesbuffer"/>
+            <objref name="slicesindex"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[static const uint8_t FRAME_SIZE = 64;		// Frame size (energy is calculated on 1 frame, etc.)
+static const uint8_t NB_CHUNK_FRAME = 4;	// 16 samples for k-rate call, then 4 calls for a 64 samples frame
+static const uint8_t INITTIMER = 128;		// Nb frames while attack or silence detection are desactived
+static const uint32_t HANINC = 33554432;	// Increment of the half hanning window use for fadein and fadeout : MAX_INT / 2 / FRAME_SIZE
+static const uint32_t HANMID = 2147483648;	// Index of the middle of the hanning window
+static const uint32_t LOG2_10 = 404035620;	// 10 / log2(10) in fixed point Q27
+
+uint8_t preset = 0;						// Used for rising edge logic on reset inlet
+uint32_t si = 0;						// slice buffer current index
+uint32_t sii = 1;						// slice index current index
+uint32_t rms = 0;						// root mean square value of the current frame
+uint16_t timer = 0;						// A simple timer, for mask consecutive attack detection
+uint8_t crosscheck = 0;					// true <==> zero crossing check activate
+uint32_t zerocrosspoint = 0;				// zero crossing index in wave table
+int32_t twoframe[2 * FRAME_SIZE];			// Buffer used for temporary continuous recording
+uint8_t tfi = 0;						// Two frame buffer index
+uint8_t curchunk = 0;					// Current chunk number
+uint8_t detect = 0;						// Detection status : 1 => store slice in slicebuffer
+int32_t peakenvelope = 0;				// Current envelope value expressed in decibel
+int32_t diff = 0;						// For attackstep calibration output
+int32_t attack = 0;						// [user] Decibel absolute threshold for attack test
+int32_t decay = 0;						// [user] Threshold for attack detection on difference of previous peakenvelope and current peakenvelope
+int32_t silence = 0;					// [user] Decibel threshold for silence test
+uint32_t radius = 130685889;				// (uint32_t) (exp(-1.33333333f / 1000) * (1<<27));
+uint8_t trig = 0;
+
+// For display a value each second : if(!calib_cpt) LogTextMessage("val : %d", val);
+
+/* Take a frac32 value and return the equivalent value in logarithmic scale 
+ * From axoloti "log" object. 
+ */
+int32_t logscale(int32_t in) {
+	Float_t f;
+	f.f = in;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+/* Convert rms power value to decibel unit */
+int32_t rmstodb(int32_t rms) {
+	
+	int32_t y = logscale(rms); 		// 16 + 8 * log2(x)
+	return ___SMMUL(y - 16, LOG2_10);	// decibel = 10 * log10(power / power_ref) 
+								// <=> 10 * log2(x) / log2(10) with power_ref == 1 (1 << 27)
+}
+
+/*  Apply an half Hanning window on the begin of the recorded sample (2 frames)
+ *  Hanning is full range (input in range 0..MAX_INT).
+ *  Start on the begin of the hanning window and finish on the middle the hanning window. 
+ */
+void insert_twoframe(void) {
+	int32_t s = 0;
+	uint32_t phase = 0;
+	int8_t tfitmp = tfi;
+	int32_t r;
+	int8_t i;
+	
+	for(i = 0; i < FRAME_SIZE; i++){
+		HANNING2TINTERP(phase, r)
+		/* "<< 5" to complete ___SMMUL operation (fixed point choice contraint)
+		 * ">> 4" => just a copy of the hanning window axoloti object. Why not >> 5 ? I don't understand.
+		 */
+		s = ___SMMUL(twoframe[tfitmp], r >> 4) << 5;
+		attr_slicesbuffer.array[si] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
+		tfitmp++;
+		si++;
+		tfitmp %= FRAME_SIZE * 2;
+		phase += HANINC;
+	}
+	for(i = 0; i < FRAME_SIZE; i++){
+		s = twoframe[tfitmp];
+		attr_slicesbuffer.array[si] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
+		tfitmp++;
+		si++;
+		tfitmp %= FRAME_SIZE * 2;
+	}
+}
+
+/*  Apply an half Hanning window on the end of the recorded sample (2 frames)
+ *  Hanning is full range (input in range 0..MAX_INT).
+ *  Start on the middle of the hanning window and finish on the end the hanning window. 
+ */
+void fadeout(uint32_t cuepoint) {
+	/* MAX_INT / 2 => hanning window is full range (input in range 0..MAX_INT).
+	 *  Start on the middle of the hanning window. */
+	uint32_t phase = HANMID; 
+	int32_t r;
+	int32_t s;
+     for(int i = cuepoint - (2 * FRAME_SIZE); i < cuepoint; i++){
+     	HANNING2TINTERP(phase, r)
+     	s = ___SMMUL(attr_slicesbuffer.array[i], r >> 4) << 5; // see "insert_twoframe"
+     	attr_slicesbuffer.array[i] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
+     	phase += (HANINC / 2); // HANINC is a FRAMESIZE increment. Fadeout apply a fadeout on 2 frames.
+     }
+
+     /* Store cuepoint */
+     if(sii < attr_slicesindex.LENGTH){
+     	attr_slicesindex.array[0] = sii;
+     	attr_slicesindex.array[sii++] = cuepoint;
+     }
+}
+
+void detection() {
+	int32_t peakenvelope_tmp = peakenvelope;
+	rms >>= 2; // rms = rms << 5 (to complete last ___SMMLA operation) and >> 7 (/ 128) for the mean value
+	int32_t decibel = rms > 1 ? rmstodb(rms) : 0; // rmstodb produce bad value with a very little value of rms
+	diff = decibel - peakenvelope_tmp;
+	
+	// New slice detection
+	if((decibel > attack) && (diff > decay) && !(timer > 0)) {
+		trig = 1;
+		if(!(detect)) {
+			insert_twoframe();
+			detect = 1;
+          } else {
+          	fadeout(zerocrosspoint);
+          }
+          timer = INITTIMER; // To avoid closed detections 
+	}
+	peakenvelope_tmp = ___SMMUL(radius, peakenvelope_tmp) << 5; // << 5 (to complete ___SMMUL operation
+	if(decibel > peakenvelope_tmp) peakenvelope_tmp = decibel;
+
+	// Silence detection
+	if(detect && !(timer > 0) && (peakenvelope_tmp < silence)) {
+		detect = 0;
+		fadeout(si);
+	}
+     peakenvelope = peakenvelope_tmp;
+}]]></code.declaration>
+         <code.krate><![CDATA[/**************/
+/* Parameters */
+/**************/
+
+attack = inlet_attack; 
+decay = inlet_decay;	
+silence = inlet_silence;
+
+/****************/
+/* Record logic */
+/****************/
+
+int32_t s = 0;
+int32_t prev_s = 0;
+static uint32_t zerocrosspoint_tmp = 0;
+trig = 0;
+
+if(inlet_reset>0 && !preset) {
+	preset = 1;
+	si = 0;
+	sii = 1;
+	attr_slicesindex.array[0] = 0;
+} else if(!(inlet_reset>0)) {
+	preset = 0;
+}
+
+if(timer > 0) timer--;
+
+for(int i = 0; i < BUFSIZE; i++){
+	s = inlet_in[i];
+	if(detect){
+		if(crosscheck && (prev_s * s < 0)){
+			zerocrosspoint_tmp = si;
+			crosscheck = 0;
+		}
+		attr_slicesbuffer.array[si] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
+		si++;
+	} else {
+		twoframe[tfi] = s;
+		tfi++;
+	}
+	rms = __USAT(___SMMLA(s, s, rms), 27); // rms += s * s (must apply "<< 5" in order to exactly have the sum of square)
+	prev_s = s;
+}
+
+tfi %= 2 * FRAME_SIZE;
+if(curchunk == NB_CHUNK_FRAME - 1){
+	crosscheck = 1;
+	detection(); // Attack and decay to zero detection
+	zerocrosspoint = zerocrosspoint_tmp;
+	rms = 0;
+}
+curchunk++;
+curchunk %= NB_CHUNK_FRAME;
+
+/************************/
+/* Displays and outputs */
+/************************/
+disp_detection = detect;
+outlet_detection = detect;
+outlet_rms = peakenvelope;
+outlet_diff = diff;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="gpio/out/digital" uuid="320eed040f6c55bb24c56416596ac2e67d0c82bc" name="digital_1" x="588" y="378">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB6"/>
+         <combo attributeName="mode" selection="Push pull"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="e0631b14-a178-462d-9a53-af8b7b93cc7a" name="slice_player1" x="728" y="378">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+      <object id="patch/object" uuid="e0631b14-a178-462d-9a53-af8b7b93cc7a">
+         <sDescription>play audio from table (non-transposed), starting from position</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <bool32.rising name="start" description="start playback"/>
+            <int32 name="nslice"/>
+            <frac32.bipolar name="pitch"/>
+            <bool32 name="reverse"/>
+            <bool32 name="retrig"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="o" description="wave"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="slicesbuffer"/>
+            <objref name="slicesindex"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int pstart;
+int play;
+int64_t pos;
+uint32_t beg;
+uint32_t end;
+int64_t f0;]]></code.declaration>
+         <code.init><![CDATA[pstart = 0;
+play = 0;
+beg = 0;
+end = 0;
+pos = 0;
+f0 = 0;]]></code.init>
+         <code.krate><![CDATA[if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+   pstart = 1;
+   play = 1;
+   if(inlet_nslice < attr_slicesindex.array[0]) {
+      if(inlet_nslice == 0) {
+         beg = 0;
+   	    end = attr_slicesindex.array[1];
+      } else {
+         beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+         end = attr_slicesindex.array[inlet_nslice+1];
+      }
+      if(!inlet_reverse){
+      	pos = ((uint64_t)beg)<<32;
+      } else {
+      	pos = ((uint64_t)end)<<32;
+      }
+   }
+} else if (!(inlet_start>0)) {
+   pstart = 0;
+}
+
+MTOFEXTENDED(inlet_pitch + 80179668,f0);]]></code.krate>
+         <code.srate><![CDATA[outlet_o = 0;
+
+if(play){
+   uint64_t inc = ((uint64_t)f0)<<4;
+   if(!inlet_reverse) { 
+      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
+      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
+      pos += inc;
+      if(pos>>32 > end) play = 0; 
+   } else if (inlet_reverse){ 
+      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
+      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)-1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
+      pos -= inc;
+      if(pos>>32 < beg) play = 0; 
+   } else {
+      play = 0;
+   }
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="896" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="952" y="378">
+      <params>
+         <frac32.s.map name="pitch" value="45.0"/>
+         <frac32.u.map name="reso" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gao/fx/D10 DelayVerb" uuid="9941fa96-6d3d-4d51-aaad-e264341f70bd" name="obj_1" x="1022" y="378">
+      <params>
+         <frac32.u.map name="amount" value="10.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_3" x="28" y="462">
+      <params>
+         <frac32.s.map name="value" value="13.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_3" x="98" y="462">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="4"/>
+      </attribs>
+   </obj>
+   <obj type="disp/hex" uuid="87617898f70d90033f8add921438bf0d11721fdd" name="hex_2" x="182" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="28" y="546">
+      <params>
+         <frac32.u.map name="value" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/&gt;&gt;" uuid="d883beaf50b7aae4803ed9941e8f123e87e1e3aa" name="&gt;&gt;_2" x="98" y="546">
+      <params/>
+      <attribs>
+         <spinner attributeName="shift" value="18"/>
+      </attribs>
+   </obj>
+   <obj type="disp/hex" uuid="87617898f70d90033f8add921438bf0d11721fdd" name="hex_3" x="182" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="in_1" outlet="left"/>
+         <dest obj="beatslicer" inlet="in"/>
+      </net>
+      <net>
+         <source obj="RESET ALL" outlet="o"/>
+         <dest obj="beatslicer" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="&gt;&gt;_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="&gt;&gt;_1" outlet="result"/>
+         <dest obj="hex_1" inlet="in"/>
+         <dest obj="beatslicer" inlet="attack"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="&gt;&gt;_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="&gt;&gt;_3" outlet="result"/>
+         <dest obj="hex_2" inlet="in"/>
+         <dest obj="beatslicer" inlet="decay"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="&gt;&gt;_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="&gt;&gt;_2" outlet="result"/>
+         <dest obj="hex_3" inlet="in"/>
+         <dest obj="beatslicer" inlet="silence"/>
+      </net>
+      <net>
+         <source obj="beatslicer" outlet="detection"/>
+         <dest obj="digital_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="beatslicer" outlet="diff"/>
+         <dest obj="chart_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="beatslicer" outlet="rms"/>
+         <dest obj="chart_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="square_2" outlet="wave"/>
+         <dest obj="turing_3" inlet="trig"/>
+         <dest obj="slice_player1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="turing_3" outlet="trig"/>
+         <dest obj="flipflop_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="bitand_1" outlet="out"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="bitand_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="turing_3" outlet="buffer"/>
+         <dest obj="bitand_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="retrig" outlet="o"/>
+         <dest obj="slice_player1" inlet="retrig"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="slice_player1" inlet="nslice"/>
+      </net>
+      <net>
+         <source obj="reverse" outlet="o"/>
+         <dest obj="slice_player1" inlet="reverse"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="square_3" outlet="wave"/>
+         <dest obj="turing_4" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="turing_4" outlet="note"/>
+         <dest obj="slice_player1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="obj_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="turing_4" outlet="trig"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="slice_player1" outlet="o"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>55</x>
+      <y>24</y>
+      <width>1311</width>
+      <height>744</height>
+   </windowPos>
+</patch-1.0>
