@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="enc 1 to 8 u" uuid="f60f782d-fc51-4db2-a905-291de5240fd9">
+   <obj.normal id="enc 1 to 8 u" uuid="310fa984-1c35-410e-87c9-b6d0c787eb51">
       <author>Robert Schirmer</author>
       <license>BSD</license>
       <helpPatch>midi_in.axh</helpPatch>
@@ -31,6 +31,7 @@
 uint8_t offset;
 int inc;
 uint32_t fine;
+uint8_t count;
 
 int32_t in [8];
 int32_t prev [8];
@@ -51,15 +52,17 @@ in [4] = inlet_v4;
 in [5] = inlet_v5;
 in [6] = inlet_v6;
 in [7] = inlet_v7;
-int i;
-for (i = 0;i < 8; i ++) {
-	if (in[i] != prev[i]) {
-	prev [i] = in [i];
-	offset = i;
-	out [i] = in[i];
-	break;	
+
+
+count ++;
+count = count %8;
+	if (in[count] != prev[count]) {
+	prev [count] = in [count];
+	offset = count;
+	out [count] = in[count];	
 	}
-}
+
+
 
 if (slength) {
 		offset = ccstack [sread];

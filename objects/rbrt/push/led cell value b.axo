@@ -1,0 +1,87 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led cell value b" uuid="131d913c-55d7-46a3-b31c-de619c9d9cb0">
+      <license>GPL</license>
+      <inlets>
+         <frac32 name="in"/>
+         <bool32 name="mode"/>
+         <bool32.rising name="redraw"/>
+         <bool32.risingfalling name="mute"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="mode">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+         <spinner name="column" MinValue="0" MaxValue="7" DefaultValue="0"/>
+         <objref name="LEDmaster"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t v;
+int8_t prev;
+int8_t fb;
+int16_t nb;
+uint16_t offset;
+uint8_t row;
+bool doit;
+bool trig;
+bool mtrig;
+bool update;]]></code.declaration>
+      <code.init><![CDATA[#define BARS_ONE_L  0x03
+#define BARS_ONE_R  0x04
+#define BARS_TWO    0x05
+#define BARS_NONE   0x06
+
+
+offset = attr_LEDmaster.array [308 + attr_column] + (attr_row*77);]]></code.init>
+      <code.krate><![CDATA[if (!inlet_mute && !mtrig) {mtrig = 1;update = 1;}
+	if (inlet_mute) mtrig = 0;
+
+if (!inlet_mute){
+if (inlet_redraw && !trig) {trig = 1;update = 1;}
+if (!inlet_redraw) trig = 0;
+row = attr_row;
+v = inlet_in >> 20;
+if ((v != prev)||update){
+	prev = v;
+	update =0;
+	if (!(attr_mode || inlet_mode)){
+		if (v <= 0) v = 0;
+		memset(attr_LEDmaster.array + offset,BARS_NONE,8);
+		nb = ((v+1) << 4) >> 7;
+		fb = nb >> 1;
+		memset(attr_LEDmaster.array + offset,BARS_TWO,fb);
+		if(nb%2) attr_LEDmaster.array[fb + offset] = BARS_ONE_L;		
+	} else {
+		v = (v>>1) + 64;
+    		memset(attr_LEDmaster.array + offset,BARS_NONE,8);
+    		attr_LEDmaster.array[4 + offset] = BARS_ONE_L; 
+    		if(v>64) {
+        		nb = (((v+1) << 4) >> 7) - 8;
+        		fb = nb >> 1;
+       		 memset(attr_LEDmaster.array+ offset + 4, BARS_TWO, fb);
+        		if (nb % 2) attr_LEDmaster.array[fb+ 4 + offset] = BARS_ONE_L;
+   	 		}else {
+      			nb = 8 - (((v+1)<<4) >>7);
+       			fb = nb >> 1;
+        			memset(attr_LEDmaster.array+ offset + ( 4 - fb), BARS_TWO, fb);
+				if (nb % 2) attr_LEDmaster.array[offset + 3 - fb] = BARS_ONE_R;       
+   				}
+		}
+	doit = 1;
+}
+		if (doit && !attr_LEDmaster.ROW) {
+	attr_LEDmaster.ROW = row +1;
+		doit =0;
+		}
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

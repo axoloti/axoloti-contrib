@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led row text" uuid="7f8f306c-6fa9-46d7-bcbc-e95d640e16b3">
+   <obj.normal id="led row text" uuid="be3e95b9-63c2-4681-8a28-cd5ca6a6bdc8">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="redraw"/>
@@ -26,22 +26,26 @@
       <code.declaration><![CDATA[bool trig;
 bool mtrig;
 bool doit;
-uint8_t prerow;]]></code.declaration>
+uint8_t prerow;
+uint8_t row;]]></code.declaration>
       <code.krate><![CDATA[if (!inlet_mute){
+		row = (inlet_row + attr_row) %4;
+		uint16_t offset = row *77;
 		if (inlet_redraw && !trig){trig = 1;doit = 1;}
-		if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
-		if (inlet_row != prerow) {doit = 1;prerow = inlet_row;}			
+			if (!inlet_redraw) trig = 0;
+		if (row != prerow) {doit = 1;prerow = row;}			
 		if (doit && !attr_LEDmaster.ROW) {
 			doit = 0;
-			memcpy(&attr_LEDmaster.array[8],inlet_text0,8);
-			memcpy(&attr_LEDmaster.array[17],inlet_text1,8);
-			memcpy(&attr_LEDmaster.array[25],inlet_text2,8);
-			memcpy(&attr_LEDmaster.array[34],inlet_text3,8);
-			memcpy(&attr_LEDmaster.array[42],inlet_text4,8);
-			memcpy(&attr_LEDmaster.array[51],inlet_text5,8);
-			memcpy(&attr_LEDmaster.array[59],inlet_text6,8);
-			memcpy(&attr_LEDmaster.array[68],inlet_text7,8);
-			attr_LEDmaster.ROW = ((inlet_row + attr_row) + 1) %5;
+			memset(&attr_LEDmaster.array[offset+8],32,68);
+			memcpy(&attr_LEDmaster.array[offset+ 8],inlet_text0,strlen (inlet_text0));
+			memcpy(&attr_LEDmaster.array[offset+17],inlet_text1,strlen (inlet_text1));
+			memcpy(&attr_LEDmaster.array[offset+25],inlet_text2,strlen (inlet_text2));
+			memcpy(&attr_LEDmaster.array[offset+34],inlet_text3,strlen (inlet_text3));
+			memcpy(&attr_LEDmaster.array[offset+42],inlet_text4,strlen (inlet_text4));
+			memcpy(&attr_LEDmaster.array[offset+51],inlet_text5,strlen (inlet_text5));
+			memcpy(&attr_LEDmaster.array[offset+59],inlet_text6,strlen (inlet_text6));
+			memcpy(&attr_LEDmaster.array[offset+68],inlet_text7,strlen (inlet_text7));
+			attr_LEDmaster.ROW = row +1;
 		}	
 }
 if (inlet_mute) mtrig = 0;

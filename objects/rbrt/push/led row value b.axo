@@ -1,18 +1,26 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led row value u" uuid="4746181d-8607-414c-a081-2d9c0f39faaf">
+   <obj.normal id="led row value b" uuid="f5942844-5f89-44db-a7d7-d6ab0cde8486">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="redraw"/>
          <int32 name="row"/>
          <bool32.risingfalling name="mute"/>
          <frac32.positive name="v0"/>
+         <bool32 name="mode0"/>
          <frac32.positive name="v1"/>
+         <bool32 name="mode1"/>
          <frac32.positive name="v2"/>
+         <bool32 name="mode2"/>
          <frac32.positive name="v3"/>
+         <bool32 name="mode3"/>
          <frac32.positive name="v4"/>
+         <bool32 name="mode4"/>
          <frac32.positive name="v5"/>
+         <bool32 name="mode5"/>
          <frac32.positive name="v6"/>
+         <bool32 name="mode6"/>
          <frac32.positive name="v7"/>
+         <bool32 name="mode7"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -32,6 +40,8 @@ uint8_t count;
 
 int8_t in [8];
 int8_t prev [8];
+bool mode [8];
+bool premode [8];
 int8_t v;
 
 bool doit;
@@ -54,33 +64,66 @@ if (!inlet_mute) {
 	in [6] = inlet_v6 >> 20;
 	in [7] = inlet_v7 >> 20;
 
+	mode [0] = inlet_mode0;
+	mode [1] = inlet_mode1;
+	mode [2] = inlet_mode2;
+	mode [3] = inlet_mode3;
+	mode [4] = inlet_mode4;
+	mode [5] = inlet_mode5;
+	mode [6] = inlet_mode6;
+	mode [7] = inlet_mode7;
 	
 	row = (inlet_row + attr_row)%4;
+	
 	if (inlet_redraw && !trig) {trig = 1;update = 1;count = 0;}
 	if (!inlet_redraw) trig = 0;
 	if (row != prerow) {prerow = row;update = 1;count = 0;}
+	if (mode[count] != premode [count]) {premode[count]  = mode[count];update = 1;count = 0;}
 
-	v = in [count];
 	offset = attr_LEDmaster.array [count+308] + (row*77);
+	v = in[count];
 	
-if ((v != prev[count])|| update){
+if ((v != prev[count])||update){
 	prev[count] = v;
-	if (v <= 0) v = 0;
-	memset(attr_LEDmaster.array + offset,BARS_NONE,8);
-	nb = ((v+1) << 4) >> 7;
-	fb = nb >> 1;
-	memset(attr_LEDmaster.array + offset,BARS_TWO,fb);
-	if(nb%2) attr_LEDmaster.array[fb + offset] = BARS_ONE_L;		
-	doit = 1;
-	}
+	if (!mode[count]){
+		if (v <= 0) v = 0;
+		memset(attr_LEDmaster.array + offset,BARS_NONE,8);
+		nb = ((v+1) << 4) >> 7;
+		fb = nb >> 1;
+		memset(attr_LEDmaster.array+ offset,BARS_TWO,fb);
+		if(nb%2) attr_LEDmaster.array[fb + offset] = BARS_ONE_L;		
+	} else {
+		v = (v>>1) + 64;
+    		memset(attr_LEDmaster.array + offset,BARS_NONE,8);
+    		if (v == 64){
+   		attr_LEDmaster.array[4 + offset] = 60; 
+    		attr_LEDmaster.array[3 + offset] = 62; 
+    		}
+    		if(v>64) {
+    			attr_LEDmaster.array[3 + offset] = 62; 
+        		nb = (((v+1) << 4) >> 7) - 8;
+        		fb = nb >> 1;
+       		 memset(attr_LEDmaster.array + offset + 4, BARS_TWO, fb);
+        		if (nb % 2) attr_LEDmaster.array[fb+ 4 + offset] = BARS_ONE_L;
+   	 		}
+   	 	if (v<64){
+   	 		attr_LEDmaster.array[4 + offset] = 60; 
+      		nb = 8 - (((v+6)<<4) >>7);
+       		fb = nb >> 1;
+        		memset(attr_LEDmaster.array + offset + ( 4 - fb), BARS_TWO, fb);
+			if (nb % 2) attr_LEDmaster.array[offset + 3 - fb] = BARS_ONE_R;       
+   				}
+		}
+doit = 1;
+}
 
 if (doit && !attr_LEDmaster.ROW){
 	attr_LEDmaster.ROW = row +1;
 	doit = 0;	
-}
-count ++;
-if (count == 8) update = 0;	
+	}
+count ++;	
 count = count %8;
+if (!count) update = 0;
 }]]></code.krate>
    </obj.normal>
 </objdefs>

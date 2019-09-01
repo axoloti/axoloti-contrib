@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led master" uuid="5aad8d94-41a6-478f-bf0a-da6f90f60ccc">
+   <obj.normal id="led master sdram" uuid="34fad619-5cf7-4263-a6be-4d72d21d0e17">
       <license>GPL</license>
       <inlets/>
       <outlets/>
@@ -10,8 +10,11 @@
       </attribs>
       <code.declaration><![CDATA[uint8_t count;
 uint8_t ROW;
-uint8_t array[316];]]></code.declaration>
-      <code.init><![CDATA[uint8_t init [8]{240, 71, 127, 21,0,0,69,0};
+uint8_t *array;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[attr_poly][316]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+
+uint8_t init [8]{240, 71, 127, 21,0,0,69,0};
 uint8_t offset [8] = {8,17,25,34,42,51,59,68};
 memset (&array[0],32,308);
 memcpy (&array[308],offset,8);
