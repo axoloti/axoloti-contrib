@@ -33,7 +33,7 @@
    </obj>
    <patcher type="patch/patcher" uuid="1156835a-b6c4-42aa-8819-c25f36dedf6e" name="Absolute attack thershold_" x="28" y="112">
       <params>
-         <frac32.u.map name="click_pop_amp" value="11.0"/>
+         <frac32.u.map name="click_pop_amp" value="14.0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -207,7 +207,7 @@
    <comment type="patch/comment" x="168" y="112" text="First parameter : absolute attack thershold (attack)"/>
    <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="inputs selector" x="504" y="112">
       <params>
-         <int32.vradio name="value" value="2"/>
+         <int32.vradio name="value" value="1"/>
       </params>
       <attribs/>
    </obj>
@@ -299,9 +299,15 @@
       </params>
       <attribs/>
    </obj>
+   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="i_3" x="980" y="322">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
    <patcher type="patch/patcher" uuid="47d59ed6-1fdb-4fd5-880b-6c43f592ffcd" name="Noisy input" x="28" y="364">
       <params>
-         <frac32.u.map name="noise amp" value="21.0"/>
+         <frac32.u.map name="noise amp" value="18.0"/>
          <bool32.mom name="trig percussive sound" value="0"/>
       </params>
       <attribs/>
@@ -439,7 +445,7 @@
    </obj>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="cyclic trigger" x="896" y="364">
       <params>
-         <frac32.s.map name="pitch" value="-42.0"/>
+         <frac32.s.map name="pitch" value="-45.0"/>
       </params>
       <attribs/>
    </obj>
@@ -453,9 +459,11 @@
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
          <objref attributeName="slicesindex" obj="slicesind"/>
          <text attributeName="conf">
-            <sText><![CDATA[attack =  0x00010000; 
-decay =   0x00010000;	
-silence = 0x00000080;]]></sText>
+            <sText><![CDATA[power_db_threshold   = 60.0f; 
+delta_power_db 	 = 10.0f;	
+silence_db_threshold = 2.0f;
+timeconstant = .1f;
+]]></sText>
          </text>
       </attribs>
       <object id="patch/object" uuid="83e2f688-3873-45de-b879-8ab79efe3999">
@@ -469,15 +477,12 @@ silence = 0x00000080;]]></sText>
          </inlets>
          <outlets>
             <bool32 name="detection"/>
-            <frac32 name="decay_amp_env"/>
-            <frac32 name="amp_env"/>
+            <int32 name="power_db"/>
+            <int32 name="delta_power_db"/>
          </outlets>
          <displays>
             <bool32 name="detection"/>
             <int32.label name="n"/>
-            <int32.hexlabel name="attack"/>
-            <int32.hexlabel name="decay"/>
-            <int32.hexlabel name="silence"/>
          </displays>
          <params/>
          <attribs>
@@ -496,8 +501,9 @@ static const uint32_t LOG2_10 = 50504453;	// 10/8*ln(2)/ln(10) in fixed point Q2
 uint8_t preset = 0;						// Used for rising edge logic on reset inlet
 uint32_t si = 0;						// slice buffer current index
 uint32_t sii = 1;						// slice index current index
-uint32_t rms = 0;						// root mean square value of the current frame
-uint32_t rms_decibel = 0;				// root mean square value of the current frame in decibel (rms reference = 1)
+float energy = 0.f;						// root mean square value of the current frame
+float power_decibel = 0.f;				// root mean square value of the current frame in decibel (rms reference = 1)
+float power_decibel_prev = 0.f;			// root mean square value of the current frame in decibel (rms reference = 1)
 uint16_t timer = 0;						// A simple timer, for mask consecutive attack detection
 uint8_t crosscheck = 0;					// true <==> zero crossing check activate
 uint32_t zerocrosspoint = 0;				// zero crossing index in wave table
@@ -505,37 +511,29 @@ int32_t twoframe[2 * FRAME_SIZE];			// Buffer used for temporary continuous reco
 uint8_t tfi = 0;						// Two frame buffer index
 uint8_t curchunk = 0;					// Current chunk number
 uint8_t detect = 0;						// Detection status : 1 => store slice in slicebuffer
-int32_t peakenvelope = 0;				// Current envelope value expressed in decibel
-int32_t diff = 0;						// For attackstep calibration output
-int32_t attack = 0;						// [user] Decibel absolute threshold for attack test
-int32_t decay = 0;						// [user] Threshold for attack detection on difference of previous peakenvelope and current peakenvelope
-int32_t silence = 0;					// [user] Decibel threshold for silence test
-uint32_t radius = 130685889;				// (uint32_t) (exp(-1.33333333f / 1000) * (1<<27));
+float peakenvelope = 0.f;				// Current envelope value expressed in decibel
+float delta = 0.f;						// For attackstep calibration output
+float power_db_threshold = 0.f;			// [user] Decibel absolute threshold for attack test
+float delta_power_db = 0.f;				// [user] Threshold for attack detection on difference of previous peakenvelope and current peakenvelope
+float silence_db_threshold = 0.f;			// [user] Decibel threshold for silence test
+float timeconstant = 0.f;				// [user]
+float radius = 0.f;
 uint8_t trig = 0;
+uint32_t calib_cpt = 0;
+
+/* Float <-> Fixed Point conversion */
+__attribute__ ( ( always_inline ) ) __STATIC_INLINE float q_to_float(int32_t op1, int q) {
+  float fop1 = *(float*)(&op1);
+  __ASM volatile ("VCVT.F32.S32 %0, %0, %1" : "+w" (fop1) : "i" (q));
+  return(fop1);
+}
+
+__attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t float_to_q(float op1, int q) {
+  __ASM volatile ("VCVT.S32.F32 %0, %0, %1" : "+w" (op1) : "i" (q));
+  return(*(int32_t*)(&op1));
+}
 
 // For display a value each second : if(!calib_cpt) LogTextMessage("val : %d", val);
-
-/* Take a frac32 value and return the equivalent value in logarithmic scale 
- * From axoloti "log" object. 
- */
-int32_t logscale(int32_t in) {
-	Float_t f;
-	f.f = in;
-	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
-	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
-	return r1 + r3;
-}
-
-/* Convert rms power value to decibel unit */
-int32_t rmstodb(int32_t rms) {
-	int32_t y = logscale(rms); 		// 16 + 8 * log2(x)
-	return ___SMMUL(y - 16, LOG2_10);	// decibel = 10 * log10(rms / rms_ref) 
-								// set rms_ref to 1 arbitrary
-								// log10(rms) = ln(rms)/ln(10) = log2(rms) * ln(2) / ln(10)
-								// then rmstodb(rms) = (y - 16) * LOG2_10 with
-								// LOG2_10 = 10/8*ln(2)/ln(10) = 0.37628749457997646
-								// in Q27 = 50504453
-}
 
 /*  Apply an half Hanning window on the begin of the recorded sample (2 frames)
  *  Hanning is full range (input in range 0..MAX_INT).
@@ -594,13 +592,15 @@ void fadeout(uint32_t cuepoint) {
 }
 
 void detection() {
-	int32_t peakenvelope_tmp = peakenvelope;
-	rms >>= 2; // rms = rms << 5 (to complete last ___SMMLA operation) and >> 7 (/ 128) for the mean value
-	rms_decibel = rms > 1 ? rmstodb(rms) : 0; // rmstodb produce bad value with a very little value of rms
-	diff = rms_decibel - peakenvelope_tmp;
+	float peakenvelope_tmp = peakenvelope;
+	power_decibel = log(energy*15625000+1)*4.34294482f;
+	// 0.015625 = 1/64 for compute the mean of sum of squares (64 samples (FRAME_SIZE))
+	// P0 = 0,000000001 is the power ref, then 10*log10(P/P0) <=> 10*log10(energy/64 * 1000000000)
+	// log10(x) = ln(x)/ln(10), then 10*log10(x) = ln(x)*10/ln(10) = ln(x)*4,34294482
+	delta = power_decibel - peakenvelope_tmp;
 	
 	// New slice detection
-	if((rms_decibel > attack) && (diff > decay) && !(timer > 0)) {
+	if((power_decibel > power_db_threshold) && (delta > delta_power_db) && !(timer > 0)) {
 		trig = 1;
 		if(!(detect)) {
 			insert_twoframe();
@@ -610,11 +610,13 @@ void detection() {
           }
           timer = INITTIMER; // To avoid closed detections 
 	}
-	peakenvelope_tmp = ___SMMUL(radius, peakenvelope_tmp) << 5; // << 5 (to complete ___SMMUL operation
-	if(rms_decibel > peakenvelope_tmp) peakenvelope_tmp = rms_decibel;
+	peakenvelope_tmp = radius * peakenvelope_tmp;
+	calib_cpt++; calib_cpt = calib_cpt % 1000;
+	if(!calib_cpt) LogTextMessage("peakenvelope_tmp : %f", peakenvelope_tmp);
+	if(power_decibel > peakenvelope_tmp) peakenvelope_tmp = power_decibel;
 
 	// Silence detection
-	if(detect && !(timer > 0) && (peakenvelope_tmp < silence)) {
+	if(detect && !(timer > 0) && (peakenvelope_tmp < silence_db_threshold)) {
 		detect = 0;
 		fadeout(si);
 	}
@@ -622,25 +624,14 @@ void detection() {
 }]]></code.declaration>
          <code.init><![CDATA[attr_conf
 
-disp_attack = attack;
-disp_decay = decay;
-disp_silence = silence;]]></code.init>
-         <code.krate><![CDATA[/**************/
-/* Parameters */
-/**************/
-
-/*
-attack = inlet_attack; 
-decay = inlet_decay;	
-silence = inlet_silence;
-*/
-
-/****************/
+radius = exp((-1000.f / (48000.f * ((float)(BUFSIZE*NB_CHUNK_FRAME)))) / timeconstant);
+LogTextMessage("radius : %f", radius);]]></code.init>
+         <code.krate><![CDATA[/****************/
 /* Record logic */
 /****************/
 
-int32_t s = 0;
-int32_t prev_s = 0;
+float s = 0.f;
+float prev_s = 0.f;
 static uint32_t zerocrosspoint_tmp = 0;
 trig = 0;
 
@@ -656,7 +647,7 @@ if(inlet_reset>0 && !preset) {
 if(timer > 0) timer--;
 
 for(int i = 0; i < BUFSIZE; i++){
-	s = inlet_in[i];
+	s = q_to_float(inlet_in[i],27);
 	if(detect){
 		if(crosscheck && (prev_s * s < 0)){
 			zerocrosspoint_tmp = si;
@@ -665,10 +656,10 @@ for(int i = 0; i < BUFSIZE; i++){
 		attr_slicesbuffer.array[si] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
 		si++;
 	} else {
-		twoframe[tfi] = s;
+		twoframe[tfi] = float_to_q(s,27);
 		tfi++;
 	}
-	rms = __USAT(___SMMLA(s, s, rms), 27); // rms += s * s (must apply "<< 5" in order to exactly have the sum of square)
+	energy = s*s;
 	prev_s = s;
 }
 
@@ -677,7 +668,7 @@ if(curchunk == NB_CHUNK_FRAME - 1){
 	crosscheck = 1;
 	detection(); // Attack and decay to zero detection
 	zerocrosspoint = zerocrosspoint_tmp;
-	rms = 0;
+	energy = 0;
 }
 curchunk++;
 curchunk %= NB_CHUNK_FRAME;
@@ -688,19 +679,19 @@ curchunk %= NB_CHUNK_FRAME;
 disp_detection = detect;
 disp_n = sii;
 outlet_detection = detect;
-outlet_amp__env = rms_decibel;
-outlet_decay__amp__env = diff;]]></code.krate>
+outlet_power__db = power_decibel;
+outlet_delta__power__db = delta;]]></code.krate>
       </object>
    </patchobj>
-   <patcher type="patch/patcher" uuid="16ca093a-d416-40fb-8932-dd1495a70159" name="max with reset_" x="602" y="392">
+   <patcher type="patch/patcher" uuid="490d57e9-2d2b-44dc-8be0-75e3978094d7" name="max with reset" x="602" y="392">
       <params>
          <bool32.mom name="reset" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_5" x="112" y="42">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="112" y="42">
             <params>
-               <frac32.u.map name="value" value="0.0"/>
+               <int32 name="value" value="0"/>
             </params>
             <attribs/>
          </obj>
@@ -710,19 +701,19 @@ outlet_decay__amp__env = diff;]]></code.krate>
             </params>
             <attribs/>
          </obj>
-         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="inlet_1" x="28" y="126">
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="inlet_1" x="28" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="math/max" uuid="12440f9565ca6f036f087665b49fb708062e90d0" name="max_1" x="112" y="126">
+         <obj type="math/max" uuid="7d8a1d11e17a67ee6b57ddc6a20b35d748558c22" name="max_1" x="112" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="mux/mux 2" uuid="3bcb8a666381ed18b8962eda50b1aa679136f618" name="mux_1" x="196" y="126">
+         <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="196" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="outlet_1" x="294" y="126">
+         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="outlet_1" x="294" y="126">
             <params/>
             <attribs/>
          </obj>
@@ -741,7 +732,7 @@ outlet_decay__amp__env = diff;]]></code.krate>
                <dest obj="mux_1" inlet="i1"/>
             </net>
             <net>
-               <source obj="dial_5" outlet="out"/>
+               <source obj="i_1" outlet="out"/>
                <dest obj="mux_1" inlet="i2"/>
             </net>
             <net>
@@ -755,13 +746,13 @@ outlet_decay__amp__env = diff;]]></code.krate>
          <notes><![CDATA[]]></notes>
          <windowPos>
             <x>260</x>
-            <y>237</y>
+            <y>265</y>
             <width>445</width>
             <height>321</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="disp/hex" uuid="87617898f70d90033f8add921438bf0d11721fdd" name="hex_2" x="686" y="392">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="686" y="392">
       <params/>
       <attribs/>
    </obj>
@@ -857,37 +848,37 @@ if(play){
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="fc038d94-a635-4716-bb19-9335027d5a0f" name="max with reset" x="602" y="490">
+   <patcher type="patch/patcher" uuid="a2ca7255-9953-4f71-a113-449747bed3a0" name="max with reset_" x="602" y="490">
       <params>
          <bool32.mom name="reset" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_5" x="126" y="42">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="112" y="42">
             <params>
-               <frac32.u.map name="value" value="0.0"/>
+               <int32 name="value" value="0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="reset" x="210" y="42">
+         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="reset" x="196" y="42">
             <params>
                <bool32.mom name="b" onParent="true" value="0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="inlet_1" x="42" y="126">
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="inlet_1" x="28" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="math/max" uuid="12440f9565ca6f036f087665b49fb708062e90d0" name="max_1" x="126" y="126">
+         <obj type="math/max" uuid="7d8a1d11e17a67ee6b57ddc6a20b35d748558c22" name="max_1" x="112" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="mux/mux 2" uuid="3bcb8a666381ed18b8962eda50b1aa679136f618" name="mux_1" x="210" y="126">
+         <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="196" y="126">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="outlet_1" x="294" y="126">
+         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="outlet_1" x="294" y="126">
             <params/>
             <attribs/>
          </obj>
@@ -906,7 +897,7 @@ if(play){
                <dest obj="mux_1" inlet="i1"/>
             </net>
             <net>
-               <source obj="dial_5" outlet="out"/>
+               <source obj="i_1" outlet="out"/>
                <dest obj="mux_1" inlet="i2"/>
             </net>
             <net>
@@ -919,14 +910,14 @@ if(play){
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>302</x>
-            <y>364</y>
-            <width>472</width>
-            <height>369</height>
+            <x>260</x>
+            <y>265</y>
+            <width>445</width>
+            <height>321</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="disp/hex" uuid="87617898f70d90033f8add921438bf0d11721fdd" name="hex_1" x="686" y="490">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="686" y="490">
       <params/>
       <attribs/>
    </obj>
@@ -978,20 +969,24 @@ if(play){
          <dest obj="slice_player1" inlet="retrig"/>
       </net>
       <net>
-         <source obj="beatslicer" outlet="decay_amp_env"/>
-         <dest obj="max with reset_" inlet="inlet_1"/>
-      </net>
-      <net>
-         <source obj="beatslicer" outlet="amp_env"/>
+         <source obj="beatslicer" outlet="power_db"/>
          <dest obj="max with reset" inlet="inlet_1"/>
       </net>
       <net>
-         <source obj="max with reset_" outlet="outlet_1"/>
-         <dest obj="hex_2" inlet="in"/>
+         <source obj="max with reset" outlet="outlet_1"/>
+         <dest obj="i_1" inlet="in"/>
       </net>
       <net>
-         <source obj="max with reset" outlet="outlet_1"/>
-         <dest obj="hex_1" inlet="in"/>
+         <source obj="max with reset_" outlet="outlet_1"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="beatslicer" outlet="delta_power_db"/>
+         <dest obj="max with reset_" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="slice_player1" inlet="nslice"/>
       </net>
    </nets>
    <settings>
