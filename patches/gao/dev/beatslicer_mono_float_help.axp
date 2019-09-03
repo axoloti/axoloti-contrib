@@ -31,9 +31,14 @@
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="1156835a-b6c4-42aa-8819-c25f36dedf6e" name="Absolute attack thershold_" x="28" y="112">
+   <comment type="patch/comment" x="490" y="14" text="Set power_db_threshold and delta_power_db parameters to detect musical percussives sounds and not noise and unintentional clicks and pops."/>
+   <comment type="patch/comment" x="490" y="28" text="These parameters are printed in Axoloti console when a detection occurs. Use inputs selector below."/>
+   <comment type="patch/comment" x="490" y="56" text="Set timeconstant constant parameters (in &quot;conf&quot; text box) in order to record all modulating sound."/>
+   <comment type="patch/comment" x="490" y="70" text="If timeconstant parameters is set with a wrong value, modulations can be interpreted as silence."/>
+   <comment type="patch/comment" x="490" y="98" text="End of percussive sound is detected when the signal is below silence_db_threshold. In noisy environment set this threshold with an appropriate value."/>
+   <patcher type="patch/patcher" uuid="11c1a355-5230-4d92-8eb2-bc86fb345857" name="Absolute attack thershold_" x="28" y="112">
       <params>
-         <frac32.u.map name="click_pop_amp" value="14.0"/>
+         <frac32.u.map name="click_pop_amp" value="9.5"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -204,43 +209,43 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <comment type="patch/comment" x="168" y="112" text="First parameter : absolute attack thershold (attack)"/>
-   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="inputs selector" x="504" y="112">
-      <params>
-         <int32.vradio name="value" value="1"/>
-      </params>
-      <attribs/>
-   </obj>
-   <comment type="patch/comment" x="168" y="126" text="1. set amplitude value of unitentional clicks and pops"/>
-   <comment type="patch/comment" x="168" y="140" text="2. read max amp_env value"/>
-   <comment type="patch/comment" x="168" y="154" text="3. set &quot;attack&quot; parameter above this value"/>
-   <comment type="patch/comment" x="588" y="154" text="&lt;-- musical percussive sound with unintentional clicks and pops."/>
-   <comment type="patch/comment" x="168" y="168" text="3. check that signl of 1st input is never recorded"/>
-   <comment type="patch/comment" x="588" y="168" text="&lt;-- musical percussive sound with modulation"/>
-   <comment type="patch/comment" x="588" y="182" text="&lt;-- musical percussive sound with noise"/>
-   <comment type="patch/comment" x="588" y="196" text="&lt;-- no signal (just listen recorded slices)"/>
-   <patcher type="patch/patcher" uuid="f70d29a3-9fa8-422e-aa7c-d2b0010cfaa1" name="Modulated sound generator" x="28" y="252">
+   <patcher type="patch/patcher" uuid="cb68f3a3-fca3-4b19-bda9-6f7cdbffafde" name="Modulated sound generator" x="28" y="252">
       <params>
          <bool32.mom name="trig modulated sound" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="trig modulated sound" x="112" y="84">
+         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="182" y="0">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="-55.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="378" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="noise/pink" uuid="72c03a2468ee865f248733fcf9b12d4cf42b5a61" name="pink_1" x="308" y="70">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="trig modulated sound" x="42" y="112">
             <params>
                <bool32.mom name="b" onParent="true" value="0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="182" y="84">
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="182" y="112">
             <params>
                <frac32.s.map name="a" value="-64.0"/>
-               <frac32.s.map name="d" value="-32.0"/>
-               <frac32.u.map name="s" value="64.0"/>
+               <frac32.s.map name="d" value="-39.0"/>
+               <frac32.u.map name="s" value="40.0"/>
                <frac32.s.map name="r" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="osc/brds/vowel" uuid="5fe75952-b89b-416b-a502-d5c1e47a8827" name="vowel_1" x="280" y="84">
+         <obj type="osc/brds/vowel" uuid="5fe75952-b89b-416b-a502-d5c1e47a8827" name="vowel_1" x="280" y="112">
             <params>
                <frac32.s.map name="pitch" value="-13.0"/>
                <frac32.u.map name="timbre" value="20.0"/>
@@ -248,11 +253,21 @@
             </params>
             <attribs/>
          </obj>
-         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="378" y="84">
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="378" y="112">
             <params/>
             <attribs/>
          </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="448" y="84">
+         <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="434" y="112">
+            <params>
+               <frac32.u.map name="amp" value="8.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="560" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="630" y="112">
             <params/>
             <attribs/>
          </obj>
@@ -268,10 +283,31 @@
             <net>
                <source obj="trig modulated sound" outlet="o"/>
                <dest obj="adsr_1" inlet="gate"/>
+               <dest obj="ad_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="pink_1" outlet="out"/>
+               <dest obj="vca_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="ad_1" outlet="env"/>
+               <dest obj="vca_2" inlet="v"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vca_2" outlet="o"/>
+               <dest obj="+_1" inlet="in1"/>
             </net>
             <net>
                <source obj="vca_1" outlet="o"/>
-               <dest obj="outlet_1" inlet="outlet"/>
+               <dest obj="gain_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="gain_1" outlet="out"/>
+               <dest obj="+_1" inlet="in2"/>
             </net>
          </nets>
          <settings>
@@ -280,102 +316,63 @@
          <notes><![CDATA[]]></notes>
          <windowPos>
             <x>121</x>
-            <y>315</y>
+            <y>368</y>
             <width>848</width>
             <height>400</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="gpio/out/digital" uuid="320eed040f6c55bb24c56416596ac2e67d0c82bc" name="detection_led" x="602" y="294">
-      <params/>
-      <attribs>
-         <combo attributeName="pad" selection="PB6"/>
-         <combo attributeName="mode" selection="Push pull"/>
-      </attribs>
-   </obj>
-   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="RESET BUFFER" x="434" y="322">
+   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="inputs selector" x="280" y="252">
       <params>
-         <bool32.mom name="b" value="0"/>
+         <int32.vradio name="value" value="3"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="i_3" x="980" y="322">
+   <comment type="patch/comment" x="364" y="294" text="&lt;-- unintentional clicks and pops : no detection expected."/>
+   <comment type="patch/comment" x="364" y="308" text="&lt;-- musical percussive sound with modulation : detection expected while button is pressed (long time for the test)"/>
+   <comment type="patch/comment" x="364" y="322" text="&lt;-- musical percussive sound with noise : detection expected only when button is pressed."/>
+   <comment type="patch/comment" x="364" y="336" text="&lt;-- microphone (real usage of the beatslicer)"/>
+   <patcher type="patch/patcher" uuid="13956e92-a0b2-4dd6-82bb-42c64a91ed5a" name="Noisy input" x="28" y="364">
       <params>
-         <int32.hradio name="value" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <patcher type="patch/patcher" uuid="47d59ed6-1fdb-4fd5-880b-6c43f592ffcd" name="Noisy input" x="28" y="364">
-      <params>
-         <frac32.u.map name="noise amp" value="18.0"/>
-         <bool32.mom name="trig percussive sound" value="0"/>
+         <frac32.u.map name="noise amp" value="1.5"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="noise/gaussian" uuid="a0f2cae6eafbfa58e1f1cb28e369824c54486f79" name="gaussian_1" x="28" y="42">
+         <obj type="noise/gaussian" uuid="a0f2cae6eafbfa58e1f1cb28e369824c54486f79" name="gaussian_1" x="70" y="84">
             <params/>
             <attribs/>
          </obj>
-         <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="112" y="42">
+         <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="154" y="84">
             <params>
                <frac32.s.map name="pitch" value="58.0"/>
                <frac32.u.map name="reso" value="17.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="math/cos" uuid="a2ba1ca8d10b854e06728c088c43409866624fc1" name="cos_1" x="210" y="42">
+         <obj type="math/cos" uuid="a2ba1ca8d10b854e06728c088c43409866624fc1" name="cos_1" x="252" y="84">
             <params/>
             <attribs/>
          </obj>
-         <obj type="dist/hardclip" uuid="8f14ab3a-798a-473a-9c68-2f9e6a8054b5" name="hardclip_1" x="266" y="42">
+         <obj type="dist/hardclip" uuid="8f14ab3a-798a-473a-9c68-2f9e6a8054b5" name="hardclip_1" x="308" y="84">
             <params>
                <frac32.u.map name="level" value="20.5"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="350" y="42">
+         <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="392" y="84">
             <params>
                <frac32.s.map name="pitch" value="-17.0"/>
                <frac32.u.map name="reso" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise amp" x="448" y="42">
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="noise amp" x="490" y="84">
             <params>
                <frac32.u.map name="amp" onParent="true" value="0.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="trig percussive sound" x="112" y="168">
-            <params>
-               <bool32.mom name="b" onParent="true" value="0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="196" y="168">
-            <params>
-               <frac32.s.map name="a" value="-64.0"/>
-               <frac32.s.map name="d" value="-20.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="294" y="168">
-            <params>
-               <frac32.s.map name="pitch" value="-5.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="392" y="168">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="504" y="168">
-            <params>
-               <frac32.u.map name="gain1" value="32.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="616" y="168">
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="616" y="84">
             <params/>
             <attribs/>
          </obj>
@@ -393,22 +390,6 @@
                <dest obj="hardclip_1" inlet="in"/>
             </net>
             <net>
-               <source obj="ad_1" outlet="env"/>
-               <dest obj="vca_1" inlet="v"/>
-            </net>
-            <net>
-               <source obj="sine_1" outlet="wave"/>
-               <dest obj="vca_1" inlet="a"/>
-            </net>
-            <net>
-               <source obj="vca_1" outlet="o"/>
-               <dest obj="mix_1" inlet="in1"/>
-            </net>
-            <net>
-               <source obj="trig percussive sound" outlet="o"/>
-               <dest obj="ad_1" inlet="trig"/>
-            </net>
-            <net>
                <source obj="hp_1" outlet="out"/>
                <dest obj="noise amp" inlet="in"/>
             </net>
@@ -417,12 +398,8 @@
                <dest obj="hp_1" inlet="in"/>
             </net>
             <net>
-               <source obj="mix_1" outlet="out"/>
-               <dest obj="outlet_1" inlet="outlet"/>
-            </net>
-            <net>
                <source obj="noise amp" outlet="out"/>
-               <dest obj="mix_1" inlet="bus_in"/>
+               <dest obj="outlet_1" inlet="outlet"/>
             </net>
          </nets>
          <settings>
@@ -431,38 +408,58 @@
          <notes><![CDATA[]]></notes>
          <windowPos>
             <x>121</x>
-            <y>315</y>
+            <y>343</y>
             <width>848</width>
             <height>400</height>
          </windowPos>
       </subpatch>
    </patcher>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="RESET BUFFER" x="476" y="364">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="826" y="364">
       <params>
-         <bool32.tgl name="b" value="1"/>
+         <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="cyclic trigger" x="896" y="364">
       <params>
-         <frac32.s.map name="pitch" value="-45.0"/>
+         <frac32.s.map name="pitch" value="1.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="322" y="378">
+   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="i_3" x="994" y="364">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_2" x="140" y="378">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="280" y="378">
       <params/>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="83e2f688-3873-45de-b879-8ab79efe3999" name="beatslicer" x="434" y="378">
-      <params/>
+   <patchobj type="patch/object" uuid="83e2f688-3873-45de-b879-8ab79efe3999" name="beatslicer" x="476" y="420">
+      <params>
+         <int32 name="power_db_threshold" value="40"/>
+         <int32 name="delta_power_db" value="15"/>
+         <int32 name="silence_db_threshold" value="30"/>
+      </params>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
          <objref attributeName="slicesindex" obj="slicesind"/>
          <text attributeName="conf">
-            <sText><![CDATA[power_db_threshold   = 60.0f; 
-delta_power_db 	 = 10.0f;	
-silence_db_threshold = 2.0f;
-timeconstant = .1f;
+            <sText><![CDATA[
+timeconstant = 175.f;
 ]]></sText>
          </text>
       </attribs>
@@ -477,14 +474,25 @@ timeconstant = .1f;
          </inlets>
          <outlets>
             <bool32 name="detection"/>
-            <int32 name="power_db"/>
-            <int32 name="delta_power_db"/>
          </outlets>
          <displays>
             <bool32 name="detection"/>
             <int32.label name="n"/>
          </displays>
-         <params/>
+         <params>
+            <int32 name="power_db_threshold">
+               <MinValue i="0"/>
+               <MaxValue i="100"/>
+            </int32>
+            <int32 name="delta_power_db">
+               <MinValue i="0"/>
+               <MaxValue i="100"/>
+            </int32>
+            <int32 name="silence_db_threshold">
+               <MinValue i="0"/>
+               <MaxValue i="100"/>
+            </int32>
+         </params>
          <attribs>
             <objref name="slicesbuffer"/>
             <objref name="slicesindex"/>
@@ -516,10 +524,9 @@ float delta = 0.f;						// For attackstep calibration output
 float power_db_threshold = 0.f;			// [user] Decibel absolute threshold for attack test
 float delta_power_db = 0.f;				// [user] Threshold for attack detection on difference of previous peakenvelope and current peakenvelope
 float silence_db_threshold = 0.f;			// [user] Decibel threshold for silence test
-float timeconstant = 0.f;				// [user]
+float timeconstant = 0.f;				// [user] Attribute
 float radius = 0.f;
 uint8_t trig = 0;
-uint32_t calib_cpt = 0;
 
 /* Float <-> Fixed Point conversion */
 __attribute__ ( ( always_inline ) ) __STATIC_INLINE float q_to_float(int32_t op1, int q) {
@@ -599,8 +606,8 @@ void detection() {
 	// log10(x) = ln(x)/ln(10), then 10*log10(x) = ln(x)*10/ln(10) = ln(x)*4,34294482
 	delta = power_decibel - peakenvelope_tmp;
 	
-	// New slice detection
 	if((power_decibel > power_db_threshold) && (delta > delta_power_db) && !(timer > 0)) {
+		LogTextMessage("power_db / delta_power_db : %f / %f", power_decibel, delta);
 		trig = 1;
 		if(!(detect)) {
 			insert_twoframe();
@@ -611,8 +618,6 @@ void detection() {
           timer = INITTIMER; // To avoid closed detections 
 	}
 	peakenvelope_tmp = radius * peakenvelope_tmp;
-	calib_cpt++; calib_cpt = calib_cpt % 1000;
-	if(!calib_cpt) LogTextMessage("peakenvelope_tmp : %f", peakenvelope_tmp);
 	if(power_decibel > peakenvelope_tmp) peakenvelope_tmp = power_decibel;
 
 	// Silence detection
@@ -624,9 +629,12 @@ void detection() {
 }]]></code.declaration>
          <code.init><![CDATA[attr_conf
 
-radius = exp((-1000.f / (48000.f * ((float)(BUFSIZE*NB_CHUNK_FRAME)))) / timeconstant);
-LogTextMessage("radius : %f", radius);]]></code.init>
-         <code.krate><![CDATA[/****************/
+radius = exp(((-1000.f / 48000.f) * ((float)(BUFSIZE*NB_CHUNK_FRAME))) / timeconstant);]]></code.init>
+         <code.krate><![CDATA[power_db_threshold = (float)param_power__db__threshold;
+delta_power_db = (float)param_delta__power__db;
+silence_db_threshold = (float)param_silence__db__threshold;
+
+/****************/
 /* Record logic */
 /****************/
 
@@ -653,10 +661,10 @@ for(int i = 0; i < BUFSIZE; i++){
 			zerocrosspoint_tmp = si;
 			crosscheck = 0;
 		}
-		attr_slicesbuffer.array[si] = __SSAT(s,28)>>attr_slicesbuffer.GAIN;
+		attr_slicesbuffer.array[si] = __SSAT(inlet_in[i],28)>>attr_slicesbuffer.GAIN;
 		si++;
 	} else {
-		twoframe[tfi] = float_to_q(s,27);
+		twoframe[tfi] = inlet_in[i];
 		tfi++;
 	}
 	energy = s*s;
@@ -678,82 +686,20 @@ curchunk %= NB_CHUNK_FRAME;
 /************************/
 disp_detection = detect;
 disp_n = sii;
-outlet_detection = detect;
-outlet_power__db = power_decibel;
-outlet_delta__power__db = delta;]]></code.krate>
+outlet_detection = detect;]]></code.krate>
       </object>
    </patchobj>
-   <patcher type="patch/patcher" uuid="490d57e9-2d2b-44dc-8be0-75e3978094d7" name="max with reset" x="602" y="392">
-      <params>
-         <bool32.mom name="reset" value="0"/>
-      </params>
-      <attribs/>
-      <subpatch appVersion="1.0.12">
-         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="112" y="42">
-            <params>
-               <int32 name="value" value="0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="reset" x="196" y="42">
-            <params>
-               <bool32.mom name="b" onParent="true" value="0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="inlet_1" x="28" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/max" uuid="7d8a1d11e17a67ee6b57ddc6a20b35d748558c22" name="max_1" x="112" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="196" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="outlet_1" x="294" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <nets>
-            <net>
-               <source obj="mux_1" outlet="o"/>
-               <dest obj="max_1" inlet="in2"/>
-               <dest obj="outlet_1" inlet="outlet"/>
-            </net>
-            <net>
-               <source obj="inlet_1" outlet="inlet"/>
-               <dest obj="max_1" inlet="in1"/>
-            </net>
-            <net>
-               <source obj="max_1" outlet="out"/>
-               <dest obj="mux_1" inlet="i1"/>
-            </net>
-            <net>
-               <source obj="i_1" outlet="out"/>
-               <dest obj="mux_1" inlet="i2"/>
-            </net>
-            <net>
-               <source obj="reset" outlet="o"/>
-               <dest obj="mux_1" inlet="s"/>
-            </net>
-         </nets>
-         <settings>
-            <subpatchmode>no</subpatchmode>
-         </settings>
-         <notes><![CDATA[]]></notes>
-         <windowPos>
-            <x>260</x>
-            <y>265</y>
-            <width>445</width>
-            <height>321</height>
-         </windowPos>
-      </subpatch>
-   </patcher>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="686" y="392">
+   <obj type="gpio/out/digital" uuid="320eed040f6c55bb24c56416596ac2e67d0c82bc" name="detection_led" x="644" y="420">
       <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB6"/>
+         <combo attributeName="mode" selection="Push pull"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="reverse" x="826" y="420">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
       <attribs/>
    </obj>
    <patchobj type="patch/object" uuid="e0631b14-a178-462d-9a53-af8b7b93cc7a" name="slice_player1" x="896" y="476">
@@ -848,76 +794,7 @@ if(play){
       <params/>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="a2ca7255-9953-4f71-a113-449747bed3a0" name="max with reset_" x="602" y="490">
-      <params>
-         <bool32.mom name="reset" value="0"/>
-      </params>
-      <attribs/>
-      <subpatch appVersion="1.0.12">
-         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="112" y="42">
-            <params>
-               <int32 name="value" value="0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="reset" x="196" y="42">
-            <params>
-               <bool32.mom name="b" onParent="true" value="0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="inlet_1" x="28" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="math/max" uuid="7d8a1d11e17a67ee6b57ddc6a20b35d748558c22" name="max_1" x="112" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="196" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="outlet_1" x="294" y="126">
-            <params/>
-            <attribs/>
-         </obj>
-         <nets>
-            <net>
-               <source obj="mux_1" outlet="o"/>
-               <dest obj="max_1" inlet="in2"/>
-               <dest obj="outlet_1" inlet="outlet"/>
-            </net>
-            <net>
-               <source obj="inlet_1" outlet="inlet"/>
-               <dest obj="max_1" inlet="in1"/>
-            </net>
-            <net>
-               <source obj="max_1" outlet="out"/>
-               <dest obj="mux_1" inlet="i1"/>
-            </net>
-            <net>
-               <source obj="i_1" outlet="out"/>
-               <dest obj="mux_1" inlet="i2"/>
-            </net>
-            <net>
-               <source obj="reset" outlet="o"/>
-               <dest obj="mux_1" inlet="s"/>
-            </net>
-         </nets>
-         <settings>
-            <subpatchmode>no</subpatchmode>
-         </settings>
-         <notes><![CDATA[]]></notes>
-         <windowPos>
-            <x>260</x>
-            <y>265</y>
-            <width>445</width>
-            <height>321</height>
-         </windowPos>
-      </subpatch>
-   </patcher>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="686" y="490">
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="490">
       <params/>
       <attribs/>
    </obj>
@@ -945,7 +822,7 @@ if(play){
       </net>
       <net>
          <source obj="Noisy input" outlet="outlet_1"/>
-         <dest obj="mux_1" inlet="i2"/>
+         <dest obj="mix_2" inlet="bus_in"/>
       </net>
       <net>
          <source obj="slice_player1" outlet="o"/>
@@ -961,32 +838,29 @@ if(play){
          <dest obj="mux_1" inlet="i0"/>
       </net>
       <net>
-         <source obj="Modulated sound generator" outlet="outlet_1"/>
-         <dest obj="mux_1" inlet="i1"/>
-      </net>
-      <net>
          <source obj="retrig" outlet="o"/>
          <dest obj="slice_player1" inlet="retrig"/>
       </net>
       <net>
-         <source obj="beatslicer" outlet="power_db"/>
-         <dest obj="max with reset" inlet="inlet_1"/>
-      </net>
-      <net>
-         <source obj="max with reset" outlet="outlet_1"/>
-         <dest obj="i_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="max with reset_" outlet="outlet_1"/>
-         <dest obj="i_2" inlet="in"/>
-      </net>
-      <net>
-         <source obj="beatslicer" outlet="delta_power_db"/>
-         <dest obj="max with reset_" inlet="inlet_1"/>
-      </net>
-      <net>
          <source obj="i_3" outlet="out"/>
          <dest obj="slice_player1" inlet="nslice"/>
+      </net>
+      <net>
+         <source obj="Modulated sound generator" outlet="outlet_1"/>
+         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="reverse" outlet="o"/>
+         <dest obj="slice_player1" inlet="reverse"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="mux_1" inlet="i3"/>
       </net>
    </nets>
    <settings>
