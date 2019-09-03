@@ -1,10 +1,10 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="beatslicer_configurator" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc">
+   <obj.normal id="beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc">
       <sDescription>An realtime beat slicer. Port of slicerec~ puredata object from Katja Vetter (http://www.katjaas.nl/beatdetection/beatdetection.html).
 Record any type of acoustic input material on the fly.</sDescription>
       <author>Jérôme Burlando</author>
       <license>BSD</license>
-      <helpPatch>beatslicer.axh</helpPatch>
+      <helpPatch>beatslicer2.axh</helpPatch>
       <inlets>
          <frac32buffer name="in" description="Audio input."/>
       </inlets>
@@ -63,6 +63,7 @@ float silence_db_threshold = 0.f;			// [user] Decibel threshold for silence test
 float timeconstant = 0.f;				// [user] Attribute used for computing the decay factor
 float radius = 0.f;						// The decay factor
 uint8_t trig = 0;
+uint8_t confmode = 0;
 
 /* Float <-> Fixed Point conversion */
 __attribute__ ( ( always_inline ) ) __STATIC_INLINE float q_to_float(int32_t op1, int q) {
@@ -143,7 +144,7 @@ void detection() {
 	delta = power_decibel - peakenvelope_tmp;
 	
 	if((power_decibel > power_db_threshold) && (delta > delta_power_db) && !(timer > 0)) {
-		LogTextMessage("power_db / delta_power_db : %f / %f", power_decibel, delta);
+		if(conf_mode) LogTextMessage("power_db / delta_power_db : %f / %f", power_decibel, delta);
 		trig = 1;
 		if(!(detect)) {
 			insert_twoframe();
@@ -179,12 +180,12 @@ float prev_s = 0.f;
 static uint32_t zerocrosspoint_tmp = 0;
 trig = 0;
 
-if(inlet_delete__last>0 && !preset && (sii > 1)) {
+if(param_delete__last>0 && !preset && (sii > 1)) {
 	preset = 1;
 	si = 0;
 	sii = attr_slicesindex.array[0];
 	attr_slicesindex.array[0] = (sii-1);
-} else if(!(inlet_delete__last>0)) {
+} else if(!(param_delete__last>0)) {
 	preset = 0;
 }
 

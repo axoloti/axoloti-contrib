@@ -34,8 +34,8 @@
    <comment type="patch/comment" x="490" y="28" text="First, see principle here :"/>
    <hyperlink type="patch/hyperlink" name="http://www.katjaas.nl/beatdetection/beatdetection.html" x="616" y="28"/>
    <comment type="patch/comment" x="490" y="70" text="Set power_db_threshold and delta_power_db parameters to detect musical percussives sounds and not noise and unintentional clicks and pops."/>
-   <comment type="patch/comment" x="490" y="84" text="These parameters are printed in Axoloti console when a detection occurs. Use inputs selector below."/>
-   <patcher type="patch/patcher" uuid="f2c1db3c-0f72-4c71-9cca-bed482acefe1" name="Absolute attack thershold_" x="28" y="112">
+   <comment type="patch/comment" x="490" y="84" text="These parameters are printed in Axoloti console when a detection occurs and if &quot;confmode&quot; variable is set to 1 (in &quot;conf&quot; text box). Use inputs selector below."/>
+   <patcher type="patch/patcher" uuid="04689532-08c9-4746-9d93-a359f67a392e" name="Absolute attack thershold_" x="28" y="112">
       <params>
          <frac32.u.map name="click_pop_amp" value="9.5"/>
       </params>
@@ -211,7 +211,7 @@
    <comment type="patch/comment" x="490" y="112" text="Set timeconstant constant parameters (in &quot;conf&quot; text box) in order to record all modulating sound."/>
    <comment type="patch/comment" x="490" y="126" text="If timeconstant parameters is set with a wrong value, modulations can be interpreted as silence."/>
    <comment type="patch/comment" x="490" y="154" text="End of percussive sound is detected when the signal is below silence_db_threshold. In noisy environment set this threshold with an appropriate value."/>
-   <patcher type="patch/patcher" uuid="cf362981-d442-4180-8d7a-b555ff8f3778" name="Modulated sound generator" x="28" y="252">
+   <patcher type="patch/patcher" uuid="0f755387-6210-4202-8f7b-52eea029b50a" name="Modulated sound generator" x="28" y="252">
       <params>
          <bool32.mom name="trig modulated sound" value="0"/>
       </params>
@@ -334,7 +334,7 @@
    <comment type="patch/comment" x="364" y="308" text="&lt;-- musical percussive sound with modulation : detection expected while button is pressed (long time for the test)"/>
    <comment type="patch/comment" x="364" y="322" text="&lt;-- musical percussive sound with noise : detection expected only when button is pressed."/>
    <comment type="patch/comment" x="364" y="336" text="&lt;-- microphone (real usage of the beatslicer)"/>
-   <patcher type="patch/patcher" uuid="8a041df1-de05-4860-b5cd-1a0594365900" name="Noisy input" x="28" y="364">
+   <patcher type="patch/patcher" uuid="3747bb78-6e2a-4437-9e75-3065eac09334" name="Noisy input" x="28" y="364">
       <params>
          <frac32.u.map name="noise amp" value="1.5"/>
       </params>
@@ -430,7 +430,7 @@
    </obj>
    <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="i_3" x="994" y="364">
       <params>
-         <int32.hradio name="value" value="0"/>
+         <int32.hradio name="value" value="1"/>
       </params>
       <attribs/>
    </obj>
@@ -444,7 +444,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="gao/sample/beatslicer_configurator" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer_configurator_1" x="420" y="378">
+   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="420" y="378">
       <params>
          <bool32.mom name="delete_last" value="0"/>
          <int32 name="power_db_threshold" value="40"/>
@@ -456,7 +456,7 @@
          <objref attributeName="slicesindex" obj="slicesind"/>
          <text attributeName="conf">
             <sText><![CDATA[timeconstant = 175.f;
-]]></sText>
+confmode = 1;]]></sText>
          </text>
       </attribs>
    </obj>
@@ -577,7 +577,7 @@ if(play){
       <net>
          <source obj="mux_1" outlet="o"/>
          <dest obj="mix_1" inlet="bus_in"/>
-         <dest obj="beatslicer_configurator_1" inlet="in"/>
+         <dest obj="beatslicer2_1" inlet="in"/>
       </net>
       <net>
          <source obj="inputs selector" outlet="out"/>
@@ -626,7 +626,7 @@ if(play){
          <dest obj="mux_1" inlet="i3"/>
       </net>
       <net>
-         <source obj="beatslicer_configurator_1" outlet="record"/>
+         <source obj="beatslicer2_1" outlet="record"/>
          <dest obj="detection_led" inlet="in"/>
       </net>
    </nets>
