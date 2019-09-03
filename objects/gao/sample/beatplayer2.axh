@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbufl" x="14" y="14">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbuf" x="14" y="14">
       <params/>
       <attribs>
          <combo attributeName="size" selection="524288"/>
@@ -27,7 +27,7 @@
    </obj>
    <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_3" x="476" y="14">
       <params>
-         <frac32.u.map name="random" value="2.5"/>
+         <frac32.u.map name="random" value="62.0"/>
          <int32 name="rotation" value="1"/>
          <int32 name="length" value="8"/>
          <int32 name="hits" value="5"/>
@@ -131,7 +131,9 @@ if(inlet_trig > 0 && !ntrig){
     
 	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
 		buf = buffer;
-		note = penta3oct[buffer%16];
+		// note = penta3oct[buffer%16];
+		if(buffer&128) note = -((buffer&0x7F)<<20);
+		else note = (buffer<<20);
 		o = 1;
 		sv |= 1<<(counter%param_length); // display
     }
@@ -157,10 +159,6 @@ outlet_trig = o;]]></code.krate>
       <attribs/>
    </obj>
    <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="812" y="14">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="882" y="14">
       <params/>
       <attribs/>
    </obj>
@@ -211,10 +209,10 @@ outlet_trig = o;]]></code.krate>
    </obj>
    <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_4" x="476" y="252">
       <params>
-         <frac32.u.map name="random" value="61.5"/>
-         <int32 name="rotation" value="2"/>
+         <frac32.u.map name="random" value="6.5"/>
+         <int32 name="rotation" value="4"/>
          <int32 name="length" value="8"/>
-         <int32 name="hits" value="3"/>
+         <int32 name="hits" value="5"/>
       </params>
       <attribs/>
       <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
@@ -315,7 +313,9 @@ if(inlet_trig > 0 && !ntrig){
     
 	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
 		buf = buffer;
-		note = penta3oct[buffer%16];
+		// note = penta3oct[buffer%16];
+		if(buffer&128) note = -((buffer&0x7F)<<20);
+		else note = (buffer<<20);
 		o = 1;
 		sv |= 1<<(counter%param_length); // display
     }
@@ -344,14 +344,10 @@ outlet_trig = o;]]></code.krate>
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="882" y="252">
-      <params/>
-      <attribs/>
-   </obj>
    <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="1008" y="252">
       <params>
-         <frac32.u.map name="gain1" value="32.0"/>
-         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -384,12 +380,11 @@ outlet_trig = o;]]></code.krate>
       </net>
       <net>
          <source obj="turing_4" outlet="trig"/>
-         <dest obj="beatplayer2_1" inlet="start"/>
          <dest obj="flipflop_2" inlet="trig"/>
+         <dest obj="beatplayer2_1" inlet="start"/>
       </net>
       <net>
          <source obj="bitand_1" outlet="out"/>
-         <dest obj="i_1" inlet="in"/>
          <dest obj="beatplayer2_2" inlet="nslice"/>
       </net>
       <net>
@@ -402,7 +397,6 @@ outlet_trig = o;]]></code.krate>
       </net>
       <net>
          <source obj="bitand_2" outlet="out"/>
-         <dest obj="i_4" inlet="in"/>
          <dest obj="beatplayer2_1" inlet="nslice"/>
       </net>
       <net>
@@ -436,8 +430,8 @@ outlet_trig = o;]]></code.krate>
       </net>
       <net>
          <source obj="turing_3" outlet="trig"/>
-         <dest obj="beatplayer2_2" inlet="start"/>
          <dest obj="flipflop_1" inlet="trig"/>
+         <dest obj="beatplayer2_2" inlet="start"/>
       </net>
       <net>
          <source obj="flipflop_1" outlet="o"/>

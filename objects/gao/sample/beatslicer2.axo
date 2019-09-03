@@ -16,16 +16,16 @@ Record any type of acoustic input material on the fly.</sDescription>
          <int32.label name="current_slice_index" description="Current slice index (to record)."/>
       </displays>
       <params>
-         <bool32.mom name="delete_last"/>
-         <int32 name="power_db_threshold" description="Absolute attack threshold in deciBels">
+         <bool32.mom name="delete_last" description="Delete last slice recorded on the slices stack."/>
+         <int32 name="power_db_threshold" description="Absolute attack threshold in deciBels.">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
-         <int32 name="delta_power_db" description="[Actual level - peak envelope level], an interval in deciBels">
+         <int32 name="delta_power_db" description="[Actual level - peak envelope level], an interval in deciBels.">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
-         <int32 name="silence_db_threshold" description="Absolute silence threshold in deciBels">
+         <int32 name="silence_db_threshold" description="Absolute silence threshold in deciBels.">
             <MinValue i="0"/>
             <MaxValue i="100"/>
          </int32>
@@ -40,7 +40,6 @@ static const uint8_t NB_CHUNK_FRAME = 4;	// 16 samples for k-rate call, then 4 c
 static const uint8_t INITTIMER = 128;		// Nb frames while attack or silence detection are desactived
 static const uint32_t HANINC = 33554432;	// Increment of the half hanning window use for fadein and fadeout : MAX_INT / 2 / FRAME_SIZE
 static const uint32_t HANMID = 2147483648;	// Index of the middle of the hanning window
-static const uint32_t LOG2_10 = 50504453;	// 10/8*ln(2)/ln(10) in fixed point Q27
 
 uint8_t preset = 0;						// Used for rising edge logic on reset inlet
 uint32_t si = 0;						// slice buffer current index
@@ -144,7 +143,7 @@ void detection() {
 	delta = power_decibel - peakenvelope_tmp;
 	
 	if((power_decibel > power_db_threshold) && (delta > delta_power_db) && !(timer > 0)) {
-		if(conf_mode) LogTextMessage("power_db / delta_power_db : %f / %f", power_decibel, delta);
+		if(confmode) LogTextMessage("power_db / delta_power_db : %f / %f", power_decibel, delta);
 		trig = 1;
 		if(!(detect)) {
 			insert_twoframe();

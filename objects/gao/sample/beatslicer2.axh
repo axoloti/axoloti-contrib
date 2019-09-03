@@ -416,24 +416,6 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="826" y="364">
-      <params>
-         <bool32.tgl name="b" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="cyclic trigger" x="896" y="364">
-      <params>
-         <frac32.s.map name="pitch" value="14.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="i_3" x="994" y="364">
-      <params>
-         <int32.hradio name="value" value="1"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_2" x="140" y="378">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
@@ -467,94 +449,25 @@ confmode = 1;]]></sText>
          <combo attributeName="mode" selection="Push pull"/>
       </attribs>
    </obj>
-   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="reverse" x="826" y="420">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="cyclic trigger" x="896" y="378">
       <params>
-         <bool32.tgl name="b" value="0"/>
+         <frac32.s.map name="pitch" value="14.0"/>
       </params>
       <attribs/>
    </obj>
-   <patchobj type="patch/object" uuid="e0631b14-a178-462d-9a53-af8b7b93cc7a" name="slice_player1" x="896" y="476">
+   <obj type="ctrl/i radio 8 h" uuid="81c4cf13a2d0e267b327a4663a711c2f96f7f9b7" name="slice index" x="994" y="378">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6" name="beatplayer2" x="910" y="476">
       <params/>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
          <objref attributeName="slicesindex" obj="slicesind"/>
       </attribs>
-      <object id="patch/object" uuid="e0631b14-a178-462d-9a53-af8b7b93cc7a">
-         <sDescription>play audio from table (non-transposed), starting from position</sDescription>
-         <author>Johannes Taelman</author>
-         <license>BSD</license>
-         <helpPatch>table.axh</helpPatch>
-         <inlets>
-            <bool32.rising name="start" description="start playback"/>
-            <int32 name="nslice"/>
-            <frac32.bipolar name="pitch"/>
-            <bool32 name="reverse"/>
-            <bool32 name="retrig"/>
-         </inlets>
-         <outlets>
-            <frac32buffer name="o" description="wave"/>
-         </outlets>
-         <displays/>
-         <params/>
-         <attribs>
-            <objref name="slicesbuffer"/>
-            <objref name="slicesindex"/>
-         </attribs>
-         <includes/>
-         <code.declaration><![CDATA[int pstart;
-int play;
-int64_t pos;
-uint32_t beg;
-uint32_t end;
-int64_t f0;]]></code.declaration>
-         <code.init><![CDATA[pstart = 0;
-play = 0;
-beg = 0;
-end = 0;
-pos = 0;
-f0 = 0;]]></code.init>
-         <code.krate><![CDATA[if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
-   pstart = 1;
-   play = 1;
-   if(inlet_nslice < attr_slicesindex.array[0]) {
-      if(inlet_nslice == 0) {
-         beg = 0;
-   	    end = attr_slicesindex.array[1];
-      } else {
-         beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
-         end = attr_slicesindex.array[inlet_nslice+1];
-      }
-      if(!inlet_reverse){
-      	pos = ((uint64_t)beg)<<32;
-      } else {
-      	pos = ((uint64_t)end)<<32;
-      }
-   }
-} else if (!(inlet_start>0)) {
-   pstart = 0;
-}
-
-MTOFEXTENDED(inlet_pitch + 80179668,f0);]]></code.krate>
-         <code.srate><![CDATA[outlet_o = 0;
-
-if(play){
-   uint64_t inc = ((uint64_t)f0)<<4;
-   if(!inlet_reverse) { 
-      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
-      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
-      pos += inc;
-      if(pos>>32 > end) play = 0; 
-   } else if (inlet_reverse){ 
-      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
-      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)-1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
-      pos -= inc;
-      if(pos>>32 < beg) play = 0; 
-   } else {
-      play = 0;
-   }
-}]]></code.srate>
-      </object>
-   </patchobj>
+   </obj>
    <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="1078" y="476">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
@@ -572,7 +485,7 @@ if(play){
    <nets>
       <net>
          <source obj="cyclic trigger" outlet="wave"/>
-         <dest obj="slice_player1" inlet="start"/>
+         <dest obj="beatplayer2" inlet="start"/>
       </net>
       <net>
          <source obj="mux_1" outlet="o"/>
@@ -588,7 +501,7 @@ if(play){
          <dest obj="mix_2" inlet="bus_in"/>
       </net>
       <net>
-         <source obj="slice_player1" outlet="o"/>
+         <source obj="beatplayer2" outlet="o"/>
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
@@ -601,12 +514,8 @@ if(play){
          <dest obj="mux_1" inlet="i0"/>
       </net>
       <net>
-         <source obj="retrig" outlet="o"/>
-         <dest obj="slice_player1" inlet="retrig"/>
-      </net>
-      <net>
-         <source obj="i_3" outlet="out"/>
-         <dest obj="slice_player1" inlet="nslice"/>
+         <source obj="slice index" outlet="out"/>
+         <dest obj="beatplayer2" inlet="nslice"/>
       </net>
       <net>
          <source obj="Modulated sound generator" outlet="outlet_1"/>
@@ -616,10 +525,6 @@ if(play){
       <net>
          <source obj="mix_2" outlet="out"/>
          <dest obj="mux_1" inlet="i2"/>
-      </net>
-      <net>
-         <source obj="reverse" outlet="o"/>
-         <dest obj="slice_player1" inlet="reverse"/>
       </net>
       <net>
          <source obj="in_1" outlet="wave"/>
