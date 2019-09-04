@@ -19,143 +19,29 @@
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="86d14c47-486d-4469-846b-df100e629ff6" name="patcher_1" x="476" y="56">
+   <patcher type="patch/patcher" uuid="5f565a0f-1a6d-4bb3-9a82-a4c8bdef5913" name="patcher_1" x="476" y="56">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="turing_3:random" value="27.0"/>
-         <bool32.tgl name="retrig" value="0"/>
+         <frac32.u.map name="TESeq_1:random" value="62.0"/>
+         <bool32.tgl name="retrig" value="1"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="70" y="28">
+         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="56" y="28">
             <params>
                <frac32.s.map name="pitch" onParent="true" value="10.0"/>
             </params>
             <attribs/>
          </obj>
-         <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_3" x="168" y="28">
+         <obj type="gao/seq/TESeq" uuid="b6cad059-9382-48be-ab4b-5827d8662f54" name="TESeq_1" x="168" y="28">
             <params>
-               <frac32.u.map name="random" onParent="true" value="62.0"/>
+               <frac32.u.map name="random" onParent="true" value="59.0"/>
                <int32 name="rotation" value="1"/>
                <int32 name="length" value="8"/>
                <int32 name="hits" value="5"/>
             </params>
             <attribs/>
-            <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
-               <sDescription>Turing Machine Random Looping Sequencer</sDescription>
-               <author>Jérôme Burlando</author>
-               <license>BSD</license>
-               <helpPatch>turing.axh</helpPatch>
-               <inlets>
-                  <bool32.rising name="trig" description=""/>
-               </inlets>
-               <outlets>
-                  <int32 name="buffer"/>
-                  <frac32.bipolar name="note"/>
-                  <bool32.pulse name="trig"/>
-                  <int32.positive name="euclid"/>
-               </outlets>
-               <displays/>
-               <params>
-                  <frac32.u.map name="random"/>
-                  <int32 name="rotation">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="length">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="hits">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-               </params>
-               <attribs/>
-               <includes/>
-               <code.declaration><![CDATA[uint8_t ntrig;
-uint8_t buffer;
-uint8_t newbit;
-uint8_t counter;
-int32_t note;
-int32_t buf;
-int32_t o;
-
-int32_t penta3oct[16] = {
-				// Axo / midi / note
-	0xFE000000, 	// -16 / 48 / Do 
-	0xFE400000, 	// -14 / 50 / Ré
-	0xFE800000,	// -12 / 52 / Mi 
-	0xFEE00000,	// -9  / 55 / Sol
-	0XFF200000,	// -7  / 57 / La
-	0xFF800000,	// -4  / 60 / Do
-	0xFFC00000,	// -2  / 62 / Ré
-	0x00000000,	// 0   / 64 / Mi
-	0x00600000,	// 3   / 67 / Sol
-	0x00A00000,	// 5   / 69 / La
-	0x01000000,	// 8   / 72 / Do
-	0x01400000,	// 10  / 74 / Ré
-	0x01800000,	// 12  / 76 / Mi
-	0x01E00000,	// 15  / 79 / Sol
-	0x02200000,	// 17  / 81 / La
-	0x02800000	// 20  / 84 / Do
-};
-
-// For display
-int32_t sv;
-int32_t param_rotation_prev;
-int32_t param_hits_prev;
-int32_t param_length_prev;]]></code.declaration>
-               <code.init><![CDATA[ntrig = 0;
-buffer = 1;
-counter = 0;
-buf = 0;
-note = 0;
-o = 0;
-sv = 0;]]></code.init>
-               <code.krate><![CDATA[o = 0;
-
-if(inlet_trig > 0 && !ntrig){
-	ntrig = 1;
-
-    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
-     	newbit = ~buffer & 0x1;
-    	} else {
-        	newbit = buffer & 0x1;
-    	}
-    	buffer = (buffer >> 1) | (newbit << 7);
-
-	// display
-	if(
-		(param_hits != param_hits_prev) ||
-		(param_rotation != param_rotation_prev) ||
-		(param_length != param_length_prev)) {
-		sv = 0;
-		param_hits_prev = param_hits;
-		param_rotation_prev = param_rotation;
-		param_length_prev = param_length;
-	}
-	// end display
-    
-	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
-		buf = buffer;
-		// note = penta3oct[buffer%16];
-		if(buffer&128) note = -((buffer&0x7F)<<20);
-		else note = (buffer<<20);
-		o = 1;
-		sv |= 1<<(counter%param_length); // display
-    }
-}
-outlet_euclid = sv; //display
-
-
-if(!(inlet_trig > 0)) ntrig = 0;
-
-outlet_note = note;
-outlet_buffer = buf;
-outlet_trig = o;]]></code.krate>
-            </object>
-         </patchobj>
+         </obj>
          <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="280" y="28">
             <params/>
             <attribs/>
@@ -190,7 +76,7 @@ outlet_trig = o;]]></code.krate>
          <nets>
             <net>
                <source obj="square_1" outlet="wave"/>
-               <dest obj="turing_3" inlet="trig"/>
+               <dest obj="TESeq_1" inlet="trig"/>
             </net>
             <net>
                <source obj="bitand_1" outlet="out"/>
@@ -201,15 +87,15 @@ outlet_trig = o;]]></code.krate>
                <dest obj="bitand_1" inlet="in2"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="buffer"/>
+               <source obj="TESeq_1" outlet="buffer"/>
                <dest obj="bitand_1" inlet="in1"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="note"/>
+               <source obj="TESeq_1" outlet="note"/>
                <dest obj="beatplayer2_2" inlet="pitch"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="trig"/>
+               <source obj="TESeq_1" outlet="trig"/>
                <dest obj="flipflop_1" inlet="trig"/>
                <dest obj="beatplayer2_2" inlet="start"/>
             </net>
@@ -232,18 +118,12 @@ outlet_trig = o;]]></code.krate>
          <notes><![CDATA[]]></notes>
          <windowPos>
             <x>55</x>
-            <y>108</y>
+            <y>136</y>
             <width>776</width>
             <height>362</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="tiar/dist/fold" uuid="68089205-5e2d-45e4-b4a2-453ee02b9504" name="fold_1" x="616" y="56">
-      <params>
-         <frac32.u.map name="gain" value="31.5"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
       <params/>
       <attribs>
@@ -256,21 +136,21 @@ outlet_trig = o;]]></code.krate>
          </text>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="45af1ae9-ee88-447c-9b5a-fe61df2d16d1" name="patcher_2" x="476" y="238">
+   <patcher type="patch/patcher" uuid="33ef887c-d036-4c96-97cd-3e42cfc5d002" name="patcher_2" x="476" y="238">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="turing_3:random" value="61.0"/>
-         <bool32.tgl name="retrig" value="1"/>
+         <frac32.u.map name="TESeq_1:random" value="19.5"/>
+         <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="70" y="28">
+         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="56" y="28">
             <params>
                <frac32.s.map name="pitch" onParent="true" value="10.0"/>
             </params>
             <attribs/>
          </obj>
-         <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_3" x="168" y="28">
+         <obj type="gao/seq/TESeq" uuid="b6cad059-9382-48be-ab4b-5827d8662f54" name="TESeq_1" x="168" y="28">
             <params>
                <frac32.u.map name="random" onParent="true" value="62.0"/>
                <int32 name="rotation" value="1"/>
@@ -278,121 +158,7 @@ outlet_trig = o;]]></code.krate>
                <int32 name="hits" value="5"/>
             </params>
             <attribs/>
-            <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
-               <sDescription>Turing Machine Random Looping Sequencer</sDescription>
-               <author>Jérôme Burlando</author>
-               <license>BSD</license>
-               <helpPatch>turing.axh</helpPatch>
-               <inlets>
-                  <bool32.rising name="trig" description=""/>
-               </inlets>
-               <outlets>
-                  <int32 name="buffer"/>
-                  <frac32.bipolar name="note"/>
-                  <bool32.pulse name="trig"/>
-                  <int32.positive name="euclid"/>
-               </outlets>
-               <displays/>
-               <params>
-                  <frac32.u.map name="random"/>
-                  <int32 name="rotation">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="length">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="hits">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-               </params>
-               <attribs/>
-               <includes/>
-               <code.declaration><![CDATA[uint8_t ntrig;
-uint8_t buffer;
-uint8_t newbit;
-uint8_t counter;
-int32_t note;
-int32_t buf;
-int32_t o;
-
-int32_t penta3oct[16] = {
-				// Axo / midi / note
-	0xFE000000, 	// -16 / 48 / Do 
-	0xFE400000, 	// -14 / 50 / Ré
-	0xFE800000,	// -12 / 52 / Mi 
-	0xFEE00000,	// -9  / 55 / Sol
-	0XFF200000,	// -7  / 57 / La
-	0xFF800000,	// -4  / 60 / Do
-	0xFFC00000,	// -2  / 62 / Ré
-	0x00000000,	// 0   / 64 / Mi
-	0x00600000,	// 3   / 67 / Sol
-	0x00A00000,	// 5   / 69 / La
-	0x01000000,	// 8   / 72 / Do
-	0x01400000,	// 10  / 74 / Ré
-	0x01800000,	// 12  / 76 / Mi
-	0x01E00000,	// 15  / 79 / Sol
-	0x02200000,	// 17  / 81 / La
-	0x02800000	// 20  / 84 / Do
-};
-
-// For display
-int32_t sv;
-int32_t param_rotation_prev;
-int32_t param_hits_prev;
-int32_t param_length_prev;]]></code.declaration>
-               <code.init><![CDATA[ntrig = 0;
-buffer = 1;
-counter = 0;
-buf = 0;
-note = 0;
-o = 0;
-sv = 0;]]></code.init>
-               <code.krate><![CDATA[o = 0;
-
-if(inlet_trig > 0 && !ntrig){
-	ntrig = 1;
-
-    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
-     	newbit = ~buffer & 0x1;
-    	} else {
-        	newbit = buffer & 0x1;
-    	}
-    	buffer = (buffer >> 1) | (newbit << 7);
-
-	// display
-	if(
-		(param_hits != param_hits_prev) ||
-		(param_rotation != param_rotation_prev) ||
-		(param_length != param_length_prev)) {
-		sv = 0;
-		param_hits_prev = param_hits;
-		param_rotation_prev = param_rotation;
-		param_length_prev = param_length;
-	}
-	// end display
-    
-	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
-		buf = buffer;
-		// note = penta3oct[buffer%16];
-		if(buffer&128) note = -((buffer&0x7F)<<20);
-		else note = (buffer<<20);
-		o = 1;
-		sv |= 1<<(counter%param_length); // display
-    }
-}
-outlet_euclid = sv; //display
-
-
-if(!(inlet_trig > 0)) ntrig = 0;
-
-outlet_note = note;
-outlet_buffer = buf;
-outlet_trig = o;]]></code.krate>
-            </object>
-         </patchobj>
+         </obj>
          <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="280" y="28">
             <params/>
             <attribs/>
@@ -427,7 +193,7 @@ outlet_trig = o;]]></code.krate>
          <nets>
             <net>
                <source obj="square_1" outlet="wave"/>
-               <dest obj="turing_3" inlet="trig"/>
+               <dest obj="TESeq_1" inlet="trig"/>
             </net>
             <net>
                <source obj="bitand_1" outlet="out"/>
@@ -438,15 +204,15 @@ outlet_trig = o;]]></code.krate>
                <dest obj="bitand_1" inlet="in2"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="buffer"/>
+               <source obj="TESeq_1" outlet="buffer"/>
                <dest obj="bitand_1" inlet="in1"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="note"/>
+               <source obj="TESeq_1" outlet="note"/>
                <dest obj="beatplayer2_2" inlet="pitch"/>
             </net>
             <net>
-               <source obj="turing_3" outlet="trig"/>
+               <source obj="TESeq_1" outlet="trig"/>
                <dest obj="flipflop_1" inlet="trig"/>
                <dest obj="beatplayer2_2" inlet="start"/>
             </net>
@@ -468,27 +234,21 @@ outlet_trig = o;]]></code.krate>
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>55</x>
-            <y>108</y>
+            <x>65</x>
+            <y>136</y>
             <width>776</width>
             <height>362</height>
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="616" y="238">
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="644" y="238">
       <params>
-         <frac32.u.map name="gain1" value="54.0"/>
+         <frac32.u.map name="gain1" value="64.0"/>
          <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="gao/fx/D10 DelayVerb" uuid="b5d04c57-13cf-4e46-ad8f-feed1b13cf72" name="obj_1" x="742" y="238">
-      <params>
-         <frac32.u.map name="amount" value="8.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="882" y="238">
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="756" y="238">
       <params/>
       <attribs/>
    </obj>
@@ -518,28 +278,17 @@ outlet_trig = o;]]></code.krate>
          <dest obj="beatslicer2_1" inlet="in"/>
       </net>
       <net>
-         <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="fold_1" inlet="in"/>
-      </net>
-      <net>
-         <source obj="patcher_2" outlet="outlet_1"/>
-         <dest obj="mix_1" inlet="in2"/>
-      </net>
-      <net>
-         <source obj="mix_1" outlet="out"/>
-         <dest obj="obj_1" inlet="inlet_1"/>
-      </net>
-      <net>
-         <source obj="obj_1" outlet="l"/>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
          <dest obj="out_1" inlet="left"/>
       </net>
       <net>
-         <source obj="obj_1" outlet="r"/>
-         <dest obj="out_1" inlet="right"/>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="mix_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="fold_1" outlet="out"/>
-         <dest obj="mix_1" inlet="in1"/>
+         <source obj="patcher_2" outlet="outlet_1"/>
+         <dest obj="mix_2" inlet="in2"/>
       </net>
    </nets>
    <settings>
