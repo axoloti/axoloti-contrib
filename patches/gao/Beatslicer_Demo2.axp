@@ -1,0 +1,463 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbuf" x="14" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/inconfig" uuid="9a80ef3c19f2a8f81da3a3b7c1c44d18126b97d9" name="inconfig_1" x="154" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="gain" selection="12dB"/>
+         <combo attributeName="boost" selection="0dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="378" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="10.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_3" x="476" y="14">
+      <params>
+         <frac32.u.map name="random" value="62.0"/>
+         <int32 name="rotation" value="1"/>
+         <int32 name="length" value="8"/>
+         <int32 name="hits" value="5"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
+         <sDescription>Turing Machine Random Looping Sequencer</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <helpPatch>turing.axh</helpPatch>
+         <inlets>
+            <bool32.rising name="trig" description=""/>
+         </inlets>
+         <outlets>
+            <int32 name="buffer"/>
+            <frac32.bipolar name="note"/>
+            <bool32.pulse name="trig"/>
+            <int32.positive name="euclid"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="random"/>
+            <int32 name="rotation">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="length">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="hits">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint8_t ntrig;
+uint8_t buffer;
+uint8_t newbit;
+uint8_t counter;
+int32_t note;
+int32_t buf;
+int32_t o;
+
+int32_t penta3oct[16] = {
+				// Axo / midi / note
+	0xFE000000, 	// -16 / 48 / Do 
+	0xFE400000, 	// -14 / 50 / Ré
+	0xFE800000,	// -12 / 52 / Mi 
+	0xFEE00000,	// -9  / 55 / Sol
+	0XFF200000,	// -7  / 57 / La
+	0xFF800000,	// -4  / 60 / Do
+	0xFFC00000,	// -2  / 62 / Ré
+	0x00000000,	// 0   / 64 / Mi
+	0x00600000,	// 3   / 67 / Sol
+	0x00A00000,	// 5   / 69 / La
+	0x01000000,	// 8   / 72 / Do
+	0x01400000,	// 10  / 74 / Ré
+	0x01800000,	// 12  / 76 / Mi
+	0x01E00000,	// 15  / 79 / Sol
+	0x02200000,	// 17  / 81 / La
+	0x02800000	// 20  / 84 / Do
+};
+
+// For display
+int32_t sv;
+int32_t param_rotation_prev;
+int32_t param_hits_prev;
+int32_t param_length_prev;]]></code.declaration>
+         <code.init><![CDATA[ntrig = 0;
+buffer = 1;
+counter = 0;
+buf = 0;
+note = 0;
+o = 0;
+sv = 0;]]></code.init>
+         <code.krate><![CDATA[o = 0;
+
+if(inlet_trig > 0 && !ntrig){
+	ntrig = 1;
+
+    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
+     	newbit = ~buffer & 0x1;
+    	} else {
+        	newbit = buffer & 0x1;
+    	}
+    	buffer = (buffer >> 1) | (newbit << 7);
+
+	// display
+	if(
+		(param_hits != param_hits_prev) ||
+		(param_rotation != param_rotation_prev) ||
+		(param_length != param_length_prev)) {
+		sv = 0;
+		param_hits_prev = param_hits;
+		param_rotation_prev = param_rotation;
+		param_length_prev = param_length;
+	}
+	// end display
+    
+	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
+		buf = buffer;
+		// note = penta3oct[buffer%16];
+		if(buffer&128) note = -((buffer&0x7F)<<20);
+		else note = (buffer<<20);
+		o = 1;
+		sv |= 1<<(counter%param_length); // display
+    }
+}
+outlet_euclid = sv; //display
+
+
+if(!(inlet_trig > 0)) ntrig = 0;
+
+outlet_note = note;
+outlet_buffer = buf;
+outlet_trig = o;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="588" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="756" y="14">
+      <params>
+         <int32 name="value" value="7"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="812" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6" name="beatplayer2_2" x="756" y="70">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig1" x="588" y="84">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="14" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="98" y="252">
+      <params>
+         <bool32.mom name="delete_last" value="0"/>
+         <int32 name="power_db_threshold" value="40"/>
+         <int32 name="delta_power_db" value="15"/>
+         <int32 name="silence_db_threshold" value="30"/>
+      </params>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+         <text attributeName="conf">
+            <sText><![CDATA[timeconstant = 175.f;
+// confmode = 1;]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00" name="turing_4" x="476" y="252">
+      <params>
+         <frac32.u.map name="random" value="6.5"/>
+         <int32 name="rotation" value="4"/>
+         <int32 name="length" value="8"/>
+         <int32 name="hits" value="5"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="45278e43-bb82-473b-8d76-d930ad3fed00">
+         <sDescription>Turing Machine Random Looping Sequencer</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <helpPatch>turing.axh</helpPatch>
+         <inlets>
+            <bool32.rising name="trig" description=""/>
+         </inlets>
+         <outlets>
+            <int32 name="buffer"/>
+            <frac32.bipolar name="note"/>
+            <bool32.pulse name="trig"/>
+            <int32.positive name="euclid"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="random"/>
+            <int32 name="rotation">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="length">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+            <int32 name="hits">
+               <MinValue i="0"/>
+               <MaxValue i="128"/>
+            </int32>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint8_t ntrig;
+uint8_t buffer;
+uint8_t newbit;
+uint8_t counter;
+int32_t note;
+int32_t buf;
+int32_t o;
+
+int32_t penta3oct[16] = {
+				// Axo / midi / note
+	0xFE000000, 	// -16 / 48 / Do 
+	0xFE400000, 	// -14 / 50 / Ré
+	0xFE800000,	// -12 / 52 / Mi 
+	0xFEE00000,	// -9  / 55 / Sol
+	0XFF200000,	// -7  / 57 / La
+	0xFF800000,	// -4  / 60 / Do
+	0xFFC00000,	// -2  / 62 / Ré
+	0x00000000,	// 0   / 64 / Mi
+	0x00600000,	// 3   / 67 / Sol
+	0x00A00000,	// 5   / 69 / La
+	0x01000000,	// 8   / 72 / Do
+	0x01400000,	// 10  / 74 / Ré
+	0x01800000,	// 12  / 76 / Mi
+	0x01E00000,	// 15  / 79 / Sol
+	0x02200000,	// 17  / 81 / La
+	0x02800000	// 20  / 84 / Do
+};
+
+// For display
+int32_t sv;
+int32_t param_rotation_prev;
+int32_t param_hits_prev;
+int32_t param_length_prev;]]></code.declaration>
+         <code.init><![CDATA[ntrig = 0;
+buffer = 1;
+counter = 0;
+buf = 0;
+note = 0;
+o = 0;
+sv = 0;]]></code.init>
+         <code.krate><![CDATA[o = 0;
+
+if(inlet_trig > 0 && !ntrig){
+	ntrig = 1;
+
+    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
+     	newbit = ~buffer & 0x1;
+    	} else {
+        	newbit = buffer & 0x1;
+    	}
+    	buffer = (buffer >> 1) | (newbit << 7);
+
+	// display
+	if(
+		(param_hits != param_hits_prev) ||
+		(param_rotation != param_rotation_prev) ||
+		(param_length != param_length_prev)) {
+		sv = 0;
+		param_hits_prev = param_hits;
+		param_rotation_prev = param_rotation;
+		param_length_prev = param_length;
+	}
+	// end display
+    
+	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
+		buf = buffer;
+		// note = penta3oct[buffer%16];
+		if(buffer&128) note = -((buffer&0x7F)<<20);
+		else note = (buffer<<20);
+		o = 1;
+		sv |= 1<<(counter%param_length); // display
+    }
+}
+outlet_euclid = sv; //display
+
+
+if(!(inlet_trig > 0)) ntrig = 0;
+
+outlet_note = note;
+outlet_buffer = buf;
+outlet_trig = o;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_2" x="588" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_3" x="756" y="252">
+      <params>
+         <int32 name="value" value="7"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_2" x="812" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="1008" y="252">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1120" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6" name="beatplayer2_1" x="756" y="308">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig2" x="588" y="322">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="turing_3" inlet="trig"/>
+         <dest obj="turing_4" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="turing_4" outlet="note"/>
+         <dest obj="beatplayer2_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="turing_4" outlet="trig"/>
+         <dest obj="flipflop_2" inlet="trig"/>
+         <dest obj="beatplayer2_1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="bitand_1" outlet="out"/>
+         <dest obj="beatplayer2_2" inlet="nslice"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="bitand_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="turing_3" outlet="buffer"/>
+         <dest obj="bitand_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="bitand_2" outlet="out"/>
+         <dest obj="beatplayer2_1" inlet="nslice"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="bitand_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="turing_4" outlet="buffer"/>
+         <dest obj="bitand_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="beatslicer2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="beatplayer2_1" outlet="o"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="beatplayer2_2" outlet="o"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="turing_3" outlet="note"/>
+         <dest obj="beatplayer2_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="turing_3" outlet="trig"/>
+         <dest obj="flipflop_1" inlet="trig"/>
+         <dest obj="beatplayer2_2" inlet="start"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="beatplayer2_2" inlet="reverse"/>
+      </net>
+      <net>
+         <source obj="retrig1" outlet="o"/>
+         <dest obj="beatplayer2_2" inlet="retrig"/>
+      </net>
+      <net>
+         <source obj="flipflop_2" outlet="o"/>
+         <dest obj="beatplayer2_1" inlet="reverse"/>
+      </net>
+      <net>
+         <source obj="retrig2" outlet="o"/>
+         <dest obj="beatplayer2_1" inlet="retrig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>55</x>
+      <y>24</y>
+      <width>1311</width>
+      <height>744</height>
+   </windowPos>
+</patch-1.0>
