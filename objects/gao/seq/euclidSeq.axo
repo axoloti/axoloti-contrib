@@ -1,23 +1,18 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="TESeq" uuid="b6cad059-9382-48be-ab4b-5827d8662f54">
-      <sDescription>Turing Machine Random Looping Sequencer (note) with Euclidean Rhythm Sequencer (rhythm).
-
-https://musicthing.co.uk/random-sequencer-documentation/
+   <obj.normal id="euclidSeq" uuid="88a9eef9-c8ba-465a-9e68-7ccc6cc1a951">
+      <sDescription>Euclidean Rhythm Sequencer (rhythm).
 https://en.wikipedia.org/wiki/Euclidean_rhythm</sDescription>
       <author>Jérôme Burlando</author>
       <license>BSD</license>
-      <helpPatch>TESeq.axh</helpPatch>
+      <helpPatch>euclidSeq.axh</helpPatch>
       <inlets>
          <bool32.rising name="trig"/>
       </inlets>
       <outlets>
-         <int32 name="buffer" description="buffer (uint8_t)"/>
-         <frac32.bipolar name="note" description="note (-64..64)"/>
          <bool32.pulse name="trig" description="bang"/>
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="random" description="random knob (turing sequencer)"/>
          <int32 name="rotation" description="first hit index in measure (euclidean sequencer)">
             <MinValue i="0"/>
             <MaxValue i="128"/>
@@ -33,42 +28,17 @@ https://en.wikipedia.org/wiki/Euclidean_rhythm</sDescription>
       </params>
       <attribs/>
       <code.declaration><![CDATA[uint8_t ntrig;
-uint8_t buffer;
-uint8_t newbit;
 uint8_t counter;
-int32_t note;
-int32_t buf;
 int32_t o;]]></code.declaration>
       <code.init><![CDATA[ntrig = 0;
-buffer = 1;
 counter = 0;
-buf = 0;
-note = 0;
 o = 0;]]></code.init>
       <code.krate><![CDATA[o = 0;
-
 if(inlet_trig > 0 && !ntrig){
 	ntrig = 1;
-
-    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
-     	newbit = ~buffer & 0x1;
-    	} else {
-        	newbit = buffer & 0x1;
-    	}
-    	buffer = (buffer >> 1) | (newbit << 7);
-
-	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
-		buf = buffer;
-		if(buf&128) note = -((buf&0x7F)<<20);
-		else note = (buf<<20);
-		o = 1;
-    }
+	o = ((((counter++ + param_rotation) * param_hits) % param_length) < param_hits);
 }
-
 if(!(inlet_trig > 0)) ntrig = 0;
-
-outlet_note = note;
-outlet_buffer = buf;
 outlet_trig = o;]]></code.krate>
    </obj.normal>
 </objdefs>
