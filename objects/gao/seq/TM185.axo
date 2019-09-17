@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="TM185" uuid="a2561c7a-2f76-410d-9216-b3293169eb80">
+      <sDescription>Turing Machine Random Looping Sequencer (note) with Roland M185 Sequencer style (rhythm).
+
+https://musicthing.co.uk/random-sequencer-documentation/
+https://www.matrixsynth.com/2009/05/roland-100m-m185-mkii-sequencer.html</sDescription>
+      <author>Jérôme Burlando</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig" description="clock in"/>
+      </inlets>
+      <outlets>
+         <bool32 name="trig"/>
+         <frac32 name="note"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="random" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t ntrig;
+int8_t pc; 		// pulse counter [0..7]
+uint8_t gm;		// gate mode [0..3] 0 : silence, 1 : one trig, 2 : multiple trig, 3 : long trig
+uint32_t note;
+uint8_t trig;
+uint8_t ft;		// first trig
+uint8_t buf;
+uint8_t newbit;
+
+uint8_t noiseGen(uint8_t in){
+	return (((((in>>7)^(in>>5))^(in>>4))^in)&1) | (in<<1) ;
+}]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;
+pc = 0;
+gm = 0;
+note = 0;
+trig = 0;
+ft = 0;
+buf = 0;
+newbit = 0;]]></code.init>
+      <code.krate><![CDATA[trig = 0;
+if((gm == 3) || (gm == 2) || ((gm == 1) && (ft == 1))) trig = 1;
+
+if((inlet_trig > 0) && !ntrig) {
+	ntrig = 1;
+	if(pc < 1) {
+    		if((GenerateRandomNumber() % 255) < (param_random >> 19)){
+     		newbit = ~buf & 0x1;
+    		} else {
+        		newbit = buf & 0x1;
+    		}
+    		buf = (buf >> 1) | (newbit << 7);
+
+		if(buf&128) note = -((buf&0x7F)<<20);
+		else note = (buf<<20);
+		
+		pc = noiseGen(buf)>>5;
+		gm = noiseGen(noiseGen(buf))>>6;
+		trig = 0;
+		ft = 1;
+		LogTextMessage("buf(%x)\tpc(%d)\tgm(%d)\n", buf, pc, gm);
+	} else {
+		ft = 0;
+	}
+	if(gm == 2) trig = 0; // multiple trig
+	pc--;
+}
+if (!(inlet_trig > 0)) ntrig = 0;
+
+outlet_trig = trig;
+outlet_note = note;]]></code.krate>
+   </obj.normal>
+</objdefs>
