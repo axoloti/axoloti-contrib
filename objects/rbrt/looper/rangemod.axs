@@ -7,18 +7,12 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/math/scale" uuid="0ee2fe10-0178-4217-b4c1-c4c64338dcc0" name="offset_" x="938" y="70">
-      <params>
-         <frac32.u.map name="high" value="0.0"/>
-         <frac32.u.map name="low" value="0.0"/>
-      </params>
+   <obj type="rbrt/math/scale m" uuid="ed61801c-b16c-4ac5-8ee1-d4d02ba68483" name="scale_2" x="938" y="70">
+      <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/math/scale" uuid="0ee2fe10-0178-4217-b4c1-c4c64338dcc0" name="scale_1" x="686" y="84">
-      <params>
-         <frac32.u.map name="high" value="0.0"/>
-         <frac32.u.map name="low" value="0.0"/>
-      </params>
+   <obj type="rbrt/math/scale m" uuid="ed61801c-b16c-4ac5-8ee1-d4d02ba68483" name="scale_1" x="686" y="84">
+      <params/>
       <attribs/>
    </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="812" y="84">
@@ -63,11 +57,14 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/math/scale" uuid="0ee2fe10-0178-4217-b4c1-c4c64338dcc0" name="offset__" x="868" y="224">
-      <params>
-         <frac32.u.map name="high" value="64.0"/>
-         <frac32.u.map name="low" value="0.0"/>
-      </params>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="686" y="196">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="64"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/math/scale m" uuid="ed61801c-b16c-4ac5-8ee1-d4d02ba68483" name="scale_3" x="868" y="224">
+      <params/>
       <attribs/>
    </obj>
    <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="rmod" x="56" y="238">
@@ -77,11 +74,11 @@
    <nets>
       <net>
          <source obj="+_1" outlet="out"/>
-         <dest obj="offset_" inlet="high"/>
          <dest obj="-_1" inlet="in1"/>
+         <dest obj="scale_2" inlet="high"/>
       </net>
       <net>
-         <source obj="offset_" outlet="out"/>
+         <source obj="scale_2" outlet="out"/>
          <dest obj="-_1" inlet="in2"/>
          <dest obj="OFFSET" inlet="outlet"/>
       </net>
@@ -99,10 +96,10 @@
       </net>
       <net>
          <source obj="scale_1" outlet="out"/>
-         <dest obj="offset_" inlet="in"/>
+         <dest obj="scale_2" inlet="in"/>
       </net>
       <net>
-         <source obj="offset__" outlet="out"/>
+         <source obj="scale_3" outlet="out"/>
          <dest obj="*_1" inlet="b"/>
       </net>
       <net>
@@ -111,8 +108,8 @@
       </net>
       <net>
          <source obj="&gt;&gt;_1" outlet="result"/>
-         <dest obj="offset__" inlet="low"/>
          <dest obj="inv_pos_2" inlet="in"/>
+         <dest obj="scale_3" inlet="low"/>
       </net>
       <net>
          <source obj="inv_pos_2" outlet="out"/>
@@ -120,8 +117,8 @@
       </net>
       <net>
          <source obj="offset" outlet="inlet"/>
-         <dest obj="offset_" inlet="low"/>
          <dest obj="+_1" inlet="in1"/>
+         <dest obj="scale_2" inlet="low"/>
       </net>
       <net>
          <source obj="range" outlet="inlet"/>
@@ -135,7 +132,11 @@
       </net>
       <net>
          <source obj="rmod" outlet="inlet"/>
-         <dest obj="offset__" inlet="in"/>
+         <dest obj="scale_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="scale_3" inlet="high"/>
       </net>
    </nets>
    <settings>

@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scale attr b" uuid="66711a45-e6b9-48a6-8a83-7008ac1d2130">
+      <sDescription>scales the input between &apos;high&apos; and &apos;low&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>timeri.axh</helpPatch>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="hi" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="lo" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <combo name="input">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.krate><![CDATA[uint32_t in = (attr_input) ? (inlet_in>>1)+(1<<26) :inlet_in;
+outlet_out= (___SMMUL((((attr_hi <<21) - (attr_lo <<21)) >>1),in)<<6) + (attr_lo <<21);]]></code.krate>
+   </obj.normal>
+</objdefs>

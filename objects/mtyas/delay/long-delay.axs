@@ -40,7 +40,7 @@
    <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="sound" x="644" y="196">
       <params/>
       <attribs>
-         <combo attributeName="size" selection="262144 (5.46s)"/>
+         <combo attributeName="size" selection="1048576 (21.8s)"/>
       </attribs>
    </obj>
    <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="770" y="196">

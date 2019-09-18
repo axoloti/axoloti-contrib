@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="led clear" uuid="97b0866e-efa5-4f18-960a-84dce022809f">
+   <obj.normal id="led clear" uuid="f8bfc892-24e2-47d9-a044-c486df16caa1">
       <license>GPL</license>
       <inlets>
          <bool32.rising name="clear"/>
@@ -20,14 +20,14 @@ uint8_t count;]]></code.declaration>
       <code.krate><![CDATA[if (inlet_clear && ( !trig && !count)) {trig = 1;dorow = 1;}
 if (dorow && !attr_LED.ROW){
 	dorow = 0;
-	memset(attr_LED.array + 8,32,68);
+	memset(&attr_LED.array [(inlet_row*77) + 8],32,68);
 	attr_LED.ROW = inlet_row + 1;
 	}	
 if (!inlet_clear && !dorow) trig = 0;
 
 if (inlet_clearAll && !trigall) {trigall = 1;count = 4;}
 if (count && !attr_LED.ROW){
-	memset(attr_LED.array + 8,32,68);
+	memset(&attr_LED.array [((count -1)*77) + 8],32,68);
 	attr_LED.ROW = count;
 	count --;	
 	}

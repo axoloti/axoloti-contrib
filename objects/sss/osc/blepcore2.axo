@@ -53,7 +53,8 @@ int core;
    int32_t mod[BUFSIZE];
 /////////// all these values have to be updated from the oscillator voice module for correct functioning of the oscillators!///////////////
 
-  
+int32_t v27=1<<27;
+int32_t v28=1<<28;
 
 int32_t OSC_SIN(int32_t pitch){
 	int32_t freq;
@@ -74,6 +75,78 @@ int32_t OSC_SIN(int32_t pitch){
   	}
 }
 
+int32_t OSC_NSI(int32_t pitch){
+	int32_t freq;
+  	MTOFEXTENDED(pitch,freq);
+  	freq=freq*hrmPst[pst][core];
+  	int j;
+  	int32_t LP;
+  	
+  	for(j=0;j<BUFSIZE;j++){
+  	MTOF(Pwm[j],LP)
+	osc_p+=freq+(___SMMUL(freq,pwmp+mod[j]<<3)<<6);
+	if((sync[j]>0)&&!nextvoice){
+  		nextvoice=1;
+  		osc_p=0;
+  	}
+  	else if(sync[j]<0){nextvoice=0;}
+	int32_t r;
+	SINE2TINTERP(osc_p,r)
+	pwmp+=___SMMUL((int32_t)(GenerateRandomNumber()>>4)-pwmp,LP);
+	wave[j]=___SMMUL(r,pwmp);
+  	}
+}
+
+int32_t OSC_HRM(int32_t pitch){
+	int32_t freq;
+  	MTOFEXTENDED(pitch,freq);
+  	freq=freq*hrmPst[pst][core];
+  	int j;
+  	for(j=0;j<BUFSIZE;j++){
+  	int32_t mix,stp1,stp2;
+  	mix=Pwm[j];
+  	mix=mix>0?mix:-mix;
+  	stp1=mix>>22;
+  	mix=mix-(stp1<<22)<<5;
+  	stp1=stp1&31;
+  	stp2=(stp1+1)&31;
+  	stp1+=1;
+  	stp2+=1;
+	osc_p+=freq+(___SMMUL(freq,mod[j]<<3)<<6);
+	if((sync[j]>0)&&!nextvoice){
+  		nextvoice=1;
+  		osc_p=0;
+  	}
+  	else if(sync[j]<0){nextvoice=0;}
+	int32_t r1,r2;
+	SINE2TINTERP(osc_p*stp1,r1)
+	SINE2TINTERP(osc_p*stp2,r2)
+	r1=r1>>5;
+	r2=r2>>5;
+	wave[j]=r1+(___SMMUL(r2-r1,mix)<<5);
+  	}
+}
+
+
+int32_t OSC_VOW(int32_t pitch){
+	int32_t freq;
+  	MTOFEXTENDED(pitch,freq);
+  	freq=freq*hrmPst[pst][core];
+  	int j;
+  	for(j=0;j<BUFSIZE;j++){
+  	
+	uosc_p+=freq+(___SMMUL(freq,mod[j]<<3)<<6);
+	if((sync[j]>0)&&!nextvoice){
+  		nextvoice=1;
+  		uosc_p=0;
+  	}
+  	else if(sync[j]<0){nextvoice=0;}
+	int32_t r;
+	SINE2TINTERP(uosc_p+(___SMMUL(Pwm[j],uosc_p>>1)<<8),r)
+	wave[j]=___SMMUL((((1<<32)-uosc_p>>1)),r>>3);
+  	}
+}
+
 int32_t OSC_TRI(int32_t pitch){
   uint32_t Freq;
   MTOFEXTENDED(pitch,Freq);
@@ -81,7 +154,7 @@ int32_t OSC_TRI(int32_t pitch){
   int j;
   const int16_t *lastblep = &blt[BLEPSIZE-1];
   for(j=0;j<BUFSIZE;j++){
-    int32_t freq=Freq+(___SMMUL(Freq>>1,mod[j]<<3)<<6);
+    int32_t freq=Freq+(___SMMUL(Freq>>1,mod[j]<<3)<<4);
     int dir=freq>0?1:0;
     int32_t frq=freq;
     freq=freq>0?freq:-freq; 
@@ -126,7 +199,65 @@ int32_t OSC_TRI(int32_t pitch){
 
 }
 
+int32_t OSC_PEK(int32_t pitch){
+  uint32_t Freq;
+  MTOFEXTENDED(pitch,Freq);
+  Freq=Freq*hrmPst[pst][core];
+  int j;
+  const int16_t *lastblep = &blt[BLEPSIZE-1];
+  for(j=0;j<BUFSIZE;j++){
+    int32_t freq=Freq+(___SMMUL(Freq>>1,mod[j]<<3)<<4);
+    int dir=freq>0?1:0;
+    int32_t frq=freq;
+    freq=freq>0?freq:-freq; 
+    int i;
+    uint32_t p;
+    p = uosc_p;
+    int32_t p3 = p-2*frq;
+    int32_t tri;
+    if (p3>0){
+       tri = ((1<<30)-(p3))>>4;
+    } else {
+       tri = (p3+(1<<30))>>4;
+    }
+    uosc_p = p+freq;
+    
+    int i1 = sync[j]>>2;
+    if ((i1>0)&&!(i0>0)){   // phase reset
+      nextvoice = (nextvoice+1)&(3);
+      int32_t x = 64-((-i0<<6)/(i1-i0));
+      uoscp[nextvoice] = &blt[x];
+      vgain[nextvoice] = (((x * (frq>>7)) + (((uint32_t)p)>>1)))>>18;
+      uosc_p = x * (frq>>6);
+    } else if ((((int32_t)uosc_p)>0)^(((int32_t)p)>0)){   // dispatch
+      if ((freq>>6)>0) {
+         nextvoice = (nextvoice+1)&(3);
+         int32_t x = (uosc_p&0x7FFFFFFF)/(((uint32_t)freq)>>6);
+         uoscp[nextvoice] = &blt[x];
+         vgain[nextvoice] = (((int32_t)uosc_p)<0)?frq>>16:-(frq>>16);
+      }
+    }
+    i0 = i1;
+    int32_t sum=0;
+    for(i=0;i<4;i++){ // sample
+      const int16_t *t = uoscp[i];
+      sum += (*t)*vgain[i];
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      uoscp[i]=t;
+    }
+    if(tri>0){
+    	SINE2TINTERP(tri-v27<<3,tri)
+    	tri=(tri>>3)+v28;
+    }
+    else{
+    	SINE2TINTERP(v27+tri<<3,tri)
+    	tri=(tri>>3)-v28;
+    }
+    wave[j]=tri + (sum>>3);
+  }
 
+}
 
 int32_t OSC_SAW(int32_t pitch){
   int32_t Freq;
@@ -137,7 +268,7 @@ int32_t OSC_SAW(int32_t pitch){
   for(j=0;j<BUFSIZE;j++){
     int i;
     int p;
-    int32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<6);
+    int32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<4);
     int dir=freq>0?1:-1;
     freq=freq>0?freq:-freq;
     p = osc_p;
@@ -218,7 +349,8 @@ int32_t OSC_PLS(int32_t pitch){
   for(j=0;j<BUFSIZE;j++){
     int i;
     int p;
-    uint32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<6);
+    int32_t freq=Freq+(___SMMUL(Freq,mod[j]<<3)<<6);
+    freq=freq>0?freq:-freq;
     p = osc_p;
     osc_p = p+(freq);
     int32_t sum=0;

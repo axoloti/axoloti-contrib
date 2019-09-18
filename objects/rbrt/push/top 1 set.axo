@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="top 1 set" uuid="453672fe-e42d-4996-abeb-5ae274e11927">
+   <obj.normal id="top 1 set" uuid="d7b353e8-b151-4ccb-8f7e-817475330ecd">
       <license>GPL</license>
       <inlets>
          <int32.positive name="b0"/>
@@ -15,9 +15,9 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[int32_t in [8];
-int32_t prev [8];
-int i;
+      <code.declaration><![CDATA[uint8_t in [8];
+uint8_t prev [8];
+uint8_t i;
 uint8_t doit;]]></code.declaration>
       <code.krate><![CDATA[in [0] = inlet_b0;
 in [1] = inlet_b1;
@@ -29,13 +29,12 @@ in [6] = inlet_b6;
 in [7] = inlet_b7;
 
 if (!doit) {
-	for (i = 0;i < 8; i ++){
 		if (in[i] != prev[i]) {
 			prev[i] = in [i];
-			doit = i + 1;
-			break;
-			}	
+			doit = i + 1;	
 		}
+		i ++;
+		i = i%8;
 }
 
 	if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){

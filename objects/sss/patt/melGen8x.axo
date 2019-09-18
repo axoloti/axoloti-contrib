@@ -1,0 +1,352 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="melGen8x" uuid="a56796fd-a678-4567-af25-145e081fe6a7">
+      <sDescription>8x stacked randomised melody generator
+-sum&amp;self outputs send out actual semitones to connect your oscillators to.
+-semi&amp;oct outputs are to connect to scale modules with 7 notes/octave
+This version only has two controls:
+-maximum octave
+-randomise everything...
+-all parameters of the single version are randomised within certain &quot;usable&quot; limitations
+-sequences can select any of the former sequences&apos;s semitone,octave and triggers
+-all sequences have their own outputs
+Each stacked generator can add it&apos;s own note change to the entire sequence
+Together they create an entire sequence with multiple layers to connect your oscillators to.
+Each bar a &quot;fill&quot; is generated which starts from the &quot;start&quot; minus the shift parameter for the length of &quot;barlenght-start&quot;(what&apos;s left). The fill goes around the semitone scale toward the next note in the bars-sequence in steps based on chord scaling (2 steps within the scale each time) and holds this new note until the bar restarts (and then it is the actual current note).
+Stacking several of them with first a couple short, quick sequences with not many octaves and semitones in it, followed by a couple of slower ones, provides a really nice start to experiment.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>counter.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="r" description="reset"/>
+         <bool32.rising name="trig" description="trigger"/>
+         <int32 name="semi"/>
+         <int32 name="oct"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="restart1" description="carry pulse"/>
+         <bool32.pulse name="restart2"/>
+         <bool32.pulse name="restart3"/>
+         <bool32.pulse name="restart4"/>
+         <bool32.pulse name="restart5"/>
+         <bool32.pulse name="restart6"/>
+         <bool32.pulse name="restart7"/>
+         <bool32.pulse name="restart8"/>
+         <int32 name="self1"/>
+         <int32 name="self2"/>
+         <int32 name="self3"/>
+         <int32 name="self4"/>
+         <int32 name="self5"/>
+         <int32 name="self6"/>
+         <int32 name="self7"/>
+         <int32 name="self8"/>
+         <int32 name="semi1"/>
+         <int32 name="semi2"/>
+         <int32 name="semi3"/>
+         <int32 name="semi4"/>
+         <int32 name="semi5"/>
+         <int32 name="semi6"/>
+         <int32 name="semi7"/>
+         <int32 name="semi8"/>
+         <int32 name="oct1"/>
+         <int32 name="oct2"/>
+         <int32 name="oct3"/>
+         <int32 name="oct4"/>
+         <int32 name="oct5"/>
+         <int32 name="oct6"/>
+         <int32 name="oct7"/>
+         <int32 name="oct8"/>
+         <int32 name="sum1" description="output"/>
+         <int32 name="sum2"/>
+         <int32 name="sum3"/>
+         <int32 name="sum4"/>
+         <int32 name="sum5"/>
+         <int32 name="sum6"/>
+         <int32 name="sum7"/>
+         <int32 name="sum8"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="rnd"/>
+         <int32.hradio name="octaves">
+            <MaxValue i="5"/>
+         </int32.hradio>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+               <string>4194304</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+               <string>22</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig[8];
+   int rtrig[8];
+   int count[8];
+int i;
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t BITS = 8;
+static const uint32_t GAIN = 20;
+int8_t *array;
+int8_t settings[8][8];
+int32_t cnt[8];
+int rnd;
+int note[7]={0,2,4,5,7,9,11};
+int stp[8],ofs[8],dcnt[8];;
+int sel1[8],sel2[8];
+int trg[9],PST[8];
+int restart[8],tsum[8],tsemi[9],toct[9],tself[8];
+int32_t CYCLE(int R,int32_t bar,int32_t brs,int32_t start,int32_t shift,int32_t ot,int32_t sm,int32_t integrate,int dv, int SM,int OCT,int I)
+{
+int trig=trg[sel1[I]];
+	restart[I]=0;
+int s1,s2,o1,o2;
+
+if(integrate){
+	s1=o1=0;
+	s2=SM;
+	o2=OCT*7;
+}
+else{
+	s2=o2=0;
+	s1=SM;
+	o1=OCT;
+}
+if ((trig>0) && !ntrig[I]) {
+   dcnt[I]+=1;
+   if(dcnt[I]>=dv){
+   	dcnt[I]=0;
+   count[I] += 1; 
+   if(count[I]>=bar)
+   {
+   	ofs[I]=0;
+   	count[I] = 0;
+   	restart[I] = 1;
+   	cnt[I]+=1;
+   	stp[I]=(int32_t)GenerateRandomNumber()%8;
+   	stp[I]+=(stp[I]%7)==0?1:0;
+   	if(cnt[I]>=brs)
+   	{
+   		cnt[I]=0;
+   		PST[I]+=1;
+   		if(PST[I]>=8){
+   			PST[I]=0;
+   		}
+   		
+   	}
+   	
+   }
+   }
+   ntrig[I]=1;
+
+}
+else if (!(trig>0)) ntrig[I]=0;
+if ((R>0) && !rtrig[I]) {count[I]=0; cnt[I]=0;dcnt[I]=0;rtrig[I] = 1;restart[I]=1;}
+else if (!(R>0)) rtrig[I]=0;
+int ct=(count[I]+___SMMUL(shift,bar<<5))%bar;
+int strt=___SMMUL(bar<<5,start);
+int left=__USAT(count[I]-strt,28);
+int PST[8];
+ct=cnt[I];
+if(left>0){
+	left=(bar-strt-left)*stp[I];
+	ofs[I]=1;
+}
+int mem=(array[ct+ofs[I]&LENGTHMASK]+left);
+left=mem+s2+o2;
+
+int oct=left/sm;
+if((left<0)&&(left>-sm)){oct-=1;}
+left=left%sm;
+left+=left<0?sm:0;
+left*=2;
+left+=s1;
+left=left%7;
+left+=left<0?7:0;
+
+oct=oct%ot;
+oct+=(oct<0?ot:0)+o1;
+tsum[I]= note[left]+oct*12;
+tsemi[I+1]=left;
+toct[I+1]=oct;
+
+
+left=mem;
+oct=left/sm;
+if((left<0)&&(left>-sm)){oct-=1;}
+left=left%sm;
+left+=left<0?sm:0;
+left*=2;
+left=left%7;
+left+=left<0?7:0;
+tself[I]=note[left]+oct*12;
+trg[I+1]=restart[i];
+
+};]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<8;i++){
+count[i]=0;
+	PST[i]=0;
+   ntrig[i] = 0;
+   rtrig[i] = 0;
+   cnt[i]=0;
+   dcnt[i]=0;
+   stp[i]=(int32_t)GenerateRandomNumber()%14;
+   stp[i]+=(stp[i]%7)==0?1:0;
+   
+   sel1[i]=(int32_t)GenerateRandomNumber()>0?(int32_t)(GenerateRandomNumber()%(i+1)):0;
+   sel2[i]=(int32_t)GenerateRandomNumber()>0?(int32_t)(GenerateRandomNumber()%(i+1)):0;
+}
+static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  array[0]=0;
+  for(i=1;i<LENGTH;i++){
+  	int chg=(int32_t)(GenerateRandomNumber()%21);
+  	chg+=(chg%7)==0?1:0;
+  	array[i]=array[i-1]+chg;
+  }
+}
+
+for(i=0;i<8;i++){
+	settings[i][0]=((int8_t)(GenerateRandomNumber()%7)+2)<<(int8_t)(GenerateRandomNumber()%3);
+	settings[i][1]=(int8_t)(GenerateRandomNumber()%15)+1;
+	settings[i][2]=(int8_t)(GenerateRandomNumber()%64);
+	settings[i][3]=(int8_t)(GenerateRandomNumber()%64);
+	settings[i][4]=(int8_t)(GenerateRandomNumber()%4)+1;
+	settings[i][5]=(int8_t)(GenerateRandomNumber()%7)+1;
+	settings[i][6]=(int8_t)(GenerateRandomNumber()%1);
+	int tp=(int32_t)(GenerateRandomNumber()>>1);
+	tp=___SMMUL(tp,tp);
+	settings[i][7]=(tp>>27)+1;
+}]]></code.init>
+      <code.krate><![CDATA[int pst;
+trg[0]=inlet_trig;
+if(param_rnd&&!rnd){
+	rnd=1;
+	for(i=0;i<8;i++){
+	settings[i][0]=((int8_t)(GenerateRandomNumber()%7)+2)<<(int8_t)(GenerateRandomNumber()%3);
+	settings[i][1]=(int8_t)(GenerateRandomNumber()%15)+1;
+	settings[i][2]=(int8_t)(GenerateRandomNumber()%64);
+	settings[i][3]=(int8_t)(GenerateRandomNumber()%64);
+	settings[i][4]=(int8_t)(GenerateRandomNumber()%4)+1;
+	settings[i][5]=(int8_t)(GenerateRandomNumber()%7)+1;
+	settings[i][6]=(int8_t)(GenerateRandomNumber()%1);
+	settings[i][7]=(int8_t)(GenerateRandomNumber()%8)+1;
+	int tp=(int32_t)(GenerateRandomNumber()>>1);
+	tp=___SMMUL(tp,tp);
+	settings[i][7]=(tp>>27)+1;
+	stp[i]=(int32_t)GenerateRandomNumber()%14;
+     stp[i]+=(stp[i]%7)==0?1:0;
+     sel1[i]=(int32_t)GenerateRandomNumber()>0?(int32_t)(GenerateRandomNumber()%(i+1)):0;
+     sel2[i]=(int32_t)GenerateRandomNumber()>0?(int32_t)(GenerateRandomNumber()%(i+1)):0;
+}
+array[0]=0;
+  for(i=1;i<LENGTH;i++){
+  	int chg=(int32_t)(GenerateRandomNumber()%21);
+  	chg+=(chg%7)==0?1:0;
+  	array[i]=array[i-1]+chg;
+  }
+}
+else if(!param_rnd){rnd=0;}
+int ovs=param_octaves+1;
+for(i=0;i<8;i++){
+	pst=PST[i];
+CYCLE(inlet_r,settings[pst][0],settings[pst][1],settings[pst][2],settings[pst][3],settings[pst][4],settings[pst][5],settings[pst][6],settings[pst][7],tsemi[(sel2[i])],toct[(sel2[i])],i);
+tsum[i]=tsum[i]%(ovs*12);
+toct[i]=toct[i]%(ovs);
+}
+
+outlet_restart1=restart[0];
+outlet_self1=tself[0];
+outlet_sum1=tsum[0];
+outlet_semi1=tsemi[0];
+outlet_oct1=toct[0];
+
+outlet_restart2=restart[1];
+outlet_self2=tself[1];
+outlet_sum2=tsum[1];
+outlet_semi2=tsemi[1];
+outlet_oct2=toct[1];
+
+outlet_restart3=restart[2];
+outlet_self3=tself[2];
+outlet_sum3=tsum[2];
+outlet_semi3=tsemi[2];
+outlet_oct3=toct[2];
+
+outlet_restart4=restart[3];
+outlet_self4=tself[3];
+outlet_sum4=tsum[3];
+outlet_semi4=tsemi[3];
+outlet_oct4=toct[3];
+
+outlet_restart5=restart[4];
+outlet_self5=tself[4];
+outlet_sum5=tsum[4];
+outlet_semi5=tsemi[4];
+outlet_oct5=toct[4];
+
+outlet_restart6=restart[5];
+outlet_self6=tself[5];
+outlet_sum6=tsum[5];
+outlet_semi6=tsemi[5];
+outlet_oct6=toct[5];
+
+outlet_restart7=restart[6];
+outlet_self7=tself[6];
+outlet_sum7=tsum[6];
+outlet_semi7=tsemi[6];
+outlet_oct7=toct[6];
+
+outlet_restart8=restart[7];
+outlet_self8=tself[7];
+outlet_sum8=tsum[7];
+outlet_semi8=tsemi[7];
+outlet_oct8=toct[7];]]></code.krate>
+   </obj.normal>
+</objdefs>

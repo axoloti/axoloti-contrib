@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led row text attr" uuid="f02e2b0b-d187-4e06-a983-6dcba385326c">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="redraw"/>
+         <int32 name="row"/>
+         <bool32.risingfalling name="mute"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="LEDmaster"/>
+         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+         <table name="cell0"/>
+         <table name="cell1"/>
+         <table name="cell2"/>
+         <table name="cell3"/>
+         <table name="cell4"/>
+         <table name="cell5"/>
+         <table name="cell6"/>
+         <table name="cell7"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool mtrig;
+bool doit;
+uint8_t prerow;
+uint8_t row;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
+	if (inlet_mute) mtrig = 0;
+if (!inlet_mute){
+		row = (inlet_row + attr_row) %4;
+		uint16_t offset = row *77;
+		if (inlet_redraw && !trig){trig = 1;doit = 1;}
+			if (!inlet_redraw) trig = 0;
+		if (row != prerow) {doit = 1;prerow = row;}			
+		if (doit && !attr_LEDmaster.ROW) {
+			doit = 0;
+			memset(&attr_LEDmaster.array[offset+8],32,68);
+			memcpy(&attr_LEDmaster.array[offset+ 8],"attr_cell0",strlen ("attr_cell0"));
+			memcpy(&attr_LEDmaster.array[offset+17],"attr_cell1",strlen ("attr_cell1"));
+			memcpy(&attr_LEDmaster.array[offset+25],"attr_cell2",strlen ("attr_cell2"));
+			memcpy(&attr_LEDmaster.array[offset+34],"attr_cell3",strlen ("attr_cell3"));
+			memcpy(&attr_LEDmaster.array[offset+42],"attr_cell4",strlen ("attr_cell4"));
+			memcpy(&attr_LEDmaster.array[offset+51],"attr_cell5",strlen ("attr_cell5"));
+			memcpy(&attr_LEDmaster.array[offset+59],"attr_cell6",strlen ("attr_cell6"));
+			memcpy(&attr_LEDmaster.array[offset+68],"attr_cell7",strlen ("attr_cell7"));
+			attr_LEDmaster.ROW = row +1;
+		}	
+}
+if (inlet_mute) mtrig = 0;
+if (!inlet_redraw) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

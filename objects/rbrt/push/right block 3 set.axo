@@ -17,9 +17,9 @@
       <displays/>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[int32_t in [10];
-int32_t prev [10];
-int i;
+      <code.declaration><![CDATA[uint8_t in [10];
+uint8_t prev [10];
+uint8_t i;
 uint8_t doit;
 uint8_t count;]]></code.declaration>
       <code.krate><![CDATA[in [8] = inlet_b0;
@@ -34,13 +34,13 @@ in [0] = inlet_b8;
 in [1] = inlet_b9;
 
 
-if (!doit && !count) {
-	for (i = 0;i < 10; i ++){
+if (!doit) {
 		if (in[i] != prev[i]) {
-			doit = i + 1;
-			break;
-			}	
+			prev[i] = in [i];
+			doit = i + 1;	
 		}
+		i ++;
+		i = i%10;
 }
 
 	if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){

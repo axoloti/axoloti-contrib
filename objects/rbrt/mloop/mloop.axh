@@ -158,7 +158,7 @@ else thin --;
    </obj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="952" y="280">
       <params>
-         <bool32.tgl name="b" value="1"/>
+         <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
@@ -368,10 +368,10 @@ outlet_target = target;
 outlet_test = old_voice_length;]]></code.krate>
       </object>
    </patchobj>
-   <patcher type="patch/patcher" uuid="662af91f-fdeb-47ef-8f7f-1bf53ae8f448" name="patcher_1" x="1638" y="322">
+   <patcher type="patch/patcher" uuid="6d5f4eb4-d205-4fd4-9e8c-c72a8448e76f" name="patcher_1" x="1638" y="322">
       <params>
          <frac32.u.map name="attack" value="0.0"/>
-         <frac32.u.map name="release" value="62.5"/>
+         <frac32.u.map name="release" value="0.0"/>
       </params>
       <attribs>
          <combo attributeName="poly" selection="8"/>
@@ -506,10 +506,122 @@ outlet_test = old_voice_length;]]></code.krate>
       <params/>
       <attribs/>
    </obj>
-   <obj type="rbrt/mloop/rec n sdram" uuid="c27a0ef9-5797-4520-9293-f5a0f4374023" name="mloop" x="686" y="350">
+   <patchobj type="patch/object" uuid="722248a1-5007-4de8-835e-eb789aaa6dd0" name="mloop" x="686" y="350">
       <params/>
       <attribs/>
-   </obj>
+      <object id="patch/object" uuid="722248a1-5007-4de8-835e-eb789aaa6dd0">
+         <sDescription>records notes,as pitch and velocity,to a table with the same name as the object.
+after recording,the recorded notes are translated to a sequence with 512ppq resolution.
+the maximum recording length is 42 seconds,with a maxium of 512 events (or,256 notes played)
+outlet &apos;length&apos; provides the recording length,in order to drive a &apos;ktransport&apos; -object.
+use &apos;note play&apos; to play the sequence.</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <inlets>
+            <bool32.risingfalling name="rec" description="start/stop recording"/>
+            <int32.positive name="note"/>
+            <int32.positive name="velo"/>
+            <bool32.risingfalling name="dub"/>
+            <int32.positive name="index"/>
+         </inlets>
+         <outlets>
+            <int32 name="length" description="length of recording in k-ticks"/>
+            <int32 name="test"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[uint32_t tc;
+uint16_t count;
+bool rec;
+
+uint8_t pren;
+uint8_t prev;
+uint8_t velo;
+bool trig;
+
+
+static const uint16_t LENGTHPOW = 9;
+static const uint16_t LENGTH = 1<<9;
+static const uint16_t LENGTHMASK = (1<<9)-1;
+static const uint16_t BITS = 16;
+static const uint16_t GAIN = 12;
+uint16_t *array;
+uint32_t *recarray;
+
+uint32_t bitmask =  0b11111111111111110000000000000000;
+uint32_t bitmask2 = 0b00000000000000001111111111111111;
+
+uint16_t target;
+
+uint8_t _note;
+uint8_t _velo;
+uint16_t clearcount;
+uint16_t writecount;]]></code.declaration>
+         <code.init><![CDATA[trig = 0;
+pren = 0;
+prev = 0;
+static uint16_t _array[attr_poly][LENGTH]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+
+static uint32_t _recarray[attr_poly][LENGTH]  __attribute__ ((section (".sdram")));
+recarray = &_recarray[parent->polyIndex][0];
+
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++) {array[i]=0;recarray[i]=0;}
+}]]></code.init>
+         <code.krate><![CDATA[if (inlet_rec && !rec) {
+	rec = 1;
+	tc = 0;
+	pren = 255;
+	clearcount = 512;
+	writecount = 0;
+}
+if (rec && (!inlet_rec)) rec = 0;
+
+if ((inlet_note != pren) || (inlet_velo != prev)) {
+	trig = 1;
+	pren = inlet_note;
+	prev = inlet_velo;
+	}
+
+if (rec){
+	tc++;
+	if (trig ){
+		recarray [count] = ((tc << 16 ) + ((inlet_note + 1) + (inlet_velo << 8)));
+		count ++;
+		}	
+	}
+
+if (!rec && count) {
+ 	if (writecount < count){
+ 		target = (((recarray [writecount] & bitmask ) / tc) * 512) >> 16;
+ 		while (array [target] > 0 ) target ++;
+ 		array[target] = recarray [writecount] & bitmask2;	
+ 		writecount ++;
+ 		}
+ 		else count = 0;
+	}
+
+if (inlet_dub) {
+	if (trig ){
+		target = inlet_index;
+		while (array [target]) target ++;
+		array [target] =  (inlet_note + 1) + (inlet_velo << 8);	
+	}	
+}
+
+trig = 0;
+outlet_test = writecount;
+outlet_length = tc;]]></code.krate>
+         <code.srate><![CDATA[if (clearcount) {
+	array [clearcount -1] = 0;
+	clearcount --;
+}]]></code.srate>
+      </object>
+   </patchobj>
    <obj type="rbrt/seq/ktransport" uuid="fe6c2bcf-f893-4eb2-bb14-cabb30026d49" name="ktransport_1" x="840" y="350">
       <params>
          <int32 name="factor" value="1"/>
@@ -525,19 +637,110 @@ outlet_test = old_voice_length;]]></code.krate>
          <objref attributeName="holdmap" obj="hold"/>
       </attribs>
    </obj>
-   <obj type="rbrt/mloop/play n" uuid="65386957-c344-49fa-befc-c52624a6db38" name="play_1" x="994" y="364">
+   <patchobj type="patch/object" uuid="ae98667c-b05f-4ce3-ade7-cf66c7f19fe1" name="play_1" x="994" y="364">
       <params/>
       <attribs>
          <objref attributeName="seq" obj="mloop"/>
       </attribs>
-   </obj>
+      <object id="patch/object" uuid="ae98667c-b05f-4ce3-ade7-cf66c7f19fe1">
+         <sDescription>play back a sequence recorded with &apos;note rec&apos;</sDescription>
+         <author>Robert Schirmer</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <int32.positive name="index" description="index (0 - 512)"/>
+            <bool32.risingfalling name="play" description="start/stop"/>
+            <bool32.rising name="stopall" description="stop all active notes"/>
+         </inlets>
+         <outlets>
+            <int32 name="note" description=""/>
+            <int32 name="velo"/>
+            <int32 name="test"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="seq"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[uint16_t v;
+uint8_t *active;
+uint8_t note;
+uint8_t velo;
+bool sa;
+bool play;
+uint8_t stopcount;
+uint8_t high;
+uint8_t low;]]></code.declaration>
+         <code.init><![CDATA[static uint8_t _active[attr_poly][128]  __attribute__ ((section (".sdram")));
+active = &_active[parent->polyIndex][0];
+
+{ 
+  int i;
+  for(i=0;i<128;i++) active[i]=0;
+}
+
+high = 0;
+low = 128;]]></code.init>
+         <code.krate><![CDATA[if (inlet_play && !play) play = 1;
+if (!inlet_play && play) {play = 0;stopcount = high-low;}
+
+if (play) {
+	v = attr_seq.array [inlet_index];
+	if (v ){
+		note = (v & 255) - 1;
+		velo = v >> 8;
+		if (velo) {
+			if (note >= high) high = note +1;
+			if (note <= low) low =   note;
+			active [note] = velo;
+		}
+	}
+}
+
+if (inlet_stopall && !sa) {stopcount = high-low ;sa = 1;}
+if (!inlet_stopall) sa = 0;
+
+if (stopcount) {
+	stopcount --;
+	if (active [stopcount + low]){
+		note = stopcount + low;
+		velo = 0;
+		active [stopcount + low] = 0;
+		}
+	if (!stopcount) {
+		high = 0;
+		low = 128;
+	}
+}
+
+outlet_note = note;
+outlet_velo = velo;
+
+outlet_test = high;]]></code.krate>
+      </object>
+   </patchobj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="OVERDUB" x="588" y="392">
       <params>
          <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="1134" y="462">
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="420" y="476">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_2" x="616" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="742" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="994" y="574">
       <params/>
       <attribs/>
    </obj>
@@ -545,9 +748,9 @@ outlet_test = old_voice_length;]]></code.krate>
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="hold" inlet="note"/>
+         <dest obj="del_1" inlet="note"/>
          <dest obj="midimux_1" inlet="note1"/>
          <dest obj="mloop" inlet="note"/>
-         <dest obj="del_1" inlet="note"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="velo"/>
@@ -557,16 +760,15 @@ outlet_test = old_voice_length;]]></code.krate>
       </net>
       <net>
          <source obj="ktransport_1" outlet="step"/>
-         <dest obj="i_1" inlet="in"/>
-         <dest obj="mloop" inlet="index"/>
          <dest obj="del_2" inlet="index"/>
          <dest obj="play_1" inlet="index"/>
+         <dest obj="mloop" inlet="index"/>
       </net>
       <net>
          <source obj="rec_1" outlet="rec"/>
          <dest obj="disp_1" inlet="in"/>
-         <dest obj="mloop" inlet="rec"/>
          <dest obj="obj_1" inlet="rec"/>
+         <dest obj="mloop" inlet="rec"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="noteOn"/>
@@ -579,14 +781,6 @@ outlet_test = old_voice_length;]]></code.krate>
       <net>
          <source obj="rec_1" outlet="waitstate"/>
          <dest obj="disp_2" inlet="in"/>
-      </net>
-      <net>
-         <source obj="play_1" outlet="note"/>
-         <dest obj="midicheck_1" inlet="note"/>
-      </net>
-      <net>
-         <source obj="play_1" outlet="velo"/>
-         <dest obj="midicheck_1" inlet="velo"/>
       </net>
       <net>
          <source obj="patcher_1" outlet="audio"/>
@@ -628,12 +822,8 @@ outlet_test = old_voice_length;]]></code.krate>
          <dest obj="midimux_1" inlet="mute2"/>
       </net>
       <net>
-         <source obj="change_1" outlet="1to0"/>
-         <dest obj="play_1" inlet="stopall"/>
-      </net>
-      <net>
          <source obj="change_1" outlet="0to1"/>
-         <dest obj="ktransport_1" inlet="reset"/>
+         <dest obj="or_2" inlet="i1"/>
       </net>
       <net>
          <source obj="OVERDUB" outlet="o"/>
@@ -658,6 +848,35 @@ outlet_test = old_voice_length;]]></code.krate>
       <net>
          <source obj="i_3" outlet="out"/>
          <dest obj="matrix_2" inlet="brightness"/>
+      </net>
+      <net>
+         <source obj="or_1" outlet="o"/>
+         <dest obj="play_1" inlet="stopall"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="1to0"/>
+         <dest obj="or_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="or_2" outlet="o"/>
+         <dest obj="ktransport_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="or_2" inlet="i2"/>
+         <dest obj="or_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="mloop" outlet="test"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="play_1" outlet="note"/>
+         <dest obj="midicheck_1" inlet="note"/>
+      </net>
+      <net>
+         <source obj="play_1" outlet="velo"/>
+         <dest obj="midicheck_1" inlet="velo"/>
       </net>
    </nets>
    <settings>

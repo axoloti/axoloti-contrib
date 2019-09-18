@@ -8,14 +8,17 @@ Bandwith limited</sDescription>
       <inlets>
          <frac32.bipolar name="pitch1" description="pitch"/>
          <frac32 name="fm1"/>
+         <frac32 name="pw1"/>
          <frac32buffer name="pwm"/>
          <frac32buffer name="mod"/>
          <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
          <int32 name="wave1"/>
          <frac32 name="pitch2"/>
          <frac32 name="fm2"/>
+         <frac32 name="pw2"/>
          <int32 name="wave2"/>
-         <frac32 name="mix"/>
+         <frac32buffer name="mix"/>
+         <int32 name="complex" description="functions as binairy on/off selection for the toggle switch functions"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
@@ -25,14 +28,14 @@ Bandwith limited</sDescription>
       <params>
          <bool32.tgl name="snc1"/>
          <int32.hradio name="wave1">
-            <MaxValue i="5"/>
+            <MaxValue i="8"/>
          </int32.hradio>
          <frac32.s.map.pitch name="pitch1" noLabel="true"/>
          <frac32.s.map name="pw1" description="pulse width for pulse oscillator mode (5)"/>
          <frac32.s.map name="pwm1" description="pulse width modulation width for pulse oscillator mode (5)"/>
          <frac32.s.map name="fm1"/>
          <int32.hradio name="wave2">
-            <MaxValue i="5"/>
+            <MaxValue i="8"/>
          </int32.hradio>
          <bool32.tgl name="track" description="link to pitch1 input"/>
          <bool32.tgl name="link" description="link to pitch1 parameter"/>
@@ -56,7 +59,7 @@ uint32_t uosc_p[2];
   int16_t *oscp[2][blepvoices];
   int32_t vgain[2][blepvoices];
   uint32_t nextvoice[2];
-  int32_t pwmp[2];
+  int32_t pwmp[2],ppwm[2];;
   int32_t i0[2];
   int32_t sync[BUFSIZE];
   int i;
@@ -67,6 +70,8 @@ uint32_t uosc_p[2];
   bool snc[2];
   int32_t fm[2];
   int32_t v27=1<<27;
+  int32_t vi28=(1<<28)-1;
+  int32_t Pwm[2];
   int32_t SQRT(int32_t in){
 int32_t ai = in;
 float aif = ai;
@@ -81,51 +86,79 @@ return (int)aif;
       nextvoice[i] = 0; 
       i0[i] = 0;
       }}]]></code.init>
-      <code.krate><![CDATA[wave[0]=(param_wave1+inlet_wave1);
+      <code.krate><![CDATA[//put parameters into pairs
+wave[0]=(param_wave1+inlet_wave1);
 wave[1]=(param_wave2+inlet_wave2);
 pitch[0]=param_pitch1+inlet_pitch1;
-pitch[1]=param_pitch2+inlet_pitch2+(param_track>0?inlet_pitch1:0)+(param_link>0?param_pitch1:0);
-snc[0]=param_snc1;
-snc[1]=param_snc2;
+pitch[1]=param_pitch2+inlet_pitch2+((param_track||((inlet_complex>>2)&1))>0?inlet_pitch1:0)+((param_link||((inlet_complex>>3)&1))>0?param_pitch1:0);
+snc[0]=param_snc1||(inlet_complex&1);
+snc[1]=param_snc2||((inlet_complex>>1)&1);
 fm[0]=__SSAT(param_fm1+inlet_fm1,28)<<3;
 fm[1]=__SSAT(param_fm2+inlet_fm2,28)<<3;
-int32_t mix=__USAT(param_mix+inlet_mix,27);
-int32_t imix=v27-mix;
-imix=SQRT(imix)<<3;
-mix=SQRT(mix)<<3;
-int32_t pwm[2];
 
-pwm[0]=param_pw1;
-pwm[1]=param_pw2;
+
+
+Pwm[0]+=(param_pw1+inlet_pw1)-Pwm[0]>>6;
+Pwm[1]+=(param_pw2+inlet_pw2)-Pwm[1]>>6;
+int32_t stp[2],PW[2];
+
 for(k=0;k<2;k++){
+//smooth pwm control
+stp[k]=Pwm[k]-ppwm[k]>>4;
+PW[k]=ppwm[k];
+ppwm[k]=Pwm[k];
+}
+
+
+
+for(k=0;k<2;k++){
+wave[k]=(wave[k]>0?wave[k]:-wave[k])%8;
+
+//update oscillator blep memory
 for(i=0;i<blepvoices;i++){
 	attr_core.oscp[i]=oscp[k][i];
 	attr_core.uoscp[i]=uoscp[k][i];
 	attr_core.vgain[i]=vgain[k][i];
 
 }
+
+//update oscillator modulation inputs
 for(i=0;i<BUFSIZE;i++){
-	attr_core.sync[i]=snc[k]>0?(k>0?sync[i]:inlet_sync[i]):0;
-	int32_t md=___SMMUL((k>0?(param_selectM>0?inlet_mod[i]:attr_core.wave[i]):inlet_mod[i])<<2,fm[k]);
+	attr_core.sync[i]=snc[k]>0?(k>0?((param_selectS||((inlet_complex>>6)&1))>0?inlet_sync[i]:sync[i]):inlet_sync[i]):0;
+	int32_t md=___SMMUL((k>0?((param_selectM||((inlet_complex>>4)&1))>0?inlet_mod[i]:attr_core.wave[i]):inlet_mod[i])<<2,fm[k]);
 	hp[k]+=md-hp[k]>>8;
 	attr_core.mod[i]=md-hp[k];
-	if(wave[k]==4){
-	attr_core.Pwm[i]=pwm[k]+___SMMUL(((k>0?(param_selectP>0?inlet_pwm[i]:attr_core.wave[i]):inlet_pwm[i]))<<1,(k>0?param_pwm2:param_pwm1)<<4);}
+	if(wave[k]>=4){
+	attr_core.Pwm[i]=PW[k]+___SMMUL(((k>0?((param_selectP||((inlet_complex>>5)&1))>0?inlet_pwm[i]:attr_core.wave[i]):inlet_pwm[i]))<<1,(k>0?param_pwm2:param_pwm1)<<4);}
+	PW[k]+=stp[k];
 }
+
+//update oscillator internal memory eg. last phase position from former loop
 attr_core.i0=i0[k];
 attr_core.osc_p=osc_p[k];
 attr_core.uosc_p=uosc_p[k];
 attr_core.nextvoice=nextvoice[k];
-
 attr_core.pwmp=pwmp[k];
+
+//select oscillator model
 switch(wave[k]){
 case 0: attr_core.OSC_SIN(pitch[k]);	break;
 case 1: attr_core.OSC_TRI(pitch[k]);	break;
 case 2: attr_core.OSC_SAW(pitch[k]);	break;
 case 3: attr_core.OSC_SQR(pitch[k]);	break;
 case 4: attr_core.OSC_PLS(pitch[k]);	break;
+case 5: attr_core.OSC_VOW(pitch[k]);	break;
+case 6: attr_core.OSC_HRM(pitch[k]);	break;
+case 7: attr_core.OSC_NSI(pitch[k]);	break;
 }
+//get oscillator audio output
 for(i=0;i<BUFSIZE;i++){
+	int32_t mix=param_mix+inlet_mix[i];
+	mix=(mix>0?mix:-mix)&vi28;
+	mix=(__USAT(mix,27)<<1)-mix;
+int32_t imix=v27-mix;
+imix=SQRT(imix)<<3;
+mix=SQRT(mix)<<3;
 		if(k==0){
 	outlet_wave[i]=___SMMUL(attr_core.wave[i]<<2,imix);
 		sync[i]=param_selectS>0?inlet_sync[i]:attr_core.wave[i];
@@ -134,11 +167,14 @@ for(i=0;i<BUFSIZE;i++){
 		outlet_wave[i]+=___SMMUL(attr_core.wave[i]<<2,mix);
 	}
 }
+
+//get oscillator blep memory
 for(i=0;i<blepvoices;i++){
 	oscp[k][i]=attr_core.oscp[i];
 	uoscp[k][i]=attr_core.uoscp[i];
 	vgain[k][i]=attr_core.vgain[i];
 }
+//get oscillator internal memory eg. last phase position
 i0[k]=attr_core.i0;
 osc_p[k]=attr_core.osc_p;
 uosc_p[k]=attr_core.uosc_p;

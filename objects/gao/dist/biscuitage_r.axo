@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.8">
+<objdefs appVersion="1.0.12">
    <obj.normal id="biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b">
       <sDescription>For 8 bits signal, reverse selected bits</sDescription>
       <author>GaoTamanrasset</author>
@@ -6,14 +6,15 @@
       <helpPatch>biscuitage_r.axh</helpPatch>
       <inlets>
          <frac32buffer name="a" description="Signal in"/>
-         <frac32 name="reversebits" description="Reversed bits"/>
-         <frac32 name="noisegate"/>
       </inlets>
       <outlets>
          <frac32buffer name="b" description="Signal out"/>
       </outlets>
       <displays/>
-      <params/>
+      <params>
+         <bin12 name="p1" noLabel="true"/>
+         <frac32.u.map name="noisegate"/>
+      </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t reversebits;
 int32_t tmp;
@@ -24,18 +25,14 @@ int32_t noisegate;]]></code.declaration>
 tmp = 0;
 hp_freq = 0x000B29A4; // MTOF(8,176Hz)
 val = 0;]]></code.init>
-      <code.krate><![CDATA[noisegate = inlet_noisegate;]]></code.krate>
-      <code.srate><![CDATA[reversebits = inlet_reversebits & 0xFF;
+      <code.krate><![CDATA[noisegate = param_noisegate;
+reversebits = param_p1 & 0xFFF;]]></code.krate>
+      <code.srate><![CDATA[tmp = (inlet_a >> 1) + 0x04000000;   	// Bipolar to unipolar signal
+tmp = tmp + (noisegate >> 7);			// Noise gate
+tmp = tmp ^ (reversebits << 15);       	// Bitwise operation
+tmp = tmp + ((reversebits/2) << 15);    // Suppress DC offset partially
+tmp = (tmp - 0x04000000) << 1; 	  	// Unipolar to bipolar  
 
-tmp = inlet_a & 0xFFF00000;		  // Convert to 8 signal bits
-tmp = (inlet_a >> 1) + 0x04000000;   // Bipolar to unipolar signal
-//tmp = tmp + 0x00100000;			  // Noise gate
-tmp = tmp + (noisegate >> 7);			  // Noise gate
-tmp = tmp ^ (reversebits << 20);       // Bitwise operation
-tmp = tmp + ((reversebits/2) << 20);    // Suppress DC offset partially
-tmp = (tmp - 0x04000000) << 1; 	  // Unipolar to bipolar  
-
-// outlet_b = tmp;
 // HP filter to suppress entirely  DC offset
 val = ___SMMLA((tmp-val)<<1, hp_freq, val); 
 outlet_b = tmp-val;]]></code.srate>
