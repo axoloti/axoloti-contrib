@@ -1,12 +1,12 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="9b6a8138-9d02-431d-905a-e3f5b0ddb3c2" name="patcher_3" x="280" y="0">
+   <patcher type="patch/patcher" uuid="397e7355-cd84-4013-a5ea-5a53077d1b2f" name="patcher_3" x="280" y="0">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="TESeq_1:random" value="1.0"/>
-         <int32 name="TESeq_1:rotation" value="0"/>
+         <frac32.u.map name="TESeq_1:random" value="29.5"/>
+         <int32 name="TESeq_1:rotation" value="1"/>
          <int32 name="TESeq_1:length" value="8"/>
          <int32 name="TESeq_1:hits" value="8"/>
-         <bool32.tgl name="retrig" value="1"/>
+         <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -114,7 +114,7 @@
    </patcher>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_3" x="434" y="0">
       <params>
-         <frac32.u.map name="amp" value="12.5"/>
+         <frac32.u.map name="amp" value="11.5"/>
       </params>
       <attribs/>
    </obj>
@@ -158,105 +158,26 @@
          </text>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="d95b5fc9-47ef-4cfa-9fa6-7848938f2e62" name="patcher_1" x="280" y="224">
+   <patcher type="patch/patcher" uuid="1d0512c9-ec82-4da4-a900-c3d0fa2f4cde" name="patcher_1" x="280" y="224">
       <params>
-         <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="TESeq_1:random" value="61.5"/>
-         <int32 name="TESeq_1:rotation" value="0"/>
-         <int32 name="TESeq_1:length" value="8"/>
-         <int32 name="TESeq_1:hits" value="5"/>
+         <frac32.s.map name="square_1" value="49.0"/>
+         <frac32.u.map name="TM185Seq_1" value="1.5"/>
          <bool32.tgl name="retrig" value="1"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
-         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="56" y="28">
+         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="42" y="28">
             <params>
                <frac32.s.map name="pitch" onParent="true" value="10.0"/>
             </params>
             <attribs/>
          </obj>
-         <patchobj type="patch/object" uuid="2033a3d4-7cfb-4a25-95d1-6e2d0edbffce" name="TESeq_1" x="168" y="28">
+         <obj type="gao/seq/TM185Seq" uuid="dccc1d8a-63cc-4429-bfa7-1b60e14b3170" name="TM185Seq_1" x="154" y="28">
             <params>
                <frac32.u.map name="random" onParent="true" value="59.0"/>
-               <int32 name="rotation" onParent="true" value="1"/>
-               <int32 name="length" onParent="true" value="8"/>
-               <int32 name="hits" onParent="true" value="5"/>
             </params>
             <attribs/>
-            <object id="patch/object" uuid="2033a3d4-7cfb-4a25-95d1-6e2d0edbffce">
-               <sDescription>Turing Machine Random Looping Sequencer (note) with Euclidean Rhythm Sequencer (rhythm).
-
-https://musicthing.co.uk/random-sequencer-documentation/
-https://en.wikipedia.org/wiki/Euclidean_rhythm</sDescription>
-               <author>Jérôme Burlando</author>
-               <license>BSD</license>
-               <helpPatch>TESeq.axh</helpPatch>
-               <inlets>
-                  <bool32 name="trig" description="Clock input"/>
-               </inlets>
-               <outlets>
-                  <int32 name="buffer" description="buffer (uint8_t)"/>
-                  <frac32.bipolar name="note" description="note (-64..64)"/>
-                  <bool32.pulse name="trig" description="bang"/>
-               </outlets>
-               <displays/>
-               <params>
-                  <frac32.u.map name="random" description="random knob (turing sequencer)"/>
-                  <int32 name="rotation" description="first hit index in measure (euclidean sequencer)">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="length" description="length of the measure (euclidean sequencer)">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-                  <int32 name="hits" description="number of hits in the measure (euclidean sequencer)">
-                     <MinValue i="0"/>
-                     <MaxValue i="128"/>
-                  </int32>
-               </params>
-               <attribs/>
-               <includes/>
-               <code.declaration><![CDATA[uint8_t ntrig;
-uint8_t buffer;
-uint8_t newbit;
-uint8_t counter;
-int32_t note;
-int32_t buf;
-int32_t o;]]></code.declaration>
-               <code.init><![CDATA[ntrig = 0;
-buffer = 1;
-counter = 0;
-buf = 0;
-note = 0;
-o = 0;]]></code.init>
-               <code.krate><![CDATA[o = 0;
-
-if(inlet_trig > 0 && !ntrig){
-	ntrig = 1;
-
-    	if((GenerateRandomNumber() % 255) < (param_random >> 19)){
-     	newbit = ~buffer & 0x1;
-    	} else {
-        	newbit = buffer & 0x1;
-    	}
-    	buffer = (buffer >> 1) | (newbit << 7);
-
-	if((((counter++ + param_rotation) * param_hits) % param_length) < param_hits){
-		buf = buffer;
-		if(buf&128) note = -((buf&0x7F)<<20);
-		else note = (buf<<20);
-		o = 1;
-    }
-}
-
-if(!(inlet_trig > 0)) ntrig = 0;
-
-outlet_note = note;
-outlet_buffer = buf;
-outlet_trig = o;]]></code.krate>
-            </object>
-         </patchobj>
+         </obj>
          <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="280" y="28">
             <params/>
             <attribs/>
@@ -291,7 +212,7 @@ outlet_trig = o;]]></code.krate>
          <nets>
             <net>
                <source obj="square_1" outlet="wave"/>
-               <dest obj="TESeq_1" inlet="trig"/>
+               <dest obj="TM185Seq_1" inlet="trig"/>
             </net>
             <net>
                <source obj="bitand_1" outlet="out"/>
@@ -302,15 +223,12 @@ outlet_trig = o;]]></code.krate>
                <dest obj="bitand_1" inlet="in2"/>
             </net>
             <net>
-               <source obj="TESeq_1" outlet="buffer"/>
+               <source obj="TM185Seq_1" outlet="note"/>
+               <dest obj="beatplayer2_2" inlet="pitch"/>
                <dest obj="bitand_1" inlet="in1"/>
             </net>
             <net>
-               <source obj="TESeq_1" outlet="note"/>
-               <dest obj="beatplayer2_2" inlet="pitch"/>
-            </net>
-            <net>
-               <source obj="TESeq_1" outlet="trig"/>
+               <source obj="TM185Seq_1" outlet="trig"/>
                <dest obj="flipflop_1" inlet="trig"/>
                <dest obj="beatplayer2_2" inlet="start"/>
             </net>
@@ -332,8 +250,8 @@ outlet_trig = o;]]></code.krate>
          </settings>
          <notes><![CDATA[]]></notes>
          <windowPos>
-            <x>55</x>
-            <y>248</y>
+            <x>65</x>
+            <y>332</y>
             <width>776</width>
             <height>362</height>
          </windowPos>
@@ -341,13 +259,13 @@ outlet_trig = o;]]></code.krate>
    </patcher>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_2" x="448" y="224">
       <params>
-         <frac32.u.map name="amp" value="17.0"/>
+         <frac32.u.map name="amp" value="32.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="gao/dist/biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b" name="biscuitage_r_1" x="560" y="224">
       <params>
-         <bin12 name="p1" value="0"/>
+         <bin12 name="p1" value="256"/>
          <frac32.u.map name="noisegate" value="36.0"/>
       </params>
       <attribs/>
@@ -367,65 +285,13 @@ outlet_trig = o;]]></code.krate>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="476" y="392">
-      <params>
-         <frac32.u.map name="amp" value="20.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="gao/fx/D10 DelayVerb" uuid="1c7cef29-7631-455e-ba73-98809b0b48cc" name="obj_1" x="602" y="392">
-      <params>
-         <frac32.u.map name="amount" value="18.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="994" y="434">
-      <params>
-         <frac32.u.map name="gain1" value="32.0"/>
-         <frac32.u.map name="gain2" value="32.0"/>
-         <frac32.u.map name="gain3" value="32.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_2" x="1092" y="434">
-      <params>
-         <frac32.u.map name="gain1" value="32.0"/>
-         <frac32.u.map name="gain2" value="32.0"/>
-         <frac32.u.map name="gain3" value="32.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="434">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="0" y="462">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="84" y="462">
-      <params>
-         <bool32.mom name="delete_last" value="0"/>
-         <int32 name="power_db_threshold" value="40"/>
-         <int32 name="delta_power_db" value="15"/>
-         <int32 name="silence_db_threshold" value="30"/>
-      </params>
-      <attribs>
-         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
-         <objref attributeName="slicesindex" obj="slicesind"/>
-         <text attributeName="conf">
-            <sText><![CDATA[timeconstant = 175.f;
-// confmode = 1;]]></sText>
-         </text>
-      </attribs>
-   </obj>
-   <patcher type="patch/patcher" uuid="9a26abe0-1318-426a-bfbe-05c568126662" name="patcher_2" x="294" y="462">
+   <patcher type="patch/patcher" uuid="13f58b0e-a116-4833-a82a-2293c33b0d12" name="patcher_2" x="280" y="434">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="TESeq_1:random" value="34.5"/>
+         <frac32.u.map name="TESeq_1:random" value="2.0"/>
          <int32 name="TESeq_1:rotation" value="0"/>
          <int32 name="TESeq_1:length" value="8"/>
-         <int32 name="TESeq_1:hits" value="4"/>
+         <int32 name="TESeq_1:hits" value="8"/>
          <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
@@ -527,6 +393,58 @@ outlet_trig = o;]]></code.krate>
          </windowPos>
       </subpatch>
    </patcher>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="462" y="434">
+      <params>
+         <frac32.u.map name="amp" value="24.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gao/fx/D10 DelayVerb" uuid="1c7cef29-7631-455e-ba73-98809b0b48cc" name="obj_1" x="588" y="434">
+      <params>
+         <frac32.u.map name="amount" value="18.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="994" y="434">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_2" x="1092" y="434">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="0" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="84" y="462">
+      <params>
+         <bool32.mom name="delete_last" value="0"/>
+         <int32 name="power_db_threshold" value="40"/>
+         <int32 name="delta_power_db" value="15"/>
+         <int32 name="silence_db_threshold" value="30"/>
+      </params>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+         <text attributeName="conf">
+            <sText><![CDATA[timeconstant = 175.f;
+// confmode = 1;]]></sText>
+         </text>
+      </attribs>
+   </obj>
    <nets>
       <net>
          <source obj="in_1" outlet="wave"/>
