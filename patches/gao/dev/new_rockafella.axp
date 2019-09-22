@@ -71,10 +71,10 @@
       </attribs>
       <object id="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279">
          <inlets>
-            <frac32 name="pitch" description="-64..64"/>
-            <frac32 name="chunk size" description="0..128 ms"/>
-            <frac32 name="transposition" description="halftone/10"/>
             <int32 name="nslice" description=""/>
+            <frac32 name="pitch" description=""/>
+            <frac32 name="loop freq" description=""/>
+            <frac32 name="chunk size" description="0..128 ms"/>
          </inlets>
          <outlets>
             <frac32buffer name="o"/>
@@ -89,12 +89,14 @@
          <code.declaration><![CDATA[int64_t pos;
 uint32_t beg;
 uint32_t end;
-int64_t f0;
+int64_t rfl; // repetition frequency of the loop
+int64_t f;
 uint32_t nslice;]]></code.declaration>
          <code.init><![CDATA[pos = 0;
 beg = 0;
 end = 0;
-f0 = 0;
+rfl = 0;
+f = 0;
 nslice = 0xFFFF;]]></code.init>
          <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0] && inlet_nslice != nslice) {
    nslice = inlet_nslice; 
@@ -108,7 +110,8 @@ nslice = 0xFFFF;]]></code.init>
    pos = ((uint64_t)beg)<<32;
 }
 
-MTOFEXTENDED(inlet_precession + 80179668,f0);]]></code.krate>
+MTOFEXTENDED(inlet_precession + 80179668,rfl);
+MTOFEXTENDED(inlet_precession + 80179668,f);]]></code.krate>
          <code.srate><![CDATA[uint64_t inc = ((uint64_t)f0)<<4;
 uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
 outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
