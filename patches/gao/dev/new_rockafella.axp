@@ -19,6 +19,12 @@
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="868" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
       <params/>
       <attribs>
@@ -74,7 +80,7 @@
             <int32 name="nslice" description=""/>
             <frac32 name="pitch" description=""/>
             <frac32 name="loop freq" description=""/>
-            <frac32 name="chunk size" description="0..128 ms"/>
+            <frac32.positive name="chunk size"/>
          </inlets>
          <outlets>
             <frac32buffer name="o"/>
@@ -86,18 +92,26 @@
             <objref name="slicesindex"/>
          </attribs>
          <includes/>
-         <code.declaration><![CDATA[int64_t pos;
+         <code.declaration><![CDATA[int64_t pos1;
+int64_t pos2;
+int64_t pos3;
 uint32_t beg;
 uint32_t end;
+int32_t chkend;
 int64_t rfl; // repetition frequency of the loop
+int64_t fch; // chunk frequency
 int64_t f;
 uint32_t nslice;]]></code.declaration>
-         <code.init><![CDATA[pos = 0;
+         <code.init><![CDATA[pos1 = 0;
+pos2 = 0;
+pos3 = 0;
 beg = 0;
 end = 0;
 rfl = 0;
+fch = 0;
 f = 0;
-nslice = 0xFFFF;]]></code.init>
+nslice = 0xFFFF;
+chkend = 0;]]></code.init>
          <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0] && inlet_nslice != nslice) {
    nslice = inlet_nslice; 
    if(inlet_nslice == 0) {
@@ -107,16 +121,23 @@ nslice = 0xFFFF;]]></code.init>
       beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
       end = attr_slicesindex.array[inlet_nslice+1];
    }
-   pos = ((uint64_t)beg)<<32;
+   pos1 = ((uint64_t)beg)<<32;
 }
 
-MTOFEXTENDED(inlet_precession + 80179668,rfl);
-MTOFEXTENDED(inlet_precession + 80179668,f);]]></code.krate>
-         <code.srate><![CDATA[uint64_t inc = ((uint64_t)f0)<<4;
-uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
-outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
-pos += inc;
-if(pos>>32 > end) pos = ((uint64_t)beg)<<32;]]></code.srate>
+MTOFEXTENDED(inlet_loop_freq + 80179668,rfl);
+MTOFEXTENDED(inlet_pitch + 80179668,f);
+
+fch = (f-rfl)/(inlet_chunk_size>>20);]]></code.krate>
+         <code.srate><![CDATA[uint64_t inc  = ((uint64_t)f)<<4;
+uint64_t inc2 = ((uint64_t)f_ch)<<4;
+uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos3>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
+pos1 += inc;
+if(pos1>>32 > end) pos1 = ((uint64_t)beg)<<32;
+pos2 += inc2;
+if(pos2>>32 > chkend) pos2 = 0;
+pos3 = pos1+pos2;
+if(pos3>>32 > end) pos3 = pos2;]]></code.srate>
       </object>
    </patchobj>
    <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="266">
