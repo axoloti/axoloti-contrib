@@ -19,12 +19,6 @@
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
-   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="868" y="28">
-      <params>
-         <frac32.s.map name="pitch" value="0.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
       <params/>
       <attribs>
@@ -39,7 +33,19 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="448" y="154">
       <params>
-         <frac32.s.map name="value" value="0.0"/>
+         <frac32.s.map name="value" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="518" y="154">
+      <params>
+         <frac32.u.map name="value" value="42.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="588" y="154">
+      <params>
+         <frac32.u.map name="value" value="1.05"/>
       </params>
       <attribs/>
    </obj>
@@ -69,7 +75,7 @@
          </text>
       </attribs>
    </obj>
-   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="object_1" x="448" y="266">
+   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="object_1" x="518" y="266">
       <params/>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
@@ -79,8 +85,8 @@
          <inlets>
             <int32 name="nslice" description=""/>
             <frac32 name="pitch" description=""/>
-            <frac32 name="loop freq" description=""/>
-            <frac32.positive name="chunk size"/>
+            <frac32 name="loopfreq" description=""/>
+            <frac32.positive name="chunksize"/>
          </inlets>
          <outlets>
             <frac32buffer name="o"/>
@@ -97,10 +103,9 @@ int64_t pos2;
 int64_t pos3;
 uint32_t beg;
 uint32_t end;
-int32_t chkend;
-int64_t rfl; // repetition frequency of the loop
-int64_t fch; // chunk frequency
-int64_t f;
+uint32_t rfl; // repetition frequency of the loop
+uint32_t fch; // chunk frequency
+uint32_t f;
 uint32_t nslice;]]></code.declaration>
          <code.init><![CDATA[pos1 = 0;
 pos2 = 0;
@@ -108,10 +113,8 @@ pos3 = 0;
 beg = 0;
 end = 0;
 rfl = 0;
-fch = 0;
 f = 0;
-nslice = 0xFFFF;
-chkend = 0;]]></code.init>
+nslice = 0xFFFF;]]></code.init>
          <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0] && inlet_nslice != nslice) {
    nslice = inlet_nslice; 
    if(inlet_nslice == 0) {
@@ -124,20 +127,19 @@ chkend = 0;]]></code.init>
    pos1 = ((uint64_t)beg)<<32;
 }
 
-MTOFEXTENDED(inlet_loop_freq + 80179668,rfl);
-MTOFEXTENDED(inlet_pitch + 80179668,f);
-
-fch = (f-rfl)/(inlet_chunk_size>>20);]]></code.krate>
-         <code.srate><![CDATA[uint64_t inc  = ((uint64_t)f)<<4;
-uint64_t inc2 = ((uint64_t)f_ch)<<4;
-uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+MTOFEXTENDED(inlet_loopfreq + 80179668,rfl); // repetition frequency of the loop
+MTOFEXTENDED(inlet_pitch-inlet_loopfreq + 80179668,fch);]]></code.krate>
+         <code.srate><![CDATA[uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
 outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos3>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
-pos1 += inc;
-if(pos1>>32 > end) pos1 = ((uint64_t)beg)<<32;
-pos2 += inc2;
-if(pos2>>32 > chkend) pos2 = 0;
+
+pos1 += ((uint64_t)rfl)<<4;
+if((pos1>>32) > end) pos1 = ((uint64_t)beg)<<32;
+
+pos2 += ((uint64_t)fch)<<4;
+if((pos2>>32) > (4294944*(inlet_chunksize>>20))) pos2 = 0;
+
 pos3 = pos1+pos2;
-if(pos3>>32 > end) pos3 = pos2;]]></code.srate>
+if((pos3>>32) > end) pos3 = end;]]></code.srate>
       </object>
    </patchobj>
    <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="266">
@@ -170,6 +172,14 @@ if(pos3>>32 > end) pos3 = pos2;]]></code.srate>
          <source obj="object_1" outlet="o"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="object_1" inlet="loopfreq"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="object_1" inlet="chunksize"/>
       </net>
    </nets>
    <settings>
