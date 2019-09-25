@@ -33,19 +33,19 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="448" y="154">
       <params>
-         <frac32.s.map name="value" value="12.0"/>
+         <frac32.s.map name="value" value="-1.7000000000000046"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="518" y="154">
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="518" y="154">
       <params>
-         <frac32.u.map name="value" value="42.0"/>
+         <frac32.s.map name="value" value="-64.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="588" y="154">
       <params>
-         <frac32.u.map name="value" value="1.05"/>
+         <frac32.u.map name="value" value="15.0"/>
       </params>
       <attribs/>
    </obj>
@@ -63,8 +63,8 @@
       <params>
          <bool32.mom name="delete_last" value="0"/>
          <int32 name="power_db_threshold" value="40"/>
-         <int32 name="delta_power_db" value="15"/>
-         <int32 name="silence_db_threshold" value="30"/>
+         <int32 name="delta_power_db" value="10"/>
+         <int32 name="silence_db_threshold" value="10"/>
       </params>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
@@ -75,7 +75,7 @@
          </text>
       </attribs>
    </obj>
-   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="object_1" x="518" y="266">
+   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="v1" x="462" y="266">
       <params/>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
@@ -103,10 +103,13 @@ int64_t pos2;
 int64_t pos3;
 uint32_t beg;
 uint32_t end;
-uint32_t rfl; // repetition frequency of the loop
-uint32_t fch; // chunk frequency
-uint32_t f;
-uint32_t nslice;]]></code.declaration>
+int32_t rfl; // repetition frequency of the loop
+int32_t fch; // chunk frequency
+int32_t f;
+uint32_t nslice;
+uint32_t chunksize;
+uint32_t coef;
+uint8_t on;]]></code.declaration>
          <code.init><![CDATA[pos1 = 0;
 pos2 = 0;
 pos3 = 0;
@@ -114,7 +117,10 @@ beg = 0;
 end = 0;
 rfl = 0;
 f = 0;
-nslice = 0xFFFF;]]></code.init>
+nslice = 0xFFFF;
+chunksize = 0;
+coef = 0;
+on = 0;]]></code.init>
          <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0] && inlet_nslice != nslice) {
    nslice = inlet_nslice; 
    if(inlet_nslice == 0) {
@@ -126,23 +132,45 @@ nslice = 0xFFFF;]]></code.init>
    }
    pos1 = ((uint64_t)beg)<<32;
 }
+if(!(inlet_nslice < attr_slicesindex.array[0])) on = 0;
+else on = 1;
 
 MTOFEXTENDED(inlet_loopfreq + 80179668,rfl); // repetition frequency of the loop
-MTOFEXTENDED(inlet_pitch-inlet_loopfreq + 80179668,fch);]]></code.krate>
-         <code.srate><![CDATA[uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
-outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos3>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
+MTOFEXTENDED(inlet_pitch + 80179668,f);
+fch = f-rfl;]]></code.krate>
+         <code.srate><![CDATA[int32_t r;
+int32_t pos2_32 = pos2>>32;
+int32_t pos3_32 = pos3>>32;
+int32_t phase = pos2_32*coef;
+HANNING2TINTERP(phase<<5,r)
 
-pos1 += ((uint64_t)rfl)<<4;
+uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+o = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
+if(on) outlet_o = ___SMMUL(o, r>>4)<<5;
+else outlet_o = 0;
+
+pos1 += ((int64_t)rfl)<<4;
 if((pos1>>32) > end) pos1 = ((uint64_t)beg)<<32;
 
-pos2 += ((uint64_t)fch)<<4;
-if((pos2>>32) > (4294944*(inlet_chunksize>>20))) pos2 = 0;
+pos2 += ((int64_t)fch)<<4;
+if(abs(pos2_32) > chunksize){
+	pos2 = 0;
+	chunksize = 48*(inlet_chunksize>>20);
+	coef = INT32_MAX/chunksize;
+}
 
 pos3 = pos1+pos2;
-if((pos3>>32) > end) pos3 = end;]]></code.srate>
+if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;]]></code.srate>
       </object>
    </patchobj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="266">
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="728" y="280">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="32.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="840" y="280">
       <params/>
       <attribs/>
    </obj>
@@ -155,31 +183,39 @@ if((pos3>>32) > end) pos3 = end;]]></code.srate>
    </obj>
    <nets>
       <net>
-         <source obj="in_1" outlet="wave"/>
-         <dest obj="beatslicer2_1" inlet="in"/>
-      </net>
-      <net>
          <source obj="i_1" outlet="out"/>
          <dest obj="beatplayer2_1" inlet="nslice"/>
-         <dest obj="object_1" inlet="nslice"/>
+         <dest obj="v1" inlet="nslice"/>
       </net>
       <net>
          <source obj="dial_1" outlet="out"/>
          <dest obj="beatplayer2_1" inlet="pitch"/>
-         <dest obj="object_1" inlet="pitch"/>
+         <dest obj="v1" inlet="pitch"/>
       </net>
       <net>
-         <source obj="object_1" outlet="o"/>
+         <source obj="mix_1" outlet="out"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
-         <source obj="dial_2" outlet="out"/>
-         <dest obj="object_1" inlet="loopfreq"/>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="beatslicer2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="v1" outlet="o"/>
+         <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
          <source obj="dial_3" outlet="out"/>
-         <dest obj="object_1" inlet="chunksize"/>
+         <dest obj="v1" inlet="chunksize"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="v1" inlet="loopfreq"/>
+      </net>
+      <net>
+         <source obj="beatplayer2_1" outlet="o"/>
+         <dest obj="mix_1" inlet="in2"/>
       </net>
    </nets>
    <settings>
