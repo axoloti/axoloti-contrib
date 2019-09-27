@@ -19,63 +19,13 @@
          <combo attributeName="mode" selection="Stereo"/>
       </attribs>
    </obj>
-   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
-      <params/>
-      <attribs>
-         <combo attributeName="size" selection="8"/>
-         <text attributeName="init">
-            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
-	array[i] = 0;
-}
-]]></sText>
-         </text>
-      </attribs>
-   </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="448" y="154">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="406" y="56">
       <params>
-         <frac32.s.map name="value" value="-1.7000000000000046"/>
+         <frac32.s.map name="pitch" value="-43.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="518" y="154">
-      <params>
-         <frac32.s.map name="value" value="-64.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="588" y="154">
-      <params>
-         <frac32.u.map name="value" value="15.0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_1" x="350" y="238">
-      <params>
-         <int32.hradio name="value" value="0"/>
-      </params>
-      <attribs/>
-   </obj>
-   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="266">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="112" y="266">
-      <params>
-         <bool32.mom name="delete_last" value="0"/>
-         <int32 name="power_db_threshold" value="40"/>
-         <int32 name="delta_power_db" value="10"/>
-         <int32 name="silence_db_threshold" value="10"/>
-      </params>
-      <attribs>
-         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
-         <objref attributeName="slicesindex" obj="slicesind"/>
-         <text attributeName="conf">
-            <sText><![CDATA[timeconstant = 175.f;
-// confmode = 1;]]></sText>
-         </text>
-      </attribs>
-   </obj>
-   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="v1" x="462" y="266">
+   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="v1_" x="1064" y="70">
       <params/>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
@@ -85,8 +35,10 @@
          <inlets>
             <int32 name="nslice" description=""/>
             <frac32 name="pitch" description=""/>
-            <frac32 name="loopfreq" description=""/>
+            <bool32.rising name="start"/>
+            <frac32 name="loopspeed" description=""/>
             <frac32.positive name="chunksize"/>
+            <bool32 name="retrig"/>
          </inlets>
          <outlets>
             <frac32buffer name="o"/>
@@ -109,7 +61,8 @@ int32_t f;
 uint32_t nslice;
 uint32_t chunksize;
 uint32_t coef;
-uint8_t on;]]></code.declaration>
+uint8_t play;
+uint8_t pstart;]]></code.declaration>
          <code.init><![CDATA[pos1 = 0;
 pos2 = 0;
 pos3 = 0;
@@ -120,22 +73,26 @@ f = 0;
 nslice = 0xFFFF;
 chunksize = 0;
 coef = 0;
-on = 0;]]></code.init>
-         <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0] && inlet_nslice != nslice) {
-   nslice = inlet_nslice; 
-   if(inlet_nslice == 0) {
-      beg = 0;
-      end = attr_slicesindex.array[1];
-   } else {
-      beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
-      end = attr_slicesindex.array[inlet_nslice+1];
-   }
-   pos1 = ((uint64_t)beg)<<32;
+play = 0;
+pstart = 0;]]></code.init>
+         <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0]){
+	if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+		pstart = 1;
+		play = 1;
+		if(inlet_nslice == 0) {
+      		beg = 0;
+      		end = attr_slicesindex.array[1];
+   		} else {
+      		beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+      		end = attr_slicesindex.array[inlet_nslice+1];
+   		}
+   		pos1 = ((uint64_t)beg)<<32;
+	} else if (!(inlet_start>0)) {
+     	pstart = 0;
+   	}
 }
-if(!(inlet_nslice < attr_slicesindex.array[0])) on = 0;
-else on = 1;
 
-MTOFEXTENDED(inlet_loopfreq + 80179668,rfl); // repetition frequency of the loop
+MTOFEXTENDED(inlet_loopspeed + 80179668,rfl); // repetition frequency of the loop
 MTOFEXTENDED(inlet_pitch + 80179668,f);
 fch = f-rfl;]]></code.krate>
          <code.srate><![CDATA[int32_t r;
@@ -144,29 +101,211 @@ int32_t pos3_32 = pos3>>32;
 int32_t phase = pos2_32*coef;
 HANNING2TINTERP(phase<<5,r)
 
-uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
-o = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
-if(on) outlet_o = ___SMMUL(o, r>>4)<<5;
-else outlet_o = 0;
+outlet_o = 0;
 
-pos1 += ((int64_t)rfl)<<4;
-if((pos1>>32) > end) pos1 = ((uint64_t)beg)<<32;
+if(play){
+	uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+	o = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o);
+	outlet_o = ___SMMUL(o, r>>4)<<5;
 
-pos2 += ((int64_t)fch)<<4;
-if(abs(pos2_32) > chunksize){
-	pos2 = 0;
-	chunksize = 48*(inlet_chunksize>>20);
-	coef = INT32_MAX/chunksize;
+	pos1 += ((int64_t)rfl)<<4;
+	if((pos1>>32) > end) play = 0;
+
+	pos2 += ((int64_t)fch)<<4;
+	if(abs(pos2_32) > chunksize){
+		pos2 = 0;
+		chunksize = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize;
+	}
+
+	pos3 = pos1+pos2;
+	if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="700" y="126">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="448" y="154">
+      <params>
+         <frac32.s.map name="value" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="518" y="154">
+      <params>
+         <frac32.s.map name="value" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="588" y="154">
+      <params>
+         <frac32.u.map name="value" value="14.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_1" x="350" y="238">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="112" y="266">
+      <params>
+         <bool32.mom name="delete_last" value="0"/>
+         <int32 name="power_db_threshold" value="10"/>
+         <int32 name="delta_power_db" value="20"/>
+         <int32 name="silence_db_threshold" value="14"/>
+      </params>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+         <text attributeName="conf">
+            <sText><![CDATA[timeconstant = 175.f;
+// confmode = 1;]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="v1" x="462" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+      <object id="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279">
+         <inlets>
+            <int32 name="nslice" description=""/>
+            <frac32 name="pitch" description=""/>
+            <bool32.rising name="start"/>
+            <frac32 name="loopspeed" description=""/>
+            <frac32.positive name="chunksize"/>
+            <bool32 name="retrig"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="o"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="slicesbuffer"/>
+            <objref name="slicesindex"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int64_t pos1;
+int64_t pos2;
+int64_t pos3;
+int64_t pos4;
+uint32_t beg;
+uint32_t end;
+int32_t rfl; // repetition frequency of the loop
+int32_t fch; // chunk frequency
+int32_t f;
+uint32_t nslice;
+uint32_t chunksize;
+uint32_t chunksize2;
+uint32_t coef;
+uint8_t play;
+uint8_t pstart;]]></code.declaration>
+         <code.init><![CDATA[pos1 = 0;
+pos2 = 0;
+pos3 = 0;
+pos4 = 0;
+beg = 0;
+end = 0;
+rfl = 0;
+f = 0;
+nslice = 0xFFFF;
+chunksize = 0;
+chunksize2 = 0;
+coef = 0;
+play = 0;
+pstart = 0;]]></code.init>
+         <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0]){
+	if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+		pstart = 1;
+		play = 1;
+		if(inlet_nslice == 0) {
+      		beg = 0;
+      		end = attr_slicesindex.array[1];
+   		} else {
+      		beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+      		end = attr_slicesindex.array[inlet_nslice+1];
+   		}
+   		pos1 = ((uint64_t)beg)<<32;
+   		pos4 = ((inlet_chunksize>>20)*48)>>1;
+	} else if (!(inlet_start>0)) {
+     	pstart = 0;
+   	}
 }
 
-pos3 = pos1+pos2;
-if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;]]></code.srate>
+MTOFEXTENDED(inlet_loopspeed + 80179668,rfl); // repetition frequency of the loop
+MTOFEXTENDED(inlet_pitch + 80179668,f);
+fch = f-rfl;]]></code.krate>
+         <code.srate><![CDATA[int32_t r1;
+int32_t r2;
+int32_t pos2_32 = pos2>>32;
+int32_t pos3_32 = pos3>>32;
+int32_t pos4_32 = pos4>>32;
+int32_t phase1 = pos2_32*coef;
+HANNING2TINTERP(phase1<<5,r1)
+int32_t phase2 = pos4_32*coef;
+HANNING2TINTERP(phase2<<5,r2)
+
+
+outlet_o = 0;
+
+if(play){
+	uint32_t o1 = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+	o1 = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o1);
+	uint32_t o2 = ___SMMUL(attr_slicesbuffer.array[pos4_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos4)>>1));
+	o2 = ___SMMLA(attr_slicesbuffer.array[(pos4_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos4)>>1),o2);
+	// outlet_o = ___SMMUL(o1, r1>>4)<<5 + ___SMMUL(o2, r2>>4)<<5;
+	outlet_o = /*___SMMUL(o1, r1>>4)<<5 +*/ ___SMMUL(o2, r2>>4)<<5;
+
+	pos1 += ((int64_t)rfl)<<4;
+	if((pos1>>32) > end) play = 0;
+
+	pos2 += ((int64_t)fch)<<4;
+	if(abs(pos2_32) > chunksize){
+		pos2 = 0;
+		chunksize = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize;
+	}
+	pos4 += ((int64_t)fch)<<4;
+	if(abs(pos4_32) > chunksize2){
+		pos4 = 0;
+		chunksize2 = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize2;
+	}
+
+	pos3 = pos1+pos2;
+	if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;
+}]]></code.srate>
       </object>
    </patchobj>
    <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="728" y="280">
       <params>
          <frac32.u.map name="gain1" value="64.0"/>
-         <frac32.u.map name="gain2" value="32.5"/>
+         <frac32.u.map name="gain2" value="64.0"/>
       </params>
       <attribs/>
    </obj>
@@ -174,7 +313,7 @@ if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;]]></code.srate>
       <params/>
       <attribs/>
    </obj>
-   <obj type="gao/sample/beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6" name="beatplayer2_1" x="448" y="434">
+   <obj type="gao/sample/beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6" name="beatplayer2_1" x="462" y="462">
       <params/>
       <attribs>
          <objref attributeName="slicesbuffer" obj="slicesbuf"/>
@@ -210,12 +349,21 @@ if(((pos3_32) > end) || (pos3 < 0)) pos3 = 0;]]></code.srate>
          <dest obj="v1" inlet="chunksize"/>
       </net>
       <net>
-         <source obj="dial_2" outlet="out"/>
-         <dest obj="v1" inlet="loopfreq"/>
-      </net>
-      <net>
          <source obj="beatplayer2_1" outlet="o"/>
          <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="beatplayer2_1" inlet="start"/>
+         <dest obj="v1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="v1" inlet="loopspeed"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="v1" inlet="retrig"/>
       </net>
    </nets>
    <settings>
