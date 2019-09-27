@@ -1,12 +1,12 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="5cf71bd8-2f02-44bd-b579-f8c9ff0940c9" name="patcher_3" x="280" y="0">
+   <patcher type="patch/patcher" uuid="7dac3913-ab17-4243-a4c3-3daba0ceb575" name="patcher_3" x="280" y="0">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
          <frac32.u.map name="TESeq_1:random" value="2.0"/>
          <int32 name="TESeq_1:rotation" value="0"/>
          <int32 name="TESeq_1:length" value="8"/>
          <int32 name="TESeq_1:hits" value="5"/>
-         <bool32.tgl name="retrig" value="1"/>
+         <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -114,7 +114,7 @@
    </patcher>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_3" x="434" y="0">
       <params>
-         <frac32.u.map name="amp" value="17.5"/>
+         <frac32.u.map name="amp" value="24.0"/>
       </params>
       <attribs/>
    </obj>
@@ -125,6 +125,137 @@
       <attribs>
          <combo attributeName="depth" selection="full"/>
       </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="2125dc36-5838-47cc-9404-03fcfbd4998e" name="patcher_4" x="994" y="14">
+      <params>
+         <frac32.s.map name="square_1" value="10.0"/>
+         <frac32.u.map name="TM185Seq_1" value="6.0"/>
+         <frac32.u.map name="chunksize" value="18.5"/>
+         <frac32.s.map name="loospeed" value="-62.0"/>
+         <frac32.s.map name="offset_scale_1_1:offset" value="24.0"/>
+         <frac32.s.map name="offset_scale_1_1:scale" value="10.0"/>
+         <bool32.tgl name="retrig" value="0"/>
+      </params>
+      <attribs/>
+      <subpatch appVersion="1.0.12">
+         <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="28">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="10.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gao/seq/TM185Seq" uuid="dccc1d8a-63cc-4429-bfa7-1b60e14b3170" name="TM185Seq_1" x="126" y="28">
+            <params>
+               <frac32.u.map name="random" onParent="true" value="59.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="chunksize" x="252" y="28">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="loospeed" x="336" y="28">
+            <params>
+               <frac32.s.map name="value" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="448" y="28">
+            <params>
+               <int32 name="value" value="7"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="504" y="28">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gao/sample/spTimeExpansion" uuid="001539c3-5385-41d6-b11c-1837e7106889" name="spTimeExpansion_1" x="448" y="84">
+            <params/>
+            <attribs>
+               <objref attributeName="slicesbuffer" obj="../slicesbuf"/>
+               <objref attributeName="slicesindex" obj="../slicesind"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="616" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="drj/math/offset_scale_1" uuid="8943f98651aed59bf140da20c3f97585a2dffa8d" name="offset_scale_1_1" x="112" y="140">
+            <params>
+               <frac32.s.map name="offset" onParent="true" value="16.0"/>
+               <frac32.s.map name="scale" onParent="true" value="12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="280" y="154">
+            <params>
+               <bool32.tgl name="b" onParent="true" value="1"/>
+            </params>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="square_1" outlet="wave"/>
+               <dest obj="TM185Seq_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="i_2" outlet="out"/>
+               <dest obj="bitand_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="TM185Seq_1" outlet="note"/>
+               <dest obj="bitand_1" inlet="in1"/>
+               <dest obj="offset_scale_1_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="spTimeExpansion_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="bitand_1" outlet="out"/>
+               <dest obj="spTimeExpansion_1" inlet="nslice"/>
+            </net>
+            <net>
+               <source obj="chunksize" outlet="out"/>
+               <dest obj="spTimeExpansion_1" inlet="chunksize"/>
+            </net>
+            <net>
+               <source obj="loospeed" outlet="out"/>
+               <dest obj="spTimeExpansion_1" inlet="loopspeed"/>
+            </net>
+            <net>
+               <source obj="TM185Seq_1" outlet="trig"/>
+               <dest obj="spTimeExpansion_1" inlet="start"/>
+            </net>
+            <net>
+               <source obj="offset_scale_1_1" outlet="out"/>
+               <dest obj="spTimeExpansion_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="retrig" outlet="o"/>
+               <dest obj="spTimeExpansion_1" inlet="retrig"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>149</x>
+            <y>260</y>
+            <width>776</width>
+            <height>362</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_4" x="1162" y="14">
+      <params>
+         <frac32.u.map name="amp" value="28.0"/>
+      </params>
+      <attribs/>
    </obj>
    <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbuf" x="14" y="28">
       <params/>
@@ -158,11 +289,21 @@
          </text>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="fb0617cd-c5b7-4322-a4c6-431e5cfca6a6" name="patcher_1" x="280" y="224">
+   <obj type="tiar/fx/RanDelay" uuid="6bc226c3-740d-4f8a-b406-5c36e9ca70d3" name="RanDelay_1" x="1162" y="98">
+      <params>
+         <frac32.u.map name="minRate" value="0.0"/>
+         <frac32.u.map name="maxRate" value="18.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="NBD" selection="2"/>
+         <combo attributeName="LENGTH" selection="128"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="67d2d6a3-870e-4eab-a5ab-73747e0696d3" name="patcher_1" x="280" y="224">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
          <frac32.u.map name="TM185Seq_1" value="2.0"/>
-         <bool32.tgl name="retrig" value="1"/>
+         <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -259,13 +400,13 @@
    </patcher>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_2" x="448" y="224">
       <params>
-         <frac32.u.map name="amp" value="29.0"/>
+         <frac32.u.map name="amp" value="11.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="gao/dist/biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b" name="biscuitage_r_1" x="560" y="224">
       <params>
-         <bin12 name="p1" value="128"/>
+         <bin12 name="p1" value="0"/>
          <frac32.u.map name="noisegate" value="0.0"/>
       </params>
       <attribs/>
@@ -281,18 +422,18 @@
          <frac32.u.map name="PingPong" value="47.0"/>
          <frac32.u.map name="Feedback" value="24.5"/>
          <frac32.u.map name="flutter" value="0.0"/>
-         <frac32.u.map name="mix" value="21.0"/>
+         <frac32.u.map name="mix" value="0.0"/>
       </params>
       <attribs/>
    </obj>
-   <patcher type="patch/patcher" uuid="3275275e-7ffc-4c55-a92d-4beff5a8d2c4" name="patcher_2" x="280" y="434">
+   <patcher type="patch/patcher" uuid="95e75d16-cbf2-4920-90d4-1198acab7af5" name="patcher_2" x="280" y="434">
       <params>
          <frac32.s.map name="square_1" value="10.0"/>
-         <frac32.u.map name="TESeq_1:random" value="28.5"/>
+         <frac32.u.map name="TESeq_1:random" value="0.0"/>
          <int32 name="TESeq_1:rotation" value="0"/>
          <int32 name="TESeq_1:length" value="8"/>
-         <int32 name="TESeq_1:hits" value="8"/>
-         <bool32.tgl name="retrig" value="1"/>
+         <int32 name="TESeq_1:hits" value="5"/>
+         <bool32.tgl name="retrig" value="0"/>
       </params>
       <attribs/>
       <subpatch appVersion="1.0.12">
@@ -395,7 +536,7 @@
    </patcher>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="462" y="434">
       <params>
-         <frac32.u.map name="amp" value="25.0"/>
+         <frac32.u.map name="amp" value="24.0"/>
       </params>
       <attribs/>
    </obj>
@@ -405,19 +546,21 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_1" x="994" y="434">
+   <obj type="mix/mix 4 g" uuid="36f472cd81da2e17bd4b4ee11b53b4c82527220c" name="mix_1" x="994" y="434">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
          <frac32.u.map name="gain2" value="32.0"/>
          <frac32.u.map name="gain3" value="32.0"/>
+         <frac32.u.map name="gain4" value="32.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 3 g" uuid="efc0bdb8ca0ec2184330951eff5203ff487e35a9" name="mix_2" x="1092" y="434">
+   <obj type="mix/mix 4 g" uuid="36f472cd81da2e17bd4b4ee11b53b4c82527220c" name="mix_2" x="1092" y="434">
       <params>
          <frac32.u.map name="gain1" value="32.0"/>
          <frac32.u.map name="gain2" value="32.0"/>
          <frac32.u.map name="gain3" value="32.0"/>
+         <frac32.u.map name="gain4" value="32.0"/>
       </params>
       <attribs/>
    </obj>
@@ -511,6 +654,22 @@
       <net>
          <source obj="chor81_1" outlet="out1"/>
          <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="RanDelay_1" outlet="right"/>
+         <dest obj="mix_2" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="RanDelay_1" outlet="left"/>
+         <dest obj="mix_1" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="patcher_4" outlet="outlet_1"/>
+         <dest obj="gain_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gain_4" outlet="out"/>
+         <dest obj="RanDelay_1" inlet="in"/>
       </net>
    </nets>
    <settings>
