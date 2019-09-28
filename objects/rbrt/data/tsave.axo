@@ -25,10 +25,8 @@
          <depend>fatfs</depend>
       </depends>
       <code.declaration><![CDATA[int ntrig;
-WORKING_AREA(waThreadSD, 800);
-int bits;]]></code.declaration>
-      <code.init><![CDATA[ntrig = 0;
-bits = attr_table.BITS >> 4;]]></code.init>
+WORKING_AREA(waThreadSD, 800);]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;]]></code.init>
       <code.krate><![CDATA[outlet_done = 0;
 
 if ((inlet_trig>0) && !ntrig) {
@@ -40,8 +38,8 @@ if ((inlet_trig>0) && !ntrig) {
     err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
     if (err != FR_OK) {report_fatfs_error(err,inlet_filename); return;}
 
-    int rem_sz = inlet_length << bits;
-    int offset = inlet_start << bits;
+    int rem_sz = inlet_length << (attr_table.BITS >> 4);
+    int offset = inlet_start << (attr_table.BITS >> 4);
     while (rem_sz>0) {
       if (rem_sz>sizeof(fbuff)) {
         memcpy((char *)fbuff,(char *)(&attr_table.array[0]) + offset, sizeof(fbuff));
