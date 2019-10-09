@@ -1,0 +1,125 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="spTimeExpansion" uuid="001539c3-5385-41d6-b11c-1837e7106889">
+      <sDescription>spTimeExpansion
+
+Slice Player (beatslicer companion) with Time Compression/Expansion with looped sampling
+See puredata help patch B14.sampler.rockafella.pd.</sDescription>
+      <author>Jérôme Burlando</author>
+      <license>BSD</license>
+      <helpPatch>spTimeExpansion.axh</helpPatch>
+      <inlets>
+         <int32 name="nslice" description=""/>
+         <frac32 name="pitch" description=""/>
+         <bool32.rising name="start"/>
+         <frac32 name="loopspeed" description=""/>
+         <frac32.positive name="chunksize"/>
+         <bool32 name="retrig"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="slicesbuffer"/>
+         <objref name="slicesindex"/>
+      </attribs>
+      <code.declaration><![CDATA[int64_t pos1;
+int64_t pos2;
+int64_t pos3;
+int64_t pos4;
+int64_t pos5;
+uint32_t beg;
+uint32_t end;
+int32_t rfl; // repetition frequency of the loop
+int32_t fch; // chunk frequency
+int32_t f;
+uint32_t nslice;
+uint32_t chunksize;
+uint32_t chunksize2;
+uint32_t coef;
+uint8_t play;
+uint8_t pstart;]]></code.declaration>
+      <code.init><![CDATA[pos1 = 0;
+pos2 = 0;
+pos3 = 0;
+pos4 = 0;
+pos5 = 0;
+beg = 0;
+end = 0;
+rfl = 0;
+f = 0;
+nslice = 0xFFFF;
+chunksize = 0;
+chunksize2 = 0;
+coef = 0;
+play = 0;
+pstart = 0;]]></code.init>
+      <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0]){
+	if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+		pstart = 1;
+		play = 1;
+		if(inlet_nslice == 0) {
+      		beg = 0;
+      		end = attr_slicesindex.array[1];
+   		} else {
+      		beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+      		end = attr_slicesindex.array[inlet_nslice+1];
+   		}
+   		pos1 = ((uint64_t)beg)<<32;
+   		pos4 = ((inlet_chunksize>>20)*48)>>1;
+	} else if (!(inlet_start>0)) {
+     	pstart = 0;
+   	}
+}
+
+MTOFEXTENDED(inlet_loopspeed + 80179668,rfl); // repetition frequency of the loop
+MTOFEXTENDED(inlet_pitch + 80179668,f);
+fch = f-rfl;]]></code.krate>
+      <code.srate><![CDATA[int32_t r1;
+int32_t r2;
+int32_t pos2_32 = pos2>>32;
+int32_t pos3_32 = pos3>>32;
+int32_t pos4_32 = pos4>>32;
+int32_t pos5_32 = pos5>>32;
+int32_t phase1 = pos2_32*coef;
+HANNING2TINTERP(phase1<<5,r1)
+int32_t phase2 = pos4_32*coef;
+HANNING2TINTERP(phase2<<5,r2)
+
+
+outlet_o = 0;
+
+if(play){
+	uint32_t o1 = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+	o1 = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o1);
+	uint32_t o2 = ___SMMUL(attr_slicesbuffer.array[pos5_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos5)>>1));
+	o2 = ___SMMLA(attr_slicesbuffer.array[(pos5_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos5)>>1),o2);
+	outlet_o = (___SMMUL(o1, r1>>4)<<5) + (___SMMUL(o2, r2>>4)<<5); 
+
+	pos1 += ((int64_t)rfl)<<4;
+	if((pos1>>32) > end) play = 0;
+
+	pos2 += ((int64_t)fch)<<4;
+	if(abs(pos2_32) > chunksize){
+		pos2 = 0;
+		chunksize = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize;
+	}
+	pos4 += ((int64_t)fch)<<4;
+	if(abs(pos4_32) > chunksize2){
+		pos4 = 0;
+		chunksize2 = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize2;
+	}
+
+	pos3 = pos1+pos2;
+	pos5 = pos1+pos4;
+	if(((pos3_32) > end) || (pos3 < 0)){
+		pos3 = 0;
+		play = 0;
+	}
+	if(((pos5_32) > end) || (pos5 < 0)) pos5 = 0;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>
