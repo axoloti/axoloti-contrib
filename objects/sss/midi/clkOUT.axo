@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="clkOUT" uuid="6353acea-dcda-47b6-b4c9-a07568ed136a">
+      <sDescription>main midi clock module with song position and several extra boolean triggers to communicate with other axoloti&apos;s.
+Comes with it&apos;s own receive module for proper functioning of the midi messages! (clkIN module)
+reset/random/triggers are send as a single combined midiCC value whenever any one of them go high (each input being one bit) to reduce message count if several get updated at the same time. NOTE! No &quot;off&quot; message will be send as the receiver does this automatically, again, to save message count.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <int32.positive name="position"/>
+         <bool32.risingfalling name="start"/>
+         <bool32.risingfalling name="stop"/>
+         <bool32.risingfalling name="continue"/>
+         <bool32.risingfalling name="clock" description=""/>
+         <bool32.risingfalling name="reset"/>
+         <bool32.risingfalling name="random"/>
+         <bool32.risingfalling name="trg1"/>
+         <bool32.risingfalling name="trg2"/>
+         <bool32.risingfalling name="trg3"/>
+      </inlets>
+      <outlets>
+         <int32 name="position"/>
+         <bool32 name="active"/>
+         <bool32 name="clock"/>
+         <bool32 name="reset"/>
+         <bool32 name="random"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="CH" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="CC" MinValue="1" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int pos,trg,act,ACT,stop,rnd,rst;]]></code.declaration>
+      <code.krate><![CDATA[int AS=inlet_start||inlet_continue;
+if(AS&&!act){
+	act=1;
+	ACT=1;
+	if(inlet_start)
+	{
+		MidiSend1((midi_device_t) attr_device, MIDI_START);
+	}
+	else
+	{
+		MidiSend1((midi_device_t) attr_device, MIDI_CONTINUE);
+	}
+	MidiSend3((midi_device_t) attr_device, MIDI_SONG_POSITION,inlet_position&127,inlet_position>>7);
+	pos=inlet_position;
+}
+else if(!AS){act=0;}
+
+if(inlet_stop&&!stop){
+	stop=1;
+	ACT=0;
+	MidiSend1((midi_device_t) attr_device, MIDI_STOP);
+}
+else if(!inlet_stop){stop=0;}
+
+outlet_active=ACT;
+outlet_clock=0;
+if(ACT){
+if (!(inlet_position==pos)) {
+MidiSend3((midi_device_t) attr_device, MIDI_SONG_POSITION,inlet_position&127,inlet_position>>7);
+}
+
+if(inlet_clock&&!trg){
+	trg=1;
+	MidiSend1((midi_device_t) attr_device,MIDI_TIMING_CLOCK);
+	outlet_clock=1;
+}
+else if(!inlet_clock){trg=0;}
+}
+
+outlet_reset=0;
+outlet_random=0;
+int RST=inlet_reset+(inlet_random<<1)+(inlet_trg1<<2)+(inlet_trg2<<3)+(inlet_trg3<<4);
+if((RST>0)&&!rst){	
+	rst=1;
+	if(inlet_reset)
+	{
+		outlet_reset=1;
+	}
+	if(inlet_random)
+	{
+		outlet_random=1;
+	}
+	MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_CH-1),attr_CC,__USAT(RST,7));
+}
+else if((RST<1)&&rst){rst=0;}
+
+
+
+pos=inlet_position;]]></code.krate>
+   </obj.normal>
+</objdefs>

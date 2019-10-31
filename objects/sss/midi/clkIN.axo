@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="clkIN" uuid="0b5a596d-f5c5-486c-9a28-6d82ecd0c908">
+      <sDescription>midi clock&amp;position receive module.
+Works with the &quot;clkOUT&quot; module to proper functioning!
+Also features 5 extra &quot;main&quot; momentary trigger outputs.
+These can be used for whatever you want to trigger, but as I often use a dedicated reset and random, I&apos;ve added these labels for the first two.
+Also, the &quot;reset&quot; output also goes high when receiving the midi start message, but not when midi continue is used.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32 name="position" description="counter position"/>
+         <bool32 name="active" description="clock active"/>
+         <bool32 name="clock" description="clock signal"/>
+         <bool32 name="reset" description="reset/1st trigger to use to do something"/>
+         <bool32 name="random" description="randomise/2nd trigger to use to do something"/>
+         <bool32 name="trg1"/>
+         <bool32 name="trg2"/>
+         <bool32 name="trg3"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="CH" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="CC" MinValue="1" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t _active;
+
+int32_t _pos;
+int clck,active,ccv;]]></code.declaration>
+      <code.init><![CDATA[_active = 0;
+_pos = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_active = _active;
+outlet_clock=clck;
+outlet_position = _pos;
+clck=0;
+outlet_reset=ccv&1;
+outlet_random=(ccv>>1)&1;
+outlet_trg1=(ccv>>2)&1;
+outlet_trg2=(ccv>>3)&1;
+outlet_trg3=(ccv>>4)&1;
+ccv=0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == (attr_CH-1) + MIDI_CONTROL_CHANGE)&&(data1 == attr_CC)) { ccv = data2;}
+if (status == MIDI_TIMING_CLOCK) {
+clck=1;
+} else if (status == MIDI_START) {
+  _active = 1;
+  ccv=ccv-(ccv&1)+1;
+} else if (status == MIDI_STOP) {
+  _active = 0;
+
+} else if (status == MIDI_CONTINUE) {
+  _active = 1;
+} else if (status == MIDI_SONG_POSITION) {
+  _pos = ((data2<<7)+data1);
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

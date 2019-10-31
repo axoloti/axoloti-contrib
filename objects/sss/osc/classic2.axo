@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="classic" uuid="275baf8b-027b-4f85-a76a-284e45735d52">
+   <obj.normal id="classic2" uuid="a1477947-ec52-4eb3-a3a5-5e40dc79bd59">
       <sDescription>sine wave based internal PM/FM oscillator
 Though the knobs tell their independent function when the rest is set to zero, there is a lot of cross-influencing between the wave-morphs.</sDescription>
       <author>Remco van der Most</author>
@@ -9,6 +9,7 @@ Though the knobs tell their independent function when the rest is set to zero, t
          <frac32.bipolar name="pitch" description="pitch"/>
          <frac32buffer name="freq" description="frequency"/>
          <frac32buffer name="phase" description="phase"/>
+         <frac32buffer name="sync"/>
          <frac32 name="saw"/>
          <frac32 name="pls"/>
          <frac32 name="shark"/>
@@ -42,17 +43,20 @@ Though the knobs tell their independent function when the rest is set to zero, t
             <MinValue i="0"/>
             <MaxValue i="4"/>
          </int32>
+         <frac32.s.map.pitch name="softsync"/>
       </params>
       <attribs/>
-      <code.declaration><![CDATA[uint32_t Phase;
+      <code.declaration><![CDATA[int i,snc;
+uint32_t Phase;
+int32_t sync;
 int32_t phs;
 int32_t r;
 int32_t t1;
 int32_t t2;
 int32_t t3;
 int32_t t4;
-int i;
 int32_t val;
+int32_t hp;
 int32_t vil;
 int32_t pv[4];
 int32_t stp[4];
@@ -74,6 +78,8 @@ case 4:Phs=P>0?(1<<30):-(1<<30);break;
 bool trg;]]></code.declaration>
       <code.init><![CDATA[Phase = 0;]]></code.init>
       <code.krate><![CDATA[int32_t freq;
+int32_t rate;
+MTOF(param_softsync,rate)
 int32_t pitch=__SSAT(param_pitch + inlet_pitch,28);
    MTOFEXTENDED(pitch,freq);
 freq=freq/param_div>>param_OS;
@@ -135,11 +141,22 @@ if((inlet_trig>0)&&!trg){
 }
 else if (inlet_trig==0){trg=0;}]]></code.krate>
       <code.srate><![CDATA[int32_t out;
+int32_t MOD=inlet_freq;
+hp+=MOD-hp>>8;
+MOD-=hp;
 for(i=0;i<(1<<param_OS);i++){
+sync-=___SMMUL(sync,rate);
 phs+=super;
+
+if((inlet_sync>0)&&!snc){
+	snc=1;
+	sync+=Phase;
+	Phase=0;
+}
+else if(inlet_sync<0){snc=0;}
 SHAPE(phs,param_wave);
-Phase += freq  ;
-int32_t p2 = Phase + (inlet_phase<<4);
+Phase += freq  +(___SMMUL(freq,MOD)<<8);
+int32_t p2 = sync+Phase + (inlet_phase<<8);
 uint32_t p3=p2+(t1<<1)+t2+(t3<<3);
 SINE2TINTERP((p3*param_div+(t4<<8)+Phs),r)
 int32_t s;
@@ -155,7 +172,7 @@ val+=((out>>4)-val)>>1+param_OS;
 vil+=(val-vil)>>10+param_OS;
 }
 outlet_wave= (val)-vil>>1;
-outlet_phase=Phase*param_div>>5;
+outlet_phase=(sync+Phase)*param_div>>5;
 
 saw+=stp[0];
 pls+=stp[1];
