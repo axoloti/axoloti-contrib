@@ -1,0 +1,94 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ladder1" uuid="8301023f-389a-4b27-aafd-957400d43ab1">
+      <sDescription>24 db Ladder filter.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>reciprocal.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i"/>
+         <frac32 name="c"/>
+         <frac32 name="r"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="Cut">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="Res">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float buf1;
+float buf2;
+float buf3;
+float buf4;
+float resoclip;
+float in;]]></code.declaration>
+      <code.krate><![CDATA[// Cut off param + input
+int32_t CutOff = inlet_c + param_Cut;
+
+// Use math/exp to scale cut off
+int32_t EXP;
+int8_t s    = (CutOff>>24)+4;
+uint8_t ei  = CutOff>>16;
+if (s>=0)   EXP = expt[ei]<<s;
+else        EXP = expt[ei]>>(-s);
+
+// Set minimum value for cut off to 0.25
+int32_t MinimumCut= (EXP  >  (0.25f * (1 << 21))  )?  EXP  :  (0.25f * (1 << 21));
+// Set maximum value for cut off
+int32_t MaximumCut= (  MinimumCut  <  1+(64<<21)  )?  MinimumCut  :  1+(64<<21);
+// Set range of cut off to around 0.8
+int32_t CutOffRange = ___SMMUL(MaximumCut<<3,  (int32_t)(0.8149995803833008f * (1 << 21))<<2);
+
+
+// Resonance param + input
+int32_t Reso   = inlet_r + param_Res;
+// Set maximum value for resonance
+int32_t MaximumRes= (  Reso  <  1+(64<<21)  )?  Reso  :  1+(64<<21);
+// Set range of resonance to 4
+int32_t ResoRange = ___SMMUL(MaximumRes<<3,  1+(4<<21)  <<2);
+
+
+// Convert int32_t parameters to float
+float cut   = arm::q_to_float(CutOffRange, 21);
+float res   = arm::q_to_float(ResoRange  , 21);]]></code.krate>
+      <code.srate><![CDATA[/*
+The parameters are:
+b_cut - cutoff freq
+b_rez - resonance
+b_in1 - input 
+
+resoclip = buf4; if (resoclip > 1) resoclip = 1;
+in = in - (resoclip * res);
+buf1 = ((in - buf1) * cut) + buf1;
+buf2 = ((buf1 - buf2) * cut) + buf2;
+buf3 = ((buf2 - buf3) * cut) + buf3;
+buf4 = ((buf3 - buf4) * cut) + buf4;
+lpout = buf4;
+
+Note that asymmetrical clipping gives you DC offset (at least that's what I get), 
+so symmetrical clipping is better (and gives a much smoother sound).
+
+*/
+
+// Input as float value
+float input = arm::q_to_float(inlet_i, 21);
+
+// Karlsen 24db fast ladder filter
+resoclip = buf4; if (resoclip > 1+(64<<21)) resoclip = 1+(64<<21);
+in = input - (resoclip * res);
+buf1 = ((in - buf1) * cut) + buf1;
+buf2 = ((buf1 - buf2) * cut) + buf2;
+buf3 = ((buf2 - buf3) * cut) + buf3;
+buf4 = ((buf3 - buf4) * cut) + buf4;
+
+
+// Convert float back to int32_t
+outlet_o = (int32_t)(buf4 * (1<<21));]]></code.srate>
+   </obj.normal>
+</objdefs>
