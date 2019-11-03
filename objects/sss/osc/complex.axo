@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="complex" uuid="26cdb55f-1b44-4afc-818e-f1e3643cc3d3">
+   <obj.normal id="complex" uuid="9b7d4d85-1d7d-4f49-b731-3c0616fe6736">
       <sDescription>Complex oscillator based on the &quot;inf&quot; distortion module
 -at the base is a thru-zero sine oscillator with a soft&amp;hard sync function
 -root can be modulated to a saw-type thanks to internal self FM
@@ -12,6 +12,7 @@
       <helpPatch>inf.axh</helpPatch>
       <inlets>
          <frac32 name="pitch"/>
+         <frac32 name="subrate"/>
          <frac32 name="pw1"/>
          <frac32 name="pw2"/>
          <frac32 name="sofs"/>
@@ -95,7 +96,7 @@ for(i=0;i<max;i++){
   int32_t ofs2=inlet_pw2+param_pw2;
   int32_t sofs=inlet_sofs+param_sofs;
   int32_t rate;
-  MTOFEXTENDED(param_subrate,rate)
+  MTOFEXTENDED(param_subrate+inlet_subrate,rate)
   rate=rate>>2;
   int32_t FM=___SMMUL(freq,param_sawizer+inlet_sawizer)<<5;
   int32_t fm=___SMMUL(freq,param_fm)<<5;
@@ -110,7 +111,7 @@ for(i=0;i<max;i++){
   	saw=LP;
   	phase+=freq+saw;
 
-	if((inlet_sync[j]>0)&&!SNC){
+	if((inlet_sync[j]>0)&&!SNC&&(ss>0)){
 		SNC=1;
 		sync+=phase;
 		phase=0;
