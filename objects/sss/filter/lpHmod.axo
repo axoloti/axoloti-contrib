@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lpHmod" uuid="6172d700-f1af-4e88-8ff3-a4db5b857dce">
+      <sDescription>1st order lowpass filter with resonance and self-modulation with the highpass output to increase the slope steepness
+The starve parameter allows to continuously subtract an amount from the LP buffer, forcing it to zero</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freq" description="cutoff frequency"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freq" noLabel="true"/>
+         <frac32.u.map name="slope"/>
+         <frac32.u.map.filterq name="res"/>
+         <frac32.u.map.filterq name="starve"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val,hp,HP;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.srate><![CDATA[int32_t dif=inlet_in-val;
+   dif=dif>0?-dif:dif;
+
+   int32_t f;
+   MTOF(__SSAT(param_freq+inlet_freq+___SMMUL(dif<<1,param_slope<<4),28),f);
+   val = ___SMMLA((inlet_in-val+(___SMMUL(param_res,hp)<<5))<<1,f,val);
+   outlet_out= val;
+   HP+=___SMMUL(val-HP,f)<<1;
+   hp=val-HP;
+   val-=___SMMUL(val,param_starve)<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>
