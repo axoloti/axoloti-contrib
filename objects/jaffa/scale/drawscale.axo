@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="drawscale" uuid="70c9df15-833a-4a04-af0b-ae0480ebf6b1">
+      <sDescription>note to a scale</sDescription>
+      <author>Mark Harris</author>
+      <license>BSD</license>
+      <helpPatch>note scale.axh</helpPatch>
+      <inlets>
+         <int32 name="note"/>
+      </inlets>
+      <outlets>
+         <int32 name="s"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bin12 name="p1" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int i;]]></code.declaration>
+      <code.krate><![CDATA[int Step = (inlet_note+120) % 12;
+
+int ScaleOut;
+if (param_p1 & (1 << Step)) {
+	ScaleOut = Step;
+} else {
+	int closest_higher = -1, closest_lower = -1;
+	// look for closest lower
+	for (int i = Step - 1; i >= 0; i -= 1) {
+		if (param_p1 & (1 << i)) {
+			closest_lower = Step - i;
+			break;
+		}
+	}
+	// look for closest higher
+	for (int i = Step + 1; i <= 11; i += 1) {
+		if (param_p1 & (1 << i)) {
+			closest_higher = i - Step;
+			break;
+		}		
+	}
+
+	if (closest_lower != -1 && closest_higher != -1) {
+		if (closest_lower < closest_higher) {
+			ScaleOut = Step - closest_lower;
+		} else {
+			ScaleOut = Step + closest_higher;	
+		}
+	} else if (closest_lower != -1) {
+		ScaleOut = Step - closest_lower;
+	} else if (closest_higher != -1) {
+		ScaleOut = Step + closest_higher;
+	} else {
+		ScaleOut = 0;
+	}
+}
+
+
+int Octave = ((inlet_note+120) / 12) * 12 ;
+
+outlet_s = ScaleOut + Octave - 120;]]></code.krate>
+   </obj.normal>
+</objdefs>
