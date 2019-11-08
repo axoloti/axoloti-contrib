@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="2.0.0">
    <obj.normal id="graintable" uuid="7a0f7cae-b34c-4c12-94a2-9ff9f34694dc">
       <sDescription>Plays grains from a 16-bit sdram table.
 It is important that the referenced table is 16 bit per sample, and in sdram.
@@ -16,8 +16,12 @@ Grains are not transposed.</sDescription>
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="pos" description="position"/>
-         <frac32.u.map name="spread" description="random position spreading"/>
+         <frac32.u.map name="pos" description="position">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="spread" description="random position spreading">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
       </params>
       <attribs>
          <objref name="table"/>
@@ -72,6 +76,10 @@ Grains are not transposed.</sDescription>
             </CEntries>
          </combo>
       </attribs>
+      <file-depends/>
+      <includes/>
+      <depends/>
+      <modules/>
       <code.declaration><![CDATA[static const int ngrains = attr_grains;
 static const int attenuate_shift = attr_grains==128?5:attr_grains==64?4:attr_grains==32?3:2;
 static const int grainlength = attr_grainlength;
@@ -81,6 +89,9 @@ static const int incr2 = ((1ull<<32)/(BUFSIZE*1024)) * ((BUFSIZE*BUFSIZE*1024/*n
 static const int iNewGrainsPerFrame = (ngrains*BUFSIZE)/grainlength;
 // to avoid division by zero warnings in inactive code...
 static const int iNewGrainsPerFrame1 = iNewGrainsPerFrame>0?iNewGrainsPerFrame:1;
+
+int32_t * dmabuf1; // 8 words
+int32_t * dmabuf2; // another 8 words
 
 int32_t * offsets[ngrains];
 int32_t prev_window[ngrains];
@@ -209,6 +220,10 @@ RCC->AHB1ENR |= RCC_AHB1ENR_DMA2DEN;
 RCC->AHB1RSTR |= RCC_AHB1RSTR_DMA2DRST;
 RCC->AHB1RSTR &= ~RCC_AHB1RSTR_DMA2DRST;
 
+dmabuf1 = ax_malloc(16*sizeof(int32_t), mem_type_hint_tiny_dma);
+if (!dmabuf1) return error_outOfMemory;
+dmabuf2 = &dmabuf1[8];
+
 int i;
 for(i=0;i<ngrains;i++){
 	offsets[i] = (int32_t *)&attr_table.array[0];
@@ -220,11 +235,9 @@ phase = 0;
 //FMC_Bank5_6->SDCR[0] |= FMC_SDCR1_RBURST;
 save_FMC_SDCR1 = *((uint32_t *)0xA0000140);
 *((uint32_t *)0xA0000140) |= 0x00001000;]]></code.init>
-      <code.dispose><![CDATA[*((uint32_t *)0xA0000140) = save_FMC_SDCR1;]]></code.dispose>
-      <code.krate><![CDATA[static int32_t dmabuf1[8] __attribute__ ((section (".sram2")));
-static int32_t dmabuf2[8] __attribute__ ((section (".sram2")));
-
-int32_t offset=__USAT(param_pos+inlet_pos,27)>>(28-attr_table.LENGTHPOW);
+      <code.dispose><![CDATA[*((uint32_t *)0xA0000140) = save_FMC_SDCR1;
+ax_free(dmabuf1);]]></code.dispose>
+      <code.krate><![CDATA[int32_t offset=__USAT(param_pos+inlet_pos,27)>>(28-attr_table.LENGTHPOW);
 if (offset<0) offset=-offset;
 int32_t spread=__USAT(param_spread+inlet_spread,27)>>3;
 

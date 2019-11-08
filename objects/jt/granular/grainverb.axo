@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="2.0.0">
    <obj.normal id="grainverb" uuid="aaafab49-927b-4660-a360-ed30d1a7e643">
       <sDescription>granular reverb
 a granular delay with feedback</sDescription>
@@ -16,7 +16,9 @@ a granular delay with feedback</sDescription>
       </outlets>
       <displays/>
       <params>
-         <frac32.u.map name="amount" description="dry/wet balance"/>
+         <frac32.u.map name="amount" description="dry/wet balance">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
          <frac32.u.map name="delay" description="pre-delay time">
             <DefaultValue v="1.0"/>
          </frac32.u.map>
@@ -103,6 +105,10 @@ a granular delay with feedback</sDescription>
             </CEntries>
          </combo>
       </attribs>
+      <file-depends/>
+      <includes/>
+      <depends/>
+      <modules/>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
 static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
@@ -123,6 +129,9 @@ static const int attenuate_fdbk = (int32_t)(0x7FFFFFFF*0.58f*(
 				attr_grains==64?0.70710678f:
 				attr_grains==32?0.70710678f*0.70710678f:
 				0.70710678f*0.70710678f*0.70710678f));
+
+int32_t * dmabuf1; // 8 words
+int32_t * dmabuf2; // another 8 words
 
 int32_t fdbk[BUFSIZE];
 
@@ -249,10 +258,14 @@ void simd16_env(int32_t *outp, int32_t a_new, int32_t a_prev, volatile int32_t *
 	}
 }]]></code.declaration>
       <code.init><![CDATA[int i;
-static int16_t _array[attr_poly][LENGTH*2]  __attribute__ ((section (".sdram")));
-array = &_array[parent->polyIndex][0];
+array = (int16_t *)ax_malloc(LENGTH*2*sizeof(int16_t), mem_type_hint_large);
+if (!array) return error_outOfMemory;
 writepos = 0;
 for(i=0;i<LENGTH*2;i++) array[i] = 0;
+
+dmabuf1 = (int32_t *)ax_malloc(16*sizeof(int32_t), mem_type_hint_tiny_dma);
+if (!dmabuf1) return error_outOfMemory;
+dmabuf2 = &dmabuf1[8];
 
 // initialize DMA2D engine
 RCC->AHB1ENR |= RCC_AHB1ENR_DMA2DEN;
@@ -272,11 +285,10 @@ phase = 0;
 //FMC_Bank5_6->SDCR[0] |= FMC_SDCR1_RBURST;
 save_FMC_SDCR1 = *((uint32_t *)0xA0000140);
 *((uint32_t *)0xA0000140) |= 0x00001000;]]></code.init>
-      <code.dispose><![CDATA[*((uint32_t *)0xA0000140) = save_FMC_SDCR1;]]></code.dispose>
-      <code.krate><![CDATA[static int32_t dmabuf1[8] __attribute__ ((section (".sram2")));
-static int32_t dmabuf2[8] __attribute__ ((section (".sram2")));
-
-int i;
+      <code.dispose><![CDATA[*((uint32_t *)0xA0000140) = save_FMC_SDCR1;
+ax_free(dmabuf1);
+ax_free(array);]]></code.dispose>
+      <code.krate><![CDATA[int i;
 writepos = (writepos + BUFSIZE)&LENGTHMASK;
 int16_t *parray = &array[writepos];
 for(i=0;i<BUFSIZE;i++){
