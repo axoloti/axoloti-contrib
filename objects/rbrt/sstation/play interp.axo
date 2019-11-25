@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="play interp" uuid="db3f4654-79c1-45e8-892b-696f423cb1f9">
+      <sDescription>read from table, linear interpolated</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="a" description="index in fraction of table size"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="table[a]"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+      </attribs>
+      <code.srate><![CDATA[uint32_t asat = __USAT(inlet_a,27);
+    int index = (asat>>attr_smplr.SHIFT);
+   int32_t y1 = attr_smplr.WAVE[index]<<16;
+   int32_t y2 = attr_smplr.WAVE[(index+1)&attr_smplr.W_LENGTHMASK]<<16;
+   int frac = (asat - (index<<attr_smplr.SHIFT))<<(attr_smplr.W_LENGTHPOW+3);
+  int32_t rr;
+  rr = ___SMMUL(y1,(1<<30)-frac);
+  rr = ___SMMLA(y2,frac,rr);
+outlet_o= rr<<2;]]></code.srate>
+   </obj.normal>
+</objdefs>

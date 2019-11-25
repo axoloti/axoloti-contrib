@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slot" uuid="ac02ea77-79f0-42ce-b51b-e9a4acacd363">
+      <sDescription>reference sample information created by &apos;smplr&apos;.
+&apos;slot&apos; sets the sample bank slot to refer to.
+&apos;offset&apos; returns the start of the slot in fraction of the table&apos;s size,
+&apos;range&apos; returns the length.
+&apos;playmode&apos; returns the playmode the slot has been recorded with.
+&apos;Aux&apos; returns auxiliary information,like the recording startpoint.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>smplr.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="offset" description="sample start in fraction of the table"/>
+         <frac32.positive name="range" description="sample length in fraction of the table"/>
+         <int32.positive name="playmode" description="playmode"/>
+         <frac32 name="Aux" description="additional info"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+      </attribs>
+      <code.krate><![CDATA[outlet_offset  = attr_smplr.array [inlet_slot <<5] << attr_smplr.SHIFT;
+outlet_range  = (attr_smplr.array [(inlet_slot <<5) + 1] - attr_smplr.array [inlet_slot <<5]) << attr_smplr.SHIFT;
+outlet_playmode = attr_smplr.array [(inlet_slot <<5)+ 2] ;
+outlet_Aux = attr_smplr.array [(inlet_slot <<5)+ 3] ;]]></code.krate>
+   </obj.normal>
+</objdefs>

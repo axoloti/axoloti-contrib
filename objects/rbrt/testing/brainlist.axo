@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="brainlist" uuid="b559f3a6-2002-495a-8b06-6e3f5a760468">
+      <sDescription>load table from sdcard</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="getDir" description="trigger"/>
+         <int32.positive name="index"/>
+      </inlets>
+      <outlets>
+         <int32 name="test"/>
+         <charptr32 name="OUT1"/>
+         <charptr32 name="out2"/>
+         <charptr32 name="out3"/>
+         <bool32 name="trig"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="flist"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[bool trig;
+
+char out1[9];
+char out2[9];
+char out3[9];
+
+uint8_t pre;]]></code.declaration>
+      <code.krate><![CDATA[outlet_trig = 0;
+
+if (inlet_index != pre){
+	pre = inlet_index;
+	memcpy (&out1[0],&attr_flist.fout[(pre+0)<<3],8);
+	memcpy (&out2[0],&attr_flist.fout[(pre+1)<<3],8);
+	memcpy (&out3[0],&attr_flist.fout[(pre+2)<<3],8);
+	outlet_trig = 1;
+}
+
+outlet_OUT1 = &out1[0];
+outlet_out2 = &out2[0];
+outlet_out3 = &out3[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

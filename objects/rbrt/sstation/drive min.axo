@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="drive min" uuid="b425e3bf-cdae-4c66-924f-9cefdb32736f">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ldrive.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.bipolar name="direction" description="speed modulation"/>
+         <frac32.positive name="transpose" description="tansposition in semi-notes"/>
+         <bool32.risingfalling name="play" description="toggle playback"/>
+         <bool32.rising name="reset" description="reset to &apos;offset&apos; "/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phase" description="position inside table"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="direction" description="forward or reverse" MinValue="-64" MaxValue="64" DefaultValue="64"/>
+         <objref name="smplr"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t lrange;
+uint32_t inc;
+int32_t t_speed;
+int32_t index;
+uint8_t scale;
+bool play;
+bool rro;]]></code.declaration>
+      <code.init><![CDATA[scale = (attr_smplr.W_LENGTHPOW < 6) ? 0 : 4;]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(inlet_transpose + (1<<22) + 512000,inc);
+t_speed  = ((___SMMUL(inc,inlet_direction + (attr_direction <<21))) << 5) >> (attr_smplr.W_LENGTHPOW - (scale + 2));
+lrange = inlet_range << scale;
+
+if (inlet_play && !play) {
+		play = 1;
+		index = 0;
+	}
+	if (!inlet_play) play = 0;
+	
+      if (inlet_reset && (!rro)) {
+ 		index = 0; 	
+         	rro = 1;
+      }
+      if (!inlet_reset) rro = 0;
+
+      if (!lrange) play = 0;]]></code.krate>
+      <code.srate><![CDATA[if (t_speed > 0){
+      if (index >= lrange) index = 0;
+      } 
+      else if (index <= (-t_speed)) index = lrange;
+
+outlet_phase =  (__USAT(((index >> scale) + inlet_offset),27)) * play;
+index += t_speed;]]></code.srate>
+   </obj.normal>
+</objdefs>
