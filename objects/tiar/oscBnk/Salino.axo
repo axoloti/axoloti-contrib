@@ -35,7 +35,7 @@ int32_t envTarget[12*NB_OCT+13];
 int32_t coefEnv[12*NB_OCT+13];]]></code.declaration>
       <code.init><![CDATA[for(int n12 = 0; n12 < 12; n12++){
 	int32_t dp;
-	MTOFEXTENDED((-52<<21) + (n12<<21), dp)
+	MTOFEXTENDED((-40<<21) + (n12<<21), dp)
 	dPhi[n12] = -dp;
 	for(int oct = 0; oct < NB_OCT + (n12 == 0); oct++){
 		int32_t note = 12 * oct + n12;
@@ -87,11 +87,20 @@ for(int n12 = 0; n12 < 12; n12++){
 	int32_t* e = envMix + n12;
 	int32_t p = phi[n12];
 	for(int oct = 0; oct < NB_OCT + (n12 == 0); oct++){
-		int32_t x = p & 0x7FFFFFFF; //q31
-		int32_t y = ___SMMUL(x, x); //q30
+	/*	int32_t x = p & 0x7FFFFFFF; //q31
+		int32_t y = ___SMMUL(x, x)<<1; //q30
+		 y = ___SMMUL(y, y); //q30
 		y = ___SMMLS(y, y, x>>3);//q28
 		y0 = ___SMMLA(y, *e, y0);
+*/
+
+		int32_t x=__USAT(p,31);
+		x = ___SMMUL(x, x); //q30
+		x = ___SMMLS(x, x, x>>2);//q28
+		y0 = ___SMMLA(x, *e, y0);
+		
 		e += 12;
+		p-=1<<30;
 		p <<= 1;
 	}
 }
@@ -112,11 +121,20 @@ for(int i = 0; i < BUFSIZE; i++){
 		int32_t* e = envMix + n12;
 		int32_t p = phi[n12];
 		for(int oct = 0; oct < NB_OCT + (n12 == 0); oct++){
-			int32_t x = p & 0x7FFFFFFF; //q31
-			int32_t y = ___SMMUL(x, x); //q30
-			y = ___SMMLS(y, y, x>>3);//q28
-			y0 = ___SMMLA(y, *e, y0);
+			
+	/*	int32_t x = p & 0x7FFFFFFF; //q31
+		int32_t y = ___SMMUL(x, x)<<1; //q30
+		 y = ___SMMUL(y, y); //q30
+		y = ___SMMLS(y, y, x>>3);//q28
+		y0 = ___SMMLA(y, *e, y0);
+*/
+
+			int32_t x=__USAT(p,31);
+			x = ___SMMUL(x, x); //q30
+			x = ___SMMLS(x, x, x>>2);//q28
+			y0 = ___SMMLA(x, *e, y0);
 			e += 12;
+		p-=1<<30;
 			p <<= 1;
 		}
 	}
