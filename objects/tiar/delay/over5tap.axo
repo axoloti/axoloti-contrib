@@ -1,0 +1,177 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="over5tap" uuid="55fbe87b-d4f7-48f5-92bf-b1494183c15b">
+      <sDescription>A five tap 32bit delay line with internal oversampling to limit unwanted interpolation filtering.
+Useful for choruses</sDescription>
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch>over3tap.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="d1"/>
+         <frac32 name="d2"/>
+         <frac32 name="d3"/>
+         <frac32 name="d4"/>
+         <frac32 name="d5"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out1"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="out3"/>
+         <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (2.66ms)</string>
+               <string>512 (5.33ms)</string>
+               <string>1024 (10.66ms)</string>
+               <string>2048 (21.33ms)</string>
+               <string>4096 (42.66ms)</string>
+               <string>8192 (85.33ms)</string>
+               <string>16384 (170ms)</string>
+               <string>32768 (341ms)</string>
+               <string>65536 (682ms)</string>
+               <string>131072 (1.36s)</string>
+               <string>262144 (2.73s)</string>
+               <string>524288 (5.46s)</string>
+               <string>1048576 (10.9s)</string>
+               <string>2097152 (21.8s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int32_t *d;
+
+int32_t interp(uint32_t ind, int32_t p){
+	//int32_t a = p&((1<<(27-LOG2))-1); //q27-LOG2
+	//a <<= 31-(27-LOG2); //q31
+	int32_t a = (p<<(31-(27-LENGTHPOW))) & 0x7FFFFFFF; //q31
+	int32_t i = p>>(27-LENGTHPOW); //int
+	i = (ind + i) & LENGTHMASK;
+	int32_t d0 = d[i];
+	return ___SMMLA(a, (d[(i + 1) & LENGTHMASK] - d0)<<1, d0);
+}
+void calcOut(int32_t in_d, int32_t &d, int32_t &fd, int32_t *out){
+	//local copies -> registers
+	int32_t ld = d;
+	int32_t lfd = fd;
+	
+	int i = ind;
+	int32_t dd = __USAT(in_d, 27);
+	dd = (dd - ld)>>4;
+	for(int smp = 0; smp < BUFSIZE; smp++){
+		ld += dd;  //interpolation
+		lfd = ___SMMLA(0x20000000, ld - lfd, lfd); //smooth
+		out[smp] = interp(i, lfd);
+		i -= 2; i &= LENGTHMASK;
+	}
+	d = ld;
+	fd = lfd;
+}
+uint32_t ind;
+int32_t x, y;
+int32_t d1, fd1, d2, fd2, d3, fd3, d4, fd4, d5, fd5;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+d = &_d[parent->polyIndex][0];
+
+for(int i=0;i<LENGTH;i++) d[i] = 0;
+ind = 0;
+d1 = fd1 = d2 = fd2 = d3 = fd3 = d4 = fd4 = d5 = fd5 = x = y = 0;]]></code.init>
+      <code.krate><![CDATA[//writer
+for(int smp = 0; smp < BUFSIZE; smp++){
+	//interp -> LP1
+	ind--; ind &= LENGTHMASK;
+	d[ind] = y = (((inlet_in[smp] + x)>>1) + y)>>1;
+	//nointerp ->LP1
+	x = inlet_in[smp];
+	ind--; ind &= LENGTHMASK;
+	d[ind] = y = ___SMMLA(1004378102, x - y, y); //0.4677q31 same gain as one zero one pole 0.5 at Sr/8
+}
+
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//readers
+/*
+int i = ind;
+int32_t dd1 = __USAT(inlet_d1, 27);
+dd1 = (dd1 - d1)>>4;
+for(int smp = 0; smp < BUFSIZE; smp++){
+	d1 += dd1;  //interpolation
+	fd1=___SMMLA(0x20000000, d1 - fd1, fd1); //smooth
+	outlet_out1[smp] = interp(i, fd1);
+	i -= 2; i &= LENGTHMASK;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+i = ind;
+int32_t dd2 = __USAT(inlet_d2, 27);
+dd2 = (dd2 - d2)>>4;
+for(int smp = 0; smp < BUFSIZE; smp++){
+	d2 += dd2;  //interpolation
+	fd2=___SMMLA(0x20000000, d2 - fd2, fd2); //smooth
+	outlet_out2[smp] = interp(i, fd2);
+	i -= 2; i &= LENGTHMASK;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+i = ind;
+int32_t dd3 = __USAT(inlet_d3, 27);
+dd3 = (dd3 - d3)>>4;
+for(int smp = 0; smp < BUFSIZE; smp++){
+	d3 += dd3;  //interpolation
+	fd3=___SMMLA(0x20000000, d3 - fd3, fd3); //smooth
+	outlet_out3[smp] = interp(i, fd3);
+	i -= 2; i &= LENGTHMASK;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+i = ind;
+int32_t dd4 = __USAT(inlet_d4, 27);
+dd4 = (dd4 - d4)>>4;
+for(int smp = 0; smp < BUFSIZE; smp++){
+	d4 += dd4;  //interpolation
+	fd4=___SMMLA(0x20000000, d4 - fd4, fd4); //smooth
+	outlet_out4[smp] = interp(i, fd4);
+	i -= 2; i &= LENGTHMASK;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+i = ind;
+int32_t dd5 = __USAT(inlet_d5, 27);
+dd5 = (dd5 - d5)>>4;
+for(int smp = 0; smp < BUFSIZE; smp++){
+	d5 += dd5;  //interpolation
+	fd5=___SMMLA(0x20000000, d5 - fd5, fd5); //smooth
+	outlet_out5[smp] = interp(i, fd5);
+	i -= 2; i &= LENGTHMASK;
+}
+*/
+
+calcOut(inlet_d1, d1, fd1, outlet_out1);
+calcOut(inlet_d2, d2, fd2, outlet_out2);
+calcOut(inlet_d3, d3, fd3, outlet_out3);
+calcOut(inlet_d4, d4, fd4, outlet_out4);
+calcOut(inlet_d5, d5, fd5, outlet_out5);
+
+
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

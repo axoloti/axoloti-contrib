@@ -19,6 +19,7 @@
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="out"/>
+         <frac32.positive name="keys"/>
       </outlets>
       <displays/>
       <params/>
@@ -79,7 +80,11 @@ int32_t coef16Feet = __SSAT(inlet_16Feet,28)<<4; //q31
 for(int i = 12; i < 12*NB_OCT+1; i++){
 	envMix[i-12] = ___SMMLA((env[i]+envRev[i])<<1, coef16Feet, envMix[i-12]>>1)<<1;
 }
-
+int32_t keys=0;
+for(int i = 0; i < 12*NB_OCT+1; i++){
+	keys+=envTarget[i]!=0?1<<21:0;
+}
+outlet_keys = keys;
 //_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 int32_t y1;
 int32_t y0 = 0;
