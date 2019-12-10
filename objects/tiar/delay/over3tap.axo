@@ -53,6 +53,18 @@ Useful for choruses</sDescription>
                <string>21</string>
             </CEntries>
          </combo>
+         <combo name="Over">
+            <MenuEntries>
+               <string>Smooth</string>
+               <string>Normal</string>
+               <string>Bright</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
@@ -71,22 +83,64 @@ int32_t interp(uint32_t ind, int32_t p){
 
 uint32_t ind;
 int32_t x, y;
-int32_t d1, fd1, d2, fd2, d3, fd3;]]></code.declaration>
+int32_t d1, fd1, d2, fd2, d3, fd3;
+
+float x0, x1, x2, x3, x4, x5, y0, y1;
+
+
+]]></code.declaration>
       <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
 d = &_d[parent->polyIndex][0];
 
 for(int i=0;i<LENGTH;i++) d[i] = 0;
 ind = 0;
-d1 = fd1 = d2 = fd2 = d3 = fd3 = x = y = 0;]]></code.init>
-      <code.krate><![CDATA[//writer
-for(int smp = 0; smp < BUFSIZE; smp++){
-	//interp -> LP1
-	ind--; ind &= LENGTHMASK;
-	d[ind] = y = (((inlet_in[smp] + x)>>1) + y)>>1;
-	//nointerp ->LP1
-	x = inlet_in[smp];
-	ind--; ind &= LENGTHMASK;
-	d[ind] = y = ___SMMLA(1004378102, x - y, y); //0.4677q31 same gain as one zero one pole 0.5 at Sr/8
+d1 = fd1 = d2 = fd2 = d3 = fd3 = x = y = 0;
+x0=x1=x2=x3=x4=x5=y0=y1=0;
+
+
+]]></code.init>
+      <code.krate><![CDATA[
+	  
+//writer
+if(attr_Over == 1){	  
+	for(int smp = 0; smp < BUFSIZE; smp++){
+		//interp -> LP1
+		ind--; ind &= LENGTHMASK;
+		d[ind] = y = (((inlet_in[smp] + x)>>1) + y)>>1;
+		//nointerp ->LP1
+		x = inlet_in[smp];
+		ind--; ind &= LENGTHMASK;
+		d[ind] = y = ___SMMLA(1004378102, x - y, y); //0.4677q31 same gain as one zero one pole 0.5 at Sr/8
+	}
+}
+if(attr_Over == 2){	  
+	for(int smp = 0; smp < BUFSIZE; smp++){
+		ind--; ind &= LENGTHMASK;
+		d[ind] = inlet_in[smp];
+		ind--; ind &= LENGTHMASK;
+		d[ind] = inlet_in[smp];
+	}
+}
+//use interpolator
+if(attr_Over == 3){	 
+	for(int smp = 0; smp < BUFSIZE; smp++){
+	x0 = x1; x1 = x2; x2 = x3; x3 = x4; x4 = x5; x5 = (float)inlet_in[smp];
+/*outlet_y1 = (int32_t)x2;
+outlet_y0 = (int32_t)(
+	 (x5 + x0) * 0.025665914601895386f
+     + (x4 + x1) * -0.04277652433649233f
+     + (x3 + x2) * 0.517110609734597f
+     );	
+	*/
+		ind--; ind &= LENGTHMASK;
+		d[ind] = (int32_t)x2;
+		ind--; ind &= LENGTHMASK;
+		d[ind] = (int32_t)(
+	 (x5 + x0) * 0.025665914601895386f
+     + (x4 + x1) * -0.04277652433649233f
+     + (x3 + x2) * 0.517110609734597f
+     );	
+	}
 }
 
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
@@ -119,6 +173,8 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 	fd3=___SMMLA(0x10000000, d3 - fd3, fd3); //smooth
 	outlet_out3[smp] = interp(i, fd3);
 	i -= 2; i &= LENGTHMASK;
-}]]></code.krate>
+}
+
+]]></code.krate>
    </obj.normal>
 </objdefs>
