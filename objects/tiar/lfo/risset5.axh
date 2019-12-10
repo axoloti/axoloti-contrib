@@ -1,10 +1,22 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="tiar/midi/in/keyb zone lru" uuid="50ad41c5-e271-4f77-83a4-4f1cc8745b17" name="keyb_2" x="56" y="42">
+   <obj type="tiar/midi/in/keyb zone lru" uuid="50ad41c5-e271-4f77-83a4-4f1cc8745b17" name="keyb_2" x="0" y="42">
       <params/>
       <attribs>
          <spinner attributeName="startNote" value="0"/>
          <spinner attributeName="endNote" value="127"/>
       </attribs>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="140" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_2" x="238" y="42">
+      <params>
+         <frac32.u.map name="gain1" value="0.09000000357627869"/>
+      </params>
+      <attribs/>
    </obj>
    <obj type="math/+" uuid="44553fdc8628c67ab535845ed1be304ad6c9553b" name="+_1" x="322" y="42">
       <params/>
@@ -107,7 +119,7 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="70" y="420">
       <params>
-         <frac32.s.map name="value" value="-11.0"/>
+         <frac32.s.map name="value" value="-17.0"/>
       </params>
       <attribs/>
    </obj>
@@ -162,7 +174,7 @@
          <frac32.s.map name="a" value="-64.0"/>
          <frac32.s.map name="d" value="37.0"/>
          <frac32.u.map name="s" value="30.5"/>
-         <frac32.s.map name="r" value="18.0"/>
+         <frac32.s.map name="r" value="31.0"/>
       </params>
       <attribs/>
    </obj>
@@ -181,13 +193,6 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/midi/in/keyb zone lru" uuid="50ad41c5-e271-4f77-83a4-4f1cc8745b17" name="keyb_1" x="168" y="784">
-      <params/>
-      <attribs>
-         <spinner attributeName="startNote" value="0"/>
-         <spinner attributeName="endNote" value="127"/>
-      </attribs>
-   </obj>
    <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="308" y="784">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
@@ -202,10 +207,6 @@
       <net>
          <source obj="sine_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
-      </net>
-      <net>
-         <source obj="keyb_1" outlet="note"/>
-         <dest obj="sine_1" inlet="pitch"/>
       </net>
       <net>
          <source obj="risset5_1" outlet="env1"/>
@@ -264,16 +265,7 @@
       </net>
       <net>
          <source obj="keyb_2" outlet="note"/>
-         <dest obj="DevilSync_1" inlet="pitch master"/>
-         <dest obj="DevilSync_2" inlet="pitch master"/>
-         <dest obj="DevilSync_3" inlet="pitch master"/>
-         <dest obj="DevilSync_4" inlet="pitch master"/>
-         <dest obj="DevilSync_5" inlet="pitch master"/>
-         <dest obj="+_1" inlet="in1"/>
-         <dest obj="+_2" inlet="in1"/>
-         <dest obj="+_3" inlet="in1"/>
-         <dest obj="+_4" inlet="in1"/>
-         <dest obj="+_5" inlet="in1"/>
+         <dest obj="mix_2" inlet="bus_in"/>
       </net>
       <net>
          <source obj="risset5_1" outlet="env4"/>
@@ -367,6 +359,24 @@
       <net>
          <source obj="vca_6" outlet="o"/>
          <dest obj="lp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="+_1" inlet="in1"/>
+         <dest obj="+_2" inlet="in1"/>
+         <dest obj="+_4" inlet="in1"/>
+         <dest obj="+_5" inlet="in1"/>
+         <dest obj="+_3" inlet="in1"/>
+         <dest obj="DevilSync_2" inlet="pitch master"/>
+         <dest obj="DevilSync_1" inlet="pitch master"/>
+         <dest obj="DevilSync_4" inlet="pitch master"/>
+         <dest obj="DevilSync_5" inlet="pitch master"/>
+         <dest obj="DevilSync_3" inlet="pitch master"/>
+         <dest obj="sine_1" inlet="pitch"/>
       </net>
    </nets>
    <settings>
