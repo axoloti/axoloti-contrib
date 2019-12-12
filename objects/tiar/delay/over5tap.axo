@@ -73,6 +73,8 @@ Useful for choruses</sDescription>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
 static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t MINDD = (32<<(27-LENGTHPOW));
+static const uint32_t MAXDD = (1<<27)-(32<<(27-LENGTHPOW));
 int32_t *d;
 
 int32_t interp(uint32_t ind, int32_t p){
@@ -90,7 +92,10 @@ void calcOut(int32_t in_d, int32_t &d, int32_t &fd, int32_t *out){
 	int32_t lfd = fd;
 	
 	int i = ind;
-	int32_t dd = __USAT(in_d, 27);
+	int32_t dd = in_d;
+	if(dd<MINDD) dd=MINDD;
+	else if(dd>MAXDD) dd=MAXDD;
+
 	dd = (dd - ld)>>4;
 	for(int smp = 0; smp < BUFSIZE; smp++){
 		ld += dd;  //interpolation
@@ -105,9 +110,7 @@ uint32_t ind;
 int32_t x, y;
 int32_t d1, fd1, d2, fd2, d3, fd3, d4, fd4, d5, fd5;
 
-float x0, x1, x2, x3, x4, x5, y0, y1;
-
-]]></code.declaration>
+float x0, x1, x2, x3, x4, x5, y0, y1;]]></code.declaration>
       <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
 d = &_d[parent->polyIndex][0];
 

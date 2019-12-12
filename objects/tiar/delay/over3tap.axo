@@ -69,6 +69,8 @@ Useful for choruses</sDescription>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
 static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t MINDD = (32<<(27-LENGTHPOW));
+static const uint32_t MAXDD = (1<<27)-(32<<(27-LENGTHPOW));
 int32_t *d;
 
 int32_t interp(uint32_t ind, int32_t p){
@@ -85,10 +87,7 @@ uint32_t ind;
 int32_t x, y;
 int32_t d1, fd1, d2, fd2, d3, fd3;
 
-float x0, x1, x2, x3, x4, x5, y0, y1;
-
-
-]]></code.declaration>
+float x0, x1, x2, x3, x4, x5, y0, y1;]]></code.declaration>
       <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
 d = &_d[parent->polyIndex][0];
 
@@ -99,9 +98,7 @@ x0=x1=x2=x3=x4=x5=y0=y1=0;
 
 
 ]]></code.init>
-      <code.krate><![CDATA[
-	  
-//writer
+      <code.krate><![CDATA[//writer
 if(attr_Over == 1){	  
 	for(int smp = 0; smp < BUFSIZE; smp++){
 		//interp -> LP1
@@ -146,7 +143,9 @@ outlet_y0 = (int32_t)(
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //readers
 int i = ind;
-int32_t dd1 = __USAT(inlet_d1, 27);
+int32_t dd1 = inlet_d1;
+if(dd1<MINDD) dd1=MINDD;
+else if(dd1>MAXDD) dd1=MAXDD;
 dd1 = (dd1 - d1)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d1 += dd1;  //interpolation
@@ -156,7 +155,9 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 }
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 i = ind;
-int32_t dd2 = __USAT(inlet_d2, 27);
+int32_t dd2 = inlet_d2;
+if(dd2<MINDD) dd2=MINDD;
+else if(dd2>MAXDD) dd2=MAXDD;
 dd2 = (dd2 - d2)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d2 += dd2;  //interpolation
@@ -166,15 +167,15 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 }
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 i = ind;
-int32_t dd3 = __USAT(inlet_d3, 27);
+int32_t dd3 = inlet_d3;
+if(dd3<MINDD) dd3=MINDD;
+else if(dd3>MAXDD) dd3=MAXDD;
 dd3 = (dd3 - d3)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d3 += dd3;  //interpolation
 	fd3=___SMMLA(0x10000000, d3 - fd3, fd3); //smooth
 	outlet_out3[smp] = interp(i, fd3);
 	i -= 2; i &= LENGTHMASK;
-}
-
-]]></code.krate>
+}]]></code.krate>
    </obj.normal>
 </objdefs>
