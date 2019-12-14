@@ -113,8 +113,7 @@ int count;
 	UINT bytes_written;
 	UINT bytes_read;
 
-void _save(){
-
+void _save()__attribute__((noinline))  {
     err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
     if (err != FR_OK) {report_fatfs_error(err,fn);return;}
     int offset = 0;
@@ -134,7 +133,7 @@ void _save(){
     err = f_close(&FileObject);
 }
 
-void _load () {
+void _load () __attribute__((noinline))  {
     err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
     if (err != FR_OK) { report_fatfs_error(err,fn);return;}
     int offset = 0;
@@ -155,7 +154,7 @@ void _load () {
     err = f_close(&FileObject);
 }
 
-void delete_slot (uint8_t target){
+void delete_slot (uint8_t target)__attribute__((noinline))  {
 	if (array [(target <<2) +2]){
 	sstart = array[target << 2];
 	send = array[(target << 2) + 1];
@@ -172,7 +171,7 @@ void delete_slot (uint8_t target){
 	}	
 }
 
-void get_dir (){
+void get_dir ()__attribute__((noinline))  {
 	memset (&fout[0],0,512);
 	f_opendir(&dir,"");
 		for (;;){
@@ -188,7 +187,7 @@ void get_dir (){
 		}	
 }
 
-void del_file (){
+void del_file ()__attribute__((noinline)){
 	memcpy(&oldn[0],&fload[0],8);
 	memcpy(&newn[0],&fload[0],8);
 	strcat(&oldn[0],".lpr");

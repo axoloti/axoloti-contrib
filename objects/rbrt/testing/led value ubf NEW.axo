@@ -1,0 +1,175 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led value ubf NEW" uuid="b8ae25ba-a65b-4401-ab04-42110a6ba265">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="redraw"/>
+         <int32 name="row"/>
+         <bool32.risingfalling name="mute"/>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+         <frac32 name="v5"/>
+         <frac32 name="v6"/>
+         <frac32 name="v7"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="LEDmaster"/>
+         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+         <combo name="mode0">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode1">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode2">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode3">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode4">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string> bipolar</string>
+               <string> float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode5">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode6">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="mode7">
+            <MenuEntries>
+               <string>unipolar</string>
+               <string>bipolar</string>
+               <string>float</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool mtrig;
+
+uint8_t prerow;
+uint8_t count;
+
+int32_t in [8];
+int32_t prev [8];
+uint8_t mode [8];
+
+bool doit;
+bool update;
+uint8_t row;]]></code.declaration>
+      <code.init><![CDATA[mode [0] = attr_mode0;
+	mode [1] = attr_mode1;
+	mode [2] = attr_mode2;
+	mode [3] = attr_mode3;
+	mode [4] = attr_mode4;
+	mode [5] = attr_mode5;
+	mode [6] = attr_mode6;
+	mode [7] = attr_mode7;]]></code.init>
+      <code.krate><![CDATA[if (!inlet_mute && !mtrig) {mtrig = 1;update = 1;count = 0;}
+	if (inlet_mute) mtrig = 0;
+if (!inlet_mute) {
+	in [0] = inlet_v0 ;
+	in [1] = inlet_v1 ;
+	in [2] = inlet_v2 ;
+	in [3] = inlet_v3 ;
+	in [4] = inlet_v4 ;
+	in [5] = inlet_v5 ;
+	in [6] = inlet_v6 ;
+	in [7] = inlet_v7 ;
+
+	row = (inlet_row + attr_row)%4;
+	
+	if (inlet_redraw && !trig) {trig = 1;update = 1;count = 0;}
+		if (!inlet_redraw) trig = 0;
+	if (row != prerow) {prerow = row;update = 1;count = 0;}
+
+	
+	if ((in[count] != prev[count])||update){
+		doit = 1;
+		prev[count] = in[count];
+		attr_LEDmaster.disp_cell_value (mode[count],count,row,in[count]);
+	}
+
+	if ((doit && !attr_LEDmaster.ROW)&& !attr_LEDmaster.LOCKED){
+		attr_LEDmaster.ROW = row +1;
+		doit = 0;	
+	}
+count ++;
+count = count %8;
+if (!count) update = 0;	
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
