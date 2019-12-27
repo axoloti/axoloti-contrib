@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="A_DtoADS" uuid="09e54b54-df43-4aad-8466-2a3375dc968f">
+      <sDescription>A/D to ADS for simplified panel envelopes</sDescription>
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32 name="AD" description="in1"/>
+      </inlets>
+      <outlets>
+         <frac32 name="A" description="out"/>
+         <frac32 name="D"/>
+         <frac32 name="S"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[if(inlet_AD < (32<<21)){
+	// AR mode
+	// A long -> A short
+	outlet_A = 0x07FFFFFF - (inlet_AD<<1);
+	outlet_D = 0x07FFFFFF;
+	outlet_S = 0x07FFFFFF;
+}else{
+	//DR mode
+	outlet_A = 0;
+	// D long -> D short
+	outlet_D = 0x0FFFFFFF - (inlet_AD<<1);
+	outlet_S = 0;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
