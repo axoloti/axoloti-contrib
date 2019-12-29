@@ -61,6 +61,20 @@ Useful for choruses</sDescription>
                <string>3</string>
             </CEntries>
          </combo>
+         <combo name="Ctrl">
+            <MenuEntries>
+               <string>Delay</string>
+               <string>Freq1_4</string>
+               <string>Freq1_8</string>
+               <string>Freq1_16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
@@ -82,7 +96,8 @@ int32_t interp(uint32_t ind, int32_t p){
 uint32_t ind;
 int32_t x, y;
 int32_t d1, fd1;
-float x0, x1, x2, x3, x4, x5, y0, y1;]]></code.declaration>
+float x0, x1, x2, x3, x4, x5, y0, y1;
+float df1;]]></code.declaration>
       <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
 d = &_d[parent->polyIndex][0];
 
@@ -91,7 +106,7 @@ ind = 0;
 d1 = fd1 = x = y = 0;
 x0=x1=x2=x3=x4=x5=y0=y1=0;
 
-
+df1 = 0;
 ]]></code.init>
       <code.krate><![CDATA[//writer
 if(attr_Over == 1){	  
@@ -137,15 +152,29 @@ outlet_y0 = (int32_t)(
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //readers
 int i = ind;
+#if attr_Ctrl == 0
 int32_t dd1 = inlet_d1;
 if(dd1<MINDD) dd1=MINDD;
 else if(dd1>MAXDD) dd1=MAXDD;
+#elif attr_Ctrl==1
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+3.0f*arm::q_to_float(inlet_d1,27)));
+#elif attr_Ctrl==2
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+7.0f*arm::q_to_float(inlet_d1,27)));
+if(dd1<MINDD) dd1=MINDD;
+#else 
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+15.0f*arm::q_to_float(inlet_d1,27)));
+if(dd1<MINDD) dd1=MINDD;
+#endif
 dd1 = (dd1 - d1)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d1 += dd1;  //interpolation
 	fd1=___SMMLA(0x20000000, d1 - fd1, fd1); //smooth
 	outlet_out1[smp] = interp(i, fd1);
 	i -= 2; i &= LENGTHMASK;
-}]]></code.krate>
+}
+]]></code.krate>
    </obj.normal>
 </objdefs>

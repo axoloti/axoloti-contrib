@@ -65,6 +65,20 @@ Useful for choruses</sDescription>
                <string>3</string>
             </CEntries>
          </combo>
+         <combo name="Ctrl">
+            <MenuEntries>
+               <string>Delay</string>
+               <string>Freq1_4</string>
+               <string>Freq1_8</string>
+               <string>Freq1_16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
 static const uint32_t LENGTH = (1<<attr_size);
@@ -87,7 +101,8 @@ uint32_t ind;
 int32_t x, y;
 int32_t d1, fd1, d2, fd2, d3, fd3;
 
-float x0, x1, x2, x3, x4, x5, y0, y1;]]></code.declaration>
+float x0, x1, x2, x3, x4, x5, y0, y1;
+float df1, df2, df3;]]></code.declaration>
       <code.init><![CDATA[static int32_t _d[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
 d = &_d[parent->polyIndex][0];
 
@@ -96,8 +111,7 @@ ind = 0;
 d1 = fd1 = d2 = fd2 = d3 = fd3 = x = y = 0;
 x0=x1=x2=x3=x4=x5=y0=y1=0;
 
-
-]]></code.init>
+df1 = df2 = df3 = 0;]]></code.init>
       <code.krate><![CDATA[//writer
 if(attr_Over == 1){	  
 	for(int smp = 0; smp < BUFSIZE; smp++){
@@ -143,9 +157,22 @@ outlet_y0 = (int32_t)(
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 //readers
 int i = ind;
+#if attr_Ctrl == 0
 int32_t dd1 = inlet_d1;
 if(dd1<MINDD) dd1=MINDD;
 else if(dd1>MAXDD) dd1=MAXDD;
+#elif attr_Ctrl==1
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+3.0f*arm::q_to_float(inlet_d1,27)));
+#elif attr_Ctrl==2
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+7.0f*arm::q_to_float(inlet_d1,27)));
+if(dd1<MINDD) dd1=MINDD;
+#else 
+int32_t dd1 = (int32_t) df1; 
+df1 = (MAXDD/(1.0f+15.0f*arm::q_to_float(inlet_d1,27)));
+if(dd1<MINDD) dd1=MINDD;
+#endif
 dd1 = (dd1 - d1)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d1 += dd1;  //interpolation
@@ -155,9 +182,22 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 }
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 i = ind;
+#if attr_Ctrl == 0
 int32_t dd2 = inlet_d2;
 if(dd2<MINDD) dd2=MINDD;
 else if(dd2>MAXDD) dd2=MAXDD;
+#elif attr_Ctrl==1
+int32_t dd2 = (int32_t) df2; 
+df2 = (MAXDD/(1.0f+3.0f*arm::q_to_float(inlet_d2,27)));
+#elif attr_Ctrl==2
+int32_t dd2 = (int32_t) df2; 
+df2 = (MAXDD/(1.0f+7.0f*arm::q_to_float(inlet_d2,27)));
+if(dd2<MINDD) dd2=MINDD;
+#else 
+int32_t dd2 = (int32_t) df2; 
+df2 = (MAXDD/(1.0f+15.0f*arm::q_to_float(inlet_d2,27)));
+if(dd2<MINDD) dd2=MINDD;
+#endif
 dd2 = (dd2 - d2)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d2 += dd2;  //interpolation
@@ -167,9 +207,22 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 }
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 i = ind;
+#if attr_Ctrl == 0
 int32_t dd3 = inlet_d3;
 if(dd3<MINDD) dd3=MINDD;
 else if(dd3>MAXDD) dd3=MAXDD;
+#elif attr_Ctrl==1
+int32_t dd3 = (int32_t) df3; 
+df3 = (MAXDD/(1.0f+3.0f*arm::q_to_float(inlet_d3,27)));
+if(dd3<MINDD) dd3=MINDD;
+#elif attr_Ctrl==2
+int32_t dd3 = (int32_t) df3; 
+df3 = (MAXDD/(1.0f+7.0f*arm::q_to_float(inlet_d3,27)));
+#else 
+int32_t dd3 = (int32_t) df3; 
+df3 = (MAXDD/(1.0f+15.0f*arm::q_to_float(inlet_d3,27)));
+if(dd3<MINDD) dd3=MINDD;
+#endif
 dd3 = (dd3 - d3)>>4;
 for(int smp = 0; smp < BUFSIZE; smp++){
 	d3 += dd3;  //interpolation
