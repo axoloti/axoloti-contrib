@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="comb" uuid="4fc46fd1-ab8c-4ae6-86bf-d05d9a2f9e9c">
+      <sDescription></sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32.positive name="delay"/>
+         <frac32.positive name="fb"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[//val div by two => x*2
+//delay q32 
+int32_t val(uint32_t p32){
+	uint8_t p0 = p32>>24;
+	p0 += ind;
+	uint8_t p1 = p0 + 1;
+	//return ___SMMLA((delay & 0x00FFFFFF)<<7, d[p1] - d[p0], d[p0]>>1);
+	return ___SMMLA((delay<<7) & 0x7FFFFFFF, d[p1] - d[p0], d[p0]>>1);
+}
+int32_t d[256];
+int32_t delay;
+uint8_t ind;
+int32_t y,dc;]]></code.declaration>
+      <code.init><![CDATA[delay = ind = y = dc = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t ndelay = __USAT(inlet_delay, 27);  //sq27
+// 1/3     = 1431655765 q32
+// 1/5     =  858993459 q32
+// 1/6 715827882
+// 1/sqrt5 = 1920767766 q32
+ndelay = ___SMMUL(ndelay, 1431655765); //  1/3
+int32_t ddelay = (ndelay - delay)>>4;
+int32_t fb = __USAT(inlet_fb,27)<<4;]]></code.krate>
+      <code.srate><![CDATA[ind--;
+//int32_t x = inlet_in>>3;
+int32_t x = ___SMMLA(__SSAT(y,27), fb, inlet_in>>1)<<1 ;
+d[ind] = x<<1;
+delay += ddelay;
+uint32_t p32 = delay<<5; // uq32
+
+//outlet_out = (x+val(p32))>>1;
+outlet_out = y=(x+2*val(p32)+val(2*p32))>>2;
+dc = ___SMMLA(0x00200000,y-dc,dc);
+y-=dc;
+
+//outlet_out = y = x + 3 * (val(p32) + val(2*p32)) + val(3*p32);
+//outlet_out = y = x + 3 * (-val(p32) + val(2*p32)) - val(3*p32);
+/*
+outlet_out = y = x + 4 * (val(p32) + val(3*p32)) + 6*val(2*p32) + val(4*p32);
+
+*/]]></code.srate>
+   </obj.normal>
+</objdefs>
