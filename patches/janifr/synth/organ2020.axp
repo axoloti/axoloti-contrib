@@ -1,0 +1,792 @@
+<patch appVersion="2.0.0">
+   <patchobj type="patch/object" uuid="a467e87d-ea4d-4fd1-8f32-b59b93a0d727" name="drawbar1" x="14" y="14">
+      <params>
+         <frac32.u.map name="f1" MidiCC="73" value="64.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f2" MidiCC="75" value="64.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f3" MidiCC="72" value="64.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f4" MidiCC="91" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f5" MidiCC="92" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f6" MidiCC="93" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f7" MidiCC="94" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f8" MidiCC="95" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="f9" MidiCC="7" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <object id="drawbar1" uuid="a467e87d-ea4d-4fd1-8f32-b59b93a0d727">
+         <sDescription>Organ Drawbars</sDescription>
+         <author>Johannes Taelman/Jani Frilander</author>
+         <license>BSD</license>
+         <helpPatch>drawbars.axh</helpPatch>
+         <inlets/>
+         <outlets/>
+         <displays/>
+         <params>
+            <frac32.u.map name="f1" description="16&apos;, suboctave, -12ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f2" description="5 1/3&apos;, 5th, +7ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f3" description="8&apos;, unison, principal">
+               <DefaultValue v="64.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f4" description="4&apos;, 8th, octave, +12ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f5" description="2 2/3&apos;,12th, nazard, +19ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f6" description="2&apos;, 15th, blockflote, +24ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f7" description="1 3/5&apos;, 17th, tierce, +28ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f8" description="1 1/3&apos;, 19th, +31ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="f9" description="1&apos;, 22nd, +36ST">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+         </params>
+         <attribs/>
+         <file-depends/>
+         <includes/>
+         <depends/>
+         <modules/>
+         <code.declaration><![CDATA[int32_t f1;
+int32_t f2;
+int32_t f3;
+int32_t f4;
+int32_t f5;
+int32_t f6;
+int32_t f7;
+int32_t f8;
+int32_t f9;]]></code.declaration>
+         <code.init><![CDATA[]]></code.init>
+         <code.dispose><![CDATA[]]></code.dispose>
+         <code.krate><![CDATA[f1=param_f1<<3;
+f2=param_f2<<3;
+f3=param_f3<<3;
+f4=param_f4<<3;
+f5=param_f5<<3;
+f6=param_f6<<3;
+f7=param_f7<<3;
+f8=param_f8<<3;
+f9=param_f9<<3;]]></code.krate>
+         <code.srate><![CDATA[]]></code.srate>
+         <code.midihandler><![CDATA[]]></code.midihandler>
+      </object>
+   </patchobj>
+   <patchobj type="patch/object" uuid="a467e87d-ea4d-4fd1-8f32-b59b93a0d727" name="switched1" x="98" y="14">
+      <params>
+         <frac32.u.map name="leakage" value="7.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="velosense" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <bool32.tgl name="curve" value="1">
+            <presets/>
+         </bool32.tgl>
+      </params>
+      <attribs>
+         <objref attributeName="db" obj="drawbar1"/>
+         <spinner attributeName="midichannel" value="1"/>
+      </attribs>
+      <object id="switched1" uuid="a467e87d-ea4d-4fd1-8f32-b59b93a0d727">
+         <sDescription>Switching drawbars at hammond intervals.
+Note that the key switches do not open/close at exactly the same moment, but are spread over maximum 2.666 milliseconds.</sDescription>
+         <author>Johannes Taelman/Jani Frilander</author>
+         <license>BSD</license>
+         <helpPatch>drawbars.axh</helpPatch>
+         <inlets/>
+         <outlets/>
+         <displays/>
+         <params>
+            <frac32.u.map name="leakage" description="harmonic leakage">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="velosense" description="0: no velocity, 64: full velocity dependent">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <bool32.tgl name="curve" description="tone generator calibration curve"/>
+         </params>
+         <attribs>
+            <objref name="db" description=""/>
+            <spinner name="midichannel" description="" MinValue="0" MaxValue="15" DefaultValue="0"/>
+         </attribs>
+         <file-depends/>
+         <includes/>
+         <depends/>
+         <modules/>
+         <code.declaration><![CDATA[static const int ntw = 128;
+static const int nkeys = 128+12;
+int16_t keys[nkeys];
+int32_t *array;
+uint32_t sustain_notes[4];
+bool sustain_pedal;
+static const uint32_t LENGTHPOW = 7;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = (1<<LENGTHPOW)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+static const uint32_t startNote=36;
+static const uint32_t endNote=96;
+
+int32_t r_array[ntw+48];
+int32_t velosense=0;
+int cycle=0;
+int keys_pressed=0;
+int trigger_percussion=0;
+			
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLABB (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlabb %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLABT (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlabt %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLATB (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlatb %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLATT (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlatt %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}]]></code.declaration>
+         <code.init><![CDATA[array = &r_array[0];
+
+int i;
+for(i=0;i<nkeys;i++){
+	keys[i]=0;
+}
+for(i=0;i<ntw;i++){
+	array[i]=0;
+}]]></code.init>
+         <code.dispose><![CDATA[]]></code.dispose>
+         <code.krate><![CDATA[velosense=param_velosense<<3;
+
+int32_t f12 = (attr_db.f1>>16) + (attr_db.f2 & 0xFFFF0000);
+int32_t f34 = (attr_db.f3>>16) + (attr_db.f4 & 0xFFFF0000);
+int32_t f56 = (attr_db.f5>>16) + (attr_db.f6 & 0xFFFF0000);
+int32_t f78 = (attr_db.f7>>16) + (attr_db.f8 & 0xFFFF0000);
+int32_t f90 = (attr_db.f9>>16);
+
+int32_t leakage = param_leakage;
+
+int offset = cycle&0x7;
+cycle++;
+int i;
+for(i=(24+(offset<<1));i<nkeys;i+=16){
+
+	int32_t a1 = 0;
+	int32_t a2 = 0;
+	int32_t l1 = 0;
+	int32_t l2 = 0;
+	int32_t k12;
+
+// foldback
+	if (i>=108){
+		k12 = *((int32_t *)&keys[i-16]);
+		a1 = _SMLABB(k12,f78,a1);
+		a2 = _SMLATB(k12,f78,a2);
+		k12 = *((int32_t *)&keys[i-19]);
+		a1 = _SMLABT(k12,f78,a1);
+		a2 = _SMLATT(k12,f78,a2);
+
+		k12 = *((int32_t *)&keys[i-24]);
+		a1 = _SMLABB(k12,f90,a1);
+		a2 = _SMLATB(k12,f90,a2);
+		a1 = a1>>1;
+		a2 = a2>>1;
+	}
+
+//leakage
+	if (i>71){
+		l1 = array[i-48];
+		l2 = array[i-47];
+	}
+	else
+	{
+		l1 = array[i+48];
+		l2 = array[i+49];
+	}
+	
+	a1 = __SMMLA(leakage,l1,a1);
+	a2 = __SMMLA(leakage,l2,a2);
+	
+	k12 = *((int32_t *)&keys[i+12]);
+	a1 = _SMLABB(k12,f12,a1);
+	a2 = _SMLATB(k12,f12,a2);
+	k12 = *((int32_t *)&keys[i- 7]);
+	a1 = _SMLABT(k12,f12,a1);
+	a2 = _SMLATT(k12,f12,a2);
+	
+	k12 = *((int32_t *)&keys[i   ]);
+	a1 = _SMLABB(k12,f34,a1);
+	a2 = _SMLATB(k12,f34,a2);
+	k12 = *((int32_t *)&keys[i-12]);
+	a1 = _SMLABT(k12,f34,a1);
+	a2 = _SMLATT(k12,f34,a2);
+
+	k12 = *((int32_t *)&keys[i-19]);
+	a1 = _SMLABB(k12,f56,a1);
+	a2 = _SMLATB(k12,f56,a2);
+	k12 = *((int32_t *)&keys[i-24]);
+	a1 = _SMLABT(k12,f56,a1);
+	a2 = _SMLATT(k12,f56,a2);
+
+	if(i>=28){
+		k12 = *((int32_t *)&keys[i-28]);
+		a1 = _SMLABB(k12,f78,a1);
+		a2 = _SMLATB(k12,f78,a2);
+	}
+	
+	if(i>=31){
+		k12 = *((int32_t *)&keys[i-31]);
+		a1 = _SMLABT(k12,f78,a1);
+		a2 = _SMLATT(k12,f78,a2);
+	}
+
+	if(i>=36){
+		k12 = *((int32_t *)&keys[i-36]);
+		a1 = _SMLABB(k12,f90,a1);
+		a2 = _SMLATB(k12,f90,a2);
+	}
+
+	/*
+	 * Tonegenerator calibration curve linear approximation based on Kon's spreadsheet. This approximation is mixture of alternative 2 TG
+	 * factory calibration curve for the treble portion and 1935 model A for bass portion.
+	 * 
+	 * Extra gain (g) (multiply original with this) by tonewheel.
+	 * 
+	 * Tonewheels (tw)
+	 * 
+	 * 1-23: (index 24-46)
+	 * g = 1+(24-tw)/20
+	 * 
+	 * 24-36: (index 47-59)
+	 * g = 1
+	 * 
+	 * 37-77: (index 60-100)
+	 * g = 1+(tw-36)/40
+	 * 
+	 * 78-91: (index 101-114)
+	 * g = 2
+	 * 
+	 * Note that tonewheel 1 is at index 24 of array.
+	 */
+
+	if (param_curve){
+		if((i>=24)&&(i<=46)){
+			a1=__SMMLA(0x0590B216*(47-i),a1<<1,a1);
+			a2=__SMMLA(0x0590B216*(48-i),a2<<1,a2);
+		}
+		if((i>=60)&&(i<=100)){
+		a1=__SMMLA(0x03333333*(i-59),a1<<1,a1);
+		a2=__SMMLA(0x03333333*(i-58),a2<<1,a2);
+		}
+		if(i>=101){
+			a1=a1<<1;
+			a2=a2<<1;
+		}
+	}
+
+	array[i  ]=a1;
+	array[i+1]=a2;
+	
+}]]></code.krate>
+         <code.srate><![CDATA[]]></code.srate>
+         <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+	if ((data1>=startNote)&&(data1<=endNote)) {
+		keys[data1]=__SMMLA(velosense,data2<<24,0x1FFFFFFF-(velosense>>1))>>16;	     
+   	     int j = data1>>5;
+   	     int k = data1&0x01F;
+	     sustain_notes[j] |= 1<<k;
+	     keys_pressed++;
+	     if (keys_pressed==1)
+	     	trigger_percussion=1;
+	}
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel)) {
+	if ((data1>=startNote)&&(data1<=endNote)) {
+   	     int j = data1>>5;
+   	     int k = data1&0x01F;
+   	     sustain_notes[j] &= ~(1<<k);
+   	     if (!sustain_pedal){
+   	     	keys[data1]=0;
+   	     }
+   	     keys_pressed--;
+   	     if (keys_pressed<0)
+   	     	keys_pressed=0;
+	}
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == 64)) {
+	if (data2&0x40) {
+		sustain_pedal = 1;
+		int16_t *p = &keys[0];
+	} else {
+		sustain_pedal = 0;
+		int j;
+		uint32_t *ps = sustain_notes;
+		uint32_t s = *ps;
+		int16_t *p = &keys[0];
+		for(j=0;j<ntw;) {
+			if (!(s&1)) {
+				*p = 0;
+			}
+			p++;
+			s>>=1;
+			j++;
+			if (!(j&0x1F)){
+				ps++;
+				s = *ps;
+			}
+		}
+	}
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <patchobj type="patch/object" uuid="2038be33-72e8-4fe0-98d4-d624e0bf978d" name="r_1" x="294" y="14">
+      <params>
+         <bool32.tgl name="perc2ndor3rd" MidiCC="65" value="0">
+            <presets/>
+         </bool32.tgl>
+         <frac32.s.map name="release" value="-35.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+         <frac32.s.map name="attack" value="-45.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+         <frac32.s.map name="decay" MidiCC="74" value="26.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+         <frac32.u.map name="volume" value="32.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <objref attributeName="input" obj="switched1"/>
+      </attribs>
+      <object id="patch/object" uuid="2038be33-72e8-4fe0-98d4-d624e0bf978d">
+         <sDescription>Release envelope for a amplitude table (with 128 32bit elements). Does not alter the referenced table, but this object can be referenced as amplitude table. Percussion decay envolope for drawbar organ added by Jani.</sDescription>
+         <author>Johannes Taelman/Jani Frilander</author>
+         <license>BSD</license>
+         <helpPatch>table_envelopes.axh</helpPatch>
+         <inlets/>
+         <outlets/>
+         <displays/>
+         <params>
+            <bool32.tgl name="perc2ndor3rd"/>
+            <frac32.s.map.kdecaytime.exp name="release" description="release" noLabel="true">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <frac32.s.map.kdecaytime.exp name="attack" description="">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <frac32.s.map.kdecaytime.exp name="decay" description="">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map.kdecaytime.exp>
+            <frac32.u.map name="volume" description="">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+         </params>
+         <attribs>
+            <objref name="input" description="amplitude table"/>
+         </attribs>
+         <file-depends/>
+         <includes/>
+         <depends/>
+         <modules/>
+         <code.declaration><![CDATA[static const uint32_t LENGTH = 128;
+
+int32_t array[LENGTH];
+
+int percussion_gain=0;]]></code.declaration>
+         <code.init><![CDATA[]]></code.init>
+         <code.dispose><![CDATA[]]></code.dispose>
+         <code.krate><![CDATA[int pr = 0x80000000 - param_release;
+pr = pr<<2;
+int pa = 0x80000000 - param_attack;
+pa = pa<<2;
+int decay = 0x80000000 - param_decay;
+decay = decay<<2;
+
+int percussion_offset=12+7*(param_perc2ndor3rd&&1);
+
+if (attr_input.trigger_percussion){
+	attr_input.trigger_percussion=0;
+	percussion_gain=param_volume<<1;
+}
+
+int i;
+
+for(i=24;i<120;i++){
+		
+	int32_t in=attr_input.array[i];
+	
+	//if(i>47){
+		in += percussion_gain*(attr_input.keys[i-percussion_offset]&&1);
+	//}
+	
+	int32_t d = in-array[i];
+	
+	if (d>=0)
+		array[i] = __SMMLA(d,pa,array[i]);
+	else
+		array[i] = __SMMLA(d,pr,array[i]);
+}
+
+percussion_gain = ___SMMLS(percussion_gain,decay,percussion_gain);]]></code.krate>
+         <code.srate><![CDATA[]]></code.srate>
+         <code.midihandler><![CDATA[]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="jt/tonewheels/sine" uuid="7ba83694-44c8-4197-94cb-63dbe7db78e6" name="sine_1" x="434" y="14">
+      <params/>
+      <attribs>
+         <objref attributeName="amplitudes" obj="r_1"/>
+         <objref attributeName="tuning" obj="hammond_1"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="77d1df07-daf8-4157-b0be-275a3c033923" name="scanner_1" x="602" y="14">
+      <params>
+         <frac32.u.map name="vibrato" MidiCC="77" value="63.99999952316284">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <bool32.tgl name="upper" MidiCC="8" value="0">
+            <presets/>
+         </bool32.tgl>
+         <bool32.tgl name="lower" MidiCC="9" value="0">
+            <presets/>
+         </bool32.tgl>
+         <bool32.tgl name="chorus" MidiCC="11" value="1">
+            <presets/>
+         </bool32.tgl>
+         <frac32.u.map name="rate" MidiCC="76" value="64.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <object id="scanner_1" uuid="77d1df07-daf8-4157-b0be-275a3c033923">
+         <sDescription>Drawbar organ vibrato scanner.</sDescription>
+         <author>Jani Frilander</author>
+         <license>BSD</license>
+         <inlets>
+            <frac32buffer.bipolar name="upper"/>
+            <frac32buffer.bipolar name="lower"/>
+         </inlets>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="vibrato">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+            <bool32.tgl name="upper"/>
+            <bool32.tgl name="lower"/>
+            <bool32.tgl name="chorus"/>
+            <frac32.u.map name="rate">
+               <DefaultValue v="0.0"/>
+            </frac32.u.map>
+         </params>
+         <attribs/>
+         <file-depends/>
+         <includes/>
+         <depends/>
+         <modules/>
+         <code.declaration><![CDATA[int32_t delay_line[32];
+uint32_t delay_position=0;
+int32_t lfo_phase=0;
+int32_t increment=1<<17;
+int32_t lfo_increment=increment;]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<32;i++)
+	delay_line[i]=0;]]></code.init>
+         <code.dispose><![CDATA[]]></code.dispose>
+         <code.krate><![CDATA[uint32_t i;
+int32_t scanner_in[BUFSIZE];
+param_vibrato <<=4;
+
+//int32_t increment = param_rate>>10;
+//lfo_increment = (-((unsigned)lfo_increment >> 31))*param_rate>>10;
+if(lfo_increment<0)
+	lfo_increment=-param_rate>>10;
+else
+	lfo_increment=param_rate>>10;
+
+for (i=0;i<BUFSIZE;i++)
+	scanner_in[i]=inlet_upper[i]*param_upper+inlet_lower[i]*param_lower;
+
+if(param_chorus){
+	for (i=0;i<BUFSIZE;i++){
+		uint32_t pos= i+delay_position;
+		uint32_t depth=___SMMUL(param_vibrato,lfo_phase<<1);
+		int32_t frac=(depth&0xffffff)<<7;
+		depth = depth>>24;
+		delay_line[(pos)&0x1f]=scanner_in[i];
+		int32_t delayed_sample = __SMMLA(delay_line[(pos-2-(depth))&0x1f],frac,
+							___SMMUL(delay_line[(pos-1-(depth))&0x1f],(0x7f<<24)-frac));
+		outlet_out[i]=(scanner_in[i]>>1)+(delayed_sample);
+		lfo_phase += lfo_increment;
+	}
+}
+else
+{
+	for (i=0;i<BUFSIZE;i++){
+		uint32_t pos=i+delay_position;
+		uint32_t depth=___SMMUL(param_vibrato,lfo_phase<<1);
+		int32_t frac=(depth&0xffffff)<<7;
+		depth = depth>>24;
+		delay_line[(pos)&0x1f]=scanner_in[i];
+		int32_t delayed_sample = __SMMLA(delay_line[(pos-2-(depth))&0x1f],frac,
+							___SMMUL(delay_line[(pos-1-(depth))&0x1f],(0x7f<<24)-frac));
+		outlet_out[i]=delayed_sample<<1;
+		lfo_phase += lfo_increment;
+	}
+}
+delay_position = ((delay_position+BUFSIZE)&0x1f);
+if (lfo_phase<=0)
+		lfo_increment=increment;
+if (lfo_phase>=(3520<<17))
+		lfo_increment=-increment;
+
+//int32_t d=increment-(1<<(17-param_slow));
+
+//increment=___SMMLS(d,rate<<2,1<<17);
+			
+for (i=0;i<BUFSIZE;i++)
+	outlet_out[i]+=inlet_upper[i]*(!param_upper)+inlet_lower[i]*(!param_lower);]]></code.krate>
+         <code.srate><![CDATA[]]></code.srate>
+         <code.midihandler><![CDATA[]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="700" y="14">
+      <params>
+         <frac32.u.map name="amp" value="9.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp_1" x="812" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="-32.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+         <frac32.u.map name="reso" value="0.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jt/dist/class a" uuid="2e434261-5101-486e-8685-800ec8406675" name="class_1" x="924" y="14">
+      <params>
+         <frac32.u.map name="drive" value="11.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/fx/reverb" uuid="0f2b79c2-df69-4fcd-9081-9a932761e578" name="reverb_1" x="1120" y="14">
+      <params>
+         <frac32.u.map name="PreDelay" value="11.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="decay" value="9.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="LowDamp" value="9.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="HighDamp" value="32.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="size" value="23.5">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.s.map name="mod_:pitch" value="-17.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+         <frac32.u.map name="mod_:gain" value="24.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="diffusion" value="64.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+         <frac32.u.map name="mix" value="10.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1232" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="476" y="126">
+      <params>
+         <frac32.u.map name="value" MidiCC="1" value="63.99999952316284">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_2" x="700" y="126">
+      <params>
+         <frac32.s.map name="freq" value="-19.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="448" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="532" y="322">
+      <params>
+         <frac32.u.map name="gain1" value="24.0">
+            <modulators/>
+            <presets/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="630" y="322">
+      <params>
+         <frac32.s.map name="freq" value="5.0">
+            <modulators/>
+            <presets/>
+         </frac32.s.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jt/tuning/hammond" uuid="11fa8b6d-8b8e-489f-875e-54ba999bfaa1" name="hammond_1" x="742" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="bend_1" outlet="bend"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="lowpass_1" outlet="out"/>
+         <dest obj="hammond_1" inlet="detune"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="lp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="lowpass_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lowpass_2" outlet="out"/>
+         <dest obj="lp_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="lowpass_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp_1" outlet="out"/>
+         <dest obj="class_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="scanner_1" outlet="out"/>
+         <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="scanner_1" inlet="upper"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="class_1" outlet="out"/>
+         <dest obj="reverb_1" inlet="InL"/>
+         <dest obj="reverb_1" inlet="InR"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>0</x>
+      <y>0</y>
+      <width>1336</width>
+      <height>768</height>
+   </windowPos>
+</patch>
