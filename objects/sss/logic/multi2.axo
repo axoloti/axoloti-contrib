@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="multi2" uuid="2e4afc65-05b8-46ed-8d47-160484d7d2b4">
+      <sDescription>8 logic functions for 2 inputs
+4th mode samples logic outcome at rising edge, but updates output after the rising edge-&gt;eg. for generative logic feedback networks</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <bool32 name="i1" description="input 1"/>
+         <bool32 name="i2" description="input 2"/>
+         <int32 name="mode" description="logic mode: 0=AND,1=NAND,2=OR,3=NOR,4=XOR,5=XNOR,6=S&amp;H,7=T&amp;H"/>
+         <int32 name="update" description="update mode: 0=direct,1=when i1 changes,2=when i2 changes,3=when either one changes"/>
+         <bool32 name="trg"/>
+      </inlets>
+      <outlets>
+         <bool32 name="o" description="output"/>
+      </outlets>
+      <displays>
+         <bool32 name="o1" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="mode" description="logic mode: 0=AND,1=NAND,2=OR,3=NOR,4=XOR,5=XNOR,6=S&amp;H,7=T&amp;H. Selector works as an offset, outcome is wrapped within list size">
+            <MinValue i="0"/>
+            <MaxValue i="7"/>
+         </int32>
+         <int32 name="update" description="update mode: 0=direct,1=when i1 changes,2=when i2 changes,3=when either one changes. Selector works as an offset, outcome is wrapped within list size">
+            <MinValue i="0"/>
+            <MaxValue i="4"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int bt,bit,s,S,p1,p2,mode,trg;]]></code.declaration>
+      <code.krate><![CDATA[int upd=inlet_update+param_update%5;
+switch(upd){
+	case 0: mode=inlet_mode+param_mode;		break;	//direct update
+	case 1:if(!(p1==inlet_i1))						//update when i1 changes
+			{
+				mode=inlet_mode+param_mode;
+			}							break;
+	case 2:if(!(p2==inlet_i2))						//update when i2 changes
+			{
+				mode=inlet_mode+param_mode;
+			}							break;
+	case 3:if((!(p1==inlet_i1))||(!(p2==inlet_i2)))		//update when either i1 or i2 changes
+			{
+				mode=inlet_mode+param_mode;
+			}							break;
+	case 4: mode=inlet_mode+param_mode;		break;	//update triggered by trg input
+}
+p1=inlet_i1;
+p2=inlet_i2;
+int o;
+switch(mode&7){
+case 0: o = (inlet_i1)&&(inlet_i2);			break;	//AND
+case 1: o = !((inlet_i1)&&(inlet_i2));			break;	//NAND
+case 2: o = ((inlet_i1)||(inlet_i2));			break;	//OR
+case 3: o = !((inlet_i1)||(inlet_i2));			break;	//NOR
+case 4: o = !((inlet_i1)==(inlet_i2));			break;	//XOR
+case 5: o = ((inlet_i1)==(inlet_i2));			break;	//XNOR
+case 6: if(inlet_i2&&!bt){bt=1;bit=inlet_i1;}
+	   else if(bt&&!inlet_i2){bt=0;}
+	   o = bit;							break;	//sample&hold bit
+case 7: if(inlet_i2){bit=inlet_i1;}o=bit;		break;	//track&hold bit
+}
+
+if(upd==4){
+	S=s;
+	if(inlet_trg&&!trg){
+		trg=1;
+		s=o;
+	}
+	else if(trg&&!inlet_trg){trg=0;}
+}
+else{
+	S=o;
+}
+outlet_o=S;
+
+disp_o1=S;]]></code.krate>
+   </obj.normal>
+</objdefs>
