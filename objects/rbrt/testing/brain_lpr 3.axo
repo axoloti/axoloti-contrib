@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="brain_lpr_2" uuid="9196c9fb-f5fe-43de-85c2-1b552d8bd117">
+   <obj.normal id="brain_lpr 3" uuid="f0557897-c18e-4a49-aaf5-b6bfa7246f5e">
       <sDescription>edits a bank of samples recorded with &apos;smplr&apos;.
 &apos;slot&apos; sets the slot to work on,
 &apos;copy&apos;,&apos;move&apos; and &apos;delete&apos; have to be triggered via &apos;trig&apos;.
@@ -18,9 +18,6 @@
          <bool32.risingfalling name="delete" description="delete the selected slot"/>
          <bool32.rising name="defrag" description="defragment the sample data"/>
          <bool32.rising name="clear" description="clear all data"/>
-         <bool32.rising name="load"/>
-         <bool32.rising name="save"/>
-         <bool32.rising name="delFile"/>
       </inlets>
       <outlets>
          <bool32.pulse name="delete" description="pulse on delete"/>
@@ -52,14 +49,7 @@
                <string>7</string>
             </CEntries>
          </combo>
-         <objref name="aux1"/>
-         <objref name="aux2"/>
-         <objref name="aux3"/>
-         <spinner name="auxes" MinValue="0" MaxValue="4" DefaultValue="0"/>
       </attribs>
-      <depends>
-         <depend>fatfs</depend>
-      </depends>
       <code.declaration><![CDATA[bool ctrig;
 bool dtrig;
 bool cpytrig;
@@ -73,7 +63,6 @@ bool mtrig;
 uint8_t mslot;
 uint8_t srcslot;
 
-bool deletetrig;
 bool copytrig;
 
 uint32_t sstart;
@@ -88,71 +77,6 @@ uint32_t *array;
 bool REC;
 uint8_t RECSLOT;
 
-uint8_t index;
-bool save;
-bool load;
-bool dftrig;
-bool busy;
-bool trig;
-uint8_t m_count;
-int rem_sz;
-char * t_adr;
-uint8_t *fout;
-char fn [16];
-uint8_t fload[8];
-uint8_t fsave[8];
-char oldn[16];
-char newn[16];
-
-int count;
-
-    	FILINFO fno;
-    	DIR dir;
-    	FIL FileObject;
-    	FRESULT err;
-	UINT bytes_written;
-	UINT bytes_read;
-
-void _save()__attribute__((noinline))  {
-    err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
-    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
-    int offset = 0;
-    while (rem_sz>0) {
-      if (rem_sz>sizeof(fbuff)) {
-        memcpy((char *)fbuff,t_adr + offset, sizeof(fbuff));
-        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
-        rem_sz -= sizeof(fbuff);
-        offset += sizeof(fbuff);
-      } else {
-        memcpy((char *)fbuff,t_adr + offset, rem_sz);
-        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
-        rem_sz = 0;
-      }
-    } 
-    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
-    err = f_close(&FileObject);
-}
-
-void _load () __attribute__((noinline))  {
-    err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
-    if (err != FR_OK) { report_fatfs_error(err,fn);return;}
-    int offset = 0;
-    while (rem_sz>0) {
-      if (rem_sz>sizeof(fbuff)) {
-        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
-        if (bytes_read == 0) break;
-        memcpy(t_adr + offset,(char *)fbuff,bytes_read);
-        rem_sz -= bytes_read;
-        offset += bytes_read;
-      } else {
-        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
-        memcpy(t_adr + offset,(char *)fbuff,bytes_read);
-        rem_sz = 0;
-      }
-    }  
-    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
-    err = f_close(&FileObject);
-}
 
 void delete_slot (uint8_t target)__attribute__((noinline))  {
 	if (array [(target <<2) +2]){
@@ -169,30 +93,6 @@ void delete_slot (uint8_t target)__attribute__((noinline))  {
 		array[1023] ++;
 		}
 	}	
-}
-
-void get_dir ()__attribute__((noinline))  {
-	memset (&fout[0],0,512);
-	f_opendir(&dir,"");
-		for (;;){
-			err = f_readdir(&dir, &fno);			
-			if (err != FR_OK || fno.fname[0] == 0) break;
-			if (count < 64){
-				uint8_t len = strlen (fno.fname);
-				if ((fno.fname[len -3] == 'l')&&(fno.fname[len-2] == 'p')&&(fno.fname[len-1] == 'r')){
-					memcpy(&fout[count <<3],fno.fname,((len-4)>0) ? (len -4):1);
-              			count ++;
-				}
-			}
-		}	
-}
-
-void del_file ()__attribute__((noinline)){
-	memcpy(&oldn[0],&fload[0],8);
-	memcpy(&newn[0],&fload[0],8);
-	strcat(&oldn[0],".lpr");
-	strcat(&newn[0],".xxx");
-	f_rename (&oldn[0],&newn[0]);
 }]]></code.declaration>
       <code.init><![CDATA[static uint32_t _array[attr_poly][1024]  __attribute__ ((section (".sdram")));
 array = &_array[parent->polyIndex][0];
@@ -202,14 +102,15 @@ array = &_array[parent->polyIndex][0];
 	for(i=0;i<1024;i++) array[i]=0;
 }
 
-
+/*
 static uint8_t _fout[attr_poly][512] __attribute__ ((section (".sdram")));
 fout = &_fout[parent->polyIndex][0];
 {
 	int i;
 	for(i=0;i<512;i++) fout[i]=0;
 }
-get_dir ();]]></code.init>
+get_dir ();
+*/]]></code.init>
       <code.krate><![CDATA[mslot = inlet_slot % 126;
 outlet_delete = 0;
 
@@ -288,94 +189,6 @@ if (inlet_clear && !clrtrig){
 if (!inlet_copy && !inlet_move) cpytemptrig = 0;
 if (!inlet_move) {mtrig = 0;move = 0;}
 if (!inlet_trig) {cpytrig = 0;dtrig = 0;}
-if (!inlet_clear) clrtrig = 0;
-
-//IO
-if (inlet_save && !trig) {
-	save = 1 ;
-	index = 0;
-	trig = 1;
-	m_count = 3 + attr_auxes;
-	}
-
-if (inlet_load && !trig) {
-	load = 1 ;
-	index = 0;
-	trig = 1;
-	m_count = 3 + attr_auxes;
-	}
-
-busy = load || save;
-
-if (busy){
-	memset (&fn[0],0,16);
-	if (load) memcpy (&fn[0],&fload[0],8);
-	if (save) memcpy (&fn[0],&fsave[0],8);
-	switch(index?index:0){
-      	case 0: {
-      	rem_sz = 1024 << 2;
-      	t_adr = (char *) (&array[0]);
-		strcat(&fn[0],".lpr");
-      	break;
-      	}
-      	case 1: {
-      	rem_sz = sizeof(*attr_wave.array) * array[1022];
-      	t_adr = (char *) (&attr_wave.array[0]);
-		strcat(&fn[0],".raw");
-      	break;
-      	}
-      	case 2: {
-      	rem_sz = sizeof(*attr_params.array) * attr_params.LENGTH;
-      	t_adr = (char *) (&attr_params.array[0]);
-		strcat(&fn[0],".prm");
-      	break;
-      	}
-      	case 3: {
-      	rem_sz = sizeof(*attr_aux1.array) * attr_aux1.LENGTH;
-      	t_adr = (char *) (&attr_aux1.array[0]);
-		strcat(&fn[0],".ax1");
-      	break;      	
-		}
-		case 4: {
-      	rem_sz = sizeof(*attr_aux2.array) * attr_aux2.LENGTH;
-      	t_adr = (char *) (&attr_aux2.array[0]);
-		strcat(&fn[0],".ax2");
-      	break;      	
-		}
-		case 5: {
-      	rem_sz = sizeof(*attr_aux3.array) * attr_aux3.LENGTH;
-      	t_adr = (char *) (&attr_aux3.array[0]);
-		strcat(&fn[0],".ax3");
-      	break;      	
-		}
-	}
-}
-
-if (save) {
-	_save ();
-	index ++;
-	if (index >= m_count) {
-		save = 0;
-		get_dir();
-		} 
-}
-
-if (load) {
-  	_load ();
-	index ++;
-	if (index >= m_count) {
-		load = 0;
-		}   
-}
-
-
-if (inlet_delFile && !dftrig){
-	dftrig = 1;
-	del_file();
-	get_dir();
-}
-if (!inlet_delFile) dftrig = 0;
-
- if (!inlet_load&& !inlet_save&& !busy ) trig = 0;]]></code.krate>
+if (!inlet_clear) clrtrig = 0;]]></code.krate>
    </obj.normal>
 </objdefs>

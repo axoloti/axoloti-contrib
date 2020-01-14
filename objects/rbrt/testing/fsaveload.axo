@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fsaveload" uuid="069e16a1-5770-4de1-90b6-8e4668594a5f">
+      <license>GPL</license>
+      <inlets>
+         <charptr32 name="filename"/>
+         <bool32.rising name="load"/>
+         <int32.positive name="offset"/>
+         <bool32.rising name="save"/>
+         <int32.positive name="start"/>
+         <int32.positive name="length"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <objref name="SDapi"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool load;
+bool save;
+uint32_t length;
+uint32_t offset;
+uint8_t bytes;
+int rem_sz;]]></code.declaration>
+      <code.init><![CDATA[bytes = sizeof(*attr_table.array);]]></code.init>
+      <code.krate><![CDATA[if (inlet_load && !trig) {trig = 1;load = 1;}
+if (inlet_save && !trig) {trig = 1;save = 1;}
+
+if (load) {
+	load = 0;
+	int filesize = attr_SDapi.fsize(inlet_filename)/bytes;
+	rem_sz = (((filesize + inlet_offset) > attr_table.LENGTH) ? attr_table.LENGTH : filesize) * bytes;		
+	attr_SDapi.fload(inlet_filename,(char *) &attr_table.array[0],inlet_offset * bytes,rem_sz);
+		}
+if (save) {
+	save = 0;
+	rem_sz = (((inlet_length +inlet_start) > attr_table.LENGTH) ? attr_table.LENGTH - inlet_start : inlet_length)* bytes;		
+	attr_SDapi.fsave(inlet_filename,(char *) &attr_table.array[0],inlet_start * bytes,rem_sz);
+	}
+
+if (!inlet_load && !inlet_save) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>
