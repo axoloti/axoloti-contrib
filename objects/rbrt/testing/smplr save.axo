@@ -1,15 +1,39 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="SDapi" uuid="93f3372d-024b-4597-b600-490c91c46844">
+   <obj.normal id="smplr save" uuid="e209f1ca-03e4-472b-80cc-1a340d9955be">
       <license>GPL</license>
-      <inlets/>
+      <inlets>
+         <charptr32 name="filename"/>
+         <bool32.rising name="load"/>
+         <bool32.rising name="save"/>
+      </inlets>
       <outlets/>
       <displays/>
       <params/>
-      <attribs/>
+      <attribs>
+         <objref name="smplr"/>
+         <combo name="directory">
+            <MenuEntries>
+               <string>local</string>
+               <string>root</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <depends>
          <depend>fatfs</depend>
       </depends>
-      <code.declaration><![CDATA[FILINFO fno;
+      <code.declaration><![CDATA[bool trig;
+bool load;
+bool save;
+int rem_sz;
+uint8_t bytes;
+
+char fn [16];
+
+FILINFO fno;
 DIR dir;
 FIL FileObject;
 FRESULT err;
@@ -103,6 +127,39 @@ void frename (const char* old_n,const char* new_n)__attribute__((noinline)){
 //delete a file
 void fdelete (const char* del_f)__attribute__((noinline)){
 	f_unlink (del_f);
+}
+
+//prepare filename
+void prep_name (const char* fname,const char* suffix) __attribute__((noinline)){
+	memset (&fn[0],0,16);
+	if (attr_directory) strcpy (&fn[0],"/");
+	memcpy (&fn[attr_directory],&fname[0],8);
+     strcat(&fn[0],suffix);
 }]]></code.declaration>
+      <code.init><![CDATA[bytes = sizeof (attr_smplr.WAVE);]]></code.init>
+      <code.krate><![CDATA[if (inlet_load && !trig) {trig = 1;load = 1;}
+if (inlet_save && !trig) {trig = 1;save = 1;}
+
+if (load) {
+	load = 0;
+	prep_name (inlet_filename,".raw");
+	int filesize = fsize(fn)/bytes;
+	attr_smplr.REC_HEAD = (filesize > attr_smplr.W_LENGTH) ? attr_smplr.W_LENGTH : filesize;	
+	rem_sz = attr_smplr.REC_HEAD * bytes;
+	fload(fn,(char *) &attr_smplr.WAVE[0],0,rem_sz);
+	prep_name (inlet_filename,".dat");
+	fload(fn,(char *) &attr_smplr.array[0],0,16384);
+		}
+if (save) {
+	save = 0;
+	attr_smplr.defrag();
+	rem_sz = attr_smplr.REC_HEAD * bytes;
+	prep_name (inlet_filename,".raw");	
+	fsave(fn,(char *) &attr_smplr.WAVE[0],0,rem_sz);
+	prep_name (inlet_filename,".dat");
+	fsave(fn,(char *) &attr_smplr.array[0],0,16384);	
+	}
+
+if (!inlet_load && !inlet_save) trig = 0;]]></code.krate>
    </obj.normal>
 </objdefs>
