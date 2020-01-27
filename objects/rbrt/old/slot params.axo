@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="slot params" uuid="fb116463-2ed1-40db-8e1f-6a3a659e5eeb">
+   <obj.normal id="slot params" uuid="b92b3345-9449-4bf6-9b46-c4f25aede2f5">
       <sDescription>reference sample information created by &apos;smplr&apos;.
 &apos;slot&apos; sets the sample bank slot to refer to.
 &apos;offset&apos; returns the start of the slot in fraction of the table&apos;s size,
@@ -22,12 +22,14 @@
       <params/>
       <attribs>
          <objref name="smplr"/>
+         <objref name="wave"/>
       </attribs>
-      <code.declaration><![CDATA[uint16_t t_slot;]]></code.declaration>
-      <code.krate><![CDATA[t_slot = inlet_slot << 5;
-outlet_offset  = attr_smplr.array [t_slot + 28] << attr_smplr.SHIFT;
-outlet_range  = (attr_smplr.array [t_slot + 29] - attr_smplr.array [t_slot + 28]) << attr_smplr.SHIFT;
-outlet_playmode = attr_smplr.array [t_slot + 30];
-outlet_Aux = attr_smplr.array [t_slot + 31];]]></code.krate>
+      <code.declaration><![CDATA[bool full;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_wave.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[outlet_offset  = attr_smplr.array [inlet_slot << 2] << shift;
+outlet_range  = (attr_smplr.array [(inlet_slot << 2) + 1] - attr_smplr.array [inlet_slot << 2]) << shift;
+outlet_playmode = attr_smplr.array [(inlet_slot << 2 )+ 2] ;
+outlet_Aux = attr_smplr.array [(inlet_slot << 2 )+ 3] ;]]></code.krate>
    </obj.normal>
 </objdefs>

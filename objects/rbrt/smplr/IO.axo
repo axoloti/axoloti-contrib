@@ -1,0 +1,124 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="IO" uuid="2ca503b6-5eb5-4d59-ae27-29f869086f3b">
+      <license>GPL</license>
+      <inlets>
+         <charptr32 name="filename"/>
+         <bool32.rising name="save"/>
+         <bool32.rising name="load"/>
+         <bool32.rising name="delete"/>
+         <bool32.rising name="trash"/>
+         <charptr32 name="sampleName"/>
+         <bool32.rising name="saveSample"/>
+         <frac32.positive name="offset"/>
+         <frac32.positive name="range"/>
+         <bool32.rising name="loadSample"/>
+         <int32.positive name="toSlot"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+         <objref name="SDapi"/>
+         <combo name="directory">
+            <MenuEntries>
+               <string>local</string>
+               <string>root</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="loadSlotAndDefrag">
+            <MenuEntries>
+               <string>off</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool load;
+bool save;
+int rem_sz;
+uint8_t bytes;
+int prev;
+char fn[16];
+char df[16];
+
+//prepare filename
+void prep_name (const char* fname,const char* suffix) __attribute__((noinline)){
+	memset (&fn[0],0,16);
+	if (attr_directory) strcpy (&fn[0],"/");
+	memcpy (&fn[attr_directory],&fname[0],8);
+     strcat(&fn[0],suffix);
+}]]></code.declaration>
+      <code.init><![CDATA[bytes = sizeof (attr_smplr.WAVE);]]></code.init>
+      <code.krate><![CDATA[if (inlet_delete && !trig){
+	trig = 1;
+	prep_name (inlet_filename,".raw");
+	attr_SDapi.fdelete (fn);
+	prep_name (inlet_filename,".lpr");
+	attr_SDapi.fdelete (fn);
+	prep_name (inlet_filename,".glb");
+	attr_SDapi.fdelete (fn);
+}
+
+if (inlet_trash && !trig){
+	trig = 1;
+	prep_name (inlet_filename,".xxx");
+	strcpy (df,fn);
+	prep_name (inlet_filename,".lpr");	
+	attr_SDapi.frename (fn,df);
+}
+
+if (inlet_load && !trig) {
+	trig = 1;
+	prep_name (inlet_filename,".glb");
+	attr_SDapi.fload(fn,(char *) &attr_smplr.GLOBAL[0],64);
+	prep_name (inlet_filename,".raw");
+	rem_sz = attr_smplr.REC_HEAD * bytes;
+	attr_SDapi.fload(fn,(char *) &attr_smplr.WAVE[0],rem_sz);
+	prep_name (inlet_filename,".lpr");
+	attr_SDapi.fload(fn,(char *) &attr_smplr.array[0],16384);
+		}
+if (inlet_save && !trig) {
+	trig = 1;
+	attr_smplr.defrag();
+	prep_name (inlet_filename,".glb");
+	attr_SDapi.fsave(fn,(char *) &attr_smplr.GLOBAL[0],64);
+	rem_sz = attr_smplr.REC_HEAD * bytes;
+	prep_name (inlet_filename,".raw");	
+	attr_SDapi.fsave(fn,(char *) &attr_smplr.WAVE[0],rem_sz);
+	prep_name (inlet_filename,".lpr");
+	attr_SDapi.fsave(fn,(char *) &attr_smplr.array[0],16384);	
+	}
+
+if (inlet_saveSample  && !trig){
+	trig = 1;	
+	rem_sz = (inlet_range >> attr_smplr.SHIFT)*bytes;
+	prep_name (inlet_sampleName,".raw");
+	attr_SDapi.fsave(fn,(char *) &attr_smplr.WAVE[inlet_offset >> attr_smplr.SHIFT],rem_sz);
+}
+
+if (inlet_loadSample && !trig){
+	trig = 1;
+	attr_smplr.delete_slot (inlet_toSlot);
+	if (attr_loadSlotAndDefrag)(attr_smplr.defrag());
+	prep_name (inlet_sampleName,".raw");
+	int filesize = attr_SDapi.fsize(fn);
+	rem_sz = filesize % ((attr_smplr.W_LENGTH - attr_smplr.REC_HEAD) * bytes);
+	attr_SDapi.fload(fn,(char *) &attr_smplr.WAVE[attr_smplr.REC_HEAD],rem_sz);
+	attr_smplr.array[(inlet_toSlot<<5)+28] = attr_smplr.REC_HEAD;
+	attr_smplr.array[(inlet_toSlot<<5)+29] = (filesize / bytes) + attr_smplr.REC_HEAD;
+	attr_smplr.array[(inlet_toSlot<<5)+30] = 1;
+	attr_smplr.REC_HEAD += (filesize/bytes);
+}
+
+if (!inlet_load && !inlet_save && !inlet_delete && !inlet_trash && !inlet_saveSample && !inlet_loadSample) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

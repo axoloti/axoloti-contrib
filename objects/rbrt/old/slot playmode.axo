@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="slot playmode" uuid="5173775a-b91c-4351-a826-4b86f5313446">
+   <obj.normal id="slot playmode" uuid="aae065ce-a35b-406d-b6ba-514b501dc00b">
       <sDescription>reference sample information created by &apos;smplr&apos;.
 &apos;slot&apos; sets the sample bank slot to refer to.
 &apos;offset&apos; returns the start of the slot in fraction of the table&apos;s size,
@@ -11,15 +11,25 @@
       <helpPatch>smplr.axh</helpPatch>
       <inlets>
          <int32 name="slot" description="read sample data of the set slot"/>
+         <bool32.rising name="set"/>
+         <int32.positive name="mode"/>
       </inlets>
       <outlets>
-         <int32.positive name="mode"/>
+         <int32.positive name="playmode" description="playmode"/>
       </outlets>
       <displays/>
       <params/>
       <attribs>
          <objref name="smplr"/>
       </attribs>
-      <code.krate><![CDATA[outlet_mode = attr_smplr.array [(inlet_slot << 5) + 30];]]></code.krate>
+      <code.declaration><![CDATA[bool set;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_set && !set) {
+	set = 1;
+	attr_smplr.array [(inlet_slot << 2 )+ 2] = inlet_mode;	
+	}
+
+outlet_playmode = attr_smplr.array [(inlet_slot << 2 )+ 2] ;
+
+if (!inlet_set) set = 0;]]></code.krate>
    </obj.normal>
 </objdefs>

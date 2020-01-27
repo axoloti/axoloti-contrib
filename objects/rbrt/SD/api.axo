@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="SDapi" uuid="93f3372d-024b-4597-b600-490c91c46844">
+   <obj.normal id="api" uuid="b7186964-e120-4dc5-aebf-2419999e987a">
       <license>GPL</license>
       <inlets/>
       <outlets/>
@@ -20,7 +20,7 @@ char fname_flt [16];
 char fname_raw [16];
 
 // load file from SD:: fload (filename,destination table adress,start index,length)
-void fload (const char* fn ,char* table,int start,int bytes_rem)__attribute__((noinline)) {
+void fload (const char* fn ,char* table,int bytes_rem)__attribute__((noinline)) {
     err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
     if (err != FR_OK) { report_fatfs_error(err,fn);return;}
     int offset = 0;
@@ -28,12 +28,12 @@ void fload (const char* fn ,char* table,int start,int bytes_rem)__attribute__((n
       if (bytes_rem>sizeof(fbuff)) {
         err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
         if (bytes_read == 0) break;
-        memcpy(table + offset + start,(char *)fbuff,bytes_read);
+        memcpy(table + offset,(char *)fbuff,bytes_read);
         bytes_rem -= bytes_read;
         offset += bytes_read;
       } else {
         err = f_read(&FileObject, fbuff,bytes_rem,&bytes_read);
-        memcpy(table + offset + start,(char *)fbuff,bytes_read);
+        memcpy(table + offset,(char *)fbuff,bytes_read);
         bytes_rem = 0;
       }
     }  
@@ -42,18 +42,18 @@ void fload (const char* fn ,char* table,int start,int bytes_rem)__attribute__((n
 }
 
 //save array to SD::fsave (filename,source table adress,start index,length)
-void fsave(const char* fn,char* table,int start,int bytes_rem)__attribute__((noinline)) {
+void fsave(const char* fn,char* table,int bytes_rem)__attribute__((noinline)) {
     err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
     if (err != FR_OK) {report_fatfs_error(err,fn);return;}
     int offset = 0;
     while (bytes_rem>0) {
       if (bytes_rem>sizeof(fbuff)) {
-        memcpy((char *)fbuff,table + offset + start, sizeof(fbuff));
+        memcpy((char *)fbuff,table + offset, sizeof(fbuff));
         err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
         bytes_rem -= sizeof(fbuff);
         offset += sizeof(fbuff);
       } else {
-        memcpy((char *)fbuff,table + offset + start, bytes_rem);
+        memcpy((char *)fbuff,table + offset, bytes_rem);
         err = f_write(&FileObject, fbuff,bytes_rem, &bytes_written);
         bytes_rem = 0;
       }
