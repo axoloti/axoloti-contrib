@@ -111,12 +111,13 @@ if (inlet_loadSample && !trig){
 	if (attr_loadSlotAndDefrag)(attr_smplr.defrag());
 	prep_name (inlet_sampleName,".raw");
 	int filesize = attr_SDapi.fsize(fn);
-	rem_sz = filesize % ((attr_smplr.W_LENGTH - attr_smplr.REC_HEAD) * bytes);
+	int dstsize = (attr_smplr.W_LENGTH - attr_smplr.REC_HEAD) * bytes;
+	rem_sz = (filesize > dstsize) ? dstsize : filesize;
 	attr_SDapi.fload(fn,(char *) &attr_smplr.WAVE[attr_smplr.REC_HEAD],rem_sz);
 	attr_smplr.array[(inlet_toSlot<<5)+28] = attr_smplr.REC_HEAD;
-	attr_smplr.array[(inlet_toSlot<<5)+29] = (filesize / bytes) + attr_smplr.REC_HEAD;
+	attr_smplr.array[(inlet_toSlot<<5)+29] = (rem_sz / bytes) + attr_smplr.REC_HEAD;
 	attr_smplr.array[(inlet_toSlot<<5)+30] = 1;
-	attr_smplr.REC_HEAD += (filesize/bytes);
+	attr_smplr.REC_HEAD += (rem_sz/bytes);
 }
 
 if (!inlet_load && !inlet_save && !inlet_delete && !inlet_trash && !inlet_saveSample && !inlet_loadSample) trig = 0;]]></code.krate>

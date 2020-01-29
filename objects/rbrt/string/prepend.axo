@@ -1,0 +1,24 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="prepend" uuid="f6e727a7-2a8c-463f-9598-913ca0cf0df5">
+      <sDescription>constant string</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <charptr32 name="in"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="out" description="string"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="prepend"/>
+         <spinner name="maxLength" MinValue="1" MaxValue="32" DefaultValue="16"/>
+      </attribs>
+      <code.declaration><![CDATA[char c[attr_maxLength];]]></code.declaration>
+      <code.krate><![CDATA[memset (&c[0],0,attr_maxLength);
+memcpy(&c[0],"attr_prepend",strlen ("attr_prepend"));
+strcat (c,inlet_in);
+outlet_out = &c[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

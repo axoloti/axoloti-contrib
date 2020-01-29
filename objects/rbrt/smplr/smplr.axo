@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="smplr" uuid="a62a5ad5-5a20-4c68-9b42-0be212460d50">
+   <obj.normal id="smplr" uuid="4dee8ffd-6c2c-4724-b814-531281425baf">
       <sDescription>edits a bank of samples recorded with &apos;smplr&apos;.
 &apos;slot&apos; sets the slot to work on,
 &apos;copy&apos;,&apos;move&apos; and &apos;delete&apos; have to be triggered via &apos;trig&apos;.
@@ -10,17 +10,15 @@
       <helpPatch>smplr.axh</helpPatch>
       <inlets>
          <int32.positive name="slot" description="slot to work on"/>
+         <bool32.rising name="trig"/>
          <bool32.rising name="copy"/>
-         <bool32.rising name="paste"/>
+         <bool32.rising name="move"/>
          <bool32.rising name="delete"/>
-         <bool32 name="pitchUp"/>
-         <bool32 name="pitchDown"/>
          <bool32.rising name="defrag" description="defragment the sample data"/>
          <bool32.rising name="clear" description="clear all data"/>
       </inlets>
       <outlets>
          <bool32.pulse name="delete" description="pulse on delete"/>
-         <int32 name="test"/>
       </outlets>
       <displays/>
       <params/>
@@ -49,20 +47,19 @@ bool REC;
 uint8_t RECSLOT;
 uint8_t SHIFT;
 
-bool ctrig;
 bool dtrig;
-bool ptrig;
-bool del;
 bool clrtrig;
 uint8_t mslot;
 uint8_t srcslot;
+bool defragtrig;
+bool move;
+bool cpytemptrig;
+bool mtrig;
+bool trig;
 
-uint32_t sstart;
-uint32_t send;
-uint32_t slength;
+
 
 int32_t paramtemp [32];
-
 
 void delete_slot (uint8_t target)__attribute__((noinline))  {
 	uint16_t adr = target << 5;
@@ -70,9 +67,9 @@ void delete_slot (uint8_t target)__attribute__((noinline))  {
 	if (array [adr + 30]){
 	int start = array[adr + 28];
 	int end = array[adr + 29];
+	memset (&array[adr],0,128);
 	int i;
-	for (i = 0;i < 32;i++) array [adr + i ] = 0;
-		for (i = 0;i < 127; i ++) if (array [(i << 5) + 29] == end) check = 0;
+	for (i = 0;i < 127; i ++) if (array [(i << 5) + 29] == end) check = 0;
 	if (check) {
 		del_array [delcount] = start;
 		del_array [delcount + 1] = end;
@@ -84,22 +81,20 @@ void delete_slot (uint8_t target)__attribute__((noinline))  {
 void defrag ()__attribute__((noinline)){
 		int i;
 	for (i = 0; i < delcount;i+=2){		
-		sstart = del_array [i];
-		send =  del_array[i + 1];	
-		slength = (send - sstart);			
+		int start = del_array [i];
+		int end =  del_array[i + 1];	
+		int length = (end - start);			
 				int shift_index;
 				for(shift_index=0;shift_index < LENGTH;shift_index += 32)
-				if (array[shift_index + 28] >= send) {
-					array[shift_index + 28] -= slength;
-					array[shift_index + 29] -= slength;
-					}			
-				int move_samples;
-				for(move_samples=send;move_samples < REC_HEAD;move_samples++) 
-				WAVE [move_samples - slength] = WAVE[move_samples];							
+					if (array[shift_index + 28] >= end) {
+						array[shift_index + 28] -= length;
+						array[shift_index + 29] -= length;
+						}			
+				memmove (&WAVE[start],&WAVE[end],(REC_HEAD - end) << 2);						
 				int shift_chunks;
 				for (shift_chunks = 0;shift_chunks < delcount;shift_chunks += 2)
-				if (array[shift_chunks] >= send ) {array [shift_chunks] -=slength;array [shift_chunks+1] -= slength;}
-				REC_HEAD -= slength;	
+					if (del_array[shift_chunks] >= end ) {del_array [shift_chunks] -=length;del_array [shift_chunks+1] -= length;}
+				REC_HEAD -= length;	
 	}
 	delcount = 0;
 }]]></code.declaration>
@@ -123,35 +118,44 @@ SHIFT =  (27-attr_wave.LENGTHPOW);]]></code.init>
       <code.krate><![CDATA[mslot = inlet_slot % 128;
 outlet_delete = 0;
 
+
 //delete
 if (inlet_delete && !dtrig) {
-dtrig = 1;
 delete_slot (mslot);
+dtrig = 1;
 outlet_delete = 1;
 }
+
 //defrag
-if (inlet_defrag && !ctrig) {
-	ctrig = 1;
+if (inlet_defrag && !defragtrig) {
+	defragtrig = 1;
 	defrag();
 }
-if (!inlet_defrag) ctrig = 0;
 
 //paste
-	if (inlet_paste && !ptrig){
-	ptrig = 1;
-	//pitch up/down
-	if (inlet_pitchUp) paramtemp[0] += (((1 << 23)/3)+1);
-	if (inlet_pitchDown) paramtemp[0] -= (((1 << 23)/3)+1);
-	int i;
-	for (i = 0;i < 32 ;i ++ ) array [(mslot * 32)+ i] = paramtemp[i];
+	if ((inlet_trig && !trig) && cpytemptrig && (inlet_copy || move)){
+	trig = 1;
+	delete_slot(mslot);
+	memcpy (&array[mslot <<5],&paramtemp[0],128);
+	if (move) {
+			delete_slot (srcslot);
+			outlet_delete = 1;
+			move = 0;
+		}
 	}
 
 //copy	
-if (inlet_copy && !ctrig){
-	ctrig = 1;
+if ((inlet_trig && !trig) && !cpytemptrig && (inlet_copy || move)){
+	trig = 1;
+	cpytemptrig = 1;
 	srcslot = mslot;
-	int i;
-	for (i = 0;i < 32 ;i ++ ) paramtemp [i] = array [(mslot * 32)+ i];
+	memcpy (&paramtemp[0],&array[mslot <<5],128);
+}
+
+//move
+if (inlet_move && !mtrig){
+	mtrig = 1;
+	move = 1;	
 }
 
 //clear
@@ -162,10 +166,12 @@ if (inlet_clear && !clrtrig){
 	int i;
 	for (i = 0;i < LENGTH;i++)array[i] = 0;
 }
-	
-if (!inlet_copy) ctrig = 0;
-if (!inlet_delete) dtrig = 0;
-if (!inlet_paste) ptrig = 0;
-if (!inlet_clear) clrtrig = 0;]]></code.krate>
+
+if (!inlet_copy && !inlet_move) cpytemptrig = 0;
+if (!inlet_move) {mtrig = 0;move = 0;}
+if (!inlet_clear) clrtrig = 0;
+if (!inlet_defrag) defragtrig = 0;
+if (!inlet_trig) trig = 0;
+if (!inlet_delete) dtrig =0;]]></code.krate>
    </obj.normal>
 </objdefs>
