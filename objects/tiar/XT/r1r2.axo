@@ -1,0 +1,92 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="r1r2" uuid="7f730fec-3c6c-4cdc-aa4c-fd08227f40c3">
+      <sDescription>Two slope cyclic ramp/LFO</sDescription>
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch>r1r2.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="start"/>
+         <frac32.bipolar name="rate1"/>
+         <frac32.bipolar name="rate2"/>
+         <bool32.rising name="reset"/>
+         <bool32 name="sync"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out" description="saw wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float r, v;
+bool atrig;
+int state;]]></code.declaration>
+      <code.init><![CDATA[r = v = 0;
+atrig = false;
+state = 0;]]></code.init>
+      <code.krate><![CDATA[float r1 = arm::q_to_float(inlet_rate1, 27);
+r1 = r1*r1*r1;
+r1 *= (40/3000.0f);
+float r2 = arm::q_to_float(inlet_rate2, 27);
+r2 = r2*r2*r2;
+r2 *= (40/3000.0f);
+
+bool trig=inlet_reset && !atrig;
+atrig = inlet_reset;
+bool sync=inlet_sync;;
+if(r1 > 0){
+	if(r2 > 0){
+		if(sync){ //two rate ramp
+			if(trig) {state = 0; v=0;}  //start segment 
+			if(v > 1){state = 1;}
+			v += state == 0 ? r1 : r2;
+			if(v >= 4) v -= 8;
+		} else {  //free run alternating rates ramp			
+               state = ((int)(v+4))&1;
+			v += state == 0 ? r1 : r2;
+			if(v >= 4) v -= 8;
+		}
+	} else {
+		if(sync){ //synched LFO
+			if(trig)  {state = 0; v = 0;}  //start segment 
+               if(v  > 1){state = 1; v = 1;}
+			if(v <= 0){state = 0; v = 0;}
+			v += state == 0 ? r1 : r2;			
+		} else { //free run LFO
+			if(v >= 1){state = 1; v = 1;}
+			if(v <  0){state = 0; v = 0;}
+			v += state == 0 ? r1 : r2;			
+		}
+	}
+} else {
+	if(r2 > 0){
+		if(sync){//synched neg LFO
+			if(trig) {state = 0; v=0;}  //start segment 
+			if(v<=-1){state=1;v=-1;}
+			if(v>0){state=0;v=0;}
+			v += state == 0 ? r1 : r2;
+		} else {// free un neg LFO
+			if(v<=-1){state=1;v=-1;}
+			if(v>0){state=0;v=0;}
+			v += state == 0 ? r1 : r2;	
+		}
+	} else {
+		if(sync){//two rate neg ramp
+			if(trig) {state = 0; v=0;}  //start segment 
+			if(v < -1){state = 1;}
+			v += state == 0 ? r1 : r2;
+			if(v < -4) v += 8;
+			
+		}else{//free run alternating rates neg ramp			
+			state = ((int)(v+4))&1;
+			v += state == 0 ? r2 : r1;
+			if(v < -4) v += 8;
+		}
+	}
+}
+
+
+float s=16+8*arm::q_to_float(inlet_start,27);
+float fv=(v+s)*0.125f;
+outlet_out = arm::float_to_q((fv-floorf(fv)), 27);]]></code.krate>
+   </obj.normal>
+</objdefs>
