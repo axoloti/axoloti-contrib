@@ -85,6 +85,16 @@
                <string>2</string>
             </CEntries>
          </combo>
+         <combo name="loadAtInit">
+            <MenuEntries>
+               <string>yes</string>
+               <string>no</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>false</string>
+            </CEntries>
+         </combo>
       </attribs>
       <includes>
          <include>chibios/ext/fatfs/src/ff.h</include>
@@ -268,20 +278,16 @@ int32_t I0p30(int32_t *_v, uint32_t i, int32_t a){
   return ___SMMLS(a, _v[i+1] - _v[i], _v[i] >> 1) << (GAIN + 1);
   #endif
 }]]></code.declaration>
-      <code.init><![CDATA[
-	  
-static int32_t  v_[attr_poly][NBWAVES * (LENGTH+1)] LOCATION;
+      <code.init><![CDATA[static int32_t  v_[attr_poly][NBWAVES * (LENGTH+1)] LOCATION;
 static int32_t Iv_[attr_poly][NBWAVES * (LENGTH  )] LOCATION;
 #undef LOCATION
-
+first = true;
+ntrig = false;
 v  =  &v_[parent->polyIndex][0];
 Iv = &Iv_[parent->polyIndex][0];
 fv = (float *)v; //in place
-v16 = (int16_t*)Iv; //in place
-
-]]></code.init>
-      <code.krate><![CDATA[
-if(inlet_trig && !ntrig) {
+v16 = (int16_t*)Iv; //in place]]></code.init>
+      <code.krate><![CDATA[if((inlet_trig && !ntrig)||(first && attr_loadAtInit)) {
     FIL FileObject;
     FRESULT err;
     UINT bytes_read;
@@ -319,9 +325,6 @@ if(inlet_trig && !ntrig) {
 	prepare();
 }
 ntrig = inlet_trig;
-  
-  
-  
-  ]]></code.krate>
+first=false;]]></code.krate>
    </obj.normal>
 </objdefs>

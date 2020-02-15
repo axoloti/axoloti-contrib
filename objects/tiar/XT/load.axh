@@ -1,11 +1,28 @@
 <patch-1.0 appVersion="1.0.12">
-   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_1" x="42" y="28">
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_1" x="182" y="0">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jaffa/string/c4" uuid="e7c37b3e-e478-4967-8b0b-fc400c050e6a" name="c4_1" x="42" y="56">
       <params/>
       <attribs>
-         <table attributeName="str" table="0:/PPG_WA00.raw"/>
+         <table attributeName="1" table="0:/PPG_WA00.raw"/>
+         <table attributeName="2" table="0:/PPG_WA08.raw"/>
+         <table attributeName="3" table="0:/PPG_WA13.raw"/>
+         <table attributeName="4" table="0:/PPG_WA20.raw"/>
       </attribs>
    </obj>
-   <obj type="tiar/XT/load" uuid="104ddbe5-078e-47b3-b71e-fe71baba1c6d" name="load_1" x="322" y="28">
+   <obj type="tiar/string/mux4" uuid="fe061374-84aa-489d-820e-063b89fe61d1" name="mux4_1" x="210" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_1" x="322" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/XT/load" uuid="104ddbe5-078e-47b3-b71e-fe71baba1c6d" name="load_1" x="658" y="56">
       <params/>
       <attribs>
          <combo attributeName="nbWaves" selection="64"/>
@@ -75,10 +92,6 @@
    </obj>
    <nets>
       <net>
-         <source obj="c_1" outlet="out"/>
-         <dest obj="load_1" inlet="filename"/>
-      </net>
-      <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="osc_2" inlet="pitch"/>
          <dest obj="sine_1" inlet="pitch"/>
@@ -113,6 +126,35 @@
       <net>
          <source obj="osc_2" outlet="wave"/>
          <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="mux4_1" outlet="out"/>
+         <dest obj="load_1" inlet="filename"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="change_1" inlet="in"/>
+         <dest obj="mux4_1" inlet="sel"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="trig"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="c4_1" outlet="1"/>
+         <dest obj="mux4_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="c4_1" outlet="2"/>
+         <dest obj="mux4_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="c4_1" outlet="3"/>
+         <dest obj="mux4_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="c4_1" outlet="4"/>
+         <dest obj="mux4_1" inlet="i3"/>
       </net>
    </nets>
    <settings>
