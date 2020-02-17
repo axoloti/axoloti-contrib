@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dejump" uuid="16f9a2c5-256d-4947-9085-189b0b103b93">
+      <sDescription>1st order lowpass filter and high pass filter.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <bool32.rising name="trig"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t y;
+bool atrig;]]></code.declaration>
+      <code.init><![CDATA[y = 0;
+atrig = false;]]></code.init>
+      <code.krate><![CDATA[if(inlet_trig && !atrig){
+	int32_t a = (1<<27)/16; //1/16
+	for(int i = 0; i < BUFSIZE; i++){
+		outlet_out[i] = y = ___SMMLA(a, inlet_in[i] - y, y>>5)<<5;
+		a = ___SMMUL(a, 1276901416)<<2; //q30 root16 16 1,1892
+	}
+} else {
+	for(int i = 0; i < BUFSIZE; i++){
+		outlet_out[i] = y = inlet_in[i];
+	}
+}
+atrig = inlet_trig;]]></code.krate>
+   </obj.normal>
+</objdefs>
