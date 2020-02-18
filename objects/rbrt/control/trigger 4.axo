@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="trigger 4" uuid="ce086580-d8d6-49cf-a55c-ba18d55a4241">
+      <sDescription>useful to trigger events in strict order to overcome execution-order troubles.
+optionally,with a delay in k-rate ticks in between events.
+similar to max/msp &apos;trigger bang&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="t1"/>
+         <bool32.pulse name="t2"/>
+         <bool32.pulse name="t3"/>
+         <bool32.pulse name="t4"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="delay" MinValue="1" MaxValue="3000" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[int count ;
+bool ntrig;
+bool go;]]></code.declaration>
+      <code.init><![CDATA[count = -1;]]></code.init>
+      <code.krate><![CDATA[if (inlet_trig && !ntrig) {ntrig = 1; count = -1;go = 1;}
+
+if (go) count += 1;
+
+if (count == 0 ) outlet_t1 = 1;
+else outlet_t1 = 0;
+
+if (count == (1 * attr_delay) ) outlet_t2 = 1;
+else outlet_t2 = 0;
+
+if (count == (2 * attr_delay) ) outlet_t3 = 1;
+else outlet_t3 = 0;
+
+if (count == (3 * attr_delay) ) outlet_t4 = 1;
+else outlet_t4 = 0;
+
+if (count > (3 * attr_delay) ) {
+	go = 0;
+	if (!inlet_trig) ntrig = 0;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

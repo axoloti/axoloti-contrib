@@ -1,0 +1,144 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="4op FM" uuid="130301da-8bab-4145-bc98-578ed0a62fbe">
+      <sDescription>4 operator FM/PM synthesizer, with freely configurable modulation path. See help file.
+
+Tags: fm pm synthesizer matrix 4 operator</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>FM.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="pitch CV"/>
+         <frac32 name="env1" description="connect to some envelope to drive operator 1"/>
+         <frac32 name="env2" description="connect to some envelope to drive operator 2"/>
+         <frac32 name="env3" description="connect to some envelope to drive operator 3"/>
+         <frac32 name="env4" description="connect to some envelope to drive operator 4"/>
+         <frac32 name="matrix4" description="connect to the output of matrix row 4 object"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="audio out"/>
+         <int32 name="matrix4" description="connect to the input of matrix row 4 object"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="base pitch for the oscillator"/>
+         <int32 name="op1p" description="pitch multiplier for operator 1">
+            <MinValue i="1"/>
+            <MaxValue i="99"/>
+         </int32>
+         <int32 name="op2p" description="pitch multiplier for operator 2">
+            <MinValue i="1"/>
+            <MaxValue i="99"/>
+         </int32>
+         <int32 name="op3p" description="pitch multiplier for operator 3">
+            <MinValue i="1"/>
+            <MaxValue i="99"/>
+         </int32>
+         <int32 name="op4p" description="pitch multiplier for operator 4">
+            <MinValue i="1"/>
+            <MaxValue i="99"/>
+         </int32>
+         <frac32.u.map.gain name="op1mix" description="output mix amount for operator 1"/>
+         <frac32.u.map.gain name="op2mix" description="output mix amount for operator 2"/>
+         <frac32.u.map.gain name="op3mix" description="output mix amount for operator 3"/>
+         <frac32.u.map.gain name="op4mix" description="output mix amount for operator 4"/>
+         <bool32.tgl name="mode" description="switch between PM (off) and FM mode. Classic DX sounds are achieved with PM mode, while FM is less stable and more quirky"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t matrix[4][4] = {
+					{0,0,0,0},	
+					{0,0,0,0},
+					{0,0,0,0},
+					{0,0,0,0}
+				   }	;
+				   
+int32_t tempv[4] = {0,0,0,0};
+int32_t temps = 0 ;
+
+int sel =0;
+
+int32_t freq[4] = {0,0,0,0};
+uint32_t phase[4] = {0,0,0,0};
+uint32_t wave[4] = {0,0,0,0};
+uint32_t wave_old[4] = {0,0,0,0};
+
+int32_t envelope[4] = {0,0,0,0};
+int32_t envelope_old[4] = {0,0,0,0};
+int32_t increment[4] = {0,0,0,0};
+
+
+uint32_t gain[4] = {0,0,0,0};]]></code.declaration>
+      <code.krate><![CDATA[// modmatrix handling section
+matrix[sel>>2][sel-((sel>>2)<<2)]=inlet_matrix4<<1;
+
+sel +=1;
+if (sel == 16)
+sel=0;
+
+outlet_matrix4=sel;
+
+
+
+// pitch handling section
+MTOFEXTENDED(param_pitch + inlet_pitch,temps);
+
+freq[0]=temps*param_op1p;
+freq[1]=temps*param_op2p;
+freq[2]=temps*param_op3p;
+freq[3]=temps*param_op4p;
+
+
+
+
+
+increment[0] = (inlet_env1 - envelope_old[0])>>4;
+increment[1] = (inlet_env2 - envelope_old[1])>>4;
+increment[2] = (inlet_env3 - envelope_old[2])>>4;
+increment[3] = (inlet_env4 - envelope_old[3])>>4;
+   
+for(int i=0;i<4;i++)
+envelope[i] = envelope_old[i];
+   
+envelope_old[0] = inlet_env1;
+envelope_old[1] = inlet_env2;
+envelope_old[2] = inlet_env3;
+envelope_old[3] = inlet_env4;
+   
+gain[0] = param_op1mix;
+gain[1] = param_op2mix;
+gain[2] = param_op3mix;
+gain[3] = param_op4mix;
+
+]]></code.krate>
+      <code.srate><![CDATA[//actual fm handling
+for(int i=0;i<4;i++)
+{
+	phase[i]+=freq[i];	
+	temps = 0;
+	if (param_mode)
+	{
+		for(int j=0;j<4;j++)
+			if (i!=j) 	
+				phase[i] =  ___SMMLA(matrix[i][j]<<3,wave_old[j]<<4,phase[i]);
+				SINE2TINTERP((___SMMUL(matrix[i][i]<<3,wave_old[i]<<3)<<3)+phase[i],wave[i]);
+	}
+	else
+	{
+		for(int j=0;j<4;j++)
+			temps+=  ___SMMUL(matrix[i][j]<<((i!=j)?3:1),wave_old[j]<<4);
+			SINE2TINTERP((temps<<4)+phase[i],wave[i]);
+	}
+	wave[i] = ___SMMUL(wave[i],envelope[i]);
+	envelope[i] += increment[i];
+}
+
+
+//final output handling
+temps=0;
+for(int i=0;i<4;i++)
+{
+	wave_old[i] = wave[i];
+	temps=___SMMLA(wave_old[i],gain[i],temps);
+}
+outlet_out = temps<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>

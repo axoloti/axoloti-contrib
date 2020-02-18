@@ -1,0 +1,102 @@
+<objdefs>
+   <obj.normal id="triggered buffer" uuid="cpwitz-delay-triggered buffer">
+      <sDescription>A circular sample buffer referencing a 32b table. Each time trigger input rises above zero a new sample is taken from in and the oldest sample from the buffer is on out. Good for building pitch shifting tape delays.</sDescription>
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <helpPatch/>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32buffer name="trigger" description="triggered on rising above 0"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="oldest sample output"/>
+      </outlets>
+      <displays/>
+      <params />
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[
+        uint32_t pos;
+        int32_t last_input; 
+        int32_t val_out; 
+        int32_t val_target; 
+        int32_t accu;
+        int32_t sampleno;
+      ]]></code.declaration>
+      <code.init><![CDATA[
+        last_input = 0;
+        pos = 0;
+        val_out = 0;
+        val_target = 0;
+        accu = 0;
+        sampleno = 0;
+      ]]></code.init>
+      <code.srate><![CDATA[
+      if (inlet_trigger>0 && last_input<=0) {
+        pos = (pos+1) & attr_table.LENGTHMASK;
+        val_target = attr_table.array[(pos+1)&attr_table.LENGTHMASK];
+        attr_table.array[pos]=__SSAT(accu/sampleno,28);
+        accu = 0;
+        sampleno = 0;
+      }
+      last_input = inlet_trigger;
+      accu += inlet_in;
+      sampleno++;
+      val_out = (val_out + val_out + val_out + val_target)>>2;
+      outlet_out = val_out;
+]]></code.srate>
+   </obj.normal>
+   <obj.normal id="triggered buffer feedback" uuid="cpwitz-delay-triggered buffer feedback">
+      <sDescription>A circular sample buffer referencing a 32b table. Each time trigger input rises above zero a new sample is taken from in and the oldest sample from the buffer is on out. Good for building pitch shifting tape delays. Includes parameter and inlet for the buffer'sfeedback level.</sDescription>
+      <author>Peter Witzel</author>
+      <license>CC0</license>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32buffer name="trigger" description="triggered on rising above 0"/>
+         <frac32.positive name="feedback" description="feedback mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="oldest sample output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="feedback" />
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[
+        uint32_t pos;
+        int32_t last_input; 
+        int32_t val_out; 
+        int32_t val_target; 
+        int32_t accu;
+        int32_t sampleno;
+        int32_t fdb_level;]]></code.declaration>
+      <code.init><![CDATA[
+        last_input = 0;
+        pos = 0;
+        val_out = 0;
+        val_target = 0;
+        accu = 0;
+        sampleno = 0;
+        fdb_level = 0;]]></code.init>
+      <code.krate><![CDATA[fdb_level = __SSAT((param_feedback + inlet_feedback),28);]]></code.krate>
+      <code.srate><![CDATA[
+      if (inlet_trigger>0 && last_input<=0) {
+        pos = (pos+1) & attr_table.LENGTHMASK;
+        val_target = attr_table.array[(pos+1)&attr_table.LENGTHMASK];
+        int32_t val = attr_table.array[pos];
+        attr_table.array[pos]=__SSAT(accu/sampleno + (___SMMUL(fdb_level, val)<<5), 28);
+        accu = 0;
+        sampleno = 0;
+      }
+      last_input = inlet_trigger;
+      accu += inlet_in;
+      sampleno++;
+      val_out = (val_out + val_out + val_out + val_target)>>2;
+      outlet_out = val_out;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

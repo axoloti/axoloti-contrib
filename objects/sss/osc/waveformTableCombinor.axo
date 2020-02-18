@@ -1,0 +1,166 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="waveformTableCombinor" uuid="d5e86f67-a694-42d6-b796-f06212394f3b">
+      <sDescription>Combines tables from the waveformGenerator. After creating a big wavetable, the &quot;waveformLoader&quot; module can be used to load the wavetables later on.
+
+The waveformGenerator can be used together with the waveformGuitar and waveformRandom modules to create different kinds of waveforms and load them all into a single table.
+
+Pressing &quot;get&quot; will get the current wavetable from the waveformGenerator and saves it behind the &quot;wavesReady&quot; position.
+
+At waveform-size 8192 (on waveformGenerator), &quot;best&quot; total amount of waveforms would be 127.
+As this is also the amount of waveforms the waveformLoader will expect.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.mom name="get"/>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+         <int32 name="wavesReady">
+            <MinValue i="0"/>
+            <MaxValue i="8192"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <objref name="table"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t SIZEPOW = attr_size;
+static const uint32_t SIZE = 1<<attr_size;
+static const uint32_t SIZEMASK = (1<<attr_size)-1;
+uint32_t LENGTHPOW=attr_table.LENGTHPOW;
+uint32_t LENGTH=attr_table.LENGTH;
+uint32_t LENGTHMASK=attr_table.LENGTHMASK;
+int32_t *array;
+int strig;
+int ltrig;
+int gtrig;
+int i;
+int32_t Waveforms;
+int32_t presets;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[SIZE] __attribute__ ((section (".sdram")));
+array = &_array[0];]]></code.init>
+      <code.krate><![CDATA[int save=param_save+inlet_save;
+int load=param_load+inlet_load;
+
+if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*SIZE;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*SIZE;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(load>0)) ltrig=0;
+
+  if((param_get>0)&&!gtrig){
+  	gtrig=1;
+ for(i=0;i<(attr_table.Waveforms*attr_table.LENGTH);i++){
+  array[i+(param_wavesReady*attr_table.LENGTH)]=attr_table.array[i];
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_wavesReady],param_wavesReady+attr_table.Waveforms,0xFFFD);
+}}
+else if(param_get==0){gtrig=0;}
+
+presets=Waveforms=param_wavesReady>0?param_wavesReady:1;]]></code.krate>
+   </obj.normal>
+</objdefs>

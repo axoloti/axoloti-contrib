@@ -1,0 +1,221 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="loadtrain1" uuid="451c9085-2bb2-4a36-8eff-588199796348">
+      <sDescription>allocate 16bit table in SDRAM memory, -128.00 .. 127.99</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="load" description="when input goes high, starts to load samples"/>
+         <int32 name="offset" description="connects to the former loadtrain module to get the sample-loading offset. FIRST MODULE DOESN&apos;T NEED AN OFFSET!"/>
+         <int32 name="remsize" description="connects to the former loadtrain module to get the sample-loading remaining size. FIRST MODULE DOESN&apos;T NEED AN REMSIZE OFFSET!"/>
+      </inlets>
+      <outlets>
+         <bool32 name="load"/>
+         <int32 name="offset"/>
+         <int32 name="remsize"/>
+         <int32 name="first"/>
+         <int32 name="samples"/>
+      </outlets>
+      <displays>
+         <int32.label name="first"/>
+         <int32.label name="last"/>
+      </displays>
+      <params>
+         <int32 name="samples" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="samples"/>
+         <objref name="starts"/>
+         <table name="sample01"/>
+         <table name="sample02"/>
+         <table name="sample03"/>
+         <table name="sample04"/>
+         <table name="sample05"/>
+         <table name="sample06"/>
+         <table name="sample07"/>
+         <table name="sample08"/>
+         <table name="sample09"/>
+         <table name="sample10"/>
+         <table name="sample11"/>
+         <table name="sample12"/>
+         <table name="sample13"/>
+         <table name="sample14"/>
+         <table name="sample15"/>
+         <table name="sample16"/>
+         <combo name="first">
+            <MenuEntries>
+               <string>no</string>
+               <string>yes</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[int i;
+int rem_sz;
+int offset;
+char c[64];
+bool ntrig;
+int j;
+int32_t s1;
+int32_t s2;]]></code.declaration>
+      <code.krate><![CDATA[outlet_load=0;
+if ((inlet_load>0) && !ntrig) {
+	int i;
+	if(attr_first>0){
+		for(j=0;j<attr_samples.LENGTH;j++){
+		attr_samples.array[j]=0;
+	}
+	for(j=0;j<attr_starts.LENGTH;j++){
+		attr_starts.array[j]=0;
+	}
+	}
+
+	int I=1;
+while(attr_starts.array[I]>0){
+	s1=attr_starts.array[I];
+	s2=I;
+	I+=1;
+}
+
+int k=s2;
+disp_first=k;
+	
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    offset = inlet_offset;
+    for(i=0;i<param_samples;i++){
+switch(i)
+	{
+	case 0:
+	err = f_open(&FileObject, "attr_sample01", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample01"); return;}
+     break;
+     case 1:
+	err = f_open(&FileObject, "attr_sample02", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample02"); return;}
+     break;
+     case 2:
+	err = f_open(&FileObject, "attr_sample03", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample03"); return;}
+     break;
+     case 3:
+	err = f_open(&FileObject, "attr_sample04", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample04"); return;}
+     break;
+     case 4:
+	err = f_open(&FileObject, "attr_sample05", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample05"); return;}
+     break;
+     case 5:
+	err = f_open(&FileObject, "attr_sample06", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample06"); return;}
+     break;
+     case 6:
+	err = f_open(&FileObject, "attr_sample07", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample07"); return;}
+     break;
+     case 7:
+	err = f_open(&FileObject, "attr_sample08", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample08"); return;}
+     break;
+     case 8:
+	err = f_open(&FileObject, "attr_sample09", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample09"); return;}
+     break;
+     case 9:
+	err = f_open(&FileObject, "attr_sample10", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample10"); return;}
+     break;
+     case 10:
+	err = f_open(&FileObject, "attr_sample11", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample11"); return;}
+     break;
+     case 11:
+	err = f_open(&FileObject, "attr_sample12", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample12"); return;}
+     break;
+     case 12:
+	err = f_open(&FileObject, "attr_sample13", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample13"); return;}
+     break;
+     case 13:
+	err = f_open(&FileObject, "attr_sample14", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample14"); return;}
+     break;
+     case 14:
+	err = f_open(&FileObject, "attr_sample15", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample15"); return;}
+     break;
+     case 15:
+	err = f_open(&FileObject, "attr_sample16", FA_READ | FA_OPEN_EXISTING);
+     if (err != FR_OK) {report_fatfs_error(err,"attr_sample16"); return;}
+     break;
+	}
+
+
+
+	
+if(i==0){   if(attr_first>0){
+rem_sz = sizeof(*attr_samples.array)*attr_samples.LENGTH;}
+else{rem_sz=inlet_remsize;}}
+switch(i){
+case 0: strcpy(&c[0],"attr_sample01");break;
+case 1: strcpy(&c[0],"attr_sample02");break;
+case 2: strcpy(&c[0],"attr_sample03");break;
+case 3: strcpy(&c[0],"attr_sample04");break;
+case 4: strcpy(&c[0],"attr_sample05");break;
+case 5: strcpy(&c[0],"attr_sample06");break;
+case 6: strcpy(&c[0],"attr_sample07");break;
+case 7: strcpy(&c[0],"attr_sample08");break;
+case 8: strcpy(&c[0],"attr_sample09");break;
+case 9: strcpy(&c[0],"attr_sample10");break;
+case 10: strcpy(&c[0],"attr_sample11");break;
+case 11: strcpy(&c[0],"attr_sample12");break;
+case 12: strcpy(&c[0],"attr_sample13");break;
+case 13: strcpy(&c[0],"attr_sample14");break;
+case 14: strcpy(&c[0],"attr_sample15");break;
+case 15: strcpy(&c[0],"attr_sample16");break;
+}
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&attr_samples.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_samples.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,&c[0]); return;};
+
+	uint32_t m=attr_samples.LENGTHMASK;
+	while((attr_samples.array[m]==0)&&(m>0)){
+		m-=1;
+	}
+	attr_starts.array[i]=m;
+  }
+}
+  else if ((!(inlet_load>0))&&ntrig) {ntrig=0;outlet_load=1;}
+  outlet_offset=offset;
+  outlet_remsize=rem_sz;
+  outlet_first=disp_first;
+  disp_last=disp_first+param_samples-1;
+  outlet_samples=param_samples;]]></code.krate>
+   </obj.normal>
+</objdefs>

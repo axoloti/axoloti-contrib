@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sampleredux" uuid="17e04b8f-1cea-4b11-951d-fc3e0e603a13">
+      <sDescription>quantize to n bits</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32.positive name="rate"/>
+         <frac32.positive name="mask"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="rate" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="mask">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int sample;
+int counter;
+int mask;]]></code.declaration>
+      <code.init><![CDATA[counter = 0;
+mask = 0;]]></code.init>
+      <code.srate><![CDATA[if (counter >= (param_rate + (inlet_rate >>21) - mask)) {
+counter = - 1;
+mask = mask + 1;
+sample = inlet_in;
+}
+if (mask >= (param_mask + (inlet_mask >>21))) mask = 0;
+counter = counter + 1;
+outlet_out = sample;]]></code.srate>
+   </obj.normal>
+</objdefs>

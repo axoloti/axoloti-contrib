@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scope6K" uuid="66034a0b-3d66-4aba-9273-4c03a268079d">
+      <sDescription>6 displays with a shared sync input to track phase-relations of modulation signals</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>disp.axh</helpPatch>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+         <frac32 name="i3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="snc"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <int8array128.vbar name="s1"/>
+         <int8array128.vbar name="s2"/>
+         <int8array128.vbar name="s3"/>
+         <int8array128.vbar name="s4"/>
+         <int8array128.vbar name="s5"/>
+         <int8array128.vbar name="s6"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t t[6][128];
+int index;
+bool trg;]]></code.declaration>
+      <code.init><![CDATA[int i;
+int j;
+for(j=0;j<6;j++){
+for(i=0;i<128;i++){
+	t[j][i]=0;
+}}
+index = 0;]]></code.init>
+      <code.krate><![CDATA[int i;
+if((inlet_snc>0)&&(!trg)&&(index==128)){
+	index=0;
+}
+trg=inlet_snc>0?1:0;
+
+if(index<128){
+
+t[0][index] = (uint8_t)(inlet_i1>>21);
+t[1][index] = (uint8_t)(inlet_i2>>21);
+t[2][index] = (uint8_t)(inlet_i3>>21);
+t[3][index] = (uint8_t)(inlet_i4>>21);
+t[4][index] = (uint8_t)(inlet_i5>>21);
+t[5][index] = (uint8_t)(inlet_i6>>21);
+index+=1;
+}
+if (index == 128){
+
+    for(i=0;i<128;i++)
+    {
+      disp_s1[i]=t[0][i];
+      disp_s2[i]=t[1][i];
+      disp_s3[i]=t[2][i];
+      disp_s4[i]=t[3][i];
+      disp_s5[i]=t[4][i];
+      disp_s6[i]=t[5][i];
+    }
+  }]]></code.krate>
+   </obj.normal>
+</objdefs>

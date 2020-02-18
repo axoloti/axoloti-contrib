@@ -1,0 +1,83 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="beatplayer2" uuid="5d8cca93-2110-49fa-93f9-64104879f9f6">
+      <sDescription>An realtime beat slicer. Port of sliceplay~ puredata object from Katja Vetter (http://www.katjaas.nl/beatdetection/beatdetection.html).
+Play slice store in slicebuffer/sliceindex tables with beatslicer2 object.</sDescription>
+      <author>Jérôme Burlando</author>
+      <license>BSD</license>
+      <helpPatch>beatplayer2.axh</helpPatch>
+      <inlets>
+         <int32 name="nslice" description="Select the slice to play."/>
+         <frac32.bipolar name="pitch" description="Pitch of the slice."/>
+         <bool32.rising name="start" description="Start playback"/>
+         <bool32 name="reverse" description="Play slice in reverse mode."/>
+         <bool32 name="retrig" description="If active and if trig on &quot;start&quot; input, play the slice. Else slice must be entirely played to be replayed."/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="slicesbuffer" description="Slices stack"/>
+         <objref name="slicesindex" description="Slices cuepoints table"/>
+      </attribs>
+      <code.declaration><![CDATA[int pstart;
+int play;
+int64_t pos;
+uint32_t beg;
+uint32_t end;
+uint32_t f0;
+int32_t pitch;
+uint8_t reverse;]]></code.declaration>
+      <code.init><![CDATA[pstart = 0;
+play = 0;
+beg = 0;
+end = 0;
+pos = 0;
+f0 = 0;
+pitch = 0;
+reverse = 0;]]></code.init>
+      <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0]) {
+   if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+      pstart = 1;
+      play = 1;
+      reverse = inlet_reverse;
+      pitch = inlet_pitch;
+      if(inlet_nslice == 0) {
+         beg = 0;
+         end = attr_slicesindex.array[1];
+      } else {
+         beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+         end = attr_slicesindex.array[inlet_nslice+1];
+      }
+      if(!reverse){
+         pos = ((uint64_t)beg)<<32;
+      } else {
+         pos = ((uint64_t)end)<<32;
+      }
+   } else if (!(inlet_start>0)) {
+      pstart = 0;
+   }
+}
+
+MTOFEXTENDED(pitch + 80179668,f0);]]></code.krate>
+      <code.srate><![CDATA[outlet_o = 0;
+
+if(play){
+   uint64_t inc = ((uint64_t)f0)<<4;
+   if(!reverse) { 
+      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
+      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
+      pos += inc;
+      if(pos>>32 > end) play = 0; 
+   } else if (reverse){ 
+      uint32_t o = ___SMMUL(attr_slicesbuffer.array[pos>>32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos)>>1));
+      outlet_o = ___SMMLA(attr_slicesbuffer.array[(pos>>32)-1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos)>>1),o);
+      pos -= inc;
+      if(pos>>32 < beg) play = 0; 
+   } else {
+      play = 0;
+   }
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

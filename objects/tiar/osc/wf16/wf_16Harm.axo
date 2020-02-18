@@ -1,0 +1,92 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="wf_16Harm" uuid="bfcc9ba9-9a9b-430b-901f-cd0cfaad394c">
+      <sDescription>For use with 16StepsDP2</sDescription>
+      <author>Thierry Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>wf_16Harm.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <bool32 name="update"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wf16"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.mapvsl name="h1">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h2">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h3">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h4">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h5">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h6">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h7">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.u.mapvsl name="h8">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.u.mapvsl>
+         <frac32.s.map name="interp"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int16_t y[32];]]></code.declaration>
+      <code.krate><![CDATA[if(inlet_update){
+  for(int i = 0; i < 16; i++){
+  int p = i * 256;
+  int32_t v = 
+    ___SMMLA(param_h1, sine2t[p],
+      ___SMMLS(param_h2, sine2t[(2*p) & 4095],
+        ___SMMLA(param_h3, sine2t[(3*p) & 4095],
+          ___SMMLS(param_h4, sine2t[(4*p) & 4095],
+            ___SMMLA(param_h5, sine2t[(5*p) & 4095],
+              ___SMMLS(param_h6, sine2t[(6*p) & 4095],
+                ___SMMLA(param_h7, sine2t[(7*p) & 4095],
+                  ___SMMUL(param_h8, sine2t[(8*p+1024) & 4095]
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    );
+    v = __SSAT(v >> 12, 16);
+    y[i*2] = (int16_t)v;
+  }
+  // connect the dots.. or not
+  int32_t a = abs(param_interp);
+  if(a >= 0x07F70000) a = 0x07F70000;
+  for(int i2 = 1; i2 <= 31; i2 += 2){
+    y[i2] =  ___SMMLA(a, y[(i2 + 1) & 31] - y[(i2 - 1) & 31], y[(i2 - 1) & 31] >> 5) << 5;
+  }
+  if(param_interp < 0){ // reversed
+    for(int i2 = 0; i2 <= 31; i2 += 2){
+    	 int32_t t = y[i2 + 1];  y[i2 + 1] = y[i2]; y[i2] = t;  // swap
+    }
+  }
+}
+//pack
+int16_t* wf16 = (int16_t*) outlet_wf16;
+for(int i = 0; i < 32; i++)
+  wf16[i] = y[i];]]></code.krate>
+   </obj.normal>
+</objdefs>

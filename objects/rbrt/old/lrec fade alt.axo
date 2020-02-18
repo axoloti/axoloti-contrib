@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="lrec fade alt" uuid="ab8a8f56-2adf-4f4a-b9aa-de5e66597c23">
+      <sDescription>records audio to a table.after recording is done,the length of the recording in samples is sent out,
+as well as the length of the recording (in fraction of the table&apos;s size).
+&apos;lrec fade alt&apos; is writing the fade-out to an alternative buffer.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>loop_simple.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="wave" description="audio in"/>
+         <bool32.risingfalling name="rec" description="record"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="range" description="length of recording in fraction of the table"/>
+         <int32 name="smps" description="length in samples"/>
+         <bool32 name="state"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.kdecaytime.exp name="attack"/>
+         <frac32.s.map.kdecaytime.exp name="release"/>
+         <bool32.tgl name="hard"/>
+      </params>
+      <attribs>
+         <objref name="main"/>
+         <objref name="fade"/>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+bool recstate;
+uint32_t recpos;
+uint8_t shift;
+
+uint32_t shold;
+uint32_t rhold;
+int32_t env;]]></code.declaration>
+      <code.init><![CDATA[recpos =0;
+rec = 0;
+
+//set 'shift factor' for storing the recording length/the sync output
+    if (attr_main.LENGTH == 2048){shift = 16; }
+    if (attr_main.LENGTH == 4096){shift = 15; }
+    if (attr_main.LENGTH == 8192){shift = 14; }
+    if (attr_main.LENGTH == 16384){shift = 13; }
+    if (attr_main.LENGTH == 32768){shift = 12; }
+    if (attr_main.LENGTH == 65536){shift = 11; }
+    if (attr_main.LENGTH == 131072){shift = 10;}
+    if (attr_main.LENGTH == 262144){shift = 9;}
+    if (attr_main.LENGTH == 524288){shift = 8;}
+    if (attr_main.LENGTH == 1048576 ){shift = 7;}
+    if (attr_main.LENGTH == 2097152 ){shift = 6;}
+    if (attr_main.LENGTH == 4194304 ){shift = 5;}]]></code.init>
+      <code.krate><![CDATA[if (rec) env = (param_hard) ? -(1<<27) : (1<<27) - (___SMMUL((1<<27)-env, param_attack)<<1);
+   else env = ___SMMUL(env, param_release)<<1;
+
+if (env == 0) recstate = 0;
+
+outlet_state = recstate;
+outlet_range = rhold;
+outlet_smps = shold;]]></code.krate>
+      <code.srate><![CDATA[if ((inlet_rec) && !rec)  {
+      rec = 1;
+      recstate = 1;
+      recpos = 0;
+         
+ } 
+if ((!inlet_rec)&& rec) {
+      rhold = (recpos << shift);
+      shold = recpos;
+      rec = 0;
+      recpos = 0;
+      }
+
+ //record
+   if (recstate)  {
+   	recpos ++;
+   	if (recpos >= attr_main.LENGTH) recpos = 0;
+     if (rec) attr_main.array[recpos] = __SSAT((___SMMUL((inlet_wave),env)<<5),28 )>>attr_main.GAIN;
+     else attr_fade.array[recpos] = (__SSAT((___SMMUL((inlet_wave),env)<<5),28 ) + (attr_fade.array [recpos] << attr_fade.GAIN ) )>>attr_fade.GAIN;  	
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

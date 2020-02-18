@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="median" uuid="10ffb844-af17-4679-ac2e-270aa5f3f61b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>Median.axh</helpPatch>
+      <inlets>
+         <frac32 name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32 name="med" description="output"/>
+         <frac32 name="gch"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="N">
+            <MenuEntries>
+               <string>3</string>
+               <string>5</string>
+               <string>7</string>
+               <string>11</string>
+               <string>17</string>
+               <string>25</string>
+               <string>37</string>
+            </MenuEntries>
+            <CEntries>
+               <string>3</string>
+               <string>5</string>
+               <string>7</string>
+               <string>11</string>
+               <string>17</string>
+               <string>25</string>
+               <string>37</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[//int32_t x0, x1, x2; // current and past inputs
+//int32_t y0, y1, y2; // sorted values
+
+int32_t x[attr_N];
+int sorted[attr_N]; // points to x
+int ind_mid[attr_N]; // points to mid of delay line
+int c = 0; // the last input]]></code.declaration>
+      <code.init><![CDATA[//x0 = x1 = x2 = 0;
+//y0 = y1 = y2 = 0;
+
+for (int i = 0; i < attr_N; i++) {
+  sorted[i] = i;
+  ind_mid[i] = i + attr_N - ((attr_N - 1) / 2);
+  if (ind_mid[i] >= attr_N) {
+    ind_mid[i] -= attr_N;
+  }
+}]]></code.init>
+      <code.krate><![CDATA[/*x0 = inlet_in;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//basic bubble sort
+if(x1 <= x2){ y1 = x1; y2 = x2; } else { y1 = x2; y2 = x1; }
+if(x0 < y1) {y0 = x1;} else {y0 = y1; y1 = x0;}
+if(y1 > y2) { outlet_out = y2;} else {outlet_out = y1;}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+x2 = x1; x1 = x0; // update past inputs
+*/
+
+c++;
+  if (c >= attr_N) {
+    c = 0;
+  }
+x[c] = inlet_in;
+//ascendig bubble sort
+for(int j = attr_N - 2; j >= 0; j--) {
+  if(x[sorted[j]] > x[sorted[j + 1]]) {
+    int tmp = sorted[j];
+    sorted[j] = sorted[j + 1];
+    sorted[j + 1] = tmp;
+  }
+}
+//descending bubble sort
+for(int j = 1; j < attr_N - 1; j++) {
+  if(x[sorted[j]] > x[sorted[j + 1]]) {
+    int tmp = sorted[j];
+    sorted[j] = sorted[j + 1];
+    sorted[j + 1] = tmp;
+  }
+}
+outlet_med = x[sorted[(attr_N - 1) / 2]];
+outlet_gch = x[ind_mid[c]] - outlet_med;]]></code.krate>
+   </obj.normal>
+</objdefs>

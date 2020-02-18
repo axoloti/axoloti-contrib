@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="slowlfo2" uuid="f378ff44-c9bb-4dbd-81e6-36d6338af913">
+      <sDescription>sine wave LFO, linear interpolated table, pitch input</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <int32.positive name="div"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch"/>
+         <int32 name="div">
+            <MinValue i="0"/>
+            <MaxValue i="31"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[{      int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+      Phase += freq>>((param_div+1)+inlet_div);
+      int32_t r;
+      SINE2TINTERP(Phase,r)
+      outlet_wave= (r>>4);
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>

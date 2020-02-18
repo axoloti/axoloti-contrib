@@ -1,0 +1,134 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="H8" uuid="f8c8f8a7-a7ae-4c03-ada5-137a1a497344">
+      <sDescription>8x8 Hadamard reflection matrix</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>H8 DelayVerb.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in0"/>
+         <frac32buffer name="in1"/>
+         <frac32buffer name="in2"/>
+         <frac32buffer name="in3"/>
+         <frac32buffer name="in4"/>
+         <frac32buffer name="in5"/>
+         <frac32buffer name="in6"/>
+         <frac32buffer name="in7"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out0"/>
+         <frac32buffer name="out1"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="out3"/>
+         <frac32buffer name="out4"/>
+         <frac32buffer name="out5"/>
+         <frac32buffer name="out6"/>
+         <frac32buffer name="out7"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[// + + + + + + + + 
+// + - + - + - + - 
+// + + - - + + - - 
+// + - - + + - - + 
+// + + + + - - - - 
+// + - + - - + - + 
+// + + - - - - + + 
+// + - - + - + + -
+
+
+// y0 + + + + + + + + 
+// y4 + + + + - - - - 
+// y2 + + - - + + - - 
+// y6 + + - - - - + + 
+// y1 + - + - + - + - 
+// y5 + - + - - + - + 
+// y3 + - - + + - - + 
+// y7 + - - + - + + -
+
+void H8(int32_t x0,  int32_t x1,  int32_t x2,  int32_t x3,  int32_t x4,  int32_t x5,  int32_t x6,  int32_t x7,
+        int32_t &y0, int32_t &y1, int32_t &y2, int32_t &y3, int32_t &y4, int32_t &y5, int32_t &y6, int32_t &y7){
+  // y0 + + + + + + + + 
+  // y4 + + + + - - - - 
+  // y2 + + - - + + - - 
+  // y6 + + - - - - + + 
+  int32_t coef = 1518500249; //1/sqrt8 q32
+  int32_t x01 = x0 + x1;
+  int32_t x23 = x2 + x3;
+  int32_t x45 = x4 + x5;
+  int32_t x67 = x6 + x7;
+  int32_t x0123 = x01 + x23;
+  int32_t x4567 = x45 + x67;
+  y0 = ___SMMUL(x0123 + x4567, coef);
+  y4 = ___SMMUL(x0123 - x4567, coef);
+  x0123 = x01-x23;
+  x4567 = x45-x67;
+  y2 = ___SMMUL(x0123 + x4567, coef);
+  y6 = ___SMMUL(x0123 - x4567, coef);
+
+  // y1 + - + - + - + - 
+  // y5 + - + - - + - + 
+  // y3 + - - + + - - + 
+  // y7 + - - + - + + -
+
+  x01 = x0 - x1;
+  x23 = x2 - x3;
+  x45 = x4 - x5;
+  x67 = x6 - x7;
+  x0123 = x01 + x23;
+  x4567 = x45 + x67;
+  y1 = ___SMMUL(x0123 + x4567, coef);
+  y5 = ___SMMUL(x0123 - x4567, coef);
+  x0123 = x01 - x23;
+  x4567 = x45 - x67;
+  y3 = ___SMMUL(x0123 + x4567, coef);
+  y7 = ___SMMUL(x0123 - x4567, coef);
+}
+/*
+void H8(int32_t x0,  int32_t x1,  int32_t x2,  int32_t x3,  int32_t x4,  int32_t x5,  int32_t x6,  int32_t x7,
+        int32_t &y0, int32_t &y1, int32_t &y2, int32_t &y3, int32_t &y4, int32_t &y5, int32_t &y6, int32_t &y7){
+  int32_t coef = 1518500249; //1/sqrt8 q32
+  int32_t xA = x0+x1;
+  int32_t xB = x2+x3;
+  y4 = y0 = xA+xB;
+  y5 = y2 = xA-xB;
+  xA = x0-x1;
+  xB = x2-x3;
+  y6 = y1 = xA+xB;
+  y7 = y3 = xA-xB;
+
+  xA = x4+x5;
+  xB = x6+x7;
+  int32_t t = xA+xB;
+  y0 = ___SMMUL(y0 + t, coef);
+  y4 = ___SMMUL(y4 - t, coef);
+
+
+  t = xA-xB;
+  y2 = ___SMMUL(y2 + t, coef);
+  y6 = ___SMMUL(y6 - t, coef);
+  
+  xA = x4-x5;
+  xB = x6-x7;
+  t = xA+xB;
+  y1 = ___SMMUL(y1 + t, coef);
+  y5 = ___SMMUL(y5 - t, coef);
+
+  t = xA-xB;
+  y3 = ___SMMUL(y3 + t, coef);
+  y7 = ___SMMUL(y7 - t, coef);
+
+}*/]]></code.declaration>
+      <code.krate><![CDATA[
+
+for(int i = 0; i < BUFSIZE; i++){
+  H8(  inlet_in0[i],  inlet_in1[i],  inlet_in2[i],  inlet_in3[i],  inlet_in4[i],  inlet_in5[i],  inlet_in6[i],  inlet_in7[i],
+     outlet_out0[i],outlet_out1[i],outlet_out2[i],outlet_out3[i],outlet_out4[i],outlet_out5[i],outlet_out6[i],outlet_out7[i]
+  );
+}
+
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

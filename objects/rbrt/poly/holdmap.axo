@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="holdmap" uuid="05ffaf70-22e4-420f-b99a-779cb5c84a60">
+      <sDescription>creates a table named like the object that can be referenced in the patcher and creates a &apos;map&apos; of all notes currently held down,including velocities.
+no &apos;aftertouch&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t pren;
+uint8_t prev;
+
+static const uint8_t LENGTHPOW = 7;
+static const uint8_t LENGTH = 1<<7;
+static const uint8_t LENGTHMASK = (1<<7)-1;
+static const uint8_t BITS = 8;
+static const uint8_t GAIN = 20;
+uint8_t array [LENGTH];]]></code.declaration>
+      <code.init><![CDATA[int i;
+  {
+  for(i=0;i<LENGTH;i++) array[i]=0;
+  }]]></code.init>
+      <code.krate><![CDATA[if ((inlet_note != pren) || (inlet_velo != prev)) {
+	array[__USAT((inlet_note),LENGTHPOW)]= inlet_velo;
+	pren = inlet_note;
+	prev = inlet_velo;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

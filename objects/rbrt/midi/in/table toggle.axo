@@ -1,0 +1,110 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="table toggle" uuid="c50727e4-5379-4f56-bce7-8d7601e0ef56">
+      <sDescription>toggle elements of a table with midi-notes.set the range of the notes to use as toggles with &apos;startnote&apos;,the length of the range with &apos;length&apos;.the start of the area of the table to work on is set with &apos;offset&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>launchpad.axh</helpPatch>
+      <inlets>
+         <int32 name="offset"/>
+         <int32 name="startnote"/>
+         <int32 name="length"/>
+         <bool32.risingfalling name="active"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig" description="pulse if an element of the table is set to ON"/>
+         <int32 name="note" description="note index if inside range"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <int32 name="startnote">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="length">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <bool32.tgl name="active"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <combo name="blocksize">
+            <MenuEntries>
+               <string>1</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int8_t _note1;
+uint8_t _gate1;
+uint8_t _velo1;
+uint8_t prevnote;
+uint8_t lastnote;
+
+
+uint8_t start;
+uint8_t end;
+
+int trig;
+int ntrig;
+bool op;
+
+uint32_t offset;]]></code.declaration>
+      <code.krate><![CDATA[start = inlet_startnote + param_startnote;
+end = (start + ( inlet_length + param_length));
+offset = (inlet_offset + param_offset);
+
+if ((_note1 >= start) && (_note1 < end)) {
+	outlet_note = _note1;lastnote = _note1;
+
+if 	(inlet_active || param_active) {
+if (((_gate1>0) && !ntrig) ||(_note1 != prevnote))  {
+      ntrig=1;
+      op = attr_table.array[((_note1 -start) << attr_blocksize) + offset];
+      op = !op ;
+         attr_table.array[((_note1 -start) << attr_blocksize)+offset]= (op * ((1 << 27)- 1 >>attr_table.GAIN));
+    if (op) trig = 1;
+   }
+   if (!(_gate1>0)) ntrig=0;   
+}
+}
+else {if (!lastnote) lastnote = start;
+outlet_note = lastnote;
+}
+
+prevnote = _note1;
+outlet_trig = trig;
+   trig = 0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {	
+  
+    _note1 = data1;
+    _gate1 = 1;
+    _velo1 = data2;
+  
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note1 == data1) {
+    _gate1 = 0;
+  }
+
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+   _gate1 = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

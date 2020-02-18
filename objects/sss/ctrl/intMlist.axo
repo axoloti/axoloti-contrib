@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="intMlist" uuid="db64e3d7-4650-4aeb-a7e6-3538f4b1fb26">
+      <sDescription>midi controlled list selector
+in the list-edit:
+-enter the midiCC, midiChannel and amount of entries on the first line, seperated and ending with a comma ( , ) (if you put entries below each other you can easily read out the amount of entries, don&apos;t forget to subtract 1, because of the first line!)
+-enter the integers that you want to be selectable by midi in the lines below, each on their own line and ending with a comma:
+-maximum amount of values is 128.
+
+so, for CC16, midichannel 1 and 10 values:
+
+16,1,10,
+0,
+1,
+2,
+3,
+4,
+5,
+6,
+7,
+8,
+9</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32.positive name="value" description="midi CC value 0..127"/>
+         <int32 name="length"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="value" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <text name="list"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t _value;
+int32_t _cc;
+int32_t _channel;
+int32_t ntrig;
+bool DO;
+int list[131]={attr_list};]]></code.declaration>
+      <code.init><![CDATA[_cc = 0;
+_channel = 1;
+_value = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if(DO>0){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],_value,0xFFFD);}
+DO=0;
+
+if(param_value>list[2]-1){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],list[2]-1,0xFFFD);	
+}
+
+outlet_value=list[param_value+3];]]></code.krate>
+      <code.midihandler><![CDATA[if (((status&0xF0) == list[1]-1+MIDI_CONTROL_CHANGE)&&(data1==list[0])) {
+  _value = data2>list[2]?list[2]:data2;
+  DO=1;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

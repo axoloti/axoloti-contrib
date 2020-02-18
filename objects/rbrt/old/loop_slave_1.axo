@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_slave_1" uuid="c806ea58-00d0-49b7-855b-e76f24bd9cf6">
+      <sDescription>write to table,at inlet pos (in fraction of the table&apos;s size)
+will record for exactly 1 phase (well,bar...)</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>simple looper.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="pos" description="index in fraction of table size"/>
+         <frac32buffer name="wave" description="audio in"/>
+         <bool32.rising name="rec" description="trigger recording"/>
+      </inlets>
+      <outlets>
+         <bool32 name="recstate" description="recording state"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[
+  int rec;
+  uint32_t spos;
+  uint32_t csample;
+ int count;
+ bool rollover;]]></code.declaration>
+      <code.init><![CDATA[  
+rec = 0 ;]]></code.init>
+      <code.krate><![CDATA[
+
+]]></code.krate>
+      <code.srate><![CDATA[csample =  (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+rollover = count;
+
+	 //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      spos = csample;
+      count = -1;
+
+ } else if (rollover) {
+      rec = 0;
+      spos = 0;
+       }
+
+
+// rec + count
+ if (rec){
+if (csample == spos){
+	count ++ ;}
+	attr_table.array[csample] = __SSAT((inlet_wave),28 )>>attr_table.GAIN;
+}
+
+outlet_recstate = rec;
+
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

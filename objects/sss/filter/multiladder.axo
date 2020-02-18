@@ -1,0 +1,132 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="multiladder" uuid="70b742f2-e51a-4dd8-82ff-432afb8f5ea8">
+      <sDescription>nth order lowpass and bandpass filter (max filters=32)
+freq sets cutoff center frequency
+spread spreads the cutoff frequencies between cascaded filters (for HP inversed), so can be seen as slope-control.
+BW spreads the highpass and lowpass filters apart
+res sets the resonance level
+
+LPcasc sets the TOTAL amount of filters
+HP sets after how many lowpass filters, highpass filters are used. If higher then LPcasc, all filters are lowpass.
+feed sets which filter output is used for the resonance.
+
+Resonance path is saveguarded by the same code that&apos;s used for the &quot;fatbasters&quot; distortion module.
+gain boosts the resonance in the feedback loop-&gt;adds upper harmonics to the resonating signal.
+&quot;max&quot; sets the max level of the resonance (so it cannot go out of control)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freq" description="cutoff frequency"/>
+         <frac32 name="spread"/>
+         <frac32 name="BW"/>
+         <frac32.positive name="res"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freq" noLabel="true"/>
+         <frac32.s.map name="spread"/>
+         <frac32.u.map name="BW"/>
+         <frac32.u.map name="res"/>
+         <int32 name="LP">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="HP">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="feed">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <frac32.u.map name="gain"/>
+         <frac32.u.map name="max"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val[33];
+int32_t vil[33];
+int32_t f[33];
+int32_t g[33];
+int i;
+int32_t resonance;
+int32_t volsat;
+int32_t volres;
+int32_t vola;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<33;i++)
+{val[i] = 0;}
+]]></code.init>
+      <code.krate><![CDATA[for(i=0;i<=(param_LP+param_HP);i++)
+{if(i>0)
+MTOF(inlet_BW+param_BW+param_freq+inlet_freq+___SMMUL(((param_spread+inlet_spread)/(param_LP+param_HP))<<4,i<<26),f[i]);
+MTOF(-inlet_BW-param_BW+param_freq+inlet_freq-___SMMUL(((param_spread+inlet_spread)/(param_LP+param_HP))<<4,i<<26),g[i]);
+}
+]]></code.krate>
+      <code.srate><![CDATA[   int32_t input=inlet_in;
+
+volsat=___SMMUL(vola<<2,(inlet_res+param_res)<<2);
+
+int dir=volsat>0?1:-1;
+int32_t in=volsat>0?vola:-volsat;
+int32_t gian=___SMMUL(param_gain<<3,param_gain<<2);
+float32_t gain=___SMMUL((gian+(1<<17))<<2,in<<3);
+gain=1+gain/(1<<19);
+volres=inlet_in+((param_max)-((param_max)-in)/gain)*dir;
+
+
+   
+   for(i=1;i<=(param_LP+param_HP);i++)
+{
+   if(i<=param_LP)
+   {if(i==1)
+        { 
+   	     val[i] = ___SMMLA((volres-val[i])<<1,f[i],val[i]);}
+   if(i>=2)
+        {
+        	val[i] = ___SMMLA((val[i-1]-val[i])<<1,f[i],val[i]);}
+        	vil[i]=val[i];
+        }
+   
+   if(i>param_LP)
+   {
+   	if(i==1)
+   	{
+   		val[i] = ___SMMLA((volres-val[i])<<1,g[i],val[i]);
+   		vil[i]=volres-val[i];
+   	} 
+     else
+     {
+   	     val[i] = ___SMMLA((val[i-1]-val[i])<<1,g[i],val[i]);
+   	     vil[i]=val[i-1]-val[i];
+   	}
+   }
+   
+}
+   
+   if((param_LP+param_HP)>0)
+   {outlet_out= vil[param_LP+param_HP];}
+   if((param_LP+param_HP)<1)
+   {outlet_out=inlet_in;}
+   
+   int resread=param_feed>=(param_LP+param_HP)?(param_LP+param_HP):param_feed;
+   
+   if(resread<param_LP)
+   {if(resread>1)
+   {resonance=val[resread]-vil[(resread)-1];}
+   if(resread==1)
+   {resonance=-inlet_in+val[resread];}}
+ 
+   if(resread>=param_LP)
+   {if(resread>1)
+   {resonance=val[resread];}
+   if(resread==1)
+   {resonance=val[resread];}}
+
+   
+   vola=vola+((-resonance-vola)>>1);]]></code.srate>
+   </obj.normal>
+</objdefs>

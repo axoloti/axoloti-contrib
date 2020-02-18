@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="lifeXYread" uuid="57310e73-38ec-4994-b460-e66c3f5cdcb7">
+      <sDescription>Reads out a XY-coordinate of the &quot;game of life&quot; module and outputs a gate when both the input trigger and the coordinate are above zero (light/dark grey and black steps on game of life module)
+When using a toggle button, the gates can be (un)muted and act like a sustain if multiple steps in a row are above zero.
+Send a gate/trigger signal into the trigger input to add a rhythmic variation of the gate output or to create pulses instead of a sustained gate output.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="X"/>
+         <int32 name="Y"/>
+      </inlets>
+      <outlets>
+         <bool32 name="gate"/>
+         <frac32 name="CV"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="X">
+            <MinValue i="0"/>
+            <MaxValue i="15"/>
+         </int32>
+         <int32 name="Y">
+            <MinValue i="0"/>
+            <MaxValue i="15"/>
+         </int32>
+         <frac32.s.map name="V1"/>
+         <frac32.s.map name="V2"/>
+         <frac32.s.map name="V3"/>
+         <frac32.s.map name="V4"/>
+      </params>
+      <attribs>
+         <objref name="ref"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+int j;
+int gate;
+int32_t V[4];
+int v;]]></code.declaration>
+      <code.krate><![CDATA[int X=param_X+inlet_X;
+X=X&15;
+int Y=param_Y+inlet_Y;
+Y=Y&15;
+
+int degate=0;
+if((inlet_trig>0)&&(!gate)){gate=1;degate=1;}
+else if (inlet_trig==0){gate=0;}
+V[0]=param_V1;
+V[1]=param_V2;
+V[2]=param_V3;
+V[3]=param_V4;
+outlet_gate=attr_ref.array[X][Y]>0?(attr_ref.array[X][Y]>1?(attr_ref.array[X][Y]>2?inlet_trig-degate:1-inlet_trig):1):0;
+
+if(outlet_gate>0){
+v=attr_ref.array[X][Y];}
+outlet_CV=V[v];]]></code.krate>
+   </obj.normal>
+</objdefs>

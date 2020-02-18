@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="sawizer" uuid="ab924715-d65c-4579-9fd2-a2e24a8f191b">
+      <sDescription>creates steps or spikes in your signal depending on parameter settings
+
+&quot;range&quot; sets the stepsize, just like a quantizer.
+&quot;direction&quot; sets the volume of the part within each step, result is added to the step.
+positive values enlarge the part, amplifying the lower half of the negatively and the upper half positively.
+negative values first attenuate the part, creating a stepped/quantized signal.
+negative values then start to invert the part, creating inverted spikes.
+&quot;mix&quot; mixes between original and changed signal</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="range"/>
+         <frac32 name="direction"/>
+         <frac32 name="mix"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="range"/>
+         <frac32.s.map name="direction"/>
+         <frac32.u.map name="mix"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t mix=(param_mix+inlet_mix);
+mix=mix>0?mix:-mix;
+mix=mix>(1<<27)?(2<<27)-mix:mix;
+int32_t miix=mix<<3;
+mix=((1<<27)-mix)<<3;]]></code.krate>
+      <code.srate><![CDATA[int32_t param=param_range+inlet_range;
+int32_t direction=param_direction+inlet_direction;
+param=param==0?param+1:param;
+int32_t range=inlet_in/param;
+int32_t left=inlet_in-range*param;
+outlet_out=___SMMUL((range*param+___SMMUL(left<<3,((1<<27)+(direction<<1))<<2))<<3,miix)+___SMMUL(mix,inlet_in<<2);]]></code.srate>
+   </obj.normal>
+</objdefs>

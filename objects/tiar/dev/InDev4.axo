@@ -1,0 +1,191 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="InDev4" uuid="6901f09d-8482-497e-b719-51a218c04590">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>InDev4.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="vib0"/>
+         <frac32.bipolar name="vib1"/>
+         <frac32.bipolar name="vib2"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.kdecaytime.exp name="A"/>
+         <frac32.s.map.kdecaytime.exp name="R1"/>
+         <frac32.u.map name="L"/>
+         <frac32.s.map.kdecaytime.exp name="R2"/>
+      </params>
+      <attribs/>
+      <includes>
+         <include>./tiar_bli_8_64.h</include>
+      </includes>
+      <code.declaration><![CDATA[//Filtered Impulse Trains
+class Fit{
+public:
+  int32_t coefLP[8];
+  int32_t out[8];
+  int32_t amp[8];
+  int32_t y0[8];
+  int32_t y1[8];
+  uint32_t intPer;
+  uint32_t subPer;
+  uint32_t subSpl;
+  uint16_t nextSpl;
+  uint16_t cpt;
+  void setFandFilters(float freq){
+    float period = 48000.0f/freq;
+    intPer = (int)period;
+    subPer = arm::float_to_q(period - intPer, 27);
+    float c = 10.0f * freq / 48000.0f;
+    for(int oct = 7; oct >= 0; oct--){
+      coefLP[oct] = arm::float_to_q(c, 32);
+      c*=0.5f;
+    }
+  }
+  void setF(float freq){
+    float period = 48000.0f/freq;
+    intPer = (int)period;
+    subPer = arm::float_to_q(period - intPer, 27);
+  }
+  void init(void){
+    for(int oct = 0; oct < 8; oct++){
+      out[oct] = y0[oct] = y1[oct] = amp[oct] = 0;
+    }
+    nextSpl = subSpl = 0;
+    cpt = 0;
+  }
+  int32_t proc(uint16_t spl){
+    if(spl == nextSpl){
+      int32_t _subSpl = (1<<27) - subSpl;
+      y0[7] = ___SMMUL(subSpl, amp[7]);  y1[7] = ___SMMUL(_subSpl, amp[7]);
+      if((cpt&1) == 0){ 
+        y0[6] = ___SMMUL(subSpl, amp[6]);  y1[6] = ___SMMUL(_subSpl, amp[6]); 
+        if((cpt&3) == 0){
+          y0[5] = ___SMMUL(subSpl, amp[5]);  y1[5] = ___SMMUL(_subSpl, amp[5]); 
+          if((cpt&7) == 0){
+            y0[4] = ___SMMUL(subSpl, amp[4]);  y1[4] = ___SMMUL(_subSpl, amp[4]); 
+            if((cpt&15) == 0){
+              y0[3] = ___SMMUL(subSpl, amp[3]);  y1[3] = ___SMMUL(_subSpl, amp[3]);
+              if((cpt&31) == 0){
+                y0[2] = ___SMMUL(subSpl, amp[2]);  y1[2] = ___SMMUL(_subSpl, amp[2]); 
+                if((cpt&63) == 0){
+                  y0[1] = ___SMMUL(subSpl, amp[1]);  y1[1] = ___SMMUL(_subSpl, amp[1]); 
+                  if((cpt&127) == 0){
+                    y0[0] = ___SMMUL(subSpl, amp[0]);  y1[0] = ___SMMUL(_subSpl, amp[0]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }    
+      nextSpl = spl + intPer;
+      subSpl += subPer;
+      if(subSpl >= 1<<27){
+        subSpl -= 1<<27;
+        nextSpl++;
+      }
+      cpt++;
+    }
+    int32_t outFit = 0;
+    for(int oct = 0; oct < 8; oct++){
+      int32_t tmp = out[oct];
+      tmp += y1[oct];
+      tmp = ___SMMLS(coefLP[oct], tmp, tmp);
+     // if(tmp<(1<<21)) tmp = 1<<21;
+      outFit += tmp;//-(1<<21);
+      out[oct] = tmp;
+
+      y1[oct] = y0[oct]; y0[oct] = 0;
+    }
+
+    return outFit*4;
+  }
+};
+
+
+uint32_t spl = 0;
+Fit fits[12];
+
+int8_t gates[128];
+int32_t envs[8*12];
+int32_t envc[8*12];]]></code.declaration>
+      <code.init><![CDATA[float f = 4186.009f/2;
+  f *= 1.059463094f;
+for(int i =0;i<12;i++){
+  fits[i].init();
+  fits[i].setFandFilters(f);
+  f *= 1.059463094f;
+}
+
+
+for(int i = 0; i < 128; i++){
+	gates[i] = 0;
+}
+for(int i = 0; i < 8*12; i++){
+	envs[i] = 0;
+	envc[i] = 0;
+}]]></code.init>
+      <code.krate><![CDATA[float vib0 = inlet_vib0 * 1e-10f;
+float vib1 = inlet_vib1 * 1e-10f;
+float vib2 = inlet_vib2 * 1e-10f;
+//C#
+float f = 0.5f*4186.009f*1.059463094f;
+fits[0].setF(f*vib0+f);  f *= 1.059463094f;
+fits[1].setF(0.5f*f*vib0+f);  f *= 1.059463094f;
+fits[2].setF(-f*vib0+f);  f *= 1.059463094f;
+fits[3].setF(f*vib1+f);  f *= 1.059463094f;
+fits[4].setF(-f*vib1+f);  f *= 1.059463094f;
+fits[5].setF(-f*vib2+f);  f *= 1.059463094f;
+fits[6].setF(0.9f*f*vib2+f);  f *= 1.059463094f;
+fits[7].setF(-0.9f*f*vib1+f);  f *= 1.059463094f;
+fits[8].setF(f*vib1+f);  f *= 1.059463094f;
+fits[9].setF(-f*vib0+f);  f *= 1.059463094f;
+fits[10].setF(0.7f*f*vib2+f);  f *= 1.059463094f;
+fits[11].setF(0.5f*f*vib2+f); 
+
+
+
+float envTot=0;
+for(int i = 0; i <8*12; i++){
+  int32_t b = envs[i];
+  if(gates[13 + i] > 10) envs[i] = ___SMMLA(0x7FFFFFFF-param_A,(100<<20)-b, b>>1)<<1; // ascending
+  else if(b>param_L)     envs[i] = ___SMMUL(b, param_R1)<<1;
+  else                   envs[i] = ___SMMUL(b, param_R2)<<1;
+  envTot += envs[i];
+}
+int32_t comp = arm::float_to_q(10000000/sqrtf(envTot+(1<<27)), 27);
+for(int i = 0; i <8*12; i++){
+	envc[i] = ___SMMUL(envs[i], comp);
+}
+float totAmp=0;
+for(int i = 0; i <12; i++){
+	for(int oct = 0; oct < 8; oct++){
+	  totAmp += (fits[i].amp[oct] = envc[i + 12*oct]<<4);
+	}
+}]]></code.krate>
+      <code.srate><![CDATA[int32_t accu = 0;
+for(int nBlit = 0; nBlit < 12; nBlit++){
+  accu += fits[nBlit].proc(spl);
+}
+
+
+
+
+
+
+outlet_out = accu;
+
+spl++;]]></code.srate>
+      <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
+  gates[data1 & 0x7F] = data2 ? 100:0;
+} else if(status == MIDI_NOTE_OFF + attr_midichannel) {
+  gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i=0;i<128;i++) gates[data1 & 0x7F] = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

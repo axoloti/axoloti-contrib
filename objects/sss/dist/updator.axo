@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="updator" uuid="4c3f11d5-fcb6-491f-9378-d45e9a9a7699">
+      <sDescription>update modulator
+the input is copied to the output as long as the internal phase-oscillator is above the pw-value. When it&apos;s below, last value will be held.
+Result is HP-filtered</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="phase increment"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="freq"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phasor" description="phasor wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="octave" noLabel="true"/>
+         <frac32.s.map.lfopitch name="morph"/>
+         <frac32.u.map name="pw"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+int32_t SQR;
+int32_t val;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[uint32_t freq;
+   MTOFEXTENDED(((param_octave>>24)*12<<21) + inlet_pitch,freq);
+uint32_t F;
+MTOFEXTENDED(param_morph,F)
+F=F>>10;
+   freq+=inlet_freq+F;]]></code.krate>
+      <code.srate><![CDATA[Phase += (freq>>0) ;
+
+if((Phase>>5)>param_pw){
+SQR=inlet_in;}
+val+=(SQR-val)>>10;
+outlet_phasor = SQR-val;]]></code.srate>
+   </obj.normal>
+</objdefs>

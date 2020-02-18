@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="phasorSelect" uuid="05c8186c-adb0-41ec-8a04-5af865157cc8">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>AxoEnString.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="note"/>
+         <frac32buffer.bipolar name="C"/>
+         <frac32buffer.bipolar name="Cs"/>
+         <frac32buffer.bipolar name="D"/>
+         <frac32buffer.bipolar name="Ds"/>
+         <frac32buffer.bipolar name="E"/>
+         <frac32buffer.bipolar name="F"/>
+         <frac32buffer.bipolar name="Fs"/>
+         <frac32buffer.bipolar name="G"/>
+         <frac32buffer.bipolar name="Gs"/>
+         <frac32buffer.bipolar name="A"/>
+         <frac32buffer.bipolar name="As"/>
+         <frac32buffer.bipolar name="B"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays>
+         <int32.label name="note"/>
+         <int32.label name="oct"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[// _____________________________________________________________________
+//Krate
+int note = (inlet_note >> 21) + 64;
+int oct = note / 12;
+
+disp_note = note;
+disp_oct = oct;
+
+int n12 = note - 12 * oct;
+int offset = oct - 1;
+if(offset < 0) offset = 0;
+const int32_t* in = inlet_C;
+     if(n12 ==  1) in = inlet_Cs;
+else if(n12 ==  2) in = inlet_D;
+else if(n12 ==  3) in = inlet_Ds;
+else if(n12 ==  4) in = inlet_E;
+else if(n12 ==  5) in = inlet_F;
+else if(n12 ==  6) in = inlet_Fs;
+else if(n12 ==  7) in = inlet_G;
+else if(n12 ==  8) in = inlet_Gs;
+else if(n12 ==  9) in = inlet_A;
+else if(n12 == 10) in = inlet_As;
+else if(n12 == 11) in = inlet_B;
+
+for(int k = 0; k < BUFSIZE; k++){
+  outlet_out[k] = (in[k] << offset) & 0x07FFFFFF;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

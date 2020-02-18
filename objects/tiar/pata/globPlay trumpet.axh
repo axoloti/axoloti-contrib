@@ -1,0 +1,113 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb mod" uuid="abcd509d15e7d13d5381203fd2b4d0ac6fe57bb3" name="keyb_1" x="14" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="112" y="56">
+      <params>
+         <frac32.s.map name="a" value="-2.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="44.0"/>
+         <frac32.s.map name="r" value="-16.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="210" y="56">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="336" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/pata/globPlayI" uuid="33b50feb-74c5-49bd-b173-d96e7114eb18" name="globPlayI_1" x="476" y="56">
+      <params>
+         <frac32.u.map name="theta" value="15.5"/>
+         <frac32.s.map name="mod r" value="6.0"/>
+         <frac32.s.map name="mod i" value="4.5"/>
+         <frac32.s.map name="LP" value="64.0"/>
+         <frac32.s.map name="HP" value="-35.0"/>
+         <int32 name="delay" value="14"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="644" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="196" y="266">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="294" y="266">
+      <params>
+         <frac32.u.map name="amp" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="56" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_2" x="56" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="DCA_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_2" inlet="pitch"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="DCA_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="sine_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="globPlayI_1" outlet="r"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="DCA_1" outlet="out"/>
+         <dest obj="globPlayI_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="globPlayI_1" outlet="i"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="MIDscope_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>630</x>
+      <y>8</y>
+      <width>894</width>
+      <height>962</height>
+   </windowPos>
+</patch-1.0>

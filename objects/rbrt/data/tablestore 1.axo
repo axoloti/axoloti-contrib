@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tablestore 1" uuid="102fe36d-c17c-4794-8acb-692b85f60cfd">
+      <sDescription>writes and outputs 4 values to a table.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <frac32 name="v0"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+      </inlets>
+      <outlets>
+         <frac32 name="v0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t prev0;]]></code.declaration>
+      <code.init><![CDATA[prev0 = 0;]]></code.init>
+      <code.krate><![CDATA[if (inlet_v0 != prev0){
+attr_table.array[inlet_offset + 0]=__SSAT(inlet_v0,28)>>attr_table.GAIN;
+outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev0 = inlet_v0;
+}
+else {outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;}]]></code.krate>
+   </obj.normal>
+</objdefs>

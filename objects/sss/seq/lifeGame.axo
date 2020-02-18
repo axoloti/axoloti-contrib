@@ -1,0 +1,261 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="lifeGame" uuid="94219ab1-1b09-4e7a-837c-4ee33ebdbd33">
+      <sDescription>This is the core &quot;game of life&quot; module which can be read out by the other life modules.
+It can also be used as a normal XY-sequencer (not using the evolver)
+It can only &quot;evolve&quot; when play is high.
+You can create your own starting pattern (set play to off!!), use the rnd (total randomise-&gt;drastic and quite chaotic, often lots of &quot;invinsible&quot; black cells) or use the &quot;change&quot;, which makes use of the chance-parameter to set what the chance is for each cell to get randomised. The max-parameter sets which values may be generated and leaves higher values untouched.
+
+Then press &quot;save&quot; to put it into the internal array for calculation and press play (if you actually want it to evolve, that is.. you can also use it as a fixed XY-sequencer.)
+
+Each step can be 0,1,2 or 3. These generate different outcomes for the readout modules, but also have different characteristics when it comes to the game of life!
+
+A white step is zero.. dead... no gate and not adding a value to the CV&apos;s. Though when the total value of all cells around the dead cell is exactly 3, the cell becomes &quot;alive&quot;.
+A light-grey step is 1.
+A dark-grey step is 2.
+A black step is 3, and is also &quot;invinsible&quot; in the game of life... it cannot die and generates new living cells around it as long as there are no other life around the dead cell &quot;trying to come to life&quot; (as this would make the total of all the cells around the dead cell go above 3).
+
+Rules:
+1. only if the cell isn&apos;t black, then the following rules will be applied:
+2. if the total of the cells around the calculated cell is above 3, it loses 1 point until it&apos;s dead(light/dark grey only). So a dark grey cell can survive 1 round longer then a light gray cell.
+3. if the total of the cells around the calculated cell is 2 or 3, the cell gains a point.
+4. if the total of the cells around the calculated cell is above 3, the cell loses the half the difference between the total amount minus it&apos;s own value. This way grey cells can always &quot;kill&quot; other white cells together, but 3 light grey cells can&apos;t kill a grey one, only take 1 level off of it. They need to be with more to do that.
+5. if a cell is dead and the total of the cells around it is exactly 3, it becomes alive.
+
+Enjoy playing! :)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="evolve"/>
+         <bool32 name="play"/>
+         <bool32 name="change"/>
+         <bool32 name="randomise"/>
+         <bool32 name="reset"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int2x16 name="01"/>
+         <int2x16 name="02"/>
+         <int2x16 name="03"/>
+         <int2x16 name="04"/>
+         <int2x16 name="05"/>
+         <int2x16 name="06"/>
+         <int2x16 name="07"/>
+         <int2x16 name="08"/>
+         <int2x16 name="09"/>
+         <int2x16 name="10"/>
+         <int2x16 name="11"/>
+         <int2x16 name="12"/>
+         <int2x16 name="13"/>
+         <int2x16 name="14"/>
+         <int2x16 name="15"/>
+         <int2x16 name="16"/>
+         <bool32.mom name="load"/>
+         <bool32.mom name="save"/>
+         <bool32.mom name="reset"/>
+         <int32.hradio name="max">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <bool32.mom name="rnd"/>
+         <bool32.mom name="change"/>
+         <frac32.u.map name="chance"/>
+         <bool32.tgl name="play"/>
+         <bool32.tgl name="update"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t array[16][16];
+int32_t Array[16][16];
+int32_t temp;
+int ltrig;
+int strig;
+int rtrig;
+int i;
+int j;
+int rprev;
+int ctrig;
+int count;
+int reset;
+uint32_t Atrig;
+int gate;
+int32_t V[4];
+int v[6];
+int32_t param[16];]]></code.declaration>
+      <code.init><![CDATA[Atrig=255;]]></code.init>
+      <code.krate><![CDATA[int play=param_play+inlet_play;
+param[0]=param_01;
+param[1]=param_02;
+param[2]=param_03;
+param[3]=param_04;
+param[4]=param_05;
+param[5]=param_06;
+param[6]=param_07;
+param[7]=param_08;
+param[8]=param_09;
+param[9]=param_10;
+param[10]=param_11;
+param[11]=param_12;
+param[12]=param_13;
+param[13]=param_14;
+param[14]=param_15;
+param[15]=param_16;
+
+
+int Reset=param_reset+inlet_reset;
+int rst=0;
+if((Reset>0)&&!reset){
+rst=1;
+reset=1;
+for(i=0;i<16;i++){
+for(j=0;j<16;j++){
+array[j][i]=0;}}	
+}
+else if (Reset==0){reset=0;}
+
+int rnd=param_rnd+inlet_randomise;
+int change=param_change+inlet_change;
+int32_t chance=param_chance;
+
+if(count<64){
+count+=1;
+}
+
+if((rnd>0)&&!rtrig){
+	count=0;
+	rtrig=1;
+	for(i=0;i<16;i++){
+	for(j=0;j<16;j++){
+		if(array[j][i]<(param_max+2)){
+		array[j][i]=((uint32_t)(GenerateRandomNumber()>>30)*(param_max+2))>>2;}
+
+	}}
+}
+else if(rnd==0){rtrig=0;}
+
+
+
+if((change>0)&&!ctrig){
+	ctrig=1;
+	count=0;
+	for(i=0;i<16;i++)
+	{for(j=0;j<16;j++){
+		if(array[j][i]<(param_max+2)){	
+		if(((int32_t)(GenerateRandomNumber()>>4))<chance){
+		array[j][i]=((uint32_t)(GenerateRandomNumber()>>30)*(param_max+2))>>2;}
+	}}}}
+else if(change==0){ctrig=0;}
+
+
+
+if((param_save>0)&!strig){
+strig=1;
+for(i=0;i<16;i++){
+array[0][i]=(param_01>>(i*2))&3;
+array[1][i]=(param_02>>(i*2))&3;
+array[2][i]=(param_03>>(i*2))&3;
+array[3][i]=(param_04>>(i*2))&3;
+array[4][i]=(param_05>>(i*2))&3;
+array[5][i]=(param_06>>(i*2))&3;
+array[6][i]=(param_07>>(i*2))&3;
+array[7][i]=(param_08>>(i*2))&3;
+array[8][i]=(param_09>>(i*2))&3;
+array[9][i]=(param_10>>(i*2))&3;
+array[10][i]=(param_11>>(i*2))&3;
+array[11][i]=(param_12>>(i*2))&3;
+array[12][i]=(param_13>>(i*2))&3;
+array[13][i]=(param_14>>(i*2))&3;
+array[14][i]=(param_15>>(i*2))&3;
+array[15][i]=(param_16>>(i*2))&3;
+}}
+else if (param_save==0){strig=0;}
+
+int load=param_load+(count==63)+((Atrig==0)&(param_update||play))+rst;
+if((load)&&!ltrig){
+ltrig=1;
+temp=0;
+for(i=0;i<16;i++){
+temp+=array[0][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_01],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[1][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_02],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[2][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_03],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[3][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_04],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[4][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_05],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[5][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_06],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[6][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_07],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[7][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_08],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[8][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_09],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[9][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_10],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[10][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_11],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[11][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_12],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[12][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_13],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[13][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_14],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[14][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_15],temp,0xFFFD);temp=0;
+for(i=0;i<16;i++){
+temp+=array[15][i]<<(i<<1);}
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_16],temp,0xFFFD);temp=0;
+}
+else if (load==0){ltrig=0;}
+
+
+
+
+if(play>0){
+	Atrig+=1;
+	Atrig=Atrig>255?255:Atrig;
+	}
+if((inlet_evolve>0)&play>0){Atrig=0;}
+if(((play>0))&(Atrig==0)){
+for(i=0;i<16;i++){
+for(j=0;j<16;j++){
+Array[j][i]=array[j][i];	
+}}}
+if((play==0)){Atrig=255;}
+if(((play>0))&(Atrig<256)){
+j=Atrig>>4;
+i=Atrig-(j<<4);
+
+temp=Array[(j-1)&15][(i-1)&15];//>0?1:0;
+temp+=Array[(j-1)&15][(i)&15];//>0?1:0;
+temp+=Array[(j-1)&15][(i+1)&15];//>0?1:0;
+temp+=Array[(j)&15][(i-1)&15];//>0?1:0;
+temp+=Array[(j)&15][(i+1)&15];//>0?1:0;
+temp+=Array[(j+1)&15][(i-1)&15];//>0?1:0;
+temp+=Array[(j+1)&15][(i)&15];//>0?1:0;
+temp+=Array[(j+1)&15][(i+1)&15];//>0?1:0;
+
+if(!(array[j][i]==3)){
+if((temp<3)&(array[j][i]>0)){array[j][i]=array[j][i]-1<0?0:array[j][i]-1;}
+if((temp>1)&(temp<4)){array[j][i]=(array[j][i]+1)>2?2:array[j][i]+1;}
+if((temp>3)&(array[j][i]>0)){array[j][i]=array[j][i]-(temp-array[j][i])<0?0:array[j][i]-(temp-array[j][i]>>1);}
+if((array[j][i]==0)&(temp==3)){array[j][i]=1;}
+}}
+ rprev=rnd;   ]]></code.krate>
+   </obj.normal>
+</objdefs>

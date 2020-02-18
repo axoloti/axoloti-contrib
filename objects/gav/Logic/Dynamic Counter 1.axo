@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Dynamic Counter 1" uuid="cca409b4-0499-4b2d-9eea-94df38178fde">
+      <sDescription>Dynamic up / down counter.
+As each stage count is completed, the next stage count begins in the opposite direction.
+Numstage - will determine how many stages will be select from stage 1 only to all 8 stages.
+retfirst - will return to the very beginning of count 1 in forward direction when the last count of the last selected stage is complete, if not on, then the direction is changed and count continues fromm last point.
+restart - will return to the very beginning stage 1 count 1 in forward direction, toggle parameter was added so a midi cc could be nominated. 
+
+The purpose opf this object is to create length when connected to a sequence so it is percieved a less or even non-repetitive pattern.</sDescription>
+      <author>Gavin</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="inc" description="increment trigger"/>
+         <bool32 name="retfirst"/>
+         <bool32 name="restart"/>
+      </inlets>
+      <outlets>
+         <int32 name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="numstage">
+            <MaxValue i="8"/>
+         </int32.hradio>
+         <int32 name="p0">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p1">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p2">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p3">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p4">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p5">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p6">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="p7">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <bool32.tgl name="retfirst"/>
+         <bool32.tgl name="restart"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+   int count;
+   int scount;
+   int pval;
+   int vdir;
+   int cstep[8];]]></code.declaration>
+      <code.init><![CDATA[count=-1;
+   ntrig = 0;
+   scount = 0;
+   pval = 0;
+   vdir = 1;]]></code.init>
+      <code.krate><![CDATA[cstep[0] = param_p0;
+cstep[1] = param_p1;
+cstep[2] = param_p2;
+cstep[3] = param_p3;
+cstep[4] = param_p4;
+cstep[5] = param_p5;
+cstep[6] = param_p6;
+cstep[7] = param_p7;
+
+if(param_restart>0 || inlet_restart>0){
+   count=-1;
+   ntrig = 0;
+   scount = 0;
+   pval = 0;
+   vdir = 1;
+}
+
+if (scount>=cstep[pval]) {
+	if(param_numstage <= pval) {
+		if(param_retfirst>0 || inlet_retfirst>0) {
+			count = -1;
+			vdir = -1;	
+		}
+		pval = 0;
+	} else {
+		pval = pval + 1;
+	}
+	scount = 0;
+	vdir = vdir * -1;
+}
+
+if ((inlet_inc>0) && ntrig == 0) {
+   if(vdir == 1) count = count + 1; 
+   if(vdir == -1) count = count - 1;
+   if(count < 0) count = 15;
+   if(count > 15) count = 0;
+   scount = scount + 1;
+   ntrig=1;
+}
+
+if (inlet_inc<1) ntrig=0;
+
+outlet_o= count;]]></code.krate>
+   </obj.normal>
+</objdefs>

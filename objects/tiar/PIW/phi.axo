@@ -1,0 +1,53 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="phi" uuid="1c13dbe5-478e-47b3-b71e-ce71ca8a1b6d">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>phi.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="piwt"/>
+         <spinner name="seed" MinValue="0" MaxValue="65536" DefaultValue="0"/>
+         <spinner name="iterations" MinValue="0" MaxValue="250" DefaultValue="0"/>
+      </attribs>
+      <code.init><![CDATA[for(int i=0;i<attr_piwt.LENGTH;i++){
+  attr_piwt.fv[i] = arm::q_to_float(attr_piwt.v[i], 27-attr_piwt.GAIN);
+}
+int32_t rnd = attr_seed;
+rnd = rnd * 1664525 + 1013904223;
+rnd = rnd * 1664525 + 1013904223;
+rnd = rnd * 1664525 + 1013904223;
+for(int pass = 0; pass < attr_iterations; pass++){
+  float u = 0;
+  float v[16];
+  for(int i=0;i<16;i++) v[i] = 0;
+  rnd = rnd * 1664525 + 1013904223;
+  int order = ((rnd>>24)&0x7)+7;
+  rnd = rnd * 1664525 + 1013904223;
+  bool dir = true;  
+  rnd = rnd * 1664525 + 1013904223;
+  float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
+
+  if(dir){
+    rnd = rnd * 1664525 + 1013904223;
+    float g = 0.782f + 0.2f*arm::q_to_float(rnd, 31);
+    for(int warmup = 0; warmup < 1024/attr_piwt.LENGTH; warmup++){
+      for(int i = attr_piwt.LENGTH - 1; i >= 0; i--){
+        u = attr_piwt.fv[i] + g * v[order];
+        for(int j = order; j > 0; j--) v[j] = v[j-1];
+        v[0] = u; 
+      }
+    }
+    for(int i = attr_piwt.LENGTH - 1; i >= 0; i--){
+      u = attr_piwt.fv[i] + g * v[order];
+      attr_piwt.fv[i] = v[order] - g * u;
+      for(int j = order; j > 0; j--) v[j] = v[j-1];
+      v[0] = u; 
+    }
+  }
+}
+attr_piwt.prepare();]]></code.init>
+   </obj.normal>
+</objdefs>

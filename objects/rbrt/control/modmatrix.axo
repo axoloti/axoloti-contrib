@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="modmatrix" uuid="cc77e8e0-5328-4323-aa95-f2fb11f8e6dc">
+      <sDescription>modulation matrix.
+&apos;amp&apos; crossfades between the selected inlet (&apos;target&apos;) and the value at inlet &apos;mod&apos;.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>mux.axh</helpPatch>
+      <inlets>
+         <frac32 name="amp" description="modulation amount"/>
+         <frac32 name="mod" description="modulation input"/>
+         <int32 name="target" description="modulation target"/>
+         <frac32 name="i0" description=""/>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+         <frac32 name="i3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="i7"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o0" description="output"/>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="o4"/>
+         <frac32 name="o5"/>
+         <frac32 name="o6"/>
+         <frac32 name="o7"/>
+         <frac32 name="mod"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int mod;
+int src;]]></code.declaration>
+      <code.krate><![CDATA[switch(inlet_target>0?inlet_target:0){
+      case 0: src= inlet_i0;break;
+      case 1: src= inlet_i1;break;
+      case 2: src= inlet_i2;break;
+      case 3: src= inlet_i3;break;
+      case 4: src= inlet_i4;break;
+      case 5: src= inlet_i5;break;
+      case 6: src= inlet_i6;break;
+      case 7: src= inlet_i7;break;
+      default: src= inlet_i7;break;
+}
+
+  {
+      int64_t a = (int64_t)inlet_mod * inlet_amp;
+      a += (int64_t)src * ((128<<20)-inlet_amp);
+      mod= a>>27;
+   }
+
+   outlet_o0= (inlet_target == 0)?mod:inlet_i0;
+   outlet_o1= (inlet_target == 1)?mod:inlet_i1;
+   outlet_o2= (inlet_target == 2)?mod:inlet_i2;
+   outlet_o3= (inlet_target == 3)?mod:inlet_i3;
+
+   outlet_o4= (inlet_target == 4)?mod:inlet_i4;
+   outlet_o5= (inlet_target == 5)?mod:inlet_i5;
+   outlet_o6= (inlet_target == 6)?mod:inlet_i6;
+   outlet_o7= (inlet_target == 7)?mod:inlet_i7;
+
+   outlet_mod = mod;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,90 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="matrix get" uuid="c1cee0db-d880-4881-ad24-31885b7f0b6d">
+      <sDescription>useful for polyphonic midi.
+noteOn issues a pulse whenever a note-on occurs,
+note returns the note number, with &apos;noteshift&apos; added (or substracted)
+same for note off.
+hold is 1 if any keys are on hold.
+gate is true when velocity &gt; 0</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>push buttons.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32.positive name="pad" description="note number +/- &apos;noteshift&apos;"/>
+         <int32.positive name="velo" description="velocity"/>
+         <bool32 name="gate" description="status of current note"/>
+         <bool32.pulse name="padOn" description="pulse on note-on"/>
+         <bool32.pulse name="padOff" description="pulse on note-off"/>
+         <int32 name="hold"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t _note;
+int8_t count;
+uint8_t _velo;
+uint8_t pren;
+uint8_t prev;
+
+uint8_t nstack [16] = {0};
+uint8_t vstack [16] = {0};
+uint8_t slength;
+uint8_t sread;
+uint8_t swrite;
+uint8_t thin;]]></code.declaration>
+      <code.init><![CDATA[slength = 0;
+_note = 0;
+_velo = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_padOn = 0;
+outlet_padOff = 0;
+
+if (!thin){
+	thin = 2;
+	if (slength) {
+		_note = nstack [sread];
+		_velo = vstack [sread];
+		if (_velo) {
+			outlet_padOn = 1;
+			count ++;
+		}
+			else {
+				outlet_padOff = 1;
+				count --;
+			}
+		sread ++;
+		sread = sread %16;
+		slength --;
+	} 
+} else thin --;
+
+	outlet_gate = bool (_velo);
+	outlet_hold = count;
+	outlet_pad = _note;
+	outlet_velo = _velo;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON) && (data2)) {
+  if ((data1 >= 36)&&(data1 <= 99))
+  {
+    	nstack [swrite] = data1 -36;
+     vstack [swrite] = data2;
+     slength ++;
+  	swrite ++;
+  	swrite = swrite %16; 
+  }
+}
+if (((status == MIDI_NOTE_ON) && (!data2))||(status == MIDI_NOTE_OFF)) 
+{
+ if ((data1 >= 36)&&(data1 <= 99))
+{
+    	nstack [swrite] = data1 -36;
+     vstack [swrite] = 0;
+     slength ++;
+    	swrite ++;
+  	swrite = swrite %16;    
+}
+ }
+else if ((status ==  MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  _velo = 0;count = 0;slength = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

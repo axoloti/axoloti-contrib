@@ -1,0 +1,36 @@
+<objdefs>
+   <obj.normal id="allpass m hq" uuid="c6bec25f5bf44267a6bd5537d6a2cfae">
+      <sDescription>allpass reverb section with modulation input</sDescription>
+      <author>Johannes Taelman / Jan Hofmann</author>
+      <license>BSD</license>
+      <helpPatch>allpass.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="in"/>
+        <frac32buffer name="mod" description="modulation input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <attribs>
+         <spinner name="delay" MinValue="1" MaxValue="5000" DefaultValue="100"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t d[attr_delay];
+int dpos;
+]]></code.declaration>
+      <code.init><![CDATA[int i;
+for (i=0;i<attr_delay;i++)
+   d[i] = 0;
+dpos = 0;
+]]></code.init>
+      <code.krate><![CDATA[int32_t g2;
+]]></code.krate>
+      <code.srate><![CDATA[g2 = inlet_mod<<4;
+int32_t dout =  d[dpos];
+int32_t din = ___SMMLA(g2,dout,inlet_in>>1)<<1;
+d[dpos++]=din;
+outlet_out = ___SMMLS(g2,din,dout>>1)<<1;
+if (dpos == attr_delay) dpos = 0;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

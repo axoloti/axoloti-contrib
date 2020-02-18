@@ -1,0 +1,81 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="streamplay" uuid="43e33fb8-77a3-48be-b7ec-33df12c5a2fe">
+      <sDescription>plays audio from the tablestream module</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="pos" description="start position in table"/>
+         <bool32.rising name="start" description="start playback"/>
+         <bool32.rising name="stop" description="stop playback"/>
+         <int32 name="sample"/>
+         <bool32 name="direction"/>
+         <frac32 name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int pstart;
+   int pstop;
+   int pos;
+   int32_t phs;
+   int32_t prv;
+   int32_t stp;
+   int32_t vi30=(1<<30)-1;]]></code.declaration>
+      <code.init><![CDATA[pos = 0;
+pstart = 0;
+pstop = 1;]]></code.init>
+      <code.krate><![CDATA[bool dir=inlet_direction;
+
+   	int32_t pitch;
+   	int32_t base;
+   	MTOFEXTENDED(0,base)
+   	MTOFEXTENDED(param_pitch+inlet_pitch,pitch)
+   	pitch-=base;
+if ((inlet_start>0) && !pstart) {
+      pstart = 1;
+      pstop = 0;
+      uint32_t asat = __USAT(inlet_pos,27);
+      if(dir){asat=(1<<27)-asat-1;}
+      pos = (asat>>(27-attr_table.LENGTHPOW));
+   } else if (!(inlet_start>0)) {
+      pstart = 0;
+   }
+  if ((inlet_stop>0) && !pstop) {
+      pstop = 1;
+      pstart = 0;
+   } 
+
+   	int32_t sample=inlet_sample&(attr_table.SAMPLES-1);
+   	sample*=attr_table.LENGTH;]]></code.krate>
+      <code.srate><![CDATA[if (!pstop) {
+
+       if ((pos< attr_table.LENGTH)&&(pos>=0)){
+       phs+=pitch;
+       int32_t p1=phs&vi30;
+       stp=p1>>25;
+       p1=p1-(stp<<25)<<5;
+       if(!(stp==prv)){
+       	if(pitch>0){
+       		(pos++);
+       	}
+       	else{(pos--);}
+       }
+       pos-=pos>=attr_table.LENGTH?2:0;
+       pos+=pos<=0?1:0;
+       if(dir>0){(pos--);}else{(pos++);}
+       int32_t tmp1=attr_table.array[__USAT(pos,attr_table.LENGTHPOW)+sample]<<attr_table.GAIN;
+       int32_t tmp2=attr_table.array[__USAT(pos+1,attr_table.LENGTHPOW)+sample]<<attr_table.GAIN;
+       outlet_wave = tmp1+(___SMMUL(tmp2-tmp1,p1)<<2);
+       prv=stp;
+   }	else outlet_wave = 0;
+   } else outlet_wave = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

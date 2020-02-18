@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="u2b" uuid="2e1253ac-ca4b-430b-971f-cd0cfaad394c">
+      <sDescription>A unipolar input, bipolar output k rate function defined by 2 segments.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>u2b.axh</helpPatch>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="p0"/>
+         <frac32.s.map name="p1"/>
+         <frac32.s.map name="p2"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[if(inlet_in >= (1<<27))
+  outlet_out = param_p2;
+else if(inlet_in <= 0)
+  outlet_out = param_p0;
+else{
+  int32_t i = inlet_in >> (27-1);              // i [0 8[
+  int32_t a = (inlet_in & ((1<<(27-1)) - 1));  // a q26
+  if(i < 1){ // [0 1[             q27         q26   q21           q27 
+    outlet_out = ___SMMLA(param_p1 - param_p0, a, param_p0 >> 6) << 6;
+  } else {   // [1 2[
+    outlet_out = ___SMMLA(param_p2 - param_p1, a, param_p1 >> 6) << 6;
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

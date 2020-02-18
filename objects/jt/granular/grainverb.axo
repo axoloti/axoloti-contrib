@@ -1,0 +1,450 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="grainverb" uuid="aaafab49-927b-4660-a360-ed30d1a7e643">
+      <sDescription>granular reverb
+a granular delay with feedback</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>grainverb.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+         <frac32.bipolar name="delay"/>
+         <frac32.bipolar name="spread"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="l"/>
+         <frac32buffer name="r"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="amount" description="dry/wet balance"/>
+         <frac32.u.map name="delay" description="pre-delay time">
+            <DefaultValue v="1.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="spread" description="amount of random variation in grain delay">
+            <DefaultValue v="1.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="fdbk" description="feedback - the sweet spot depends on window shape!">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs>
+         <combo name="grains" description="number of simulatneous grains">
+            <MenuEntries>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </CEntries>
+         </combo>
+         <combo name="grainlength" description="length of each grain in samples">
+            <MenuEntries>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+            </MenuEntries>
+            <CEntries>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+            </CEntries>
+         </combo>
+         <combo name="window" description="window shape">
+            <MenuEntries>
+               <string>triangle</string>
+               <string>hanning</string>
+               <string>smoothstep</string>
+               <string>smoothstep_ext</string>
+            </MenuEntries>
+            <CEntries>
+               <string>triangle</string>
+               <string>hanning</string>
+               <string>smoothstep</string>
+               <string>smoothstep_ext</string>
+            </CEntries>
+         </combo>
+         <combo name="size" description="maximum delay in samples">
+            <MenuEntries>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+
+static const int ngrains = attr_grains;
+static const int attenuate_shift = attr_grains==128?6:attr_grains==64?5:attr_grains==32?4:3;
+static const int grainlength = attr_grainlength;
+// even distribution of grain phases
+static const int incr1 = (1ull<<32)/ngrains;
+static const int incr2 = ((1ull<<32)/(BUFSIZE*1024)) * ((BUFSIZE*BUFSIZE*1024/*ngrains*/)/grainlength);
+static const int iNewGrainsPerFrame = (ngrains*BUFSIZE)/grainlength;
+// to avoid division by zero warnings in inactive code...
+static const int iNewGrainsPerFrame1 = iNewGrainsPerFrame>0?iNewGrainsPerFrame:1;
+static const int attenuate_fdbk = (int32_t)(0x7FFFFFFF*0.58f*(
+				attr_grains==128?1.0f:
+				attr_grains==64?0.70710678f:
+				attr_grains==32?0.70710678f*0.70710678f:
+				0.70710678f*0.70710678f*0.70710678f));
+
+int32_t fdbk[BUFSIZE];
+
+int32_t * offsets[ngrains];
+int32_t prev_window[ngrains];
+int32_t phase=0;
+
+int32_t save_FMC_SDCR1;
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLAWT (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlawt %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t _SMLAWB (int32_t op1, int32_t op2, int32_t op3)
+{
+  int32_t result;  
+  __ASM volatile ("smlawb %0, %1, %2, %3" : "=r" (result) : "r" (op1), "r" (op2), "r" (op3));
+  return(result);
+}
+
+void setupDMACopy(int nwords) {
+	DMA2D->IFCR |= DMA2D_IFSR_CTEIF;
+	DMA2D->IFCR |= DMA2D_IFSR_CTCIF;
+	DMA2D->CR = 0;
+	DMA2D->FGPFCCR = 0;
+	DMA2D->OPFCCR = 0;
+	DMA2D->FGOR = 0;
+	DMA2D->OOR = 0;
+	DMA2D->NLR = 1 + (nwords<<16);
+}
+
+void initiateDMACopy(volatile int32_t * pDst, volatile int32_t * pSrc) {
+	DMA2D->FGMAR = (uint32_t)pSrc;
+	DMA2D->OMAR = (uint32_t)pDst;
+	DMA2D->CR |= DMA2D_CR_START;
+}
+
+void waitDMACopyComplete(){
+	while (DMA2D->CR & DMA2D_CR_START) {
+	}
+}
+
+int window_triangle(int phase){
+	int32_t x = phase;
+	x = x<0?~x:x;
+	return x>>3;
+}
+
+int window_smoothstep(int phase){
+	int32_t x = phase;
+	x = x<0?~x:x;
+	uint32_t _3_minus_2x = 0xC0000000 - x;
+	uint32_t x_squared = ___SMMUL(x,x);
+	return (_3_minus_2x*(uint64_t)x_squared)>>32;
+}
+
+int window_smoothstep_ext(int phase){
+	int32_t x = phase;
+	x = x<0?~x:x;
+	x = __SSAT(x,31)<<1;
+	uint32_t _3_minus_2x = 0xC0000000 - x;
+	uint32_t x_squared = ___SMMUL(x,x);
+	return (_3_minus_2x*(uint64_t)x_squared)>>32;
+}
+
+int window_hanning_ext(int phase){
+	int32_t x = phase;
+	x = x<0?~x:x;
+	x = __SSAT(x,31)<<1;
+	int32_t c = sin_q31(x - 0x40000000);
+	return 0x08000000 + (c>>4);
+}
+
+int window_hanning(int phase){
+	int32_t x = phase;
+	int32_t c = sin_q31(x - 0x40000000);
+	return 0x08000000 + (c>>4);
+}
+
+int window(int phase){
+	return window_attr_window(phase);
+}
+
+int32_t * getNewOffset(int delay, int spread) {
+	int32_t tpdf = (GenerateRandomNumber()>>(32-LENGTHPOW))+(GenerateRandomNumber()>>(32-LENGTHPOW));
+	int off = 2*__SMMLA(spread, tpdf, delay);
+	int lim = LENGTH - grainlength;
+	if (off >= lim){
+		off = lim - (off - lim);
+	}
+	if (off<0) {
+		off = -off;
+	}
+	return (int32_t *)&array[(writepos-off)&LENGTHMASK];
+}
+
+void simd16_env(int32_t *outp, int32_t a_new, int32_t a_prev, volatile int32_t *src){
+	int32_t ainc = (a_new-a_prev)>>4;
+	int32_t a = a_prev;
+	int i = BUFSIZE/2;
+	while(i--) {
+	// registers:
+	// 	*src
+	// 	s_s16_s16
+	// 	a 
+	// 	ainc
+	// 	i 
+	//   *inp
+	// 	x1
+	// 	x2
+		int32_t s_s16_s16 = *src++;
+		int32_t *inp = outp;
+		int32_t x1 = *inp++;
+		int32_t x2 = *inp;
+		x1 = _SMLAWB(a, s_s16_s16,x1);
+		a+=ainc;
+		x2 = _SMLAWT(a, s_s16_s16,x2);
+		a+=ainc;
+		*outp++ = x1;
+		*outp++ = x2;
+	}
+}]]></code.declaration>
+      <code.init><![CDATA[int i;
+static int16_t _array[attr_poly][LENGTH*2]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+writepos = 0;
+for(i=0;i<LENGTH*2;i++) array[i] = 0;
+
+// initialize DMA2D engine
+RCC->AHB1ENR |= RCC_AHB1ENR_DMA2DEN;
+RCC->AHB1RSTR |= RCC_AHB1RSTR_DMA2DRST;
+RCC->AHB1RSTR &= ~RCC_AHB1RSTR_DMA2DRST;
+
+for(i=0;i<ngrains;i++){
+	offsets[i] = (int32_t *)&array[0];
+	prev_window[i]=0;
+}
+for(i=0;i<BUFSIZE;i++){
+	fdbk[i]=0;
+}
+phase = 0;
+
+// enable SDRam read burst
+//FMC_Bank5_6->SDCR[0] |= FMC_SDCR1_RBURST;
+save_FMC_SDCR1 = *((uint32_t *)0xA0000140);
+*((uint32_t *)0xA0000140) |= 0x00001000;]]></code.init>
+      <code.dispose><![CDATA[*((uint32_t *)0xA0000140) = save_FMC_SDCR1;]]></code.dispose>
+      <code.krate><![CDATA[static int32_t dmabuf1[8] __attribute__ ((section (".sram2")));
+static int32_t dmabuf2[8] __attribute__ ((section (".sram2")));
+
+int i;
+writepos = (writepos + BUFSIZE)&LENGTHMASK;
+int16_t *parray = &array[writepos];
+for(i=0;i<BUFSIZE;i++){
+	*parray++ = __SSAT((fdbk[i]+inlet_in[i])>>12,16);
+}
+parray = &array[writepos]+LENGTH;
+for(i=0;i<BUFSIZE;i++){
+	*parray++ = __SSAT((fdbk[i]+inlet_in[i])>>12,16);
+}
+
+int32_t delay=__USAT(param_delay+inlet_delay,27)>>(28-LENGTHPOW);
+int32_t spread=__USAT(param_spread+inlet_spread,27)<<4;
+
+/*	
+// unfinished
+// search for next positive zerocrossing
+	int16_t *psample = &attr_table.array[off + 128 * BUFSIZE];
+	int j = 512;
+	while(j--){
+		if (*psample++ < 0) break;
+	}
+	j = 512;
+	while(j--){
+		if (*psample++ >= 0) break;
+	}
+	// align to middle of window
+	*psample -= 64 * BUFSIZE;
+	*psample -= index * 16;
+	offsets[(127-index)&0x7F] = (int32_t *)((int32_t)psample & 0xFFFFFFFC);
+*/
+
+/*
+example:
+	ngrains=16 
+	grainlength=8*BUFSIZE
+	iNewGrainsPerFrame=2
+
+  frame:0 1 2 3 4 5 6 7 8 9 A B C D E F
+grain:0 / - - - - - - \ / - - - - - - \
+	 1 \ / - - - - - - \ / - - - - - - 
+	 2 - \ / - - - - - - \ / - - - - -
+	 3 - - \ / - - - - - - \ / - - - -
+	 4 - - - \ / - - - - - - \ / - - -
+	 5 - - - - \ / - - - - - - \ / - - 
+	 6 - - - - - \ / - - - - - - \ / - 
+	 7 - - - - - - \ / - - - - - - \ / 
+	 8 / - - - - - - \ / - - - - - - \
+	 9 \ / - - - - - - \ / - - - - - - 
+	 A - \ / - - - - - - \ / - - - - -
+	 B - - \ / - - - - - - \ / - - - -
+	 C - - - \ / - - - - - - \ / - - -
+	 D - - - - \ / - - - - - - \ / - - 
+	 E - - - - - \ / - - - - - - \ / - 
+	 F - - - - - - \ / - - - - - - \ / 
+even grains on left output
+odd grains on right output
+*/
+
+if (iNewGrainsPerFrame) {
+	int index = ((uint32_t)phase)/((1ull<<32)/(ngrains/iNewGrainsPerFrame1));
+	for(i=0;i<iNewGrainsPerFrame;i++){
+		index += ngrains/iNewGrainsPerFrame1;
+		offsets[(0-index)&(ngrains-1)] = getNewOffset(delay,spread);
+	}
+} else {
+	if (!(phase & (incr1-1))) {
+		int index = ((uint32_t)phase)/((1ull<<32)/ngrains);
+		offsets[(0-index)&(ngrains-1)] = getNewOffset(delay,spread);
+	}
+}
+
+// every 32bit word contains 2 16bit samples
+setupDMACopy(BUFSIZE/2);
+
+// clear output buffers
+for(i=0;i<BUFSIZE;i++) {
+	outlet_l[i]=0;
+	outlet_r[i]=0;
+}
+
+int iGrain;
+int phl = phase;
+int32_t * * pGrain;
+pGrain = &offsets[0];
+int32_t *pPrevWindow = &prev_window[0];
+int32_t a1,a2;
+
+#if 1 // use DMA
+// loop lead-in
+waitDMACopyComplete();
+initiateDMACopy(&dmabuf2[0],*pGrain);
+*pGrain += BUFSIZE/2; pGrain++;
+// loop
+for(iGrain=1;iGrain<(ngrains-1);iGrain++){	
+// pingpong SDRAM to SRAM using DMA
+	waitDMACopyComplete();
+	initiateDMACopy(&dmabuf1[0],*pGrain);
+
+	*pGrain += BUFSIZE/2; pGrain++;
+	a1 = *pPrevWindow;
+	a2 = window(phl + incr2)>>attenuate_shift;
+	*pPrevWindow++ = a2;
+
+//	if (iGrain==1+(param_p1>>20))
+	simd16_env(&outlet_l[0], a2, a1, &dmabuf2[0]);
+
+	phl += incr1;
+
+	iGrain++;
+	waitDMACopyComplete();
+	initiateDMACopy(&dmabuf2[0],*pGrain);
+	*pGrain += BUFSIZE/2; pGrain++;
+
+	a1 = *pPrevWindow;
+	a2 = window(phl + incr2)>>attenuate_shift;
+	*pPrevWindow++ = a2;
+
+//	if (iGrain==1+(param_p1>>20))
+	simd16_env(&outlet_r[0], a2, a1, &dmabuf1[0]);
+
+	phl += incr1;
+}
+// loop lead-out
+waitDMACopyComplete();
+initiateDMACopy(&dmabuf1[0],*pGrain);
+*pGrain += BUFSIZE/2; pGrain++;
+a1 = *pPrevWindow;
+a2 = window(phl + incr2)>>attenuate_shift;
+*pPrevWindow++ = a2;
+simd16_env(&outlet_l[0], a2, a1, &dmabuf2[0]);
+phl += incr1;
+a1 = *pPrevWindow;
+a2 = window(phl + incr2)>>attenuate_shift;
+*pPrevWindow++ = a2;
+waitDMACopyComplete();
+simd16_env(&outlet_r[0], a2, a1, &dmabuf1[0]);
+
+#else // implementation without DMA copy
+for(iGrain=0;iGrain<ngrains;iGrain++){	
+	a1 = *pPrevWindow;
+	a2 = window(phl + incr2)>>attenuate_shift;
+	*pPrevWindow++ = a2;
+	simd16_env(&outlet_l[0], a2, a1, *pGrain);
+	*pGrain += BUFSIZE/2; pGrain++;
+	phl += incr1;
+	iGrain++;
+	a1 = *pPrevWindow;
+	a2 = window(phl + incr2)>>attenuate_shift;
+	*pPrevWindow++ = a2;
+	simd16_env(&outlet_r[0], a2, a1, *pGrain);
+	*pGrain += BUFSIZE/2; pGrain++;
+	phl += incr1;
+}
+#endif
+
+phase += incr2;
+
+int fdbka = ___SMMUL(param_fdbk,attenuate_fdbk)<<5;
+for(i=0;i<BUFSIZE;i++){
+	fdbk[i] = __SSAT(___SMMUL(fdbka,outlet_l[i]-outlet_r[i]),26)<<5;
+}
+
+int amt = param_amount<<4;
+int amtc = 0x7FFFFFFF-(param_amount<<4);
+
+for(i=0;i<BUFSIZE;i++){
+	outlet_l[i] = ___SMMLA(amt,outlet_l[i],___SMMUL(amtc,inlet_in[i]))<<1;
+	outlet_r[i] = ___SMMLA(amt,outlet_r[i],___SMMUL(amtc,inlet_in[i]))<<1;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

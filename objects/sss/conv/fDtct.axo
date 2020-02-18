@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fDtct" uuid="e114e4ae-b5f3-45c5-b03e-4aaecddc25d9">
+      <sDescription>fast frequency detector</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="tresh" description="pitch detections that are above treshold value will be ommited (not sure if it actually helps, but it&apos;s there to try)" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prv;
+uint32_t Prv;
+uint32_t cur;
+uint32_t writepos;
+int32_t array[128];
+uint32_t Array[128];
+int64_t TM;
+int32_t TS;
+bool zc;
+int cnt;
+int32_t tmp;
+int32_t lp1;
+int32_t lp2;
+int32_t hp;
+uint32_t Time;
+int i;]]></code.declaration>
+      <code.krate><![CDATA[//for(i=0;i<127;i++){
+//tmp+=array[i]-tmp>>8;
+//}
+
+
+for(i=0;i<128;i++){
+	int32_t diff=tmp-array[i];
+	diff=diff>0?diff:-diff;
+	if(diff<(param_tresh)){
+	int k=(i+writepos)&127;
+	cur=Array[k];
+	TM=Array[k]-Prv;
+	TS=TM<0?(1<<32)+TM:TM;
+	Prv=Array[k];
+}
+}
+
+
+outlet_pitch=((int64_t)(65584)<<8)/TS<<4;]]></code.krate>
+      <code.srate><![CDATA[lp1+=(inlet_in-lp1)>>7;
+lp2+=(lp1-lp2)>>7;
+hp+=(lp2-hp)>>10;
+int32_t lh=lp2-hp;
+if((lh>=0)&&(prv<0)){
+int32_t chg=lh-prv;
+tmp+=chg-tmp>>4;
+array[writepos]=chg;
+Array[writepos]=Time;
+writepos=(writepos+1)&127;
+}
+Time+=1;
+prv=lh;]]></code.srate>
+   </obj.normal>
+</objdefs>

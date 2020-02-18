@@ -1,0 +1,98 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="EnvTX802Mod" uuid="b0622e2a-c423-49a5-8a74-1d8cec942bec">
+      <sDescription>This is a four phase enveloppe generator like used in the Yamaha TX802 FM synthesizer. Most important feauture is that the end levels of the different phases can be set. This is the version with modulation inputs.</sDescription>
+      <author>Albert van der Zee</author>
+      <license>GPL</license>
+      <inlets>
+         <bool32.risingfalling name="Trigger"/>
+         <bool32 name="EnvOn"/>
+         <frac32.bipolar name="Duration1"/>
+         <frac32.positive name="Level1"/>
+         <frac32.bipolar name="Duration2"/>
+         <frac32.positive name="Level2"/>
+         <frac32.bipolar name="Duration3"/>
+         <frac32.positive name="Level3"/>
+         <frac32.bipolar name="Duration4"/>
+         <frac32.positive name="Level4"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="o"/>
+      </outlets>
+      <displays>
+         <int32.label name="stage"/>
+         <int32.label name="cycles"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t stage = 1;
+int ntrig;
+int32_t val;
+int64_t rate;
+int32_t cycles;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_EnvOn) { // Enveloppe can be switched off
+	stage=1;
+	ntrig=0;	
+	}
+else
+{ if ((inlet_Trigger>0) && !ntrig) { // pressing a key will start the enveloppe 
+   stage = 2;
+   ntrig = 1;  
+   }
+
+if (!(inlet_Trigger>0) && ntrig) { // releasing the key will start the final (release) phase of the enveloppe 
+   stage = 9;
+   ntrig=0;   
+   }
+}
+
+switch(stage) {
+	case 1 : val = (inlet_Level4<<4);//phase 1: key is off, release is finnished
+		    break;              
+	case 2 : // phase 2: key is on, start of move to Level1 at Rate1
+		    cycles = (inlet_Duration1 + 134217728)>>21;  // read duration and transfer to value range 0-127
+		    cycles= (11*cycles*cycles - 234*cycles)/10;  // number of cycles is calculated based on the positive side of parabolic formula y = 1.1*X^2 - 23.4 * x (-64 = 0 sec, 0 = 1 sec, +64 = 5 sec)  
+		    rate = ((((inlet_Level1<<4) - val))/(cycles));    // the adjustment per cycle of the output value during this phase is calculated
+		    stage = 3;		    		                   // set the next stage and do not break
+    	case 3 : // phase 2: key is on, moving to level1 at Rate1 
+		     val+=  rate;                                // the output value is adjusted
+		     cycles -= 1;                                // opne cycle finnished
+		     if (cycles<0) {stage = 4; val=(inlet_Level1<<4);} // out of cycles move to the next phase
+		     else break;
+	case 4 :  //phase 3: key is on, start of move to Level2 at Rate2 
+	          cycles = (inlet_Duration2 + 134217728)>>21;
+		     cycles= (11*cycles*cycles - 234*cycles)/10;
+		     rate = ((((inlet_Level2<<4) - val))/(cycles));  			
+    			stage = 5;          
+     case 5 : // phase 3: key is on, moving to level2 at Rate2 
+		     val+=  rate;
+		     cycles -= 1;		     
+		     if (cycles<0) {stage = 6; val=(inlet_Level2<<4);}
+		     else break;
+    	case 6 : // phase 4: key is on, start of move to Level3 at Rate3
+    		     cycles = (inlet_Duration3 + 134217728)>>21;
+		     cycles= (11*cycles*cycles - 234*cycles)/10;
+		     rate = ((((inlet_Level3<<4) - val))/(cycles));  			
+    		    	stage = 7;             	
+     case 7 : // phase 4: key is on, moving to level3 at Rate3 
+    		     val+=  rate;
+		     cycles -= 1;		     
+		     if (cycles<0) {stage = 8; val=(inlet_Level3<<4);}
+		     else break;
+    case 8 :// phase 5: key is on, staying at Level3 
+     		val=(inlet_Level3<<4); 
+     		break;
+     case 9 : // phase 6: key is off, start of move to Level4 at Rate4
+    			cycles = (inlet_Duration4 + 134217728)>>21;
+		     cycles= (11*cycles*cycles - 234*cycles)/10;
+		     rate = ((((inlet_Level4<<4) - val))/(cycles));  			
+    		    	stage = 10;             	
+    case 10 : // phase 6: key is off, moving to level4 at Rate4 
+               val+=  rate;
+		     cycles -= 1;		     
+		     if (cycles<0) {stage = 1; val=(inlet_Level4<<4);}
+		     else break;          	
+} // end switch
+
+outlet_o = val>>4;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dualvcf3" uuid="119286e3-a239-4c99-aa8a-71b987b1a774">
+      <sDescription>4-pole (instead of 2-pole) resonant low-pass filter (biquad), filter updated at k-rate
+added a softdrive between the two filters two prevent too loud/wrapping signals</sDescription>
+      <author>Johannes Taelman edit by Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[data_filter_biquad_A fd[2];]]></code.declaration>
+      <code.init><![CDATA[init_filter_biquad_A(&fd[0]);
+  init_filter_biquad_A(&fd[1]);]]></code.init>
+      <code.krate><![CDATA[{
+      int32_t freq;
+      MTOF(param_pitch + inlet_pitch,freq);
+      f_filter_biquad_A(&fd[0],inlet_in,outlet_out,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      for(int i=0;i<BUFSIZE;i++){
+      int32_t ts = __SSAT(outlet_out[i],28);
+	int32_t tsq31 = ts<<3;
+	int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+	outlet_out[i] = ts + (ts>>1) - (tsq31p3)>>1;
+      }
+      f_filter_biquad_A(&fd[1],outlet_out,outlet_out,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+   }]]></code.krate>
+   </obj.normal>
+</objdefs>

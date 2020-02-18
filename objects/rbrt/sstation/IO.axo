@@ -1,0 +1,207 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="IO" uuid="d84fabd7-172d-4432-b343-0d59416d07ce">
+      <sDescription>save and load table to sdcard</sDescription>
+      <author>Johannes Taelman edit by Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="saveAll" description="trigger"/>
+         <bool32.rising name="loadAll" description="trigger"/>
+         <int32.positive name="slot"/>
+         <bool32.rising name="saveSlot"/>
+         <bool32.rising name="loadSlot"/>
+         <charptr32 name="fn1"/>
+         <charptr32 name="fn2"/>
+         <charptr32 name="fn3"/>
+         <charptr32 name="fn4"/>
+         <charptr32 name="fn5"/>
+         <charptr32 name="fn6"/>
+      </inlets>
+      <outlets>
+         <bool32 name="done"/>
+         <int32 name="test"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[uint8_t index;
+bool slot;
+bool save;
+bool load;
+bool all;
+bool trig;
+uint8_t m_count;
+int rem_sz;
+char * t_adr;
+bool error;
+
+char fn [32];
+
+
+int _save(){
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,fn);return 1;}
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,t_adr + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,t_adr + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    } 
+    if (err != FR_OK) report_fatfs_error(err,fn);
+    err = f_close(&FileObject);
+    return 0;
+}
+
+int _load () {
+	FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,fn);return 1;}
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy(t_adr + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy(t_adr + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }  
+    if (err != FR_OK) report_fatfs_error(err,fn);
+    err = f_close(&FileObject);
+    return 0;
+}]]></code.declaration>
+      <code.krate><![CDATA[outlet_done =0;
+
+if (inlet_saveAll && !trig) {
+	save = 1 ;
+	index = 0;
+	all = 1;
+	trig = 1;
+	m_count = 3;
+	attr_smplr.GLOBAL [0] = attr_smplr.RECPOS;
+    	attr_smplr.GLOBAL [1] = attr_smplr.delcount;
+	}
+
+if (inlet_loadAll && !trig) {
+	load = 1 ;
+	index = 0;
+	all = 1;
+	trig = 1;
+	m_count = 3;
+	}
+
+
+
+if (all){
+	switch(index?index:0){
+		case 0: {
+		 rem_sz = 8 << 2;
+	 	t_adr = (char *) (&attr_smplr.GLOBAL[0]);
+	 	memcpy(&fn[0],inlet_fn1,strlen (inlet_fn1));
+	 	break;
+		 }
+      	case 1: {
+      	rem_sz = 8192 << 2;
+      	t_adr = (char *) (&attr_smplr.array[0]);
+      	memcpy(&fn[0],inlet_fn2,strlen (inlet_fn2));
+      	break;
+      	}
+      	case 2: {
+      	rem_sz = attr_smplr.RECPOS << 1;
+      	t_adr = (char *) (&attr_smplr.WAVE[0]);
+      	memcpy(&fn[0],inlet_fn3,strlen (inlet_fn3));
+      	break;
+      	}
+	}
+}
+
+if (inlet_saveSlot && !trig) {
+	save = 1 ;
+	index = 0;
+	slot = 1;
+	trig = 1;
+	m_count = 2;
+	}
+
+if (inlet_loadSlot && !trig) {
+	attr_smplr.delete_slot(inlet_slot);
+	load = 1 ;
+	index = 0;
+	slot = 1;
+	trig = 1;
+	m_count = 2;
+	}
+if (slot){
+	switch(index?index:0){
+      	case 0: {
+      	rem_sz = 32 << 2;
+      	t_adr = (char *) (&attr_smplr.array[inlet_slot<<5]);
+      	memcpy(&fn[0],inlet_fn4,strlen (inlet_fn4));
+      	break;
+      	}
+      	case 1: {
+      	rem_sz = (attr_smplr.array [(inlet_slot <<5)+1] - attr_smplr.array [inlet_slot <<5]) << 1;
+      	
+      if (save) t_adr = (char *) (&attr_smplr.WAVE[attr_smplr.array [inlet_slot <<5]]);
+      if (load) {
+      		t_adr = (char *) (&attr_smplr.WAVE[attr_smplr.RECPOS]);
+      		attr_smplr.RECPOS += (attr_smplr.array [(inlet_slot <<5)+1] - attr_smplr.array [inlet_slot <<5]);
+     	 	}    
+      	memcpy(&fn[0],inlet_fn5,strlen (inlet_fn5));
+      	break;
+      	}
+	}
+}
+
+if (save) {
+	_save ();
+	//if (_save()) index = 127;
+	index ++;
+	if (index >= m_count) {
+		save = 0;
+		all = 0;
+		slot = 0;
+		} 
+}
+
+if (load) {
+  	_load ();
+  	//if (_load()) index = 127;
+  	attr_smplr.RECPOS = attr_smplr.GLOBAL[0];
+    	attr_smplr.delcount = attr_smplr.GLOBAL [1];
+	index ++;
+	if (index >= m_count) {
+		load = 0;
+		all = 0;
+		slot = 0;
+		}   
+}
+
+ if (!inlet_loadAll && !inlet_saveAll && !all && !inlet_loadSlot && !inlet_saveSlot && !slot) trig = 0;
+ outlet_test = sizeof(*attr_smplr.GLOBAL);]]></code.krate>
+   </obj.normal>
+</objdefs>

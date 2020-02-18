@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ribbonKeyboard" uuid="980b9e6e-9805-4f28-acf5-be192f0e949a">
+      <sDescription>Ribbon like keyboard
+Works with the scalebank modules (not the 7-note-only version)
+Selected scale is shown on the keyboard
+Black notes won&apos;t respond when clicked
+Possible to &quot;swipe&quot; over the keyboard, playing arpeggio&apos;s
+trg-output sends triggers while swiping, note though, that this also seems to happen even though your still o the same note..</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>note scale.axh</helpPatch>
+      <inlets>
+         <int32 name="key"/>
+         <int32 name="scale"/>
+      </inlets>
+      <outlets>
+         <int32 name="note"/>
+         <bool32 name="trg"/>
+      </outlets>
+      <displays>
+         <int32.label name="val" noLabel="true"/>
+      </displays>
+      <params>
+         <bin32 name="b1" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="scalebank"/>
+      </attribs>
+      <code.declaration><![CDATA[int64_t ch;
+int i;
+int64_t tmp;
+bool trg;
+int prv;
+int64_t cur;]]></code.declaration>
+      <code.krate><![CDATA[int k;
+if(!((inlet_key+inlet_scale)==prv)){
+	cur=0;
+	for(i=0;i<32;i++){
+		int m=i-i/12*12;
+		k=i+inlet_key;
+		k=k-k/32*32;
+		k=k<0?k+32:k;
+	trg=(!(attr_scalebank.note[m+inlet_scale*12]==m));
+	cur+=trg<<k;}
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],cur,0xFFFD);
+}
+
+outlet_trg=0;
+if(!(param_b1==cur)){
+	outlet_trg=1;
+	tmp=param_b1-cur;
+	if(tmp>0){
+	ch=0;
+	for(i=0;i<32;i++){
+	ch+=((tmp>>i)&1)*i;
+	}}
+}
+outlet_note=ch;
+
+disp_val=tmp;
+
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],cur,0xFFFD);
+
+prv=inlet_key+inlet_scale;]]></code.krate>
+   </obj.normal>
+</objdefs>

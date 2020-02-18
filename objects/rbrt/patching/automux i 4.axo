@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="automux i 4" uuid="f5b6ba45-6f00-400c-86c8-3bb1fbbbd53a">
+      <sDescription>input collector.outputs an input&apos;s value if it changes.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>patching.axh</helpPatch>
+      <inlets>
+         <int32 name="i0"/>
+         <int32 name="i1"/>
+         <int32 name="i2"/>
+         <int32 name="i3"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev0;
+int32_t prev1;
+int32_t prev2;
+int32_t prev3;
+
+
+int src;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_i0 != prev0) {src = 0;prev0 = inlet_i0;}
+if (inlet_i1 != prev1) {src = 1;prev1 = inlet_i1;}
+if (inlet_i2 != prev2) {src = 2;prev2 = inlet_i2;}
+if (inlet_i3 != prev3) {src = 3;prev3 = inlet_i3;}
+
+   
+   switch(src){
+      case 0: outlet_o= inlet_i0;break;
+      case 1: outlet_o= inlet_i1;break;
+      case 2: outlet_o= inlet_i2;break;
+      case 3: outlet_o= inlet_i3;break;
+      default: outlet_o= inlet_i0;break;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

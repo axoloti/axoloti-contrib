@@ -1,0 +1,86 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scriii" uuid="135bdb40-8e45-400d-8280-f479d10ab31b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>scriii.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+      uint32_t p, dp;
+int32_t rm1, rm2, rm3, r1, r2, r3, rnd;]]></code.declaration>
+      <code.init><![CDATA[
+p = 0; dp = 1<<27;      
+rm1 = 1371;
+rm2 = GenerateRandomNumber();
+rm3 = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[//krate
+MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+//int32_t _dp = (int32_t)(2147483648.0f/dp); //q31
+
+//evolution of random seeds for r2 and r3
+rnd = rnd*69069+1;
+if(rnd > 0x7FFFFFFF-0x04000000){
+  rm2 = 69069 * rm2 + 1;
+}
+rnd = rnd*69069+1;
+if(rnd > 0x7FFFFFFF-0x0A000000){
+  rm3 = -1511872763 * (rm3 - 1);
+}]]></code.krate>
+      <code.srate><![CDATA[p += dp;
+
+// three pseudo random series reseted on various times of the cycle
+/*
+ a = p/dp subsample time since transition is used as probability of advance
+r <= a
+r <= p / dp;
+r * dp <= p
+p > r * dp
+p > ___SMMUL(rnd&0x7FFFFFFF, dp)<<1
+*/
+int32_t e1 = p; if(e1 < 0) e1 = -e1;
+//x*x*(3-2*x)
+//              q30             q29
+e1 = ___SMMUL(___SMMUL(e1,e1), (3<<29)-(e1>>1));//q27
+
+// q29
+
+
+if(p < dp){
+  r1 = rm1;
+  rnd = rnd * 69069 + 1;
+  if(p > ___SMMUL(rnd & 0x7FFFFFFF, dp)<<1) r1 = r1 * 69069 + 1;
+}
+
+p += 0x60000000UL;  // I use and abuse of modulo 2^32
+int32_t e2 = p; if(e2 < 0) e2 = -e2;
+if(p < dp){
+  r2 = rm2;
+  rnd = rnd * 69069 + 1;
+  if(p > ___SMMUL(rnd & 0x7FFFFFFF, dp)<<1) r2 = r2 * 69069 + 1;
+} 
+p += 0x30000000UL;  
+int32_t e3 = p; if(e3 < 0) e3 = -e3;
+if(p < dp){
+  r3 = rm3;
+  rnd = rnd * 69069 + 1;
+  if(p > ___SMMUL(rnd & 0x7FFFFFFF, dp)<<1) r3 = r3 * 69069 + 1;
+}    
+p += 0x70000000UL;  // we loop p through an entire cycle
+ 
+
+r1 = r1 * 69069 + 1;
+r2 = r2 * 69069 + 1;
+r3 = r3 * 69069 + 1;
+
+outlet_out = (___SMMUL(r1, e1)) - (___SMMUL(r2, e2)>>5) - (___SMMUL(r3, e3)>>5);]]></code.srate>
+   </obj.normal>
+</objdefs>

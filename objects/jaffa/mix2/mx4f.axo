@@ -1,0 +1,125 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mx4f" uuid="c3f2be8a-f532-4270-9fc5-299627608045">
+      <sDescription>5 channel mixer with 1 send with stereo return. 
+
+All channels are mono, but the output of the object is stereo, so you are able to use a stereo send effect. The send effects are post-channel fader(they are affected by the channel volume).
+
+All parameters are described if you hoover the mouse over them, so look there for description.
+
+6% DSP</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>mx4HELP.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r1l" description="send 1 stereo return L"/>
+         <frac32buffer name="r1r" description="send 1 stereo return R"/>
+         <frac32buffer name="1"/>
+         <frac32buffer name="2"/>
+         <frac32buffer name="3"/>
+         <frac32buffer name="4"/>
+         <frac32buffer name="5"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="s1" description="send 1"/>
+         <frac32buffer name="ml" description="Master out L"/>
+         <frac32buffer name="mr" description="Master out R"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.mom name="CHANNELS"/>
+         <bool32.tgl name="ch1"/>
+         <frac32.u.map name="v1" description="Ch1. volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s1a" description="Ch1. senda">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <bool32.tgl name="ch2"/>
+         <frac32.u.map name="v2" description="Ch2. volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s2a" description="Ch2. senda">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <bool32.tgl name="ch3"/>
+         <frac32.u.map name="v3" description="Ch3. volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s3a" description="Ch3. senda">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <bool32.tgl name="ch4"/>
+         <frac32.u.map name="v4" description="Ch4. volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s4a" description="Ch4. senda">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <bool32.tgl name="ch5"/>
+         <frac32.u.map name="v5" description="Ch5. volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="s5a" description="Ch5. senda">
+            <DefaultValue v="0.0"/>
+         </frac32.u.map>
+         <bool32.mom name="RETURNS"/>
+         <bool32.tgl name="returnaoo" description="Returna on/off"/>
+         <frac32.u.map name="retavol" description="Returna volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <bool32.mom name="MAIN" description=""/>
+         <frac32.u.map name="Mvol" description="Master volume">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[// Channel 1 //
+int32_t CHANNELONE;
+if(param_ch1>0){CHANNELONE	= ___SMMUL(inlet_1<<3,param_v1<<2);}	else{CHANNELONE=0;} 
+int32_t CHANNELONESENDA 		= ___SMMUL(CHANNELONE<<3,param_s1a<<2);
+
+
+// Channel 2 //
+int32_t CHANNELTWO;
+if(param_ch2>0){CHANNELTWO	= ___SMMUL(inlet_2<<3,param_v2<<2);}	else{CHANNELTWO=0;} 
+int32_t CHANNELTWOSENDA 		= ___SMMUL(CHANNELTWO<<3,param_s2a<<2);
+
+
+// Channel 3 //
+int32_t CHANNELTHREE;
+if(param_ch3>0){CHANNELTHREE	= ___SMMUL(inlet_3<<3,param_v3<<2);}	else{CHANNELTHREE=0;} 
+int32_t CHANNELTHREESENDA	= ___SMMUL(CHANNELTHREE<<3,param_s3a<<2);
+
+
+// Channel 4 //
+int32_t CHANNELFOUR;
+if(param_ch4>0){CHANNELFOUR	= ___SMMUL(inlet_4<<3,param_v4<<2);}	else{CHANNELFOUR=0;} 
+int32_t CHANNELFOURSENDA 	= ___SMMUL(CHANNELFOUR<<3,param_s4a<<2);
+
+
+// Channel 5 //
+int32_t CHANNELFIVE;
+if(param_ch5>0){CHANNELFIVE	= ___SMMUL(inlet_5<<3,param_v5<<2);}	else{CHANNELFIVE=0;} 
+int32_t CHANNELFIVESENDA 		= ___SMMUL(CHANNELFIVE<<3,param_s5a<<2);
+
+
+
+// Sends //
+outlet_s1 				= CHANNELONESENDA+CHANNELTWOSENDA+CHANNELTHREESENDA+CHANNELFOURSENDA+CHANNELFIVESENDA;
+
+// Returns//
+int32_t RETURNAL;
+int32_t RETURNAR;
+if(param_returnaoo)			{RETURNAL 		= ___SMMUL(inlet_r1l<<3,param_retavol<<2);	
+						 RETURNAR 		= ___SMMUL(inlet_r1r<<3,param_retavol<<2);}
+						 
+else						{RETURNAL 		= 0;	
+                               RETURNAR 		= 0;							}
+
+
+
+// Final master out volume on outlet_m before going to master effect //
+outlet_ml 				= ___SMMUL((CHANNELONE+CHANNELTWO+CHANNELTHREE+CHANNELFOUR+CHANNELFIVE+RETURNAL)<<3,param_Mvol<<2);
+outlet_mr 				= ___SMMUL((CHANNELONE+CHANNELTWO+CHANNELTHREE+CHANNELFOUR+CHANNELFIVE+RETURNAR)<<3,param_Mvol<<2);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sineGS" uuid="2c227c08-b52b-433c-ab26-30b1ecbb2502">
+      <sDescription>sine wave oscillator with a krate sync input to sync the oscillator to a gate. eg. very useful for a neat kick-punch</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32 name="phase"/>
+         <bool32 name="sync"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+         <frac32buffer name="phase"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map.gain name="phase"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+bool strg;
+int32_t step;
+int32_t prev;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+   if((inlet_sync>0)&&!strg){
+   	strg=1;
+   	Phase=0;
+   }
+   else if(inlet_sync==0){strg=0;}
+
+   step=(freq-prev)>>4;
+   int32_t I=prev;
+   prev=freq;
+   int32_t phase=(param_phase<<1)+(inlet_phase<<4);]]></code.krate>
+      <code.srate><![CDATA[I+=step;
+Phase += I + inlet_freq;
+int32_t r;
+int32_t p2 = Phase+phase;
+SINE2TINTERP(p2,r)
+outlet_wave= (r>>4);
+outlet_phase=Phase;]]></code.srate>
+   </obj.normal>
+</objdefs>

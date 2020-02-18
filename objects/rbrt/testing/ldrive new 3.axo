@@ -1,0 +1,83 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive new 3" uuid="80544d26-c962-4b98-afbf-075f4b3784d1">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>loop_multi.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.positive name="startpoint" description="position inside range on reset"/>
+         <frac32.positive name="loopstart" description="loopstart inside range"/>
+         <frac32.bipolar name="speed" description="speed modulation"/>
+         <bool32.rising name="r2zero"/>
+         <bool32.rising name="r2start" description="reset to startpoint"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="pos" description="drive table/read"/>
+         <int32 name="count" description="loop count since reset"/>
+         <int32 name="spos" description="lenght of the loop in samples"/>
+         <int32 name="slength"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[float32_t index;
+
+bool r;
+bool rzero;
+uint8_t shift;
+
+uint32_t range;
+int32_t t_speed;
+uint32_t loopstart;
+uint32_t reset;
+uint32_t count;
+
+bool add;]]></code.declaration>
+      <code.init><![CDATA[index = 0;
+   r = 1;
+
+   //set 'shift factor' for storing the recording length/the sync output
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[range = (inlet_range >> shift);
+loopstart = (___SMMUL(range,inlet_loopstart)<<5);
+t_speed = (inlet_speed + param_speed);
+add = range;
+
+reset = (___SMMUL(range,inlet_startpoint)<<5);
+
+      if (inlet_r2start && r) {
+         index = reset;
+         r = 0;
+         count = 0;
+      } else if (!inlet_r2start) r = 1;
+
+      if (inlet_r2zero && rzero) {
+         index = 0;
+         rzero = 0;
+         count = 0;
+      } else if (!inlet_r2zero) rzero = 1;
+
+outlet_count = count;
+
+outlet_spos = index - (loopstart * (bool) count);
+outlet_slength = range - (loopstart * (bool) count);]]></code.krate>
+      <code.srate><![CDATA[index += (t_speed*(float)(1.0f/(1<<27))); 
+
+//set a range
+      if (t_speed > 0){
+      if (index >= range){index = loopstart;count += add; } 
+      } 
+      else{
+      if (index <= loopstart){ index = range;count +=add;}  
+          }    
+
+        
+outlet_pos = ((int (index) << shift)+inlet_offset);]]></code.srate>
+   </obj.normal>
+</objdefs>

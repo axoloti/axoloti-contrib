@@ -1,0 +1,105 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="saw cheap phasing" uuid="be1437b9-b80b-41f1-95b6-cac659167471">
+      <sDescription>Saw wave tonewheels, cheap and aliased
+The saw oscillators use the 1st order DPW algorithm.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>tonewheels.axh</helpPatch>
+      <inlets>
+         <frac32 name="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="phase" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="amplitudes" description="Table containing the amplitudes (32bit)"/>
+         <objref name="tuning" description="Tuning table"/>
+      </attribs>
+      <code.declaration><![CDATA[class osc {
+	public:
+	void init();
+};
+
+class osc_one : public osc {
+	public:
+	int32_t prev;
+	uint32_t phase;
+	
+	void init(){
+		phase = 0;
+	}
+
+	void render(int32_t *pOut, int32_t amp1, uint32_t freq1){
+		// out: pointer to s32 output buffer, adds values
+		// amp: s32 amplitude
+		amp1=amp1>>6;
+		int32_t phase1 = phase;
+		int i;
+		for(i=0;i<BUFSIZE;i++) {
+			int32_t out = *pOut;
+			phase1 += freq1;
+			out = __SMMLA(phase1,amp1,out);
+			*pOut = out;
+			pOut++;
+		}
+		phase = phase1;
+	}
+};
+
+static const int n_octaves = 8;
+
+class chroma {
+	int phase;
+		
+	public:
+	osc_one octaves[n_octaves];
+	
+	void init(){
+		phase = 0;
+		int i;
+		for(i=0;i<n_octaves;i++){
+			octaves[i].init();
+		}
+	};
+
+	void render(int freq, int32_t *pOut, int32_t *pAmp, uint32_t x){
+		uint32_t f = freq;
+		x = ___SMMUL(x,f);
+		int i;
+		for(i=0;i<n_octaves;i++){
+			//g = ___SMMLA(f,x,f);
+			octaves[i].render(pOut,*pAmp,f+x);
+			pAmp+=12;
+			f=f<<1;
+		}
+	}
+};
+
+chroma chromas[12];]]></code.declaration>
+      <code.init><![CDATA[int i;
+
+for(i=0;i<12;i++) {
+	chromas[i].init();
+}]]></code.init>
+      <code.krate><![CDATA[int i;
+
+// clear
+for(i=0;i<BUFSIZE;i++) {
+	outlet_wave[i]=0;
+}
+
+// sum into output buffer
+for(i=0;i<12;i++){
+	chromas[i].render(attr_tuning.array[i]>>5,&outlet_wave[0] ,&attr_amplitudes.array[i],(param_phase+inlet_phase)<<1);
+}
+
+// output gain
+for(i=0;i<BUFSIZE;i++) {
+	outlet_wave[i]=outlet_wave[i]<<2;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

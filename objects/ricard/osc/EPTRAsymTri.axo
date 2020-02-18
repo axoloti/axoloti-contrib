@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="EPTRAsymTri" uuid="a8a02306-cece-47ea-9211-218e68c2c109">
+      <sDescription>Low CPU Anti Aliased Asymmetric Triangle using second order EPTR algoroithm (one correction point per transition).</sDescription>
+      <author>Smashed Transistors, Ricard Wanderlof</author>
+      <license>LGPL</license>
+      <helpPatch>EPTRAsymTri.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="symm" description="symmetry"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="asymetric triangle wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, dp, y, A, B, slope;
+float a0, a1, a2, b0, b1, b2;
+float Adp, Bdp;]]></code.declaration>
+      <code.init><![CDATA[p = 0; // goes between -1 and +1
+slope = 1; // anything positive]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+if (inlet_symm < 0) {
+	A = 2 + ( ((float) (-inlet_symm)) / (1 << 22));
+	if (A * dp > 1) A = 1/dp; // max slope is one sample period
+	B = A / (1 - A);
+} else {
+	B = -2 - (((float) inlet_symm) / (1 << 22));
+	if (B * dp < -1) B = -1/dp; // max slope is one sample period
+	A = B / (1 + B);
+}
+dp = idp*(0.25f/(1<<30));
+Adp = A * dp;
+Bdp = B * dp;
+// Indicate to k-rate loop that poly coefficients may need recalculating
+// TODO: Only do this if pitch or symm has changed
+if (slope > 0) slope = 2 * Adp; else slope = 2 * Bdp;
+// Triangle EPTR polynomial coefficients
+// While technically, we could calculate the a and b coefficients on demand, it's not
+// really worth it as worst case we need to do this every k-rate period anyway
+// (when the oscillator frequency is >= 3 kHz).
+a2 = (-0.25f / (Adp - dp));
+a1 = ((Adp - 2 * dp + 1) / (2 * (Adp - dp)));
+a0 = (- (Adp - 1) * (Adp - 1) / (4 * (Adp - dp)));
+b2 = (-0.25f / (Bdp + dp));
+b1 = ((Bdp + 2 * dp - 1) / (2 * (Bdp + dp)));
+b0 = (- (Bdp + 1) * (Bdp + 1) / (4 * (Bdp + dp)));]]></code.krate>
+      <code.srate><![CDATA[p += slope;
+if (slope > 0) {
+	if (p > 1 - Adp) {
+		y = p * (a2 * p + a1) + a0; // corr_max
+		p = 1 + (p - 1) * B / A;
+		slope = 2 * Bdp;
+	} else {
+		y = p; // linear region
+	}
+} else {
+	if (p < -1 - Bdp) {
+		y = p * (b2 * p + b1) + b0; // corr_min
+		p = -1 + (p + 1) * A / B;
+		slope = 2 * Adp;
+	} else {
+		y = p; // linear region
+	}
+}
+//p += dp; if (p > 1) p = -1;
+//y = p;
+outlet_wave = (int32_t) (y * (1 << 27));]]></code.srate>
+   </obj.normal>
+</objdefs>

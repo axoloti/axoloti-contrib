@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SyncPM3" uuid="a29ab351-d345-4833-83f2-b2e4d0ab141f">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>SyncPM3.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="pitchC"/>
+         <frac32.bipolar name="pitchM1"/>
+         <frac32.bipolar name="pitchM2"/>
+         <frac32.bipolar name="index1C"/>
+         <frac32.bipolar name="index21"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map.pitch name="pitchC"/>
+         <frac32.s.map.pitch name="pitchM1"/>
+         <frac32.s.map.pitch name="pitchM2"/>
+         <frac32.u.map name="index1C"/>
+         <frac32.u.map name="index21"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+uint32_t pC,  pM1,  pM2;
+int32_t dpC, dpM1, dpM2;
+int32_t index1C, index21;
+float pMast;
+float dpMast, _dpMast;]]></code.declaration>
+<code.init><![CDATA[
+pC = 0; 
+pM1 = 0; 
+pM2 = 0;
+pMast = 0;
+]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(inlet_pitch + param_pitch, idp);
+dpMast = (0.25f / (1 << 30)) * idp;
+_dpMast = 1.0f / dpMast;
+
+MTOFEXTENDED(inlet_pitchC + param_pitchC, dpC);
+MTOFEXTENDED(inlet_pitchM2 + param_pitchM2, dpM2);
+MTOFEXTENDED(inlet_pitchM1 + param_pitchM1, dpM1);
+index1C = inlet_index1C + param_index1C;
+index21 = inlet_index21 + param_index21;]]></code.krate>
+      <code.srate><![CDATA[pC += dpC;
+pM1 += dpM1;
+pM2 += dpM2;
+int32_t m12 = (___SMMLA(index21, sine2t[pM2 >> 20], pM1 >> 7) >> 13) & 4095;
+int32_t y = sine2t[(___SMMLA(index1C, sine2t[m12], pC >> 7) >> 13) & 4095] >> 5;
+if(pMast>0.9f){
+	y = (int32_t)(y*10*(1-pMast));
+} 
+if(pMast<0.1f){
+	y = (int32_t)(y*10*pMast);
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+pMast += dpMast;
+if(pMast > 1){
+  pMast -= 1;
+  float a = pMast * _dpMast;
+  pC = (uint32_t)(a * dpC);
+  pM1 = (uint32_t)(a * dpM1);
+  pM2 = (uint32_t)(a * dpM2);
+/*  y = (y + (sine2t[(___SMMLA(index, sine2t[pM >> 20], pC >> 7) >> 13) & 4095] >> 5)) >> 1;*/
+}
+outlet_out = y;]]></code.srate>
+   </obj.normal>
+</objdefs>

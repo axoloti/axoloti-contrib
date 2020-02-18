@@ -1,0 +1,142 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="presetMorpher" uuid="3d70b3ac-c609-4b43-b9b4-3818a10f542c">
+      <sDescription>EXPERT MODULE, be warned, this one could screw up your patch! Save your patch before use!
+Also, with next axoloti-update, it might not work anymore!
+
+This module is able to get the values from the parameters of other modules (coming after&amp;below this module) and save them as a preset (pressing the &quot;get&quot; parameter/input).
+
+Attributes:
+Set the amount of parameters to be saved using the &quot;parameters&quot; attribute (count all parameters between this module and the last parameter you want to be able to save).
+Set the amount of available presets using the &quot;presets&quot; attribute
+Use the &quot;preparams&quot; attribute to skip the first row of parameters, if there&apos;s anything in-between.
+
+&quot;value&quot; selector..... forget it, not there for you, but somehow I needed it for the &quot;first&quot; parameter where the parameter-count starts..
+
+Params/Saving/Morphing
+Before you&apos;re able to morph, you first need to create a nice preset, select a preset-number and then hit &quot;get&quot;.
+After you&apos;ve made multiple presets, you&apos;re able to smoothly morph between them. Be warned though, morphing to an empty preset can go to extreme random values beyond the limits of the parameters!!!!
+You can morph through the presets manually, using the on-module parameters or control it externally (eg. over midi-&gt; gate=morph, note=preset, velocity/touch=rate. I used a toggleswitch-controlled &quot;demux&quot; to switch between &quot;get&quot; input and &quot;morph&quot; input)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="preset"/>
+         <frac32 name="rate"/>
+         <bool32 name="morph"/>
+         <bool32 name="get"/>
+      </inlets>
+      <outlets>
+         <int32 name="pre"/>
+         <frac32 name="rate"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.mini name="value">
+            <MinValue i="999999999"/>
+            <MaxValue i="999999999"/>
+         </int32.mini>
+         <bool32.mom name="morph"/>
+         <int32 name="preset">
+            <MinValue i="0"/>
+            <MaxValue i="999"/>
+         </int32>
+         <bool32.mom name="get"/>
+         <frac32.s.map name="rate"/>
+         <bool32.mom name="rnd"/>
+      </params>
+      <attribs>
+         <spinner name="parameters" MinValue="1" MaxValue="1024" DefaultValue="0"/>
+         <spinner name="presets" MinValue="1" MaxValue="64" DefaultValue="0"/>
+         <spinner name="preparams" MinValue="0" MaxValue="99999" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[bool get;
+static const uint32_t params=attr_parameters;
+static const uint32_t presets=attr_presets;
+static const uint32_t LENGTH=params*presets;
+int32_t *pst;
+int i;
+int j;
+bool A;
+bool rnd;
+int32_t TP[params];
+bool pv;
+int P;
+int16_t pre;
+bool DO;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
+pst = &_array[0];
+pre=0;
+DO=1;]]></code.init>
+      <code.krate><![CDATA[if(DO){
+	while(!(parent->PExch[pre].value==param_value)){
+	pre+=1;
+}
+
+pre+=6;
+DO=0;
+}
+
+
+if(param_preset>=presets){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_preset],presets-1,0xFFFD);
+}
+P=param_preset+inlet_preset;
+P=P-P/presets*presets;
+P=(P<0?P+presets:P)*params;
+int32_t rate;
+MTOF(__SSAT((-1<<27)+(inlet_rate<<1),29),rate)
+rate=rate>>2;
+
+
+A=param_morph||inlet_morph;
+bool GET=param_get||inlet_get;
+
+if((GET>0)&&!get){
+	get=1;
+  for(i=0;i<params;i++){
+  	pst[P+i]=parent->PExch[i+pre].value;
+  }
+}
+else if(GET==0){get=0;}
+
+
+if(A>0)
+	{
+		for(j=0;j<params;j++)
+		{	
+			if(!(pst[P+j]==parent->PExch[j+pre].value))
+			{
+				if(!(pv==A))
+				{
+				TP[j]=(pst[P+j])-(parent->PExch[j+pre].value);
+				}
+				int32_t Tm=___SMMUL(TP[j],rate);
+				Tm=Tm==0?TP[j]>0?1:-1:Tm;
+				int32_t tmp=Tm+parent->PExch[j+pre].value;
+				if(TP[j]>0)
+				{
+					tmp=tmp>pst[P+j]?pst[P+j]:tmp;
+				}
+				else
+				{
+					tmp=tmp<pst[P+j]?pst[P+j]:tmp;
+				}
+				PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value+j+6],tmp,0xFFFD);
+			}
+		}
+	}
+
+
+if((param_rnd>0)&&!rnd){
+	rnd=1;
+	for(j=0;j<params;j++){
+	for(i=0;i<presets;i++){
+		pst[i*params+j]=(int32_t)GenerateRandomNumber()>>4;
+	}
+	}
+		
+}
+else if(param_rnd==0){rnd=0;}
+outlet_pre=pre;
+pv=A;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,150 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="pattern_selector" uuid="481b31a2a11930c14bff9213fd35ecffaa2947ac">
+      <sDescription>Step sequencer pattern selector</sDescription>
+      <author>Are Leistad</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="pattern" description="Pattern number input"/>
+         <bool32.rising name="clock" description="Clock pulse input"/>
+         <bool32.rising name="start" description="Start pulse input"/>
+         <frac32 name="p1s1" description="Pattern 1 signal 1 input"/>
+         <frac32 name="p1s2" description="Pattern 1 signal 2 input"/>
+         <frac32 name="p1s3" description="Pattern 1 signal 3 input"/>
+         <bool32 name="p1g1" description="Pattern 1 gate 1 input"/>
+         <frac32 name="p2s1" description="Pattern 2 signal 1 input"/>
+         <frac32 name="p2s2" description="Pattern 2 signal 2 input"/>
+         <frac32 name="p2s3" description="Pattern 2 signal 3 input"/>
+         <bool32 name="p2g1" description="Pattern 2 gate 1 input"/>
+         <frac32 name="p3s1" description="Pattern 3 signal 1 input"/>
+         <frac32 name="p3s2" description="Pattern 3 signal 2 input"/>
+         <frac32 name="p3s3" description="Pattern 3 signal 3 input"/>
+         <bool32 name="p3g1" description="Pattern 3 gate 1 input"/>
+         <frac32 name="p4s1" description="Pattern 4 signal 1 input"/>
+         <frac32 name="p4s2" description="Pattern 4 signal 2 input"/>
+         <frac32 name="p4s3" description="Pattern 4 signal 3 input"/>
+         <bool32 name="p4g1" description="Pattern 4 gate 1 input"/>
+      </inlets>
+      <outlets>
+         <int32 name="pattern" description="Current pattern number output"/>
+         <bool32.pulse name="switch" description="Pattern switch pulse output"/>
+         <frac32 name="s1" description="Signal 1 output"/>
+         <frac32 name="s2" description="Signal 2 output"/>
+         <frac32 name="s3" description="Signal 3 output"/>
+         <bool32 name="g1" description="Gate 1 output"/>
+      </outlets>
+      <displays>
+         <int32.label name="current   " noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.tgl name="extpattern" description="Use the pattern number input"/>
+         <bool32.tgl name="syncclock" description="Pattern switches on next clock pulse"/>
+         <bool32.tgl name="syncstart" description="Pattern switches on next start pulse"/>
+         <bool32.tgl name="mute" description="Mutes the pattern outputs"/>
+         <int32.hradio name="pattern" noLabel="false">
+            <MaxValue i="4"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+
+      int32_t   current_pattern;
+      int32_t   next_pattern;
+      uint32_t  old_clock;
+      uint32_t  old_start;
+
+    ]]></code.declaration>
+      <code.init><![CDATA[
+
+      current_pattern = 0;
+      next_pattern    = -1;
+      old_clock       = 0;
+      old_start       = 0;
+
+    ]]></code.init>
+      <code.krate><![CDATA[
+
+      //  Cue up the next pattern for playing
+
+      if( param_extpattern )
+        {
+          if( inlet_pattern != current_pattern )
+            {
+              next_pattern = inlet_pattern;
+            }
+        }
+      else if( param_pattern != current_pattern )
+        {
+          next_pattern = param_pattern;
+        }
+
+      // Switch pattern according to the sync settings
+
+      outlet_switch = 0;
+      if( next_pattern != -1 && next_pattern != current_pattern )
+        {
+          bool do_switch = false;
+          if( param_syncclock )
+            {
+              if( inlet_clock && !old_clock )
+                {
+                  do_switch = true;
+                }
+            }
+          else if( param_syncstart )
+            {
+              if( inlet_start && !old_start )
+                {
+                  do_switch = true;
+                }
+            }
+          else
+            {
+              do_switch = true;
+            }
+
+          if( do_switch )
+            {
+              current_pattern = next_pattern;
+              next_pattern    = -1;
+              outlet_switch   = 1;
+            }
+        }
+
+        switch( param_mute ? 4 : current_pattern )
+          {
+            case 0:   outlet_s1  = inlet_p1s1;
+                      outlet_s2  = inlet_p1s2;
+                      outlet_s3  = inlet_p1s3;
+                      outlet_g1  = inlet_p1g1;
+                      break;
+            case 1:   outlet_s1  = inlet_p2s1;
+                      outlet_s2  = inlet_p2s2;
+                      outlet_s3  = inlet_p2s3;
+                      outlet_g1  = inlet_p2g1;
+                      break;
+            case 2:   outlet_s1  = inlet_p3s1;
+                      outlet_s2  = inlet_p3s2;
+                      outlet_s3  = inlet_p3s3;
+                      outlet_g1  = inlet_p3g1;
+                      break;
+            case 3:   outlet_s1  = inlet_p4s1;
+                      outlet_s2  = inlet_p4s2;
+                      outlet_s3  = inlet_p4s3;
+                      outlet_g1  = inlet_p4g1;
+                      break;
+            case 4 :
+            default:  outlet_s1  = 0;
+                      outlet_s2  = 0;
+                      outlet_s3  = 0;
+                      outlet_g1  = 0;
+                      break;
+          }
+
+      outlet_pattern  = current_pattern;
+      disp_current    = current_pattern + 1;
+      old_clock       = inlet_clock;
+      old_start       = inlet_start;
+
+    ]]></code.krate>
+   </obj.normal>
+</objdefs>

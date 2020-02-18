@@ -1,0 +1,121 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="shift register 2d" uuid="98bdfe32-c0a0-4f1a-b9cb-22067fdda137">
+      <sDescription>A 2D shift register. Can be used for cartesian sequencers.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>shift.axh</helpPatch>
+      <inlets>
+         <bool32 name="in" description="input bit"/>
+         <int32.positive name="x" description="x position (column selector)"/>
+         <int32.positive name="y" description="y position (row selector)"/>
+         <bool32.rising name="left" description="shift the selected row left by one position and insert the input bit on the right"/>
+         <bool32.rising name="right" description="shift the selected row right by one position and insert the input bit on the left"/>
+         <bool32.rising name="up" description="shift the selected column up by one position and insert the input bit on the bottom"/>
+         <bool32.rising name="down" description="shift the selected column down by one position and insert the input bit on the top"/>
+         <bool32.rising name="reset" description="reset the register to the default value"/>
+         <int32.positive name="default" description="see value format in local data"/>
+      </inlets>
+      <outlets>
+         <bool32 name="out" description="output at (x,y)"/>
+         <int32.positive name="reg" description="value of the register"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[/*	REGISTER VARIABLE FORMAT
+ * 		/  16 bits   \ /4 bits\ /4 bits\ /4 bits\ /4 bits\
+ *  reg = [unused bloat]  [row1]   [row2]   [row3]   [row4]
+ * 
+ * you can see it as a 4x4 matrix like this:
+ * 	[Row1 MSB] [bit] [bit] [Row1 LSB]
+ * 	[Row2 MSB] [bit] [bit] [Row2 LSB]
+ * 	[Row3 MSB] [bit] [bit] [Row3 LSB]
+ * 	[Row4 MSB] [bit] [bit] [Row4 LSB]
+ */
+
+
+bool rtrig = 0;	//reset trigger
+bool strig = 0;	//shift trigger
+
+//these are bitmasks used for operations
+int32_t row[4] = {		
+	0b1111000000000000,
+	0b0000111100000000,
+	0b0000000011110000,
+	0b0000000000001111
+};
+int32_t col[4] = {
+	0b1000100010001000,
+	0b0100010001000100,
+	0b0010001000100010,
+	0b0001000100010001
+};
+
+int32_t reg = 0; //register in which to hold values
+int32_t tmp = 0; //temp variable for operations]]></code.declaration>
+      <code.krate><![CDATA[//saturate (well, actually overflow) inputs to the correct range
+int32_t def = inlet_default & 65535;
+int32_t x = inlet_x & 3;
+int32_t y = inlet_y & 3;
+
+//temporary variable
+tmp = reg;
+
+//shifting operations
+if (inlet_left & !strig) 
+{
+	reg = ((reg & row[y])<<1) & row[y];
+	if (inlet_in)
+	reg = reg | (row[y] & col[3]);
+	tmp = tmp & (~row[y]);
+	reg = reg | tmp;
+	strig = 1;
+}
+if (inlet_right & !strig) 
+{
+	reg = ((reg & row[y])>>1) & row[y];
+	if (inlet_in)
+	reg = reg | (row[y] & col[0]);
+	tmp = tmp & (~row[y]);
+	reg = reg | tmp;
+	strig = 1;
+}
+if (inlet_up & !strig) 
+{
+	reg = ((reg & col[x])<<4) & col[x];
+	if (inlet_in)
+	reg = reg | (col[x] & row[3]);
+	tmp = tmp & (~col[x]);
+	reg = reg | tmp;
+	strig = 1;
+}
+if (inlet_down & !strig) 
+{
+	reg = ((reg & col[x])>>4) & col[x];
+	if (inlet_in)
+	reg = reg | (col[x] & row[0]);
+	tmp = tmp & (~col[x]);
+	reg = reg | tmp;
+	strig = 1;
+}
+if (!(inlet_left | inlet_right | inlet_up | inlet_down))
+{
+	strig = 0;
+}
+
+//reset operations
+if (inlet_reset && !rtrig)
+{
+	reg = def;
+	rtrig = 1;
+}
+else if (!inlet_reset)
+{
+	rtrig = 0;
+}
+
+//outputs
+outlet_reg = reg;
+outlet_out = reg & col[x] & row[y];]]></code.krate>
+   </obj.normal>
+</objdefs>

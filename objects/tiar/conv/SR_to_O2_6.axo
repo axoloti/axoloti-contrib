@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="SR to O2 6" uuid="a0fd6d35-3135-4990-b947-3bf5fe337ef7">
+      <sDescription>x2 interpolator (upsampler)</sDescription>
+      <author>Smashed Transistors</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="y1" description="older"/>
+         <frac32buffer.bipolar name="y0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x0, x1, x2, x3, x4, x5, y0, y1;]]></code.declaration>
+      <code.init><![CDATA[x0=x1=x2=x3=x4=x5=y0=y1=0;]]></code.init>
+      <code.srate><![CDATA[x0 = x1; x1 = x2; x2 = x3; x3 = x4; x4 = x5; x5 = (float)inlet_in;
+outlet_y1 = (int32_t)x2;
+outlet_y0 = (int32_t)(
+	 (x5 + x0) * 0.025665914601895386f
+     + (x4 + x1) * -0.04277652433649233f
+     + (x3 + x2) * 0.517110609734597f
+     );]]></code.srate>
+   </obj.normal>
+</objdefs>

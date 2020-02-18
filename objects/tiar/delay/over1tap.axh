@@ -1,0 +1,218 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="252" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/b4u" uuid="a01263cc-ca4b-430b-901f-cd378aad394c" name="b4u_1" x="350" y="0">
+      <params>
+         <frac32.u.mapvsl name="p0" value="4.0"/>
+         <frac32.u.mapvsl name="p1" value="9.5"/>
+         <frac32.u.mapvsl name="p2" value="21.5"/>
+         <frac32.u.mapvsl name="p3" value="37.5"/>
+         <frac32.u.mapvsl name="p4" value="58.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="672" y="84">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="532" y="98" text="Toggle to compare ---&gt;"/>
+   <comment type="patch/comment" x="756" y="98" text="&lt;-- Flanger off/on"/>
+   <patcher type="patch/patcher" uuid="3a8cea2b-96be-4134-b791-55505a85c962" name="patcher_1" x="0" y="182">
+      <params>
+         <frac32.s.map name="adsr_1:a" value="-64.0"/>
+         <frac32.s.map name="adsr_1:d" value="25.0"/>
+         <frac32.u.map name="adsr_1:s" value="33.0"/>
+         <frac32.s.map name="adsr_1:r" value="0.0"/>
+         <frac32.u.map name="*c_1" value="33.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="98" y="0">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="196" y="0">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="0.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+               <frac32.u.map name="s" onParent="true" value="0.0"/>
+               <frac32.s.map name="r" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="294" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="378" y="0">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="31.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="476" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="saw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="*c_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="DCA_1" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="*c_1" inlet="in"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>837</x>
+            <y>345</y>
+            <width>804</width>
+            <height>579</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="714" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/mix/mix 2 s" uuid="05c222a7-a7de-4c03-ad05-309f17493e64" name="mix_2" x="322" y="196">
+      <params>
+         <frac32.s.map name="gain1" value="31.5"/>
+         <frac32.s.map name="gain2" value="-57.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/delay/over1tap" uuid="522cd2ed-e44b-47fd-9738-565690bfb4df" name="over1tap_1" x="434" y="196">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="512 (5.33ms)"/>
+         <combo attributeName="Over" selection="Bright"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="560" y="196">
+      <params>
+         <frac32.u.map name="gain1" value="15.5"/>
+         <frac32.u.map name="gain2" value="32.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/midi/in/keyb zone lru" uuid="50ad41c5-e271-4f77-83a4-4f1cc8745b17" name="keyb_1" x="98" y="434">
+      <params/>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="238" y="434">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="336" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="b4u_1" outlet="out"/>
+         <dest obj="over1tap_1" inlet="d1"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="over1tap_1" outlet="out1"/>
+         <dest obj="mix_1" inlet="in2"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="b4u_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="over1tap_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>235</x>
+      <y>64</y>
+      <width>1489</width>
+      <height>909</height>
+   </windowPos>
+</patch-1.0>

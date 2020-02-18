@@ -1,0 +1,83 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="6coseg m" uuid="30e0a55b-d492-479a-92e7-5881edd5e17c">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>6coseg.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.positive name="R0"/>
+         <frac32.positive name="R1"/>
+         <frac32.positive name="R2"/>
+         <frac32.bipolar name="l0"/>
+         <frac32.bipolar name="l1"/>
+         <frac32.bipolar name="l2"/>
+         <frac32.bipolar name="l3"/>
+         <frac32.bipolar name="l4"/>
+         <frac32.bipolar name="l5"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[const int N = 3;
+int cpt = 0;
+// Saw
+float p, dp;
+float R[3], _R[3], _1_R[3];
+float l[7];]]></code.declaration>
+      <code.init><![CDATA[
+      p = 0.0f;
+      cpt = 0;
+      ]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*((3*0.25f)/(1<<30));
+
+if(N * dp > 0.5f){
+  R[0] = R[1] = R[2] = 0.5f;
+  _1_R[0]= _1_R[1] = _1_R[2] = _R[0] = _R[1] = _R[2] = 2.0f;
+} else {
+  R[0] = (inlet_R0) * (1.0f/(1<<27));
+  R[1] = (inlet_R1) * (1.0f/(1<<27));
+  R[2] = (inlet_R2) * (1.0f/(1<<27));
+  for(int i = 0;i<3; i++){
+    if(R[i] < N * dp)
+      R[i] = N * dp;
+    else if(R[i] > 1 - N * dp)
+      R[i] = 1 - N * dp;
+    _R[i] = 1.0f / R[i];
+    _1_R[i] = 1.0f / (1 - R[i]);
+  }
+}
+l[0] = (float)inlet_l0;
+l[1] = (float)inlet_l1;
+l[2] = (float)inlet_l2;
+l[3] = (float)inlet_l3;
+l[4] = (float)inlet_l4;
+l[5] = (float)inlet_l5;
+l[6] = (float)inlet_l0;  //for modulo
+
+]]></code.krate>
+      <code.srate><![CDATA[p += dp; 
+if(p >= 1){
+	p -= 1;
+	cpt++;
+	if(cpt >= 3) cpt = 0;
+}
+float pr;
+int i;
+if(p < R[cpt]){
+	pr = p * _R[cpt];
+	i = cpt<<1;
+}else{
+	pr = (p - R[cpt]) * _1_R[cpt];
+	i = (cpt<<1) + 1;
+}
+float a = pr * pr * (3 - 2 * pr);
+outlet_wave = (int32_t)((l[i] + a * (l[i+1] - l[i])));]]></code.srate>
+   </obj.normal>
+</objdefs>

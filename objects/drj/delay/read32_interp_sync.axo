@@ -1,0 +1,337 @@
+<objdefs appVersion="1.0.11">
+  <obj.normal id="read32_interp_sync" uuid="a3ab302bacc25ccf04e3d8b551c58865951266c7">
+    <sDescription>Syncable delay read, 32 bit, interpolated, proportional time modulation</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer name="time" description="Delay time bias"/>
+      <frac32buffer name="tmod" description="Delay time modulation"/>
+      <int32 name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
+      <int32 name="muloverride" description="Override clockmul parameter, values above 0 overrides clockmul"/>
+      <int32 name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
+      <bool32.rising name="24ppq" description="Clock input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer name="out" description="Delay output"/>
+      <frac32       name="time" description="Delay time, fraction of the referenced delay writer's time"/>
+    </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockmul" noLabel="false">
+        <MinValue i="1"/>
+        <MaxValue i="128"/>
+      </int32>
+      <int32 name="clockdiv" noLabel="false">
+        <MinValue i="1"/>
+        <MaxValue i="128"/>
+      </int32>
+      <frac32.u.map name="time" description="Internal delay time"/>
+    </params>
+    <attribs>
+      <objref name="delayname"/>
+      <combo name="clocksource">
+        <MenuEntries>
+          <string>Internal</string>
+          <string>External</string>
+          <string>MIDI</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+        </CEntries>
+      </combo>
+      <combo name="device">
+        <MenuEntries>
+          <string>omni</string>
+          <string>din</string>
+          <string>usb host port 1</string>
+          <string>usb host port 2</string>
+          <string>usb host port 3</string>
+          <string>usb host port 4</string>
+          <string>internal port 1</string>
+          <string>internal port 2</string>
+          <string>usb device port 1</string>
+        </MenuEntries>
+        <CEntries>
+          <string>MIDI_DEVICE_OMNI, 0</string>
+          <string>MIDI_DEVICE_DIN, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 2</string>
+          <string>MIDI_DEVICE_USB_HOST, 3</string>
+          <string>MIDI_DEVICE_USB_HOST, 4</string>
+          <string>MIDI_DEVICE_INTERNAL, 1</string>
+          <string>MIDI_DEVICE_INTERNAL, 2</string>
+          <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+        </CEntries>
+      </combo>
+      <combo name="smooth">
+        <MenuEntries>
+          <string>5</string>
+          <string>4</string>
+          <string>3</string>
+          <string>2</string>
+          <string>1</string>
+          <string>0</string>
+        </MenuEntries>
+        <CEntries>
+          <string>5</string>
+          <string>4</string>
+          <string>3</string>
+          <string>2</string>
+          <string>1</string>
+          <string>0</string>
+        </CEntries>
+      </combo>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      enum
+      {
+        CLOCK_SOURCE_internal = 0,
+        CLOCK_SOURCE_external = 1,
+        CLOCK_SOURCE_midi     = 2,
+        CLOCK_SOURCE_midi_omni= 3
+      } CLOCK_SOURCE;
+
+      int32_t   start_sequence;
+      int32_t   clock_source;
+      int32_t   clock_multiplier;
+      int32_t   clock_divider;
+      uint32_t  sync_count;       // At least N clocks before deriving synced time
+      uint32_t  sync_time;        // Synced time expressed in fractional delay length
+      uint32_t  ktimer;           // 3kHz timer
+      uint32_t  last_ktime;
+      float     delay_length_cpl; // cache result of  1.0 / lenght of delay line
+      uint32_t  old_24ppq;
+
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE float Q27ToF(int32_t op1)
+      {
+        float fop1 = *(float*)(&op1);
+        __ASM volatile ("VCVT.F32.S32 %0, %0, 27" : "+w" (fop1) );
+        return(fop1);
+      }
+
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t FToQ27(float fop1)
+      {
+        __ASM volatile ("VCVT.S32.F32 %0, %0, 27" : "+w" (fop1) );
+        int32_t r = *(int32_t*)(&fop1);
+        return(r);
+      }
+
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int midi_device_test( midi_device_t dev, uint8_t port, int selected_dev, uint8_t selected_port )
+      {
+        if(    (selected_dev == MIDI_DEVICE_OMNI)
+            || (selected_dev == dev && selected_port == port)
+            )
+          return 1;
+        return 0;
+      }
+
+#if attr_smooth>0
+      #define FIFO_EXP attr_smooth
+      #define FIFO_LEN (1<<FIFO_EXP)
+      #define FIFO_MASK (FIFO_LEN-1)
+      typedef struct _AveragerContext
+      {
+        int32_t fifo[FIFO_LEN];
+        int32_t fifo_i;
+        int32_t acc;
+      } AveragerContext;
+      AveragerContext avg;
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t moving_average( AveragerContext *avg, int32_t new_value )
+      {
+        avg->fifo_i             = (avg->fifo_i + 1) & FIFO_MASK;
+        avg->acc               -= avg->fifo[avg->fifo_i];
+        avg->acc               += new_value;
+        avg->fifo[avg->fifo_i]  = new_value;
+        return avg->acc >> FIFO_EXP;
+      }
+#endif
+
+      void on_clock( void )
+      {
+        float   period;
+        int32_t kperiod;
+#if attr_smooth>0
+        kperiod = moving_average( &avg, ktimer - last_ktime );
+#else
+        kperiod = ktimer - last_ktime;
+#endif
+        last_ktime = ktimer;
+        period = kperiod * 16 * clock_divider;
+        period = period / clock_multiplier;
+
+        if( period < 1.0f )
+          {
+            period = 1.0f;
+          }
+
+        if( sync_count < 1 )
+          {
+            sync_count++;
+          }
+        else
+          {
+            sync_time = FToQ27( period * delay_length_cpl );
+          }
+      }
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      // Use preset time until synced
+      if( start_sequence == 0 && clock_source != CLOCK_SOURCE_internal )
+        {
+          sync_time = param_time;
+          start_sequence++;
+        }
+
+#if attr_smooth>0
+      for( avg.fifo_i = 0; avg.fifo_i < FIFO_LEN; avg.fifo_i++ )
+        {
+          avg.fifo[avg.fifo_i] = 0;
+        }
+      avg.fifo_i       = 0;
+      avg.acc          = 0;
+#endif
+      start_sequence   = 0;
+      clock_source     = CLOCK_SOURCE_internal;
+      clock_multiplier = 1;
+      clock_divider    = 12;
+      sync_count       = 0;
+      sync_time        = 0;
+      ktimer           = 0;
+      last_ktime       = 0;
+      delay_length_cpl = 1.0f/attr_delayname.LENGTH;
+      old_24ppq        = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+#ifdef USE_SYNC_HOLDOFF
+      // If too long between clocks (likely absence of clock), require two successive clocks to resync.
+      // Use max delay time as the minimum clock interval (using 5 seconds for now)?
+      if( ktimer - last_ktime > (5*3000) )
+        {
+          sync_count = 0;
+        }
+#endif
+
+      // Live overrides for the clock source and clock divider parameters.
+      // Allow clock selection without restarting the patch is good :)
+      // (The int32 spinbox is not CC assignable...(bug?))
+      if( inlet_clkoverride > 0 )
+        {
+          clock_source = inlet_clkoverride - 1;
+          if( clock_source > CLOCK_SOURCE_midi_omni )
+            {
+              clock_source = CLOCK_SOURCE_midi_omni;
+            }
+          else if( clock_source < CLOCK_SOURCE_internal )
+            {
+              clock_source = CLOCK_SOURCE_internal;
+            }
+        }
+      else
+        {
+          clock_source = attr_clocksource;
+        }
+
+      if( inlet_divoverride > 0 )
+        {
+          clock_divider = inlet_divoverride;
+          if( clock_divider < 1 )
+            {
+              clock_divider = 1;
+            }
+        }
+      else
+        {
+          clock_divider = param_clockdiv;
+        }
+
+      if( inlet_muloverride > 0 )
+        {
+          clock_multiplier = inlet_muloverride;
+          if( clock_multiplier < 1 )
+            {
+              clock_multiplier = 1;
+            }
+        }
+      else
+        {
+          clock_multiplier = param_clockmul;
+        }
+
+      if( clock_source == CLOCK_SOURCE_external && inlet_24ppq && !old_24ppq  )
+        {
+          on_clock();
+        }
+
+      old_24ppq = inlet_24ppq;
+      ktimer++;
+
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      uint32_t tmp_time;
+      int32_t  time_mod;
+      uint32_t tmp_d;
+      uint32_t tmp_d_limited;
+      uint32_t tmp_di;
+      uint32_t tmp_w1;
+      uint32_t tmp_w2;
+      int32_t  tmp_a1;
+      int32_t  tmp_a2;
+      int32_t  tmp_r;
+
+      if( clock_source != CLOCK_SOURCE_internal )
+        {
+          tmp_time = sync_time;
+        }
+      else
+        {
+          tmp_time = param_time;
+        }
+
+      time_mod    = ___SMMUL( (tmp_time + inlet_time)<<3, inlet_tmod<<2 );
+      tmp_d       = __USAT(tmp_time + inlet_time + time_mod,27);
+      outlet_time = tmp_d;
+
+      // Must limit the length!
+      tmp_d_limited = tmp_d>>(27-attr_delayname.LENGTHPOW);
+      if( tmp_d_limited > attr_delayname.LENGTHMASK - BUFSIZE )
+        {
+          tmp_d_limited = attr_delayname.LENGTHMASK - BUFSIZE;
+          tmp_d = 0;
+        }
+      tmp_di = attr_delayname.writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+      tmp_w1 = (tmp_d<<(attr_delayname.LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = attr_delayname.array[tmp_di&attr_delayname.LENGTHMASK];
+      tmp_a2 = attr_delayname.array[(tmp_di+1)&attr_delayname.LENGTHMASK];
+      tmp_r  = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r  = ___SMMLA(tmp_a2,tmp_w2,tmp_r)<<2;
+
+      outlet_out = tmp_r;
+
+    ]]></code.srate>
+    <code.midihandler><![CDATA[
+
+      if(    clock_source == CLOCK_SOURCE_midi_omni
+         || (clock_source == CLOCK_SOURCE_midi && midi_device_test( dev, port, attr_device ) == 1)
+        )
+        {
+          if( status == MIDI_TIMING_CLOCK )
+            {
+              on_clock();
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+</objdefs>

@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="slowsinesync" uuid="ac109a7f-51fd-4e74-89cb-1b75ff3155f6">
+      <sDescription>sine wave oscillator, with rising-edge sync input</sDescription>
+      <author>toneburst</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="freq" description="frequency"/>
+         <frac32buffer name="phase" description="phase"/>
+         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
+         <int32.positive name="oct"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32.hradio name="oct">
+            <MaxValue i="8"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+      int32_t old_sync;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+      old_sync = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+      MTOFEXTENDED(param_pitch + inlet_pitch,freq);]]></code.krate>
+      <code.srate><![CDATA[if( inlet_sync > 0 && old_sync <= 0 )
+        Phase = 0;
+      else
+        Phase += ((freq + inlet_freq)>>(param_oct+inlet_oct));
+      old_sync = inlet_sync;
+
+      int32_t r;
+      int32_t p2 = Phase + (inlet_phase<<4);
+      SINE2TINTERP(p2,r)
+      outlet_wave= (r>>4);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,144 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/PIWT/gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d" name="gen_1" x="42" y="0">
+      <params/>
+      <attribs>
+         <text attributeName="function">
+            <sText><![CDATA[3*saw(x)+2*saw(2*x+0.6f)-saw(3*x+0.3f)-0.5f*saw(5*x+0.1f)]]></sText>
+         </text>
+         <combo attributeName="size" selection="512"/>
+         <combo attributeName="location" selection="IntRAM"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/osc/DP2Saw" uuid="4d774e14-f458-4b92-929a-25f9209b087b" name="DP2Saw_1" x="420" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="112" y="196">
+      <params>
+         <frac32.s.map name="value" value="-8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="238" y="196">
+      <params>
+         <frac32.s.map name="value" value="5.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="378" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/PIWT/oscLightTri" uuid="06c61703-5a49-46d3-9da4-321b46fea096" name="oscLightTri_1" x="490" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="piwt" obj="gen_1"/>
+      </attribs>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="616" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="728" y="196">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="1.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="826" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="882" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="616" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="686" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="scope_synchro" x="70" y="322">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="182" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="oscLightTri_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="scope_synchro" inlet="pitch"/>
+         <dest obj="oscLightTri_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="scope_synchro" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_1" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="oscLightTri_1" inlet="freq offsetC"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="oscLightTri_1" inlet="freq offsetB"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>811</x>
+      <y>107</y>
+      <width>1073</width>
+      <height>826</height>
+   </windowPos>
+</patch-1.0>

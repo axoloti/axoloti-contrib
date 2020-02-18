@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b">
+      <sDescription>For 8 bits signal, reverse selected bits</sDescription>
+      <author>GaoTamanrasset</author>
+      <license>BSD</license>
+      <helpPatch>biscuitage_r.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a" description="Signal in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="b" description="Signal out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bin12 name="p1" noLabel="true"/>
+         <frac32.u.map name="noisegate"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t reversebits;
+int32_t tmp;
+int32_t hp_freq;
+int32_t val;
+int32_t noisegate;]]></code.declaration>
+      <code.init><![CDATA[reversebits = 0;
+tmp = 0;
+hp_freq = 0x000B29A4; // MTOF(8,176Hz)
+val = 0;]]></code.init>
+      <code.krate><![CDATA[noisegate = param_noisegate;
+reversebits = param_p1 & 0xFFF;]]></code.krate>
+      <code.srate><![CDATA[tmp = (inlet_a >> 1) + 0x04000000;   	// Bipolar to unipolar signal
+tmp = tmp + (noisegate >> 7);			// Noise gate
+tmp = tmp ^ (reversebits << 15);       	// Bitwise operation
+tmp = tmp + ((reversebits/2) << 15);    // Suppress DC offset partially
+tmp = (tmp - 0x04000000) << 1; 	  	// Unipolar to bipolar  
+
+// HP filter to suppress entirely  DC offset
+val = ___SMMLA((tmp-val)<<1, hp_freq, val); 
+outlet_b = tmp-val;]]></code.srate>
+   </obj.normal>
+</objdefs>

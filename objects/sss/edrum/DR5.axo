@@ -1,0 +1,161 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DR5" uuid="51c6a3aa-74c2-4a59-8a65-00172f4ad1eb">
+      <sDescription>Kick/tom/snare generator with seperate outputs for different parts of the sound.
+Bass-signal can be routed through &quot;bass&quot; input for ducking.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <frac32buffer name="bass"/>
+         <frac32 name="pitch"/>
+         <frac32 name="decay"/>
+         <frac32 name="bottom"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="bottom"/>
+         <frac32buffer name="hit"/>
+         <frac32buffer name="noise"/>
+         <frac32buffer name="bass"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="bottom"/>
+         <frac32.s.map name="hit"/>
+         <frac32.s.map name="noise"/>
+         <frac32.s.map name="bPunch"/>
+         <frac32.s.map name="hPunch"/>
+         <frac32.s.map name="nPunch"/>
+         <frac32.s.map.klineartime.exp name="bDec"/>
+         <frac32.s.map.klineartime.exp name="hDec"/>
+         <frac32.s.map.klineartime.exp name="nDec"/>
+         <frac32.u.map.gain name="mod"/>
+         <int32 name="octaves">
+            <MinValue i="1"/>
+            <MaxValue i="8"/>
+         </int32>
+         <frac32.u.map.gain name="seed"/>
+         <frac32.s.map.klineartime.exp name="bassFade"/>
+         <frac32.u.map.gain name="fadeLvl"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val[4];
+bool ntrig;
+int32_t phs[3];
+int i;
+int32_t v26=1<<26;
+int32_t v27=1<<27;
+int32_t v30=1<<30;
+int32_t lp;
+int32_t hp;
+int32_t noise;
+static const int noct = 8;
+int32_t obuf[noct];
+int32_t sum;
+uint32_t seed;
+int index;
+const int8_t * dyadictree(void){
+   static const int8_t dtree[] = {
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,6,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,5,
+   0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,7};
+   return dtree;
+}
+int32_t HP;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<3;i++){
+val[i] = 0;
+}
+ntrig = 0;
+for(i=0;i<noct;i++){
+   obuf[i]=0;
+index = 0;
+sum = 0;
+seed = 0x830af41e ;
+}]]></code.init>
+      <code.krate><![CDATA[int32_t dec[4];
+dec[0]=param_bDec+inlet_decay;
+dec[1]=param_hDec+inlet_decay;
+dec[2]=param_nDec+inlet_decay;
+dec[3]=param_bassFade+v26;
+if ((inlet_trig > 0) && !ntrig) {
+  for(i=0;i<3;i++){
+  val[i] = v27;
+  phs[i]=0;
+  }
+  val[3]=v27;
+  ntrig = 1;
+  for(i=0;i<noct;i++){
+   obuf[i]=0;
+index = 0;
+sum = 0;
+seed = 0x830af41e +param_seed;
+}
+}
+else {
+  if (!(inlet_trig > 0))
+    ntrig = 0;
+  int32_t t;
+  
+  for(i=0;i<4;i++){
+  MTOF(-dec[i]+(v26),t);
+  val[i] -= t>>6;
+  if (val[i] < 0)
+    val[i] = 0;
+  }
+}
+
+
+int32_t bot;
+bot=v27-val[0];
+bot=___SMMUL(bot<<2,bot<<3);
+bot=v27-___SMMUL(bot<<2,bot<<3);
+int32_t env[4];
+env[0]=___SMMUL(val[0]<<2,val[1]<<3);
+env[0]=___SMMUL(env[0]<<2,env[0]<<3);
+env[0]=___SMMUL(___SMMUL(env[0]<<2,env[0]<<3)<<3,param_bPunch<<2);
+env[1]=___SMMUL(val[1]<<2,val[1]<<3);
+env[1]=___SMMUL(___SMMUL(env[1]<<2,env[1]<<3)<<3,param_hPunch<<2);
+env[2]=___SMMUL(___SMMUL(val[2]<<2,val[2]<<3)<<3,param_nPunch<<2);
+env[3]=v27-val[3];//___SMMUL(val[3]<<3,val[3]<<2);
+env[3]=___SMMUL(env[3]<<3,env[3]<<2);
+env[3]=___SMMUL(v27-env[3]<<1,param_fadeLvl);
+int32_t frq[3];
+MTOFEXTENDED(inlet_pitch+param_bottom+inlet_bottom+env[0],frq[0])
+MTOFEXTENDED(inlet_pitch+param_hit+env[1],frq[1])
+MTOFEXTENDED(inlet_pitch+param_noise+v27+env[2],frq[2])
+int32_t FQ;
+MTOF(-(1<<26)+___SMMUL(val[0]<<1,v30),FQ);]]></code.krate>
+      <code.srate><![CDATA[phs[2]+=frq[2];
+//if(phs[2]>0){
+int o = dyadictree()[index++];
+if (o>=param_octaves){
+   index=0;
+} else {
+   sum -= obuf[o];
+   seed = (seed * 196314165) + 907633515;
+   obuf[o] = ((int32_t)seed+phs[2])>>7;
+   sum += obuf[o];
+}
+seed = (seed * 196314165) + 907633515;
+noise= (sum + (((int32_t)seed)>>param_octaves))*param_octaves;
+//}
+lp+=___SMMUL(noise-lp,frq[2]);
+
+hp+=___SMMUL(lp-hp,frq[2]);
+noise=lp-hp;
+noise=___SMMUL(noise<<3,val[2]<<2);
+phs[0]+=frq[0];
+int32_t sine;
+SINE2TINTERP(phs[0],sine)
+outlet_bottom=___SMMUL(sine,bot);
+phs[1]+=frq[1]+(___SMMUL(noise<<3,param_mod));
+
+SINE2TINTERP(phs[1],sine)
+outlet_hit=___SMMUL(sine,val[1]);
+outlet_noise=noise;
+int32_t bass=___SMMUL(inlet_bass<<2,v27-env[3]<<3);
+HP+=___SMMUL(bass-HP,FQ);
+outlet_bass=bass-HP;]]></code.srate>
+   </obj.normal>
+</objdefs>

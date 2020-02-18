@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="pan st swap c" uuid="8f7fd9ff-bd0a-44e2-b153-7f197df809de">
+      <sDescription>stereo pan swap center is mono!left is normal right swapped</sDescription>
+      <author>philoop</author>
+      <license>BSD</license>
+      <helpPatch>pan st.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="L" description="input"/>
+         <frac32buffer name="R"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="left" description="output"/>
+         <frac32buffer name="right" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pan" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[int32_t right = ___SMMUL((1<<29)-(param_pan<<2),inlet_R)<<2;
+int32_t right1 = ___SMMUL((1<<29)+(param_pan<<2),inlet_L)<<2;
+int32_t left = ___SMMUL((1<<29)+(param_pan<<2),inlet_R)<<2;
+int32_t left1 = ___SMMUL((1<<29)-(param_pan<<2),inlet_L)<<2;
+outlet_right = right+right1;
+outlet_left = left+left1;]]></code.srate>
+   </obj.normal>
+</objdefs>

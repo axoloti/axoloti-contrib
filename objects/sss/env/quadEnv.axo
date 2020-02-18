@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="quadEnv" uuid="16351535-e8c6-40d5-b96b-55ca9a0739c4">
+      <sDescription>Quad Attack/decay envelope, linear attack, exponential decay.
+
+&quot;Amin&quot;, &quot;Amax&quot;, &quot;Dmin&quot; and &quot;Dmax&quot; define the range of the attack and decay values for all 4 envelope generators.
+Values are spreaded following a sine-curve of 45 degrees offset for each envelope.
+&quot;Amorph&quot; and &quot;Dmorph&quot; set the position within the sine-curve, allowing to morph all attack and decay values simultanuously between minimum and maximum range.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>env.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig1" description="trigger"/>
+         <bool32.rising name="trig2"/>
+         <bool32.rising name="trig3"/>
+         <bool32.rising name="trig4"/>
+         <frac32 name="Amorph"/>
+         <frac32 name="Dmorph"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env1" description="envelope output"/>
+         <frac32.positive name="env2"/>
+         <frac32.positive name="env3"/>
+         <frac32.positive name="env4"/>
+         <frac32.positive name="max"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.klineartime.exp name="Amin"/>
+         <frac32.s.map.kdecaytime.exp name="Amax"/>
+         <frac32.u.map name="Amorph"/>
+         <frac32.u.map name="Dmin"/>
+         <frac32.u.map name="Dmax"/>
+         <frac32.u.map name="Dmorph"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t stage[4];
+int ntrig[4];
+int32_t val[4];
+int trig[4];
+int32_t a[4];
+int32_t d[4];
+int32_t sine[8];
+int i;
+int32_t max1;
+int32_t max2;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<4;i++)
+{ntrig[i] = 0;
+val[i] = 0;}
+]]></code.init>
+      <code.krate><![CDATA[trig[0]=inlet_trig1;
+trig[1]=inlet_trig2;
+trig[2]=inlet_trig3;
+trig[3]=inlet_trig4;
+
+SINE2TINTERP((inlet_Amorph+param_Amorph)<<5,sine[0])
+SINE2TINTERP((inlet_Amorph+param_Amorph+(1<<26))<<5,sine[1])
+sine[0]=(sine[0]>>5)+(1<<26);
+sine[1]=(sine[1]>>5)+(1<<26);
+sine[2]=(1<<27)-sine[0];
+sine[3]=(1<<27)-sine[1];
+
+SINE2TINTERP((inlet_Dmorph+param_Dmorph)<<5,sine[4])
+SINE2TINTERP((inlet_Dmorph+param_Dmorph+(1<<26))<<5,sine[5])
+sine[4]=(sine[4]>>5)+(1<<26);
+sine[5]=(sine[5]>>5)+(1<<26);
+sine[6]=(1<<27)-sine[4];
+sine[7]=(1<<27)-sine[5];
+
+for(i=0;i<4;i++){
+a[i]=(1<<27)-param_Amin-___SMMUL((param_Amax-param_Amin)<<3,sine[i]<<2);
+d[i]=(((1<<27)-param_Dmin)-___SMMUL((param_Dmax-param_Dmin)<<3,sine[i+4]<<2));
+d[i]=___SMMUL(d[i]<<3,d[i]<<2);
+	
+if ((trig[i]>0) && !ntrig[i]) {
+   ntrig[i] = 1;
+   stage[i] = 1;
+} else if (!(trig[i]>0)) {
+   ntrig[i] = 0;
+}
+if (stage[i] == 0){
+   val[i] = val[i]-(___SMMUL(val[i],d[i])<<1);
+} else {
+   int32_t t;
+   MTOF(a[i],t);
+   val[i] = val[i] + (t>>3);
+   if (val[i]<0) {
+      val[i] =0x7FFFFFFF;
+      stage[i] = 0;
+   }
+}}
+outlet_env1 = val[0]>>4;
+outlet_env2 = val[1]>>4;
+outlet_env3 = val[2]>>4;
+outlet_env4 = val[3]>>4;
+max1=outlet_env1>outlet_env2?outlet_env1:outlet_env2;
+max2=max1>outlet_env3?max1:outlet_env3;
+outlet_max=max2>outlet_env4?max2:outlet_env4;]]></code.krate>
+   </obj.normal>
+</objdefs>

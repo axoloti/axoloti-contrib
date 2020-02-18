@@ -1,0 +1,136 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="ADSRcrv" uuid="3eed0831-c77a-4251-8abe-5019a165602d">
+      <sDescription>ADSR module with exp/inverse exp controls for attack, decay and release stages. Also outputs stage number and a gate high when it changes from stage (eg selecting different waveforms for my wavetable oscillators for each stage. you could use the autoCurve (patt-folder) to morph between settings at the different stages of the envelope.)
+
+the exponential/inverse exponential sides of the A, D and R are swapped for D and R. This is done for a more intuitive control: 
+-dial it left-&gt;signal is mostly low (exp for attack, inv-exp for decay and release)
+-dial it right-&gt;signal is mostly high (inv-exp for attack, exp for decay and release)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="gate"/>
+         <frac32.bipolar name="A"/>
+         <frac32.bipolar name="crvA"/>
+         <frac32.bipolar name="D"/>
+         <frac32.bipolar name="crvD"/>
+         <frac32.bipolar name="S"/>
+         <frac32.bipolar name="R"/>
+         <frac32.bipolar name="crvR"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+         <int32 name="stage"/>
+         <bool32 name="nxtStg"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.klineartime.exp name="A"/>
+         <frac32.s.map name="crvA"/>
+         <frac32.s.map.klineartime.exp name="D"/>
+         <frac32.s.map name="crvD"/>
+         <frac32.u.map name="S"/>
+         <frac32.s.map name="R"/>
+         <frac32.s.map name="crvR"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t env1;
+int32_t env2;
+int32_t env3;
+int32_t Cenv1;
+int32_t Cenv2;
+int32_t Cenv3;
+int32_t relLvl;
+int trig;
+int stage;
+int trg;
+int32_t curved;
+int32_t ccomp;
+int prev;
+int32_t curving(int32_t in,int32_t Exp){
+	
+	in=in>>3;
+	if(Exp<0){
+	ccomp=(1<<27)+Exp+___SMMUL(-Exp<<3,in<<2);
+	curved=___SMMUL(in<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	}
+	if(Exp>=0){
+	in=(1<<27)-in;
+	ccomp=(1<<27)-Exp+___SMMUL(Exp<<3,in<<2);
+	curved=___SMMUL(in<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=___SMMUL(curved<<3,ccomp<<2);
+	curved=((1<<27)-curved);
+	}
+	}
+
+]]></code.declaration>
+      <code.krate><![CDATA[int32_t att;
+int32_t dec;
+int32_t sus;
+int32_t CrvA=__SSAT(param_crvA+inlet_crvA,28);
+int32_t CrvD=__SSAT(param_crvD+inlet_crvD,28);
+int32_t CrvR=__SSAT((param_crvR<<1)+inlet_crvR,28);
+sus=__USAT((1<<27)-5-param_S-inlet_S,27);
+int32_t rel;
+MTOF(__SSAT(-param_A-inlet_A,28),att)
+MTOF(__SSAT(-param_D-inlet_D,28),dec)
+MTOF(__SSAT(-param_R-inlet_R,28),rel)
+int32_t choke;
+MTOF(32<<21,choke)
+att=att>>3;
+dec=dec>>3;
+rel=rel>>3;
+if((inlet_gate>0)&&!trig){
+	stage=1;
+	trig=1;}
+else if(!(inlet_gate>0)){trig=0;stage=0;}
+
+if(stage==1){
+env1+=att;
+env1=__USAT(env1,30);
+if(env1>=((1<<30)-1)){stage=2;}
+}
+if(stage==2){
+env2+=dec;
+env2=__USAT(env2,30);
+if(env2>=((1<<30)-1)){stage=3;}
+}
+curving(env1,CrvA);
+Cenv1=curved<<3;
+curving(env2,-CrvD);
+Cenv2=curved<<3;
+int32_t Env2=___SMMUL(Cenv2,sus<<3)<<2;
+
+if(stage==0){
+env3=env3>0?env3-rel:0;
+curving(env3,CrvR);
+Cenv3=___SMMUL(curved<<3,relLvl>>1)<<3;
+}
+if(stage>0){
+env3=env3>0?env3-choke:0;
+curving(env3,CrvR);
+Cenv3=___SMMUL(curved<<3,relLvl>>1)<<3;
+}
+
+if((stage==0)&(!(trg))){
+trg=1;
+relLvl=Cenv1-Env2;
+env3=(1<<30);
+env1=0;
+env2=0;}
+else if(stage>0){trg=0;}
+
+
+outlet_out=__USAT(Cenv1-Env2+Cenv3>>3,27);
+outlet_nxtStg=prev==stage?0:1;
+outlet_stage=stage;
+
+prev=stage;]]></code.krate>
+   </obj.normal>
+</objdefs>

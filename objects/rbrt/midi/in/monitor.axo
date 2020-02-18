@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="monitor" uuid="64b3d36e-97ab-4b18-91f7-ff611e14fd7a">
+      <sDescription>provides in-patcher information about incoming midi-data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets/>
+      <displays>
+         <int32.label name="note "/>
+         <int32.label name="velocity "/>
+         <bool32 name="gate "/>
+         <int32.label name="cc "/>
+         <int32.label name="value "/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t gate;
+uint8_t note;
+uint8_t velo;
+uint8_t cc;
+uint8_t ccindex;]]></code.declaration>
+      <code.krate><![CDATA[disp_note = note;
+disp_velocity = velo;
+disp_gate = gate;
+disp_cc = ccindex;
+disp_value = cc;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) 
+{gate= 1;velo= data2;note = data1;}
+if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel))
+gate= 0;
+
+if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {cc = data2;ccindex = data1;}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

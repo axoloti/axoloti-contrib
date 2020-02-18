@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="auduloti" uuid="622fc7b1-29d2-47a9-b334-22305f1074e3">
+      <sDescription>auduino port to axoloti, auduloti</sDescription>
+      <author>Simon Iten</author>
+      <license>BSD</license>
+      <helpPatch>phasor.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.positive name="grainfreq"/>
+         <frac32.positive name="graindecay"/>
+         <frac32.positive name="grainfreq2"/>
+         <frac32.positive name="graindecay2"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="phasor" description="phasor wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="grainfreq"/>
+         <frac32.u.map name="graindecay"/>
+         <frac32.u.map name="grainfreq2"/>
+         <frac32.u.map name="graindecay2"/>
+         <bool32.tgl name="8bit"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint16_t syncPhaseAcc;
+uint16_t syncPhaseInc;
+uint16_t grainPhaseAcc;
+uint16_t grainPhaseInc;
+uint16_t grainAmp;
+uint8_t grainDecay;
+uint16_t grain2PhaseAcc;
+uint16_t grain2PhaseInc;
+uint16_t grain2Amp;
+uint8_t grain2Decay;
+uint16_t antilogTable[64] = {
+  64830,64132,63441,62757,62081,61413,60751,60097,59449,58809,58176,57549,56929,56316,55709,55109,
+  54515,53928,53347,52773,52204,51642,51085,50535,49991,49452,48920,48393,47871,47356,46846,46341,
+  45842,45348,44859,44376,43898,43425,42958,42495,42037,41584,41136,40693,40255,39821,39392,38968,
+  38548,38133,37722,37316,36914,36516,36123,35734,35349,34968,34591,34219,33850,33486,33125,32768
+};
+uint16_t mapPhaseInc(uint16_t input) {
+  return (antilogTable[input & 0x3f]) >> (input >> 6);
+}]]></code.declaration>
+      <code.init><![CDATA[syncPhaseInc = 0;]]></code.init>
+      <code.krate><![CDATA[uint32_t freq;
+   MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+syncPhaseInc = freq>>16;
+
+
+  grainPhaseInc  = mapPhaseInc((inlet_grainfreq + param_grainfreq)>>18) >> 1;
+  grainDecay     = (inlet_graindecay + param_graindecay) >> 21 ;
+  grain2PhaseInc = mapPhaseInc((inlet_grainfreq2 + param_grainfreq2)>>18) >> 1;
+  grain2Decay    = (inlet_graindecay2 + param_graindecay2) >> 21;]]></code.krate>
+      <code.srate><![CDATA[uint8_t value;
+  uint16_t output;
+
+  syncPhaseAcc += syncPhaseInc;
+  if (syncPhaseAcc < syncPhaseInc) {
+    // Time to start the next grain
+    grainPhaseAcc = 0;
+    grainAmp = 0x7fff;
+    grain2PhaseAcc = 0;
+    grain2Amp = 0x7fff;
+  }
+  
+  // Increment the phase of the grain oscillators
+  grainPhaseAcc += grainPhaseInc;
+  grain2PhaseAcc += grain2PhaseInc;
+
+  // Convert phase into a triangle wave
+  value = (grainPhaseAcc >> 7) & 0xff;
+  if (grainPhaseAcc & 0x8000) value = ~value;
+  // Multiply by current grain amplitude to get sample
+  output = value * (grainAmp >> 8);
+
+  // Repeat for second grain
+  value = (grain2PhaseAcc >> 7) & 0xff;
+  if (grain2PhaseAcc & 0x8000) value = ~value;
+  output += value * (grain2Amp >> 8);
+
+  // Make the grain amplitudes decay by a factor every sample (exponential decay)
+  grainAmp -= (grainAmp >> 8) * grainDecay;
+  grain2Amp -= (grain2Amp >> 8) * grain2Decay;
+
+  // Scale output to the available range, clipping if necessary
+
+  if (param_8bit) {
+	output >>= 9;
+ if (output > 255) output = 255;
+  outlet_phasor = output<<20;
+} else {
+	if (output > 1<<17) output = 1<<17;
+ 
+  outlet_phasor = output<<11;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

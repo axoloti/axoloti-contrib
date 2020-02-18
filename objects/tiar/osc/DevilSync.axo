@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DevilSync" uuid="1ddc8672-f8b0-4de1-bbc2-df34268522a7">
+      <sDescription>Advanced version with built-in Master oscillator. See help patch for usage !!
+</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>KWSync.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch slave" description="pitch_slave"/>
+         <frac32.bipolar name="pitch master"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch slave" noLabel="true"/>
+         <frac32.s.map.pitch name="pitch master"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[//dissym picky sqr
+float F(float p){
+  float x = p - (int)(p);
+  x = 4 * x - 1;
+  if(x > 1) return 0.125f*0.5f * (2 - x);
+  else return x * x * x * 0.5f*0.125f;
+}
+
+
+
+float pM, pS, dpM, _dpM, dpS, _dpS, f, FpS;]]></code.declaration>
+<code.init><![CDATA[
+pM = 0; pS = 0; FpS = 0;
+]]></code.init>
+
+
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch_space_slave + inlet_pitch_space_slave, idp);
+dpS = (idp*(0.25f/(1<<30)));
+_dpS = 1.0f / dpS;
+
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTOFEXTENDED(param_pitch_space_master + inlet_pitch_space_master, idp);
+dpM = (idp*(0.25f/(1<<30)));
+_dpM = 1 / dpM;]]></code.krate>
+      <code.srate><![CDATA[pM += dpM;
+if(pM > 1){
+  pM -= 1;
+  float a = pM * _dpM;
+  
+  f = F(pS + (1 - a) * dpS) - FpS;
+  pS = a * dpS;
+  FpS = F(pS);
+  f += FpS - F(0);
+  f *= _dpS;
+} else {
+  f = FpS;
+  pS += dpS;
+  if(pS > 1)
+    pS -= 1;
+  FpS = F(pS);
+  f = (FpS - f) * _dpS;
+}
+outlet_out = (int32_t)((1 << 27) * f);]]></code.srate>
+   </obj.normal>
+</objdefs>

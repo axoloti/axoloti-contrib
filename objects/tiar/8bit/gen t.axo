@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="gen t" uuid="9d68b77c-f33b-411a-94d9-1950d1d7f216">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>gen t.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="reset"/>
+         <frac32 name="offset"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="clkDiv" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="96"/>
+         </int32>
+      </params>
+      <attribs>
+         <text name="code"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t tc;
+int16_t c;
+int32_t out;
+bool ares = false;
+int32_t s(int32_t x){
+	return (sine2t[(x&255)<<4]>>24)+128;
+}]]></code.declaration>
+      <code.init><![CDATA[c = 0;
+tc = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t offset = inlet_offset >> 9;
+if(inlet_reset && !ares){
+  tc = 0;
+}
+ares = inlet_reset;]]></code.krate>
+      <code.srate><![CDATA[if(c >= param_clkDiv){
+  c = 0;
+  // t*((t>>12|t>>8)&63&t>>4)
+  // t&17*t&91+t>>5
+  int32_t t = tc + offset;
+  out =  (attr_code) ;
+  tc++;
+
+  out &= 255;
+  out -= 128;
+  out<<=20;
+}
+c++;
+outlet_wave= out;]]></code.srate>
+   </obj.normal>
+</objdefs>

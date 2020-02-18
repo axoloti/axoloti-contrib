@@ -1,0 +1,80 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Env3" uuid="d441b1ce-8a3d-47fa-95c9-9b2d4c24594e">
+      <sDescription>Auto-switching attack/decay or attack/decay/sustain/release envelope
+trigger=1-&gt;AD envelope
+trigger=2-&gt;ADSR envelope
+trigger=3-&gt;AHR envelope (sustain=hold time)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>adsr.axh</helpPatch>
+      <inlets>
+         <int32 name="gate"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="env" description="envelope output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.klineartime.exp2 name="a"/>
+         <frac32.s.map.kdecaytime.exp name="d"/>
+         <frac32.u.map name="s"/>
+         <frac32.s.map.kdecaytime.exp name="r"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t stage;
+int ntrig;
+int rtrig;
+int32_t val;
+int mode;
+int32_t R;
+int32_t S;
+int32_t gate;
+int32_t v27=1<<27;]]></code.declaration>
+      <code.init><![CDATA[stage = 0;
+ntrig = 0;
+val = 0;]]></code.init>
+      <code.krate><![CDATA[if((inlet_gate>0)&&!rtrig){
+	mode=inlet_gate;
+	rtrig=1;
+	gate=v27;
+	rtrig=1;
+}
+
+if(mode<3)
+{
+	if(!(inlet_gate>0)){gate=0;rtrig=0;}
+}
+if(mode==3)
+{
+	if(stage==2){
+	gate=__USAT(gate-(v27-param_s),27);
+	}
+}
+if(inlet_gate==0){rtrig=0;gate=0;}
+if ((gate>0) && !ntrig) {
+
+	if(mode==1){R=param_d;S=0;}
+	if(mode==2){R=param_r;S=param_s;}
+	if(mode==3){R=param_r;S=v27;}
+   stage = 1;   
+   ntrig = 1;
+}
+if (!(gate>0) && ntrig) {
+   stage = 0;
+   ntrig=0;
+}
+if (stage == 0){
+   val = ___SMMUL(val,R)<<1;
+} else if (stage == 1){
+   val = val + param_a;
+   if (val<0) {
+      val =0x7FFFFFFF;
+      stage = 2;
+   }
+} else if (stage == 2) {
+   val = (S<<4) + (___SMMUL(val - (S<<4),param_d)<<1);
+}
+
+outlet_env = val>>4;]]></code.krate>
+   </obj.normal>
+</objdefs>

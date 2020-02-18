@@ -1,0 +1,48 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="triggerindex 4" uuid="515373bb-ae4e-428d-a13c-7f24f96a73dc">
+      <sDescription>trigger an index according to a connected boolean source, index can be momentary or latching</sDescription>
+      <author>Simon Iten</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="b1"/>
+         <bool32 name="b2"/>
+         <bool32 name="b3"/>
+         <bool32 name="b4"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="out" description="output"/>
+         <int32.positive name="enc"/>
+      </outlets>
+      <displays>
+         <int32.label name="enc" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.tgl name="indexlatch" description="latch index" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="c1" MinValue="1" MaxValue="16" DefaultValue="3"/>
+         <spinner name="c2" MinValue="1" MaxValue="16" DefaultValue="5"/>
+         <spinner name="c3" MinValue="1" MaxValue="16" DefaultValue="6"/>
+         <spinner name="c4" MinValue="1" MaxValue="16" DefaultValue="7"/>
+      </attribs>
+      <code.declaration><![CDATA[int index;
+int combi;]]></code.declaration>
+      <code.init><![CDATA[index = 0;]]></code.init>
+      <code.krate><![CDATA[combi = inlet_b1 + (inlet_b2 << 1) + (inlet_b3 << 2) + (inlet_b4 << 3);
+
+
+if (combi == 1) index = 1;
+else if (combi == 2) index = 2;
+else if (combi == 4) index = 3;
+else if (combi == 8) index = 4;
+else if (combi == attr_c1) index = 5;
+else if (combi == attr_c2) index = 6;
+else if (combi == attr_c3) index = 7;
+else if (combi == attr_c4) index = 8;
+else if (!param_indexlatch) index = 0;
+
+outlet_out = index;
+outlet_enc = combi;
+disp_enc = combi;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,62 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tsave" uuid="d7666046-da33-406c-bca7-71b716773b83">
+      <sDescription>save an area of a table to sd-card,defined in samples</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <charptr32 name="filename" description="file name"/>
+         <bool32.rising name="trig" description="trigger"/>
+         <int32 name="start" description="start of area"/>
+         <int32 name="length" description="length of area"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="done" description="done saving"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[int ntrig;
+WORKING_AREA(waThreadSD, 800);]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_done = 0;
+
+if ((inlet_trig>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    codec_clearbuffer();
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,inlet_filename); return;}
+
+    int rem_sz = inlet_length << (attr_table.BITS >> 4);
+    int offset = inlet_start << (attr_table.BITS >> 4);
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&attr_table.array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&attr_table.array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }   
+    outlet_done = 1;
+    if (err != FR_OK) report_fatfs_error(err,inlet_filename);
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,inlet_filename);
+  }
+  else if (!(inlet_trig>0)) ntrig=0;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="lp m a" uuid="1e8dcf27-16d3-4dbb-a3c0-25110d370e16">
+      <sDescription>2-pole resonant low-pass filter (biquad)
+
+Act inlet turns code on/off. This saves a few percentage of DSP.</sDescription>
+      <author>Johannes Taelman - Edited by Jaffasplaffa</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+         <bool32 name="act"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[if(inlet_act){  
+      int32_t freq;
+      MTOF(param_pitch + inlet_pitch,freq);
+      biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,inlet_in,outlet_out);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

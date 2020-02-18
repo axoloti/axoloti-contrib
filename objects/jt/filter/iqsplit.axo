@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="iqsplit" uuid="5a98950c-1137-4b6a-ab61-e95f01f55787">
+      <sDescription>Converts an audio signal into an &quot;analytic pair&quot; of In-phase (I) and Quadrature-phase (Q) signals.
+This is not a Hilbert filter, a Hilbert genertates the Q signal from an I signal.
+Applications include frequency shifting, and envelope following.
+
+The filter is a fixed point implementation of the design by Olli Niemitalo.
+http://dsp.stackexchange.com/questions/26966/oscillations-on-hilbert-envelope</sDescription>
+      <author>Johannes Taelman</author>
+      <license>GPL</license>
+      <helpPatch>iqsplit.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="i"/>
+         <frac32buffer name="q"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t s_mid_t1[9];
+int32_t s_mid_t2[9];
+
+int32_t *mid_t1;
+int32_t *mid_t2;]]></code.declaration>
+      <code.init><![CDATA[mid_t1 = &s_mid_t1[0];
+mid_t2 = &s_mid_t2[0];]]></code.init>
+      <code.srate><![CDATA[int32_t in_t1 = inlet_in;
+
+int32_t mid0_t=___SMMLA(0.4794008656*UINT32_MAX,in_t1+mid_t2[0],mid_t2[8]);
+int32_t s1 = mid0_t+mid_t2[1];
+int32_t mid1_t=___SMMLS(UINT32_MAX*(1-0.8762184935),s1,s1-mid_t2[0]);
+int32_t s2 = mid1_t+mid_t2[2];
+int32_t mid2_t=___SMMLS(UINT32_MAX*(1-0.9765975895),s2,s2-mid_t2[1]);
+int32_t s3 = mid2_t+mid_t2[6];
+int32_t out0_t=___SMMLS(UINT32_MAX*(1-0.9974992559),s3,s3-mid_t2[2]);
+
+int32_t mid3_t=___SMMLA(0.1617584983*UINT32_MAX,in_t1+mid_t2[3],mid_t1[8]);
+int32_t s4 = mid3_t+mid_t2[4];
+int32_t mid4_t=___SMMLS(UINT32_MAX*(1-0.7330289323),s4,s4-mid_t2[3]);
+int32_t s5 = mid4_t+mid_t2[5];
+int32_t mid5_t=___SMMLS(UINT32_MAX*(1-0.9453497003),s5,s5-mid_t2[4]);
+int32_t s6 = mid5_t+mid_t2[7];
+int32_t out1_t=___SMMLS(UINT32_MAX*(1-0.9905991567),s6,s6-mid_t2[5]);
+
+outlet_i = out0_t;
+outlet_q = out1_t;
+
+// swap
+int32_t *tmp;
+tmp = mid_t2;
+mid_t2 = mid_t1;
+mid_t1 = tmp;
+
+mid_t1[0] = mid0_t;
+mid_t1[1] = mid1_t;
+mid_t1[2] = mid2_t;
+mid_t1[3] = mid3_t;
+mid_t1[4] = mid4_t;
+mid_t1[5] = mid5_t;
+mid_t1[6] = out0_t;
+mid_t1[7] = out1_t;
+mid_t1[8] = -in_t1;]]></code.srate>
+   </obj.normal>
+</objdefs>

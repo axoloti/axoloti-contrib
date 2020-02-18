@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="looper_FB_mono" uuid="de42afeb-d1c7-4de1-9225-a216e22501c5">
+      <sDescription>a looper with overdub and feedback</sDescription>
+      <author>Robert Schirmer</author>
+      <license>who cares</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="wave" description="audio in"/>
+         <bool32.risingfalling name="rec" description="record"/>
+         <bool32.risingfalling name="play" description="play "/>
+         <bool32.risingfalling name="dub" description="overdub"/>
+         <frac32.positive name="feedback" description="loop feedback"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="audio out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[bool rec;
+bool play;
+
+int recpos;
+int length;
+  uint32_t input;
+  uint32_t data;
+
+int playpos;
+int shift;
+]]></code.declaration>
+      <code.init><![CDATA[playpos = 0;
+recpos =0;
+rec = 0;
+play = 0;
+]]></code.init>
+      <code.krate><![CDATA[
+   //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      recpos = 0;
+      playpos = 0;
+  } else if (!(inlet_rec)) {
+      rec = 0;
+      length = recpos;
+  }
+    
+    //play  
+    play = (!rec);
+
+  
+
+   //set 'shift factor' for storing the recording length/the sync output
+    if (attr_table.LENGTH == 8192){shift = 14; }
+    if (attr_table.LENGTH == 16384){shift = 13; }
+    if (attr_table.LENGTH == 32768){shift = 12; }
+    if (attr_table.LENGTH == 65536){shift = 11; }
+    if (attr_table.LENGTH == 131072){shift = 10;}
+    if (attr_table.LENGTH == 262144){shift = 9;}
+    if (attr_table.LENGTH == 524288){shift = 8;}
+    if (attr_table.LENGTH == 1048576 ){shift = 7;}
+
+
+
+    
+ 
+
+
+     
+
+
+
+   
+    
+
+
+  
+]]></code.krate>
+      <code.srate><![CDATA[ //input
+ input = (__SSAT((inlet_wave),28 ));
+ 
+ //record
+   if (rec)  {
+       if (recpos< (attr_table.LENGTH - 1))
+              attr_table.array[recpos++] = input ;
+              attr_table.array[attr_table.LENGTH -1 ] = (recpos << shift) ;
+   }
+   
+//play
+if (inlet_play){
+	    if (!(playpos == ((attr_table.array[attr_table.LENGTH -1]) >> shift )))
+              playpos == playpos ++;
+              else playpos = 0;
+            } 
+             else playpos= 0;
+
+               
+ //feedback	
+ 	data = ___SMMUL((attr_table.array[playpos])<<3,inlet_feedback<<2);
+ 	attr_table.array[playpos] = data ;
+ 	
+ 	outlet_wave = ( data * play);
+     
+	
+
+	//overdub
+   if (inlet_dub && play)  {
+       attr_table.array[playpos] = (data + input);
+   }
+
+   
+
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

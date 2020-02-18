@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="beatmachine" uuid="da8bb99a-f490-4ca9-a1ed-e3dba009f1d9">
+      <sDescription>Bytebeat style &quot;noise&quot; generator, a good description of bytebeat can be found @ http://canonical.org/~kragen/bytebeat/
+Provides a number of preset &quot;beats&quot;, selecting 0 will use the beat field on the object (make sure this is populated). Beat equations can be found in beatmachine/equations.c
+
+Check the help patch!</sDescription>
+      <author>Stephen Hughes</author>
+      <license>GPL</license>
+      <helpPatch>beatmachine.axh</helpPatch>
+      <inlets>
+         <int32 name="beat"/>
+         <frac32.bipolar name="rate"/>
+         <int32 name="divider"/>
+         <frac32 name="startpos"/>
+         <bool32.rising name="rst"/>
+         <frac32 name="x"/>
+         <frac32 name="y"/>
+         <frac32 name="z"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="beat"/>
+      </attribs>
+      <includes>
+         <include>./beatmachine/beatmachine.h</include>
+      </includes>
+      <code.declaration><![CDATA[uint32_t t;
+uint64_t index;
+int32_t inc;
+uint32_t reset;
+uint32_t divider;
+uint64_t startpos;
+uint32_t compute_output;
+uint32_t beat_table;]]></code.declaration>
+      <code.init><![CDATA[inc = 0;
+t = 0;
+index = 0;
+x = 0;
+y = 0;
+z = 0;
+
+beat_table = 0;]]></code.init>
+      <code.srate><![CDATA[x = inlet_x >> 19;
+y = inlet_y >> 19;
+z = inlet_z >> 19;
+
+inc = inlet_rate >> 20;
+
+if (inlet_rst && reset) {
+    index = inlet_startpos << 4;
+    reset = 0;
+} else {
+    if (!inlet_rst)
+        reset = 1;
+        inc = inc << 1;
+        index += inc;
+        beat_table = attr_beat;
+        t = ((inlet_startpos << 4) + index) >> inlet_divider;
+        if (!beat_table) {
+        	compute_output = (((Equation(inlet_beat, t, x, y, z, 1)) << 23) - (1 << 26))<<1 ;
+        } else {
+        	compute_output = (((Equation(inlet_beat, t, x, y, z, attr_beat)) << 23) - (1 << 26))<<1 ;
+        }
+        outlet_out = ___SMMUL(0x10000000, compute_output);
+}
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>

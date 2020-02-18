@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<objdefs appVersion="1.0.12">
+  <obj.normal id="mpr121_bool" uuid="122bcb77-0f2a-4865-89b4-00f8f6380cc9">
+    <sDescription>MPR121 Capacitive Touch Sensor (I2C).
+Tested with: https://www.adafruit.com/product/1982
+The touch output is the 0/1 status of the touch plates (bits 0..11)
+
+Note:
+This object requires a single instance of the factory/gpio/i2c/config object.
+This allows multiple mpr121 devices (each with a unique i2c address) to work concurrently.
+Tested with I2C1, SCL=PB8, SDA=PB9 (these are the config defaults)</sDescription>
+    <author>Jason Harris</author>
+    <license>BSD</license>
+    <inlets/>
+    <outlets>
+      <bool32 name="o0"/>
+      <bool32 name="o1"/>
+      <bool32 name="o2"/>
+      <bool32 name="o3"/>
+      <bool32 name="o4"/>
+      <bool32 name="o5"/>
+      <bool32 name="o6"/>
+      <bool32 name="o7"/>
+      <bool32 name="o8"/>
+      <bool32 name="o9"/>
+      <bool32 name="o10"/>
+      <bool32 name="o11"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs>
+      <combo name="adr">
+        <MenuEntries>
+          <string>0x5a</string>
+          <string>0x5b</string>
+          <string>0x5c</string>
+          <string>0x5d</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0x5a</string>
+          <string>0x5b</string>
+          <string>0x5c</string>
+          <string>0x5d</string>
+        </CEntries>
+      </combo>
+    </attribs>
+    <includes>
+      <include>./mpr121.h</include>
+    </includes>
+    <depends>
+      <depend>I2CD1</depend>
+    </depends>
+    <code.declaration><![CDATA[// Register values are tuned for electrode geometry.
+// Here are some reasonable defaults, but you may need
+// to tune these values for your specific application.
+// See: https://www.nxp.com/docs/en/data-sheet/MPR121.pdf
+
+const struct mpr121_cfg config[34] = {
+  {MPR121_TOUCH_THRESHOLD(0), 6},
+  {MPR121_TOUCH_THRESHOLD(1), 6},
+  {MPR121_TOUCH_THRESHOLD(2), 6},
+  {MPR121_TOUCH_THRESHOLD(3), 6},
+  {MPR121_TOUCH_THRESHOLD(4), 6},
+  {MPR121_TOUCH_THRESHOLD(5), 6},
+  {MPR121_TOUCH_THRESHOLD(6), 6},
+  {MPR121_TOUCH_THRESHOLD(7), 6},
+  {MPR121_TOUCH_THRESHOLD(8), 6},
+  {MPR121_TOUCH_THRESHOLD(9), 6},
+  {MPR121_TOUCH_THRESHOLD(10), 6},
+  {MPR121_TOUCH_THRESHOLD(11), 6},
+
+  {MPR121_RELEASE_THRESHOLD(0), 12},
+  {MPR121_RELEASE_THRESHOLD(1), 12},
+  {MPR121_RELEASE_THRESHOLD(2), 12},
+  {MPR121_RELEASE_THRESHOLD(3), 12},
+  {MPR121_RELEASE_THRESHOLD(4), 12},
+  {MPR121_RELEASE_THRESHOLD(5), 12},
+  {MPR121_RELEASE_THRESHOLD(6), 12},
+  {MPR121_RELEASE_THRESHOLD(7), 12},
+  {MPR121_RELEASE_THRESHOLD(8), 12},
+  {MPR121_RELEASE_THRESHOLD(9), 12},
+  {MPR121_RELEASE_THRESHOLD(10), 12},
+  {MPR121_RELEASE_THRESHOLD(11), 12},
+
+  {MPR121_MHD_RISING, 0x01},
+  {MPR121_NHD_RISING, 0x01},
+  {MPR121_NCL_RISING, 0x0E},
+  {MPR121_MHD_FALLING, 0x01},
+  {MPR121_NHD_FALLING, 0x05},
+  {MPR121_NCL_FALLING, 0x01},
+  {MPR121_CDC_CONFIG, 0x10}, // default, 16uA charge current
+  {MPR121_CDT_CONFIG, 0x20}, // 0.5uS encoding, 1ms period
+  {MPR121_ELECTRODE_CONFIG, 0x8F}, // start with first 5 bits of baseline tracking
+  {0xff, 0} // end-of-list
+};
+
+struct mpr121_state state;]]></code.declaration>
+    <code.init><![CDATA[mpr121_init(&state, &config[0], attr_adr);]]></code.init>
+    <code.dispose><![CDATA[mpr121_dispose(&state);]]></code.dispose>
+    <code.krate><![CDATA[mpr121_krate_bool(
+  &state,
+  &outlet_o0,
+  &outlet_o1,
+  &outlet_o2,
+  &outlet_o3,
+  &outlet_o4,
+  &outlet_o5,
+  &outlet_o6,
+  &outlet_o7,
+  &outlet_o8,
+  &outlet_o9,
+  &outlet_o10,
+  &outlet_o11
+);]]></code.krate>
+  </obj.normal>
+</objdefs>

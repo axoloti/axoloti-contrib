@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="quant" uuid="c7fe0315-febf-47b4-915e-d8fefd0ae05e">
+      <sDescription>A k rate quantizer.
+The quant parameter and inlet (added together) correspond to the quant step.
+The quantization is to the &quot;nearest quantization steps&quot;.
+Quantization is centered on zero.
+
+Example for quant = 4.00
+Input  Output
+0      0
+-1.9   0
++1.9   0
++2.1   4
++5.9   4
++6.1   8
+-2.1  -4
+-5.9  -4
+-6.1  -8</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>quant.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="in"/>
+         <frac32.positive name="quant"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="quant" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t quant = param_quant + inlet_quant;
+if(quant > 0)
+  if(inlet_in>0)
+    outlet_out = ((inlet_in  + (quant>>1)) / quant) * quant ;
+  else if(inlet_in<0)
+    outlet_out = ((inlet_in  - (quant>>1)) / quant) * quant ;
+  else outlet_out = 0;
+else
+  outlet_out = inlet_in;]]></code.krate>
+   </obj.normal>
+</objdefs>

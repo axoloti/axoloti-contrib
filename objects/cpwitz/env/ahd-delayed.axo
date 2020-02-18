@@ -1,0 +1,49 @@
+<objdefs>
+   <obj.normal id="ahd delayed" uuid="cpwitz-env-ahd-delayed">
+   <sDescription>delayed attack hold decay envelope. Delay parameter determins a time of delay after rising gate until the envelope starts.</sDescription>
+   <author>Johannes Taelman (additions by Peter Witzel)</author>
+   <license>BSD</license>
+   <inlets>
+      <bool32.risingfalling name="gate" description="gate"/>
+   </inlets>
+   <outlets>
+      <frac32.positive name="env"/>
+   </outlets>
+   <displays/>
+   <params>
+      <frac32.s.map.klineartime.exp name="delay"/>
+      <frac32.s.map.kdecaytime.exp name="a"/>
+      <frac32.s.map.kdecaytime.exp name="d"/>
+   </params>
+   <attribs/>
+   <includes/>
+   <code.declaration><![CDATA[int32_t val;
+int32_t delay;
+int32_t ntrig;]]></code.declaration>
+   <code.init><![CDATA[val = 0;
+delay = 0;
+ntrig = 0;]]></code.init>
+   <code.krate><![CDATA[if (inlet_gate>0) {
+	if (ntrig==0) {
+		ntrig = 1;
+	}
+	else {
+		if (delay<(1<<27)) {
+			int32_t t;
+		     MTOF(-param_delay,t);
+		     delay += t>>6;
+			val = ___SMMUL(val, param_d)<<1;
+		}
+		else {
+			val = (1<<27) - (___SMMUL((1<<27)-val, param_a)<<1);
+		}
+	}
+}
+else {
+	ntrig = 0;
+	val = ___SMMUL(val, param_d)<<1;
+	delay = 0;
+}
+outlet_env= val;]]></code.krate>
+  </obj.normal>
+</objdefs>

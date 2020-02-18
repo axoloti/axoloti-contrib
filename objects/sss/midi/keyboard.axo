@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="keyboard" uuid="b61fcf6b-0ad0-4a9c-b986-5da28d2fdf8d">
+      <sDescription>internal polyphonic midi keyboard</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>note scale.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <bin12 name="b12" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="oct" MinValue="0" MaxValue="9" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int i;
+bool gate[12];]]></code.declaration>
+      <code.krate><![CDATA[for(i=0;i<12;i++){
+if(((param_b12>>i)&1)&&(!gate[i])){
+PatchMidiInHandler(MIDI_DEVICE_INTERNAL,0,MIDI_NOTE_ON + (attr_channel-1),i+attr_oct*12,1<<6);
+gate[i]=(param_b12>>i)&1;
+}
+
+else if((!((param_b12>>i)&1))&&(gate[i])){
+PatchMidiInHandler(MIDI_DEVICE_INTERNAL,0,MIDI_NOTE_OFF + (attr_channel-1),i+attr_oct*12,1<<6);
+gate[i]=(param_b12>>i)&1;
+}
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

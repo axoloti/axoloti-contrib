@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="right block 2 get" uuid="a75d5e77-ba2c-4595-91fa-8858c68b74b2">
+      <sDescription>outputs the state of 8 controllers starting from &apos;startcc&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>launchpad.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <bool32 name="b0"/>
+         <bool32 name="b1"/>
+         <bool32 name="b2"/>
+         <bool32 name="b3"/>
+         <bool32 name="b4"/>
+         <bool32 name="b5"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t cc [6];]]></code.declaration>
+      <code.krate><![CDATA[outlet_b0 = cc[4];
+outlet_b1 = cc[5];
+outlet_b2 = cc[2];
+outlet_b3 = cc[3];
+outlet_b4 = cc[0];
+outlet_b5 = cc[1];]]></code.krate>
+      <code.midihandler><![CDATA[if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {
+
+if ((data1 >=110 ) && (data1 <=115)) cc[data1 - 110] = data2;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,138 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="guitarOsc" uuid="c4bbe004-2df0-4f89-af60-ad7d3f3d31e2">
+      <sDescription>&quot;guitarOsc&quot;
+-features pulsewidth, start-shift (start) and pick-up (mod) modulation, all extern controllable. (though these are all only approximations, reshaping the wavetable)
+
+below the continuous controls, we got &quot;fixed&quot; controls, even though you could change them live, this will create a bleep as it has to recalculate the waveform.
+-damp: dampening-factor for each next added harmonic corresponding to harmonic number.
+-harmonics: how many harmonics will be generated for the wavetable (low numbers reduce recalculation time!)
+-jump: &quot;jump&quot; size for next added harmonic, skipping harmonics in-between
+-max: sets maximum harmonic number that can be added, wraps when above the max.
+-position: sets the read-out position of the guitar-element
+-strike: sets the position where the string is struck</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="pwm"/>
+         <frac32 name="mod"/>
+         <frac32 name="start"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="pwm"/>
+         <frac32.u.map name="mod"/>
+         <frac32.u.map name="start"/>
+         <int32 name="damp">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="harmonics">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="jump">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="max">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <frac32.u.map name="position"/>
+         <frac32.u.map name="strike"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t phase;
+int i;
+int j;
+int32_t sum;
+int32_t r;
+int32_t posWidth;
+int32_t position;
+int32_t prev;
+int32_t array[2048];
+int ctrig;
+int create;
+int32_t Pos;
+int k;
+int32_t start;
+float32_t A;
+float32_t B;
+uint32_t PM;]]></code.declaration>
+      <code.init><![CDATA[
+	phase=0;
+
+for(i;i<2048;i++){array[i]=0;}]]></code.init>
+      <code.krate><![CDATA[int32_t update=param_position+param_strike+param_damp+param_harmonics+param_jump+param_max;
+
+
+if((!(prev==(update)))&&!create)
+	{create=1;
+	Pos=param_position;
+	start=param_strike;
+	for(i=0;i<2048;i++){array[i]=0;}
+	for(j=0;j<param_harmonics;j++){
+		k=(j*param_jump-(j*param_jump/param_max)*param_max);
+		position=((j+1)*Pos<<4);
+		SINE2TINTERP(position,posWidth)
+		for(i=0;i<2048;i++){
+			SINE2TINTERP((i<<21)*(k+1)-(start<<3)*(k+1),r)
+			array[i]+=___SMMUL(r>>3,posWidth>>3)/(1+k*param_damp);
+			}
+		}
+	}
+else if(prev==(update)){create=0;}
+
+prev=update;
+
+
+int32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq)
+PM=param_pwm+inlet_pwm;
+PM=PM>0?PM:-PM;
+PM=PM&((1<<28)-1);
+PM=PM>(1<<27)?(2<<27)-PM:PM;
+PM=__USAT(PM+1,27)<<4;
+A=((float32_t)(1<<31))/((float32_t)(PM<<1));
+B=((float32_t)(1<<31))/((float32_t)(((1<<31)-PM)<<1));
+PM=PM<<1;
+int32_t mod1=param_mod+inlet_mod;
+mod1=mod1>0?mod1:-mod1;
+mod1=mod1&((1<<28)-1);
+mod1=mod1>(1<<27)?(2<<27)-mod1:mod1;
+mod1=mod1<<4;
+int32_t mod2;
+mod2=mod1*3;
+
+int32_t Start=param_start+inlet_start;
+Start=Start>0?Start:-Start;
+Start=Start&((1<<28)-1);
+Start=Start>(1<<27)?(2<<27)-Start:Start;
+]]></code.krate>
+      <code.srate><![CDATA[
+
+uint32_t Phase;
+phase += freq;
+
+uint32_t PHase=phase;
+if(phase<(1<<31)){
+PHase=___SMMUL(phase,Start<<4)<<2;
+}
+else{
+PHase=(___SMMUL(phase,((1<<27)-Start)<<4)<<2);
+}
+
+if(PHase<PM){
+Phase=(1<<31)+((int32_t)(PHase*A))+mod1;}
+if(PHase>=PM){Phase=((uint32_t)((PHase-PM)*B-(1<<31)))+mod1+(1<<31);}
+
+outlet_wave=array[(Phase>>21)&2047];
+]]></code.srate>
+   </obj.normal>
+</objdefs>

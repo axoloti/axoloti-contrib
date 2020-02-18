@@ -1,0 +1,520 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="glitch" uuid="621de6df-08d4-45e0-a986-6d18f8d22a13">
+      <sDescription>chorus effect from the rings dsp code open sourced by mutable instruments.
+any bugs/issues you find are our own, report on the axoloti forum.
+
+Thanks to Olivier Gillet from Mutable Instruments for open sourcing their code.
+http://mutable-instruments.com</sDescription>
+      <license>GPL</license>
+      <inlets>
+         <frac32buffer name="l"/>
+         <frac32buffer name="r"/>
+         <int32 name="select"/>
+         <bool32 name="gate"/>
+         <frac32 name="mod1"/>
+         <frac32 name="mod2"/>
+         <frac32 name="mod3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="l"/>
+         <frac32buffer name="r"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="mix" noLabel="true"/>
+         <frac32.s.map name="rate"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <includes>
+         <include>./rings_fx.h</include>
+      </includes>
+      <code.declaration><![CDATA[rings_fx::Chorus chorus;
+rings_fx::Reverb reverb;
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *a1;
+int16_t *a2;
+int16_t *a3;
+int16_t *a4;
+uint32_t writepos,wp;
+uint32_t phs;
+int32_t TM1,TM2,FD,f1,f2,prv1,prv2,stp1,stp2,T1,T2,fd1[BUFSIZE],fd2[BUFSIZE],mod1,mod2,mod3;
+int32_t L[BUFSIZE],R[BUFSIZE];
+int32_t hp1,hp2,hp3,hp4,lp[2],LP[2];
+int i;
+int SL,sel;
+bool trg,gate;
+
+int32_t Chorus(int32_t m1,int32_t m2,int32_t m3){
+static float left[BUFSIZE];
+static float right[BUFSIZE];
+chorus.set_amount(q27_to_float(m1));
+chorus.set_depth(q27_to_float(m2));
+m3-=(1<<26);
+m3=m3>>LENGTHPOW-3;
+if(m3>0){
+	m1=(m3>>27-LENGTHPOW)+BUFSIZE+1;
+	m2=BUFSIZE+1;
+}
+else{
+	m1=BUFSIZE+1;
+	m2=(-m3>>27-LENGTHPOW)+BUFSIZE+1;
+}
+for(i=0;i<BUFSIZE;i++){
+	left[i] = q27_to_float(a1[(writepos-m1+i)&LENGTHMASK]<<14);
+	right[i] = q27_to_float(a2[(writepos-m2+i)&LENGTHMASK]<<14);
+}
+chorus.Process(left,right,BUFSIZE);
+for(i=0;i<BUFSIZE;i++){
+	L[i] = (float_to_q27(left[i]));
+	R[i] = (float_to_q27(right[i]));
+}
+};
+
+
+
+
+
+
+
+
+int32_t Reverb(int32_t m1,int32_t m2,int32_t m3){
+static float left[BUFSIZE];
+static float right[BUFSIZE];
+reverb.set_amount(q27_to_float(m1));
+reverb.set_input_gain(q27_to_float((2<<24)));
+reverb.set_time(q27_to_float(m2));
+reverb.set_diffusion(q27_to_float((7<<24)));
+reverb.set_lp(q27_to_float((m3)));
+
+for(i=0;i<BUFSIZE;i++){
+	left[i] = q27_to_float(L[i]);
+	right[i] = q27_to_float(R[i]);
+}
+reverb.Process(left,right,BUFSIZE);
+for(i=0;i<BUFSIZE;i++){
+	L[i] = (float_to_q27(left[i]));
+	R[i] = (float_to_q27(right[i]));
+}
+}
+int32_t RT;
+int32_t Retrig(int32_t m1,int32_t m2,int32_t m3){
+int32_t mx;
+int32_t N[2]={0,4};
+int32_t stp,oct;
+stp=m2>>23;
+oct=stp>>1;
+stp=stp&1;
+MTOF(((-N[stp]-oct*12)<<21)-RT,m2)
+m2=m2>>27-LENGTHPOW;
+int stack;
+int32_t mix;
+stack=m3>>24;
+mix=m3-(stack<<24)<<7;
+stack+=1;
+
+for(i=0;i<BUFSIZE;i++){
+int32_t tmp1,tmp2;
+for(int k=0;k<stack;k++){
+tmp1=___SMMUL(a1[(writepos-BUFSIZE+i-k*m2)&LENGTHMASK]<<14,m1)<<5;
+tmp2=___SMMUL(a2[(writepos-BUFSIZE+i-k*m2)&LENGTHMASK]<<14,m1)<<5;
+if(k<(stack-1)){
+L[i]=__SSAT(tmp1+L[i],28);
+R[i]=__SSAT(tmp2+R[i],28);
+}
+else{
+L[i]=__SSAT(___SMMUL(mix,tmp1<<1)+L[i],28);
+R[i]=__SSAT(___SMMUL(mix,tmp2<<1)+R[i],28);
+}
+
+}
+}
+};
+
+
+int32_t Phaser(int32_t m1,int32_t m2,int32_t m3){
+MTOF((1<<27)-(m2<<1),TM1)
+TM1=TM1>>1;
+int32_t Pshift=__SSAT(m3-(1<<26)<<1,28);
+Pshift=(___SMMUL(Pshift,TM1)<<5);
+TM2=__USAT(TM1+Pshift,27);
+TM1=__USAT(TM1-Pshift,27);
+stp1=TM1-prv1>>4;
+T1=prv1;
+prv1=TM1;
+stp2=TM2-prv2>>4;
+T2=prv2;
+prv2=TM2;
+
+FD=m1;
+for(i=0;i<BUFSIZE;i++){
+	int32_t pos=(writepos-BUFSIZE+i)&LENGTHMASK;
+	a1[pos]=__SSAT(a1[pos]+(f2>>14),15);
+	a2[pos]=__SSAT(a2[pos]+(f1>>14),15);
+      uint32_t tmp_di = pos - (T1>>(27-LENGTHPOW)) -1;
+      uint32_t tmp_w1 = (T1<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = a1[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = a1[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f1 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+	
+	 tmp_di = pos - (T2>>(27-LENGTHPOW))-1;
+      tmp_w1 = (T2<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = a2[tmp_di&LENGTHMASK]<<16;
+      tmp_a2 = a2[(tmp_di+1)&LENGTHMASK]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f2 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      f1=___SMMUL(FD,f1)<<5;
+      f2=___SMMUL(FD,f2)<<5;
+      L[i]+=f1;
+      R[i]+=f2;
+	T1+=stp1;
+	T2+=stp2;
+}
+}
+
+int32_t Timemod(int32_t m1,int32_t m2,int32_t m3){
+MTOF(-(1<<27)-(m2<<1),TM1)
+TM1=TM1>>1;
+int32_t Pshift=__SSAT(m3-(1<<26)<<1,28);
+Pshift=(___SMMUL(Pshift,TM1)<<5);
+TM2=__USAT(TM1+Pshift,27);
+TM1=__USAT(TM1-Pshift,27);
+stp1=TM1-prv1>>4;
+T1=prv1;
+prv1=TM1;
+stp2=TM2-prv2>>4;
+T2=prv2;
+prv2=TM2;
+
+
+MTOFEXTENDED(-(1<<27)+m1,m1)
+m1=m1>>4;
+for(i=0;i<BUFSIZE;i++){
+uint32_t pos=(writepos-BUFSIZE+i)&LENGTHMASK;
+phs+=m1;
+int32_t sine,t1,t2;
+SINE2TINTERP(phs,sine)
+sine=(sine>>1)+(1<<30);
+t1=___SMMUL(T1,sine)<<1;
+SINE2TINTERP(phs+(1<<31),sine)
+sine=(sine>>1)+(1<<30);
+t2=___SMMUL(T2,sine)<<1;
+int32_t LP=LENGTHPOW;
+      uint32_t tmp_di = pos - (t1>>(27-LP)) ;
+      uint32_t tmp_w1 = (t1<<(LP+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = a1[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = a1[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f1 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+	
+	 tmp_di = pos - (t2>>(27-LP));
+      tmp_w1 = (t2<<(LP+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = a2[tmp_di&LENGTHMASK]<<16;
+      tmp_a2 = a2[(tmp_di+1)&LENGTHMASK]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f2 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      L[i]=f1;
+      R[i]=f2;
+	T1+=stp1;
+	T2+=stp2;
+}	
+}
+int32_t Graingrap(int32_t m1,int32_t m2,int32_t m3){
+MTOF((m2),TM1)
+TM1=TM1>>1;
+int32_t Pshift=__SSAT(m3-(1<<26)<<1,28);
+Pshift=(___SMMUL(Pshift,TM1)<<5);
+TM2=__USAT(TM1+Pshift,27);
+TM1=__USAT(TM1-Pshift,27);
+stp1=TM1-prv1>>4;
+T1=prv1;
+prv1=TM1;
+stp2=TM2-prv2>>4;
+T2=prv2;
+prv2=TM2;
+
+m1=m1-(1<<26)>>2;
+
+bool dir=m1>0?1:0;
+MTOFEXTENDED(-(1<<26)+(m1>0?m1:-m1),m1)
+m1=dir>0?-m1:m1;
+m1=m1>>7;
+for(i=0;i<BUFSIZE;i++){
+uint32_t pos=(writepos-BUFSIZE+(sel==5?i:0))&LENGTHMASK;
+phs+=m1;
+int32_t sine,t1,t2;
+uint32_t ps=phs>>1;
+t1=___SMMUL(ps,T1)<<1;
+t2=___SMMUL(ps,T2)<<1;
+int32_t LP=LENGTHPOW;
+      uint32_t tmp_di = pos - (t1>>(27-LP)) ;
+      uint32_t tmp_w1 = (t1<<(LP+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = a1[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = a1[(tmp_di+1)&LENGTHMASK]<<16;
+      int32_t tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f1 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+	
+	 tmp_di = pos - (t2>>(27-LP));
+      tmp_w1 = (t2<<(LP+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = a2[tmp_di&LENGTHMASK]<<16;
+      tmp_a2 = a2[(tmp_di+1)&LENGTHMASK]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+      f2 = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+      L[i]=f1;
+      R[i]=f2;
+	T1+=stp1;
+	T2+=stp2;	
+}
+};
+
+  static const int blepvoices = 8;
+  int16_t *oscp[2][blepvoices];
+  int32_t vgain[2][blepvoices];
+  uint32_t nextvoice[2];
+  int32_t i0[2];
+  int32_t in0[2];
+  int32_t acc[2];
+
+
+
+int32_t Sample(int32_t m1,int32_t m2,int32_t m3){
+	  int j;
+  int16_t *lastblep = &blept[BLEPSIZE-1];
+  MTOFEXTENDED(m1,m1)
+  MTOF(m2,m2)
+  MTOF(m3,m3)
+  for(j=0;j<BUFSIZE;j++){
+  	phs+=m1;
+  	 
+  	int32_t IN[2];
+  	IN[0]=L[j];
+  	IN[1]=R[j];
+  	for(int k=0;k<2;k++){
+  	int32_t ps=k&1?-phs:phs;
+  	lp[k]=___SMMLA(IN[k]-lp[k]<<1,m2,lp[k]);
+  	IN[k]=lp[k];
+  	
+ 
+    int i;
+    int i1 = (ps<<1)>>6;
+    if ((i1>0)&&!(i0[k]>0)){   // dispatch
+      nextvoice[k] = (nextvoice[k]+1)&(blepvoices-1);
+      int32_t x = (i1<<6)/(i1-i0[k]);
+      oscp[k][(nextvoice[k])] = &blept[x];
+      int32_t val = (((64-x)*(IN[k]>>2)) + (x*(in0[k]>>2)))>>6;
+      vgain[k][(nextvoice[k])] = (acc[k]-val)<<2;
+      acc[k] = val;
+    }
+    int32_t sum=0;
+    i0[k] = i1;
+    in0[k] = IN[k];
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[k][i];
+      sum =___SMMLA((16384-(*t))<<16,vgain[k][i],sum);
+      t+=64;
+      if (t>=lastblep) {        t=lastblep;
+        vgain[k][i] = 0;
+      }
+      oscp[k][i]=t;
+    }
+    IN[k]=(sum+acc[k])<<1;
+    LP[k]=___SMMLA(IN[k]-LP[k]<<1,m3,LP[k]);
+    IN[k]=__SSAT(LP[k],26)<<2;
+  }
+  L[j]=IN[0];
+  R[j]=IN[1];
+}
+};
+
+int32_t s_mid_t1[2][9];
+int32_t s_mid_t2[2][9];
+
+int32_t *mid_t1[2];
+int32_t *mid_t2[2];
+int32_t low[2];
+int32_t high[2];
+int32_t Frqshift(int32_t m1,int32_t m2,int32_t m3){
+
+int32_t IN[2];
+int32_t rate=m1-(1<<26)<<1;
+rate=___SMMUL(m1<<3,m1<<2);
+rate=___SMMUL(m1<<3,rate<<2);
+m2=m2-(1<<26)<<5;
+for(int i=0;i<BUFSIZE;i++){
+phs+=rate;
+int32_t SIN,COS;
+SINE2TINTERP(phs,SIN)
+SINE2TINTERP(phs+(1<<30),COS)
+IN[0]=L[i]>>2;
+IN[1]=R[i]>>2;
+for(int k=0;k<2;k++){
+	int32_t in_t1 = IN[k];
+
+int32_t mid0_t=___SMMLA(0.4794008656*UINT32_MAX,in_t1+mid_t2[k][0],mid_t2[k][8]);
+int32_t s1 = mid0_t+mid_t2[k][1];
+int32_t mid1_t=___SMMLS(UINT32_MAX*(1-0.8762184935),s1,s1-mid_t2[k][0]);
+int32_t s2 = mid1_t+mid_t2[k][2];
+int32_t mid2_t=___SMMLS(UINT32_MAX*(1-0.9765975895),s2,s2-mid_t2[k][1]);
+int32_t s3 = mid2_t+mid_t2[k][6];
+int32_t out0_t=___SMMLS(UINT32_MAX*(1-0.9974992559),s3,s3-mid_t2[k][2]);
+
+int32_t mid3_t=___SMMLA(0.1617584983*UINT32_MAX,in_t1+mid_t2[k][3],mid_t1[k][8]);
+int32_t s4 = mid3_t+mid_t2[k][4];
+int32_t mid4_t=___SMMLS(UINT32_MAX*(1-0.7330289323),s4,s4-mid_t2[k][3]);
+int32_t s5 = mid4_t+mid_t2[k][5];
+int32_t mid5_t=___SMMLS(UINT32_MAX*(1-0.9453497003),s5,s5-mid_t2[k][4]);
+int32_t s6 = mid5_t+mid_t2[k][7];
+int32_t out1_t=___SMMLS(UINT32_MAX*(1-0.9905991567),s6,s6-mid_t2[k][5]);
+
+//outlet_i = out0_t;
+//outlet_q = out1_t;
+int32_t t1,t2;
+t1=___SMMUL(out0_t,SIN)<<5;
+t2=___SMMUL(out1_t,COS)<<5;
+low[k]=t1+t2>>2;
+high[k]=t1-t2>>2;
+
+// swap
+int32_t *tmp;
+tmp = mid_t2[k];
+mid_t2[k] = mid_t1[k];
+mid_t1[k] = tmp;
+
+mid_t1[k][0] = mid0_t;
+mid_t1[k][1] = mid1_t;
+mid_t1[k][2] = mid2_t;
+mid_t1[k][3] = mid3_t;
+mid_t1[k][4] = mid4_t;
+mid_t1[k][5] = mid5_t;
+mid_t1[k][6] = out0_t;
+mid_t1[k][7] = out1_t;
+mid_t1[k][8] = -in_t1;
+}
+int32_t l=low[1]+high[0]+___SMMUL(-high[0]+low[1]<<1,m2);
+int32_t r=low[0]+high[1]+___SMMUL(high[1]-low[0]<<1,m2);
+L[i]=__SSAT((___SMMUL(IN[0],m3)<<5)+(l),28);
+R[i]=__SSAT((___SMMUL(IN[1],m3)<<5)+(r),28);
+}
+};
+
+
+
+
+int32_t SEL(int I){
+switch(I){
+case 0: Chorus(mod1,mod2,mod3);break;
+case 1: Phaser(mod1,mod2,mod3);break;
+case 2: Retrig(mod1,mod2,mod3);break;
+case 3: Reverb(mod1,mod2,mod3);break;
+case 4: Timemod(mod1,mod2,mod3);break;
+case 5: Graingrap(mod1,mod2,mod3);break;//no grab but continuous
+case 6: Graingrap(mod1,mod2,mod3);break;
+case 7: Sample(mod1,mod2,mod3);break;
+case 8: Frqshift(mod1,mod2,mod3);break;
+}
+}]]></code.declaration>
+      <code.init><![CDATA[static int16_t _a1[1<<attr_size]  __attribute__ ((section (".sdram")));
+a1 = &_a1[0];
+static int16_t _a2[1<<attr_size]  __attribute__ ((section (".sdram")));
+a2 = &_a2[0];
+static int16_t _a3[1<<attr_size]  __attribute__ ((section (".sdram")));
+a3 = &_a3[0];
+static int16_t _a4[1<<attr_size]  __attribute__ ((section (".sdram")));
+a4 = &_a4[0];
+writepos = 0;
+for(i=0;i<LENGTH;i++){ a1[i] = 0;a2[i]=0;a3[i] = 0;a4[i]=0;}
+
+chorus.Init((uint16_t*) sdram_malloc(32768));
+
+reverb.Init((uint16_t*) sdram_malloc(32768));
+
+
+  int j;
+  int i;
+  for(i=0;i<2;i++){
+  for(j=0;j<blepvoices;j++){
+    oscp[i][j] = &blept[BLEPSIZE-1];
+    
+  nextvoice[i] = 0;
+  i0[i] = 0;
+  in0[i] = 0;
+  acc[i] = 0;}}
+for(int k=0;k<2;k++){
+  mid_t1[k] = &s_mid_t1[k][0];
+mid_t2[k] = &s_mid_t2[k][0];}]]></code.init>
+      <code.krate><![CDATA[mod1=inlet_mod1;
+mod2=inlet_mod2;
+mod3=inlet_mod3;
+RT=param_rate;
+if(inlet_gate&&!trg){
+	trg=1;
+	phs=0;
+}
+else if(!inlet_gate){trg=0;}
+
+sel=inlet_select-inlet_select/9*9;
+sel+=sel<0?9:0;
+
+for(i=0;i<BUFSIZE;i++){
+	L[i]=__SSAT(inlet_l[i],28);
+	R[i]=__SSAT(inlet_r[i],28);
+	if(!((sel==6)&&inlet_gate)){
+	writepos=(writepos+1)&LENGTHMASK;
+	a1[writepos]=__SSAT(L[i]>>14,16);
+	a2[writepos]=__SSAT(R[i]>>14,16);
+	}
+}
+
+if(inlet_gate>0){
+SEL(sel);
+}
+
+for(i=0;i<BUFSIZE;i++){
+outlet_l[i]=inlet_l[i]+(___SMMUL(L[i]-inlet_l[i],param_mix)<<1);
+outlet_r[i]=inlet_r[i]+(___SMMUL(R[i]-inlet_r[i],param_mix)<<1);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

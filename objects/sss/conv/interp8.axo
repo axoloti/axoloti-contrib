@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="interp8" uuid="b613d3e6-596b-4518-b00f-358284b03e1f">
+      <sDescription>8 channels linear interpolation from k- to s-rate</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+         <frac32 name="i3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="i7"/>
+         <frac32 name="i8"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+         <frac32buffer name="o2"/>
+         <frac32buffer name="o3"/>
+         <frac32buffer name="o4"/>
+         <frac32buffer name="o5"/>
+         <frac32buffer name="o6"/>
+         <frac32buffer name="o7"/>
+         <frac32buffer name="o8"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _prev[8];
+    int32_t _step[8];]]></code.declaration>
+      <code.krate><![CDATA[int32_t in[8],_i[8];
+in[0]=inlet_i1;
+in[1]=inlet_i2;
+in[2]=inlet_i3;
+in[3]=inlet_i4;
+in[4]=inlet_i5;
+in[5]=inlet_i6;
+in[6]=inlet_i7;
+in[7]=inlet_i8;
+   for(int i=0;i<8;i++){
+   _step[i] = (in[i] - _prev[i])>>4;
+   _i[i] = _prev[i];
+   _prev[i] = in[i];
+   }]]></code.krate>
+      <code.srate><![CDATA[outlet_o1 = _i[0];
+   outlet_o2 = _i[1];
+   outlet_o3 = _i[2];
+   outlet_o4 = _i[3];
+   outlet_o5 = _i[4];
+   outlet_o6 = _i[5];
+   outlet_o7 = _i[6];
+   outlet_o8 = _i[7];
+   for(int i=0;i<8;i++){
+   _i[i] += _step[i];
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>

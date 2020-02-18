@@ -1,0 +1,125 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="corruptor" uuid="71c22191-717c-4fd6-a5d9-74d4d09fe67c">
+      <sDescription>Heavy distortion unit
+Just completely mashes up the waveform</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32 name="dPP"/>
+         <frac32 name="dPN"/>
+         <frac32 name="dNP"/>
+         <frac32 name="dNN"/>
+         <frac32 name="tP"/>
+         <frac32 name="tN"/>
+         <frac32 name="dChg"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="dampPP" description="damprate when signal is above treshPos and has a positive direction"/>
+         <frac32.s.map name="dampPN" description="damprate when signal is above treshPos and has a negative direction"/>
+         <frac32.s.map name="dampNN" description="damprate when signal is below treshNeg and has a negative direction"/>
+         <frac32.s.map name="dampNP" description="damprate when signal is below treshNeg and has a positive direction"/>
+         <frac32.s.map name="treshPos" description="up-trigger treshold for comparator"/>
+         <frac32.s.map name="treshNeg" description="down-trigger treshold for comparator"/>
+         <frac32.s.map name="dampChange" description="changerate dampening of the internal filter"/>
+         <bool32.tgl name="m1" description="log/lin response"/>
+         <bool32.tgl name="m2" description="log/lin response"/>
+         <bool32.tgl name="m3" description="log/lin response"/>
+         <bool32.tgl name="m4" description="log/lin response"/>
+         <frac32.u.map.gain name="gain" description="add gain for post wrapper"/>
+         <bool32.tgl name="dir1" description="sets positive/negative direction to use for comparator when signal is positive"/>
+         <bool32.tgl name="dir2" description="sets negative/ positive direction to use for comparator when signal is negative"/>
+         <frac32.s.map name="feed" description="feeds back the output to the input (into self oscillation with lots of glitches and frequency folding)"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+bool up;
+bool dn;
+int32_t TO;
+int32_t To;
+int32_t v27=(1<<27);
+int32_t prev;
+int32_t rate;
+int32_t to;
+int32_t pv;
+int32_t out;
+int32_t COMPARE(int32_t in,int32_t gain){
+int32_t A;
+int32_t B;
+int32_t max;
+in+=___SMMUL(gain,__SSAT(in,28)<<3)<<4;
+	
+	max=in>0?in:-in;
+	while(max>v27){
+	A=__SSAT(in,28);
+	B=A-(in-A);
+	in=B;
+	max=B>0?B:-B;}
+	
+	return out=in;
+}]]></code.declaration>
+      <code.krate><![CDATA[int32_t dampPP;
+MTOF(param_dampPP+inlet_dPP,dampPP)
+int32_t dampNP;
+MTOF(param_dampNP+inlet_dNP,dampNP)
+int32_t dampPN;
+MTOF(param_dampPN+inlet_dPN,dampPN)
+int32_t dampNN;
+MTOF(param_dampNN+inlet_dNN,dampNN)
+int32_t d1;
+
+MTOF(param_dampChange+inlet_dChg,d1)
+int32_t tP=param_treshPos+(inlet_tP>>3);
+int32_t tN=param_treshNeg+(inlet_tN>>3);]]></code.krate>
+      <code.srate><![CDATA[int32_t in=inlet_i1+___SMMUL(param_feed<<3,out);
+int dir=in-prev>0?1:0;
+if((in>tP)&&(!up)&&(param_dir1>0?!dir:dir)){//
+	up=1;
+	dn=0;
+	To=v27;
+	
+}
+
+if((in<tN)&&(!dn)&&(param_dir2>0?dir:!dir)){//
+	up=0;
+	dn=1;
+	To=-v27;
+}
+
+to=__SSAT(To+in>>1,28);
+
+	rate=___SMMLA(((to-TO)-rate)<<1,d1,rate);
+	rate-=rate>>9;
+	TO+=rate;
+
+if((TO>=val)&&dir){
+if(param_m1==0){val=___SMMLA((TO-val)<<1,dampPP,val);}
+if(param_m1==1){val+=dampPP>>4;val=val>TO?TO:val;}
+}
+if((TO>=val)&&!dir){
+if(param_m2==0){val=___SMMLA((TO-val)<<1,dampPN,val);}
+if(param_m2==1){val+=dampPN>>4;val=val>TO?TO:val;}
+}
+if((TO<val)&&dir){
+if(param_m4==0){val=___SMMLA((TO-val)<<1,dampNP,val);}
+if(param_m4==1){val-=dampNP>>4;val=val<TO?TO:val;}
+}
+if((TO<val)&&!dir){
+if(param_m3==0){val=___SMMLA((TO-val)<<1,dampNN,val);}
+if(param_m3==1){val-=dampNN>>4;val=val<TO?TO:val;}
+}
+if(!((val-__SSAT(val,28))==0)){
+//val-=___SMMUL(val,val>0?val:-val);
+//val-=___SMMUL(val,val>0?val:-val);
+}
+
+outlet_o1=COMPARE(val,param_gain)+pv>>1;
+pv=out;
+//outlet_o1=val>>1;
+prev=in;]]></code.srate>
+   </obj.normal>
+</objdefs>

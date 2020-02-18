@@ -1,0 +1,115 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sat ur hate 2" uuid="3563f15e-8645-4a5e-95a6-b6ec7e6c8a83">
+      <sDescription>Antialiased polynomial waveshaper distortion. y = Kx -(1-K)x^3 . Code is hackable.</sDescription>
+      <author>Sptnk</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in" description="Input. Will be saturated to normal range (saturation is not antialiased!!)"/>
+         <frac32 name="shape" description="Shape factor. Positive -&gt; soft sat. Negative -&gt; crossover distortion to wavefolding"/>
+         <frac32 name="feed" description="Internal feedback (positive/negative)"/>
+         <frac32 name="pitch" description="Pitch of the filter (if used)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="Waveshaper output"/>
+         <frac32buffer name="filter" description="Filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="shape" description="Shape factor. Positive -&gt; soft sat. Negative -&gt; crossover distortion to wavefolding"/>
+         <frac32.s.map name="feed" description="Internal feedback (positive/negative)"/>
+         <bool32.tgl name="tame" description="Lowers the input volume proportional to the feedback amount "/>
+         <int32.hradio name="filter type" description="Filter used in the feedback loop (no filter / 1 pole lp / 1 pole hp)">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <frac32.s.map.pitch name="pitch" description="Pitch of the filter (if used)"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[typedef struct {
+	int32_t x1_old =0; //old input
+	int32_t x2_old =0;
+	int32_t x4_old =0;
+} waveshaper_state;
+
+typedef struct {
+	int32_t k =0;
+	int32_t k_c =0; 
+} waveshaper_coefs;
+
+static __attribute__ ((noinline)) void waveshaper_set_coefs(waveshaper_coefs *wsc, int32_t coef)
+{
+	(wsc->k) = coef;
+	(wsc->k_c) = (1<<27)-coef;	
+}
+
+static __attribute__ ((noinline)) int32_t waveshaper_process(waveshaper_state *wss, waveshaper_coefs *wsc,int32_t input)
+{
+	int32_t x1 = __SSAT(input,28); //saturating x to normal range
+	int32_t x2 = ___SMMUL(x1<<2,x1<<3);//calculating x^2
+	int32_t x3 = ___SMMUL(x2<<2,x1<<3);//calculating x^3
+	int32_t x4 = ___SMMUL(x3<<2,x1<<3);//calculating x^4
+	
+	int32_t y = ___SMMLA((wsc->k)<<2,x1<<3,___SMMUL((wsc->k_c)<<2,x3<<3)); //kx + (1-k)x^3		[WAVESHAPER FUNCTION] //non antialiased
+	int32_t Y = ___SMMLA((wsc->k)<<2,x2<<2,___SMMUL((wsc->k_c),x4<<3)); //0.5kx^2 + 0.25(1-k)x^4 	[INTEGRATED FUNCTION] //antialiased
+	//I had to recalculate old integral value in order to make the shape parameter modulatable.
+	int32_t Y_old = ___SMMLA((wsc->k)<<2,(wss->x2_old)<<2,___SMMUL((wsc->k_c),(wss->x4_old)<<3)); //0.5kx^2 + 0.25(1-k)x^4 	[INTEGRATED FUNCTION OLD VALUE]
+	
+	
+	int32_t dx = x1 - (wss->x1_old); //new input - old input (used to calculate the integral mean value)
+	int32_t dx_abs = dx>0?dx:-dx;
+	float dY = (Y - Y_old);
+
+	int32_t mean = 134217728.0f*((dY)/(dx));
+
+	(wss->x1_old) = x1;
+	(wss->x2_old) = x2;
+	(wss->x4_old) = x4;
+	return  (dx_abs>(1<<6)?mean:y); //we don't want to divide for an excessively small quantity (actually we simply discard that result)
+}
+
+int32_t y_old =0;	//this is used for internal feedback loop
+
+waveshaper_state WS;	
+waveshaper_coefs WC;
+
+int32_t filter_out  =0;	
+int32_t filter_state =0;
+
+int32_t shape;	
+int32_t feed = 0;
+int32_t f = 0;]]></code.declaration>
+      <code.krate><![CDATA[int32_t feed_increment = __SSAT(param_feed+inlet_feed,28) - feed>>4;
+
+int32_t shape_increment = __SSAT(inlet_shape+param_shape,28) - shape>>4;
+
+
+
+
+
+
+int32_t temp;
+MTOFEXTENDED(param_pitch+inlet_pitch,temp);
+int32_t f_incr = temp-f >>4;]]></code.krate>
+      <code.srate><![CDATA[int32_t feed_abs = feed>0?feed:-feed;	//absolute value of the feedback parameter 
+int32_t input = param_tame?___SMMUL((1<<27)-feed_abs<<2,inlet_in<<3):inlet_in;	//taming the feedback loop, in case the option is activated
+
+waveshaper_set_coefs(&WC,___SMMLA(shape<<4,shape>0?(0x8000000):(0x3FFFFFFE) ,1<<27));	//binding the shape parameter from -3 to 3/2 (magic range)
+
+int32_t output = waveshaper_process(&WS,&WC,___SMMLA(feed<<2,filter_out<<3,input));	//calculating the output of the waveshaper
+
+feed+=feed_increment;	//interpolating inlets
+f+= f_incr;
+shape+=shape_increment;
+
+
+filter_state = ___SMMLA(__SSAT((output-filter_state)<<1,30),f,filter_state);	//processing 1 pole low pass filter
+
+switch (param_filter_space_type) {	
+case 1: filter_out = filter_state; break;			//no filter
+case 2: filter_out = output - filter_state; break;	//low pass
+default: filter_out = output; break;				//high pass
+}
+
+outlet_out = output;
+outlet_filter = filter_out;]]></code.srate>
+   </obj.normal>
+</objdefs>

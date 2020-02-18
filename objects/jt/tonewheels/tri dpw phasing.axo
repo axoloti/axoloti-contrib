@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tri dpw phasing" uuid="8b37e808-719b-4bec-9d45-2866af75a7ef">
+      <sDescription>Triangle wave tonewheels
+The triangle wave oscillators use the 1st order DPW algorithm (against aliasing).
+Range is midi note 24 to 119.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>tonewheels.axh</helpPatch>
+      <inlets>
+         <frac32 name="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="phase" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="amplitudes" description="Table containing the amplitudes (32bit)"/>
+         <objref name="tuning" description="Tuning table"/>
+      </attribs>
+      <code.declaration><![CDATA[class osc {
+	public:
+	void init();
+};
+
+class osc_one : public osc {
+	public:
+	uint32_t phase;
+	
+	void init(){
+		phase = 0;
+	}
+
+	int32_t dpw_tri(int32_t phase) {
+		int32_t hphase=phase>>1;
+		int32_t absnphase = phase>0?-phase:phase;
+		return ___SMMLA(absnphase,phase,hphase);
+	}
+
+	void render(int32_t *pOut, int32_t amp, uint32_t freq, float invfreq){
+		// pOut: pointer to s32 output buffer, adds values
+		// amp: s32 amplitude
+		// freq: s32 amplitude
+		// invfreq: inverse proportional to freq
+		int i;
+		int32_t a1 = (int)(invfreq*amp);
+		int32_t phase1 = phase;
+		int32_t prev1 = dpw_tri(phase1-freq);
+		for(i=0;i<BUFSIZE;i++) {
+			uint32_t v = dpw_tri(phase1);
+			int32_t d = (v-prev1);
+			*pOut = __SMMLA(d,a1,*pOut);
+			prev1 = v;
+			phase1 += freq;
+			pOut++;
+		}
+		phase = phase1;
+	}
+};
+
+static const int n_octaves = 8;
+
+class chroma {
+	int phase;
+		
+	public:
+	osc_one octaves[n_octaves];
+	
+	void init(){
+		phase = 0;
+		int i;
+		for(i=0;i<n_octaves;i++){
+			octaves[i].init();
+		}
+	};
+
+	void render(int freq, int32_t *pOut, int32_t *pAmp, uint32_t x){
+		pAmp += 24;
+		uint32_t f = freq;
+		float invfreq = (1<<26)/(float)freq;
+		x = ___SMMUL(x,f);
+		int i;
+		for(i=0;i<n_octaves;i++){
+			octaves[i].render(pOut,*pAmp,f+x,invfreq);
+			pAmp+=12;
+			f=f<<1;
+			invfreq=invfreq*0.5f;
+		}
+	}
+};
+
+chroma chromas[12];]]></code.declaration>
+      <code.init><![CDATA[int i;
+
+for(i=0;i<12;i++) {
+	chromas[i].init();
+}]]></code.init>
+      <code.krate><![CDATA[int i;
+
+// clear
+for(i=0;i<BUFSIZE;i++) {
+	outlet_wave[i]=0;
+}
+
+// sum into output buffer
+for(i=0;i<12;i++){
+	chromas[i].render(attr_tuning.array[i]>>3,&outlet_wave[0] ,&attr_amplitudes.array[i],(param_phase+inlet_phase)<<1);
+}
+
+// output gain
+for(i=0;i<BUFSIZE;i++) {
+	outlet_wave[i]=outlet_wave[i]<<2;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

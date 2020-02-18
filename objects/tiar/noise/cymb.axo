@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="cymb" uuid="48c4b11b-2ca9-43cd-bc3f-afa37ae4670c">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>cymb.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="newSeed"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[static const int NB = 4;
+/*static const int32_t a = 1664525;    
+static const int32_t b = 1013904223;*/
+static const int32_t a = 69069;    
+static const int32_t b = 1;
+int16_t p[NB];
+int32_t seed;
+int16_t c[NB];
+int32_t r[NB];
+int32_t rB[NB];
+bool _newSeed = false;
+
+int8_t sc = 16; // slide counter]]></code.declaration>
+      <code.init><![CDATA[
+for(int j = 0; j < NB; j++){ c[j] = r[j] = rB[j] = 0; }
+seed = GenerateRandomNumber();
+p[0] = 100;  p[1] = 230;  p[2] = 551;  p[3] = 839;
+
+]]></code.init>
+      <code.krate><![CDATA[if(!_newSeed && inlet_newSeed){
+  seed = GenerateRandomNumber();
+}
+_newSeed = inlet_newSeed;
+if(sc <= 0){
+  sc = 16;
+  seed = seed * a + b;
+}
+sc--;
+for(int i = 0; i < BUFSIZE; i++){
+  outlet_out[i] = 0;
+}
+for(int j = 0; j < NB; j++){
+  int32_t _c = c[j];
+  int32_t _r = r[j];
+  int32_t _rB = rB[j];
+  int32_t p_2 = p[j]>>1;
+  for(int i = 0; i < BUFSIZE; i++){
+    if(_c <= 0){
+      _c = p[j];
+      _r = seed;
+    }
+    outlet_out[i] += (_r = _r * a + b) >> (31-24);
+    if(_c == p_2)
+      _rB = seed;
+    outlet_out[i] += (_rB = _rB * a + b) >> (31-24);
+    _c--;
+  }
+  c[j] = _c;
+  r[j] = _r;
+  rB[j] = _rB;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

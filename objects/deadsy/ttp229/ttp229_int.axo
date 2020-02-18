@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<objdefs appVersion="1.0.12">
+  <obj.normal id="ttp229_int" uuid="7a54ccf2-94ca-445b-a4e4-d1fc4ae409e7">
+    <sDescription>TTP229 Capacitive Touch Sensor (I2C).
+
+http://www.tontek.com.tw/uploads/product/106/TTP229-LSF_V1.0_EN.pdf
+https://robotdyn.com/16-keys-capacitive-touch-ttp229-i2c-module.html
+
+The output is an int32 with the 0/1 status of the electrodes (bits 0..15)
+
+Note: This object requires a single instance of the factory/gpio/i2c/config object.
+This allows multiple i2c devices (each with a unique i2c address) to work concurrently.
+Tested with I2C1, SCL=PB8, SDA=PB9 (these are the config defaults)</sDescription>
+    <author>Jason Harris</author>
+    <license>BSD</license>
+    <inlets/>
+    <outlets>
+      <int32 name="touch"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs/>
+    <includes>
+      <include>./ttp229.h</include>
+    </includes>
+    <depends>
+      <depend>I2CD1</depend>
+    </depends>
+    <code.declaration><![CDATA[struct ttp229_state state;]]></code.declaration>
+    <code.init><![CDATA[ttp229_init(&state);]]></code.init>
+    <code.dispose><![CDATA[ttp229_dispose(&state);]]></code.dispose>
+    <code.krate><![CDATA[ttp229_krate_int(&state, &outlet_touch);]]></code.krate>
+  </obj.normal>
+</objdefs>

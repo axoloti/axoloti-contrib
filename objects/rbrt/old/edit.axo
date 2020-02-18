@@ -1,0 +1,148 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="edit" uuid="d5f2f2ab-178b-4d74-8253-eee6209e6b2d">
+      <sDescription>edits a bank of samples recorded with &apos;smplr&apos;.
+&apos;slot&apos; sets the slot to work on,
+&apos;copy&apos;,&apos;move&apos; and &apos;delete&apos; have to be triggered via &apos;trig&apos;.
+&apos;defrag&apos; will clear unused sample data and compact the referred table.
+&apos;clear&apos; will clear the data.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>smplr.axh</helpPatch>
+      <inlets>
+         <int32.positive name="slot" description="slot to work on"/>
+         <bool32.rising name="trig" description="trigger an editing action"/>
+         <bool32.risingfalling name="copy" description="copy the selected slot"/>
+         <bool32.risingfalling name="move" description="move the selected slot"/>
+         <bool32.risingfalling name="delete" description="delete the selected slot"/>
+         <bool32.rising name="defrag" description="defragment the sample data"/>
+         <bool32.rising name="clear" description="clear all data"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="delete" description="pulse on delete"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="smplr"/>
+         <objref name="wave"/>
+      </attribs>
+      <code.declaration><![CDATA[bool ctrig;
+bool dtrig;
+bool cpytrig;
+bool cpytemptrig;
+bool del;
+bool clrtrig;
+
+bool move;
+
+bool mtrig;
+uint8_t mslot;
+uint8_t srcslot;
+
+bool deletetrig;
+bool copytrig;
+
+uint32_t sstart;
+uint32_t send;
+uint32_t slength;
+
+uint32_t slottemp [4];
+
+uint32_t *delstart;
+uint32_t *delend;
+uint8_t delcount;]]></code.declaration>
+      <code.init><![CDATA[static uint32_t _delstart[attr_poly][128]  __attribute__ ((section (".sdram")));
+delstart = &_delstart[parent->polyIndex][0];
+static uint32_t _delend[attr_poly][128]  __attribute__ ((section (".sdram")));
+delend = &_delend[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<128;i++) {delstart[i]=0;delend [i] = 0;}
+}]]></code.init>
+      <code.krate><![CDATA[mslot = inlet_slot % 126;
+outlet_delete = 0;
+
+//delete
+if (inlet_delete && inlet_trig && !dtrig) {
+	sstart = attr_smplr.array[mslot << 2];
+	send = attr_smplr.array[(mslot << 2) + 1];
+	int i;
+	for (i = 0;i<4;i++) attr_smplr.array [(mslot <<2) + i] = 0;
+		bool check = 1;
+		for (i = 0;i < 127; i ++) if (attr_smplr.array [(i << 2) +1] == send) check = 0;
+	if (check) {
+		delstart [delcount] = sstart;
+		delend [delcount] = send;
+		delcount ++;
+		}
+	dtrig = 1;
+	outlet_delete = 1;
+}
+//compact
+if (inlet_defrag && !ctrig) {
+	ctrig = 1;
+	int i;
+	for (i = 0; i < delcount;i++){		
+		send =  delend[i];	
+		sstart = delstart [i];
+		slength = (send - sstart);			
+				int shift_index;
+				for(shift_index=0;shift_index< 508;shift_index += 4)
+				if (attr_smplr.array[shift_index] >= send) {
+					attr_smplr.array[shift_index] -= slength;
+					attr_smplr.array[shift_index + 1] -= slength;
+					}			
+				int move_samples;
+				for(move_samples=send;move_samples < (attr_smplr.array [511]);move_samples++) 
+				attr_wave.array [move_samples - slength] = attr_wave.array [move_samples];							
+				int shift_chunks;
+				for (shift_chunks = 0;shift_chunks<delcount;shift_chunks ++)
+				if (delstart[shift_chunks] >= send ) {delstart [shift_chunks] -=slength;delend [shift_chunks] -= slength;}
+
+				attr_smplr.array [511] -= slength;	
+	}
+	delcount = 0;
+}
+if (!inlet_defrag) ctrig = 0;
+
+//paste
+if (!attr_smplr.array[(mslot << 2) + 2]) {
+	if (inlet_trig && cpytemptrig && !cpytrig && (inlet_copy || move)){
+	cpytrig = 1;
+	if (move) move = 0;	
+	int i;
+	for (i = 0;i < 4 ;i ++) attr_smplr.array [(mslot << 2)+ i] = slottemp[i];
+	}
+}
+//copy	
+if (inlet_trig && !cpytemptrig && (inlet_copy || move)){
+	cpytemptrig = 1;
+	srcslot = mslot;
+	int i;
+	for (i = 0;i < 4 ;i ++ ) slottemp [i] = attr_smplr.array [(mslot << 2)+ i];
+		if (move) {
+			attr_smplr.array[(srcslot << 2) + 2] = 0;
+			outlet_delete = 1;		
+		}
+}
+
+//move
+if (inlet_move && !mtrig){
+	mtrig = 1;
+	move = 1;	
+}
+
+//clear
+if (inlet_clear && !clrtrig){
+	clrtrig = 1;
+	delcount = 0;
+	int i;
+	for (i = 0;i <512;i++)attr_smplr.array[i] = 0;
+}
+	
+if (!inlet_copy && !inlet_move) cpytemptrig = 0;
+if (!inlet_move) {mtrig = 0;move = 0;}
+if (!inlet_trig) {cpytrig = 0;dtrig = 0;}
+if (!inlet_clear) clrtrig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

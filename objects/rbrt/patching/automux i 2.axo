@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="automux i 2" uuid="04976af6-f239-40a0-95b7-2da458fe9ab3">
+      <sDescription>input collector.outputs an input&apos;s value if it changes.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>patching.axh</helpPatch>
+      <inlets>
+         <int32 name="i0"/>
+         <int32 name="i1"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev0;
+int32_t prev1;
+
+
+int src;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_i0 != prev0) {src = 0;prev0 = inlet_i0;}
+if (inlet_i1 != prev1) {src = 1;prev1 = inlet_i1;}
+   
+   switch(src){
+      case 0: outlet_o= inlet_i0;break;
+      case 1: outlet_o= inlet_i1;break;
+      default: outlet_o= inlet_i0;break;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

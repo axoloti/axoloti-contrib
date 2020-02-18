@@ -1,0 +1,336 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ctrl1" uuid="6cd33ebb-3f53-430e-ae1e-d484a88f81e8">
+      <sDescription>Controler for FSR72 custom hardware setup.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ctrl1.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="LED" description="LED brightness"/>
+         <bool32.rising name="calibrate"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="press"/>
+         <frac32.positive name="F1"/>
+         <frac32.positive name="F2"/>
+         <frac32.positive name="F3"/>
+         <frac32.positive name="F4"/>
+         <frac32.positive name="F5"/>
+      </outlets>
+      <displays>
+         <uint8array128.vbar name="vf" noLabel="true"/>
+         <frac32.vbar name="tempco"/>
+      </displays>
+      <params>
+         <frac32.u.map name="L0"/>
+         <frac32.u.map name="L1"/>
+         <frac32.u.map name="LNoteOn"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool calibrate=false;
+uint32_t vol = 80;
+uint32_t vol_cpt = 0;
+
+//tempco
+int32_t tempco = 0;
+
+int32_t scan = -12; // first cycle
+uint8_t adcNotes[12] = {12,11,10,9,8,7,6,4,3,2,1,0};
+int32_t v[6 * 12];
+int32_t cal[6 * 12];
+int32_t vrs[6 * 12];
+int32_t gate[6 * 12];
+int32_t press[6 * 12];
+const int32_t COEF_INC = 0x10000000;  // slow
+const int32_t COEF_DEC = 0x70000000;  // fast
+float _L0_L1;
+
+uint8_t oct = 3;
+uint8_t an[5 * 12]; //assignated note
+uint32_t timeCnt = 0;
+uint8_t KBmode = 0;
+uint8_t LEDmode = 0;
+uint16_t modeCntDown = 0; //modes back to 0 when 0
+bool octM = false;
+bool octP = false;
+int32_t bend = 8192, abend = 8192;
+
+//    -----\
+//           \
+//             \____
+//    0   L1   L0
+int32_t revScale(int32_t x,int32_t L0,int32_t L1){
+  if(x < L1)
+    return (1<<27)-1;
+  else if(x > L0)
+    return 0;
+  else
+   // return 1-(x-L1)/(L0-L1);         //
+    return (1<<27) - (int32_t)((x - L1) * _L0_L1);
+}
+void LED(int32_t pwm){
+  pwmEnableChannel(&PWMD8, 0, (pwmcnt_t)(pwm>=0?pwm>>(27-12):0));
+}
+void LEDOn(void){
+  pwmEnableChannel(&PWMD8, 0, (pwmcnt_t)(1<<11));
+}
+void LEDBright(void){
+  pwmEnableChannel(&PWMD8, 0, (pwmcnt_t)(1<<12));
+}
+void LEDOff(void){
+  pwmEnableChannel(&PWMD8, 0, (pwmcnt_t)(0));
+}]]></code.declaration>
+      <code.init><![CDATA[static const PWMConfig pwmcfg = {400000, /* 400kHz PWM clock frequency.  */
+	4096, /* PWM period is 128 cycles.    */
+	NULL, 
+	{{PWM_OUTPUT_ACTIVE_HIGH, NULL}, 
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL},
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL}, 
+	{PWM_OUTPUT_ACTIVE_HIGH, NULL}},
+	/* HW dependent part.*/
+	0};
+
+pwmStart(&PWMD8, &pwmcfg);
+palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(3));
+PWMD8.tim->CCER |= STM32_TIM_CCER_CC1NE | STM32_TIM_CCER_CC1NP;
+
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+palSetPadMode(GPIOC, 4, PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOC, 5, PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOB, 6, PAL_MODE_OUTPUT_PUSHPULL);  //low row
+palSetPadMode(GPIOB, 7, PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOB, 8, PAL_MODE_OUTPUT_PUSHPULL);
+palSetPadMode(GPIOB, 9, PAL_MODE_OUTPUT_PUSHPULL);
+
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+for(int k = 0; k < 5 * 12; k++){
+  an[k] = -1;
+}
+for(int i = 0; i < 6 * 12; i++){
+  v[i] = 1<<27; // assym lp filtered
+  cal[i] = 0;
+  vrs[i] = -10;   // reverse scaled
+  gate[i] = 0;
+  press[i] = 0;
+}]]></code.init>
+      <code.dispose><![CDATA[pwmStop(&PWMD8);]]></code.dispose>
+      <code.krate><![CDATA[disp_tempco = tempco = ___SMMLA(0x01000000, (adcvalues[13]<<15) - tempco, tempco);
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+if(scan >= 0){
+  // LPF input
+  int32_t *v12 = v + scan * 12;
+  for(int i = 0; i < 12; i++){ //PA0..PA7
+    int32_t in = (adcvalues[adcNotes[i]] << 15) - tempco;
+    v12[i] = __SMMLA(in > v12[i] ? COEF_INC : COEF_DEC, in - v12[i], v12[i]);
+  }
+  
+  // reverse and scale
+  _L0_L1 = ((float)(1<<27)) / (float)(param_L0 - param_L1);
+  for(int i = scan * 12; i < 12 + scan * 12; i++){
+    vrs[i] = revScale(v12[i - scan * 12] + cal[i], param_L0, param_L1);
+    // Threshold and Basic internal MIDI
+  }
+//______________________________________________________________________
+//lateral inhib
+{
+  int32_t sub[12];
+  int32_t *vrs12 = vrs + scan * 12;
+  for(int k = 1; k < 11; k++){
+    sub[k] = (vrs12[k - 1] + vrs12[k + 1]) >> 3;
+  }
+  sub[ 0] = vrs12[ 1] >> 3;
+  sub[11] = vrs12[10] >> 3;
+  
+  for(int k = 0; k < 12; k++){
+    vrs12[k] -= sub[k];
+    if(vrs12[k] < 0) vrs12[k] = 0;
+  }
+}
+  for(int i = scan * 12; i < 12 + scan * 12; i++){
+    if(gate[i] == 0){
+      if(vrs[i] > param_LNoteOn){
+        if(scan <= 4 && KBmode == 0) {
+          an[i] = i + 12 * oct;
+        	PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_NOTE_ON, an[i], 100);
+        }
+        gate[i] = 1;
+      }
+    } else {
+      if(vrs[i] <= 0) {
+        if(scan <= 4 && KBmode == 0) {
+        	PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_NOTE_OFF, an[i], 0);
+        	an[i] = -1;
+        }
+        if(scan <= 4 && KBmode == 1) {
+        	PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_PROGRAM_CHANGE, i,0);
+          //MidiSend2((midi_device_t) attr_device , MIDI_PROGRAM_CHANGE + (attr_channel-1),inlet_pgm&0x7F);
+          KBmode = 0;
+          LEDmode = 0;
+        }
+        gate[i] = 0;
+      }
+    }
+    int32_t newPress = __USAT(vrs[i] >> 20, 7);
+    if(abs(press[i] - newPress) >=1){
+      press[i] = newPress;
+      if(scan <= 4 && KBmode == 0) PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_POLY_PRESSURE, an[i], newPress);
+    }
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+   /* if(KBmode == 1 && scan <= 4) { //pc
+  for(int k = 0; k < 60; k++){
+    if(vrs[k] > (60 << 20)){
+     // PC  k
+      PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_PROGRAM_CHANGE, k,0);
+      //MidiSend2((midi_device_t) attr_device , MIDI_PROGRAM_CHANGE + (attr_channel-1),inlet_pgm&0x7F);
+
+      KBmode = 0;
+      LEDmode = 0;
+      break;
+    }
+  }
+}*/
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+// control keys
+    if(scan == 5){
+      bool vol_minus = vrs[69] > (32<<21);
+      bool vol_plus  = vrs[70] > (32<<21);
+      if(!vol_plus && !vol_minus){
+        vol_cpt == 0;
+      } else {
+        if((vol_cpt % 128) == 0) {
+          if(vol_plus  && vol < 127) vol++;
+          if(vol_minus && vol >   0) vol--;
+          PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_CONTROL_CHANGE, 7, vol); // <-------------vol CC
+          LEDmode = 10;
+          modeCntDown = 3 * 3000;
+        }
+        vol_cpt++;
+      }
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+if(vrs[71] > (60 << 20) && KBmode == 0){
+  //all notes off
+  for(int k=0; k<60;k++){
+    if(an[k] >= 0){
+        	PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_NOTE_OFF, an[k], 0);
+      an[k] = -1;
+      gate[k] = 0;
+    }
+  }
+  KBmode = 1;
+  LEDmode = 1;
+  modeCntDown = 10 * 3000; //10s
+}
+      //_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+      if(vrs[67] == 0) 
+        octM = false;
+      if(vrs[67] > (60 << 20) && octM == false) {
+        octM = true;
+        if(oct > 1) oct--;
+        LEDmode = oct + 1;
+        modeCntDown = 3 * 3000;
+      }
+      //_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+      if(vrs[68] == 0) 
+        octP = false;
+      if(vrs[68] > (60 << 20) && octP == false) {
+        octP = true;
+        if(oct < 5) oct++;
+        LEDmode = 1+oct;
+        modeCntDown = 3*3000;
+      }
+      //_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+      // bend
+      if(vrs[61] > 0 || vrs[60] > 0){
+        bend = ((vrs[61] - vrs[60]) >> (27-14)) + 8192;
+        if(bend >= (1<<14)) bend = (1<<14) - 1;
+        if(bend < 0) bend = 0;
+        if(abs(bend - abend) > 5){
+          PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_PITCH_BEND, bend & 0x7F, bend >> 7);
+          LEDmode = 11; modeCntDown = 30000;
+        }
+      } else if(bend != 8192){ 
+        bend = 8192;
+        PatchMidiInHandler(MIDI_DEVICE_INTERNAL, 0, MIDI_PITCH_BEND, bend & 0x7F, bend >> 7);
+        LEDmode = 0; modeCntDown = 0;
+      }
+      abend = bend;
+    }
+  }
+  //_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  // max press output (reinject in LED input if needed)
+  if(KBmode == 0){
+    int32_t maxVrs = 0;
+    for(int k = 0; k < 60; k++){
+      if(vrs[k] > maxVrs)
+        maxVrs = vrs[k];
+    }
+    outlet_press = maxVrs;
+  }else{
+    outlet_press = 0;
+  }
+
+  for(int i = 0; i< 72; i++){
+  	//disp_vf[i] = (uint8_t)(v[i]>>20);
+  	disp_vf[i] = (uint8_t)(vrs[i]>>20);
+  }
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  switch(LEDmode){
+    case  0: LED(inlet_LED); break;
+    case  1: 
+    { int t= timeCnt % 3000;
+      if(t < 750) LEDOff();  
+      else if(t<1500)  LEDOn();
+      else if(t<1750)  LEDOff();
+      else if(t<2000)  LEDBright();
+      else if(t<2500)  LEDOff();
+      else if(t<2750)  LEDBright();
+      else   LEDOff();
+    }
+    break;
+    case  2: if((timeCnt %  325) < 200) LEDOff();  else  LEDOn();  break;
+    case  3: if((timeCnt %  750) < 500) LEDOff();  else  LEDOn();  break;
+    case  4: LEDOn();  break;
+    case  5: if((timeCnt %  750) < 500) LEDOff();  else  LEDOn();  break;
+    case  6: if((timeCnt %  325) < 200) LEDOff();  else  LEDOn();  break;
+    case 10: LED(vol<<18);  break;
+    case 11: if((timeCnt %  325) < 100) LEDOff();  else  LED(abs(bend - 8192) << 13);  break;
+    default: LED(inlet_LED);
+  }
+
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  timeCnt++;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+  if(modeCntDown > 0)
+    modeCntDown--;
+  else{
+    LEDmode = 0;
+    KBmode = 0;
+  }
+  outlet_F1 = vrs[62];
+  outlet_F2 = vrs[63];
+  outlet_F3 = vrs[64];
+  outlet_F4 = vrs[65];
+  outlet_F5 = vrs[66];
+}
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+if(inlet_calibrate && !calibrate){
+  int32_t m = v[0];
+  for(int k = 1; k < 60; k++){
+  	if(v[k] < m) m = v[k];
+  }
+  for(int k = 0; k < 60; k++){
+  	cal[k] = m - v[k];
+  }
+  
+}
+calibrate = inlet_calibrate;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+scan++;
+if(scan >= 6) scan = 0;
+palWritePad(GPIOC, 4,(scan == 0)); // PC4 low
+palWritePad(GPIOC, 5,(scan == 1)); // PC5
+palWritePad(GPIOB, 6,(scan == 2)); // PB6
+palWritePad(GPIOB, 7,(scan == 3)); // PB7
+palWritePad(GPIOB, 8,(scan == 4)); // PB8
+palWritePad(GPIOB, 9,(scan == 5)); // PB9]]></code.krate>
+   </obj.normal>
+</objdefs>

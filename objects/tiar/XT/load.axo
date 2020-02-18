@@ -1,0 +1,330 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="load" uuid="104ddbe5-078e-47b3-b71e-fe71baba1c6d">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>load.axh</helpPatch>
+      <inlets>
+         <charptr32 name="filename" description="file name"/>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="nbWaves">
+            <MenuEntries>
+               <string>64</string>
+               <string>8</string>
+               <string>2</string>
+               <string>4</string>
+               <string>6</string>
+               <string>12</string>
+               <string>16</string>
+               <string>24</string>
+               <string>32</string>
+               <string>48</string>
+               <string>128 (16x8)</string>
+               <string>256 (16x16)</string>
+               <string>512 (16x32)</string>
+               <string>1024 (16x64)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>64</string>
+               <string>8</string>
+               <string>2</string>
+               <string>4</string>
+               <string>6</string>
+               <string>12</string>
+               <string>16</string>
+               <string>24</string>
+               <string>32</string>
+               <string>48</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+            </CEntries>
+         </combo>
+         <combo name="length">
+            <MenuEntries>
+               <string>256</string>
+               <string>512</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>ExtRAM</string>
+               <string>IntRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>0</string>
+            </CEntries>
+         </combo>
+         <combo name="mode">
+            <MenuEntries>
+               <string>interp</string>
+               <string>vintage</string>
+               <string>dirty</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+         <combo name="loadAtInit">
+            <MenuEntries>
+               <string>yes</string>
+               <string>no</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>false</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[#if attr_location == 0
+	#define LOCATION
+#else
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+static const uint32_t LENGTHPOW = attr_length;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = LENGTH-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 7;  // q20 to q27
+static const uint32_t NBWAVES = attr_nbWaves;
+static const uint32_t MODE = attr_mode; // 0 interp, 1 vintage, 2 dirty
+
+bool ntrig, first;
+
+int32_t *v;
+int32_t *Iv;
+float *fv; //in place
+int16_t* v16; //in place
+
+void prepare(void){
+  for(int n = 0; n < NBWAVES; n++){
+    float *_fv = fv + (n * (LENGTH + 1));
+	int16_t *_v16 = v16 + (n * LENGTH);
+	for(int i = 0; i < LENGTH; i++){
+		_fv[i] = _v16[i] * (1/32764.0f);
+	}
+    //remove DC
+    float moy = 0.0f;
+    for(int i = 0; i < LENGTH; i++){
+      moy += _fv[i];
+    }
+    moy *= 1.0f / LENGTH;
+    for(int i = 0; i < LENGTH; i++){
+      _fv[i] -= moy;
+      
+    }
+    // normalise
+    /*if(M != 0.0f){
+      M = 1.0f / M;
+      for(int i = 0; i < LENGTH; i++){
+        _fv[i] *= M;
+      }
+    }*/
+
+    // convert
+    int32_t *_v = v + (n * (LENGTH + 1));
+
+    for(int i = 0; i < LENGTH; i++){
+      _v[i] = arm::float_to_q(_fv[i], 27 - GAIN);
+    }
+    _v[LENGTH] = _v[0]; // for easy dv: dv = v[i+1] - v[i]
+  }
+for(int n = 0; n < NBWAVES; n++){
+    int32_t *_v = v + (n * (LENGTH + 1));
+    int32_t *_Iv = Iv + (n * LENGTH);
+    int32_t I1 = 0;
+    for(int i = 0; i < LENGTH; i++){
+      _Iv[i] = I1;
+  #if attr_mode==0
+      I1 += _v[i] + (_v[i+1]-_v[i])/2;
+  #elif attr_mode==1
+      I1 += _v[i]; 
+  #else
+      I1 += _v[i] - (_v[i+1]-_v[i])/2;
+  #endif
+    }
+  }
+}
+// used by tiar/PIXWT/oscLight
+int32_t I1p32(int32_t n, uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x003FFFFF) << 9;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 22)) >> 22;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  int32_t *_v = v + (n*(LENGTH+1));
+  int32_t *_Iv = Iv + (n*(LENGTH));
+  #if attr_mode==0
+  return _Iv[i] + (___SMMLA(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #elif attr_mode==1
+  return _Iv[i] +( ___SMMUL( _v[i], a) << 1);
+  #else
+  return _Iv[i] + (___SMMLS(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #endif
+
+}
+int32_t* getV(int n){
+  return v + (n*(LENGTH+1));
+}
+int32_t* getIv(int n){
+  return Iv + (n*(LENGTH));
+}
+// used by tiar/PIXWT/oscLight
+int32_t I1p32(int32_t *_v, int32_t *_Iv, uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x003FFFFF) << 9;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 22)) >> 22;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  #if attr_mode==0
+  return _Iv[i] + (___SMMLA(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #elif attr_mode==1
+  return _Iv[i] +( ___SMMUL( _v[i], a) << 1);
+  #else
+  return _Iv[i] + (___SMMLS(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #endif
+
+}
+// used by tiar/PIXWT/osc
+int32_t I1p30(int32_t *_v, int32_t *_Iv, uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x000FFFFF) << 11;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 20)) >> 20;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  #if attr_mode==0
+  return _Iv[i] + (___SMMLA(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #elif attr_mode==1
+  return _Iv[i] +( ___SMMUL( _v[i], a) << 1);
+  #else
+  return _Iv[i] + (___SMMLS(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #endif
+
+}
+int32_t I0p30(int32_t *_v, uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x000FFFFF) << 11;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 20)) >> 20;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  #if attr_mode==0
+  return ___SMMLA(a, _v[i+1] - _v[i], _v[i] >> 1) << (GAIN + 1);
+  #elif attr_mode==1
+  return _v[i] << GAIN;
+  #else
+  return ___SMMLS(a, _v[i+1] - _v[i], _v[i] >> 1) << (GAIN + 1);
+  #endif
+}
+
+// used by tiar/PIXWT/osc
+int32_t I1p30(int32_t *_v, int32_t *_Iv, uint32_t i, int32_t a){
+  #if attr_mode==0
+  return _Iv[i] + (___SMMLA(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #elif attr_mode==1
+  return _Iv[i] +( ___SMMUL( _v[i], a) << 1);
+  #else
+  return _Iv[i] + (___SMMLS(_v[i+1] - _v[i], ___SMMUL(a, a), ___SMMUL( _v[i], a)) << 1);
+  #endif
+
+}
+int32_t I0p30(int32_t *_v, uint32_t i, int32_t a){
+  #if attr_mode==0
+  return ___SMMLA(a, _v[i+1] - _v[i], _v[i] >> 1) << (GAIN + 1);
+  #elif attr_mode==1
+  return _v[i] << GAIN;
+  #else
+  return ___SMMLS(a, _v[i+1] - _v[i], _v[i] >> 1) << (GAIN + 1);
+  #endif
+}]]></code.declaration>
+      <code.init><![CDATA[static int32_t  v_[attr_poly][NBWAVES * (LENGTH+1)] LOCATION;
+static int32_t Iv_[attr_poly][NBWAVES * (LENGTH  )] LOCATION;
+#undef LOCATION
+first = true;
+ntrig = false;
+v  =  &v_[parent->polyIndex][0];
+Iv = &Iv_[parent->polyIndex][0];
+fv = (float *)v; //in place
+v16 = (int16_t*)Iv; //in place]]></code.init>
+      <code.krate><![CDATA[if((inlet_trig && !ntrig)||(first && attr_loadAtInit)) {
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) {
+		report_fatfs_error(err,inlet_filename); 
+		return;
+	}
+    int rem_sz = 2 * LENGTH * NBWAVES;
+    int offset = 0;
+    while(rem_sz > 0) {
+		if(rem_sz > sizeof(fbuff)) {
+			err = f_read(&FileObject, fbuff, sizeof(fbuff), &bytes_read);
+			if(bytes_read == 0)
+				break;
+			memcpy((char *)(&v16[0]) + offset, (char *)fbuff, bytes_read);
+			rem_sz -= bytes_read;
+			offset += bytes_read;
+		} else {
+			err = f_read(&FileObject, fbuff, rem_sz, &bytes_read);
+			memcpy((char *)(&v16[0]) + offset, (char *)fbuff, bytes_read);
+			rem_sz = 0;
+		}
+    }    
+	if (err != FR_OK){
+		report_fatfs_error(err, inlet_filename);
+		return;
+	}
+    err = f_close(&FileObject);
+    if (err != FR_OK){
+		report_fatfs_error(err,inlet_filename);
+		return;
+	}
+	prepare();
+}
+ntrig = inlet_trig;
+first=false;]]></code.krate>
+   </obj.normal>
+</objdefs>

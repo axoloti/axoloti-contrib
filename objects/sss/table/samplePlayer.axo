@@ -1,0 +1,229 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="samplePlayer" uuid="cb37c415-e51a-4229-a85b-61a87b2d6e34">
+      <sDescription>read from table, nearest neighbour</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="startsample"/>
+         <frac32 name="startpitch"/>
+         <frac32 name="startStrt"/>
+         <frac32 name="startEnd"/>
+         <int32 name="loopsample"/>
+         <frac32 name="looppitch"/>
+         <frac32 name="loopStrt"/>
+         <frac32 name="loopEnd"/>
+         <int32 name="loopmode"/>
+         <bool32 name="LOOP"/>
+         <int32 name="endsample"/>
+         <frac32 name="endpitch"/>
+         <frac32 name="endStrt"/>
+         <frac32 name="endEnd"/>
+         <int32 name="samplelength"/>
+         <frac32 name="FMwidth"/>
+         <frac32buffer name="fm"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="table[a]"/>
+         <int32 name="stage"/>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="samplelength">
+            <MinValue i="12"/>
+            <MaxValue i="20"/>
+         </int32>
+         <bool32.tgl name="intExt"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t count;
+int ntrig;
+int stage;
+int direction1;
+int direction2;
+int LOOP;
+int sample;
+float32_t pitch;
+int32_t out;
+uint32_t phase;
+uint32_t Phase;
+int etrig;]]></code.declaration>
+      <code.init><![CDATA[count=0;
+direction1=1;
+direction2=1;]]></code.init>
+      <code.krate><![CDATA[int32_t samplelength;
+int32_t Samplelength;
+int32_t MASK;
+if(param_intExt>0)
+{
+samplelength=(1<<param_samplelength);
+Samplelength=param_samplelength;
+MASK=((1<<(20-param_samplelength))-1);
+}
+else 
+{
+	samplelength=(1<<inlet_samplelength);
+	Samplelength=inlet_samplelength;
+	MASK=((1<<(20-inlet_samplelength))-1);
+}
+
+
+
+
+outlet_pitch=pitch;
+outlet_stage=sample;]]></code.krate>
+      <code.srate><![CDATA[phase+=___SMMUL(inlet_fm>>3,inlet_FMwidth<<2);
+Phase=phase>>19;
+pitch=pitch/(1<<21)/12;
+int32_t totalcount=(samplelength)*powf(2,pitch);
+float32_t ratio=(float32_t)(samplelength)/(float32_t)(totalcount);
+LOOP=inlet_LOOP;
+int32_t start=___SMMUL(inlet_startStrt<<2,totalcount<<3);
+int32_t stend=___SMMUL(inlet_startEnd<<2,totalcount<<3);
+int32_t enstart=___SMMUL(inlet_endStrt<<2,totalcount<<3);
+int32_t end=___SMMUL(inlet_endEnd<<2,totalcount<<3);
+int32_t loopstart=___SMMUL(inlet_loopStrt<<2,totalcount<<3);
+int32_t loopend=___SMMUL(inlet_loopEnd<<2,totalcount<<3);
+
+int DIR1=end>start?1:-1;
+int DIR2=stend>start?1:-1;
+int DIR3=loopstart<loopend?1:-1;
+
+
+if((inlet_trig>0)&&!ntrig)
+	{	stage=1;
+		phase=0;
+		if(LOOP==0){direction1=DIR1;}
+		if(LOOP==1){direction1=DIR2;}
+		ntrig=1;
+		count=start;
+	}
+else if(inlet_trig==0){ntrig=0;stage=0;}
+
+
+if(stage==1){
+	sample=inlet_startsample;
+	pitch=-inlet_startpitch;
+}
+if(stage==2){
+	sample=inlet_loopsample;
+	pitch=-inlet_looppitch;
+	}
+if(stage==0){
+	sample=inlet_endsample;
+	pitch=-inlet_endpitch;
+	}
+
+
+sample=sample&MASK;
+
+if(inlet_trig>0)
+{
+	if(stage==1){
+		count+=direction1;
+		if(LOOP==0)
+		{
+			if(start<end){
+			if(count>=end){stage=0;}}
+			if(start>end){
+			if(count<=end){stage=0;}}
+		}
+	
+		if(LOOP==1)
+		{
+		
+			if((inlet_loopmode==0)||(inlet_loopmode==2))
+			{
+				if(start<stend)
+				{
+					if(count>=stend)
+					{
+						stage=2;
+						direction2=DIR3;
+						count=loopstart;
+					}
+				}
+				if(start>stend)
+				{
+					if(count<=stend){
+						stage=2;
+						direction2=DIR3;
+						count=loopstart;}
+				}
+			}
+
+
+			if(inlet_loopmode==1)
+			{
+				if(start<stend)
+				{
+					if(count>=stend)
+					{
+						stage=2;
+						direction2=-DIR3;
+						count=loopend;
+					}
+				}
+				if(start>stend)
+				{
+					if(count<=stend)
+					{
+						stage=2;
+						direction2=DIR3;
+						count=loopend;
+					}
+				}
+			}
+		}}
+	
+	if(stage==2)
+	{
+	count+=direction2;
+	if(inlet_loopmode==0)
+	{
+		if(loopstart<loopend){
+		if(count>=loopend){count=loopstart;}}
+		if(loopstart>loopend){
+		if(count<=loopend){count=loopstart;}}
+	}	
+	if(inlet_loopmode==1)
+	{
+		if(loopstart<loopend){
+		if(count<=loopstart){count=loopend;}}
+		if(loopstart>loopend){
+		if(count>=loopstart){count=loopend;}}
+		
+	}
+	if(inlet_loopmode==2){
+		if(count==loopstart){direction2=DIR3;}
+		if(count==loopend){direction2=-DIR3;}}
+	}
+
+	out= (attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<Samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+	
+}
+
+if((stage==0)&&!etrig){
+	etrig=1;
+	if(LOOP>0){count=enstart;}
+}
+else if(stage>0){etrig=0;}
+
+if(stage==0)
+	{if(!(count==end))
+		{
+		count+=count<end?1:-1;
+		out=(attr_table.array[((((int32_t)(count*ratio))&(samplelength-1))+Phase+(sample<<Samplelength))&attr_table.LENGTHMASK]<<attr_table.GAIN)>>5;
+		
+		}
+	if(count==end){outlet_o=0;}
+}
+
+outlet_o=out;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

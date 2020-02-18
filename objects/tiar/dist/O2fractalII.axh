@@ -1,0 +1,127 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="112" y="14" text="Two sine waves"/>
+   <comment type="patch/comment" x="434" y="14" text="with a decaying enveloppe"/>
+   <comment type="patch/comment" x="658" y="14" text="Interpolator"/>
+   <comment type="patch/comment" x="756" y="14" text="oversampled fractal distortion"/>
+   <comment type="patch/comment" x="952" y="14" text="decimator"/>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="112" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="210" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="7.010000228881836"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="308" y="28">
+      <params>
+         <frac32.u.map name="gain1" value="13.0"/>
+         <frac32.u.map name="gain2" value="58.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="420" y="28">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="59.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="518" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/conv/SR to O2 6" uuid="a0fd6d35-3135-4990-b947-3bf5fe337ef7" name="SR_1" x="644" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/O2fractalII" uuid="e8875de3-7757-4e39-849c-12790dc6de92" name="O2fractalII_1" x="784" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/conv/O2 to SR 59" uuid="887de25b-b437-4442-8068-2732559237c0" name="O2_1" x="924" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1120" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="98" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="SR_1" outlet="y1"/>
+         <dest obj="O2fractalII_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="SR_1" outlet="y0"/>
+         <dest obj="O2fractalII_1" inlet="in0"/>
+      </net>
+      <net>
+         <source obj="O2_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="SR_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="O2fractalII_1" outlet="out1"/>
+         <dest obj="O2_1" inlet="x1"/>
+      </net>
+      <net>
+         <source obj="O2fractalII_1" outlet="out0"/>
+         <dest obj="O2_1" inlet="x0"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>41</x>
+      <y>100</y>
+      <width>1301</width>
+      <height>597</height>
+   </windowPos>
+</patch-1.0>

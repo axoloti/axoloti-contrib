@@ -1,0 +1,116 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_2" x="168" y="28">
+      <params>
+         <int32 name="maximum" value="4"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_1" x="322" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808bd"/>
+      </attribs>
+   </obj>
+   <obj type="audio/outconfig" uuid="eace67e3304afaa1bb695b444e9345f2d8adaf00" name="outconfig_1" x="14" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="headphones" selection="-36dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="462" y="84">
+      <params>
+         <frac32.u.map name="gain1" value="64.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+         <frac32.u.map name="gain3" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jls/logic/logistic_gate" uuid="c47aa217-c482-479e-a89b-05adba255ea2" name="logistic_gate_1" x="168" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_2" x="322" y="112">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808midtom"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="588" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="140">
+      <params>
+         <frac32.s.map name="pitch" value="11.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jls/logic/logistic_gate" uuid="c47aa217-c482-479e-a89b-05adba255ea2" name="logistic_gate_2" x="168" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="595422aa-8767-45a8-ae08-bd8ac0247c61" name="flashplay_3" x="322" y="196">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808hitom"/>
+      </attribs>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="168" y="252">
+      <params>
+         <int32 name="maximum" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="counter_2" inlet="trig"/>
+         <dest obj="counter_1" inlet="trig"/>
+         <dest obj="logistic_gate_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="counter_2" outlet="c"/>
+         <dest obj="flashplay_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="flashplay_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="logistic_gate_1" outlet="gate"/>
+         <dest obj="flashplay_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="flashplay_2" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="flashplay_3" outlet="out"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="c"/>
+         <dest obj="logistic_gate_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="logistic_gate_2" outlet="gate"/>
+         <dest obj="flashplay_3" inlet="trig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>433</x>
+      <y>95</y>
+      <width>756</width>
+      <height>666</height>
+   </windowPos>
+</patch-1.0>

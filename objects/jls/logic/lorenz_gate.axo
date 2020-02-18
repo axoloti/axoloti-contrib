@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lorenz_gate" uuid="6cdbad56-96e9-4806-9fbd-1ab0bf8f8129">
+      <sDescription>Lorenz chaotic attractor - gate
+https://en.wikipedia.org/wiki/Lorenz_system</sDescription>
+      <author>JLS</author>
+      <license>BSD</license>
+      <helpPatch>lorenz_gate.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <bool32.rising name="reset" description="reset"/>
+      </inlets>
+      <outlets>
+         <bool32 name="pos" description="positive value gate"/>
+         <bool32 name="neg" description="negative value gate"/>
+         <frac32.bipolar name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float x;
+float tx;
+float y;
+float ty;
+float z;
+float tz;
+float s;
+float r;
+float b;
+float dt;
+int res;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[x = 0.1;
+y = 0.1;
+z = 0.1;
+s = 10.0;
+r = 28.0;
+b = 2.66;
+dt = 0.005;
+res = 0;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+
+	ntrig = 1;
+
+	tx = s * (y - x);
+	ty = (r * x) - y - (x * z);
+	tz = (x * y) - (b * z);
+
+	x = x + tx * dt;
+	y = y + ty * dt;
+	z = z + tz * dt;
+	
+} else if (!(inlet_trig>0)) ntrig=0;
+
+outlet_out = (0.7 * x * (1<<23));
+
+if (x > 0) outlet_pos = 1; else outlet_pos = 0;
+if (x < 0) outlet_neg = 1; else outlet_neg = 0;
+
+
+if ((inlet_reset>0) && !res) {
+	
+   	res = 1;
+   	x = 0.1;
+	y = 0.1;
+	z = 0.1;
+	outlet_pos = 0;
+	outlet_neg = 0;
+	outlet_out = 0;
+	
+} else if (!(inlet_reset>0)) res = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

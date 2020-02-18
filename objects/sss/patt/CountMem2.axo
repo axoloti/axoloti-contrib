@@ -1,0 +1,363 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="CountMem2" uuid="62c608ed-1f47-4a1c-9d9e-1c58960525d7">
+      <sDescription>This is the control module for the quad counter/multiple single counter modules, based on the &quot;range module&quot; as I&apos;ve called it for years, but here better known as the &quot;divremc&quot;, a VERY usable module!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>hook.axh</helpPatch>
+      <inlets>
+         <frac32 name="CnO" description="adds to respective value, so no need for external adders."/>
+         <int32 name="PrR" description="adds to respective value"/>
+         <frac32 name="PrS" description="adds to respective value"/>
+         <frac32 name="PrJ" description="adds to respective value"/>
+         <frac32 name="PrC" description="adds to respective value"/>
+         <frac32 name="PrO" description="adds to respective value"/>
+         <int32 name="MiR" description="adds to respective value"/>
+         <frac32 name="MiS" description="adds to respective value"/>
+         <frac32 name="MiJ" description="adds to respective value"/>
+         <frac32 name="MiC" description="adds to respective value"/>
+         <frac32 name="MiO" description="adds to respective value"/>
+         <int32 name="PsR" description="adds to respective value"/>
+         <frac32 name="PsS" description="adds to respective value"/>
+         <frac32 name="PsJ" description="adds to respective value"/>
+         <frac32 name="PsC" description="adds to respective value"/>
+         <frac32 name="PsO" description="adds to respective value"/>
+         <int32 name="AfR" description="adds to respective value"/>
+         <int32 name="AfO" description="adds to respective value"/>
+         <bool32.rising name="trg" description="Trigger high updates parameter to &quot;in&quot; inlet"/>
+         <frac32.positive name="in" description="input for controlling parameters"/>
+         <int32 name="sel" description="select parameter to change (0 to 17)"/>
+      </inlets>
+      <outlets>
+         <frac32 name="CnO"/>
+         <int32 name="PrR" description="Connect all parameters to corresponding inputs of the quad counter module or several single counter modules."/>
+         <frac32 name="PrS"/>
+         <frac32 name="PrJ"/>
+         <frac32 name="PrC"/>
+         <frac32 name="PrO"/>
+         <int32 name="MiR"/>
+         <frac32 name="MiS"/>
+         <frac32 name="MiJ"/>
+         <frac32 name="MiC"/>
+         <frac32 name="MiO"/>
+         <int32 name="PsR"/>
+         <frac32 name="PsS"/>
+         <frac32 name="PsJ"/>
+         <frac32 name="PsC"/>
+         <frac32 name="PsO"/>
+         <int32 name="AfR"/>
+         <int32 name="AfO"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="CntOfs"/>
+         <int32 name="PreRng">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <frac32.s.map name="PreStp"/>
+         <frac32.s.map name="PreJmp"/>
+         <frac32.s.map name="PreChg"/>
+         <frac32.s.map name="PreOfs"/>
+         <int32 name="MidRng">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <frac32.s.map name="MidStp"/>
+         <frac32.s.map name="MidJmp"/>
+         <frac32.s.map name="MidChg"/>
+         <frac32.s.map name="MidOfs"/>
+         <int32 name="PstRng">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <frac32.s.map name="PstStp"/>
+         <frac32.s.map name="PstJmp"/>
+         <frac32.s.map name="PstChg"/>
+         <frac32.s.map name="PstOfs"/>
+         <int32 name="AftRng">
+            <MinValue i="0"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <int32 name="AftOfs">
+            <MinValue i="-128"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+int32_t cache;
+int trg;]]></code.declaration>
+      <code.krate><![CDATA[   switch(inlet_sel>0?inlet_sel:0){
+
+	case 0:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_CntOfs],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 1:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PreRng],inlet_in>>17,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+   	
+	case 2:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PreStp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 3:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PreJmp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 4:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PreChg],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 5:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PreOfs],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 6:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_MidRng],inlet_in>>17,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 7:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_MidStp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 8:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_MidJmp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 9:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_MidChg],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 10:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_MidOfs],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 11:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PstRng],inlet_in>>17,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+	
+	case 12:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PstStp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+	
+	case 13:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PstJmp],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 14:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PstChg],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 15:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_PstOfs],inlet_in,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 16:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_AftRng],inlet_in>>17,0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+
+	case 17:
+		if((inlet_trg>0)&&(trg!=1))
+		{trg=1;
+			PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_AftOfs],(inlet_in>>20)-(1<<6),0xFFFD);
+		}
+		else
+		{
+			if(inlet_trg==0)
+			{
+			trg=0;	
+			}
+		}
+	break;
+}
+outlet_CnO=param_CntOfs+inlet_CnO;
+outlet_PrR=param_PreRng+inlet_PrR;
+outlet_PrS=param_PreStp+inlet_PrS;
+outlet_PrJ=param_PreJmp+inlet_PrJ;
+outlet_PrC=param_PreChg+inlet_PrC;
+outlet_PrO=param_PreOfs+inlet_PrO;
+outlet_MiR=param_MidRng+inlet_MiR;
+outlet_MiS=param_MidStp+inlet_MiS;
+outlet_MiJ=param_MidJmp+inlet_MiJ;
+outlet_MiC=param_MidChg+inlet_MiC;
+outlet_MiO=param_MidOfs+inlet_MiO;
+outlet_PsR=param_PstRng+inlet_PsR;
+outlet_PsS=param_PstStp+inlet_PsS;
+outlet_PsJ=param_PstJmp+inlet_PsJ;
+outlet_PsC=param_PstChg+inlet_PsC;
+outlet_PsO=param_PstOfs+inlet_PsO;
+outlet_AfR=param_AftRng+inlet_AfR;
+outlet_AfO=param_AftOfs+inlet_AfO;]]></code.krate>
+   </obj.normal>
+</objdefs>

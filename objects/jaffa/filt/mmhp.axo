@@ -1,0 +1,62 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mmhp" uuid="2c398e12-b32a-47bb-9174-efb25881aa4c">
+      <sDescription>1st order HP filter, 6 to 24 db selector.</sDescription>
+      <author>Jaffasplaffa (Original by Johannes Taelman)</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freq" description="cutoff frequency"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="on"/>
+         <frac32.u.map name="freq" noLabel="true"/>
+         <int32.hradio name="db" description="6,12,18,24db">
+            <MaxValue i="4"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t valHP1;
+int32_t valHP2;
+int32_t valHP3;
+int32_t valHP4;]]></code.declaration>
+      <code.init><![CDATA[valHP1 = 0;
+valHP2 = 0;
+valHP3 = 0;
+valHP4 = 0;]]></code.init>
+      <code.krate><![CDATA[// HP //
+int32_t fHP1;
+   MTOF(param_freq+inlet_freq,fHP1);
+
+// HP //
+int32_t fHP2;
+   MTOF(param_freq+inlet_freq,fHP2);
+
+// HP //
+int32_t fHP3;
+   MTOF(param_freq+inlet_freq,fHP3);
+
+// HP //
+int32_t fHP4;
+   MTOF(param_freq+inlet_freq,fHP4);]]></code.krate>
+      <code.srate><![CDATA[// HP //
+valHP1 = ___SMMLA((inlet_in-valHP1)<<1,fHP1,valHP1);
+valHP2 = ___SMMLA((valHP1-valHP2)<<1,fHP2,valHP2);
+valHP3 = ___SMMLA((valHP2-valHP3)<<1,fHP3,valHP3);
+valHP4 = ___SMMLA((valHP3-valHP4)<<1,fHP4,valHP4);
+
+int32_t SWITCHOUT;
+   switch(param_db>0?param_db:0){
+      case 0: SWITCHOUT= valHP1;break;
+      case 1: SWITCHOUT= valHP2;break; //LP is routed thorugh the HP //
+      case 2: SWITCHOUT= valHP3;break;
+      case 3: SWITCHOUT= valHP4;break;
+}
+
+outlet_out = (param_on)?(inlet_in-SWITCHOUT):inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

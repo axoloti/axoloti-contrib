@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smux4_1k" uuid="c0131610-fd10-419e-a3de-ed951ea9bce3">
+      <sDescription>Smooth multiplexer. Works like multiple cross fades.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>smux4_1k.axh</helpPatch>
+      <inlets>
+         <frac32 name="i0" description="input 0"/>
+         <frac32 name="i1" description="input 1"/>
+         <frac32 name="i2" description="input 2"/>
+         <frac32 name="i3" description="input 3"/>
+         <frac32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[int32_t sel = inlet_s & 0x07FFFFFF;
+int32_t a = (sel << 2) & 0x07FFFFFF;
+switch(sel >> (27-2)){
+  case 0: outlet_o = ___SMMLA(a, inlet_i1 - inlet_i0, inlet_i0 >> 5) << 5; break;
+  case 1: outlet_o = ___SMMLA(a, inlet_i2 - inlet_i1, inlet_i1 >> 5) << 5; break;
+  case 2: outlet_o = ___SMMLA(a, inlet_i3 - inlet_i2, inlet_i2 >> 5) << 5; break;
+  case 3: outlet_o = ___SMMLA(a, inlet_i0 - inlet_i3, inlet_i3 >> 5) << 5; break;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="colvet" uuid="1456baf2-154c-45f6-a486-85dff53b045b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>colvet.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="randomness"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch"/>
+         <frac32.s.map name="randomness"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t p;       // phase counter
+int32_t dp;         // delta phase
+int32_t r;  // sign and delta phase random gen
+int32_t r2; // color rand gen
+int32_t nextR2; // color slide
+int32_t env; // decay exp env
+uint8_t c;]]></code.declaration>
+<code.init><![CDATA[
+p = 0;
+dp = 1<<30;
+r = 137;
+r2 = 137;
+nextR2 = 137;
+env = 1<<27;
+c = 0;
+]]></code.init>
+
+
+      <code.krate><![CDATA[int32_t basePitch = param_pitch + inlet_pitch;
+int32_t mod = param_randomness + inlet_randomness;  // pitch rand mod depth
+c++;
+if(c>=100){
+  c = 0;
+  nextR2 = -1511872763 * (nextR2 - 1);
+}]]></code.krate>
+      <code.srate><![CDATA[p += dp;
+if(p < dp){ // p have just wrapped to zero
+  // reset env with random sign
+  env = (r = r * 69069 + 1) > 0 ? 1<<28 : -1<<28;
+  //pitch with random modulation
+  int32_t pitch = ___SMMLA(r = r * 69069 + 1, mod, basePitch);
+  // delta phase
+  MTOFEXTENDED(pitch, dp);
+  //"color" slide
+  r2 = nextR2;
+}
+outlet_out = ___SMMUL(r2, env);
+//color pseudo rand seq
+r2 = r2 * 69069 + 1;
+//color env 
+env = ___SMMUL(env,127<<24)<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>

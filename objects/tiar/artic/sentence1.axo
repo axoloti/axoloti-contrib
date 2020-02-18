@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sentence1" uuid="7d408860-0117-4e48-967d-5fb8503da9df">
+      <author>Smashed Transistors</author>
+      <license>BSD</license>
+      <helpPatch>sentence1.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <int32 name="step"/>
+      </outlets>
+      <displays>
+         <int32.label name="step" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="maxStep" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[const int32_t NOTE_GROUPING_LAG      = (int32_t)(0.1f * 3000);
+const int32_t SILENCE_RESET_DURATION = (int32_t)(0.2f * 3000);
+int32_t lag = 0;
+uint32_t step = 0; //[0, attr_maxStep]  (attr_maxStep included)
+uint32_t silence = 0;
+
+
+
+
+
+bool gate;
+bool trig;
+bool np[128];]]></code.declaration>
+      <code.init><![CDATA[gate = false;
+trig = false;
+for(int j=0;j<128;j++) np[j]=false;]]></code.init>
+      <code.krate><![CDATA[if(lag > 0) lag--;
+if(trig){
+  if(lag <= 0 && step < param_maxStep)
+    step++;
+  lag = NOTE_GROUPING_LAG;
+}
+if(!gate) {
+  if(silence > 20) lag = 0;
+  silence++;
+} else {
+  silence = 0;
+}
+if(silence >= SILENCE_RESET_DURATION)
+  step = 0;
+disp_step   = step;
+outlet_step = step;
+trig = false;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+    trig = true;
+    np[data1] = true;
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+    np[data1] = false;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int j=0;j<128;j++) np[j]=false;
+}
+
+gate = false;
+for(int j=0;j<128;j++) {
+  if(np[j]) {
+  	gate = true;
+  	break;
+  }
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

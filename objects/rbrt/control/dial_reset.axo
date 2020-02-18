@@ -1,0 +1,32 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="dial_reset" uuid="9f25e640-ab37-451d-979e-6b48dc9f2ac4">
+      <sDescription>bipolar constant value dial.
+trigger at inlet &apos;reset&apos; will set the output to &apos;default&apos;</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="reset" description="reset output to default"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="value" noLabel="true"/>
+         <frac32.s.map name="default"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+uint32_t prev;]]></code.declaration>
+      <code.krate><![CDATA[if ((inlet_reset>0) && !ntrig) {
+	ntrig = 1;
+outlet_out = param_default;
+prev = param_value;
+}
+if (!(inlet_reset>0)) ntrig=0;
+
+if (param_value != prev) outlet_out = param_value;
+else outlet_out = param_default;]]></code.krate>
+   </obj.normal>
+</objdefs>

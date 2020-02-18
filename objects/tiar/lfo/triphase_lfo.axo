@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="triphase" uuid="c5ee2ec2-064a-4803-a37d-3e0db693311e">
+      <sDescription>120° separated outputs</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>triphase_lfo.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="phi 0" description="0° sine"/>
+         <frac32.bipolar name="phi 120" description="120° sine"/>
+         <frac32.bipolar name="phi 240" description="240° sine"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t p;]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t dp;
+MTOFEXTENDED(param_pitch + inlet_pitch,dp);
+p += dp>>2;
+int32_t r;
+SINE2TINTERP(p,r)
+outlet_phi_space_0 = (r>>4);
+SINE2TINTERP(p+1431655765UL,r)
+outlet_phi_space_120 = (r>>4);
+SINE2TINTERP(p+2*1431655765UL,r)
+outlet_phi_space_240 = (r>>4);]]></code.krate>
+   </obj.normal>
+</objdefs>

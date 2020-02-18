@@ -1,0 +1,134 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/PIWT/gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d" name="gen_1" x="42" y="0">
+      <params/>
+      <attribs>
+         <text attributeName="function">
+            <sText><![CDATA[sqr(5*x)*sqr(11*x)*pow(hann(x),3)
++exp(-3.5f+3*tri(x+0.5f))*sat(1.5f*sin1(37*x))]]></sText>
+         </text>
+         <combo attributeName="size" selection="512"/>
+         <combo attributeName="location" selection="ExtRAM"/>
+      </attribs>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="406" y="14">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="25.0"/>
+         <frac32.u.map name="s" value="5.0"/>
+         <frac32.s.map name="r" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="532" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="126" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="238" y="154">
+      <params>
+         <frac32.u.map name="amp" value="4.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/PIWT/osc" uuid="181d129c-ec57-4f15-a551-dc821a6bb46f" name="osc_1" x="112" y="280">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="piwt" obj="gen_1"/>
+      </attribs>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="448" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="saw_1" x="350" y="308">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="238" y="504">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="54.0"/>
+         <frac32.u.map name="s" value="35.0"/>
+         <frac32.s.map name="r" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="336" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="392" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="osc_1" inlet="pitch"/>
+         <dest obj="saw_1" inlet="pitch"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="osc_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="osc_1" inlet="pm"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>371</x>
+      <y>150</y>
+      <width>1216</width>
+      <height>791</height>
+   </windowPos>
+</patch-1.0>

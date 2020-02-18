@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SeaBoardSendMixer6OutSHScale" uuid="9256eec6-d8ed-42ca-8ad1-eb6463883777">
+      <sDescription>6 output send K-rate mixer for Seaboard with latch function and rescale of remaining &quot;space&quot; on the exit value.</sDescription>
+      <author>Albert van der Zee</author>
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="Trigger"/>
+         <frac32 name="In"/>
+         <frac32.positive name="GainTimbre"/>
+         <frac32.positive name="GainColor"/>
+         <frac32.positive name="GainFrequency"/>
+         <frac32.positive name="GainReso"/>
+         <frac32.positive name="GainVCA"/>
+         <frac32.positive name="GainLFO"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="OutTimbre"/>
+         <frac32.bipolar name="OutColor"/>
+         <frac32.bipolar name="OutFrequency"/>
+         <frac32.bipolar name="OutReso"/>
+         <frac32.bipolar name="OutVCA"/>
+         <frac32.bipolar name="OutLFO"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;   int latch;
+float speedup; float speeddown;
+float rangeup; float rangedown;
+float out;]]></code.declaration>
+      <code.krate><![CDATA[if ((inlet_Trigger>0) && !ntrig) {latch = inlet_In; ntrig=1;
+rangeup =   (0x07FFFFFF - latch);
+rangedown = (latch - 0);
+speedup = (float) (134217728/(rangeup+1)) ;// add one to prevent divide by zero
+speeddown = (float) (134217728/(rangedown+1));// add one to prevent divide by zero 
+}
+if (!(inlet_Trigger>0)) {ntrig=0;}
+
+float reduced = inlet_In -latch;
+if(reduced>0) {out = (float) (reduced * speedup);}
+if(!(reduced>0)) {out = (float) (reduced * speeddown);}
+
+outlet_OutTimbre = ___SMMUL(out,inlet_GainTimbre)<<5;
+outlet_OutColor = ___SMMUL(out,inlet_GainColor)<<5;
+outlet_OutFrequency = ___SMMUL(out,inlet_GainFrequency)<<5;
+outlet_OutReso = ___SMMUL(out,inlet_GainReso)<<5;
+outlet_OutVCA = ___SMMUL(out,inlet_GainVCA)<<5;
+outlet_OutLFO = ___SMMUL(out,inlet_GainLFO)<<5;]]></code.krate>
+   </obj.normal>
+</objdefs>

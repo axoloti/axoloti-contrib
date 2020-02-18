@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="noisin" uuid="4ad36376-e633-426d-b555-061c38b0dae4">
+      <sDescription>noisy sine wave oscillator</sDescription>
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch>noisin.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.positive name="noise"/>
+         <frac32.positive name="amp"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="noise"/>
+         <frac32.u.map name="amp"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t p, dpr, dp;
+int32_t r;
+int32_t amp;]]></code.declaration>
+      <code.init><![CDATA[
+      amp = 0;
+      p = 0;
+r = 137 + GenerateRandomNumber();
+MTOFEXTENDED(0, dp);
+dpr = dp;]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(inlet_pitch + param_pitch, dp);
+int32_t namp = (inlet_amp + param_amp) << 1;
+int32_t mod  = (param_noise + inlet_noise) << 3;]]></code.krate>
+      <code.srate><![CDATA[p += dpr;
+
+// change amplitude when value is near zero
+if((p & 0x7FFFFFFFU) < dpr)
+  amp = namp;
+
+// change pitch when derivative is near zero(
+if(((p + 0x40000000U) & 0x7FFFFFFFU) < dpr)
+  dpr = ___SMMLA(dp, ___SMMUL(r = r * 69069 + 1, mod)<<2, dp);
+
+outlet_wave = ___SMMUL(amp, sine2t[p >> 20]);
+
+/*
+Phase += freq + inlet_freq;
+int32_t r;
+int32_t p2 = Phase + (inlet_phase<<4);
+SINE2TINTERP(p2,r)
+outlet_wave= (r>>4);
+*/]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,84 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb">
+      <sDescription>delay read, modulateable, linear interpolated</sDescription>
+      <author>Johannes Elliesen</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="time"/>
+         <frac32.bipolar name="mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="delayname"/>
+         <combo name="interpol">
+            <MenuEntries>
+               <string>none</string>
+               <string>2pt</string>
+               <string>3pt</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t lastTime;
+int32_t step;
+int32_t currentTime;
+int32_t readPosition;]]></code.declaration>
+      <code.init><![CDATA[lastTime = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t time = ___SMMUL(inlet_time, inlet_mod) + inlet_time;
+
+step = (time - lastTime)>>4;
+currentTime = lastTime;
+lastTime = time;
+readPosition = ((attr_delayname.writepos- BUFSIZE - 1)<<8);]]></code.krate>
+      <code.srate><![CDATA[currentTime += step;
+uint32_t readp = readPosition - (currentTime>>(19-attr_delayname.LENGTHPOW));
+
+// no interpolation
+#if attr_interpol == 0
+	outlet_out = attr_delayname.array[(readp>>8)&attr_delayname.LENGTHMASK]<<14;
+// linear (2pt) interpolation
+#elif attr_interpol == 1
+	uint32_t rint = readp>>8;			// integral part of delay time
+	uint32_t rfrac = readp & 0x000000FF; // fractional part of delay time in Q8 notation
+	int32_t dout1 = attr_delayname.array[rint&attr_delayname.LENGTHMASK]<<13;
+	int32_t dout2 = attr_delayname.array[(rint+1)&attr_delayname.LENGTHMASK]<<13;
+	outlet_out = ___SMMLA(rfrac<<23, (dout2 - dout1)<<1, dout1)<<1;
+// qubic (3pt) interpolation
+#elif attr_interpol == 2
+	uint32_t rint = readp>>8;			// integral part of delay time
+	uint32_t rfrac = readp & 0x000000FF; // fractional part of delay time in Q8 notation
+	// basic formula: y = ax^2 + bx + c
+	// a = 1/2*y3 - y2 + 1/2*y1
+	// b = -1/2*y3 + 2*y2 - 3/1*y1
+	// c = y1
+	// rearranged formula
+	// y = y1*c1 + y2*c2 + y3*c3
+	// c1 = 1 + 1/2*x^2 - 3/2*x
+	// c2 = -x^2 + 2x
+	// c3 = 1/2*x^2 - 1/2*x
+	int32_t x2 = (rfrac*rfrac); // x^2 in Q16 notation
+	int32_t x22 = x2 >> 1; // x^2 / 2
+	int32_t x12 = rfrac << 7; // 1/2 * x
+	// in Q16 notation
+	int32_t c1 = (1<<16) + (x22) - x12 - (rfrac<<8);
+	int32_t c2 = -x2 + (rfrac<<9);
+	int32_t c3 = (x22) - x12;
+	int32_t dout1 = attr_delayname.array[rint&attr_delayname.LENGTHMASK]<<14;
+	int32_t dout2 = attr_delayname.array[(rint+1)&attr_delayname.LENGTHMASK]<<14;
+	int32_t dout3 = attr_delayname.array[(rint+2)&attr_delayname.LENGTHMASK]<<14;
+	int32_t douttmp1 = ___SMMUL(dout1,c1<<14);
+	int32_t douttmp2 = ___SMMLA(dout2, c2<<14, douttmp1);
+	outlet_out = ___SMMLA(dout3, c3<<14, douttmp2)<<2;
+#endif
+
+readPosition += (1<<8);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,43 @@
+<objdefs>
+   <obj.normal id="axomo" uuid="e2788a55-31db-4671-b8c3-a41e09ac0afa">
+      <sDescription>with script you can convert value to midi and send it to Maple Mini.</sDescription>
+      <author>Paul</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.positive name="led1"/>
+         <frac32.positive name="led2"/>
+         <frac32.positive name="led3"/>
+         <frac32.positive name="led4"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="script"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t led1,led2,led3,led4;
+attr_script
+msg_t ThreadX2(){
+  setup();
+  while(!chThdShouldTerminate()){
+     loop();
+     chThdSleepMilliseconds(1);
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;]]></code.declaration>
+      <code.init><![CDATA[led1=0;led2=0;led3=0;led4=0;
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);]]></code.dispose>
+      <code.krate><![CDATA[this->led1 = inlet_led1;
+this->led2 = inlet_led2;
+this->led3 = inlet_led3;
+this->led4 = inlet_led4;]]></code.krate>
+   </obj.normal>
+</objdefs>

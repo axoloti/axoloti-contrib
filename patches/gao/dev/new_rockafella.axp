@@ -1,0 +1,269 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="slicesbuf" x="14" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/inconfig" uuid="9a80ef3c19f2a8f81da3a3b7c1c44d18126b97d9" name="inconfig_1" x="154" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="gain" selection="12dB"/>
+         <combo attributeName="boost" selection="0dB"/>
+         <combo attributeName="mode" selection="Stereo"/>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="slicesind" x="14" y="84">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8"/>
+         <text attributeName="init">
+            <sText><![CDATA[for(int i = 0; i < LENGTH; i++){
+	array[i] = 0;
+}
+]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="slices" x="266" y="154">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="trigger" x="350" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="-36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="pitch" x="448" y="154">
+      <params>
+         <frac32.s.map name="value" value="7.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="loopsize" x="518" y="154">
+      <params>
+         <frac32.s.map name="value" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="chunksize" x="588" y="154">
+      <params>
+         <frac32.u.map name="value" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="658" y="154">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/sample/beatslicer2" uuid="47777fb2-ad5a-456c-bd31-cdb216b62dcc" name="beatslicer2_1" x="112" y="266">
+      <params>
+         <bool32.mom name="delete_last" value="0"/>
+         <int32 name="power_db_threshold" value="10"/>
+         <int32 name="delta_power_db" value="20"/>
+         <int32 name="silence_db_threshold" value="14"/>
+      </params>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+         <text attributeName="conf">
+            <sText><![CDATA[timeconstant = 175.f;
+// confmode = 1;]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279" name="v1" x="462" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="slicesbuffer" obj="slicesbuf"/>
+         <objref attributeName="slicesindex" obj="slicesind"/>
+      </attribs>
+      <object id="patch/object" uuid="e0bfa327-cdca-4650-88d1-69557d8fc279">
+         <sDescription>spTimeExpansion
+
+Slice Player (beatslicer companion) with Time Compression/Expansion with looped sampling
+See puredata help patch B14.sampler.rockafella.pd.</sDescription>
+         <author>Jérôme Burlando</author>
+         <license>BSD</license>
+         <inlets>
+            <int32 name="nslice" description=""/>
+            <frac32 name="pitch" description=""/>
+            <bool32.rising name="start"/>
+            <frac32 name="loopspeed" description=""/>
+            <frac32.positive name="chunksize"/>
+            <bool32 name="retrig"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="o"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="slicesbuffer"/>
+            <objref name="slicesindex"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int64_t pos1;
+int64_t pos2;
+int64_t pos3;
+int64_t pos4;
+int64_t pos5;
+uint32_t beg;
+uint32_t end;
+int32_t rfl; // repetition frequency of the loop
+int32_t fch; // chunk frequency
+int32_t f;
+uint32_t nslice;
+uint32_t chunksize;
+uint32_t chunksize2;
+uint32_t coef;
+uint8_t play;
+uint8_t pstart;]]></code.declaration>
+         <code.init><![CDATA[pos1 = 0;
+pos2 = 0;
+pos3 = 0;
+pos4 = 0;
+pos5 = 0;
+beg = 0;
+end = 0;
+rfl = 0;
+f = 0;
+nslice = 0xFFFF;
+chunksize = 0;
+chunksize2 = 0;
+coef = 0;
+play = 0;
+pstart = 0;]]></code.init>
+         <code.krate><![CDATA[if(inlet_nslice < attr_slicesindex.array[0]){
+	if ((inlet_start>0) && !pstart && (inlet_retrig || !play)) {
+		pstart = 1;
+		play = 1;
+		if(inlet_nslice == 0) {
+      		beg = 0;
+      		end = attr_slicesindex.array[1];
+   		} else {
+      		beg = (uint64_t)attr_slicesindex.array[inlet_nslice];
+      		end = attr_slicesindex.array[inlet_nslice+1];
+   		}
+   		pos1 = ((uint64_t)beg)<<32;
+   		pos4 = ((inlet_chunksize>>20)*48)>>1;
+	} else if (!(inlet_start>0)) {
+     	pstart = 0;
+   	}
+}
+
+MTOFEXTENDED(inlet_loopspeed + 80179668,rfl); // repetition frequency of the loop
+MTOFEXTENDED(inlet_pitch + 80179668,f);
+fch = f-rfl;]]></code.krate>
+         <code.srate><![CDATA[int32_t r1;
+int32_t r2;
+int32_t pos2_32 = pos2>>32;
+int32_t pos3_32 = pos3>>32;
+int32_t pos4_32 = pos4>>32;
+int32_t pos5_32 = pos5>>32;
+int32_t phase1 = pos2_32*coef;
+HANNING2TINTERP(phase1<<5,r1)
+int32_t phase2 = pos4_32*coef;
+HANNING2TINTERP(phase2<<5,r2)
+
+
+outlet_o = 0;
+
+if(play){
+	uint32_t o1 = ___SMMUL(attr_slicesbuffer.array[pos3_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos3)>>1));
+	o1 = ___SMMLA(attr_slicesbuffer.array[(pos3_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos3)>>1),o1);
+	uint32_t o2 = ___SMMUL(attr_slicesbuffer.array[pos5_32]<<attr_slicesbuffer.GAIN,INT32_MAX-(((uint32_t)pos5)>>1));
+	o2 = ___SMMLA(attr_slicesbuffer.array[(pos5_32)+1]<<attr_slicesbuffer.GAIN,(((uint32_t)pos5)>>1),o2);
+	outlet_o = (___SMMUL(o1, r1>>4)<<5) + (___SMMUL(o2, r2>>4)<<5); 
+
+	pos1 += ((int64_t)rfl)<<4;
+	if((pos1>>32) > end) play = 0;
+
+	pos2 += ((int64_t)fch)<<4;
+	if(abs(pos2_32) > chunksize){
+		pos2 = 0;
+		chunksize = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize;
+	}
+	pos4 += ((int64_t)fch)<<4;
+	if(abs(pos4_32) > chunksize2){
+		pos4 = 0;
+		chunksize2 = 48*(inlet_chunksize>>20);
+		coef = INT32_MAX/chunksize2;
+	}
+
+	pos3 = pos1+pos2;
+	pos5 = pos1+pos4;
+	if(((pos3_32) > end) || (pos3 < 0)){
+		pos3 = 0;
+		play = 0;
+	}
+	if(((pos5_32) > end) || (pos5 < 0)) pos5 = 0;
+}]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="644" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="slices" outlet="out"/>
+         <dest obj="v1" inlet="nslice"/>
+      </net>
+      <net>
+         <source obj="pitch" outlet="out"/>
+         <dest obj="v1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="beatslicer2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="v1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="chunksize" outlet="out"/>
+         <dest obj="v1" inlet="chunksize"/>
+      </net>
+      <net>
+         <source obj="trigger" outlet="wave"/>
+         <dest obj="v1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="loopsize" outlet="out"/>
+         <dest obj="v1" inlet="loopspeed"/>
+      </net>
+      <net>
+         <source obj="retrig" outlet="o"/>
+         <dest obj="v1" inlet="retrig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>55</x>
+      <y>24</y>
+      <width>1311</width>
+      <height>744</height>
+   </windowPos>
+</patch-1.0>

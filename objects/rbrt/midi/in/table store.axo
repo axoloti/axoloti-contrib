@@ -1,0 +1,62 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="table store" uuid="88b231f8-706b-4133-96c3-056a1d8759cf">
+      <sDescription>writes midi controler data to a table.set the start of the range of the controlers to read out with &apos;startcc&apos;,the length of the range with &apos;length&apos;.
+the data is written to the table starting at &apos;offset&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>launchpad.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset"/>
+         <int32 name="startcc"/>
+         <bool32.risingfalling name="active"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="chtrig" description="pulse if any cc value changes"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="offset">
+            <MinValue i="0"/>
+            <MaxValue i="1000000"/>
+         </int32>
+         <bool32.tgl name="active"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="startcc" MinValue="0" MaxValue="127" DefaultValue="0"/>
+         <spinner name="length" MinValue="1" MaxValue="128" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t cc;
+int8_t cv;
+uint8_t prevcv;
+uint8_t prevcc;
+
+uint8_t end;
+uint8_t start;
+uint32_t offset;
+
+bool chtrig;]]></code.declaration>
+      <code.init><![CDATA[prevcv=  0;
+prevcc = 0;
+chtrig = 0;]]></code.init>
+      <code.krate><![CDATA[start = attr_startcc + inlet_startcc;
+end = start + attr_length;
+offset = (inlet_offset + param_offset);
+	
+
+if (((cc >= start) && (cc < end)) && (inlet_active || param_active)) {
+
+if ((cv != prevcv)||(cc != prevcc)){
+      attr_table.array[(cc - start) + offset]= ((cv << 20) >>attr_table.GAIN);
+      prevcv = cv; 
+      prevcc = cc;
+      chtrig = 1;   
+   }  
+
+   outlet_chtrig = chtrig;
+  chtrig = 0;
+}]]></code.krate>
+      <code.midihandler><![CDATA[if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {cc = data1;cv = data2;}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

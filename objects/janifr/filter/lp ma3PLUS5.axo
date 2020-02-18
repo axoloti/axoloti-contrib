@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lp ma3+5" uuid="367b2c66-d35b-49f7-a7e5-8980d9594f02">
+      <sDescription>Dual serial moving average low pass filter with window sizes 5 and 3. Attenuation -3dB at 4 kHz and -6 dB at 5 kHz.</sDescription>
+      <author>Jani Frilander</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t buf5[5];
+int32_t buf3[3];
+int32_t pos5;
+int32_t pos3;
+int32_t sum5;
+int32_t sum3;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<5;i++)
+	buf5[i]=0;
+for(i=0;i<3;i++)
+	buf3[i]=0;
+
+pos5=0;
+pos3=0;
+sum5=0;
+sum3=0;]]></code.init>
+      <code.srate><![CDATA[sum5+=inlet_in;
+pos5++;
+if (pos5>4)
+	pos5=0;
+sum5-=buf5[pos5];
+buf5[pos5]=inlet_in;
+
+sum3+=sum5;
+pos3++;
+if (pos3>2)
+	pos3=0;
+sum3-=buf3[pos3];
+buf3[pos3]=sum5;
+
+outlet_out=sum3>>4;]]></code.srate>
+   </obj.normal>
+</objdefs>

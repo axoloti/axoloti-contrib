@@ -1,0 +1,158 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="osc" uuid="185d179c-ac57-4f15-a551-dc821a6bb46f">
+      <sDescription>XT osc, needs to connect to a XT.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="freq offset"/>
+         <frac32buffer.bipolar name="pm"/>
+         <bool32 name="disable" description="disables the object"/>
+         <bool32 name="disto" description="use the waveform as a distortion"/>
+         <frac32.bipolar name="disto offset"/>
+         <frac32 name="wave"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="xt"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t p;  // phase
+int32_t dp;  // delta phase aka freq
+int32_t x0, x1;
+int32_t I1_1_0;
+int32_t I1_1_1;
+int32_t kMI;  // Modulation Index
+int32_t aMI, dMI;  // interp Modulation Index
+int32_t alpha;
+int iw0, iw1;
+int32_t *v0;
+int32_t *Iv0;
+int32_t *v1;
+int32_t *Iv1;
+]]></code.declaration>
+      <code.init><![CDATA[
+p = 0;
+dp = 1;
+x0 = 0;
+x1 = 1;
+aMI = dMI = kMI = 0;
+I1_1_0 = 0;
+I1_1_1 = 0;
+iw0 = -1; iw1 = -1;
+alpha = 0;
+]]></code.init>
+      <code.krate><![CDATA[
+if(!inlet_disable){
+  MTOFEXTENDED(param_pitch + inlet_pitch, dp);
+  dp += ___SMMUL(0x01000000, inlet_freq_space_offset);
+  dp >>= 32 - 20 - attr_xt.LENGTHPOW;
+  // (need to calculate x0 - x1 even with over modulation)
+  const int rightShiftPM = 9 - attr_xt.LENGTHPOW;
+  const int shiftDisto = attr_xt.LENGTHPOW - 4;
+
+  int32_t w0 = ((inlet_wave & 0x07FFFFFF)>>6) * attr_xt.NBWAVES; //q21
+  int newIw0 = w0>>21;
+
+  if(newIw0 == iw0){ //continuity
+    int32_t dAlpha = (((w0 & ((1<<21)-1))<<(31-21)) - alpha) >> 4; //q31
+    for(int j = 0; j < BUFSIZE; j++){
+      alpha += dAlpha;
+      if(inlet_disto){
+        p = (inlet_disto_space_offset >> 4) << shiftDisto;
+      }else{
+        p += dp; // phase increment
+        if(p >= 0x40000000){
+           p -= attr_xt.LENGTH << 20; // length of one cycle
+          x0 -= attr_xt.LENGTH << 20;   // p, x0 and x1 must be consistent
+        }
+      }
+      x1 = x0;
+      x0 = p + ((inlet_pm[j] << 3) >> rightShiftPM);
+
+      int32_t _a  = (x0 & 0x000FFFFF) << 11;
+      uint32_t _i = (x0 & (attr_xt.LENGTHMASK << 20)) >> 20;
+      if(abs(x0 - x1) < 256){
+        int32_t val0 = attr_xt.I0p30(v0, _i, _a); 
+        int32_t val1 = attr_xt.I0p30(v1, _i, _a);
+        outlet_wave[j] = ___SMMLA(alpha,   val1 - val0, val0 >> 1)<<1;
+        I1_1_0 = attr_xt.I1p30(v0, Iv0,  _i, _a);
+        I1_1_1 = attr_xt.I1p30(v1, Iv1,  _i, _a);
+      } else {
+        float inv = ((float)(1<<27)) / ((float)(x0 - x1));
+        int32_t I1_0_0 = attr_xt.I1p30(v0, Iv0,  _i, _a);
+        int32_t diff0 = I1_0_0 - I1_1_0;
+        I1_1_0 = I1_0_0;
+        int32_t I1_0_1 = attr_xt.I1p30(v1, Iv1,  _i, _a);
+        int32_t diff1 = I1_0_1 - I1_1_1;
+        I1_1_1 = I1_0_1;
+        //                        q31      q27           q26 
+        int32_t diff = ___SMMLA(alpha,   diff1 - diff0, diff0 >> 1)<<1;
+        outlet_wave[j] = (int32_t)(diff * inv);
+      }
+    }
+  } else {//table change
+    iw0 = newIw0;
+    v0 = attr_xt.getV(iw0);
+    Iv0 = attr_xt.getIv(iw0);
+    iw1 = (iw0 + 1) % attr_xt.NBWAVES;
+    v1 = attr_xt.getV(iw1);
+    Iv1 = attr_xt.getIv(iw1);
+
+    alpha = (w0 & ((1<<21)-1)) << (31-21);
+    I1_1_0 = attr_xt.I1p30(v0, Iv0, x0);
+    I1_1_1 = attr_xt.I1p30(v1, Iv1, x0);
+    for(int j = 0; j < BUFSIZE; j++){
+      if(inlet_disto){
+        p = (inlet_disto_space_offset >> 4) << shiftDisto;
+      }else{
+        p += dp; // phase increment
+        if(p >= 0x40000000){
+           p -= attr_xt.LENGTH << 20; // length of one cycle
+          x0 -= attr_xt.LENGTH << 20;   // p, x0 and x1 must be consistent
+        }
+      }
+      x1 = x0;
+      x0 = p + ((inlet_pm[j] << 3) >> rightShiftPM);
+
+      int32_t _a  = (x0 & 0x000FFFFF) << 11;
+      uint32_t _i = (x0 & (attr_xt.LENGTHMASK << 20)) >> 20;
+      if(abs(x0 - x1) < 256){
+        int32_t val0 = attr_xt.I0p30(v0, _i, _a); 
+        int32_t val1 = attr_xt.I0p30(v1, _i, _a);
+        outlet_wave[j] = ___SMMLA(alpha,   val1 - val0, val0 >> 1)<<1;
+        I1_1_0 = attr_xt.I1p30(v0, Iv0,  _i, _a);
+        I1_1_1 = attr_xt.I1p30(v1, Iv1,  _i, _a);
+      } else {
+        float inv = ((float)(1<<27)) / ((float)(x0 - x1));
+        int32_t I1_0_0 = attr_xt.I1p30(v0, Iv0,  _i, _a);
+        int32_t diff0 = I1_0_0 - I1_1_0;
+        I1_1_0 = I1_0_0;
+        int32_t I1_0_1 = attr_xt.I1p30(v1, Iv1,  _i, _a);
+        int32_t diff1 = I1_0_1 - I1_1_1;
+        I1_1_1 = I1_0_1;
+        //                        q31      q27           q26 
+        int32_t diff = ___SMMLA(alpha,   diff1 - diff0, diff0 >> 1)<<1;
+        outlet_wave[j] = (int32_t)(diff * inv);
+      }
+    }
+  }
+} else { //disabled
+  if(inlet_disto){
+    for(int j = 0; j < BUFSIZE; j++){
+      outlet_wave[j] = inlet_pm[j];
+    }
+  }else{
+    for(int j = 0; j < BUFSIZE; j++){
+      outlet_wave[j] = 0;
+    }
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

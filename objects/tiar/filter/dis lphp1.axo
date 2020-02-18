@@ -1,0 +1,37 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dis lphp1" uuid="38e767d14f9175253a0e6a1d9d55ca41e0e61971">
+      <sDescription>Dissymetric 1st order filter
+      type = 0: rate switched on output sign (à la Salino)
+      type = 1: rate switched on rising/decaying (à la Ralond)
+      Used with a square wave input it models waveshapers found in early string machines.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>dis lphp1.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="freqUp" description="cutoff"/>
+         <frac32 name="freqDown" description="cutoff"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="lp" description="low pass"/>
+         <frac32buffer name="hp" description="high pass"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="freqUp" noLabel="false"/>
+         <frac32.u.map name="freqDown" noLabel="false"/>
+         <frac32.u.map name="type" noLabel="false"/>
+         <frac32.s.map name="bias" noLabel="false"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t y, ratef, ratef2;]]></code.declaration>
+      <code.init><![CDATA[y = ratef = ratef2 = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t rateUp, rateDown;
+MTOF(param_freqUp   + inlet_freqUp,   rateUp);
+MTOF(param_freqDown + inlet_freqDown, rateDown);
+int32_t bias = param_bias >> 6;]]></code.krate>
+      <code.srate><![CDATA[int32_t ref = ___SMMLA(inlet_in, param_type, bias) << 5;
+outlet_lp = y = ___SMMLA((inlet_in - y) << 2, ((y < ref) ? rateUp : rateDown), y);
+outlet_hp = (inlet_in - y) >> 1;]]></code.srate>
+   </obj.normal>
+</objdefs>

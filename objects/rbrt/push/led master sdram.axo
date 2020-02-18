@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led master sdram" uuid="34fad619-5cf7-4263-a6be-4d72d21d0e17">
+      <license>GPL</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="thin" MinValue="10" MaxValue="300" DefaultValue="100"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t count;
+uint8_t ROW;
+uint8_t *array;
+bool LOCKED;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _array[attr_poly][316]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+
+uint8_t init [8]{240, 71, 127, 21,0,0,69,0};
+uint8_t offset [8] = {8,17,25,34,42,51,59,68};
+memset (&array[0],32,308);
+memcpy (&array[308],offset,8);
+int i;
+for (i=0;i<4;i++){
+	memcpy (&array[i*77],init,8);
+	array [(i*77)+76] = 247;
+	array [(i*77)+4] = i+24;	
+}]]></code.init>
+      <code.krate><![CDATA[if ((ROW && !count) && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){	
+			MidiSendSysEx(MIDI_DEVICE_USB_HOST,2,&array[(ROW-1) *77],77);
+			ROW = 0;
+			count = attr_thin;
+	}	
+if (count) count --;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,82 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="morph" uuid="220d3b9c-89cd-481d-a2f1-c6692aa95283">
+      <sDescription>2-pole resonant morphing filter (biquad). You can morph between lowpass, bandpass and highpass.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+         <frac32 name="mode" description="-64: lowpass ; 0: bandpass; 64:highpass"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map.filterq name="reso"/>
+         <frac32.s.map name="mode" description="-64: lowpass ; 0: bandpass; 64:highpass"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_coefficients lpc;
+biquad_coefficients bpc;
+biquad_coefficients hpc;
+
+biquad_state bs;
+biquad_coefficients bc;
+
+
+
+static __attribute__ ((noinline)) int32_t biquad_dsp_sample(biquad_state *state,
+                                                  biquad_coefficients *coefs,
+                                                  int32_t filterinput) {
+  
+    int32_t accu = ___SMMUL(coefs->cxn_0, filterinput);
+    accu = ___SMMLA(coefs->cxn_1, state->filter_x_n1, accu);
+    accu = ___SMMLA(coefs->cxn_2, state->filter_x_n2, accu);
+    accu = ___SMMLS(coefs->cyn_1, state->filter_y_n1, accu);
+    accu = ___SMMLS(coefs->cyn_2, state->filter_y_n2, accu);
+    
+    int32_t filteroutput;
+    filteroutput = accu << 4;
+    
+    state->filter_x_n2 = state->filter_x_n1;
+    state->filter_x_n1 = filterinput;
+    state->filter_y_n2 = state->filter_y_n1;
+    state->filter_y_n1 = filteroutput;
+    
+    return __SSAT(filteroutput, 28);
+    
+}
+
+
+static __attribute__ ((noinline)) void biquad_morph_coefs(biquad_coefficients *incoefs1, biquad_coefficients *incoefs2, biquad_coefficients *outcoefs, int32_t morph)
+{
+		outcoefs->cyn_1 = ___SMMLA(incoefs2->cyn_1-incoefs1->cyn_1<<2,morph<<3,incoefs1->cyn_1);
+      	outcoefs->cyn_2 = ___SMMLA(incoefs2->cyn_2-incoefs1->cyn_2<<2,morph<<3,incoefs1->cyn_2);
+      	outcoefs->cxn_0 = ___SMMLA(incoefs2->cxn_0-incoefs1->cxn_0<<2,morph<<3,incoefs1->cxn_0);
+      	outcoefs->cxn_1 = ___SMMLA(incoefs2->cxn_1-incoefs1->cxn_1<<2,morph<<3,incoefs1->cxn_1);
+      	outcoefs->cxn_2 = ___SMMLA(incoefs2->cxn_2-incoefs1->cxn_2<<2,morph<<3,incoefs1->cxn_2);
+}]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+MTOF(param_pitch + inlet_pitch,freq);
+int32_t mode = __SSAT(inlet_mode+param_mode,28);
+
+      if (mode>0) //morph between bp and hp
+      {      	
+      	biquad_bp_coefs(&bpc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      	biquad_hp_coefs(&hpc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      	biquad_morph_coefs(&bpc,&hpc,&bc,mode);
+      }
+      else	//morph between lp and bp
+      {      	
+      	biquad_lp_coefs(&lpc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+     	biquad_bp_coefs(&bpc,freq,INT_MAX - (__USAT(inlet_reso + param_reso,27)<<4));
+      	biquad_morph_coefs(&bpc,&lpc,&bc,-mode);
+      }]]></code.krate>
+      <code.srate><![CDATA[outlet_out = biquad_dsp_sample(&bs,&bc,inlet_in);]]></code.srate>
+   </obj.normal>
+</objdefs>

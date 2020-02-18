@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="%latch" uuid="e5bf3953ead204874692af5d85c0e44a027g74f1a027g74f1">
+      <sDescription>probabilty latch</sDescription>
+      <author>Philoop</author>
+      <license>BSD</license>
+      <helpPatch>prob.axh</helpPatch>
+      <inlets>
+         <int32 name="i"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="prob" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int ntrig;
+int latch;
+int mtrig;
+int ptrig;
+int pval;]]></code.declaration>
+      <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
+      ntrig = 0;
+
+      latch = 0;
+      ptrig = 0;
+	  pval = 0;
+	  mtrig = 0;]]></code.init>
+      <code.krate><![CDATA[// change
+if ((pval != inlet_i)&(!ptrig)) { 
+  pval = inlet_i;
+  ptrig = 1;
+} else {
+  ptrig = 0;
+} 
+     //prob
+if ((ptrig>0) && !ntrig) { val = (int32_t)(GenerateRandomNumber())>>4; ntrig=1;}
+      else if (!(ptrig>0)) ntrig=0;
+
+      //latch
+      if (((param_prob>val)>0) && !mtrig) {latch = inlet_i; mtrig=1;}
+      if (!((param_prob>val)>0)) mtrig=0; 
+outlet_o= ((param_prob>val)>0)?latch:inlet_i;]]></code.krate>
+   </obj.normal>
+</objdefs>

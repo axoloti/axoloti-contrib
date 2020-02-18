@@ -1,0 +1,68 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="randomEnvLooper" uuid="c3ae4ff8-28b6-4440-900b-11be6b9179d3">
+      <sDescription>exponential smooth with separate randomised rise and fall time</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="rate"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="output"/>
+         <frac32 name="r1"/>
+         <frac32 name="r2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="max"/>
+         <frac32.u.map name="min"/>
+         <frac32.s.map.lfopitch name="smooth"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t gate;
+int64_t rnd1;
+int64_t rnd2;
+int64_t rnd3;
+int64_t rnd4;
+int ntrig1;
+int32_t gote;
+int32_t smooth1;
+int32_t smooth2;]]></code.declaration>
+      <code.init><![CDATA[   val = 0;
+rnd1 = (int32_t)(GenerateRandomNumber())>>4;
+rnd2 = (int32_t)(GenerateRandomNumber())>>4;
+ntrig1 = 0;
+smooth1=0;
+smooth2=0;]]></code.init>
+      <code.krate><![CDATA[   if ((gate==0) && !ntrig1) { rnd1 = ((int32_t)(GenerateRandomNumber())>>5)+(1<<26);rnd2 = ((int32_t)(GenerateRandomNumber())>>5)+(1<<26); ntrig1=1;}
+   else if (!((gate)>0)) {ntrig1=0;}
+
+ rnd3=___SMMUL(rnd1<<3,(param_max-param_min)<<2)+param_min+inlet_rate;  
+ rnd4=___SMMUL(rnd2<<3,(param_max-param_min)<<2)+param_min+inlet_rate;    
+rnd3=rnd3>0?rnd3:-rnd3;
+rnd4=rnd4>0?rnd4:-rnd4;
+rnd3=((1<<27)-rnd3)>0?(1<<27)-rnd3:-(1<<27)+rnd3;
+rnd4=((1<<27)-rnd4)>0?(1<<27)-rnd4:-(1<<27)+rnd4;
+rnd3=(1<<27)-rnd3;
+rnd4=(1<<27)-rnd4;
+   int32_t f;
+   MTOF(param_smooth,f);
+   smooth1 = ___SMMLA((rnd3-smooth1)<<1,f,smooth1);
+   smooth2 = ___SMMLA((rnd4-smooth2)<<1,f,smooth2);
+   
+   
+   
+   if (gate>val){      val = ___SMMLA(val-gate, (-1<<27)+smooth1,val);}
+      else {val = ___SMMLA(val-gate,(-1<<27)+smooth2,val);}
+   outlet_out = val;
+
+if((val>=gate-10000000)&&(val<=gate+10000000))
+{gate=(gate>0?0:(1<<27));}
+
+outlet_r1=smooth1;
+outlet_r2=smooth2;
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

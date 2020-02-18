@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ratios235" uuid="ef139e0b-c9f1-4a3c-a777-16eeb505fa95">
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="rate"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="rate"/>
+         <int32 name="total">
+            <MinValue i="4"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float32_t A[10];]]></code.declaration>
+      <code.init><![CDATA[A[0]=1;
+A[1]=(float32_t)6/5;
+A[2]=(float32_t)5/4;
+A[3]=(float32_t)4/3;
+A[4]=(float32_t)7/5;
+A[5]=(float32_t)3/2;
+A[6]=(float32_t)8/5;
+A[7]=(float32_t)5/3;
+A[8]=(float32_t)7/4;
+A[9]=(float32_t)9/5;]]></code.init>
+      <code.krate><![CDATA[int32_t select=___SMMUL(param_rate+inlet_rate<<2,param_total-1<<3);
+int32_t octave=(select/10)-(select>=0?0:1);
+	select=select-octave*10;
+	if(octave>=0){
+	outlet_o1=inlet_i1*A[select]*(1<<octave);}
+	else{
+	outlet_o1=inlet_i1*A[select]/(1<<-octave);}]]></code.krate>
+   </obj.normal>
+</objdefs>

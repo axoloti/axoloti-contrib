@@ -1,0 +1,59 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="step read H 4" uuid="0223c895-8944-4e0e-8e30-a37392a6d241">
+      <sDescription>reads a block of 4 elements from a table ,starting at &apos;step&apos;.
+&apos;trig&apos; = puts out a pulse if the first element of the block is greater than 0.
+&apos;h0&apos; - &apos;h3&apos; = the 4 values at index &apos;step&apos; + index of the output,
+IF &apos;trig&apos; is &apos;true&apos;.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset" description="offset"/>
+         <int32.positive name="step" description="index"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig" description="trigger if value &gt; 0 "/>
+         <frac32 name="h0"/>
+         <frac32 name="h1"/>
+         <frac32 name="h2"/>
+         <frac32 name="h3"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="offset" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="1000000000"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int prev;
+int offset;
+int h0;
+int h1;
+int h2;
+int h3;]]></code.declaration>
+      <code.krate><![CDATA[offset = (inlet_offset + param_offset);
+
+
+if ((inlet_step != prev ) && ((attr_table.array[__USAT((inlet_step+ offset),attr_table.LENGTHPOW)]<<attr_table.GAIN) > 0 )) {
+	outlet_trig = 1;
+     h0 = attr_table.array[__USAT((inlet_step+ offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+	outlet_h0 = h0;
+	h1 = attr_table.array[__USAT((inlet_step+ offset +1),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+	outlet_h1 = h1;
+	h2 = attr_table.array[__USAT((inlet_step+ offset +2),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+	outlet_h2 = h2;
+	h3 = attr_table.array[__USAT((inlet_step+ offset +3),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+	outlet_h3 = h3;
+}
+else {outlet_trig = 0;
+outlet_h0 = h0;
+outlet_h1 = h1;
+outlet_h2 = h2;
+outlet_h3 = h3;
+}
+prev = inlet_step;]]></code.krate>
+   </obj.normal>
+</objdefs>

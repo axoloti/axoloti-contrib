@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="right block 2 set" uuid="3d4752f4-bce7-41c9-bc7f-2c53c33d80ef">
+      <license>GPL</license>
+      <inlets>
+         <int32.positive name="b0"/>
+         <int32.positive name="b1"/>
+         <int32.positive name="b2"/>
+         <int32.positive name="b3"/>
+         <int32.positive name="b4"/>
+         <int32.positive name="b5"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t in [6];
+uint8_t prev [6];
+uint8_t i;
+uint8_t doit;
+uint8_t count;]]></code.declaration>
+      <code.krate><![CDATA[in [4] = inlet_b0;
+in [5] = inlet_b1;
+in [2] = inlet_b2;
+in [3] = inlet_b3;
+in [0] = inlet_b4;
+in [1] = inlet_b5;
+
+
+if (!doit) {
+		if (in[i] != prev[i]) {
+			prev[i] = in [i];
+			doit = i + 1;	
+		}
+		i ++;
+		i = i%6;
+}
+
+	if (doit && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
+		MidiSend3(MIDI_DEVICE_USB_HOST,2, MIDI_CONTROL_CHANGE,doit + 109,in [doit -1]);
+		prev [doit-1] = in [doit -1];
+		doit = 0; 
+		count = 50;		
+		}
+
+if (count) count --;]]></code.krate>
+   </obj.normal>
+</objdefs>

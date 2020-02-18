@@ -1,0 +1,148 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="delayModPing" uuid="a250fc6b-5d6a-4e7a-8650-f6846f85432a">
+      <sDescription>Ping-pong delay with time-modulation
+(use in combination with 2 &quot;delay write&quot; modules. One for left, one for right. rec1-&gt;delay left. rec2-&gt;delay right. And enter name of delay left into delayname1 and delay right into delayname2)
+(use in combination with timeSpread module (sss-&gt;delay folder) to make rational division between left&amp;right time)
+(use in combination with Phi-delay-pow-out module and Clock2Timing module (sss-&gt;timers folder) to sync to host tempo)
+
+
+-timeTotal sets total time of left+right delay time.
+-timedivide sets the ratio between left and right delay time.
+-rate sets the modulation rate of the internal LFO/OSC (internal auto adjusting to frequency). Scale is 2x the normal range of oscillators/LFO&apos;s.
+-timewidth sets modulation width of the total time.
+-divwidth sets modulation width of the ratio between left and right time.
+-feedback feeds the outputs back into the rec-outputs, but left&amp;right swapped.
+-thru controles the volume of the input audio into the audio outputs.</sDescription>
+      <author>Remco van der Mpst</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="audio"/>
+         <frac32 name="timeTotal"/>
+         <frac32 name="timeDivide"/>
+         <frac32 name="feedback"/>
+         <frac32 name="thru"/>
+         <frac32.bipolar name="rate"/>
+         <frac32 name="timewidth"/>
+         <frac32 name="divwidth"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out1" description="wave"/>
+         <frac32buffer name="out2"/>
+         <frac32buffer name="rec1"/>
+         <frac32buffer name="rec2"/>
+         <frac32buffer name="mod"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="timeTotal"/>
+         <frac32.s.map name="timeDivide"/>
+         <frac32.s.map name="rate"/>
+         <frac32.s.map name="timewidth"/>
+         <frac32.s.map name="divwidth"/>
+         <frac32.s.map name="feedback"/>
+         <frac32.s.map name="thru"/>
+      </params>
+      <attribs>
+         <objref name="delayname1"/>
+         <objref name="delayname2"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t out1;
+int32_t out2;
+int32_t timeTotal;
+int32_t timeDivide;
+int32_t timediva;
+int32_t invtime;
+int32_t timeA;
+int32_t timeB;
+
+int32_t ratu;
+int32_t freq;
+int32_t phase;
+int32_t _step;
+int32_t _prev;
+int32_t _i;
+int32_t sine;
+int32_t phr;
+int32_t timeofsA;
+int32_t timeofsB;
+int32_t timewidth;
+int32_t timewidta;
+int32_t rate;
+int32_t divofs;
+int32_t divwidth;
+int32_t feedback;
+int32_t thru;]]></code.declaration>
+      <code.krate><![CDATA[rate=inlet_rate+param_rate;
+
+if(rate>0)
+{
+	ratu=(rate<<1)-(1<<27);
+}
+else
+{
+	ratu=(rate<<1)-(1<<24);
+}
+
+   MTOFEXTENDED(ratu,freq);
+if(rate<0)
+{
+phase+=freq;
+   _step = (phase - _prev)>>4;
+_i = _prev;
+   _prev = phase;
+}
+
+feedback=inlet_feedback+param_feedback;
+thru=inlet_thru+param_thru;]]></code.krate>
+      <code.srate><![CDATA[if(rate>0)
+{
+phase+=freq;
+SINE2TINTERP(phase,sine)
+}
+else
+{
+	phr=phase;
+	phase= _i;
+   _i += _step>>5;
+   SINE2TINTERP(phase,sine)
+
+   phase=phr;
+}
+   sine=sine>>1;
+
+timewidth=param_timewidth+inlet_timewidth;
+timewidta=___SMMUL(timewidth<<3,timewidth<<2);
+timewidta=___SMMUL(timewidta<<3,timewidth<<2);
+timeofsA=___SMMUL(timewidta<<3,sine>>5);
+timeofsB=___SMMUL(timewidta<<3,-sine>>5);
+
+divwidth=param_divwidth+inlet_divwidth;
+divofs=___SMMUL(divwidth<<3,sine>>5);
+
+
+
+timeTotal=param_timeTotal+inlet_timeTotal;
+timeDivide=param_timeDivide+inlet_timeDivide+divofs;
+
+timediva=(((timeDivide>>1)+(1<<26)));
+invtime=(1<<27)-timediva;
+timeA=___SMMUL(timeTotal<<3,timediva<<2)+timeofsA;
+timeB=___SMMUL(timeTotal<<3,invtime<<2)+timeofsB;
+      
+      
+      uint32_t delay1 = attr_delayname1.writepos - (__USAT(timeA,27)>>(27-attr_delayname1.LENGTHPOW)) - BUFSIZE + buffer_index;
+      out1= attr_delayname1.array[delay1 & attr_delayname1.LENGTHMASK]<<14;
+      uint32_t delay2 = attr_delayname2.writepos - (__USAT(timeB,27)>>(27-attr_delayname2.LENGTHPOW)) - BUFSIZE + buffer_index;
+      out2= attr_delayname2.array[delay2 & attr_delayname2.LENGTHMASK]<<14;
+
+      outlet_rec1=___SMMUL(out2<<3,feedback<<2)+(inlet_audio>>2);
+	 outlet_rec2=___SMMUL(out1<<3,feedback<<2)+(inlet_audio>>2);
+
+	 
+      outlet_out1=___SMMUL(out2<<3,feedback<<2)+___SMMUL(inlet_audio<<3,thru<<2);
+	 outlet_out2=___SMMUL(out1<<3,feedback<<2)+___SMMUL(inlet_audio<<3,thru<<2);
+
+	 outlet_mod=sine>>5;]]></code.srate>
+   </obj.normal>
+</objdefs>

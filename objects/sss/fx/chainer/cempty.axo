@@ -1,0 +1,49 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="cempty" uuid="7e077bf9-0138-491a-b7c7-8e390d58008e">
+      <sDescription>This is an empty module (audio-thru) to use with the chainfx module.
+You can use this module to fill up empty slots on the chainfx module or to add your own custom effect codes by embedding this module and editting the code.
+
+Note that it is object-oriÃ«nted. This module won&apos;t feature audio in/out pins, but could use external control input to edit internal parameters (eg. see the VCA module controlling the volume with an input pin to make a gapped/enveloped signal)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[//always keep these the same names, as these are the "general in/out names"
+int32_t outL,outR;
+int32_t IL,IR;
+bool bypass,solo;
+
+//I often use names like "v30" to save powers of 2, saves up some calculation time.
+uint32_t v30=(uint32_t)1<<30;
+uint32_t v26=(uint32_t)1<<26;
+uint32_t v27=(uint32_t)1<<27;
+
+
+//this is the code for the effect
+//Don't change the inL/inR, IL/IR outL/outR names!
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2)
+{
+	IL=inL;					// this saves the left input so the effect can be bypassed
+	IR=inR;					//  this saves the right input so the effect can be bypassed
+	// enter code below:
+							//here you can enter your code.  Use inL and inR to get the audio left&right input.
+							//the below code puts the calculated audio into "outL" and "outR" as output of the FX.
+
+outL=inL;						//this is the left output of the fx  (puts inL into outL)
+outR=inR;						//this is the right output of the fx (puts inR into outR)
+	if(bypass>0)
+	{
+		outL=IL;					//when bypass is on, sends IL to left output of effect function
+		outR=IR;					//when bypass is on, sends IR to right output of effect function
+	}
+};]]></code.declaration>
+      <code.krate><![CDATA[bypass=param_bypass;
+solo=param_solo;]]></code.krate>
+   </obj.normal>
+</objdefs>

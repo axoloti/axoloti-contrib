@@ -1,0 +1,314 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="waveformGenerator" uuid="d5c727e2-d089-48a7-a388-c613fd7eac55">
+      <sDescription>Generates waveforms to be used with table-oscillators/LFO&apos;s.
+First 9 waveforms are &apos;standardised&quot; waveforms
+sine,triangle,saw,square,peak etc.
+-harmonics, sets the number of harmonics that will be summed together for the standard waves.  So setting this to 10 will only create the first 10 harmonics of eg. the saw.
+
+Depending on the &quot;waveforms&quot;-setting, it fills the rest of the presets with random generated waveforms, though these are limited to the settings below the &quot;waveforms&quot; setting.
+
+-minharm sets the minimum amount of harmonics that can be present in the random waveforms, though it might perfectly happen that it will sum the same harmonic multiple times (because of the random harmonic-number-selection).
+-maxharm sets the maximum amount of harmonics that can be present in the random waveforms.
+-The harmonic-numbers that are chosen to add are randomly selected.
+
+-maxLvl sets the maximum output level for the waveform. 64 will fill the whole scope-display.
+As my axoloti already starts clipping around 40, I often put this to 32 to save me some headroom.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32 name="save"/>
+         <bool32 name="load"/>
+         <charptr32 name="filename"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.mom name="save"/>
+         <bool32.mom name="load"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+               <string>4194304</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+               <string>22</string>
+            </CEntries>
+         </combo>
+         <spinner name="harmonics" MinValue="1" MaxValue="128" DefaultValue="32"/>
+         <spinner name="waveforms" MinValue="9" MaxValue="128" DefaultValue="32"/>
+         <spinner name="minharm" MinValue="1" MaxValue="64" DefaultValue="4"/>
+         <spinner name="maxharm" MinValue="1" MaxValue="128" DefaultValue="25"/>
+         <spinner name="maxLvl" MinValue="1" MaxValue="64" DefaultValue="32"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int32_t *array;
+int32_t i;
+int32_t j;
+int32_t k;
+int32_t l;
+int32_t m;
+int32_t n;
+uint32_t phase;
+int trig;
+int32_t Waveforms=attr_waveforms;
+int32_t harmonics=attr_harmonics>attr_maxharm?attr_maxharm:attr_harmonics;
+int32_t maxLvl=attr_maxLvl;
+int32_t presets=attr_waveforms;
+int strig;
+int ltrig;
+int Do;
+int dtrig;
+int32_t R;
+int32_t sine;
+int H[2];
+int S[attr_waveforms];
+int A[attr_waveforms];
+int E[attr_waveforms];
+int P[attr_waveforms];
+int Q;
+int32_t sum;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH*attr_waveforms] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+for(i=0;i<(LENGTH*attr_waveforms);i++)
+{
+array[i]=0;
+}
+
+
+H[0]=1;
+H[1]=harmonics;
+S[0]=0;
+S[1]=2;
+S[2]=1;
+S[3]=1;
+S[4]=2;
+S[5]=2;
+S[6]=3;
+S[7]=5;
+S[8]=2;
+A[0]=1;
+A[1]=1;
+A[2]=1;
+A[3]=2;
+A[4]=1;
+A[5]=1;
+A[6]=2;
+A[7]=3;
+A[8]=1;
+E[0]=0;
+E[1]=1;
+E[2]=0;
+E[3]=0;
+E[4]=0;
+E[5]=1;
+E[6]=0;
+E[7]=1;
+E[8]=0;
+P[0]=0;
+P[1]=1;
+P[2]=0;
+P[3]=0;
+P[4]=0;
+P[5]=0;
+P[6]=0;
+P[7]=1;
+P[8]=1;
+
+//S=harmonic stepsize
+//A=linear volume decay
+//E=exponential volume decay on/off
+//P=select harmonic number or creation-number for phase-offset
+//Q=random phase offset for each next waveform
+//R=random volume
+//H=amount of harmonics used for created waveform
+
+//if(!trig){
+//for(i=9;i<attr_waveforms;i++){
+//S[i]=((i-9>>4)&63)+1;
+//A[i]=((i-9>>2)&3)+1;
+//E[i]=(i-9>>1)&1;
+//P[i]=(i-9)&1;
+//}
+//trig=1;
+//}
+
+if(!trig){
+for(i=0;i<attr_waveforms;i++){
+S[i]=(((int32_t)(GenerateRandomNumber()))&63)+1;
+A[i]=(((int32_t)(GenerateRandomNumber()))&1)+1;
+E[i]=((int32_t)(GenerateRandomNumber()))&1;
+P[i]=((int32_t)(GenerateRandomNumber()))&1;
+}
+trig=1;
+}
+
+for(k=0;k<attr_waveforms;k++){
+if(k>8){
+H[1]=(int32_t)(GenerateRandomNumber());
+int B=harmonics-attr_minharm;
+H[1]=(H[1]-(H[1]/B)*B);
+H[1]=H[1]<0?H[1]+B+attr_minharm:H[1]+attr_minharm;
+}
+for(j=0;j<H[k>0];j++){
+R=(1<<27);
+Q=0;
+if((k>8)&&(j>0)){
+Q=((int32_t)(GenerateRandomNumber()))&3;
+R=(((uint32_t)(GenerateRandomNumber()))&((1<<26)-1))+(1<<26);
+}
+else{Q=0;}
+if(k<9){
+l=j*S[k];}
+else{l=((int32_t)(GenerateRandomNumber()));}
+l=l-(l/attr_maxharm)*attr_maxharm;
+if(P[k]==0){n=l;}
+else{n=j;}
+m=(l*A[k]+1);
+if(E[k]==1){
+m=m*m;}
+for(i=0;i<LENGTH;i++){
+SINE2TINTERP((i<<32-LENGTHPOW)*(l+1)+((n&1)<<31)+(Q<<30),sine)
+array[i+(k*LENGTH)]+=___SMMUL(((sine>>5)/m)<<3,R<<2);
+}}}
+
+
+for(j=0;j<attr_waveforms;j++){
+int32_t sum=0;
+float32_t ratio;
+for(i=0;i<LENGTH;i++){
+int32_t temp=array[i+j*LENGTH];
+temp=temp>0?temp:-temp;
+sum=temp>sum?temp:sum;
+}
+ratio=(float32_t)(attr_maxLvl<<21)/(float32_t)(sum);
+for(i=0;i<LENGTH;i++){
+array[i+j*LENGTH]=array[i+j*LENGTH]*ratio;
+}
+}]]></code.init>
+      <code.krate><![CDATA[int save=param_save+inlet_save;
+int load=param_load+inlet_load;
+
+if ((save>0) && !strig) {
+    strig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_written;
+    err = f_open(&FileObject, inlet_filename, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,"inlet_filename"); return;}
+    int rem_sz = sizeof(*array)*(attr_waveforms<<attr_size);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        rem_sz -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,(char *)(&array[0]) + offset, rem_sz);
+        err = f_write(&FileObject, fbuff, rem_sz, &bytes_written);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+    err = f_close(&FileObject);
+    if (err != FR_OK) report_fatfs_error(err,"inlet_filename");
+  }
+  else if (!(save>0)) strig=0;
+
+
+  if ((load>0) && !ltrig) {
+    ltrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*array)*(attr_waveforms<<attr_size);
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(load>0)) ltrig=0;
+
+if((Do>0)&&!dtrig){
+	dtrig=1;
+for(j=0;j<attr_waveforms;j++){
+sum=0;
+float32_t ratio;
+for(i=0;i<LENGTH;i++){
+int32_t temp=array[i+j*LENGTH];
+temp=temp>0?temp:-temp;
+sum=temp>sum?temp:sum;
+}
+ratio=(float32_t)(attr_maxLvl<<21)/(float32_t)(sum);
+for(i=0;i<LENGTH;i++){
+array[i+j*LENGTH]=array[i+j*LENGTH]*ratio;
+}
+}
+Do=0;
+}
+else if((Do==0)&&dtrig){dtrig=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Modulo" uuid="3c4a478d-c1a7-447c-b6ef-e9d9da9b1b70">
+      <sDescription>unipolar modulo function
+Example: 
+param_factor = 2
+in   modulo integ
+0  -&gt;    0    0
+31 -&gt;   62    0
+32 -&gt;    0    1
+63 -&gt;   62    1</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>Modulo.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="in"/>
+         <frac32.bipolar name="factor"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="modulo"/>
+         <int32.positive name="integer"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="factor"/>
+         <bool32.tgl name="mirror"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t factor;]]></code.declaration>
+      <code.krate><![CDATA[factor = __USAT(param_factor + inlet_factor, 27);
+if(!param_mirror){
+  //                      q21         q27
+  int32_t val = ___SMMUL(factor, inlet_in);  // q16
+  outlet_modulo = (val & ((1 << 16) - 1)) << 11;
+  outlet_integer = val >> 16;
+} else {
+  //                       q21             q27
+  int32_t val = ___SMMUL(factor, (1<<27) - inlet_in);  // q16
+  outlet_modulo = (1<<27)-((val & ((1 << 16) - 1)) << 11);
+  outlet_integer = val >> 16;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

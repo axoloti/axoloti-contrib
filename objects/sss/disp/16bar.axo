@@ -1,0 +1,82 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="16bar" uuid="6a04eefe-5fa2-4032-80ad-466a104af7f0">
+      <sDescription>spectral analyzer made out of two 2nd order bandpass filters per band, decibel scale (vertical), steeper filters</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>analyzer 24.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+         <frac32 name="i3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="i7"/>
+         <frac32 name="i8"/>
+         <frac32 name="i9"/>
+         <frac32 name="i10"/>
+         <frac32 name="i11"/>
+         <frac32 name="i12"/>
+         <frac32 name="i13"/>
+         <frac32 name="i14"/>
+         <frac32 name="i15"/>
+         <frac32 name="i16"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <frac32.vbar name="v0" noLabel="true"/>
+         <frac32.vbar name="v1" noLabel="true"/>
+         <frac32.vbar name="v2" noLabel="true"/>
+         <frac32.vbar name="v3" noLabel="true"/>
+         <frac32.vbar name="v4" noLabel="true"/>
+         <frac32.vbar name="v5" noLabel="true"/>
+         <frac32.vbar name="v6" noLabel="true"/>
+         <frac32.vbar name="v7" noLabel="true"/>
+         <frac32.vbar name="v8" noLabel="true"/>
+         <frac32.vbar name="v9" noLabel="true"/>
+         <frac32.vbar name="v10" noLabel="true"/>
+         <frac32.vbar name="v11" noLabel="true"/>
+         <frac32.vbar name="v12" noLabel="true"/>
+         <frac32.vbar name="v13" noLabel="true"/>
+         <frac32.vbar name="v14" noLabel="true"/>
+         <frac32.vbar name="v15" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs1[20];
+biquad_state bs2[20];
+biquad_coefficients bc1[20];
+biquad_coefficients bc2[20];
+int32_t val[20];]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<20;i++){
+   int32_t pitch = (-20 + (i*4))<<21;
+   int32_t freq;
+   MTOF(pitch,freq);
+   biquad_bp_coefs(&bc1[i],freq,INT_MAX - ((56<<21)<<4));
+   biquad_clearstate(&bs1[i]);
+   int32_t pitch2 = pitch + (2<<21);
+   int32_t freq2;
+   MTOF(pitch2,freq2);
+   biquad_bp_coefs(&bc2[i],freq2,INT_MAX - ((56<<21)<<4));
+   biquad_clearstate(&bs2[i]);
+}]]></code.init>
+      <code.krate><![CDATA[disp_v0=inlet_i1;
+disp_v1=inlet_i2;
+disp_v2=inlet_i3;
+disp_v3=inlet_i4;
+disp_v4=inlet_i5;
+disp_v5=inlet_i6;
+disp_v6=inlet_i7;
+disp_v7=inlet_i8;
+disp_v8=inlet_i9;
+disp_v9=inlet_i10;
+disp_v10=inlet_i11;
+disp_v11=inlet_i12;
+disp_v12=inlet_i13;
+disp_v13=inlet_i14;
+disp_v14=inlet_i15;
+disp_v15=inlet_i16;]]></code.krate>
+   </obj.normal>
+</objdefs>

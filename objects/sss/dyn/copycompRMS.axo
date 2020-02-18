@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="copycompRMS" uuid="6c07850a-4eba-4103-b6e2-16682bce503c">
+      <sDescription>Dynamic envelope copy, RMS-based (only 8 samples to keep fast response)
+Apply the envelope of one signal (copy-input) to the envelope of the other (in-input)
+Set follow-rate with attack and decay and follow-amount with &quot;ratio&quot;</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>comp.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32buffer name="copy"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="ratio"/>
+         <frac32.u.map.kdecaytime name="attack"/>
+         <frac32.u.map.kdecaytime name="decay"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+int32_t frac_exp(int32_t a) {
+	int8_t s = (a>>24)+4;
+	uint8_t ei = a>>16;
+	if (s>=0)
+	     return expt[ei]<<s;
+	else return expt[ei]>>(-s);
+}
+
+int32_t accu;
+int32_t prev;
+int32_t IN;
+int32_t val;
+int32_t vel;
+int i;
+int64_t over1;
+int64_t over2;
+int32_t copy;
+int write;
+uint32_t CP[16];
+uint32_t IP[16];]]></code.declaration>
+      <code.init><![CDATA[accu = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t attack;
+int32_t decay;
+MTOF((1<<26)-(param_attack<<1),attack)
+attack=attack>>2;
+MTOF(-(param_decay<<1),decay)
+decay=decay>>4;]]></code.krate>
+      <code.srate><![CDATA[write=(write+1)&15;
+int32_t iN=inlet_in;
+iN=iN>0?iN:-iN;
+
+IP[write]=iN;
+int32_t Copy=inlet_copy;
+Copy=Copy>0?Copy:-Copy;
+CP[write]=Copy;
+copy=0;
+IN=0;
+for(i=0;i<8;i++){
+copy+=CP[i];
+IN+=IP[i];
+}
+copy=copy>>3;
+IN=IN>>3;
+if(IN>val){
+val=IN;
+}
+else{
+val=___SMMLA((IN-val)<<1,decay,val);
+}
+
+if(copy>vel){
+vel=___SMMLA((copy-vel)<<1,attack,vel);
+}
+else{
+vel=___SMMLA((copy-vel)<<1,decay,vel);
+}
+
+
+int32_t TRESH=__USAT(vel+(1<<17),27);
+int32_t Tresh=frac_log(TRESH);
+float32_t ratio=(float32_t)(1<<27)/Tresh;
+
+int32_t inlog = frac_log(val>(1<<21)?val:(1<<21));
+over1 = (int64_t)(inlog>Tresh?Tresh-inlog:Tresh-inlog>>1);
+int32_t gain;
+gain = frac_exp((1<<27)+(___SMMUL(over1,param_ratio)<<6));
+
+int32_t out = ___SMMUL(inlet_in<<3,gain<<2);
+outlet_out=__SSAT(out,28);]]></code.srate>
+   </obj.normal>
+</objdefs>

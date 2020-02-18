@@ -1,0 +1,149 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/lfo/tri_p" uuid="d041ea9a-732b-483b-94aa-a6115e3321fa" name="tri_p_1" x="0" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="112" y="0">
+      <params>
+         <frac32.u.mapvsl name="p0" value="8.5"/>
+         <frac32.u.mapvsl name="p1" value="11.5"/>
+         <frac32.u.mapvsl name="p2" value="22.0"/>
+         <frac32.u.mapvsl name="p3" value="37.0"/>
+         <frac32.u.mapvsl name="p4" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="210" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="266" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="378" y="0">
+      <params>
+         <frac32.u.map name="amp" value="10.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_4" x="882" y="0">
+      <params>
+         <frac32.s.map name="value" value="56.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="476" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/APC4" uuid="97d71cb6-d37d-4f13-b604-a02e46ae949a" name="APC4_1" x="686" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="798" y="182">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="994" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_3" x="224" y="364">
+      <params>
+         <frac32.s.map name="pitch" value="19.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/allpass" uuid="59cc8e3d8044e145e1eb908baa5a7d3ed2ec5f72" name="allpass_2" x="336" y="364">
+      <params>
+         <frac32.s.map name="g" value="51.0"/>
+      </params>
+      <attribs>
+         <spinner attributeName="delay" value="37"/>
+      </attribs>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="476" y="392">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="574" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="saw_3" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="dial_4" outlet="out"/>
+         <dest obj="APC4_1" inlet="fb"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="*c_3" outlet="out"/>
+         <dest obj="APC4_1" inlet="freq1"/>
+         <dest obj="APC4_1" inlet="freq2"/>
+         <dest obj="APC4_1" inlet="freq3"/>
+         <dest obj="APC4_1" inlet="freq4"/>
+      </net>
+      <net>
+         <source obj="saw_3" outlet="wave"/>
+         <dest obj="allpass_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="tri_p_1" outlet="out1"/>
+         <dest obj="u4u_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="APC4_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="*c_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*_2" outlet="result"/>
+         <dest obj="*_1" inlet="a"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="u4u_1" outlet="out"/>
+         <dest obj="*_2" inlet="a"/>
+         <dest obj="*_2" inlet="b"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="APC4_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>252</x>
+      <y>264</y>
+      <width>1108</width>
+      <height>686</height>
+   </windowPos>
+</patch-1.0>

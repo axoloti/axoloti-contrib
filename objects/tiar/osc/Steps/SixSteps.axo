@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Six" uuid="389db1c3-82e5-4d29-b17f-9c96663f66b0">
+      <sDescription>The waveform of the SixSteps oscillator is controlled by six parameters: the six steps levels.
+
+It allows to generate waveforms reminiscent of old pseudo digital synths (such as the RMI and it&apos;s digit harmonics based on Walsh functions).
+
+It is **anti aliased** with an algorithm that is based on both BLEPs and DPWs... i think it is quite original and efficient with this kind of waveforms. 
+
+(the steppy signal goes through a second order leaky &quot;analytic&quot; integrator, when a transient occurs the state variable of the integrator is updated taking account of the subsample time of the transient - much like BLEPs -... at the end the signal is high passed with a second order differentiator - like a second order DPW...)
+
+It has an accompanying help patch file you can play with.
+
+The patch library/community/tiar/synths/EvolPad is more complex and uses 3 SixSteps oscillators on each of its 6 voices + LFO modulations of some levels to generate an evolving sound.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>SixSteps.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.s.map name="level0"/>
+         <frac32.s.map name="level1"/>
+         <frac32.s.map name="level2"/>
+         <frac32.s.map name="level3"/>
+         <frac32.s.map name="level4"/>
+         <frac32.s.map name="level5"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x, y, z0, z_1, z_2, p, dp, _dp;
+float w0, w_1, w_2;
+int cpt;
+float seq[6];]]></code.declaration>
+      <code.init><![CDATA[cpt = 0;
+x = y = z_2 = z_1 = z0 = w_2 = w_1 = w0 = 0;
+p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = 6.0f*(idp*(0.25f/(1<<30)));
+_dp = 1 / dp;
+if(dp > 1) dp = 1;
+float dc = seq[0] = (float)param_level0;
+dc += seq[1] = (float)param_level1;
+dc += seq[2] = (float)param_level2;
+dc += seq[3] = (float)param_level3;
+dc += seq[4] = (float)param_level4;
+dc += seq[5] = (float)param_level5;
+dc *= 1.0f/6; 
+for(int i=0;i<6;i++) seq[i] -= dc;]]></code.krate>
+      <code.srate><![CDATA[// phase increment
+p += dp;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                         transition ?
+if(p > 1){      // phase above 1
+  cpt++;        // next step in sequence
+  if(cpt >= 6)  // above 6 => wrap to 0
+    cpt = 0;
+  p -= 1;       // reset phase
+  float alpha = p * _dp;   // subsample time since the transition
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                           integrator evolution before the transition
+  float _alpha = 1 - alpha;
+  float alpha_x = _alpha * x;
+  z0 += _alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                                                           transition
+  x = seq[cpt];
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                            integrator evolution after the transition
+  alpha_x = alpha * x;
+  z0 += alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+} else {
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                              integrator evolution without transition
+  z0 += y + 0.5f * x;
+  y += x;
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                     integrator leaks
+y *= 0.999f;
+z0 *= 0.999f;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                            2nd order differenciation
+w0 = z0 + z_2 - 2 * z_1;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                               high freq compensation
+outlet_out = (int32_t)(0.9f * w_1 - 0.1f * (w_2 + w0));
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                      previous values
+z_2 = z_1; 
+z_1 = z0;
+w_2 = w_1;
+w_1 = w0;]]></code.srate>
+   </obj.normal>
+</objdefs>

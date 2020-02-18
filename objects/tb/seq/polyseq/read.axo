@@ -1,0 +1,25 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read" uuid="12eb6ce3-c8a0-4629-b665-df247e269082">
+      <sDescription>Polyphonic, Polyrythmic, Polymetric sequencer
+- read value for given step/value idx, inlets should be supplied from polyseq/track</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>polyseq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="trkIdx"/>
+         <int32.positive name="stepIdx"/>
+         <int32.positive name="valueIdx"/>
+      </inlets>
+      <outlets>
+         <frac32 name="stepValue"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.krate><![CDATA[uint32_t valueIdx = inlet_valueIdx < attr_seq.numValues_ ? inlet_valueIdx : attr_seq.numValues_ - 1;
+
+outlet_stepValue = attr_seq.seqValue_[inlet_trkIdx][inlet_stepIdx][valueIdx];]]></code.krate>
+   </obj.normal>
+</objdefs>

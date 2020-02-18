@@ -1,0 +1,111 @@
+<objdefs appVersion="1.0.8">
+   <obj.normal id="nmpgen" uuid="f4aa3eb163415b6fc796e576dde754a273a022ac">
+      <sDescription>Pseudo-random (repeatable) pattern generator. Based on Nord modular PatternGen module.</sDescription>
+      <author>toneburst</author>
+      <license>BSD</license>
+      <helpPatch>nmpgen.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="Trigger Pulse"/>
+         <bool32.rising name="r" description="Reset Pulse"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out" description="Pattern Out (Bipolar)"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="bank" description="Bank"/>
+         <frac32.u.map name="pattern" description="Pattern"/>
+         <int32 name="length" description="Pattern Length">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+
+int32_t pattern[128] = {};
+int32_t counter = 0;
+int ntrig = 0;
+int rtrig = 0;
+int32_t bindex;
+int32_t pindex;
+int32_t outval;
+int init = 1;
+
+/////////////////////////////////////////////////////////////////////////
+// Seeded Random Number Generator ///////////////////////////////////////
+// http://blog.embedded-office.com/en/blog-artikel/items/random-1.html //
+// (cryptographically rubbish, but should be fine for our porpoises) ////
+/////////////////////////////////////////////////////////////////////////
+
+int32_t a = 5;
+int32_t b = 12345;
+int32_t m = 511;
+int32_t rstate = 1;
+
+int32_t updatestate() {
+	rstate = ((rstate * a + b) % m) - 255;
+	return rstate;
+}
+
+//////////////////////////
+// Update Pattern Array //
+//////////////////////////
+
+void newpattern(int32_t a, int32_t b) {
+	rstate = a * 64 + b;
+	for(int i = 0; i < 128; i++) {
+		pattern[i] = updatestate();
+	}
+}
+
+
+        ]]></code.declaration>
+      <code.krate><![CDATA[
+
+///////////////////////////////
+// Loop Running For 1st Time //
+///////////////////////////////
+
+if (init) {
+	newpattern(param_bank, param_pattern);
+	init = 0;
+}
+
+/////////////////////////////
+// Reset Input Rising Edge //
+/////////////////////////////
+
+if ((inlet_r>0) && !rtrig) {
+    rtrig = 1;
+    counter = 0;
+} else if (!(inlet_r>0)) {
+    rtrig=0;
+}
+
+///////////////////////////////
+// Trigger Input Rising Edge //
+///////////////////////////////
+
+if ((inlet_trig>0) && !ntrig) {
+    // Check for changes to parameters
+    // and regenerate array if params changed
+	if ((param_bank != bindex) || (param_pattern != pindex)) {
+		newpattern(param_bank, param_pattern);
+		bindex = param_bank;
+		pindex = param_pattern;
+	}
+    // Set output value until next trigger
+    outval = pattern[counter % param_length];
+    counter++;
+    ntrig=1;
+} else if (!(inlet_trig>0)) {
+    ntrig=0;
+}
+
+outlet_out = outval<<19;
+
+
+    ]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="bilin33" uuid="3317aae2-154c-a5f6-a486-85d6f53b045b">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>bilin33.axh</helpPatch>
+      <inlets>
+         <frac32 name="x"/>
+         <frac32 name="y"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[float v[3][3] = {
+  attr_table
+};
+int32_t *c[3];]]></code.declaration>
+      <code.init><![CDATA[for(int iy = 0; iy < 3; iy++){
+  c[iy] = (int32_t *)v[2-iy];
+  for(int ix = 0; ix < 3; ix++){
+    c[iy][ix] = arm::float_to_q(v[2-iy][ix], 28-6);
+  }
+}]]></code.init>
+      <code.krate><![CDATA[int32_t x = __USAT(inlet_x, 27);
+int32_t y = __USAT(inlet_y, 27);
+int32_t ix = x >> 26; //[0 1]
+int32_t ax = (x & ((1<<26)-1))<<5; //q31
+int32_t iy = y >> 26; //[0 1]
+int32_t ay = (y & ((1<<26)-1))<<5; //q31
+int32_t c00 = c[iy  ][ix  ];
+int32_t c01 = c[iy  ][ix+1];
+//                   q31      q28        q27
+int32_t c0 = ___SMMLA(ax, c01 - c00, c00 >> 1);
+int32_t c10 = c[iy+1][ix  ];
+int32_t c11 = c[iy+1][ix+1];
+//                   q31      q28        q27
+int32_t c1 = ___SMMLA(ax, c11 - c10, c10 >> 1);
+//                   q31      q27     q26
+outlet_out = ___SMMLA(ay, c1  - c0,  c0 >> 1)<<1;]]></code.krate>
+   </obj.normal>
+</objdefs>

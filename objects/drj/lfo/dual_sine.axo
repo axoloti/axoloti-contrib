@@ -1,0 +1,198 @@
+<objdefs>
+  <obj.normal id="sin_2_b" uuid="75f7330c26a18733215dccc3ba3b9008545c1daa9" >
+    <sDescription>Dual phase sine LFO, bipolar, 0 and 90 degrees, lin-ip, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="0" description="0 deg sine wave"/>
+      <frac32.bipolar name="90" description="90 deg sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t sine;
+
+      SINE2TINTERP( phase, sine )
+      outlet_0 = (sine>>4);
+
+      SINE2TINTERP( phase - 0x40000000, sine )
+      outlet_90 = (sine>>4);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="sin_2_b" uuid="32f7330c26a187af215dccc3ba3b7808545c1daa9" >
+    <sDescription>Dual phase sine LFO, bipolar, 0 and 120 degrees, lin-ip, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.bipolar name="0" description="0 deg sine wave"/>
+      <frac32.bipolar name="120" description="120 deg sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t sine;
+
+      SINE2TINTERP( phase, sine )
+      outlet_0 = (sine>>4);
+
+      SINE2TINTERP( phase - 0x55555555, sine )
+      outlet_120 = (sine>>4);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="sin_2_p" uuid="75f7330c2aab87332155ade3ba3b9008545c1daa9" >
+    <sDescription>Dual phase sine LFO, unipolar, 0 and 90 degrees, lin-ip, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.positive name="0" description="0 deg sine wave"/>
+      <frac32.positive name="90" description="90 deg sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t sine;
+
+      SINE2TINTERP( phase, sine )
+      outlet_0 = (sine>>5) + (1<<26);
+
+      SINE2TINTERP( phase - 0x40000000, sine )
+      outlet_90 = (sine>>5) + (1<<26);
+
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="sin_2_p" uuid="12f7330c2aa4876AC155ade3ba3b9008545c1daa9" >
+    <sDescription>Dual phase sine LFO, unipolar, 0 and 120 degrees, lin-ip, pitch input, phase reset</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar name="pitch" description="pitch"/>
+      <bool32.rising name="reset" description="reset phase"/>
+    </inlets>
+    <outlets>
+      <frac32.positive name="0" description="0 deg sine wave"/>
+      <frac32.positive name="120" description="120 deg sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+      uint32_t phase;
+      uint32_t old_reset;
+    ]]></code.declaration>
+    <code.init><![CDATA[
+      phase = 0;
+      old_reset = 0;
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( inlet_reset && !old_reset )
+        {
+          phase = 0;
+        }
+      else
+        {
+          int32_t freq;
+          MTOFEXTENDED( param_pitch + inlet_pitch, freq );
+          phase += freq>>2;
+        }
+      old_reset = inlet_reset;
+
+      int32_t sine;
+
+      SINE2TINTERP( phase, sine )
+      outlet_0 = (sine>>5) + (1<<26);
+
+      SINE2TINTERP( phase - 0x55555555, sine )
+      outlet_120 = (sine>>5) + (1<<26);
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>

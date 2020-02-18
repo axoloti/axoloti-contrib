@@ -1,0 +1,97 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="enc 1 to 8 u" uuid="310fa984-1c35-410e-87c9-b6d0c787eb51">
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="v0"/>
+         <frac32.positive name="v1"/>
+         <frac32.positive name="v2"/>
+         <frac32.positive name="v3"/>
+         <frac32.positive name="v4"/>
+         <frac32.positive name="v5"/>
+         <frac32.positive name="v6"/>
+         <frac32.positive name="v7"/>
+         <bool32 name="fine"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="v0"/>
+         <frac32.positive name="v1"/>
+         <frac32.positive name="v2"/>
+         <frac32.positive name="v3"/>
+         <frac32.positive name="v4"/>
+         <frac32.positive name="v5"/>
+         <frac32.positive name="v6"/>
+         <frac32.positive name="v7"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t vel;
+uint8_t offset;
+int inc;
+uint32_t fine;
+uint8_t count;
+
+int32_t in [8];
+int32_t prev [8];
+int32_t out [8];
+
+uint8_t ccstack [8] = { 0};
+int8_t cvstack [8] = {0};
+uint8_t slength;
+uint8_t sread;
+uint8_t swrite;]]></code.declaration>
+      <code.init><![CDATA[vel = 0;
+fine = 32 << 12;]]></code.init>
+      <code.krate><![CDATA[in [0] = inlet_v0;
+in [1] = inlet_v1;
+in [2] = inlet_v2;
+in [3] = inlet_v3;
+in [4] = inlet_v4;
+in [5] = inlet_v5;
+in [6] = inlet_v6;
+in [7] = inlet_v7;
+
+
+count ++;
+count = count %8;
+	if (in[count] != prev[count]) {
+	prev [count] = in [count];
+	offset = count;
+	out [count] = in[count];	
+	}
+
+
+
+if (slength) {
+		offset = ccstack [sread];
+		vel = cvstack [sread];
+		if (!inlet_fine) inc = (vel << 21);
+			else inc = (vel > 0) ?  fine  : (fine * -1);
+		out[offset] = __SSAT ((out[offset] + inc),28);
+		if (out [offset] < 0) out [offset] = 0;
+		slength --;
+		sread ++;
+		sread = sread %8;
+}
+
+	outlet_v0= out [0];
+	outlet_v1= out [1];
+	outlet_v2= out [2];
+	outlet_v3= out [3];
+	outlet_v4= out [4];
+	outlet_v5= out [5];
+	outlet_v6= out [6];
+	outlet_v7= out [7];]]></code.krate>
+      <code.midihandler><![CDATA[if ((status&0xF0) == MIDI_CONTROL_CHANGE) {
+	if ((data1 >= 71 ) && (data1 <= 78)){
+    	ccstack [swrite] = data1  - 71;
+     cvstack [swrite] = (data2 & 0x40)? (128 - data2) * -1:data2;
+     slength ++;
+     swrite ++;
+     swrite = swrite %8;
+		}
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

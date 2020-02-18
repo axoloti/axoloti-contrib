@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="smallknobs" uuid="55c6cc2d-3254-42ab-a8f6-3b23d3c8a609">
+      <sDescription>Axoloti Control (AxoC) - Small knob controls</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>axoc.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32 name="out1"/>
+         <frac32 name="out2"/>
+         <frac32 name="out3"/>
+      </outlets>
+      <displays>
+         <frac32.u.dial name="d1"/>
+         <frac32.u.dial name="d2"/>
+         <frac32.u.dial name="d3"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[static const unsigned int SIZE = 3;
+static const int32_t F_FREQ = 1 << 23;
+int32_t o[SIZE];]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<SIZE;i++)
+{
+	o[i] = 0;
+}
+]]></code.init>
+      <code.krate><![CDATA[int i=0;
+for(int i=0;i<SIZE;i++) 
+{
+	o[i] = ___SMMLA(((adcvalues[i+5] <<15 )-o[i])<<1,F_FREQ,o[i]) ;
+}
+
+outlet_out1= o[0];
+outlet_out2= o[1];
+outlet_out3= o[2];
+
+disp_d1= o[0];
+disp_d2= o[1];
+disp_d3= o[2];
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

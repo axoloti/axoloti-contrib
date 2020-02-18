@@ -1,0 +1,142 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="GUITAR" uuid="c1e6c539-e988-4a03-93cf-cd57689ad4c8">
+      <sDescription>4/8 stage FDN reverb network
+has overall decay and size parameters for quick adjusting the reverb
+times can be modulated by internal LFOs which are evenly phase-spreaded sines.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="inL" description="wave input"/>
+         <frac32buffer name="inR"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.kdecaytime name="decay"/>
+         <frac32.u.map name="size"/>
+         <frac32.u.map name="t1"/>
+         <frac32.u.map name="t2"/>
+         <frac32.u.map name="t3"/>
+         <frac32.u.map name="t4"/>
+         <frac32.u.map name="t5"/>
+         <frac32.u.map name="t6"/>
+         <frac32.u.map name="t7"/>
+         <frac32.u.map name="t8"/>
+         <frac32.s.map.lfopitch name="rate"/>
+         <frac32.s.map name="depth"/>
+         <frac32.s.map name="spread"/>
+         <bool32.tgl name="sine"/>
+         <bool32.tgl name="rnd"/>
+         <bool32.tgl name="stages"/>
+         <frac32.u.map name="dry"/>
+         <frac32.u.map name="wet"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+int i;
+int32_t t[8];
+int32_t J[8];
+int32_t phase;
+bool rtrg;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[1<<attr_size+3]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+   
+   writepos = 0;
+   for(i=0;i<LENGTH<<2;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t decay=param_decay<<1;
+int32_t rate;
+int32_t stages=param_stages>0?8:4;
+int sm=stages-1;
+int32_t ON=param_stages>0?1:0;
+MTOFEXTENDED(param_rate,rate)
+phase+=rate>>4;
+int32_t sine[8];
+for(i=0;i<stages;i++){
+	if(param_sine>0){
+	SINE2TINTERP(phase+i*(1<<30-ON),sine[i])}
+	else{
+	sine[i]=phase+(i*(param_spread<<3)<<3-ON);
+	sine[i]=sine[i]>0?sine[i]:-sine[i];}
+	sine[i]=___SMMUL(param_depth,sine[i])>>31-LENGTHPOW;
+}
+
+t[0]=param_t1>>27-LENGTHPOW;
+t[1]=param_t2>>27-LENGTHPOW;
+t[2]=param_t3>>27-LENGTHPOW;
+t[3]=param_t4>>27-LENGTHPOW;
+t[4]=param_t5>>27-LENGTHPOW;
+t[5]=param_t6>>27-LENGTHPOW;
+t[6]=param_t7>>27-LENGTHPOW;
+t[7]=param_t8>>27-LENGTHPOW;
+
+for(i=0;i<stages;i++){
+	t[i]=sine[i]+___SMMUL(t[i]<<3,param_size<<4);
+}
+
+if((param_rnd>0)&&!rtrg){
+	rtrg=1;
+	for(i=0;i<stages;i++){
+		PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_t1+i],(int32_t)GenerateRandomNumber()&((1<<27)-1),0xFFFD);
+	}
+}
+else if(param_rnd==0){rtrg=0;}]]></code.krate>
+      <code.srate><![CDATA[writepos = (writepos + 1)&LENGTHMASK;
+
+int32_t O[8];
+int32_t I[8];
+for(i=0;i<stages;i++){
+O[i]=array[(writepos-t[i])&LENGTHMASK];}
+
+for(i=0;i<stages;i++){
+I[i]=___SMMUL(decay,-(__SSAT(((i&1)>0?inlet_inL:inlet_inR)>>14,16)-O[i]+O[(i+1)&sm]+O[(i+2)&sm]+O[(i+3)&sm]+(O[(i+4)&7]+O[(i+5)&7]+O[(i+6)&7]+O[(i+7)&7])*ON)<<3-ON);
+J[i]+=(I[i]-J[i])-((I[i]-J[i])>>3);
+array[writepos+i*LENGTH]=J[i];
+}
+
+outlet_outL=___SMMUL(((J[0]+J[2]+(J[4]+J[6])*ON)<<15)<<2,-param_wet<<3)+___SMMUL(inlet_inL<<2,param_dry<<3);
+outlet_outR=___SMMUL(((J[1]+J[3]+(J[5]+J[7])*ON)<<15)<<2,-param_wet<<3)+___SMMUL(inlet_inR<<2,param_dry<<3);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,209 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="O2_12StepsSync" uuid="6c4da26a-bb80-4317-a883-c67faf8ba172">
+      <sDescription>See help patch for usage !!
+
+Advanced version of the SixSteps oscillator:
+* it have a built-in Master oscillator for sync sounds.
+* 12 steps instead of 6 (use tiar/osc/wf_12Steps on waveform inlet)
+* oversampling by 2 (use tiar/conv/O2_to_SR_59 on the output) 
+
+
+The waveform of the12Steps oscillator is controlled by 12 parameters: the 12 steps levels.
+These 12 steps levels must be provided by a tiar/osc/wf_12Steps object connected to the waveform inlet.
+
+
+This object allows to generate waveforms reminiscent of old pseudo digital synths (such as the RMI and it&apos;s digit harmonics based on Walsh functions).
+
+It is **anti aliased** with an algorithm that is based on both BLEPs and DPWs... i think it is quite original and efficient with this kind of waveforms. 
+
+(the steppy signal goes through a second order leaky &quot;analytic&quot; integrator, when a transient occurs the state variable of the integrator is updated taking account of the subsample time of the transient - much like BLEPs -... at the end the signal is high passed with a second order differentiator - like a second order DPW...)</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>O2_12stepsSync.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch slave" description="pitch_slave"/>
+         <frac32.bipolar name="pitch master"/>
+         <frac32buffer.bipolar name="waveform"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="y1" description=""/>
+         <frac32buffer.bipolar name="y0"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch slave" noLabel="true"/>
+         <frac32.s.map.pitch name="pitch master"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float x, y, z0, z_1, z_2, p, dp, _dp, pM, dpM, _dpM;
+float w0;
+int cpt;
+float seq[12];]]></code.declaration>
+      <code.init><![CDATA[cpt = 0;
+x = y = z_2 = z_1 = z0 = w0 = 0;
+p = pM = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch_space_slave + inlet_pitch_space_slave, idp);
+dp = 0.25f*12.0f*(idp*(1.0f/(1<<31)));
+_dp = 1 / dp;
+if(dp > 1) dp = 1;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+MTOFEXTENDED(param_pitch_space_master + inlet_pitch_space_master, idp);
+dpM = 0.25f*(idp*(1.0f/(1<<31)));
+_dpM = 1 / dpM;
+if(dpM > 1) dpM = 1;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+float dc = seq[0] = (float)inlet_waveform[0];
+dc += seq[1] = (float)inlet_waveform[1];
+dc += seq[2] = (float)inlet_waveform[2];
+dc += seq[3] = (float)inlet_waveform[3];
+dc += seq[4] = (float)inlet_waveform[4];
+dc += seq[5] = (float)inlet_waveform[5];
+dc += seq[6] = (float)inlet_waveform[6];
+dc += seq[7] = (float)inlet_waveform[7];
+dc += seq[8] = (float)inlet_waveform[8];
+dc += seq[9] = (float)inlet_waveform[9];
+dc += seq[10] = (float)inlet_waveform[10];
+dc += seq[11] = (float)inlet_waveform[11];
+dc *= 1.0f/12; 
+for(int i=0;i<12;i++) seq[i] -= dc;]]></code.krate>
+      <code.srate><![CDATA[// phase increment
+pM += dpM;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                         synchro ?
+if(pM > 1){      // phase above 1
+  cpt = 0;        // reset  
+  pM -= 1;       // reset phase
+  float alpha = pM * _dpM;   // subsample time since the transition
+  p = alpha * dp;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                           integrator evolution before the transition
+  float _alpha = 1 - alpha;
+  float alpha_x = _alpha * x;
+  z0 += _alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                                                           transition
+  x = seq[cpt];
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                            integrator evolution after the transition
+  alpha_x = alpha * x;
+  z0 += alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+} else {
+	// phase increment
+	p += dp;
+	// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+	//                                                         transition ?
+	if(p > 1){      // phase above 1
+	  cpt++;        // next step in sequence
+	  if(cpt >= 12)  // above 12 => wrap to 0
+	    cpt = 0;
+	  p -= 1;       // reset phase
+	  float alpha = p * _dp;   // subsample time since the transition
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                           integrator evolution before the transition
+	  float _alpha = 1 - alpha;
+	  float alpha_x = _alpha * x;
+	  z0 += _alpha * (y + 0.5f * alpha_x);
+	  y += alpha_x;
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                                                           transition
+	  x = seq[cpt];
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                            integrator evolution after the transition
+	  alpha_x = alpha * x;
+	  z0 += alpha * (y + 0.5f * alpha_x);
+	  y += alpha_x;
+	} else {
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                              integrator evolution without transition
+	  z0 += y + 0.5f * x;
+	  y += x;
+	}
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                     integrator leaks
+y *= 0.997f;
+z0 *= 0.997f;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                            2nd order differenciation
+w0 = z0 + z_2 - 2 * z_1;
+outlet_y1 = (int32_t)(w0);
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                      previous values
+z_2 = z_1; 
+z_1 = z0;
+// _____________________________________________________________________
+// _____________________________________________________________________
+// phase increment
+pM += dpM;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                         synchro ?
+if(pM > 1){      // phase above 1
+  cpt = 0;        // reset  
+  pM -= 1;       // reset phase
+  float alpha = pM * _dpM;   // subsample time since the transition
+  p = alpha * dp;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                           integrator evolution before the transition
+  float _alpha = 1 - alpha;
+  float alpha_x = _alpha * x;
+  z0 += _alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                                                           transition
+  x = seq[cpt];
+//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+//                            integrator evolution after the transition
+  alpha_x = alpha * x;
+  z0 += alpha * (y + 0.5f * alpha_x);
+  y += alpha_x;
+} else {
+	// phase increment
+	p += dp;
+	// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+	//                                                         transition ?
+	if(p > 1){      // phase above 1
+	  cpt++;        // next step in sequence
+	  if(cpt >= 12)  // above 12 => wrap to 0
+	    cpt = 0;
+	  p -= 1;       // reset phase
+	  float alpha = p * _dp;   // subsample time since the transition
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                           integrator evolution before the transition
+	  float _alpha = 1 - alpha;
+	  float alpha_x = _alpha * x;
+	  z0 += _alpha * (y + 0.5f * alpha_x);
+	  y += alpha_x;
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                                                           transition
+	  x = seq[cpt];
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                            integrator evolution after the transition
+	  alpha_x = alpha * x;
+	  z0 += alpha * (y + 0.5f * alpha_x);
+	  y += alpha_x;
+	} else {
+	//_  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _
+	//                              integrator evolution without transition
+	  z0 += y + 0.5f * x;
+	  y += x;
+	}
+}
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                     integrator leaks
+y *= 0.997f;
+z0 *= 0.997f;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                            2nd order differenciation
+w0 = z0 + z_2 - 2 * z_1;
+outlet_y0 = (int32_t)w0;
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+//                                                      previous values
+z_2 = z_1; 
+z_1 = z0;
+// _____________________________________________________________________
+// _____________________________________________________________________]]></code.srate>
+   </obj.normal>
+</objdefs>

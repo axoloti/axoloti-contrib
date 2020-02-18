@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldub_NEW" uuid="af5af1e9-68ca-46d0-aaa3-7af0dc82ade6">
+      <sDescription>adds data to the content of a table,at inlet pos (in fraction of the table&apos;s size).feedback controls feedback amount.
+set the length of the fade-out period with &apos;release&apos;,
+the length of the fade-in of the recording with &apos;attack&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>looper.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="pos" description="index in fraction of table size"/>
+         <frac32buffer name="wave" description="audio in"/>
+         <bool32.risingfalling name="overdub" description="overdub"/>
+         <frac32.positive name="feedback" description="feedback amount"/>
+         <frac32.positive name="attack" description="recording fade-in time"/>
+         <frac32.positive name="release" description="recording fade-out time"/>
+      </inlets>
+      <outlets>
+         <bool32 name="state" description="recording state with fade-out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="feedback"/>
+         <frac32.s.map.kdecaytime.exp name="attack">
+            <DefaultValue v="-64.0"/>
+         </frac32.s.map.kdecaytime.exp>
+         <bool32.tgl name="hard"/>
+         <frac32.s.map.kdecaytime.exp name="release">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map.kdecaytime.exp>
+         <bool32.tgl name="nofade"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t csample;
+uint32_t dub;
+
+uint8_t shift;
+
+  int32_t env;
+  bool dubstate;
+  uint32_t attack;
+uint32_t release;]]></code.declaration>
+      <code.init><![CDATA[shift = 27-attr_table.LENGTHPOW;]]></code.init>
+      <code.krate><![CDATA[attack = inlet_attack + param_attack;
+release = inlet_release + param_release;
+
+if (!param_nofade){
+   if (inlet_overdub) env = (param_hard) ? -(1<<27) : (1<<27) - (___SMMUL((1<<27)-env,attack)<<1);
+   else env = ___SMMUL(env,release)<<1;
+  dubstate = env;
+}else {dubstate = inlet_overdub;env = 1<<27;}
+
+outlet_state = dubstate;]]></code.krate>
+      <code.srate><![CDATA[if (dubstate){
+
+csample =  (__USAT(inlet_pos,27)>>shift);
+dub= (___SMMUL((attr_table.array[csample]<<attr_table.GAIN),(inlet_feedback + param_feedback))<<5);
+
+attr_table.array[csample] =  (__SSAT((___SMMUL((inlet_wave),env)<<5) + dub,28 ))>>attr_table.GAIN;
+
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

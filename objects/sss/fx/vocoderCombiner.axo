@@ -1,0 +1,231 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="vocoderCombiner" uuid="1a52b95a-a51f-4fbe-a47a-9dc93787eadc">
+      <sDescription>Vocoder combiner
+combines audio-bands and control-bands signals into a single audio signal.
+Rise and fall smooth out the response to the control signal.
+Volume....well... it&apos;s volume.. what&apos;s more to say about it??</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="ctrl01"/>
+         <frac32 name="ctrl02"/>
+         <frac32 name="ctrl03"/>
+         <frac32 name="ctrl04"/>
+         <frac32 name="ctrl05"/>
+         <frac32 name="ctrl06"/>
+         <frac32 name="ctrl07"/>
+         <frac32 name="ctrl08"/>
+         <frac32 name="ctrl09"/>
+         <frac32 name="ctrl10"/>
+         <frac32 name="ctrl11"/>
+         <frac32 name="ctrl12"/>
+         <frac32 name="ctrl13"/>
+         <frac32 name="ctrl14"/>
+         <frac32 name="ctrl15"/>
+         <frac32 name="ctrl16"/>
+         <frac32 name="ctrl17"/>
+         <frac32 name="ctrl18"/>
+         <frac32 name="ctrl19"/>
+         <frac32 name="ctrl20"/>
+         <frac32buffer name="band01"/>
+         <frac32buffer name="band02"/>
+         <frac32buffer name="band03"/>
+         <frac32buffer name="band04"/>
+         <frac32buffer name="band05"/>
+         <frac32buffer name="band06"/>
+         <frac32buffer name="band07"/>
+         <frac32buffer name="band08"/>
+         <frac32buffer name="band09"/>
+         <frac32buffer name="band10"/>
+         <frac32buffer name="band11"/>
+         <frac32buffer name="band12"/>
+         <frac32buffer name="band13"/>
+         <frac32buffer name="band14"/>
+         <frac32buffer name="band15"/>
+         <frac32buffer name="band16"/>
+         <frac32buffer name="band17"/>
+         <frac32buffer name="band18"/>
+         <frac32buffer name="band19"/>
+         <frac32buffer name="band20"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="rise"/>
+         <frac32.u.map name="fall"/>
+         <frac32.u.map name="volume"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val01;
+int32_t val02;
+int32_t val03;
+int32_t val04;
+int32_t val05;
+int32_t val06;
+int32_t val07;
+int32_t val08;
+int32_t val09;
+int32_t val10;
+int32_t val11;
+int32_t val12;
+int32_t val13;
+int32_t val14;
+int32_t val15;
+int32_t val16;
+int32_t val17;
+int32_t val18;
+int32_t val19;
+int32_t val20;
+int32_t ctrl;
+float32_t volume;
+float32_t rise;
+float32_t fall;]]></code.declaration>
+      <code.krate><![CDATA[volume=param_volume;
+volume=param_volume/(1<<23);
+rise=param_rise/(1<<23);
+fall=param_fall/(1<<23);]]></code.krate>
+      <code.srate><![CDATA[outlet_out=0;
+
+ctrl=inlet_ctrl01;
+if(ctrl>=val01)
+{val01=val01+((ctrl-val01)/(1+rise));}
+else
+{val01=val01+((ctrl-val01)/(1+fall));}
+outlet_out+=___SMMUL(val01<<3,inlet_band01<<2)*volume;
+
+ctrl=inlet_ctrl02;
+if(ctrl>=val02)
+{val02=val02+((ctrl-val02)/(1+rise));}
+else
+{val02=val02+((ctrl-val02)/(1+fall));}
+outlet_out+=___SMMUL(val02<<3,inlet_band02<<2)*volume;
+
+ctrl=inlet_ctrl03;
+if(ctrl>=val03)
+{val03=val03+((ctrl-val03)/(1+rise));}
+else
+{val03=val03+((ctrl-val03)/(1+fall));}
+outlet_out+=___SMMUL(val03<<3,inlet_band03<<2)*volume;
+
+ctrl=inlet_ctrl04;
+if(ctrl>=val04)
+{val04=val04+((ctrl-val04)/(1+rise));}
+else
+{val04=val04+((ctrl-val04)/(1+fall));}
+outlet_out+=___SMMUL(val04<<3,inlet_band04<<2)*volume;
+
+ctrl=inlet_ctrl05;
+if(ctrl>=val05)
+{val05=val05+((ctrl-val05)/(1+rise));}
+else
+{val05=val05+((ctrl-val05)/(1+fall));}
+outlet_out+=___SMMUL(val05<<3,inlet_band05<<2)*volume;
+
+ctrl=inlet_ctrl06;
+if(ctrl>=val06)
+{val06=val06+((ctrl-val06)/(1+rise));}
+else
+{val06=val06+((ctrl-val06)/(1+fall));}
+outlet_out+=___SMMUL(val06<<3,inlet_band06<<2)*volume;
+
+ctrl=inlet_ctrl07;
+if(ctrl>=val07)
+{val07=val07+((ctrl-val07)/(1+rise));}
+else
+{val07=val07+((ctrl-val07)/(1+fall));}
+outlet_out+=___SMMUL(val07<<3,inlet_band07<<2)*volume;
+
+ctrl=inlet_ctrl08;
+if(ctrl>=val08)
+{val08=val08+((ctrl-val08)/(1+rise));}
+else
+{val08=val08+((ctrl-val08)/(1+fall));}
+outlet_out+=___SMMUL(val08<<3,inlet_band08<<2)*volume;
+
+ctrl=inlet_ctrl09;
+if(ctrl>=val09)
+{val09=val09+((ctrl-val09)/(1+rise));}
+else
+{val09=val09+((ctrl-val09)/(1+fall));}
+outlet_out+=___SMMUL(val09<<3,inlet_band09<<2)*volume;
+
+ctrl=inlet_ctrl10;
+if(ctrl>=val10)
+{val10=val10+((ctrl-val10)/(1+rise));}
+else
+{val10=val10+((ctrl-val10)/(1+fall));}
+outlet_out+=___SMMUL(val10<<3,inlet_band10<<2)*volume;
+
+ctrl=inlet_ctrl11;
+if(ctrl>=val11)
+{val11=val11+((ctrl-val11)/(1+rise));}
+else
+{val11=val11+((ctrl-val11)/(1+fall));}
+outlet_out+=___SMMUL(val11<<3,inlet_band11<<2)*volume;
+
+ctrl=inlet_ctrl12;
+if(ctrl>=val12)
+{val12=val12+((ctrl-val12)/(1+rise));}
+else
+{val12=val12+((ctrl-val12)/(1+fall));}
+outlet_out+=___SMMUL(val12<<3,inlet_band12<<2)*volume;
+
+ctrl=inlet_ctrl13;
+if(ctrl>=val13)
+{val13=val13+((ctrl-val13)/(1+rise));}
+else
+{val13=val13+((ctrl-val13)/(1+fall));}
+outlet_out+=___SMMUL(val13<<3,inlet_band13<<2)*volume;
+
+ctrl=inlet_ctrl14;
+if(ctrl>=val14)
+{val14=val14+((ctrl-val14)/(1+rise));}
+else
+{val14=val14+((ctrl-val14)/(1+fall));}
+outlet_out+=___SMMUL(val14<<3,inlet_band14<<2)*volume;
+
+ctrl=inlet_ctrl15;
+if(ctrl>=val15)
+{val15=val15+((ctrl-val15)/(1+rise));}
+else
+{val15=val15+((ctrl-val15)/(1+fall));}
+outlet_out+=___SMMUL(val15<<3,inlet_band15<<2)*volume;
+
+ctrl=inlet_ctrl16;
+if(ctrl>=val16)
+{val16=val16+((ctrl-val16)/(1+rise));}
+else
+{val16=val16+((ctrl-val16)/(1+fall));}
+outlet_out+=___SMMUL(val16<<3,inlet_band16<<2)*volume;
+
+ctrl=inlet_ctrl17;
+if(ctrl>=val17)
+{val17=val17+((ctrl-val17)/(1+rise));}
+else
+{val17=val17+((ctrl-val17)/(1+fall));}
+outlet_out+=___SMMUL(val17<<3,inlet_band17<<2)*volume;
+
+ctrl=inlet_ctrl18;
+if(ctrl>=val18)
+{val18=val18+((ctrl-val18)/(1+rise));}
+else
+{val18=val18+((ctrl-val18)/(1+fall));}
+outlet_out+=___SMMUL(val18<<3,inlet_band18<<2)*volume;
+
+ctrl=inlet_ctrl19;
+if(ctrl>=val19)
+{val19=val19+((ctrl-val19)/(1+rise));}
+else
+{val19=val19+((ctrl-val19)/(1+fall));}
+outlet_out+=___SMMUL(val19<<3,inlet_band19<<2)*volume;
+
+ctrl=inlet_ctrl20;
+if(ctrl>=val20)
+{val20=val20+((ctrl-val20)/(1+rise));}
+else
+{val20=val20+((ctrl-val20)/(1+fall));}
+outlet_out+=___SMMUL(val20<<3,inlet_band20<<2)*volume;]]></code.srate>
+   </obj.normal>
+</objdefs>

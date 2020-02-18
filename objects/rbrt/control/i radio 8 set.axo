@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="i radio 8 set" uuid="65668cba-fc1b-477f-a1da-53b75e26b06e">
+      <sDescription>positive integer control, horizontal radio buttons
+inlet &apos;reset&apos; resets control to zero</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ctrl.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="set"/>
+         <int32.positive name="setTo"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="value" noLabel="true">
+            <MaxValue i="8"/>
+         </int32.hradio>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool ntrig;
+uint8_t out;]]></code.declaration>
+      <code.krate><![CDATA[out = param_value;
+if (inlet_set && (!ntrig)){
+	ntrig = 1;
+	out = inlet_setTo %8;	
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_value],out, 0xFFFD);
+}
+
+if (!inlet_set) ntrig = 0;
+
+outlet_out= out;]]></code.krate>
+   </obj.normal>
+</objdefs>

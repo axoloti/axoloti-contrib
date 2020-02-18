@@ -1,0 +1,1013 @@
+<patch-1.0 appVersion="1.0.12">
+   <patchobj type="patch/object" uuid="691bf902-c228-4139-ac7d-0a7d4ea55818" name="object_1" x="1974" y="0">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+      </attribs>
+      <object id="patch/object" uuid="691bf902-c228-4139-ac7d-0a7d4ea55818">
+         <inlets>
+            <int32 name="offset"/>
+         </inlets>
+         <outlets>
+            <bool32.pulse name="o0"/>
+            <bool32.pulse name="o1"/>
+            <bool32.pulse name="o2"/>
+            <bool32.pulse name="o3"/>
+            <bool32.pulse name="o4"/>
+            <bool32.pulse name="o5"/>
+            <bool32.pulse name="o6"/>
+            <bool32.pulse name="o7"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int32_t prev;
+bool trig;]]></code.declaration>
+         <code.krate><![CDATA[if (inlet_offset != prev) trig = 1;
+else trig = 0;
+
+outlet_o0 = 0;
+if ((attr_table.array [inlet_offset] > 0) && trig) outlet_o0 = 1;
+outlet_o1 = 0;
+if ((attr_table.array [inlet_offset + 1] > 0) && trig) outlet_o1 = 1;
+
+prev = inlet_offset;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="table/alloc 32b" uuid="ac26551322b24f37c3be0e6481d1193f1fd66bc8" name="copy" x="476" y="140">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="64"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="data" x="826" y="154">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="512"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="490" y="238">
+      <params>
+         <int32 name="value" value="3000"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/ktransport" uuid="e1132b5e-a7db-4457-8d5b-8cf2e214e6a1" name="ktransport_1" x="574" y="238">
+      <params>
+         <int32 name="factor" value="1"/>
+         <bool32.tgl name="mode" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="steps" selection="8"/>
+      </attribs>
+   </obj>
+   <obj type="logic/decode/int 8" uuid="a6b6e4b746767d6b652c503a1b683bc84b4f7d38" name="int_1" x="966" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_2" x="1106" y="252">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="0"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_4" x="1246" y="252">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="1"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="b53e581c-146f-4693-8381-c60d5566b8c4" name="patcher_1" x="1736" y="280">
+      <params>
+         <int32 name="i_2" value="0"/>
+         <frac32.s.map name="saw_1" value="-40.0"/>
+         <int32 name="i_1" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="16"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="280" y="84">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_3" x="392" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="offset" x="98" y="112">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="196" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/read" uuid="65eb8d0f6a3344638de94c9882999b9af15510d0" name="read_1" x="504" y="140">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../data"/>
+            </attribs>
+         </obj>
+         <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="saw_1" x="658" y="140">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="798" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/polyindex" uuid="edc730b5393c31d703572e0c0c88aaced643bd6" name="polyindex_1" x="84" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_1" x="308" y="238">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_2" x="420" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="offset" outlet="inlet"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="+_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="polyindex_1" outlet="index"/>
+               <dest obj="+_1" inlet="in2"/>
+               <dest obj="+_2" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="i_1" outlet="out"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="i_2" outlet="out"/>
+               <dest obj="+_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_3" outlet="out"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polychannel</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>268</x>
+            <y>146</y>
+            <width>1612</width>
+            <height>876</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="2254" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_2" x="1428" y="294">
+      <params/>
+      <attribs>
+         <combo attributeName="blocksize" selection="64"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="dfdfec02-8e27-4dd2-80f6-749442a9ab55" name="patcher_3" x="1876" y="294">
+      <params>
+         <int32 name="base o" value="32"/>
+         <frac32.s.map name="saw_1" value="-40.0"/>
+         <int32 name="base p" value="32"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="16"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base o" x="280" y="84">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="offset" x="112" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_3" x="392" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="196" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/read" uuid="65eb8d0f6a3344638de94c9882999b9af15510d0" name="read_1" x="504" y="140">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../data"/>
+            </attribs>
+         </obj>
+         <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="saw_1" x="658" y="140">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="798" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/polyindex" uuid="edc730b5393c31d703572e0c0c88aaced643bd6" name="polyindex_1" x="84" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base p" x="308" y="238">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_2" x="420" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="offset" outlet="inlet"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="+_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="polyindex_1" outlet="index"/>
+               <dest obj="+_1" inlet="in2"/>
+               <dest obj="+_2" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="base p" outlet="out"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="base o" outlet="out"/>
+               <dest obj="+_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_3" outlet="out"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polychannel</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>279</x>
+            <y>291</y>
+            <width>1612</width>
+            <height>876</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="drj/math/sum4" uuid="7d7f2293cb126acaed86ae2d46124474d118a692" name="sum4_1" x="2044" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="2142" y="294">
+      <params>
+         <frac32.u.map name="amp" value="16.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_3" x="1106" y="406">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="2"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_5" x="1246" y="406">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="3"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/gate_hold_i" uuid="8a2bb3cd-0d44-4e9d-a279-098809d7eefb" name="gate_hold_i_1" x="812" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="532" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="6046bf36-5a7c-455e-a5b1-75e0b17e7bab" name="patcher_2" x="1736" y="476">
+      <params>
+         <int32 name="base o" value="16"/>
+         <frac32.s.map name="saw_1" value="-40.0"/>
+         <int32 name="base p" value="16"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="16"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base o" x="280" y="84">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="offset" x="112" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_3" x="392" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="196" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/read" uuid="65eb8d0f6a3344638de94c9882999b9af15510d0" name="read_1" x="504" y="140">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../data"/>
+            </attribs>
+         </obj>
+         <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="saw_1" x="658" y="140">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="798" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/polyindex" uuid="edc730b5393c31d703572e0c0c88aaced643bd6" name="polyindex_1" x="84" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base p" x="308" y="238">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_2" x="420" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="offset" outlet="inlet"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="+_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="polyindex_1" outlet="index"/>
+               <dest obj="+_1" inlet="in2"/>
+               <dest obj="+_2" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="base p" outlet="out"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="base o" outlet="out"/>
+               <dest obj="+_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_3" outlet="out"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polychannel</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>279</x>
+            <y>291</y>
+            <width>1612</width>
+            <height>876</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <patcher type="patch/patcher" uuid="9e0ea182-650f-42a4-b2fe-b932cce1fc61" name="patcher_4" x="1876" y="476">
+      <params>
+         <int32 name="base o" value="48"/>
+         <frac32.s.map name="saw_1" value="-40.0"/>
+         <int32 name="base p" value="48"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="16"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base o" x="280" y="84">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="offset" x="112" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_3" x="392" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_1" x="196" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/read" uuid="65eb8d0f6a3344638de94c9882999b9af15510d0" name="read_1" x="504" y="140">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../data"/>
+            </attribs>
+         </obj>
+         <obj type="osc/saw cheap" uuid="1f8efc3f480aec1c02c1059cc3e3ad689aa4052" name="saw_1" x="658" y="140">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="3ac307b9f782049739ed62504081b96d580ea336" name="*_1" x="798" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/polyindex" uuid="edc730b5393c31d703572e0c0c88aaced643bd6" name="polyindex_1" x="84" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="base p" x="308" y="238">
+            <params>
+               <int32 name="value" onParent="true" value="0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="b94a9b8e9adcb7d18868c0ee808a9b211b65578d" name="+_2" x="420" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="offset" outlet="inlet"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="+_3" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="polyindex_1" outlet="index"/>
+               <dest obj="+_1" inlet="in2"/>
+               <dest obj="+_2" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="+_2" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="base p" outlet="out"/>
+               <dest obj="+_2" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="base o" outlet="out"/>
+               <dest obj="+_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="+_3" outlet="out"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polychannel</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>279</x>
+            <y>291</y>
+            <width>1612</width>
+            <height>876</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="2436" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="1411ca09-fe64-4ed2-96e6-89fd7d22d401" name="matrix_1" x="2268" y="490">
+      <params>
+         <int32 name="offset" value="0"/>
+         <int32 name="start" value="0"/>
+         <int32 name="length" value="64"/>
+         <bool32.tgl name="active" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="blocksize" selection="1"/>
+      </attribs>
+      <object id="patch/object" uuid="1411ca09-fe64-4ed2-96e6-89fd7d22d401">
+         <sDescription>toggles the elements of a table with the 8x8 matrix of a &apos;launchpad&apos;.
+&apos;offset&apos; sets the table index to start at,
+&apos;startpad&apos; sets the first pad of the launchpad&apos;s active area,
+&apos;length&apos; sets the length of the area.
+&apos;blocksize&apos; sets the size of the data-block.</sDescription>
+         <author>robert schirmer</author>
+         <license>BSD</license>
+         <helpPatch>launchpad.axh</helpPatch>
+         <inlets>
+            <int32 name="offset"/>
+            <int32 name="start"/>
+            <int32 name="length"/>
+            <bool32.risingfalling name="active"/>
+            <frac32.bipolar name="value"/>
+         </inlets>
+         <outlets>
+            <int32 name="matrix" description="pad index if inside range"/>
+         </outlets>
+         <displays/>
+         <params>
+            <int32 name="offset">
+               <MinValue i="0"/>
+               <MaxValue i="1000000"/>
+            </int32>
+            <int32 name="start">
+               <MinValue i="0"/>
+               <MaxValue i="1000000"/>
+            </int32>
+            <int32 name="length">
+               <MinValue i="0"/>
+               <MaxValue i="1000000"/>
+            </int32>
+            <bool32.tgl name="active"/>
+         </params>
+         <attribs>
+            <objref name="table"/>
+            <combo name="blocksize">
+               <MenuEntries>
+                  <string>1</string>
+                  <string>4</string>
+                  <string>8</string>
+                  <string>16</string>
+                  <string>32</string>
+                  <string>64</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>0</string>
+                  <string>2</string>
+                  <string>3</string>
+                  <string>4</string>
+                  <string>5</string>
+                  <string>6</string>
+                  <string>7</string>
+               </CEntries>
+            </combo>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int8_t _note1;
+uint8_t _gate1;
+uint8_t matrix;
+uint8_t prevmatrix;
+int8_t lastmatrix;
+
+
+uint8_t start;
+uint8_t end;
+
+uint8_t bitmask1 = 0b10001110;
+
+int32_t _value;
+int32_t _cc;
+int32_t offset;
+
+int rtrig;
+int ntrig;
+bool op;]]></code.declaration>
+         <code.init><![CDATA[lastmatrix = -1;]]></code.init>
+         <code.krate><![CDATA[offset = inlet_offset + param_offset;
+start = inlet_start + param_start;
+end = (start + ( inlet_length + param_length));
+
+matrix = (_note1 -((_note1 >> 4) << 3));
+
+	
+if ((matrix >= start) && (matrix < end)) {
+	outlet_matrix = matrix;lastmatrix = matrix;
+
+if (inlet_active || param_active){
+if (_gate1) {
+      attr_table.array[(matrix << attr_blocksize)+ offset]= (inlet_value >>attr_table.GAIN);
+   }
+}
+
+}
+else {
+	if (lastmatrix <0) lastmatrix = start;
+outlet_matrix = lastmatrix;
+}]]></code.krate>
+         <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {	
+  if ((data1 -8) & bitmask1) {
+    _note1 = data1;
+    _gate1 = 1;
+  }
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note1 == data1) {
+    _gate1 = 0;
+  }
+
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+   _gate1 = 0;
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_4" x="2184" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_6" x="1106" y="560">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="4"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_7" x="1246" y="560">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="5"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/launchpad in" uuid="90f4fb72-1767-4039-8a61-e05e72b6fc03" name="launchpad_1" x="1414" y="588">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/data/tcopy" uuid="d4c37687-69fd-442f-b560-b32c25224396" name="tcopy_1" x="784" y="630">
+      <params>
+         <int32 name="src" value="0"/>
+         <int32 name="dst" value="0"/>
+         <int32 name="range" value="512"/>
+         <bool32.tgl name="splat" value="0"/>
+         <bool32.tgl name="clear" value="1"/>
+      </params>
+      <attribs>
+         <objref attributeName="src" obj="data"/>
+         <objref attributeName="dst" obj="data"/>
+         <spinner attributeName="speed" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_3" x="1624" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="1862" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/seq/blocksize" uuid="2008941b-6b2f-4ff5-898d-9c58c5fc2e88" name="blocksize_3" x="1666" y="700">
+      <params/>
+      <attribs>
+         <combo attributeName="blocksize" selection="64"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/top row" uuid="b6dc9676-87ca-43b1-b3ab-1a230d5c193e" name="top_1" x="364" y="714">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_8" x="1106" y="714">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="6"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/top disp" uuid="53640b5e-2345-494e-9be6-6130e20986e2" name="top_9" x="1246" y="714">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <spinner attributeName="button" value="7"/>
+         <combo attributeName="on" selection="red S"/>
+         <combo attributeName="off" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/matrix toggle" uuid="e4cfb313-6d47-487f-9f28-def89e6d6dc6" name="matrix_3" x="2086" y="728">
+      <params>
+         <int32 name="offset" value="0"/>
+         <int32 name="start" value="0"/>
+         <int32 name="length" value="64"/>
+         <bool32.tgl name="active" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="blocksize" selection="1"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/launchpad/matrix disp" uuid="9074be26-db88-4259-9643-756ee5e1e261" name="matrix_2" x="2352" y="742">
+      <params>
+         <bool32.tgl name="active" value="1"/>
+         <int32 name="length" value="64"/>
+         <int32 name="start" value="0"/>
+         <int32 name="offset" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="data"/>
+         <combo attributeName="device" selection="usb host port / LP"/>
+         <combo attributeName="blocksize" selection="1"/>
+         <combo attributeName="coloron" selection="red S"/>
+         <combo attributeName="coloroff" selection="off"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="602" y="798">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/launchpad/right row" uuid="b2364061-8870-4e9d-904d-3dd4c69582ff" name="right_1" x="1428" y="798">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="1666" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="ktransport_1" inlet="kticks"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o0"/>
+         <dest obj="top_2" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o1"/>
+         <dest obj="top_4" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o2"/>
+         <dest obj="top_3" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o3"/>
+         <dest obj="top_5" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o4"/>
+         <dest obj="top_6" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o5"/>
+         <dest obj="top_7" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o6"/>
+         <dest obj="top_8" inlet="on"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o7"/>
+         <dest obj="top_9" inlet="on"/>
+      </net>
+      <net>
+         <source obj="blocksize_2" outlet="out"/>
+         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="patcher_2" inlet="offset"/>
+         <dest obj="patcher_3" inlet="offset"/>
+         <dest obj="patcher_4" inlet="offset"/>
+         <dest obj="patcher_1" inlet="offset"/>
+      </net>
+      <net>
+         <source obj="launchpad_1" outlet="tgate"/>
+         <dest obj="mux_1" inlet="s"/>
+         <dest obj="inv_3" inlet="i"/>
+         <dest obj="matrix_3" inlet="active"/>
+         <dest obj="inv_4" inlet="i"/>
+      </net>
+      <net>
+         <source obj="launchpad_1" outlet="top"/>
+         <dest obj="blocksize_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="blocksize_3" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="matrix_2" inlet="offset"/>
+         <dest obj="matrix_1" inlet="offset"/>
+         <dest obj="matrix_3" inlet="offset"/>
+      </net>
+      <net>
+         <source obj="sum4_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="sum4_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="patcher_2" outlet="outlet_1"/>
+         <dest obj="sum4_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="patcher_3" outlet="outlet_1"/>
+         <dest obj="sum4_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="patcher_4" outlet="outlet_1"/>
+         <dest obj="sum4_1" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="ktransport_1" outlet="step"/>
+         <dest obj="gate_hold_i_1" inlet="in"/>
+         <dest obj="int_1" inlet="i1"/>
+         <dest obj="blocksize_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="gate_hold_i_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="tcopy_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="top_1" outlet="t0"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="top_1" outlet="t7"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="right_1" outlet="r0"/>
+         <dest obj="inv_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="matrix_1" inlet="value"/>
+      </net>
+      <net>
+         <source obj="matrix_1" outlet="matrix"/>
+         <dest obj="i_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="inv_4" outlet="o"/>
+         <dest obj="matrix_1" inlet="active"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1612</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

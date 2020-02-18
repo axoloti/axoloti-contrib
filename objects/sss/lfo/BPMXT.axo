@@ -1,0 +1,182 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="BPMXT" uuid="0a148101-2080-4020-b799-c0346f263807">
+      <sDescription>BPM clock module with lots of extra goodies to sync other modules to the clock or pitchbend depending on BPM change</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="BPMbase"/>
+         <int32 name="BPMctrl"/>
+         <bool32 name="reset"/>
+      </inlets>
+      <outlets>
+         <int32 name="BPMctrl"/>
+         <frac32.bipolar name="pitchbend"/>
+         <frac32 name="pitchbase"/>
+         <bool32 name="trigger"/>
+         <int32 name="count"/>
+         <frac32 name="phase"/>
+         <bool32 name="rst"/>
+         <frac32 name="ratebase"/>
+         <frac32 name="delaybase"/>
+         <bool32 name="straight"/>
+      </outlets>
+      <displays>
+         <bool32 name="d1" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="BPMbase">
+            <MinValue i="0"/>
+            <MaxValue i="999"/>
+         </int32>
+         <bool32.tgl name="link"/>
+         <int32 name="BPMctrl">
+            <MinValue i="0"/>
+            <MaxValue i="999"/>
+         </int32>
+         <int32 name="measureDenom">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="sync">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="measureSwing">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.s.map name="swing"/>
+         <frac32.s.map name="stretch"/>
+         <frac32.s.map name="deviate"/>
+         <frac32.s.map name="mash"/>
+         <int32 name="phsMul">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="phsDiv">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <bool32.mom name="reset"/>
+         <bool32.tgl name="16fpp24"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t phs;
+int32_t PHS;
+int cnt;
+int CNT;
+int count;
+bool trg;
+int32_t Phase;
+bool r;
+int rate1=3;
+int rate2=4;
+uint32_t frq;
+int32_t swing;
+int32_t Swing;
+int32_t out;
+int32_t vi27=(1<<27)-1;
+int snc;
+int32_t LOG(int32_t in){
+	Float_t f;
+f.f = in;
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+out = r1 + r3;
+
+}
+
+int32_t FTOM(int32_t freq){
+	int32_t ptch;
+	int32_t mid;
+MTOFEXTENDED(0,mid);
+LOG(mid);
+mid=out;
+
+int32_t to;
+LOG(freq);
+to=out;
+return ptch=(to-mid>>1)*3;
+};]]></code.declaration>
+      <code.init><![CDATA[cnt=0;
+swing=0;
+snc=0;
+count=0;
+Phase=0;]]></code.init>
+      <code.krate><![CDATA[//int32_t pitch;
+int BPMbase=param_BPMbase+inlet_BPMbase;
+int BPMctrl=param_BPMctrl+inlet_BPMctrl;
+outlet_rst=0;
+int32_t freq;
+if((BPMbase>0)&&(BPMctrl>0)){
+MTOFEXTENDED(0,freq)
+float32_t ratio;
+ratio=(float32_t)BPMctrl/BPMbase;
+if(param_link<1){
+freq=freq*ratio;
+}
+else{PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_BPMbase],param_BPMctrl,0xFFFD);BPMbase=BPMctrl;}
+	bool reset=param_reset||inlet_reset;
+      if (reset && r) {
+      outlet_rst=1;
+         Phase = 0;
+         snc=0;
+         cnt=0;
+         swing=0;
+         count=0;
+         r = 0;
+         PHS=0;
+      } else {
+         if (!reset) r = 1;
+         frq=(uint32_t)(1<<30)/(22500/BPMctrl);
+         Phase += frq>>2;
+         PHS=Phase*param_measureDenom;
+      }
+if((uint32_t)Phase<phs){
+	count+=1;
+	count=count>=param_phsDiv?0:count;
+		snc+=1;
+		if(snc>=param_sync){
+			cnt=-1;
+			snc=0;
+		}
+}
+
+
+if((PHS>swing)&&!trg){
+	trg=1;	
+	CNT=(CNT+1);
+	cnt=cnt>=(param_measureSwing*param_sync)?0:cnt;
+	cnt=CNT/param_measureSwing;
+	
+	int32_t deviate=((int32_t)(param_deviate*0.999)<<2);
+	int32_t mash=((int32_t)(param_mash*0.999)<<2);
+	int32_t stretch=((int32_t)(param_stretch*0.999)<<2);
+	bool sel=((cnt>>1)&1);
+	sel=((cnt/(4-param_16fpp24))&1)>0?!sel:sel;
+	sel=sel&&(cnt&1);
+	swing=((((int32_t)(-param_swing*0.999)<<4)*(cnt&1))+(((cnt>>1)&1)>0?-deviate:deviate)+(((cnt&3)-1)*stretch+(sel>0?mash:-mash)))*0.99;
+}
+else if((PHS<=Swing)&&trg){trg=0;Swing=swing;}
+
+      disp_d1=outlet_trigger=trg;
+      outlet_pitchbend=FTOM(freq);
+      outlet_pitchbase=FTOM(frq)+outlet_pitchbend;
+	 outlet_BPMctrl=param_BPMctrl;
+	 outlet_count=cnt;
+	 outlet_phase=(((phs>>5)/param_phsDiv+((count<<27)/param_phsDiv))*param_phsMul)&vi27;
+	 outlet_straight=Phase>0?1:0;
+}
+else{
+	outlet_pitchbend=FTOM(1);
+	outlet_pitchbase=FTOM(1);
+	outlet_BPMctrl=0;
+	outlet_trigger=0;
+	outlet_count=cnt;
+	outlet_straight=0;
+}
+phs=(uint32_t)Phase;
+outlet_delaybase=(uint64_t)(1<<30)*(1<<17)/frq;
+   outlet_ratebase=frq>>2;]]></code.krate>
+   </obj.normal>
+</objdefs>

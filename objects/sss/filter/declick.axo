@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="declick" uuid="91722819-de64-40f4-9475-4bee043e9ca2">
+      <sDescription>waveform de-click module
+when the waveform has sudden changes in it&apos;s dirac difference, the sudden offset will be fed into a LP filter, which then &quot;slowly&quot; fades the offset back to zero.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="damp"/>
+         <frac32.u.map name="threshold"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t p1;
+int32_t p2;
+int32_t p3;
+int32_t val1;
+int32_t val2;]]></code.declaration>
+      <code.krate><![CDATA[int32_t damp;
+MTOF((1<<27)-param_damp,damp);]]></code.krate>
+      <code.srate><![CDATA[int32_t diff1=inlet_in-p1;
+int32_t diff2=p1-p2;
+int32_t diff3=p2-p3;
+int32_t avg=diff1+diff3>>1;
+int32_t davg=diff2-avg;
+int32_t savg=davg;
+davg=davg>0?davg:-davg;
+if(davg>(param_threshold)){
+	val1+=diff2;
+}
+val1-=___SMMUL(val1,damp);
+
+p3=p2;
+p2=p1;
+p1=inlet_in;
+int32_t out=p2-val1;
+val2+=(out-val2)>>10;
+outlet_out=out-val2;]]></code.srate>
+   </obj.normal>
+</objdefs>

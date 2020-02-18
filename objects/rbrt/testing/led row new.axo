@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led row new" uuid="3ed34ded-ff9b-4653-80a7-6d5da8d6a26b">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="redraw"/>
+         <int32 name="row"/>
+         <bool32.risingfalling name="mute"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="LEDmaster"/>
+         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool mtrig;
+bool doit;
+uint8_t prerow;
+uint8_t row;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
+	if (inlet_mute) mtrig = 0;
+if (!inlet_mute){
+		row = (inlet_row + attr_row) %4;
+		uint16_t offset = row *77;
+		if (inlet_redraw && !trig){trig = 1;doit = 1;}
+			if (!inlet_redraw) trig = 0;
+		if (row != prerow) {doit = 1;prerow = row;}			
+		if ((doit && !attr_LEDmaster.ROW)&& !attr_LEDmaster.LOCKED) {
+			doit = 0;
+			attr_LEDmaster.disp_cell_txt (row,0,"");
+			attr_LEDmaster.disp_cell_txt (row,1,"");
+			attr_LEDmaster.disp_cell_txt (row,2,"");
+			attr_LEDmaster.disp_cell_txt (row,3,"");		
+			attr_LEDmaster.disp_cell_txt (row,4,"");
+			attr_LEDmaster.disp_cell_txt (row,5,"");
+			attr_LEDmaster.disp_cell_txt (row,6,"");
+			attr_LEDmaster.disp_cell_txt (row,7,"");
+			attr_LEDmaster.ROW = row +1;
+		}	
+}
+if (inlet_mute) mtrig = 0;
+if (!inlet_redraw) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

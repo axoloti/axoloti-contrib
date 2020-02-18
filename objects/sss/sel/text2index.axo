@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="text2index" uuid="5a87df5e-829d-4f24-8f52-d6068873ae23">
+      <sDescription>converts a text into the index-numbers (see library in the &quot;local data&quot;, you can change this library yourself! Just make sure the amount of characters is within the array size (now it&apos;s d[128] for max 128 characters).
+
+Use a selector, pattern generator or counter to step through the text. Each character (even space!-&gt; index 0) counts as 1 step.
+
+The counter reads the index-position within the text, converts the character into a value by comparing it to the library and outputs the index-value from that character within the library.
+
+This can be used to control presets for example. Best example would be a &quot;talking synth&quot; where each character stands for a preset making a distinct sound.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count"/>
+      </inlets>
+      <outlets>
+         <int32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="text"/>
+      </attribs>
+      <code.declaration><![CDATA[int length = strlen("attr_text");
+char c[512]= ("attr_text");
+char d[128]=(" aáàäâbcdeéèëêfghiíìïîjklmnoóòöôpqrstuúùüûvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()-=[];',./_+{}:|<>?");
+int32_t V;
+int i;
+int32_t C;]]></code.declaration>
+      <code.krate><![CDATA[C=inlet_count;
+C=C-(C/length)*length;
+C=C<0?C+length:C;
+
+for(i=0;i<128;i++){
+if(d[i]==c[C]){
+	V=i;
+}}
+outlet_out=V;]]></code.krate>
+   </obj.normal>
+</objdefs>

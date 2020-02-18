@@ -1,0 +1,160 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="globPlayII" uuid="22250feb-74c5-49bd-b173-d96e7114eb18">
+      <sDescription>Playful Globulator !
+    _______  
+   /       \
+  |    _____v____
+  |   |          |
+-----&gt;|          |----&gt;           fb  signal
+      |          |           /---&gt; D ---&gt; LP -----&gt;\
+  ---&gt;|          |----&gt; HP -&lt;                       \
+  |   |__________|           \---&gt; D ---&gt; LP --&gt;\    \
+  |         ^                      fb  mod       |   /
+   \         \__________________________________/   /
+    \______________________________________________/
+    
+todo: add ar and kr mod inputs
+      </sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>globPlayII.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="r"/>
+         <frac32buffer name="theta ar"/>
+         <frac32 name="theta kr" description="rotation angle"/>
+         <frac32 name="mod r" description="depth of direct modulation"/>
+         <frac32 name="mod i" description="depth of feedback modulation"/>
+         <frac32 name="HP" description="feedback high pass cutoff"/>
+         <frac32 name="signal LP" description="signal feedback low pass cutoff"/>
+         <frac32 name="mod LP" description="modulation feedback low pass cutoff"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="r" description="output signal"/>
+         <frac32buffer name="i" description="feedback signal"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="theta" description="rotation angle"/>
+         <frac32.s.map name="mod r" description="depth of direct modulation"/>
+         <frac32.s.map name="mod i" description="depth of feedback modulation"/>
+         <frac32.s.map name="HP" description="feedback high pass cutoff"/>
+         <frac32.s.map name="signal LP" description="signal feedback low pass cutoff"/>
+         <int32 name="signal fb delay">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <frac32.s.map name="mod LP" description="modulation feedback low pass cutoff"/>
+         <int32 name="mod fb delay">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t sin2t_q27(uint32_t p){
+  int32_t a = (p & ((1<<20)-1)) << 8; //q28
+  uint32_t i = p >> 20;
+  return ___SMMLA(a, sine2t[i+1] - sine2t[i], sine2t[i] >> 4);
+}
+int32_t cos2t_q27(uint32_t p){
+  return sin2t_q27(p + (1UL << 30));
+}
+int32_t d[256];
+uint8_t dc;
+int32_t in_i;
+int32_t in_mod;
+int32_t modI, modR, theta;
+int32_t a_r;
+int32_t signalLPCoeff, signalLP;
+int32_t modLPCoeff, modLP;
+int32_t HPCoeff, hp;
+]]></code.declaration>
+
+<code.init><![CDATA[
+for(int i = 0; i < 256; i++)
+  d[i] = 0;
+dc = 0;
+in_i = 0;
+in_mod = 0;
+modI = 0; modR = 0; theta = 1<<28;
+a_r = 0;
+signalLPCoeff = 1<<28; signalLP = 0;
+modLPCoeff = 1<<28; modLP = 0;
+HPCoeff = 1<<28; hp = 0;
+]]></code.init>
+
+
+
+      <code.krate><![CDATA[int32_t cutoff = param_signal_space_LP + inlet_signal_space_LP;
+if(cutoff > 64<<21) cutoff = 64<<21;
+int32_t nSignalLPCoeff;
+MTOFEXTENDED(cutoff, nSignalLPCoeff);
+
+cutoff = param_mod_space_LP + inlet_mod_space_LP;
+if(cutoff > 64<<21) cutoff = 64<<21;
+int32_t nModLPCoeff;
+MTOFEXTENDED(cutoff, nModLPCoeff);
+
+int signalDelay = param_signal_space_fb_space_delay - 1;  
+int modDelay = param_mod_space_fb_space_delay - 1;  
+
+cutoff = param_HP + inlet_HP;
+if(cutoff > 64<<21) cutoff = 64<<21;
+int32_t nHPCoeff;
+MTOFEXTENDED(cutoff, nHPCoeff);
+//deltas for linear interpolations at audio rate
+int32_t dSignalLPCoeff = (nSignalLPCoeff - signalLPCoeff)>>4;
+int32_t dModLPCoeff = (nModLPCoeff - modLPCoeff)>>4;
+int32_t dHPCoeff = (nHPCoeff - HPCoeff)>>4;
+int32_t nModI = param_mod_space_i + inlet_mod_space_i;
+int32_t nModR = param_mod_space_r + inlet_mod_space_r;
+int32_t dTheta = (param_theta  + inlet_theta_space_kr   - theta)>>4;
+//jump
+if(abs(dTheta)>(1<<19)){
+  theta = param_theta  + inlet_theta_space_kr;
+  dTheta = 0;
+}]]></code.krate>
+      <code.srate><![CDATA[
+// update modulation depth on zero crossings to avoid clics
+if(a_r > 0 != inlet_r > 0)
+  modR = nModR;
+a_r = inlet_r;
+
+//linear interpolation of krate theta
+theta += dTheta;
+
+//calc of modulated rotation angle
+uint32_t a = theta;
+a += ___SMMLA(  in_mod, modI, 
+      ___SMMUL(inlet_r, modR))<<6;
+a += inlet_theta_space_ar;
+a &= 0x07FFFFFF;
+a <<= 5;
+
+int32_t c = cos2t_q27(a);
+int32_t s = sin2t_q27(a);
+outlet_r = ___SMMLS(in_i, s, ___SMMUL(inlet_r, c)) << 5;
+outlet_i = ___SMMLA(in_i, c, ___SMMUL(inlet_r, s)) << 5;
+
+//feedback HP filter
+hp = ___SMMLA(HPCoeff += dHPCoeff, (outlet_i - hp) << 1, hp);
+
+// delay input
+// (hp is actually 'outlet_i - hp')
+dc--;
+d[dc] = outlet_i - hp;
+
+// feedback signal: delay and low pass 
+signalLP = ___SMMLA(signalLPCoeff += dSignalLPCoeff, (d[(uint8_t)(dc + signalDelay)] - signalLP) << 1, signalLP);
+signalLP = __SSAT(signalLP, 29);
+in_i = signalLP;
+
+// feedback modulation: delay and lowpass
+modLP = ___SMMLA(modLPCoeff += dModLPCoeff, (d[(uint8_t)(dc + modDelay)] - modLP) << 1, modLP);
+
+// update modulation depth on zero crossings to avoid clics
+if(in_mod > 0 != modLP > 0)
+  modI = nModI;
+in_mod = modLP;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

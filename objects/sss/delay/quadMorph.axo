@@ -1,0 +1,96 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="quadMorph" uuid="5ea08e1a-4763-407a-8b50-388428df772e">
+      <sDescription>quad morphing delay read, linear interpolated
+independent morphs for multiplying and dividing base-time input.
+Use BPMext or clock2timing module to host-sync</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32 name="time"/>
+         <frac32 name="mult"/>
+         <frac32 name="div"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="mult"/>
+         <frac32.u.map name="div"/>
+         <int32 name="qnt">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="stpM">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="stpD">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="maxM">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="maxD">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+         <int32 name="octave">
+            <MinValue i="-8"/>
+            <MaxValue i="8"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t tmp_r;
+int32_t oct;
+int32_t READ(int32_t tim,int32_t index){
+	if(oct>=0){
+	tim=tim>>oct;
+	}
+	else{
+	tim=tim<<-oct;
+	}
+	 uint32_t tmp_d =  __USAT(tim,27);
+      uint32_t tmp_di = attr_delayname.writepos - (tmp_d>>(27-attr_delayname.LENGTHPOW)) - BUFSIZE + index -1;
+      uint32_t tmp_w1 = (tmp_d<<(attr_delayname.LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = attr_delayname.array[tmp_di&attr_delayname.LENGTHMASK]<<16;
+      int32_t tmp_a2 = attr_delayname.array[(tmp_di+1)&attr_delayname.LENGTHMASK]<<16;
+      tmp_r = ___SMMUL(tmp_a1,tmp_w1);
+return      tmp_r = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+}]]></code.declaration>
+      <code.krate><![CDATA[int32_t Mult=param_mult+inlet_mult;
+int32_t Div=param_div+inlet_div;
+
+int32_t stpM1=(int64_t)((int64_t)(Mult)*param_qnt)>>27;
+int32_t MIXM=(int64_t)stpM1<<27/param_qnt*8;
+int32_t stpD1=(int64_t)((int64_t)(Div)*param_qnt)>>27;
+int32_t MIXD=(int64_t)stpD1<<27/param_qnt*8;
+int32_t stpM2=stpM1+1;
+int32_t stpD2=stpD2+1;
+stpM2=stpM2-stpM2/param_qnt*param_qnt;
+stpD2=stpD2-stpD2/param_qnt*param_qnt;
+stpM1*=param_stpM;
+stpM2*=param_stpM;
+stpM1*=param_stpD;
+stpM2*=param_stpD;
+stpM1=stpM1-stpM1/param_maxM*param_maxM+1;
+stpM2=stpM2-stpM2/param_maxM*param_maxM+1;
+stpD1=stpD1-stpD1/param_maxD*param_maxD+1;
+stpD2=stpD2-stpD2/param_maxD*param_maxD+1;
+outlet_pow=attr_delayname.LENGTHPOW;]]></code.krate>
+      <code.srate><![CDATA[int32_t tmp1=READ((int64_t)inlet_time*stpM1/stpD1,buffer_index);
+int32_t tmp2=READ((int64_t)inlet_time*stpM2/stpD1,buffer_index);
+int32_t tmp3=READ((int64_t)inlet_time*stpM1/stpD2,buffer_index);
+int32_t tmp4=READ((int64_t)inlet_time*stpM2/stpD2,buffer_index);
+tmp1=tmp1+___SMMUL(tmp2-tmp1<<2,MIXM);
+tmp3=tmp3+___SMMUL(tmp4-tmp3<<2,MIXM);
+tmp1=tmp1+___SMMUL(tmp3-tmp1<<2,MIXD);
+      outlet_out= tmp1;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="period mono" uuid="99c0b4f7-e8f8-49f1-8077-b837e4cef933">
+      <sDescription>Detects (or at least it tries) the period (number of samples) of the input, based on zero crossings and mean value.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.bipolar name="in" description="input signal. should be dc-free, if you&apos;re not sure, put a highpass in front of it"/>
+      </inlets>
+      <outlets>
+         <int32 name="smp" description="number of samples at s-rate sample rate"/>
+         <bool32.pulse name="trig"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="tol" description="tolerance for the mean value part, best set to intermediate values" noLabel="true"/>
+      </params>
+      <attribs>
+         <spinner name="max" description="Maximum period allowed. Used to discard false readings" MinValue="0" MaxValue="65535" DefaultValue="5870"/>
+         <spinner name="min" description="Minimum period allowed. Used to discard false readings" MinValue="16" MaxValue="65535" DefaultValue="16"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t count = 0;		//sample counter
+uint32_t output = 0;	//output reading. The period is stored here
+
+int64_t integral = 0;	//integral of the signal starting from 0-crossing
+int32_t dx = 0;		//derivative at zero crossing
+int64_t ramp = 0;		//"tolerance" ramp
+
+
+
+bool sign_old = 0;		//sign of previous sample
+bool sign = 0;			//sign of current sample
+
+int32_t in_old;		//old input]]></code.declaration>
+      <code.krate><![CDATA[outlet_smp = output;		//output the reading
+outlet_trig = 0;]]></code.krate>
+      <code.srate><![CDATA[count++;									//increase the counter by 1
+sign = inlet_in>0?1:0;						//calculate the sign of curent input
+integral += inlet_in;						//integrate the input
+ramp+=___SMMUL(dx,param_tol<<2);				//integrate the ramp, using the derivative at zero crossing
+
+			//too early		
+bool trig = (count>attr_min)	&&	((ramp>0)?(integral<ramp?1:0):(integral>ramp?0:1));
+										//this condition serves to filter out meaningless zero crossings:
+										//if count<attr_min it means it's too early to provide a reading (maybe there's some noise in the signal)
+										//the second condition serves to test if the mean value of the signal is sufficiently close to 0
+										//let's be honest: we'll never be so lucky to get it exactly to 0, so we'll settle at a sufficiently small value
+										//how small? it depends on how steep was the signal at zero crossing and on how happy we are with approximate readings
+										
+
+if (sign != sign_old)						//a zero crossing has occurred
+{
+	if (trig)								//if the "condition zero" i've explained before is met, we have a readout!
+	{
+		output = count;					//readout
+		count = 0;						//resetting the counter
+		integral = 0;						//resetting the integrator
+		ramp = 0;							//resetting the ramp integrator
+		dx = inlet_in - in_old;				//calculating a new derivative at 0x
+		outlet_trig = 1<<27;
+	}
+	if (count > attr_max)					//the reading is taking too long. I'll start counting from here without passing the readout.
+	{
+		count = 0;						//resetting the counter
+		integral = 0;						//resetting the integrator
+		ramp = 0;							//resetting the ramp integrator
+		dx = inlet_in - in_old;				//calculating a new derivative at 0x
+	}
+	
+}
+
+sign_old = sign;							
+in_old = inlet_in;]]></code.srate>
+   </obj.normal>
+</objdefs>

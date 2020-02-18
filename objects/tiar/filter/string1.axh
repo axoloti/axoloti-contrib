@@ -1,0 +1,150 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="0" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="112" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="210" y="0">
+      <params>
+         <frac32.u.map name="amp" value="0.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="308" y="0">
+      <params>
+         <frac32.s.map name="a" value="26.0"/>
+         <frac32.s.map name="d" value="36.0"/>
+         <frac32.u.map name="s" value="49.5"/>
+         <frac32.s.map name="r" value="-57.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="406" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="462" y="0">
+      <params>
+         <frac32.u.map name="gain1" value="41.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/DP2SawPls" uuid="454b525d-2d84-4b10-b0e3-077a48d6c5dc" name="DP2SawPls_1" x="546" y="0">
+      <params>
+         <frac32.s.map name="pitch" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="686" y="28" text="&lt;---- A simple sawtooth oscillator"/>
+   <comment type="patch/comment" x="686" y="42" text="          with vibrato"/>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="0" y="112">
+      <params>
+         <frac32.s.map name="a" value="-4.0"/>
+         <frac32.s.map name="d" value="55.0"/>
+         <frac32.u.map name="s" value="46.5"/>
+         <frac32.s.map name="r" value="-55.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="98" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="182" y="252">
+      <params>
+         <frac32.u.map name="amp" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/string1" uuid="9696178e-650d-49d8-b6fb-3d7fc1cd2ba5" name="string1_1" x="406" y="252">
+      <params>
+         <int32 name="Preset" value="9"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="700" y="266" text="12 Presets are available"/>
+   <comment type="patch/comment" x="700" y="294" text="&lt;---  Preset 0 is bypass"/>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="98" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="826" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_2" x="98" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
+         <dest obj="string1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="DP2SawPls_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="DCA_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="DCA_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="DP2SawPls_1" outlet="wave"/>
+         <dest obj="DCA_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="string1_1" outlet="out"/>
+         <dest obj="MIDscope_2" inlet="in"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>423</x>
+      <y>23</y>
+      <width>1270</width>
+      <height>983</height>
+   </windowPos>
+</patch-1.0>

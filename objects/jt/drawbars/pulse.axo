@@ -1,0 +1,96 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="pulse" uuid="c8814dae-b5b2-4286-8796-9ba8fb5deaef">
+      <sDescription>hammond-like drawbars producing pulses on midi note-on.</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>drawbars.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="velosense" description="0: no velocity, 64: full velocity dependent"/>
+         <frac32.u.map name="f1" description="16&apos;, suboctave, -12ST"/>
+         <frac32.u.map name="f2" description="5 1/3&apos;, 5th, +7ST"/>
+         <frac32.u.map name="f3" description="8&apos;, unison, principal">
+            <DefaultValue v="64.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="f4" description="4&apos;, 8th, octave, +12ST"/>
+         <frac32.u.map name="f5" description="2 2/3&apos;,12th, nazard, +19ST"/>
+         <frac32.u.map name="f6" description="2&apos;, 15th, blockflote, +24ST"/>
+         <frac32.u.map name="f7" description="1 3/5&apos;, 17th, tierce, +28ST"/>
+         <frac32.u.map name="f8" description="1 1/3&apos;, 19th, +31ST"/>
+         <frac32.u.map name="f9" description="1&apos;, 22nd, +36ST"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const int ntw = 128;
+static const int nkeys = 128+48;
+uint8_t keys1[128];
+uint16_t keys[nkeys];
+int32_t *array;
+static const uint32_t LENGTHPOW = 7;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = (1<<LENGTHPOW)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 0;
+
+int32_t r_array[ntw+48];
+int32_t velosense=0;
+const int keyoffset = 36;
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___SMULTT (int32_t op1, int32_t op2)
+{
+  int32_t result;
+
+  __ASM volatile ("smultt %0, %1, %2" : "=r" (result) : "r" (op1), "r" (op2));
+  return(result);
+}
+
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t ___SMULTB (int32_t op1, int32_t op2)
+{
+  int32_t result;
+
+  __ASM volatile ("smultb %0, %1, %2" : "=r" (result) : "r" (op1), "r" (op2));
+  return(result);
+}]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<nkeys;i++){
+	keys[i]=0;
+}
+for(i=0;i<128;i++){
+	keys1[i]=0;
+}
+
+array = &r_array[0];]]></code.init>
+      <code.krate><![CDATA[velosense=param_velosense<<3;
+
+int i;
+
+int32_t *p = &array[12];
+for(i=12;i<128;i+=4) {
+	*p++=0;
+	*p++=0;
+	*p++=0;
+	*p++=0;
+}
+
+for(i=12;i<128;i++) {
+	if (keys1[i]){
+		uint32_t val =__SMMLA(velosense,keys1[i]<<24,0x1FFFFFFF-(velosense>>1))<<4;
+		keys1[i] = 0;
+		array[i-12] = (((uint32_t)param_f1)*(uint64_t)(val))>>32;
+		array[i+ 7] = (((uint32_t)param_f2)*(uint64_t)(val))>>32;
+		array[i+ 0] = (((uint32_t)param_f3)*(uint64_t)(val))>>32;
+		array[i+12] = (((uint32_t)param_f4)*(uint64_t)(val))>>32;
+		array[i+19] = (((uint32_t)param_f5)*(uint64_t)(val))>>32;
+		array[i+24] = (((uint32_t)param_f6)*(uint64_t)(val))>>32;
+		array[i+28] = (((uint32_t)param_f7)*(uint64_t)(val))>>32;
+		array[i+31] = (((uint32_t)param_f8)*(uint64_t)(val))>>32;
+		array[i+36] = (((uint32_t)param_f9)*(uint64_t)(val))>>32;
+		break;
+	}
+}]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+   keys1[data1]=data2;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

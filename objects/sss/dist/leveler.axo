@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="leveler" uuid="7ff5e250-37e5-4b3e-b08e-d1c77fd05594">
+      <sDescription>turns any audio input signal into the level set by the &quot;level&quot; knob.
+eg. useful to level out oscillators with different volume per waveform</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="a"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="result" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="level" noLabel="true"/>
+         <frac32.s.map name="rate"/>
+         <int32 name="hold">
+            <MinValue i="0"/>
+            <MaxValue i="50000"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t max;
+int32_t val;
+int cnt;]]></code.declaration>
+      <code.krate><![CDATA[int32_t f;
+MTOF(param_rate-(1<<26),f)
+f=f>>6;]]></code.krate>
+      <code.srate><![CDATA[val+=(inlet_a-val)>>11;
+int32_t in=inlet_a-val;
+int32_t IN=in;
+in=in>0?in:-in;
+in=in<1024?1024:in;
+cnt=__USAT(cnt-1,28);
+if(in>=max){
+cnt=param_hold;
+max=in;}
+
+if(cnt==0){
+max-=___SMMUL(max,f);}
+float32_t ratio=(float32_t)(param_level)/max;
+outlet_result= IN*ratio;]]></code.srate>
+   </obj.normal>
+</objdefs>

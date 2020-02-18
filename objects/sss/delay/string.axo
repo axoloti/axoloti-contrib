@@ -1,0 +1,180 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="string" uuid="36fddf6e-c54f-4478-b6cd-d4b11ad8558e">
+      <sDescription>karplus-strong synthesis to create guitar/violin/flute sounds.
+The sound depends on the noise/waveform you feed the &quot;in&quot; input AND on the envelopes connected to the timbre and strike inputs.
+The strike-envelope opens up the vca of the &quot;in&quot; input while &quot;timbre&quot; opens up the vca of the inline-waveshaper in the delayline, forcing the delayline to self-modulate/resonate.
+These two envelopes can thus also be independently driven at different rhythms creating interesting cross-talks. Also different curvings for the envelopes can create very realistic plucks/bows.
+
+The &quot;timbre&quot; is a waveshaper using the wavetables made with the wavefromGenerator (sss/osc) which shapes the signal that loops in the delay-line. As it&apos;s offsetting the signal with the waveshape, it automatically creates a signal by itself when the &quot;timbre&quot; envelope opens up.
+
+The &quot;in&quot; input expects a signal for the &quot;strike&quot; input to work. I recommend a syncable pitched noise-source, that has a noisy edge, though will tend to have a certain pitch (ps. a synced gaussian noise generator or a noise-modulated oscillator).
+
+The internal controls:
+pitch: sets the main pitch of the delay-line.
+cutoff: sets the cutoff of the biquad BP behind the delayline.
+S2C: strike input (envelope) to cutoff height.
+reso: resonance of the biquad BP.
+feed: amount of feedback for the delayline.
+gain: gain for the output signal, forcing it into clipping.
+timbre: overall level-control for the timbre envelope.
+waveform: selects from the waveforms in the wavetable (refer to a saved table!)
+phase: sets the phase-offset of the wavetable, creating different timbre-responses.
+lfo: sets the rate of the LFO that drives the phase-offset
+damp: dampens the signal in the delayline (strike as well as timbre).
+t1, t2, t3 are three tap-positions within the delayline, which are combined to create a comb-filter effect, as if you have 3 piezo elements reading out the string at different positions.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="pitch"/>
+         <frac32 name="timbre"/>
+         <frac32 name="strike"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map.pitch name="cutoff"/>
+         <frac32.s.map name="S2C"/>
+         <frac32.u.map name="reso"/>
+         <frac32.s.map.klineartime.exp name="feed"/>
+         <frac32.u.map.gain name="gain"/>
+         <frac32.u.map name="timbre"/>
+         <frac32.u.map name="waveform"/>
+         <frac32.u.map name="phase"/>
+         <frac32.s.map.lfopitch name="lfo"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.u.map name="t1"/>
+         <frac32.u.map name="t2"/>
+         <frac32.u.map name="t3"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <objref name="timbre"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *Array;
+uint32_t writepos;
+int i;
+int32_t tmp_r[BUFSIZE];
+int32_t tmp_t[BUFSIZE];
+biquad_state bs;biquad_coefficients bc;
+uint32_t tmp_F;
+uint32_t phase;
+int32_t val;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _Array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+Array = &_Array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) Array[i] = 0;
+
+   biquad_clearstate(&bs);]]></code.init>
+      <code.krate><![CDATA[int32_t preset=___SMMUL(param_waveform<<3,attr_timbre.Waveforms<<2)*attr_timbre.LENGTH;
+  int32_t timbre=___SMMUL(inlet_timbre<<2,param_timbre<<3);
+timbre=___SMMUL(timbre<<3,timbre<<2);
+timbre=-___SMMUL(timbre<<3,timbre<<2);
+int32_t offset=___SMMUL(param_phase<<3,attr_timbre.LENGTH<<2);
+      int32_t freq;
+      MTOF(__SSAT(param_cutoff+inlet_pitch+param_pitch+___SMMUL(param_S2C<<3,inlet_strike+inlet_timbre<<2),29),freq);
+      freq=freq<<1;
+   int32_t Tim;
+   MTOF(0-param_pitch - inlet_pitch,Tim);
+   uint32_t tmp_d =  __USAT(Tim,27);
+
+int32_t TMP=tmp_d;
+//int32_t Time=TMP>>27-LENGTHPOW;
+int32_t Time=Tim;
+int32_t tailtime;
+MTOF(param_feed<<1,tailtime)
+tailtime=tailtime;
+float32_t ratio=(float32_t)(Time<<2)/(tailtime);
+float32_t dB=(float32_t)(-10)*ratio;
+dB=(powf(2,dB)-1)/8+1;
+int32_t lff;
+MTOFEXTENDED(param_lfo,lff)
+lff=lff>>8;
+phase+=lff;
+int32_t damp;
+MTOF(param_damp,damp)
+int32_t ptmp=tmp_d>>27-LENGTHPOW;
+int32_t t1=___SMMUL(param_t1<<3,ptmp<<2);
+int32_t t2=___SMMUL(param_t2<<3,ptmp<<2);
+int32_t t3=___SMMUL(param_t3<<3,ptmp<<2);
+	for(i=0;i<BUFSIZE;i++){
+	 
+      writepos = (writepos + 1)&LENGTHMASK;
+      Array[writepos] = __SSAT((inlet_in[i]+((int32_t)((tmp_r[(i-1)&(BUFSIZE-1)]*dB)))>>14),16);
+      uint32_t tmp_di = writepos - (ptmp);
+      uint32_t tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = Array[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = Array[(tmp_di+1)&LENGTHMASK]<<16;
+      tmp_r[i] = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r[i] = ___SMMLA(tmp_a2,tmp_w2,tmp_r[i]);
+
+      tmp_F+=((tmp_r[i]>>2)-tmp_F)>>3;
+      int32_t tmp_G=tmp_F&((1<<27)-1);
+      tmp_di = (tmp_F>>(27-attr_timbre.LENGTHPOW));
+      tmp_w1 = (tmp_F<<(attr_timbre.LENGTHPOW+3)) & 0x3FFFFFFF;
+      tmp_w2 = (1<<30) - tmp_w1;
+      tmp_a1 = attr_timbre.array[((tmp_di+offset+(phase>>34-attr_timbre.LENGTHPOW))&attr_timbre.LENGTHMASK)+preset];
+      tmp_a2 = attr_timbre.array[(((tmp_di+offset+1)+(phase>>34-attr_timbre.LENGTHPOW))&attr_timbre.LENGTHMASK)+preset];
+      int32_t TmP;
+      TmP = ___SMMUL(tmp_a1,tmp_w1);
+      tmp_r[i] = __SSAT(tmp_r[i]+___SMMUL(___SMMLA(tmp_a2,tmp_w2,TmP)<<3,timbre<<3),28);
+      val=___SMMLA((tmp_r[i]-val)<<1,damp,val);
+      tmp_r[i]=((tmp_r[i]*15)+val)>>4;
+     
+      tmp_t[i]=Array[writepos-t1&LENGTHMASK]<<13;
+      tmp_t[i]+=Array[writepos-t2&LENGTHMASK]<<13;
+      tmp_t[i]+=Array[writepos-t3&LENGTHMASK]<<13;
+      }
+      
+	
+	
+      biquad_bp_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
+      biquad_dsp(&bs,&bc,tmp_t,tmp_t);
+
+      for(i=0;i<BUFSIZE;i++){
+      	outlet_out[i]=__SSAT(tmp_t[i]+___SMMUL(param_gain,__SSAT(tmp_t[i],27)<<4),27)>>1;
+      }]]></code.krate>
+   </obj.normal>
+</objdefs>

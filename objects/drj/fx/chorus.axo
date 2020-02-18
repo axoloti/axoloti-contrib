@@ -1,0 +1,985 @@
+<objdefs>
+  <obj.normal id="chorus" uuid="10d7b8152ed484cfc40585d8bbac5ae03f860fba">
+    <sDescription>Chorus</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="in" description="Input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="out" description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.u.map            name="time"     noLabel="false" description="Delay time"/>
+      <frac32.s.map            name="tspread"  noLabel="false" description="Time spread"/>
+      <frac32.u.map.squaregain name="lfoamt"   noLabel="false" description="LFO amount"/>
+      <frac32.s.map.lfopitch   name="lfofreq"  noLabel="false" description="LFO frequency"/>
+      <frac32.s.map            name="fspread"  noLabel="false" description="Frequency spread"/>
+      <frac32.u.map            name="mix"      noLabel="false" description="Dry/wet mix"/>
+      <int32                   name="voices"   noLabel="false" description="Number of voices, 1..maxvoices, 0 for disable">
+        <MinValue i="0"/>
+        <MaxValue i="8"/>
+      </int32>
+    </params>
+    <attribs>
+      <combo name="wordsize">
+        <MenuEntries>
+          <string>32 bit</string>
+          <string>16 bit</string>
+          <string>12 bit</string>
+          <string>8 bit</string>
+          <string>4 bit</string>
+        </MenuEntries>
+        <CEntries>
+          <string>32</string>
+          <string>16</string>
+          <string>12</string>
+          <string>8</string>
+          <string>4</string>
+        </CEntries>
+      </combo>
+      <combo name="interp">
+        <MenuEntries>
+          <string>On</string>
+          <string>Off</string>
+        </MenuEntries>
+        <CEntries>
+          <string>1</string>
+          <string>0</string>
+        </CEntries>
+      </combo>
+      <!--combo name="storage">
+        <MenuEntries>
+          <string>SDRAM</string>
+          <string>SRAM</string>
+        </MenuEntries>
+        <CEntries>
+          <string>#define CHORUS_USE_SDRAM</string>
+          <string>#define CHORUS_USE_SRAM</string>
+        </CEntries>
+      </combo-->
+      <combo name="delaysize">
+        <MenuEntries>
+          <string>256 (5.33ms)</string>
+          <string>512 (10.66ms)</string>
+          <string>1024 (21.33ms)</string>
+          <string>2048 (42.66ms)</string>
+          <string>4096 (85.33ms)</string>
+          <string>8192 (170ms)</string>
+          <string>16384 (341ms)</string>
+          <string>32768 (682ms)</string>
+          <string>65536 (1.36s)</string>
+          <string>131072 (2.73s)</string>
+          <string>262144 (5.46s)</string>
+          <string>524288 (10.9s)</string>
+          <string>1048576 (21.8s)</string>
+          <string>2097152 (43.7s)</string>
+        </MenuEntries>
+        <CEntries>
+          <string>8</string>
+          <string>9</string>
+          <string>10</string>
+          <string>11</string>
+          <string>12</string>
+          <string>13</string>
+          <string>14</string>
+          <string>15</string>
+          <string>16</string>
+          <string>17</string>
+          <string>18</string>
+          <string>19</string>
+          <string>20</string>
+          <string>21</string>
+        </CEntries>
+      </combo>
+      <spinner name="maxvoices"  MinValue="1"  MaxValue="8" DefaultValue="4"/>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      #define WORDSIZE attr_wordsize
+      #define INTERPOLATE attr_interp
+      #define CHORUS_USE_SDRAM
+      //attr_storage
+
+      static const uint32_t LENGTHPOW = (attr_delaysize);
+      static const uint32_t LENGTH = (1<<attr_delaysize);
+      static const uint32_t LENGTHMASK = ((1<<attr_delaysize)-1);
+      static const uint32_t WORDLENGTH = attr_wordsize;
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        int32_t *array;
+      #elif WORDSIZE == 16
+        int16_t *array;
+      #elif WORDSIZE == 12
+        int16_t *array;
+      #elif WORDSIZE == 8
+        int8_t *array;
+      #elif WORDSIZE == 4
+        int8_t *array;
+      #endif
+    #else
+      #if WORDSIZE == 32
+        int32_t array[LENGTH];
+      #elif WORDSIZE == 16
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 12
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 8
+        int8_t array[LENGTH];
+      #elif WORDSIZE == 4
+        int8_t array[LENGTH];
+      #endif
+    #endif
+
+      int32_t  nvoices;
+      int32_t  old_nvoices;
+      int32_t  voice_vol;
+      int32_t  time[attr_maxvoices];
+      int32_t  lfo_prev[attr_maxvoices];
+      int32_t  lfo_step[attr_maxvoices];
+      int32_t  lfo_i[attr_maxvoices];
+      uint32_t lfo_phase[attr_maxvoices];
+      uint32_t writepos;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        static int32_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 16
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 12
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 8
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 4
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #endif
+      array = &_array[parent->polyIndex][0];
+    #endif
+
+      for( int i = 0; i < LENGTH; ++i )
+        {
+          array[i]   = 0;
+        }
+
+      for( int v = 0; v < attr_maxvoices; ++v )
+        {
+          lfo_phase[v] = 0;
+          lfo_prev[v]  = 0;
+          lfo_step[v]  = 0;
+          lfo_i[v]     = 0;
+        }
+
+      nvoices     = 0;
+      old_nvoices = -1;
+      voice_vol   = (1<<30);
+      writepos    = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      // Voice scaling
+      if( param_voices != old_nvoices )
+        {
+          nvoices = param_voices <= attr_maxvoices ? param_voices : attr_maxvoices;
+          if( nvoices > 0 )
+            {
+              voice_vol = (int32_t) ((1<<30) * 1.0f /_VSQRTF(nvoices));
+              //voice_vol = (int32_t) ((1<<30) * 1.0f / pow( nvoices, 0.4f ));  // for a bit more oomph with more voices
+            }
+          old_nvoices = nvoices;
+        }
+
+      // Modulation
+      int32_t spread = 0;
+      for( int v = 0; v < nvoices; ++v )
+        {
+                  time[v]  = ___SMMLA( param_tspread<<3, spread, param_time );
+          int32_t lfo_freq = ___SMMLA( param_fspread<<3, spread, param_lfofreq );
+          spread += (1<<27); // 0, 16, 32, 48, shifted for scaling in ___SMMUL
+          int32_t lfo_out;
+
+          MTOFEXTENDED( lfo_freq, lfo_freq );
+          lfo_phase[v] += lfo_freq>>2;
+          SINE2TINTERP( lfo_phase[v], lfo_out )
+          lfo_out = ___SMMUL( param_lfoamt>>1, lfo_out );
+
+          // LFO smoothing
+          lfo_step[v]   = (lfo_out - lfo_prev[v])>>4;
+          lfo_i[v]      = lfo_prev[v];
+          lfo_prev[v]   = lfo_out;
+        }
+
+      // Delay line write
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          // Delay line write
+          writepos = (writepos + 1)&LENGTHMASK;
+
+          #if WORDSIZE == 32
+            array[writepos] = __SSAT( inlet_in[buffer_index],     28);
+          #elif WORDSIZE == 16
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>12, 16);
+          #elif WORDSIZE == 12
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>16, 12);
+          #elif WORDSIZE == 8
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>20,  8);
+          #elif WORDSIZE == 4
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>24,  4);
+          #endif
+        }
+
+      // Voices
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          int32_t chorus_out = 0;
+          for( int v = 0; v < nvoices; ++v )
+            {
+              // LFO smoothing
+              int32_t lfo_out_interp = lfo_i[v];
+              lfo_i[v] += lfo_step[v];
+
+            #if INTERPOLATE == 0
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+
+              //uint32_t delay1 = writepos - (__USAT(param_time + inlet_time,27)>>(27-LENGTHPOW)) - BUFSIZE + buffer_index;
+              //outlet_out = array[tmp_di & LENGTHMASK]<<14;
+              #if WORDSIZE == 32
+                tmp_r = array[tmp_di&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_r = array[tmp_di&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_r = array[tmp_di&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_r = array[tmp_di&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_r = array[tmp_di&LENGTHMASK]<<26;
+              #endif
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r, chorus_out );
+
+            #else
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              uint32_t tmp_w1;
+              uint32_t tmp_w2;
+              int32_t  tmp_a1;
+              int32_t  tmp_a2;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+              tmp_w1 = (tmp_d<<( LENGTHPOW+3)) & 0x3FFFFFFF;
+              tmp_w2 = (1<<30) - tmp_w1;
+              #if WORDSIZE == 32
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<2;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<14;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<18;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<22;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<26;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<26;
+              #endif
+              tmp_r  = ___SMMUL(tmp_a1,tmp_w1);
+              tmp_r  = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r<<2, chorus_out );
+
+            #endif
+            }
+          chorus_out  = ___SMMUL(          param_mix<<3,  chorus_out<<2 );
+          chorus_out  = ___SMMLA( ((1<<27)-param_mix)<<3, inlet_in[buffer_index]<<2, chorus_out );
+          outlet_out[buffer_index] = __SSAT( chorus_out, 28 );
+        }
+    ]]></code.krate>
+  </obj.normal>
+
+  <obj.normal id="chorus" uuid="1873b8152ed484cfc40585d8bbac5ae03f860fba">
+    <sDescription>Chorus with built in and external control</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar name="in"       description="Input"/>
+      <frac32.positive      name="time"     description="Delay time"/>
+      <frac32.bipolar       name="tspread"  description="Time spread"/>
+      <frac32.positive      name="lfoamt"   description="LFO amount"/>
+      <frac32.bipolar       name="lfofreq"  description="LFO frequency"/>
+      <frac32.bipolar       name="fspread"  description="Frequency spread"/>
+      <frac32.positive      name="mix"      description="Dry/wet mix"/>
+      <int32.positive       name="voices"   description="Number of voices, added to voices parameter, 1..maxvoices, 0 for disable"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="out" description="Output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.u.map            name="time"     noLabel="false" description="Delay time"/>
+      <frac32.s.map            name="tspread"  noLabel="false" description="Time spread"/>
+      <frac32.u.map.squaregain name="lfoamt"   noLabel="false" description="LFO amount"/>
+      <frac32.s.map.lfopitch   name="lfofreq"  noLabel="false" description="LFO frequency"/>
+      <frac32.s.map            name="fspread"  noLabel="false" description="Frequency spread"/>
+      <frac32.u.map            name="mix"      noLabel="false" description="Dry/wet mix"/>
+      <int32                   name="voices"   noLabel="false" description="Number of voices, 1..maxvoices, 0 for disable">
+        <MinValue i="0"/>
+        <MaxValue i="8"/>
+      </int32>
+    </params>
+    <attribs>
+      <combo name="wordsize">
+        <MenuEntries>
+          <string>32 bit</string>
+          <string>16 bit</string>
+          <string>12 bit</string>
+          <string>8 bit</string>
+          <string>4 bit</string>
+        </MenuEntries>
+        <CEntries>
+          <string>32</string>
+          <string>16</string>
+          <string>12</string>
+          <string>8</string>
+          <string>4</string>
+        </CEntries>
+      </combo>
+      <combo name="interp">
+        <MenuEntries>
+          <string>On</string>
+          <string>Off</string>
+        </MenuEntries>
+        <CEntries>
+          <string>1</string>
+          <string>0</string>
+        </CEntries>
+      </combo>
+      <!--combo name="storage">
+        <MenuEntries>
+          <string>SDRAM</string>
+          <string>SRAM</string>
+        </MenuEntries>
+        <CEntries>
+          <string>#define CHORUS_USE_SDRAM</string>
+          <string>#define CHORUS_USE_SRAM</string>
+        </CEntries>
+      </combo-->
+      <combo name="delaysize">
+        <MenuEntries>
+          <string>256 (5.33ms)</string>
+          <string>512 (10.66ms)</string>
+          <string>1024 (21.33ms)</string>
+          <string>2048 (42.66ms)</string>
+          <string>4096 (85.33ms)</string>
+          <string>8192 (170ms)</string>
+          <string>16384 (341ms)</string>
+          <string>32768 (682ms)</string>
+          <string>65536 (1.36s)</string>
+          <string>131072 (2.73s)</string>
+          <string>262144 (5.46s)</string>
+          <string>524288 (10.9s)</string>
+          <string>1048576 (21.8s)</string>
+          <string>2097152 (43.7s)</string>
+        </MenuEntries>
+        <CEntries>
+          <string>8</string>
+          <string>9</string>
+          <string>10</string>
+          <string>11</string>
+          <string>12</string>
+          <string>13</string>
+          <string>14</string>
+          <string>15</string>
+          <string>16</string>
+          <string>17</string>
+          <string>18</string>
+          <string>19</string>
+          <string>20</string>
+          <string>21</string>
+        </CEntries>
+      </combo>
+      <spinner name="maxvoices"  MinValue="1"  MaxValue="8" DefaultValue="4"/>
+      <!--objref name="delayname"/-->
+    </attribs>
+    <code.declaration><![CDATA[
+
+      #define WORDSIZE attr_wordsize
+      #define INTERPOLATE attr_interp
+      #define CHORUS_USE_SDRAM
+
+      static const uint32_t LENGTHPOW = (attr_delaysize);
+      static const uint32_t LENGTH = (1<<attr_delaysize);
+      static const uint32_t LENGTHMASK = ((1<<attr_delaysize)-1);
+      static const uint32_t WORDLENGTH = attr_wordsize;
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        int32_t *array;
+      #elif WORDSIZE == 16
+        int16_t *array;
+      #elif WORDSIZE == 12
+        int16_t *array;
+      #elif WORDSIZE == 8
+        int8_t *array;
+      #elif WORDSIZE == 4
+        int8_t *array;
+      #endif
+    #else
+      #if WORDSIZE == 32
+        int32_t array[LENGTH];
+      #elif WORDSIZE == 16
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 12
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 8
+        int8_t array[LENGTH];
+      #elif WORDSIZE == 4
+        int8_t array[LENGTH];
+      #endif
+    #endif
+
+      int32_t  nvoices;
+      int32_t  old_nvoices;
+      int32_t  voice_vol;
+      int32_t  time[attr_maxvoices];
+      int32_t  lfo_prev[attr_maxvoices];
+      int32_t  lfo_step[attr_maxvoices];
+      int32_t  lfo_i[attr_maxvoices];
+      uint32_t lfo_phase[attr_maxvoices];
+      uint32_t writepos;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        static int32_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 16
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 12
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 8
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 4
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #endif
+      array = &_array[parent->polyIndex][0];
+    #endif
+
+      for( int i = 0; i < LENGTH; ++i )
+        {
+          array[i]   = 0;
+        }
+
+      for( int v = 0; v < attr_maxvoices; ++v )
+        {
+          lfo_phase[v] = 0;
+          lfo_prev[v]  = 0;
+          lfo_step[v]  = 0;
+          lfo_i[v]     = 0;
+        }
+
+      nvoices     = 0;
+      old_nvoices = -1;
+      voice_vol   = (1<<30);
+      writepos    = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      // Voice scaling
+      int32_t tmp_nvoices = param_voices + inlet_voices;
+      if( tmp_nvoices != old_nvoices )
+        {
+          nvoices = tmp_nvoices <= attr_maxvoices ? tmp_nvoices : attr_maxvoices;
+          if( nvoices > 0 )
+            {
+              voice_vol = (int32_t) ((1<<30) * 1.0f /_VSQRTF(nvoices));
+            }
+          old_nvoices = nvoices;
+        }
+
+      // Modulation
+      int32_t spread = 0;
+      for( int v = 0; v < nvoices; ++v )
+        {
+                  time[v]  = ___SMMLA( (param_tspread + inlet_tspread)<<3, spread, param_time + inlet_time );
+          int32_t lfo_freq = ___SMMLA( (param_fspread + inlet_fspread)<<3, spread, param_lfofreq + param_lfofreq );
+          spread += (1<<27); // 0, 16, 32, 48, shifted for scaling in ___SMMUL
+          int32_t lfo_out;
+
+          MTOFEXTENDED( lfo_freq, lfo_freq );
+          lfo_phase[v] += lfo_freq>>2;
+          SINE2TINTERP( lfo_phase[v], lfo_out )
+          lfo_out = ___SMMUL( (param_lfoamt + inlet_lfoamt)>>1, lfo_out );
+
+          // LFO smoothing
+          lfo_step[v]   = (lfo_out - lfo_prev[v])>>4;
+          lfo_i[v]      = lfo_prev[v];
+          lfo_prev[v]   = lfo_out;
+        }
+
+      // Delay line write
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          // Delay line write
+          writepos = (writepos + 1)&LENGTHMASK;
+
+          #if WORDSIZE == 32
+            array[writepos] = __SSAT( inlet_in[buffer_index],     28);
+          #elif WORDSIZE == 16
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>12, 16);
+          #elif WORDSIZE == 12
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>16, 12);
+          #elif WORDSIZE == 8
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>20,  8);
+          #elif WORDSIZE == 4
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>24,  4);
+          #endif
+        }
+
+      // Voices
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          int32_t chorus_out = 0;
+          for( int v = 0; v < nvoices; ++v )
+            {
+              // LFO smoothing
+              int32_t lfo_out_interp = lfo_i[v];
+              lfo_i[v] += lfo_step[v];
+
+            #if INTERPOLATE == 0
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+
+              #if WORDSIZE == 32
+                tmp_r = array[tmp_di&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_r = array[tmp_di&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_r = array[tmp_di&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_r = array[tmp_di&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_r = array[tmp_di&LENGTHMASK]<<26;
+              #endif
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r, chorus_out );
+
+            #else
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              uint32_t tmp_w1;
+              uint32_t tmp_w2;
+              int32_t  tmp_a1;
+              int32_t  tmp_a2;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+              tmp_w1 = (tmp_d<<( LENGTHPOW+3)) & 0x3FFFFFFF;
+              tmp_w2 = (1<<30) - tmp_w1;
+              #if WORDSIZE == 32
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<2;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<14;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<18;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<22;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<26;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<26;
+              #endif
+              tmp_r  = ___SMMUL(tmp_a1,tmp_w1);
+              tmp_r  = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r<<2, chorus_out );
+
+            #endif
+            }
+          chorus_out  = ___SMMUL(          (param_mix + inlet_mix)<<3,  chorus_out<<2 );
+          chorus_out  = ___SMMLA( ((1<<27)-(param_mix + inlet_mix))<<3, inlet_in[buffer_index]<<2, chorus_out );
+          outlet_out[buffer_index] = __SSAT( chorus_out, 28 );
+        }
+    ]]></code.krate>
+  </obj.normal>
+  <obj.normal id="chorus" uuid="1ed4bbac5ae03f123f84cfc0d7b815240585d8ba">
+    <sDescription>Chorus with control inputs</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32buffer.bipolar   name="in"       description="Input"/>
+      <frac32.positive        name="time"     description="Delay time"/>
+      <frac32.bipolar         name="tspread"  description="Time spread"/>
+      <frac32.positive        name="lfoamt"   description="LFO amount"/>
+      <frac32.bipolar         name="lfofreq"  description="LFO frequency"/>
+      <frac32.bipolar         name="fspread"  description="Frequency spread"/>
+      <frac32.positive        name="mix"      description="Dry/wet mix"/>
+      <int32.positive         name="voices"   description="Number of voices, 1..maxvoices, 0 for disable"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="out" description="Output"/>
+    </outlets>
+    <displays/>
+    <params/>
+    <attribs>
+      <combo name="wordsize">
+        <MenuEntries>
+          <string>32 bit</string>
+          <string>16 bit</string>
+          <string>12 bit</string>
+          <string>8 bit</string>
+          <string>4 bit</string>
+        </MenuEntries>
+        <CEntries>
+          <string>32</string>
+          <string>16</string>
+          <string>12</string>
+          <string>8</string>
+          <string>4</string>
+        </CEntries>
+      </combo>
+      <combo name="interp">
+        <MenuEntries>
+          <string>On</string>
+          <string>Off</string>
+        </MenuEntries>
+        <CEntries>
+          <string>1</string>
+          <string>0</string>
+        </CEntries>
+      </combo>
+      <!--combo name="storage">
+        <MenuEntries>
+          <string>SDRAM</string>
+          <string>SRAM</string>
+        </MenuEntries>
+        <CEntries>
+          <string>#define CHORUS_USE_SDRAM</string>
+          <string>#define CHORUS_USE_SRAM</string>
+        </CEntries>
+      </combo-->
+      <combo name="delaysize">
+        <MenuEntries>
+          <string>256 (5.33ms)</string>
+          <string>512 (10.66ms)</string>
+          <string>1024 (21.33ms)</string>
+          <string>2048 (42.66ms)</string>
+          <string>4096 (85.33ms)</string>
+          <string>8192 (170ms)</string>
+          <string>16384 (341ms)</string>
+          <string>32768 (682ms)</string>
+          <string>65536 (1.36s)</string>
+          <string>131072 (2.73s)</string>
+          <string>262144 (5.46s)</string>
+          <string>524288 (10.9s)</string>
+          <string>1048576 (21.8s)</string>
+          <string>2097152 (43.7s)</string>
+        </MenuEntries>
+        <CEntries>
+          <string>8</string>
+          <string>9</string>
+          <string>10</string>
+          <string>11</string>
+          <string>12</string>
+          <string>13</string>
+          <string>14</string>
+          <string>15</string>
+          <string>16</string>
+          <string>17</string>
+          <string>18</string>
+          <string>19</string>
+          <string>20</string>
+          <string>21</string>
+        </CEntries>
+      </combo>
+      <spinner name="maxvoices"  MinValue="1"  MaxValue="8" DefaultValue="4"/>
+    </attribs>
+    <code.declaration><![CDATA[
+
+
+      #define WORDSIZE attr_wordsize
+      #define INTERPOLATE attr_interp
+      #define CHORUS_USE_SDRAM
+
+      static const uint32_t LENGTHPOW = (attr_delaysize);
+      static const uint32_t LENGTH = (1<<attr_delaysize);
+      static const uint32_t LENGTHMASK = ((1<<attr_delaysize)-1);
+      static const uint32_t WORDLENGTH = attr_wordsize;
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        int32_t *array;
+      #elif WORDSIZE == 16
+        int16_t *array;
+      #elif WORDSIZE == 12
+        int16_t *array;
+      #elif WORDSIZE == 8
+        int8_t *array;
+      #elif WORDSIZE == 4
+        int8_t *array;
+      #endif
+    #else
+      #if WORDSIZE == 32
+        int32_t array[LENGTH];
+      #elif WORDSIZE == 16
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 12
+        int16_t array[LENGTH];
+      #elif WORDSIZE == 8
+        int8_t array[LENGTH];
+      #elif WORDSIZE == 4
+        int8_t array[LENGTH];
+      #endif
+    #endif
+
+      int32_t  nvoices;
+      int32_t  old_nvoices;
+      int32_t  voice_vol;
+      int32_t  time[attr_maxvoices];
+      int32_t  lfo_prev[attr_maxvoices];
+      int32_t  lfo_step[attr_maxvoices];
+      int32_t  lfo_i[attr_maxvoices];
+      uint32_t lfo_phase[attr_maxvoices];
+      uint32_t writepos;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+    #ifdef CHORUS_USE_SDRAM
+      #if WORDSIZE == 32
+        static int32_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 16
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 12
+        static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 8
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #elif WORDSIZE == 4
+        static int8_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+      #endif
+      array = &_array[parent->polyIndex][0];
+    #endif
+
+      for( int i = 0; i < LENGTH; ++i )
+        {
+          array[i] = 0;
+        }
+
+      for( int v = 0; v < attr_maxvoices; ++v )
+        {
+          lfo_phase[v] = 0;
+          lfo_prev[v]  = 0;
+          lfo_step[v]  = 0;
+          lfo_i[v]     = 0;
+        }
+
+      nvoices      = 0;
+      old_nvoices  = -1;
+      voice_vol    = (1<<30);
+      writepos     = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      // Voice scaling
+      if( inlet_voices != old_nvoices )
+        {
+          nvoices = inlet_voices <= attr_maxvoices ? inlet_voices : attr_maxvoices;
+          if( nvoices > 0 )
+            {
+              voice_vol = (int32_t) ((1<<30) * 1.0f /_VSQRTF(nvoices));
+            }
+          old_nvoices = nvoices;
+        }
+
+      // Modulation
+      int32_t spread  = 0;
+      for( int v = 0; v < nvoices; ++v )
+        {
+                  time[v]  = ___SMMLA( inlet_tspread<<3, spread, inlet_time );
+          int32_t lfo_freq = ___SMMLA( inlet_fspread<<3, spread, inlet_lfofreq );
+          spread += (1<<27); // 0, 16, 32, 48, shifted up 6 bits
+          int32_t lfo_out;
+
+          MTOFEXTENDED( lfo_freq, lfo_freq );
+          lfo_phase[v] += lfo_freq>>2;
+          SINE2TINTERP( lfo_phase[v], lfo_out )
+          lfo_out = ___SMMUL( inlet_lfoamt<<3, lfo_out );
+
+          // LFO smoothing
+          lfo_step[v]   = (lfo_out - lfo_prev[v])>>4;
+          lfo_i[v]      = lfo_prev[v];
+          lfo_prev[v]   = lfo_out;
+        }
+
+      // Delay line write
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          writepos = (writepos + 1)&LENGTHMASK;
+
+          #if WORDSIZE == 32
+            array[writepos] = __SSAT( inlet_in[buffer_index],     28);
+          #elif WORDSIZE == 16
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>12, 16);
+          #elif WORDSIZE == 12
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>16, 12);
+          #elif WORDSIZE == 8
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>20,  8);
+          #elif WORDSIZE == 4
+            array[writepos] = __SSAT( inlet_in[buffer_index]>>24,  4);
+          #endif
+        }
+
+      // Voices
+      for( int buffer_index = 0; buffer_index < BUFSIZE; ++buffer_index )
+        {
+          int32_t chorus_out = 0;
+          for( int v = 0; v < nvoices; ++v )
+            {
+              // LFO smoothing
+              int32_t lfo_out_interp = lfo_i[v];
+              lfo_i[v] += lfo_step[v];
+
+            #if INTERPOLATE == 0
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+
+              #if WORDSIZE == 32
+                tmp_r = array[tmp_di&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_r = array[tmp_di&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_r = array[tmp_di&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_r = array[tmp_di&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_r = array[tmp_di&LENGTHMASK]<<26;
+              #endif
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r, chorus_out );
+
+            #else
+
+              int32_t  time_mod;
+              uint32_t tmp_d;
+              uint32_t tmp_di;
+              uint32_t tmp_w1;
+              uint32_t tmp_w2;
+              int32_t  tmp_a1;
+              int32_t  tmp_a2;
+              int32_t  tmp_r;
+
+              time_mod = ___SMMUL( time[v], lfo_out_interp );
+              tmp_d = __USAT( time[v] + time_mod, 27 );
+              uint32_t tmp_d_limited = tmp_d>>(27 -LENGTHPOW);
+              if( tmp_d_limited > LENGTHMASK - BUFSIZE )
+                {
+                  tmp_d_limited = LENGTHMASK - BUFSIZE;
+                  tmp_d = 0;
+                }
+              tmp_di = writepos - tmp_d_limited - BUFSIZE + buffer_index -1;
+              tmp_w1 = (tmp_d<<( LENGTHPOW+3)) & 0x3FFFFFFF;
+              tmp_w2 = (1<<30) - tmp_w1;
+              #if WORDSIZE == 32
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<2;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<2;
+              #elif WORDSIZE == 16
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<14;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<14;
+              #elif WORDSIZE == 12
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<18;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<18;
+              #elif WORDSIZE == 8
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<22;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<22;
+              #elif WORDSIZE == 4
+                tmp_a1 = array[tmp_di&LENGTHMASK]<<26;
+                tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<26;
+              #endif
+              tmp_r  = ___SMMUL(tmp_a1,tmp_w1);
+              tmp_r  = ___SMMLA(tmp_a2,tmp_w2,tmp_r);
+
+              chorus_out = ___SMMLA( voice_vol, tmp_r<<2, chorus_out );
+
+            #endif
+            }
+          chorus_out  = ___SMMUL(          inlet_mix<<3,  chorus_out<<2 );
+          chorus_out  = ___SMMLA( ((1<<27)-inlet_mix)<<3, inlet_in[buffer_index]<<2, chorus_out );
+          outlet_out[buffer_index] = __SSAT( chorus_out, 28 );
+        }
+
+    ]]></code.krate>
+  </obj.normal>
+</objdefs>

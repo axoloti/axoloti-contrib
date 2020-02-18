@@ -1,0 +1,25 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rpass f" uuid="6b0f4f15-2138-4018-955f-814f1ffe5abe">
+      <sDescription>outputs the input when the input is in between &apos;high&apos; and &apos;low&apos; (&gt;= AND &lt;=).
+otherwise,the last input within range is held.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="out"/>
+         <bool32 name="b" description="inside ??"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="high"/>
+         <frac32.s.map name="low"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t prev;]]></code.declaration>
+      <code.krate><![CDATA[if ( (inlet_in >= param_low) && (inlet_in <= param_high)) {outlet_out = inlet_in;prev = inlet_in;outlet_b = 1;}
+else {outlet_out = prev;outlet_b = 0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="mux 12b" uuid="a1f8ed9aeab23f6eaebf5500caa6839fd5ae23ea">
+      <sDescription>input multiplexer. Output is i1 when s &lt; 1, i[i] when....</sDescription>
+      <author>Are Leistad</author>
+      <license>BSD</license>
+      <helpPatch>mux.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i0" description="input 0"/>
+         <frac32buffer name="i1" description="input 1"/>
+         <frac32buffer name="i2" description="input 2"/>
+         <frac32buffer name="i3" description="input 3"/>
+         <frac32buffer name="i4" description="input 4"/>
+         <frac32buffer name="i5" description="input 5"/>
+         <frac32buffer name="i6" description="input 6"/>
+         <frac32buffer name="i7" description="input 7"/>
+         <frac32buffer name="i8" description="input 8"/>
+         <frac32buffer name="i9" description="input 9"/>
+         <frac32buffer name="iA" description="input 10"/>
+         <frac32buffer name="iB" description="input 11"/>
+         <int32.positive name="s" description="select"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.srate><![CDATA[
+      // 24.11.2017 19:51
+      // Replacement for "mux 12" with frac32buffer inlet type, due to BUG in 1.0.12:
+      //  For the audio rate sample buffer inlet type, the patcher mangles the building of the patch source
+      //  when an input has a name that ends in a number with more than 2 digits.
+      //  The fix is to use something other trhan two digits in the inlet names
+      switch(inlet_s>0?inlet_s:0){
+      case 0: outlet_o= inlet_i0;break;
+      case 1: outlet_o= inlet_i1;break;
+      case 2: outlet_o= inlet_i2;break;
+      case 3: outlet_o= inlet_i3;break;
+      case 4: outlet_o= inlet_i4;break;
+      case 5: outlet_o= inlet_i5;break;
+      case 6: outlet_o= inlet_i6;break;
+      case 7: outlet_o= inlet_i7;break;
+      case 8: outlet_o= inlet_i8;break;
+      case 9: outlet_o= inlet_i9;break;
+      case 10: outlet_o= inlet_iA;break;
+      case 11: outlet_o= inlet_iB;break;
+      default: outlet_o= inlet_iB;break;
+}
+]]></code.srate>
+   </obj.normal>
+</objdefs>

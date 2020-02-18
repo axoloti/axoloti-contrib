@@ -1,0 +1,110 @@
+<objdefs>
+  <obj.normal id="quad_sine" uuid="75f7330c26a15673215dccc3ba3b9008545c1daa9" >
+    <sDescription>Quadrature sine oscillator, bipolar, 0, 90, 180 and 290 degrees, lin-ip, pitch input, fm input</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>lfo.axh</helpPatch>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32buffer.bipolar name="fm" description="Freqeuncy modulation input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.bipolar name="0" description="0 deg sine wave"/>
+      <frac32buffer.bipolar name="90" description="90 deg sine wave"/>
+      <frac32buffer.bipolar name="180" description="180 deg sine wave"/>
+      <frac32buffer.bipolar name="270" description="270 sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.pitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t freq;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      MTOFEXTENDED(param_pitch + inlet_pitch, freq);
+
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      phase += freq + inlet_fm;
+
+      int32_t sine;
+
+      SINE2TINTERP(phase,sine)
+      outlet_0 = (sine>>4);
+
+      SINE2TINTERP(phase+0x40000000,sine)
+      outlet_90 = (sine>>4);
+
+      outlet_180 = -outlet_0;
+
+      outlet_270 = -outlet_90;
+
+    ]]></code.srate>
+  </obj.normal>
+  <obj.normal id="quad_sine" uuid="8545c1d75f7330c26a15673215dccc3ba3b900239" >
+    <sDescription>Quadrature sine oscillator, unipolar, 0, 90, 180 and 290 degrees, lin-ip, pitch input, fm input</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <helpPatch>lfo.axh</helpPatch>
+    <inlets>
+      <frac32.bipolar name="pitch" description="Pitch input"/>
+      <frac32buffer.bipolar name="fm" description="Freqeuncy modulation input"/>
+    </inlets>
+    <outlets>
+      <frac32buffer.positive name="0" description="0 deg sine wave"/>
+      <frac32buffer.positive name="90" description="90 deg sine wave"/>
+      <frac32buffer.positive name="180" description="180 deg sine wave"/>
+      <frac32buffer.positive name="270" description="270 sine wave"/>
+    </outlets>
+    <displays/>
+    <params>
+      <frac32.s.map.pitch name="pitch" noLabel="true"/>
+    </params>
+    <attribs/>
+    <code.declaration><![CDATA[
+
+      uint32_t phase;
+      int32_t freq;
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      phase = 0;
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      MTOFEXTENDED(param_pitch + inlet_pitch, freq);
+
+    ]]></code.krate>
+    <code.srate><![CDATA[
+
+      phase += freq + inlet_fm;
+
+      int32_t sine;
+
+      SINE2TINTERP(phase,sine)
+      outlet_0 = (sine>>5) + (1<<26);
+
+      SINE2TINTERP(phase-0x40000000,sine)
+      outlet_90 = (sine>>5) + (1<<26);
+
+      outlet_180 = (1<<27) - outlet_0;
+
+      outlet_270 = (1<<27) - outlet_90;
+
+    ]]></code.srate>
+  </obj.normal>
+</objdefs>

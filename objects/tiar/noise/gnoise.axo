@@ -1,0 +1,89 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="gnoise" uuid="48b8b51a-2ca9-43cd-bc3f-afa37ae4670c">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>gnoise.axh</helpPatch>
+      <inlets>
+         <frac32 name="period"/>
+         <frac32 name="detune"/>
+         <frac32 name="jitter"/>
+         <frac32 name="slide"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="impulses"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="period"/>
+         <frac32.u.map name="detune"/>
+         <frac32.u.map name="jitter"/>
+         <frac32.u.map name="slide"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[//const int32_t a = 69069;    
+//const int32_t b = 0;
+const int32_t a = 1664525;    
+const int32_t b = 1013904223;
+int32_t cForNewSeed;
+int32_t cA,randA;
+int32_t cB,randB;
+int32_t cC,randC;
+int32_t cD,randD;
+int32_t seed;
+uint32_t rand2;
+int32_t nPeriodA;]]></code.declaration>
+<code.init><![CDATA[
+cA = cB = cC = cD;
+seed = 987654321;
+rand2 = 654624898UL;
+]]></code.init>
+      <code.krate><![CDATA[// period in samples for generator A
+int32_t period = (__USAT(param_period + inlet_period, 28) >> (27-11)) + 64;
+// depth of the random jitter on the period
+int32_t jitter = __USAT(param_jitter + inlet_jitter, 27);
+jitter = ___SMMUL(jitter, jitter) << 5;
+jitter = ___SMMUL(jitter, period) << 4;
+// each period, the seed is changed to create an evolving sound
+int32_t slide = __USAT(param_slide + inlet_slide, 27) >> (27 - 8);
+// detunings for the 3 co generators
+int32_t detune = __USAT(inlet_detune+param_detune, 27);
+int32_t detB = ___SMMUL( 34<<5, detune) ;
+int32_t detC = ___SMMUL(-14<<5, detune) ;
+int32_t detD = ___SMMUL(-10<<5, detune) ;
+
+for(int i = 0; i < BUFSIZE; i++){
+  //The (de)counter for generator A reaches zero
+  // we reset the generator to the seed
+  // we randomize the (de)counter cA according to jitter
+  if(cA <= 0){
+    randA = seed;
+    rand2 = rand2 * 69069UL + 1UL;
+    cA = nPeriodA = ___SMMLA(rand2 & 0x7FFFFFFF, jitter, period);
+    rand2 = rand2 * 69069UL + 1UL;
+    cForNewSeed = ___SMMLS(rand2, slide, cA);
+  }
+  // seed "slide" to create evolving sounds
+  if(cA == cForNewSeed){
+    seed = randA;
+  }
+  cA--;
+  outlet_out[i] = ((randA = randA * a + b) >> (31-25));
+}
+// "detuned" co-generators create intricate interferences
+for(int i = 0; i < BUFSIZE; i++){
+  if(cB <= 0){ randB = seed; cB = nPeriodA + detB; } 
+  cB--;
+  outlet_out[i] += (randB = randB * a + b) >> (31-25);
+}
+for(int i = 0; i < BUFSIZE; i++){
+  if(cC <= 0){ randC = seed; cC = nPeriodA + detC; } 
+  cC--;
+  outlet_out[i] += (randC = randC * a + b) >> (31-25); 
+}
+for(int i = 0; i < BUFSIZE; i++){
+  if(cD <= 0){ randD = seed; cD = nPeriodA + detD; } 
+  cD--;
+  outlet_out[i] += (randD = randD * a + b) >> (31-25);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,72 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="record speed" uuid="f718c91d-ac4f-4a83-add9-787fdc41cc73">
+      <sDescription>Record 4 tracks of audio into a 32bit table.
+Each track occupies 8bit in size.
+This implementation allows stretched playback.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>4x8bit looper.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="w1" description="audio in for track 1"/>
+         <frac32buffer name="w2" description="audio in for track 2"/>
+         <frac32buffer name="w3" description="audio in for track 3"/>
+         <frac32buffer name="w4" description="audio in for track 4"/>
+         <frac32buffer.positive name="pos" description="use looper/pos to drive this input"/>
+         <int32.positive name="protect" description="use looper/protect to protect specific bits (or you could use this to distort the signal)"/>
+         <int32.positive name="mode" description="0 = idle, 1 = erase, 2 = overwrite, 3 = overdub, 4 = halving overdub, 5.. idle"/>
+         <int32 name="startpos"/>
+         <int32 name="endpos"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table" description="the 32b table in which storing tracks"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t pos = 0;
+uint32_t pos_old = 0;
+   
+uint32_t bitmask1 = 0b11111111000000000000000000000000;
+uint32_t bitmask2 = 0b00000000111111110000000000000000;
+uint32_t bitmask3 = 0b00000000000000001111111100000000;
+uint32_t bitmask4 = 0b00000000000000000000000011111111;
+
+int state = 0; // 0 = do nothing; 1 = erase;  2 = overwrite; 3 = overdub; 4 = halving overdub;]]></code.declaration>
+      <code.krate><![CDATA[uint32_t protected_bits = inlet_protect;
+
+state = inlet_mode; //0= idle; 1=overwrite; 2=overdub; 3= halving overdub]]></code.krate>
+      <code.srate><![CDATA[pos = __USAT(inlet_pos,28);
+
+if (pos>attr_table.LENGTH)
+pos = attr_table.LENGTH;
+
+
+uint32_t table_pos = attr_table.array[pos];
+
+uint32_t input = ((__SSAT(inlet_w1>>1,27)<<5)&bitmask1) | ((__SSAT(inlet_w2>>1,27)>>3)&bitmask2) | ((__SSAT(inlet_w3>>1,27)>>11)&bitmask3) | ((__SSAT(inlet_w4>>1,27)>>19)&bitmask4);
+uint32_t temp_out;
+
+
+	switch (state)
+	{
+		case 1: temp_out = 0; break; //erasing table
+		case 2: temp_out = input; break; //overwriting table 
+		case 3: temp_out = __SADD8(table_pos,input); break; //overdubbing table
+		case 4: temp_out = __SHADD8(table_pos,input); break; // halving overdub
+		default: temp_out = table_pos;  break; //idle, do nothing
+	}
+
+
+while (pos != pos_old)
+{
+	attr_table.array[pos_old++] = (temp_out & (~protected_bits)) |(table_pos & protected_bits);
+	if (pos_old>inlet_endpos)
+	pos_old = inlet_startpos;
+}
+
+
+
+
+pos_old = pos;]]></code.srate>
+   </obj.normal>
+</objdefs>

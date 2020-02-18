@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scale i" uuid="f42f1174-a517-46b5-9b7c-ae87a0a6b7f6">
+      <sDescription>Experimental::scales an input between 0 and &apos;inrange&apos; to a value between 0 and &apos;outrange&apos;.NOT accurate sometimes.CAN &apos;overflow&apos;</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>timeri.axh</helpPatch>
+      <inlets>
+         <int32 name="in"/>
+      </inlets>
+      <outlets>
+         <int32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="inrange">
+            <MinValue i="0"/>
+            <MaxValue i="650000"/>
+         </int32>
+         <int32 name="outrange">
+            <MinValue i="0"/>
+            <MaxValue i="650000"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int64_t va;
+int32_t result;]]></code.declaration>
+      <code.krate><![CDATA[va = param_outrange;
+result = (float)((va <<15)/param_inrange);
+outlet_out = ((result * inlet_in) >> 15);]]></code.krate>
+   </obj.normal>
+</objdefs>

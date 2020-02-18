@@ -1,0 +1,76 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="quantizer" uuid="4720391c-8f92-430f-bfde-f9168fd622cf">
+      <sDescription>quantize note input to a scale</sDescription>
+      <author>a773</author>
+      <license>GPL</license>
+      <helpPatch>quantizer.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="note"/>
+      </inlets>
+      <outlets>
+         <frac32.bipolar name="note" description="note number (-64..63)"/>
+         <bool32 name="change" description="triggers on new quantized note"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bin12 name="b12" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t	_scaleVal;
+float	_last_note;
+int32_t	_out;
+int32_t	_last_out_note;
+int		_midi_notes[252];
+int32_t	_last_scale;
+int		_gate_hi_counter;
+int		_nb_waits;]]></code.declaration>
+      <code.init><![CDATA[_nb_waits = 1;]]></code.init>
+      <code.krate><![CDATA[// calculate new lookup table when scale is updated
+if (_last_scale != param_b12) {
+	_last_scale = param_b12;
+	int offset = 8; // aloloti treats 0 as E
+	for(int i=0; i<12; i++){
+    		for(int octave=0; octave<20; octave++){
+    			if((param_b12 & (1 << i)) << 21){
+    				_midi_notes[i + octave*12 + offset] = i + octave*12;
+    			} else {
+    				_midi_notes[i + octave*12 + offset] = -1;
+    			}
+    		}
+    }
+ }
+
+
+
+if (_last_note != inlet_note) {
+	_last_note = inlet_note;	
+
+  	int _initial_guess;
+	int guess;
+
+	// handle negative numbers
+  	_initial_guess = (inlet_note >> 21) + 120;
+  	
+	for(guess=_initial_guess; guess >=0; guess--){
+		if(_midi_notes[guess] > -1){
+			// appropiate note found
+			_out = (guess-120) << 21;
+			if(_out != _last_out_note){
+				// new value on note outlet
+				outlet_change = true;
+				_gate_hi_counter = _nb_waits;
+				_last_out_note = _out;
+			}
+			guess = -1; // leave loop
+		}
+	}
+}
+
+// set change outlet low after _nb_waits cycles
+if(_gate_hi_counter-- < 1){
+	outlet_change = false;
+}
+
+outlet_note = _out;]]></code.krate>
+   </obj.normal>
+</objdefs>

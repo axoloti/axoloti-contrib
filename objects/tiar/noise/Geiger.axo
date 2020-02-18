@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Geiger" uuid="e8add726-86f9-4df7-bf47-9c9f90c53d8e">
+      <sDescription>pseudo gaussian distributed (white) noise
+Range -64..64</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>Geiger.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="density"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="impulses"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="density" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t r;
+int32_t y;
+int32_t density;]]></code.declaration>
+      <code.init><![CDATA[y = 1<<27;
+r = 137+GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[density = param_density + inlet_density;
+density = ___SMMLA(density<<2, density << 3, density>>4); // x^2 + x/16
+density = ___SMMLA(density<<2, density << 3, density>>2); // (x^2 + x/16)^2 + (x^2 + x/16)/4
+
+density >>= 6; //q31]]></code.krate>
+      <code.srate><![CDATA[//a
+r *= 69069UL;
+if((r >> 5) < density)
+  y = -y;
+
+outlet_out = y;]]></code.srate>
+   </obj.normal>
+</objdefs>

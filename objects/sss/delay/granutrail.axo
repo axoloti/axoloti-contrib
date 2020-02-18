@@ -1,0 +1,193 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="granutrail" uuid="12ee8e49-77e8-4716-90f5-e0e184280f72">
+      <sDescription>Morphing granular train delay
+Internal oscillator controls the play-position and at the same time morphs from delay-tap to delay-tap using it&apos;s phase.
+
+Pitch controls the rate at which the recording is played (play position).
+Width sets the range of the play position.
+Offset sets a static offset to the play-position (delay)
+Morph adds a changing offset to the play position
+After each repeat of the play-position a new offset will be generated:
+Train sets how many different timing positions will be morphed-through by the play position.
+Step sets the stepsize of the time/tap-morph
+
+The internal delay-memory can be overwritten or updated by switching the &quot;mode&quot; switch.
+When &quot;on&quot;, the &quot;update&quot; knob sets the rate at which the memory will follow the incoming signal. The effect is like a bit like a reverb.
+
+&quot;feed&quot; enables you to feed the delay-output back into the memory of the delay. (together with the update-mode).
+
+Mix sets the mix-amount between dry and completely wet.
+&quot;demix&quot; allows a quick connection for an envelope to duck the wetness of the signal-&gt; only wet when there&apos;s no audio coming in, which generates interesting tails for short sounds.
+
+The module can be oversampled with the &quot;OS&quot; control. Though keep watch of your CPU use!</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="pitch"/>
+         <int32 name="train"/>
+         <frac32 name="demix"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="width"/>
+         <frac32.u.map name="offset"/>
+         <frac32.s.map name="morph"/>
+         <int32 name="train">
+            <MinValue i="0"/>
+            <MaxValue i="2048"/>
+         </int32>
+         <int32 name="step">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <bool32.tgl name="mode"/>
+         <frac32.s.map.pitch name="update"/>
+         <frac32.s.map name="feed"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.u.map name="mix"/>
+         <frac32.u.map name="demix"/>
+         <int32 name="OS">
+            <MinValue i="1"/>
+            <MaxValue i="4"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+uint32_t phase;
+int32_t del;
+int32_t read(uint32_t Time){
+	 uint32_t tmp_d =  Time&((1<<27)-1);
+      uint32_t tmp_di = writepos - (tmp_d>>(27-LENGTHPOW))-1;
+      uint32_t tmp_w1 = (tmp_d<<(LENGTHPOW+3)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = (1<<30) - tmp_w1;
+      int32_t tmp_a1 = array[tmp_di&LENGTHMASK]<<16;
+      int32_t tmp_a2 = array[(tmp_di+1)&LENGTHMASK]<<16;
+      del = ___SMMUL(tmp_a1,tmp_w1);
+      del = ___SMMLA(tmp_a2,tmp_w2,del);
+}
+uint32_t prev1;
+uint32_t prev2;
+uint32_t cnt1;
+uint32_t cnt2;
+int dir1;
+int dir2;
+uint32_t C1;
+uint32_t C2;
+int32_t val;
+int32_t out;
+int32_t vol;
+uint32_t T1;
+uint32_t T2;
+uint32_t morph;
+int i;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+   cnt1=0;
+   dir1=1;
+   dir2=1;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+MTOFEXTENDED(param_pitch+inlet_pitch,f)
+f=f/param_OS;
+
+int32_t F;
+MTOFEXTENDED(param_damp,F)
+int32_t M;
+//MTOFEXTENDED(param_morph,M)
+
+int train=param_train+inlet_train;
+M=param_morph;
+M=___SMMUL(M<<4,(M>0?M:-M)<<4)/param_OS;
+int32_t G;
+MTOF(__SSAT(param_update+___SMMUL(inlet_demix<<3,param_demix<<2),28),G)
+int32_t width1=param_width>>attr_size-8;
+width1=(width1)/(train);
+int32_t width2=width1*(train+1);
+if(param_morph==0){morph=0;}
+int32_t Mix;
+Mix=param_mix;
+Mix-=___SMMUL(___SMMUL(inlet_demix<<3,param_demix<<2)<<3,Mix<<2);]]></code.krate>
+      <code.srate><![CDATA[int32_t in=(inlet_in>>15)+(___SMMUL(out<<3,param_feed<<2)>>14);
+writepos = (writepos + 1)&LENGTHMASK;
+if(param_mode>0){
+array[writepos] = __SSAT((in>>1)+___SMMLA(-(array[writepos])<<2,G,array[writepos]),16);
+array[(writepos-1)&LENGTHMASK]=(array[(writepos-1)&LENGTHMASK]>>1)+((array[(writepos-2)&LENGTHMASK]>>1)+(array[(writepos)&LENGTHMASK]>>1)>>1);
+}
+else
+{array[writepos]=__SSAT(in,16);}
+
+outlet_out=0;
+
+
+for(i=0;i<param_OS;i++){
+phase+=f;
+int32_t mix;
+SINE2TINTERP((phase>>1)-(1<<30),mix)
+mix=(mix>>2)+(1<<29);
+uint32_t p1=phase;
+
+if(prev1>p1){
+	T2=C1;
+	cnt1=cnt1>=train?0:cnt1+1;
+	C2=cnt1+1;
+	C2=C2*width1*param_step;
+	C1=width1*cnt1*param_step;
+	C1=C1-C1/width2*width2;
+	C2=C2-C2/width2*width2;
+
+}
+morph+=(M>>19);
+morph=morph&((1<<27)-1);
+read(C1+morph+param_offset);
+int32_t tmp= del;
+read(C2+morph+param_offset);
+val=___SMMLA((___SMMUL((1<<30)-mix,tmp<<2)+___SMMUL(mix,del<<2)-val)<<1,F,val);
+out=val;
+vol+=(out-vol)>>10;
+out=out-vol;
+outlet_out+=(___SMMUL(Mix<<3,out<<2)+___SMMUL((1<<27)-Mix<<3,inlet_in<<2))/param_OS;
+
+
+prev1=p1;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

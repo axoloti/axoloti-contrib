@@ -1,0 +1,271 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="massVerb" uuid="87cbbcb5-f0db-4758-b31c-0ab371ac37ad">
+      <sDescription>Feedback delay network with 4 delay lines and 12 allpass filters. High quality 32bit.
+Internal parameters are randomisable and function as different room-shapes. These can be saved/loaded using the table-load/save factory modules for recall in other projects.
+-Overall size and decay parameters
+-pre-attenuation of input signal before being fed into the fnd matrix.
+-auto-ducking of decay when output signal goes high to prevent overloading (eg. for endless drones)
+-4 inputs for 4 different signals, each pannable for positioning in the room.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>fdn4.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="in1"/>
+         <frac32buffer name="in2" description="in2"/>
+         <frac32buffer name="in3" description="in3"/>
+         <frac32buffer name="in4" description="in4"/>
+         <bool32 name="rndALL"/>
+         <frac32 name="size"/>
+         <frac32 name="mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out1" description="out1"/>
+         <frac32buffer name="out2" description="out2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="pre"/>
+         <frac32.u.map name="size"/>
+         <frac32.u.map name="decay"/>
+         <frac32.u.map.gain name="duck"/>
+         <frac32.s.map.lfopitch name="mod"/>
+         <frac32.u.map.gain name="modwidth"/>
+         <bool32.mom name="rndT"/>
+         <bool32.mom name="rndAP"/>
+         <bool32.mom name="rndMR"/>
+         <bool32.mom name="rndALL"/>
+         <frac32.u.map.gain name="rndRate"/>
+         <frac32.s.map name="pan1"/>
+         <frac32.s.map name="pan2"/>
+         <frac32.s.map name="pan3"/>
+         <frac32.s.map name="pan4"/>
+         <frac32.u.map.gain name="wet"/>
+         <frac32.u.map.gain name="dry"/>
+      </params>
+      <attribs>
+         <spinner name="d1" MinValue="2" MaxValue="10000" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTH=28;
+
+int32_t *d1d;
+int32_t *d2d;
+int32_t *d3d;
+int32_t *d4d;
+int32_t D[4];
+int32_t bs[12][2];
+int i;
+uint32_t d1p;
+uint32_t d2p;
+uint32_t d3p;
+uint32_t d4p;
+int32_t All;
+int32_t ALLPASS(int32_t in,int32_t pitch,int I){
+int32_t Frq;
+SINE2TINTERP(pitch+sine[I]<<3,Frq)
+bs[I][1]=___SMMUL(-in<<1,Frq)+bs[I][0]+___SMMUL(bs[I][1]<<1,Frq);
+All=bs[I][1];
+bs[I][0]=in;
+}
+int32_t hp[4];
+int32_t v27=1<<27;
+int32_t lp[4];
+bool rndT,rndAP,rndALL,rndMR;
+int32_t sine[12];
+int32_t phs[12];
+int32_t *array;
+int32_t PL;
+int32_t PR;
+int32_t pn[4];
+int32_t PAN(int32_t in,int32_t pan){
+	PR=___SMMUL(in<<2,pan);
+	PL=in-PR;
+}
+int32_t env;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+static int32_t _d1d[attr_d1] __attribute__ ((section (".sdram")));
+d1d = &_d1d[0];
+static int32_t _d2d[attr_d1] __attribute__ ((section (".sdram")));
+d2d = &_d2d[0];
+static int32_t _d3d[attr_d1] __attribute__ ((section (".sdram")));
+d3d = &_d3d[0];
+static int32_t _d4d[attr_d1] __attribute__ ((section (".sdram")));
+d4d = &_d4d[0];
+
+for(i=0;i<attr_d1;i++) d1d[i]=0;
+for(i=0;i<attr_d1;i++) d2d[i]=0;
+for(i=0;i<attr_d1;i++) d3d[i]=0;
+for(i=0;i<attr_d1;i++) d4d[i]=0;
+d1p = 0;
+d2p = 0;
+d3p = 0;
+d4p = 0;
+for(i=0;i<28;i++){
+	array[i]=(int32_t)(GenerateRandomNumber()>>5);
+	}]]></code.init>
+      <code.krate><![CDATA[uint32_t size=___SMMUL(attr_d1-1<<3,__USAT(param_size+inlet_size,27)<<2)+1;
+D[0]=___SMMUL(size-1<<3,array[0]<<2)+1;
+D[1]=___SMMUL(size-1<<3,array[1]<<2)+1;
+D[2]=___SMMUL(size-1<<3,array[2]<<2)+1;
+D[3]=___SMMUL(size-1>>3,array[3]<<2)+1;
+pn[0]=param_pan1+v27<<2;
+pn[1]=param_pan2+v27<<2;
+pn[2]=param_pan3+v27<<2;
+pn[3]=param_pan4+v27<<2;
+
+int32_t rate[12];
+for(i=0;i<12;i++){
+MTOFEXTENDED(param_mod+inlet_mod+___SMMUL(array[i+16]<<2,param_rndRate),rate[i])
+rate[i]=rate[i]>>6;
+}
+
+
+
+if((param_rndAP>0)&&!rndAP){
+	rndAP=1;
+	for(i=0;i<8;i++){
+	array[i+4]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(param_rndAP==0){rndAP=0;}
+
+if((param_rndT>0)&&!rndT){
+	rndT=1;
+	for(i=0;i<4;i++){
+	array[i]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(param_rndT==0){rndT=0;}
+
+if((param_rndMR>0)&&!rndMR){
+	rndMR=1;
+	for(i=0;i<8;i++){
+	array[i+16]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(param_rndMR==0){rndMR=0;}
+int RNDALL=(param_rndALL+inlet_rndALL)&1;
+if((RNDALL>0)&&!rndALL){
+	rndALL=1;
+	for(i=0;i<24;i++){
+	array[i]=(int32_t)(GenerateRandomNumber()>>5);
+	}
+}
+else if(RNDALL==0){rndALL=0;}]]></code.krate>
+      <code.srate><![CDATA[int32_t i1 = d1d[d1p];
+int32_t i2 = d2d[d2p];
+int32_t i3 = d3d[d3p];
+int32_t i4 = d4d[d4p];
+PAN(inlet_in1,pn[0]);
+i1+=___SMMUL(param_pre,PL<<1);
+i2+=___SMMUL(param_pre,PR<<1);
+outlet_out1=___SMMUL(param_dry,PL<<1);
+outlet_out2=___SMMUL(param_dry,PR<<1);
+PAN(inlet_in2,pn[1]);
+i2+=___SMMUL(param_pre,PL<<1);
+i3+=___SMMUL(param_pre,PR<<1);
+outlet_out1+=___SMMUL(param_dry,PL<<1);
+outlet_out2+=___SMMUL(param_dry,PR<<1);
+PAN(inlet_in3,pn[2]);
+i3+=___SMMUL(param_pre,PL<<1);
+i4+=___SMMUL(param_pre,PR<<1);
+outlet_out1+=___SMMUL(param_dry,PL<<1);
+outlet_out2+=___SMMUL(param_dry,PR<<1);
+PAN(inlet_in4,pn[3]);
+i4+=___SMMUL(param_pre,PL<<1);
+i1+=___SMMUL(param_pre,PR<<1);
+outlet_out1+=___SMMUL(param_dry,PL<<1);
+outlet_out2+=___SMMUL(param_dry,PR<<1);
+
+
+for(i=0;i<8;i++){
+phs[i]+=rate[i];
+sine[i]=phs[i]>0?phs[i]:-phs[i];
+sine[i]=___SMMUL(sine[i],param_modwidth)>>4;
+}
+
+ALLPASS(i1,array[4],0);
+i1=All;
+ALLPASS(i2,array[5],1);
+i2=All;
+ALLPASS(i3,array[6],2);
+i3=All;
+ALLPASS(i4,array[7],3);
+i4=All;
+int32_t t1 = i2 + i3;
+int32_t t2 = -i1 - i4;
+int32_t t3 = i1 - i4;
+int32_t t4 = i2 - i3;
+ALLPASS(t1,array[12],8);
+t1=All;
+ALLPASS(t2,array[13],9);
+t2=All;
+ALLPASS(t3,array[14],10);
+t3=All;
+ALLPASS(t4,array[15],11);
+t4=All;
+int32_t g2 = 755299123+param_decay-(__USAT(___SMMUL((___SMMUL(param_duck,param_decay)<<4),__USAT(env,28)<<3)<<2,27));
+int32_t o1 = ___SMMLA(t1,g2,t1>>1);
+int32_t o2 = ___SMMLA(t2,g2,t2>>1);
+int32_t o3 = ___SMMLA(t3,g2,t3>>1);
+int32_t o4 = ___SMMLA(t4,g2,t4>>1);
+o1=__SSAT(o1,28);
+o2=__SSAT(o2,28);
+o3=__SSAT(o3,28);
+o4=__SSAT(o4,28);
+ALLPASS(o1,array[8],4);
+o1=All;
+ALLPASS(o2,array[9],5);
+o2=All;
+ALLPASS(o3,array[10],6);
+o3=All;
+ALLPASS(o4,array[11],7);
+o4=All;
+
+hp[0]+=o1-hp[0]>>9;
+hp[1]+=o2-hp[1]>>9;
+hp[2]+=o3-hp[2]>>9;
+hp[3]+=o4-hp[3]>>9;
+o1-=hp[0]>>1;
+o2-=hp[1]>>1;
+o3-=hp[2]>>1;
+o4-=hp[3]>>1;
+lp[0]+=o1-lp[0]>>1;
+lp[1]+=o2-lp[1]>>1;
+lp[2]+=o3-lp[2]>>1;
+lp[3]+=o4-lp[3]>>1;
+o1=o1*3+lp[0]>>2;
+o2=o2*3+lp[1]>>2;
+o3=o3*3+lp[2]>>2;
+o4=o4*3+lp[3]>>2;
+
+
+d1d[d1p] = o1;
+d2d[d2p] = o2;
+d3d[d3p] = o3;
+d4d[d4p] = o4;
+d1p++;
+d2p++;
+d3p++;
+d4p++;
+if (d1p >= D[0]) d1p = 0;
+if (d2p >= D[1]) d2p = 0;
+if (d3p >= D[2]) d3p = 0;
+if (d4p >= D[3]) d4p = 0;
+outlet_out1 += ___SMMUL(param_wet,o3)<<1;
+outlet_out2 += ___SMMUL(param_wet,o4)<<1;
+int32_t out1=o1;
+int32_t out2=o2;
+int32_t out3=o3;
+int32_t out4=o4;
+out1=out1>0?out1:-out1;
+out2=out2>0?out2:-out2;
+out3=out3>0?out3:-out3;
+out4=out4>0?out4:-out4;
+out1=(out1>out2?out1:out2);
+out1=(out1>out3?out1:out3);
+out1=(out1>out4?out1:out4);
+env+=out1>env?(out1-env>>3):(out1-env>>11);]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="folderBip" uuid="5a49ca4c-23c1-47a3-9d82-eba7cf83483d">
+      <sDescription>bipolar wavefolder
+Has independent wavefold strength for positive and negative parts of the signal.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="above"/>
+         <frac32 name="under"/>
+         <frac32 name="offset"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="clip"/>
+         <frac32.s.map name="above"/>
+         <frac32.s.map name="under"/>
+         <frac32.s.map name="offset"/>
+         <frac32.s.map.lfopitch name="rate"/>
+         <frac32.s.map name="mod"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t phs;
+int32_t v30=1<<30;
+int32_t WRP(int32_t IN,int32_t lvl){
+IN=___SMMUL(IN<<2,lvl<<3)<<5;
+IN=(IN<<4)>>4;
+return IN=__SSAT(IN,27)*2-IN;
+}
+int32_t lp;]]></code.declaration>
+      <code.krate><![CDATA[int32_t rate;
+MTOFEXTENDED(param_rate,rate)
+rate=rate>>8;
+int32_t ABO=param_above+inlet_above;
+int32_t UND=param_under+inlet_under;
+int32_t offset=param_offset+inlet_offset<<2;]]></code.krate>
+      <code.srate><![CDATA[phs+=rate;
+int32_t r;
+
+r=___SMMUL((phs>0?phs:-phs)-v30<<1,param_mod)<<1;
+
+
+int32_t in=inlet_in+offset+r;
+bool over=(in>0?in:-in)>param_clip?1:0;
+int32_t under=0;
+int32_t above=0;
+outlet_out=(over>0?WRP(in>>1,ABO)<<1:WRP(in,UND))+inlet_in>>1;]]></code.srate>
+   </obj.normal>
+</objdefs>

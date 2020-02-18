@@ -1,0 +1,168 @@
+<patch-1.0 appVersion="1.0.8">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="98" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="cpwitz/osc/sine harmonics" uuid="cpwitz-osc-sine harmonics" name="harmonic_1" x="560" y="126">
+      <params>
+         <frac32.u.map name="sub" value="34.5"/>
+         <frac32.u.map name="fundamental" value="63.5"/>
+         <frac32.u.map name="2nd" value="0.0"/>
+         <frac32.u.map name="3rd" value="11.5"/>
+         <frac32.u.map name="4th" value="0.0"/>
+         <frac32.u.map name="5th" value="0.0"/>
+         <frac32.u.map name="6th" value="0.0"/>
+         <frac32.u.map name="7th" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="770" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_1" x="882" y="140">
+      <params>
+         <frac32.u.map name="gain1" value="21.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="980" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="stomps/delay" uuid="13413b33-6a8d-43a7-acc7-74ff1af86dfc" name="obj_2" x="1050" y="140">
+      <params>
+         <bool32.tgl name="on" value="1"/>
+         <frac32.u.map name="fdbk" value="16.5"/>
+         <frac32.u.map name="time" value="15.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1148" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="826" y="266">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="-64.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="224" y="294">
+      <params>
+         <frac32.u.map name="value" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="cpwitz/demux/demux smooth 8" uuid="cpwitz-demux-demox smooth 8" name="demux_1" x="336" y="336">
+      <params>
+         <frac32.u.map name="risetime" value="60.0"/>
+         <frac32.u.map name="falltime" value="61.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="98" y="462">
+      <params>
+         <frac32.s.map name="pitch" value="-24.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="210" y="462">
+      <params>
+         <int32 name="maximum" value="6"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="harmonic_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="square_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="demux_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="demux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="counter_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="harmonic_1" outlet="out"/>
+         <dest obj="soft_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o0"/>
+         <dest obj="harmonic_1" inlet="2nd"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o1"/>
+         <dest obj="harmonic_1" inlet="3rd"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o2"/>
+         <dest obj="harmonic_1" inlet="4th"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o3"/>
+         <dest obj="harmonic_1" inlet="5th"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o4"/>
+         <dest obj="harmonic_1" inlet="6th"/>
+      </net>
+      <net>
+         <source obj="demux_1" outlet="o5"/>
+         <dest obj="harmonic_1" inlet="7th"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="obj_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="obj_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>Peter Witzel</Author>
+      <License>CC0</License>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>298</x>
+      <y>171</y>
+      <width>1391</width>
+      <height>911</height>
+   </windowPos>
+</patch-1.0>

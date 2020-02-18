@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="primeRead" uuid="dff5e0d0-8c1b-4de8-a6ae-0eee1cd7f3ba">
+      <sDescription>reads out the &quot;primes&quot; table allocation module (see my table-folder)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32 name="prime"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays>
+         <int32.label name="value" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="prime" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.krate><![CDATA[int16_t prime=(inlet_prime+param_prime)&1023;
+
+outlet_o= attr_table.array[__USAT(prime-1,attr_table.LENGTHPOW)];
+disp_value=outlet_o;]]></code.krate>
+   </obj.normal>
+</objdefs>

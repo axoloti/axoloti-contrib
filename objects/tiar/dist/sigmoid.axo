@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sigmoid" uuid="41497886-5ba9-4afb-be6e-176d13f177fd">
+      <sDescription>Sigmoid. Differentiated Anti aliasing.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>sigmoid.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="InGain"/>
+         <frac32.u.map name="OutGain"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+      int32_t nextX0, x0, x1, nextSq1;
+      float y0;
+      ]]></code.declaration>
+      <code.init><![CDATA[
+nextX0 = x0 = x1 = 0;
+nextSq1 = 1<<22;
+y0 = 0;
+]]></code.init>
+      <code.krate><![CDATA[int32_t outGain = param_OutGain<<3;
+const int32_t *pIn = inlet_in;
+int32_t *pOut = outlet_out - 1;
+while(pOut < outlet_out + BUFSIZE - 1){
+  float r;
+  float y1 = y0;
+  y0 = arm::vsqrtf(arm::q_to_float(nextSq1, 22));
+  nextX0 = ___SMMUL(param_InGain, *pIn)<<7;
+  nextSq1 = ___SMMLA(nextX0, nextX0, 1<<22);
+  int32_t x1_x0 = x1 - x0;
+  if(abs(x1_x0) > (1<<17)){
+    r = y1 - y0;
+    r /= arm::q_to_float(x1_x0, 27);
+  } else {
+    r = arm::q_to_float(x0, 27) / y0;
+  }
+  x1 = x0;
+  x0 = nextX0;
+  pIn++;
+  pOut++;
+  *pOut = ___SMMUL(outGain, arm::float_to_q(r, 30));
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

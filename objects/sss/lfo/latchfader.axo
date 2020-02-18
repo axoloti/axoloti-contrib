@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="latchfader" uuid="54ebc489-69e6-403a-9dc5-f253053e55cd">
+      <sDescription>latched value mixer, trigger outputs are high when sine is either high or low for the respective trigger outputs. Use with latch and xfade modules</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32 name="Hz" description="frequency"/>
+         <bool32.rising name="reset" description="reset phase"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trg1"/>
+         <bool32 name="trg2"/>
+         <frac32 name="sin"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t r;
+uint32_t h;
+
+   int trg1;
+   int trg2;
+   int trg3;
+   int trg4;]]></code.declaration>
+      <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+      <code.krate><![CDATA[int32_t wave;
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } 
+      else {
+         if (!inlet_reset) r = 1;
+         Phase += ((inlet_Hz)/44*30);
+      }
+
+
+wave= (Phase>>5);
+
+
+trg1= (wave>(1<<26))?(1<<27):0;
+trg2=(1<<27)-trg1;
+
+outlet_trg1=trg1*((trg3==0)?1:0);
+outlet_trg2=trg2*((trg4==0)?1:0);
+trg3=trg1;
+trg4=trg2;
+
+int32_t Sin;
+SINE2TINTERP(Phase-(1<<29),Sin)
+outlet_sin=-(Sin>>5)+(1<<26);
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,136 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="vocoderAudio" uuid="21730a3d-3973-4f86-9c39-ff28b2299c64">
+      <sDescription>spectral analyzer turned into a 20-band audio output module to be used for vocoding</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <helpPatch>analyzer 24.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out01"/>
+         <frac32buffer name="out02"/>
+         <frac32buffer name="out03"/>
+         <frac32buffer name="out04"/>
+         <frac32buffer name="out05"/>
+         <frac32buffer name="out06"/>
+         <frac32buffer name="out07"/>
+         <frac32buffer name="out08"/>
+         <frac32buffer name="out09"/>
+         <frac32buffer name="out10"/>
+         <frac32buffer name="out11"/>
+         <frac32buffer name="out12"/>
+         <frac32buffer name="out13"/>
+         <frac32buffer name="out14"/>
+         <frac32buffer name="out15"/>
+         <frac32buffer name="out16"/>
+         <frac32buffer name="out17"/>
+         <frac32buffer name="out18"/>
+         <frac32buffer name="out19"/>
+         <frac32buffer name="out20"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[biquad_state bs1[20];
+biquad_state bs2[20];
+biquad_coefficients bc1[20];
+biquad_coefficients bc2[20];
+int32_t val[20];
+]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<20;i++){
+   int32_t pitch = (-20 + (i*4))<<21;
+   int32_t freq;
+   MTOF(pitch,freq);
+   biquad_bp_coefs(&bc1[i],freq,INT_MAX - ((56<<21)<<4));
+   biquad_clearstate(&bs1[i]);
+   int32_t pitch2 = pitch + (2<<21);
+   int32_t freq2;
+   MTOF(pitch2,freq2);
+   biquad_bp_coefs(&bc2[i],freq2,INT_MAX - ((56<<21)<<4));
+   biquad_clearstate(&bs2[i]);
+}
+]]></code.init>
+      <code.krate><![CDATA[{
+biquad_dsp(&bs1[0],&bc1[0],inlet_in,outlet_out01);
+}
+{
+biquad_dsp(&bs1[1],&bc1[1],inlet_in,outlet_out02);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[2],&bc1[2],inlet_in,outlet_out03);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[3],&bc1[3],inlet_in,outlet_out04);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[4],&bc1[4],inlet_in,outlet_out05);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[5],&bc1[5],inlet_in,outlet_out06);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[6],&bc1[6],inlet_in,outlet_out07);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[7],&bc1[7],inlet_in,outlet_out08);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[8],&bc1[8],inlet_in,outlet_out09);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[9],&bc1[9],inlet_in,outlet_out10);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[10],&bc1[10],inlet_in,outlet_out11);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[11],&bc1[11],inlet_in,outlet_out12);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[12],&bc1[12],inlet_in,outlet_out13);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[13],&bc1[13],inlet_in,outlet_out14);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[14],&bc1[14],inlet_in,outlet_out15);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[15],&bc1[15],inlet_in,outlet_out16);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[16],&bc1[16],inlet_in,outlet_out17);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[17],&bc1[17],inlet_in,outlet_out18);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[18],&bc1[18],inlet_in,outlet_out19);
+}
+{
+int32_t t1;
+biquad_dsp(&bs1[19],&bc1[19],inlet_in,outlet_out20);
+}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

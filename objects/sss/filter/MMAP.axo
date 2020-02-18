@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="MMAP" uuid="feb7c550-ce0c-4b15-9940-b6033767d027">
+      <sDescription>Multimode filter based on two allpass filters, functioning as poles for the filter.
+Depending on the modes of the filters and (bipolar) mix amount, LP, BP, HP, NOTCH, HIGHSHELF, LOWSHELF and PEAK filters can be created and morphed into each other.
+
+As the basis is an allpass filter, the cutoff frequency will fold back if it goes over 64 or below 0. This can change the filter type as well as peak width.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32 name="cut"/>
+         <frac32 name="width"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="cut" description="main cutoff frequency"/>
+         <frac32.s.map name="mod" description="scales the amount of modulation of the cutoff frequency"/>
+         <frac32.s.map name="abs" description="scales negative part of modulation for normal/half-wave-rectification/abs"/>
+         <frac32.u.map name="width" description="poles frequency spread"/>
+         <frac32.s.map name="resonance" description="amount of filter resonance"/>
+         <frac32.s.map name="mix" description="mixes the filtered signal with the original: left is addition (eg. peak,notch, shelfs), right is subtraction (eg. LP,BP,HP)"/>
+         <frac32.s.map name="mode1" description="morphs pole 1 from LP through BP to HP"/>
+         <frac32.s.map name="mode2" description="morphs pole 2 from LP through BP to HP"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t All;
+int32_t bs[4][2];
+
+uint32_t v30=1<<30;
+uint32_t v27=1<<27;
+
+
+int32_t ALLPASS(int32_t in,int32_t pitch,int I){
+int32_t Frq;
+SINE2TINTERP(pitch<<3,Frq)
+bs[I][1]=___SMMUL(-in<<1,Frq)+bs[I][0]+___SMMUL(bs[I][1]<<1,Frq);
+All=bs[I][1];
+bs[I][0]=in;
+}
+
+int32_t SOFT(int32_t IN){
+int32_t ts = __SSAT(IN,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+return ts = ts + (ts>>1) - (tsq31p3);
+}]]></code.declaration>
+      <code.krate><![CDATA[int32_t mode1=param_mode1>0?-param_mode1:param_mode1;
+int32_t mode2=param_mode2>0?-param_mode2:param_mode2;]]></code.krate>
+      <code.srate><![CDATA[int32_t mod=All+inlet_i1;
+mod=___SMMUL(mod>0?mod:___SMMUL(mod,-param_abs)<<5,-param_mod)<<3;
+ALLPASS(inlet_i1+(___SMMUL(All,param_resonance)<<5),v27-param_cut-(inlet_cut>>1)+mod,0);
+All=(___SMMUL(param_mode1,inlet_i1)<<5)+(___SMMUL(mode1,All)<<4)+All;
+//All-=(___SMMUL(mode,All)<<3);
+int32_t in=All;
+ALLPASS(All,v27-param_cut-(inlet_cut>>1)+param_width+inlet_width+mod,1);
+All=(___SMMUL(param_mode2,in)<<4)+(___SMMUL(mode2,All)<<4)+All;
+//All-=(___SMMUL(mode,All)<<3);
+outlet_o1=SOFT((inlet_i1)-(___SMMUL(All,param_mix)<<5));
+All=__SSAT(-inlet_i1+All,28);]]></code.srate>
+   </obj.normal>
+</objdefs>

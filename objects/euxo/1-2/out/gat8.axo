@@ -1,0 +1,80 @@
+<objdefs >
+   <obj.normal id="gat8" uuid="e9558a55-31db-4671-b8c3-a41e09ac0afa">
+      <sDescription>Control Gat8 outputs. Use object with Euxoloti Core rev1.2.
+It includes the necessay SPI config modification for PC5 as NSS/CS pin.</sDescription>
+      <author>Paul</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="Go1"/>
+         <bool32 name="Go2"/>
+         <bool32 name="Go3"/>
+         <bool32 name="Go4"/>
+         <bool32 name="Go5"/>
+         <bool32 name="Go6"/>
+         <bool32 name="Go7"/>
+         <bool32 name="Go8"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+   
+      <attribs/>
+      <code.declaration><![CDATA[int32_t Go1,Go2,Go3,Go4,Go5,Go6,Go7,Go8;
+		uint8_t *txbuf;
+
+msg_t ThreadX2(){
+  static uint8_t _txbuf[32] __attribute__ ((section (".sram2")));
+	txbuf = _txbuf;
+	
+  while(!chThdShouldTerminate()){
+     if (Go1 == 0) {Go1 = 0x80;} else {Go1 = 0x00;}
+	if (Go2 == 0) {Go2 = 0x40;} else {Go2 = 0x00;}
+	if (Go3 == 0) {Go3 = 0x20;} else {Go3 = 0x00;}
+	if (Go4 == 0) {Go4 = 0x10;} else {Go4 = 0x00;}
+	if (Go5 == 0) {Go5 = 0x08;} else {Go5 = 0x00;}
+	if (Go6 == 0) {Go6 = 0x04;} else {Go6 = 0x00;}
+	if (Go7 == 0) {Go7 = 0x02;} else {Go7 = 0x00;}
+	if (Go8 == 0) {Go8 = 0x01;} else {Go8 = 0x00;}
+	
+	txbuf[0] = ((Go8|Go7|Go6|Go5|Go4|Go3|Go2|Go1));
+	
+	spiSelect(&SPID1);
+  	spiSend(&SPID1,1,txbuf);
+  	spiUnselect(&SPID1);
+	chThdSleepMilliseconds(1);
+
+  }
+  chThdExit((msg_t)0);
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 1024);
+Thread *Thd;]]></code.declaration>
+      <code.init><![CDATA[Go1=0; Go2=0; Go3=0; Go4=0; Go5=0; Go6=0; Go7=0; Go8=0; 
+      
+      palSetPadMode(GPIOC, 5, PAL_MODE_OUTPUT_PUSHPULL);// NSS
+	palSetPadMode(GPIOA, 5, PAL_MODE_OUTPUT_PUSHPULL);// SCK
+	palSetPadMode(GPIOA, 7, PAL_MODE_OUTPUT_PUSHPULL);// MOSI
+
+	palSetPadMode(GPIOA, 5, PAL_MODE_ALTERNATE(5));// SCK
+	palSetPadMode(GPIOA, 6, PAL_MODE_ALTERNATE(5));// MISO
+	palSetPadMode(GPIOA, 7, PAL_MODE_ALTERNATE(5));// MOSI
+	
+	static const SPIConfig spicfg = {NULL, GPIOC, 5, 0 |SPI_CR1_CPOL |SPI_CR1_CPHA |(6<<3) };
+	spiStart(&SPID1, &spicfg);
+	
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate(Thd);
+chThdWait(Thd);]]></code.dispose>
+      <code.krate><![CDATA[this->Go1 = inlet_Go1;
+this->Go2 = inlet_Go2;
+this->Go3 = inlet_Go3;
+this->Go4 = inlet_Go4;
+this->Go5 = inlet_Go5;
+this->Go6 = inlet_Go6;
+this->Go7 = inlet_Go7;
+this->Go8 = inlet_Go8;]]></code.krate>
+   </obj.normal>
+</objdefs>

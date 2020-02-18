@@ -1,0 +1,70 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Smaog" uuid="e1963f89-06d5-4185-91de-5786a342a1d7">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>Smaog.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="_24dB" description="filter output"/>
+         <frac32buffer name="_18dB" description="filter output"/>
+         <frac32buffer name="_12dB" description="filter output"/>
+         <frac32buffer name="_6dB" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float a, b, c, d, e, f, g, h, k;
+const int iter = 6;
+float yA, yB, yC, yD;]]></code.declaration>
+<code.init><![CDATA[
+yA = yB = yC = yD = 0;
+]]></code.init>
+      <code.krate><![CDATA[float ne, nf, ng, nh;
+int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch-(12<<21), idp);
+float ff = idp * (1.0f/(1<<30));
+float w = 3.1415926535f * ff / ((float)(1<<iter)); //* pow(2, -iter);
+k = arm::q_to_float(param_reso + inlet_reso, 25);
+if(k > 3.98f) k = 3.98f;
+if(k < 0)     k = 0;
+// init with open loop step invariant coefs
+//exp(-w); with w small
+e = 1 + w * (-1 + w * ((1/2.0f) - (1/6.0f) * w));  
+f = w * e;
+g = 0.5f * w * f;
+h = (1/3.0f) * w * g;
+
+for (int i = 0; i < iter; i++) {
+  float ne = k * (-2 * f * h - g * g) + e * e;
+  float nf = 2 * (e * f - g * h * k);
+  float ng = -h * h * k + 2 * e * g + f * f;
+         h = 2 * (e * h + f * g);
+
+  e = ne; f = nf; g = ng;
+}
+
+d = (1 - e - f - g - h) / (k + 1);
+c = d + h;
+b = c + g;
+a = b + f;]]></code.krate>
+      <code.srate><![CDATA[float x = arm::q_to_float(inlet_in, 27); 
+float nyA = e * yA + a * x - k * (f * yD     + g * yC    + h * yB);
+float nyB = e * yB + f * yA     + b * x - k * (g * yD    + h * yC);
+float nyC = e * yC + f * yB     + g * yA     + c * x - k * h * yD;
+       yD = e * yD + f * yC     + g * yB     + h * yA    + d * x;
+yA = nyA;
+yB = nyB;
+yC = nyC;
+outlet___24dB = arm::float_to_q(yD, 27);
+outlet___18dB = arm::float_to_q(yC, 27);
+outlet___12dB = arm::float_to_q(yB, 27);
+outlet___6dB = arm::float_to_q(yA, 27);]]></code.srate>
+   </obj.normal>
+</objdefs>

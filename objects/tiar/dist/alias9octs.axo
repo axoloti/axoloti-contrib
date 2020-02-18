@@ -1,0 +1,64 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="alias9octs" uuid="b09b47df-8fa6-479b-a604-a510e5192952">
+      <sDescription>9 octaves aliaser</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>pink9octs.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="pink noise"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint8_t k_i;
+int32_t k_r[5];
+int32_t* k_rt[16]; 
+/*
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +     3,
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +       4
+*/
+int32_t rt0, rt1, rt2, rt3, acc = 0;]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < 16;i += 2){
+  k_rt[i] = k_r;
+}
+for(int i = 1; i < 16;i += 4){
+  k_rt[i] = k_r + 1;
+}
+for(int i = 3; i < 16;i += 8){
+  k_rt[i] = k_r + 2;
+}
+k_rt[7] = k_r + 3;
+k_rt[15] = k_r + 4;
+for(uint8_t i = 0; i < 5; i++){
+  k_r[i] = 0;
+}
+rt0 = rt1 = rt2 = rt3 = acc = 0;]]></code.init>
+      <code.krate><![CDATA[acc -= rt0; { outlet_out[ 0] = acc += rt0 = inlet_in[ 0]>>3; }
+acc -= rt1; { outlet_out[ 1] = acc += rt1 = inlet_in[ 1]>>3; }
+acc -= rt0; { outlet_out[ 2] = acc += rt0 = inlet_in[ 2]>>3; }
+acc -= rt2; { outlet_out[ 3] = acc += rt2 = inlet_in[ 3]>>3; }
+acc -= rt0; { outlet_out[ 4] = acc += rt0 = inlet_in[ 4]>>3; }
+acc -= rt1; { outlet_out[ 5] = acc += rt1 = inlet_in[ 5]>>3; }
+acc -= rt0; { outlet_out[ 6] = acc += rt0 = inlet_in[ 6]>>3; }
+acc -= rt3; { outlet_out[ 7] = acc += rt3 = inlet_in[ 7]>>3; }
+acc -= rt0; { outlet_out[ 8] = acc += rt0 = inlet_in[ 8]>>3; }
+acc -= rt1; { outlet_out[ 9] = acc += rt1 = inlet_in[ 9]>>3; }
+acc -= rt0; { outlet_out[10] = acc += rt0 = inlet_in[10]>>3; }
+acc -= rt2; { outlet_out[11] = acc += rt2 = inlet_in[11]>>3; }
+acc -= rt0; { outlet_out[12] = acc += rt0 = inlet_in[12]>>3; }
+acc -= rt1; { outlet_out[13] = acc += rt1 = inlet_in[13]>>3; }
+acc -= rt0; { outlet_out[14] = acc += rt0 = inlet_in[14]>>3; }
+acc -= *k_rt[k_i];  outlet_out[15] = acc += *k_rt[k_i] = inlet_in[15]>>3;
+
+k_i++; k_i &= 15;]]></code.krate>
+   </obj.normal>
+</objdefs>

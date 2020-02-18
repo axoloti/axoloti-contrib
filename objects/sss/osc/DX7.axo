@@ -1,0 +1,298 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="DX7" uuid="e374c425-dedd-4fdb-8cbd-0ca02256a33d">
+      <sDescription>DX7-style 6-operator FM oscillator</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="main"/>
+         <frac32.bipolar name="pitch1" description="pitch"/>
+         <frac32.bipolar name="pitch2"/>
+         <frac32.bipolar name="pitch3"/>
+         <frac32.bipolar name="pitch4"/>
+         <frac32.bipolar name="pitch5"/>
+         <frac32.bipolar name="pitch6"/>
+         <frac32.bipolar name="vol1"/>
+         <frac32.bipolar name="vol2"/>
+         <frac32.bipolar name="vol3"/>
+         <frac32.bipolar name="vol4"/>
+         <frac32.bipolar name="vol5"/>
+         <frac32.bipolar name="vol6"/>
+         <frac32 name="FM"/>
+         <int32 name="algo"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32 name="algo">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="OS">
+            <MinValue i="1"/>
+            <MaxValue i="4"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase[6];
+int32_t hp[6];
+int32_t am[6];
+int32_t fm[6];
+int32_t wave[6];
+int32_t out;
+int i;
+int32_t freq[6];
+int32_t MODE(int mode){
+switch(mode){
+case 0: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 1: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+;break;
+case 2: out=wave[0]+wave[3];
+	   fm[0]=wave[1];
+	   fm[1]=wave[2];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 3: out=wave[0]+wave[3];
+	   fm[0]=wave[1];
+	   fm[1]=wave[2];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[3];
+;break;
+case 4: out=wave[0]+wave[2]+wave[4];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 5: out=wave[0]+wave[2]+wave[4];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[4];
+;break;
+case 6: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3]+wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 7: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3]+wave[4];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+;break;
+case 8: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3]+wave[4];
+	   fm[4]=wave[5];
+;break;
+case 9: out=wave[0]+wave[3];
+	   fm[0]=wave[1];
+	   fm[1]=wave[2];
+	   fm[2]=wave[2];
+	   fm[3]=wave[4]+wave[5];
+;break;
+case 10: out=wave[0]+wave[3];
+	   fm[0]=wave[1];
+	   fm[1]=wave[2];
+	   fm[3]=wave[4]+wave[5];
+	   fm[5]=wave[4];
+;break;
+case 11: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3]+wave[4]+wave[5];
+;break;
+case 12: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3]+wave[4]+wave[5];
+	   fm[5]=wave[5];
+;break;
+case 13: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4]+wave[5];
+	   fm[5]=wave[4]+wave[5];
+;break;
+case 14: out=wave[0]+wave[2];
+	   fm[0]=wave[1];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4]+wave[5];
+;break;
+case 15: out=wave[0];
+	   fm[0]=wave[1]+wave[2]+wave[3];
+	   fm[2]=wave[3];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 16: out=wave[0];
+	   fm[0]=wave[1]+wave[2]+wave[4];
+	   fm[1]=wave[1];
+	   fm[2]=wave[3];
+	   fm[4]=wave[5];
+;break;
+case 17: out=wave[0];
+	   fm[0]=wave[1]+wave[2]+wave[3];
+	   fm[2]=wave[2]+wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[5];
+;break;
+case 18: out=wave[0]+wave[3]+wave[4];
+	   fm[0]=wave[1];
+	   fm[1]=wave[2];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 19: out=wave[0]+wave[1]+wave[3];
+	   fm[0]=wave[2];
+	   fm[1]=wave[2];
+	   fm[2]=wave[2];
+	   fm[3]=wave[4]+wave[5];
+;break;
+case 20: out=wave[0]+wave[1]+wave[3]+wave[4];
+	   fm[0]=wave[2];
+	   fm[1]=wave[2];
+	   fm[2]=wave[2];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+;break;
+case 21: out=wave[0]+wave[2]+wave[3]+wave[4];
+	   fm[0]=wave[1];
+	   fm[2]=wave[5];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 22: out=wave[0]+wave[1]+wave[3]+wave[4];
+	   fm[1]=wave[2];
+	   fm[2]=wave[2];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 23: out=wave[0]+wave[1]+wave[2]+wave[3]+wave[4];
+	   fm[2]=wave[5];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 24: out=wave[0]+wave[1]+wave[2]+wave[3]+wave[4];
+	   fm[3]=wave[5];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 25: out=wave[0]+wave[1]+wave[3];
+	   fm[1]=wave[2];
+	   fm[3]=wave[4]+wave[5];
+	   fm[5]=wave[5]+wave[4];
+;break;
+case 26: out=wave[0]+wave[1]+wave[3];
+	   fm[1]=wave[2];
+	   fm[2]=wave[2];
+	   fm[3]=wave[4]+wave[5];
+;break;
+case 27: out=wave[0]+wave[2]+wave[5];
+	   fm[0]=wave[1];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[4];
+;break;
+case 28: out=wave[0]+wave[1]+wave[2]+wave[4];
+	   fm[2]=wave[3];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 29: out=wave[0]+wave[1]+wave[2]+wave[5];
+	   fm[2]=wave[3];
+	   fm[3]=wave[4];
+	   fm[4]=wave[4];
+;break;
+case 30: out=wave[0]+wave[1]+wave[2]+wave[3]+wave[4];
+	   fm[4]=wave[5];
+	   fm[5]=wave[5];
+;break;
+case 31: out=wave[0]+wave[1]+wave[2]+wave[3]+wave[4]+wave[5];
+	   fm[5]=wave[5];
+;break;
+}
+}
+int32_t SOFT(int32_t in){
+	int32_t ts = __SSAT(in,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+return ts = ts + (ts>>1) - (tsq31p3);
+
+}
+int32_t prv;
+int32_t LP;
+int32_t prev[6];]]></code.declaration>
+      <code.init><![CDATA[Phase[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=param_pitch+inlet_main;
+MTOFEXTENDED(pitch + inlet_pitch1,freq[0]);
+MTOFEXTENDED(pitch + inlet_pitch2,freq[1]);
+MTOFEXTENDED(pitch + inlet_pitch3,freq[2]);
+MTOFEXTENDED(pitch + inlet_pitch4,freq[3]);
+MTOFEXTENDED(pitch + inlet_pitch5,freq[4]);
+MTOFEXTENDED(pitch + inlet_pitch6,freq[5]);
+for(i=0;i<6;i++){
+	freq[i]=freq[i]/(param_OS);
+}
+
+int32_t algo=(param_algo-1+inlet_algo)&31;
+am[0]=inlet_vol1;
+am[1]=inlet_vol2;
+am[2]=inlet_vol3;
+am[3]=inlet_vol4;
+am[4]=inlet_vol5;
+am[5]=inlet_vol6;
+
+int32_t step=inlet_FM-prv;
+int32_t Fm=prv;
+prv=inlet_FM;
+int32_t stp[6];
+int32_t Am[6];
+for(i=0;i<6;i++){
+stp[i]=am[i]-prev[i];
+Am[i]=prev[i];
+prev[i]=am[i];
+}]]></code.krate>
+      <code.srate><![CDATA[for(int j=0;j<param_OS;j++){
+for(i=0;i<6;i++){
+fm[i]=___SMMUL(fm[i],__SSAT(Fm,27))<<5;
+Phase[i] += freq[i]+(___SMMUL(fm[i],freq[i])<<7);
+fm[i]=0;
+int32_t r;
+SINE2TINTERP(Phase[i],r)
+wave[i]=___SMMUL(Am[i],r);
+}
+MODE(algo);
+LP+=(SOFT(out)-LP)>>1;
+Am[i]+=stp[i];
+}
+outlet_wave=LP;
+Fm+=step;]]></code.srate>
+   </obj.normal>
+</objdefs>

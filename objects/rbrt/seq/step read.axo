@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="step read" uuid="b1f7ea1e-9c45-44ff-8088-aa839d65d0d2">
+      <sDescription>read from table.
+&apos;value&apos; = value at index.
+&apos;trig&apos; = puts out a pulse if &apos;value&apos; &gt; 0.
+&apos;vhold&apos; = the current value,held until next &apos;trig&apos;.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset" description="offset"/>
+         <int32.positive name="step" description="index"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig" description="trigger if value &gt; 0 "/>
+         <frac32 name="value" description="value at index"/>
+         <frac32 name="vhold" description="hold current value until next trigger"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="offset" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="1000000000"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int prev;
+int hold;]]></code.declaration>
+      <code.krate><![CDATA[outlet_value= attr_table.array[__USAT((inlet_step+ inlet_offset +param_offset),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+
+if ((inlet_step != prev ) && (outlet_value > 0 )) { 
+	outlet_trig = 1;
+     hold = outlet_value;
+     outlet_vhold = hold;	
+}else {
+	outlet_trig = 0;
+	outlet_vhold = hold;	
+}
+prev = inlet_step;]]></code.krate>
+   </obj.normal>
+</objdefs>

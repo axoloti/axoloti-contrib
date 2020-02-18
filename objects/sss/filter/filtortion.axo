@@ -1,0 +1,75 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="filtortion" uuid="4d48b0ac-1974-4a07-9c2c-a266db559897">
+      <sDescription>Filter that has it&apos;s origin in a modification of the envelope follower in the &quot;compressor&quot; module..
+-Independent rise/fall (cutoff) offset slopes
+-Input &quot;Greater/smaller then&quot; filter adjustment of rise/fall switching
+-Switching between greater/smaller adjustment is smoothed by &quot;smooth&quot; parameter
+
+resonance... ghehehehe... let it snow, let it snow, let it snoooooooow XD</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="pitch"/>
+         <frac32 name="up"/>
+         <frac32 name="down"/>
+         <frac32 name="P"/>
+         <frac32 name="N"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map name="up"/>
+         <frac32.s.map name="down"/>
+         <frac32.u.map.squaregain name="res"/>
+         <frac32.s.map name="P"/>
+         <frac32.s.map name="N" description=""/>
+         <frac32.u.map.kdecaytime.reverse name="smooth" description=""/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t vbl;
+bool trg;
+int32_t P;
+int32_t N;
+int32_t ofs;
+int32_t hp;
+int32_t tmp;
+int32_t OFS;
+int32_t Ofs;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t pitch=__SSAT(param_pitch+inlet_pitch,28);]]></code.krate>
+      <code.srate><![CDATA[OFS+=___SMMUL(param_smooth,ofs-OFS)<<1;
+if((inlet_in>val)&&!trg){
+	trg=1;
+	ofs=param_P+inlet_P;
+	Ofs=OFS;
+}
+else if((inlet_in<val)&&trg){
+	trg=0;
+	ofs=param_N+inlet_N;
+	Ofs=OFS;
+}
+Ofs-=___SMMUL(Ofs,param_smooth)<<1;
+int32_t f1;
+int32_t f2;
+MTOF(__SSAT(pitch+param_up+inlet_up+Ofs,29),f1);
+MTOF(__SSAT(pitch+param_down+inlet_down+Ofs,29),f2);
+if(inlet_in>val){
+val = ___SMMLA((__SSAT(inlet_in+___SMMUL(param_res,-tmp<<1),28)-val)<<1,f1,val);}
+else{
+val = ___SMMLA((__SSAT(inlet_in+___SMMUL(param_res,-tmp<<1),28)-val)<<1,f2,val);}
+
+hp+=(val-hp)>>9;
+tmp=outlet_out= val-hp;
+if(tmp>vbl){
+vbl = ___SMMLA((tmp-vbl)<<1,f1,vbl);}
+else{
+vbl = ___SMMLA((tmp-vbl)<<1,f2,vbl);}
+tmp=-__SSAT(tmp-vbl,26)<<3;]]></code.srate>
+   </obj.normal>
+</objdefs>

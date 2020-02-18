@@ -1,0 +1,116 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="fb 4 notes" uuid="3a903239-7a97-4f26-ad7a-b3d8c764b037">
+      <sDescription>visual feedback of table data for bidirectional midi-controllers (f.i. novation launchpad,livid base).
+4 elements of a table are mapped to midi - notes.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>step_seq.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset" description="offset in the table"/>
+         <int32 name="velon" description="velocity on modulation"/>
+         <bool32.rising name="redraw"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32.mini name="i0" description="map the step to midi notes" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32.mini>
+         <int32.mini name="i1" description="map the step to midi notes" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32.mini>
+         <int32.mini name="i2" description="map the step to midi notes" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32.mini>
+         <int32.mini name="i3" description="map the step to midi notes" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32.mini>
+         <int32 name="on" description="note velocity if step &gt; 0">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+         <int32 name="off" description="note velocity if step &lt;= 0">
+            <MinValue i="0"/>
+            <MaxValue i="127"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;
+int rtrig;
+int prev;
+int prevon;
+int32_t val;
+
+int32_t map[4];
+
+int v;
+int i;
+int vt;
+int trigt;
+int prevt[4];]]></code.declaration>
+      <code.init><![CDATA[{ 
+  int i;
+  for(i=0;i<4;i++) prevt[i]= -666 ;}]]></code.init>
+      <code.krate><![CDATA[map[0] = param_i0;
+map[1] = param_i1;
+map[2] = param_i2;
+map[3] = param_i3;
+
+
+//re-init
+
+if ((inlet_redraw > 0) && !ntrig){
+	ntrig = 1;
+{ 
+  int ii;
+  for(ii=0;ii<4;ii++) prevt[ii]= -666 ;}
+  }
+if (!(inlet_redraw > 0 )) ntrig = 0;
+
+
+//display steps
+{ 
+  i += 1;
+  if (i == 4) i = 0; 
+  vt = attr_table.array[__USAT((inlet_offset + i),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+if (prevt[i] != vt ) trigt = 0;
+prevt[i] = vt;
+if (vt && (!trigt)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_on);  trigt=1;
+}
+if ((!vt) && (!trigt)){
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),map[i],param_off);  trigt=1;
+}
+ }]]></code.krate>
+   </obj.normal>
+</objdefs>

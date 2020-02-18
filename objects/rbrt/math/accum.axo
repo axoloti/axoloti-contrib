@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="accum" uuid="82d6ccb0-719b-4561-b29f-a4d257a80040">
+      <sDescription>accumulator.adds &apos;1&apos; on trigger. Reset clears the accumulator to zero.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <bool32.rising name="rst" description="reset"/>
+      </inlets>
+      <outlets>
+         <int32 name="o"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;   int rtrig;   int accu;]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;
+rtrig = 0;
+accu = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig) && !ntrig) {accu += 1; ntrig=1;}
+if (!inlet_trig) ntrig=0;
+if ((inlet_rst) && !rtrig) {accu = 0; rtrig=1;}
+if (!inlet_rst) rtrig=0;
+outlet_o= accu;]]></code.krate>
+   </obj.normal>
+</objdefs>

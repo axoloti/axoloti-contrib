@@ -1,0 +1,165 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="baseq" uuid="93d55977-2922-4943-ae7d-4437c6261ad0">
+      <sDescription>Basic drumpattern generator containing 2913 different drum patterns of 8 channels each.
+THIS TABLE-FILE HAS TO BE DOWNLOADED FIRST!
+For file, go to:
+http://community.axoloti.com/t/sirsicksik-contributions/1731/939?u=sirsicksik
+
+Each drumchannel or the voice channel can select it&apos;s own sequence channel and pattern preset, but in normal use the channel-selection is expected to be ordered index 0-7 for chn1 to chn8.
+p1 to p8 select the preset for the respective channel
+chn1 to chn8 selects which channel of that preset is used to generate gates
+Each of the outputs can be muted with a high-gate on the respective mute inputs.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32 name="clock" description="Needs a counter going from 0 to 95. You can use maths to change the way of counting"/>
+         <bool32 name="muteKick" description="mute channel"/>
+         <bool32 name="muteBasskick" description="mute channel"/>
+         <bool32 name="muteToms" description="mute channel"/>
+         <bool32 name="muteSnares" description="mute channel"/>
+         <bool32 name="muteOpenHH" description="mute channel"/>
+         <bool32 name="muteClosedHH" description="mute channel"/>
+         <bool32 name="muteCymbals" description="mute channel"/>
+         <bool32 name="mutePercussions" description="mute channel"/>
+         <bool32 name="muteVoice" description="mute channel"/>
+         <int32 name="p1" description="sets preset for respective channel output"/>
+         <int32 name="p2" description="sets preset for respective channel output"/>
+         <int32 name="p3" description="sets preset for respective channel output"/>
+         <int32 name="p4" description="sets preset for respective channel output"/>
+         <int32 name="p5" description="sets preset for respective channel output"/>
+         <int32 name="p6" description="sets preset for respective channel output"/>
+         <int32 name="p7" description="sets preset for respective channel output"/>
+         <int32 name="p8" description="sets preset for respective channel output"/>
+         <int32 name="pV" description="sets preset for voice channel output"/>
+         <int32 name="chn1" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn2" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn3" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn4" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn5" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn6" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn7" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chn8" description="selects one of the 8 channels in the preset to use as gate-info for respective channel output"/>
+         <int32 name="chnV" description="selects one of the 8 channels in the preset to use as gate-info for voice channel output"/>
+      </inlets>
+      <outlets>
+         <frac32 name="kick" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="basskick" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="toms" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="snares" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="openHH" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="closedHH" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="cymbals" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="percussions" description="outputs a short trigger with velocity as amplitude"/>
+         <frac32 name="voice" description="outputs a short trigger with velocity as amplitude"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="mode" description="sets loading mode when axoloti board is powered up or going live">
+            <MenuEntries>
+               <string>keep</string>
+               <string>rst</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = ((96*3007)<<3);
+int8_t *array;
+int chnl=0;
+int count,cnt[9],i;
+// 0=kick
+// 1=basskick
+// 2=toms
+// 3=snare
+// 4=openHH
+// 5=closedHH
+// 6=cymbal
+// 7=perc
+
+int prv;
+int32_t max96(int32_t in){
+	in=in-in/96*96;
+	in+=in<0?96:0;
+	return in;
+}]]></code.declaration>
+      <code.init><![CDATA[static int8_t _Array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_Array[0];
+{ 
+  int i;
+  if(attr_mode>0){
+  for(i=0;i<LENGTH;i++) array[i]=0;
+  }
+}]]></code.init>
+      <code.krate><![CDATA[count=max96(inlet_clock);
+
+/*
+for generating count offsets
+int32_t count[9];
+int32_t ofs[9]=0;
+
+generate some count offsets here by adjusting the value in "ofs[..indexnumber..]"->
+12 or 24 steps per beat, depending on how you use the rythms.
+
+for(
+
+for(i=0;i<9;i++){
+count[i]=max96(cnt+ofs[i]);
+}
+
+
+
+*/
+for(i=0;i<9;i++){
+cnt[i]=count;
+}
+
+
+
+int32_t pV=cnt[8]-768+(((inlet_chnV&7)+(inlet_pV<<3))*96);
+int32_t p1=cnt[0]-768+(inlet_p1*96<<3);
+int32_t p2=cnt[1]-768+(inlet_p2*96<<3);
+int32_t p3=cnt[2]-768+(inlet_p3*96<<3);
+int32_t p4=cnt[3]-768+(inlet_p4*96<<3);
+int32_t p5=cnt[4]-768+(inlet_p5*96<<3);
+int32_t p6=cnt[5]-768+(inlet_p6*96<<3);
+int32_t p7=cnt[6]-768+(inlet_p7*96<<3);
+int32_t p8=cnt[7]-768+(inlet_p8*96<<3);
+
+int32_t c1=(inlet_chn1&7)*96;
+int32_t c2=(inlet_chn2&7)*96;
+int32_t c3=(inlet_chn3&7)*96;
+int32_t c4=(inlet_chn4&7)*96;
+int32_t c5=(inlet_chn5&7)*96;
+int32_t c6=(inlet_chn6&7)*96;
+int32_t c7=(inlet_chn7&7)*96;
+int32_t c8=(inlet_chn8&7)*96;
+
+pV=pV<0?0:pV;
+p1=p1<0?0:p1;
+p2=p2<0?0:p2;
+p3=p3<0?0:p3;
+p4=p4<0?0:p4;
+p5=p5<0?0:p5;
+p6=p6<0?0:p6;
+p7=p7<0?0:p7;
+p8=p8<0?0:p8;
+bool trg=0;
+if(!(inlet_clock==prv)){
+	trg=1;
+}
+outlet_kick=inlet_muteKick<1?(trg==1?(array[p1+c1]<<20):0):0;
+outlet_basskick=inlet_muteBasskick<1?(trg==1?(array[p2+c2]<<20):0):0;
+outlet_toms=inlet_muteToms<1?(trg==1?(array[p3+c3]<<20):0):0;
+outlet_snares=inlet_muteSnares<1?(trg==1?(array[p4+c4]<<20):0):0;
+outlet_openHH=inlet_muteOpenHH<1?(trg==1?(array[p5+c5]<<20):0):0;
+outlet_closedHH=inlet_muteClosedHH<1?(trg==1?(array[p6+c6]<<20):0):0;
+outlet_cymbals=inlet_muteCymbals<1?(trg==1?(array[p7+c7]<<20):0):0;
+outlet_percussions=inlet_mutePercussions<1?(trg==1?(array[p8+c8]<<20):0):0;
+outlet_voice=inlet_muteVoice<1?(trg==1?(array[pV]<<20):0):0;
+prv=inlet_clock;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,131 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="euclid length out" uuid="6bd30213-01a4-40a5-aa7b-8c989bc6c5a4">
+      <sDescription>Euclidean rhythm generator. Chainable. Notes specifics the number of active steps, length the number of steps of the sequence (maximum sequence length=31). Inlet in specifics what step to read, like sel i 16/32  or disp/ibar . If outside the range the default inlet will be outputted (like said objects).
+Dynamic algorithm, therefore variable dsp load with different configurations. Additional outlet outputs an integer represention of the current sequence: you can decode the number with multiple logic/decode bin 8 chained</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>sequencer.axh</helpPatch>
+      <inlets>
+         <int32.positive name="in" description="step select"/>
+         <bool32 name="default"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="chain" description="chain output"/>
+         <bool32 name="out" description="bool out"/>
+         <int32 name="enc" description="encoded output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="notes">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+         <int32 name="length">
+            <MinValue i="1"/>
+            <MaxValue i="32"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[bool sequence[31];
+int powers[31];]]></code.declaration>
+      <code.init><![CDATA[for(int i=0;i <31;i+=1)
+{
+	powers[i]=1<<i;
+}
+]]></code.init>
+      <code.krate><![CDATA[int notes=param_notes;
+if (notes>param_length)
+	notes=param_length;
+
+int rests = param_length - notes;
+
+
+
+outlet_chain=inlet_in-param_length;
+if (rests){
+	if (notes<rests)
+	{
+		int mul=rests/notes;
+		int rem=rests-(mul*notes);
+		int ii=0;
+		int temp;
+	
+		for (int i=0;i<notes;i+=1)
+		{
+			if (i<rem)
+			{
+				temp=ii;
+				sequence[ii]=1;
+				for(ii=temp+1;ii<temp+mul+2;ii+=1)
+				sequence[ii]=0;			
+			}
+			else
+			{
+				temp=ii;
+				sequence[ii]=1;
+				for(ii=temp+1;ii<temp+mul+1;ii+=1)
+				sequence[ii]=0;	
+			}
+		}
+	}
+	else if (notes>rests)
+	{
+		int mul=notes/rests;
+		int rem=notes-(mul*rests);
+		int ii=0;
+		int temp;
+		
+		for (int i=0;i<rests;i+=1)
+		{
+			if (i<rem)
+			{
+				
+				sequence[ii]=1;
+				ii+=1;
+				sequence[ii]=0;
+				temp=ii;
+				for(ii=temp+1;ii<temp+mul+1;ii+=1)
+				sequence[ii]=1;				
+			}
+			else
+			{
+				sequence[ii]=1;
+				ii+=1;
+				sequence[ii]=0;
+				temp=ii;
+				for(ii=temp+1;ii<temp+mul;ii+=1)
+				sequence[ii]=1;	
+			}
+		}
+		
+		
+	}
+	else
+	{
+		sequence[0]=1;
+		for (int i=1;i<param_length;i+=1)
+		sequence[i]=!sequence[i-1];
+	}
+}else
+{
+for (int ii=0;ii<param_length;ii+=1)
+sequence[ii]=1; }
+
+
+if (inlet_in>=0 && inlet_in <param_length)
+	outlet_out=sequence[inlet_in];
+else
+	outlet_out=inlet_default;
+
+
+int num=0;
+for(int i=0;i<param_length;i+=1)
+num+=sequence[i]*powers[i];
+
+
+
+
+
+outlet_enc=num;]]></code.krate>
+   </obj.normal>
+</objdefs>

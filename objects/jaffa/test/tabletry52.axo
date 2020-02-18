@@ -1,0 +1,262 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tabletry52" uuid="ab9de3f4-6940-426a-8e78-6e0dce52d07c">
+      <sDescription>A combination of 3 objects:
+table/alloc 16b sdram
+table/load
+string/indexed
+
+IMPORTANT:
+Se help file about how to connect!</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table2h.axh</helpPatch>
+      <inlets>
+         <int32 name="index"/>
+      </inlets>
+      <outlets>
+         <bool32 name="trig"/>
+         <frac32.positive name="volume"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>4096</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+               <string>524288</string>
+               <string>1048576</string>
+               <string>2097152</string>
+               <string>4194304</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+               <string>22</string>
+            </CEntries>
+         </combo>
+         <table name="prefix"/>
+         <table name="suffix"/>
+         <combo name="volfade">
+            <MenuEntries>
+               <string>Immediate</string>
+               <string>Fade 0.02s</string>
+               <string>Fade 0.10s</string>
+               <string>Fade 0.50s</string>
+            </MenuEntries>
+            <CEntries>
+               <string>((0x08000000)/2)</string>
+               <string>((0x08000000)/60)</string>
+               <string>((0x08000000)/300)</string>
+               <string>((0x08000000)/1500)</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[//String/index
+int ntrig;
+char c[64];
+int offset;
+int pval;
+
+//Logic change //
+int ptrig2;
+int32_t pval2;
+
+// Connect inlet to string/index VIA logic  change //
+int32_t LcOut;
+
+
+// Block BLEEEP //
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      int32_t     old_inlet_trig;
+      int32_t     trig_pulse;
+      int32_t     gain_coeff;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
+#endif
+
+// outlet trigger fra deglitch
+int32_t Deglitchout;
+
+//Table allocation
+static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t BITS = 16;
+static const uint32_t GAIN = 12;
+int16_t *array;]]></code.declaration>
+      <code.init><![CDATA[//Table allocation
+static int16_t _array[attr_poly][LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+{ 
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}
+
+//String/index
+ntrig = 0;
+strcpy(&c[0],"attr_prefix000attr_suffix");
+offset = strlen("attr_prefix");
+pval = 0;
+
+// Logic change //
+ptrig2 = 0;
+pval2 = 0;
+
+// Block BLEEEP //
+      old_inlet_trig  = 0;
+      trig_pulse      = 0;
+      gain_coeff      = (1<<27);
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
+#endif]]></code.init>
+      <code.krate><![CDATA[// String index
+if (inlet_index != pval){   pval = inlet_index;
+   int i = inlet_index;   int i0 = i/10;
+   c[offset+2] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+1] = '0'+i-10*i0;
+   i = i0; i0 = i/10;
+   c[offset+0] = '0'+i-10*i0;
+
+}
+
+// logic change //
+if ((pval2 != inlet_index)&(!ptrig2)) { 
+  LcOut = 1;
+  pval2 = inlet_index;
+  ptrig2 = 1;
+} else {
+  ptrig2 = 0;
+  LcOut = 0;
+}
+
+// Block BLEEEP //
+
+
+      if( LcOut && !old_inlet_trig )
+        {
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          DEBUGF("deglitcher::krate(): initiate trigger");
+#else
+          // Use immediate trigger
+          codec_clearbuffer();
+          trig_pulse = 1;
+          DEBUGF("deglitcher::krate(): immediate trigger");
+#endif
+        }
+
+#if attr_volfade < (1<<27)
+      /*
+       *  Waits for the volume to ramp down before performing deferred triggering
+       *  then ramps the volume back up when the potentially blocking operation is done
+       *  We save this codespace if immedate preset switching is used.
+       */
+      if( fade_rate < 0 )
+        {
+          // Fading out before trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
+            {
+              gain_coeff = 0;
+              fade_rate  = 0;
+              fade_rate  = attr_volfade; // Start fade out
+              trig_pulse = 1;            // Trick potentially blocking operation
+              codec_clearbuffer();
+              DEBUGF("deglitcher::krate(): deferred trigger");
+            }
+        }
+      else if( fade_rate > 0 )
+        {
+          // Fading in after trigger
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff = 1<<27;
+              fade_rate  = 0;
+            }
+        }
+#endif
+
+      outlet_volume  = gain_coeff;
+      Deglitchout    = trig_pulse; //outlet_trig
+      old_inlet_trig = LcOut;
+      trig_pulse     = 0;
+
+
+// Table/load
+    if ((LcOut>0) && !ntrig) {
+	char* filename = &c[0]; // filename internally //
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    err = f_open(&FileObject,filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;}
+    int rem_sz = sizeof(*array)*LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+    err = f_close(&FileObject);
+    if (err != FR_OK) { report_fatfs_error(err,filename); return;};
+  }
+  else if (!(LcOut>0)) ntrig=0; // logic change in here //]]></code.krate>
+   </obj.normal>
+</objdefs>

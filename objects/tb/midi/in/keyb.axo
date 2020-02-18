@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="keyb" uuid="8f1af19e-f0b4-41b7-9ecf-6682e87fec90">
+      <sDescription>Monophonic MIDI keyboard note input, gate, velocity and release velocity</sDescription>
+      <author>Mark Harris</author>
+      <license>BSD</license>
+      <helpPatch>midi_in.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+         <bool32 name="gate" description="key pressed, no retrigger legato"/>
+         <bool32 name="gate2" description="key pressed, retrigger on legato"/>
+         <frac32.positive name="velocity" description="note-on velocity"/>
+         <frac32.positive name="releaseVelocity" description="note-off velocity"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t _note;
+int32_t _gate;
+int32_t _gate2;
+uint8_t _velo;
+uint8_t _rvelo;
+uint8_t _noteCount;
+int8_t _noteTrig;]]></code.declaration>
+      <code.init><![CDATA[_gate = 0;
+_note = 0;
+_noteCount = 0;
+_noteTrig = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_note= _note<<21;
+outlet_gate= _gate;
+outlet_gate2= _gate && ! _noteTrig;
+outlet_velocity= _velo<<20;
+outlet_releaseVelocity= _rvelo<<20;
+_noteTrig = 0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  _velo = data2;
+  _note = data1-64;
+  _gate = 1<<27;
+  _noteTrig = 1;
+  _noteCount++;
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  _noteCount = _noteCount > 0 ? _noteCount - 1 : 0 ;
+  _gate = _noteCount>0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  _gate = 0;
+  _noteCount = 0;
+  _noteTrig = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

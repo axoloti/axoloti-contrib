@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="boost" uuid="07d942c9-1253-46bc-9132-5a3f149aa581">
+      <sDescription>boost up to 16 times (saturated) (adds boosted signal to clean input signal and averages)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="amp"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain16 name="amp" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t step;
+int32_t prev;]]></code.declaration>
+      <code.krate><![CDATA[int32_t v=__USAT((param_amp>>3)+(inlet_amp<<3),30);
+   step = (v - prev)>>4;
+   int32_t i = prev;
+   prev = v;]]></code.krate>
+      <code.srate><![CDATA[int32_t out= __SSAT(___SMMUL(i<<1,__SSAT(inlet_in,28)<<4)<<1,28);
+
+
+int32_t ts = __SSAT(out,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+outlet_out = __SSAT(inlet_in+(ts + (ts>>1) - (tsq31p3)>>1),28)>>1;
+i+=step<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>

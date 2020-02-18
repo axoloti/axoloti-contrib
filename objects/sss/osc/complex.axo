@@ -1,0 +1,244 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="complex" uuid="9b7d4d85-1d7d-4f49-b731-3c0616fe6736">
+      <sDescription>Complex oscillator based on the &quot;inf&quot; distortion module
+-at the base is a thru-zero sine oscillator with a soft&amp;hard sync function
+-root can be modulated to a saw-type thanks to internal self FM
+-sub-harmonic generator can be forced to stay in a low-frequency region, no matter the input frequency
+-2x pulsewidth generators and the option to send the sub to the pw-generators as offset
+-a mixer to mix all the 4 types together
+-a soft distortion at the end to limit between -64 and 64</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>inf.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32 name="subrate"/>
+         <frac32 name="pw1"/>
+         <frac32 name="pw2"/>
+         <frac32 name="sofs"/>
+         <frac32 name="sawizer"/>
+         <frac32buffer name="fm"/>
+         <frac32buffer name="sync"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="audio output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" description="root pitch">
+            <DefaultValue v="-24.0"/>
+         </frac32.s.map.pitch>
+         <frac32.s.map name="fm">
+            <DefaultValue v="0.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="sawizer" description="turns root sine into a saw-like shape by internal self-FM">
+            <DefaultValue v="9.0"/>
+         </frac32.s.map>
+         <frac32.s.map.pitch name="subrate" description="sub-divides the sub based on a timer that has to have ended before it can trigger again">
+            <DefaultValue v="-12.0"/>
+         </frac32.s.map.pitch>
+         <int32 name="subhrm" description="sub-divides the sub in integers using a counter">
+            <MinValue i="1"/>
+            <MaxValue i="4"/>
+         </int32>
+         <frac32.s.map name="sofs" description="offsets the trigger point of the sub">
+            <DefaultValue v="19.0"/>
+         </frac32.s.map>
+         <frac32.u.map name="submod" description="adds the sub generator to the root before sending to pulse">
+            <DefaultValue v="51.0"/>
+         </frac32.u.map>
+         <frac32.s.map name="pw1" description="pulse width 1">
+            <DefaultValue v="26.0"/>
+         </frac32.s.map>
+         <bool32.tgl name="double" description="fully rectify before pulse2"/>
+         <frac32.s.map name="pw2" description="pulse width 2">
+            <DefaultValue v="-28.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="root" description="root level">
+            <DefaultValue v="10.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="sub" description="sub level">
+            <DefaultValue v="21.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="pulse1" description="pulse1 level">
+            <DefaultValue v="-18.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="pulse2" description="pulse2 level">
+            <DefaultValue v="21.0"/>
+         </frac32.s.map>
+         <frac32.s.map.pitch name="softsync"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const int blepvoices = 8;
+static const int max = 4;
+  int i,j,snc,cnt,sync,SNC;
+  int16_t *oscp[max][blepvoices];
+  uint32_t nextvoice[max];
+  int32_t i0[max];
+  int32_t phase,timer,Ofs;
+  int32_t v21=1<<21;
+  int32_t hp,saw,HP,LP,Hp;]]></code.declaration>
+      <code.init><![CDATA[int j;
+for(i=0;i<max;i++){
+    for(j=0;j<blepvoices;j++){
+      oscp[i][j] = &blept[BLEPSIZE-1];}
+      nextvoice[i] = 0;
+      i0[i] = 0;
+}]]></code.init>
+      <code.krate><![CDATA[int j;
+  int16_t *lastblep = &blept[BLEPSIZE-1];
+  uint32_t freq,ss;
+  MTOFEXTENDED(param_pitch+inlet_pitch,freq)
+  MTOFEXTENDED(param_softsync,ss)
+  if(param_softsync==(1<<27)){ss=(1<<31)-1;}
+  if(param_softsync==-(1<<27)){ss=0;}
+  int32_t ofs1=inlet_pw1+param_pw1;
+  int32_t ofs2=inlet_pw2+param_pw2;
+  int32_t sofs=inlet_sofs+param_sofs;
+  int32_t rate;
+  MTOFEXTENDED(param_subrate+inlet_subrate,rate)
+  rate=rate>>2;
+  int32_t FM=___SMMUL(freq,param_sawizer+inlet_sawizer)<<5;
+  int32_t fm=___SMMUL(freq,param_fm)<<5;
+  for(j=0;j<BUFSIZE;j++){
+  	sync-=___SMMUL(ss,sync);
+  	timer=__USAT(timer-rate,30);
+  	saw=(___SMMUL(FM,saw)<<8);
+  	saw+=(___SMMUL(fm,inlet_fm[j])<<8);
+  	HP+=saw-HP>>8;
+  	saw-=HP;
+  	LP+=saw-LP>>1;
+  	saw=LP;
+  	phase+=freq+saw;
+
+	if((inlet_sync[j]>0)&&!SNC&&(ss>0)){
+		SNC=1;
+		sync+=phase;
+		phase=0;
+		cnt=(cnt+1)%(param_subhrm);
+		if(timer<1){
+		if(cnt==0){
+		
+		Ofs=Ofs>0?-v21:v21;
+		timer=(1<<30);
+		}}
+	}
+  	else if(inlet_sync[j]<0){SNC=0;}
+  	int32_t out;
+///////////root
+int32_t p1=phase+sync;
+  	int32_t r;
+  	SINE2TINTERP(p1,r)
+  	SINE2TINTERP(p1+(1<<30),saw)
+  	saw=saw>>4;
+  	
+  	r=r>>4;
+
+///////////sub
+
+    int32_t in=r+sofs;
+	if((in>0)&&!snc){
+		snc=1;
+		
+		cnt=(cnt+1)%(param_subhrm);
+		if(timer<1){
+		if(cnt==0){
+			Ofs=Ofs>0?-v21:v21;
+			timer=(1<<30);
+		}}
+	}
+	else if(in<0){snc=0;}
+
+int32_t i1 = Ofs;
+    int32_t sum=0;
+    if ((i1>0)&&!(i0[2]>0)){   // dispatch
+      nextvoice[2] = (nextvoice[2]+1)&(blepvoices-1);
+      int32_t x = 64-((-i0[2]<<6)/(i1-i0[2]));
+      oscp[2][(nextvoice[2])] = &blept[x];
+    } else if ((i1<0)&&!(i0[2]<0)){   // dispatch
+      nextvoice[2] = (nextvoice[1]+1)&(blepvoices-1);
+      int32_t x = 64-((i0[2]<<6)/(i0[2]-i1));
+      oscp[2][(nextvoice[2])] = &blept[x];
+    }
+    i0[2] = i1;
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[2][i];
+      if (i&1) sum+=*t; else sum-=*t; 
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      oscp[2][i]=t;
+    }
+    sum -= ((((nextvoice[2]+1)&1)<<1)-1)<<13;
+	sum=sum<<13;
+    out=___SMMUL(sum,param_sub)<<5;
+    int32_t smod=___SMMUL(-param_submod,sum)<<5;
+  	
+///////////pulse1
+    i1 = r+ofs1+smod>>2;
+	sum=0;
+    if ((i1>0)&&!(i0[0]>0)){   // dispatch
+      nextvoice[0] = (nextvoice[0]+1)&(blepvoices-1);
+      int32_t x = 64-((-i0[0]<<6)/(i1-i0[0]));
+      oscp[0][(nextvoice[0])] = &blept[x];
+    } else if ((i1<0)&&!(i0[0]<0)){   // dispatch
+      nextvoice[0] = (nextvoice[0]+1)&(blepvoices-1);
+      int32_t x = 64-((i0[0]<<6)/(i0[0]-i1));
+      oscp[0][(nextvoice[0])] = &blept[x];
+    }
+    i0[0] = i1;
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[0][i];
+      if (i&1) sum+=*t; else sum-=*t; 
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      oscp[0][i]=t;
+    }
+    sum -= ((((nextvoice[0]+1)&1)<<1)-1)<<13;
+
+
+///////////add root and pulse1
+    out+=___SMMUL(sum<<13,param_pulse1)+___SMMUL(r,param_root)<<5;
+
+///////////pulse2
+    i1 = r+ofs2+smod>>2;
+    if(param_double){
+    i1=i1>0?i1:-i1;
+    hp+=i1-hp>>9;
+    i1-=hp;
+    }
+    sum=0;
+    if ((i1>0)&&!(i0[1]>0)){   // dispatch
+      nextvoice[1] = (nextvoice[1]+1)&(blepvoices-1);
+      int32_t x = 64-((-i0[1]<<6)/(i1-i0[1]));
+      oscp[1][(nextvoice[1])] = &blept[x];
+    } else if ((i1<0)&&!(i0[1]<0)){   // dispatch
+      nextvoice[1] = (nextvoice[1]+1)&(blepvoices-1);
+      int32_t x = 64-((i0[1]<<6)/(i0[1]-i1));
+      oscp[1][(nextvoice[1])] = &blept[x];
+    }
+    i0[1] = i1;
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[1][i];
+      if (i&1) sum+=*t; else sum-=*t; 
+      t+=64;
+      if (t>=lastblep) t=lastblep;
+      oscp[1][i]=t;
+    }
+    sum -= ((((nextvoice[1]+1)&1)<<1)-1)<<13;
+
+    out+=___SMMUL(sum<<13,param_pulse2)<<5;
+
+
+    
+//////////////
+Hp+=out-Hp>>10;
+out-=Hp;
+    
+int32_t ts = __SSAT(out,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+out = ts + (ts>>1) - (tsq31p3);
+    outlet_out[j]=out;
+  }]]></code.krate>
+   </obj.normal>
+</objdefs>

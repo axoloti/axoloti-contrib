@@ -1,0 +1,262 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="14" y="14" text="parametric electric piano"/>
+   <obj type="jt/tuning/equal" uuid="2bcbd7e3-c07f-4574-893c-573310323448" name="equal_1" x="14" y="42">
+      <params>
+         <frac32.s.map name="C" value="-4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="302abe8f-394a-4f50-80ac-257d636e171e" name="object_1" x="126" y="42">
+      <params>
+         <frac32.u.map name="damp1" value="0.40999889373779297"/>
+         <frac32.u.map name="damp2" value="9.599998950958252"/>
+         <frac32.s.map name="hammer1" value="64.0"/>
+         <frac32.s.map name="hammer2" value="0.0"/>
+         <frac32.s.map name="hammer3" value="0.0"/>
+         <frac32.s.map name="hammer4" value="8.0"/>
+         <frac32.s.map name="drive1" value="11.0"/>
+         <frac32.s.map name="drive2" value="53.0"/>
+         <frac32.s.map name="bias1" value="0.9999995231628418"/>
+         <frac32.s.map name="bias2" value="-0.09999990463256836"/>
+         <frac32.u.map name="hpf" value="49.5"/>
+         <frac32.u.map name="dissipate" value="3.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="tuning" obj="equal_1"/>
+      </attribs>
+      <object id="patch/object" uuid="302abe8f-394a-4f50-80ac-257d636e171e">
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <inlets/>
+         <outlets>
+            <frac32buffer name="o1"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="damp1" description="damping when note is on">
+               <DefaultValue v="0.41"/>
+            </frac32.u.map>
+            <frac32.u.map name="damp2" description="damping when note is off">
+               <DefaultValue v="9.6"/>
+            </frac32.u.map>
+            <frac32.s.map name="hammer1" description="strike energy">
+               <DefaultValue v="64.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="hammer2">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="hammer3">
+               <DefaultValue v="0.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="hammer4" description="sympathetic resonance, striking all strings">
+               <DefaultValue v="8.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="drive1">
+               <DefaultValue v="35.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="drive2">
+               <DefaultValue v="57.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="bias1">
+               <DefaultValue v="5.0"/>
+            </frac32.s.map>
+            <frac32.s.map name="bias2">
+               <DefaultValue v="-0.1"/>
+            </frac32.s.map>
+            <frac32.u.map name="hpf" description="high pass filter">
+               <DefaultValue v="45.0"/>
+            </frac32.u.map>
+            <frac32.u.map name="dissipate" description="energy dissipation when hitting distortion">
+               <DefaultValue v="12.5"/>
+            </frac32.u.map>
+         </params>
+         <attribs>
+            <objref name="tuning"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[static const int noct = 6;
+static const int nchroma = 12;
+
+class ctine {
+	public:
+	int32_t damp;
+	int32_t low;
+	int32_t band;
+	int32_t dc;
+	int32_t prev;
+	int32_t prev2;
+
+	int32_t process(int32_t f, 
+				int32_t drive1, 
+				int32_t drive2, 
+				int32_t bias1, 
+				int32_t bias2,
+				int32_t hpfc,
+				int32_t dissipate){
+// resonator
+			int32_t notch =  ___SMMUL(damp,band);
+			low = ___SMMLS(f,band,low);
+			int32_t high  = notch - low;
+			band = ___SMMLS(f,high<<2,band);
+			
+			int32_t distin = high;
+
+			int32_t x = ___SMMLA(drive1,prev2,___SMMLA(drive2,band,bias1));
+			int32_t xs =  __SSAT(x,25);
+#if 1 // dissipate energy from resonator when clipping
+			if (x<xs) {
+				low = ___SMMLS(dissipate,low,low);
+			}
+#endif
+			int32_t mul1 = ___SMMUL(distin + bias2,xs<<7);
+			int32_t biased1 = mul1;
+			int32_t df = biased1-dc;
+			dc = ___SMMLA(df,hpfc,dc);
+		     biased1 = df;
+			prev2 = prev + biased1;
+			prev = biased1;
+			return mul1;
+	}
+};
+
+ctine tines[noct*nchroma];
+
+int32_t fdbk=0;
+int32_t damp1=0;
+int32_t damp2=0;
+int32_t hammer1=0;
+int32_t hammer2=0;
+int32_t hammer3=0;
+int32_t hammer4=0;
+
+uint32_t sustain_notes[4];
+bool sustain_pedal;]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<noct*nchroma;i++){
+	tines[i].damp=0x4000000;
+}]]></code.init>
+         <code.krate><![CDATA[int i,j,k;
+
+damp1 = param_damp1;
+damp2 = param_damp2;
+hammer1 = param_hammer1;
+hammer2 = param_hammer2;
+hammer3 = param_hammer3;
+hammer4 = param_hammer4;
+int32_t drive1 = param_drive1<<4;
+int32_t drive2 = param_drive2;
+int32_t bias1 = param_bias1;
+int32_t bias2 = param_bias2<<4;
+
+//disp_d1 = sustain_pedal;
+//disp_d2 = sustain_notes[0];
+
+
+for(i=0;i<BUFSIZE;i++){
+	outlet_o1[i] = 0;
+}
+
+for(j=0;j<nchroma;j++){
+	int32_t f = ___SMMUL(attr_tuning.array[j],0x64880000)<<5;
+	int32_t hpfc = ___SMMUL(param_hpf,f)<<7;
+	int p = j + 12*(noct-1);
+	for(k=0;k<noct;k++){
+		ctine *t = &tines[p];
+		for(i=0;i<BUFSIZE;i++){
+			outlet_o1[i] += t->process(f, drive1, drive2, bias1, bias2, hpfc, param_dissipate);
+		}
+		f = f>>1;
+		hpfc = hpfc>>1;
+		p -= 12;
+	}
+}
+
+for(i=0;i<BUFSIZE;i++){
+	outlet_o1[i] >>= 2;
+}]]></code.krate>
+         <code.midihandler><![CDATA[static const int transpose = 24;
+
+if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+   data1-=transpose;
+   if ((data1>=0)&&(data1<noct*nchroma)) {
+	ctine *t = &tines[data1];
+	data2 = 64 + data2/2;
+	t->band=___SMMLA(data2<<23,hammer1<<4,t->band>>2);
+	t->low =___SMMLA(data2<<23,hammer2<<2,t->low>>2);
+     t->dc = ___SMMLA(data2<<23,hammer3<<2,t->dc>>10);
+   	t->damp = damp1;
+   	   int j = data1>>5;
+   	   int k = data1&0x01F;
+	   sustain_notes[j] |= 1<<k;
+   	int i;
+   	for(i=0;i<noct*nchroma;i++)
+   	   tines[i].band = ___SMMLA(data2<<21,hammer4,tines[i].band);
+   }
+}
+else if ((status == MIDI_NOTE_OFF + attr_midichannel) ||
+  (status == MIDI_NOTE_ON + attr_midichannel) && (!data2)) {
+   data1-=transpose;
+   if ((data1>=0)&&(data1<noct*nchroma)) {
+    	 int j = data1>>5;
+   	 int k = data1&0x01F;
+
+	 sustain_notes[j] &= ~(1<<k);
+
+   	 if (!sustain_pedal){
+	        ctine *t = &tines[data1];
+	   	   t->damp = damp2;
+   	 }
+   }
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == 64)) {
+	if (data2&0x40) {
+		sustain_pedal = 1;
+		ctine *t = tines;
+		int j;
+		for(j=0;j<nchroma*noct;j++){
+			t->damp = damp1;
+			t++;
+		}
+	} else {
+		sustain_pedal = 0;
+		int j;
+		uint32_t *ps = sustain_notes;
+		uint32_t s = *ps;
+		ctine *t = tines;
+		for(j=0;j<nchroma*noct;){
+			if (!(s&1)) {
+				t->damp = damp2;
+			}
+			t++;
+			s>>=1;
+			j++;
+			if (!(j&0x1F)){
+				ps++;
+				s = *ps;
+			}
+		}
+	}
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="266" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="object_1" outlet="o1"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>860</x>
+      <y>399</y>
+      <width>879</width>
+      <height>813</height>
+   </windowPos>
+</patch-1.0>

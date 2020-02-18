@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="demux_sh" uuid="d65f9389-6f3b-4290-b830-4ed2a4db542e">
+      <sDescription>demultiplexer with sample and hold.connect inlet in to outlet number s.
+the output value of output number s will be held until the value of inlet in changes.
+when s changes,the output value of the previous outlet number s will be held.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <frac32 name="in"/>
+         <int32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o0"/>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[   int32_t hold0;
+      int32_t hold1;
+      int32_t hold2;
+      int32_t hold3;
+            int32_t prev;
+   ]]></code.declaration>
+      <code.init><![CDATA[hold0 = 0;
+hold1 = 0;
+hold2 = 0;
+hold3 = 0;
+prev = 0;
+
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_s == 0) && (inlet_in != prev)){
+	hold0 = inlet_in;
+	outlet_o0 = inlet_in;
+}else {
+	outlet_o0 = hold0;
+}
+
+if ((inlet_s == 1) && (inlet_in != prev)) {
+	hold1 = inlet_in;
+	outlet_o1 = inlet_in;
+}else {
+	outlet_o1 = hold1;
+}
+
+if ((inlet_s == 2) && (inlet_in != prev)){
+	hold2 = inlet_in;
+	outlet_o2 = inlet_in;
+}else {
+	outlet_o2 = hold2;
+}
+
+if ((inlet_s == 3) && (inlet_in != prev)) {
+	hold3 = inlet_in;
+	outlet_o3 = inlet_in;
+}else {
+	outlet_o3 = hold3;
+}
+
+prev = inlet_in ;
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

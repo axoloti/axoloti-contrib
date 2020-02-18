@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="hrmDelay" uuid="2c0cc4dd-15c5-41a6-8390-5ee88b0935ee">
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="time"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="mult"/>
+         <frac32.u.map name="div"/>
+         <frac32.s.map name="hrm"/>
+         <frac32.u.map name="feed"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.u.map name="wet"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+int32_t out;
+int32_t val;
+int32_t feed;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[//uint32_t tim=param_time>>27-LENGTHPOW;
+int mult=(param_mult>>21)>=1?(param_mult>>21):1;
+int Div=(param_div>>21)>=1?(param_div>>21):1;
+int32_t tim=(int64_t)inlet_time*mult/Div;
+int hrm=param_hrm>>25;
+int32_t f;
+MTOF(param_damp,f)]]></code.krate>
+      <code.srate><![CDATA[writepos = (writepos + 1)&LENGTHMASK;
+array[writepos] = __SSAT(inlet_in+feed>>14,16);
+out=0;
+uint32_t p1;
+uint32_t p2;
+uint32_t m1;
+if(hrm>=0){
+p1=(writepos*hrm)&2047;
+p2=(writepos*hrm+1024)&2047;}
+else{
+p1=(int32_t)(writepos*(-(float32_t)(-hrm-1)/-hrm))&2047;
+p2=(int32_t)(writepos*(-(float32_t)(-hrm-1)/-hrm)+1024)&2047;}
+
+m1=(p1>1024?2048-p1:p1)<<1;
+out=___SMMUL(array[(writepos-tim+(p1))&LENGTHMASK]<<16,m1<<19);
+out+=___SMMUL(array[(writepos-tim+(p2))&LENGTHMASK]<<16,2047-m1<<19);
+val=___SMMLA((out-val)<<1,f,val);
+if(param_hrm>=0){
+feed=val;}
+else{ feed=out-val;}
+outlet_out=___SMMUL(feed<<3,param_wet<<3)+inlet_in;
+feed=___SMMUL(feed<<2,param_feed<<3);]]></code.srate>
+   </obj.normal>
+</objdefs>

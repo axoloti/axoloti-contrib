@@ -1,0 +1,218 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="compDelay" uuid="11a58119-74a1-43f8-a50b-f00181e4092c">
+      <sDescription>A delay module with a compressor/limiter/expander,low&amp;highpass filter and FIR-filter within the feedback loop.
+Send in the audio quite a high volume, ducking the delayed signal. After this, the feedback can run for eternity.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>comp.axh</helpPatch>
+      <inlets>
+         <frac32 name="release" description="releasetime for compressor"/>
+         <frac32 name="delay" description="sets delaytime (use mtod delay-conversion module to use audio-frequencies)"/>
+         <frac32 name="feedback" description="sets feedback amount, a level of 20 is often enough"/>
+         <frac32 name="center" description="sets center frequency of the LP/HP filters"/>
+         <frac32 name="width" description="sets the bandwidth between the LP/HP filters"/>
+         <bool32 name="modify" description="When high, modulates the delaytime with a squarewave. The size is set by the timemod and rate is set with rate input"/>
+         <frac32 name="timemod" description="sets the timing difference caused by the square modulator"/>
+         <frac32 name="rate" description="sets the rate of the square modulator"/>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32buffer name="coefs" description="use a coefficient generator to control the FIR filter"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="gainIn" description="adds gain to incoming signal when input is not loud enough"/>
+         <frac32.u.map name="tresh" description="sets limiter/compressor treshold or expander goal"/>
+         <frac32.u.map name="ratio" description="sets gain reduction/addition ratio"/>
+         <frac32.u.map name="expand" description="sets amount of expansion"/>
+         <frac32.u.map name="slope" description="makes the expander exponential, causing a quicker rise and more distortion at low release settings"/>
+         <frac32.s.map.lfopitch name="release" description="sets release time"/>
+         <frac32.s.map.pitch name="center" description="set center frequency of LP/HP filters"/>
+         <frac32.u.map name="width" description="sets bandwidth between LP/HP filters"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;
+
+arm_fir_instance_q31 f1;
+arm_fir_instance_q31 f2;
+q31_t state1[BUFSIZE + BUFSIZE -1];
+
+int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+int32_t frac_exp(int32_t a) {
+	int8_t s = (a>>24)+4;
+	uint8_t ei = a>>16;
+	if (s>=0)
+	     return expt[ei]<<s;
+	else return expt[ei]>>(-s);
+}
+int32_t accum;
+int i;
+int32_t prev;
+int32_t step;
+int32_t lp;
+int32_t HP,LP;
+int32_t FD[BUFSIZE];
+int32_t fd[BUFSIZE];
+bool md;
+int32_t tm;
+bool ct;
+int32_t rate;
+int32_t phs;]]></code.declaration>
+      <code.init><![CDATA[accum=0;
+
+static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) {array[i] = 0;}
+
+   arm_fir_init_q31(&f1,
+	BUFSIZE,
+	0,
+	&state1[0],
+	BUFSIZE);]]></code.init>
+      <code.krate><![CDATA[int32_t rel;
+MTOF(-param_release-inlet_release,rel)
+int32_t lfrq;
+int32_t hfrq;
+int32_t center=inlet_center+param_center;
+int32_t width=inlet_width+param_width;
+MTOF(center+width,lfrq)
+MTOF(center-width,hfrq)
+uint32_t delay = writepos-(__USAT(inlet_delay,27)>>(27-LENGTHPOW));
+//int32_t mo=___SMMUL(inlet_modify<<3,inlet_modify<<2);
+//mo=___SMMUL(mo<<3,mo<<2);
+//mo=___SMMUL(mo<<3,mo<<2);
+//int32_t it=___SMMUL(inlet_interupt<<3,inlet_interupt<<2);
+//it=___SMMUL(it<<3,it<<2);
+/*
+if(mo>0){
+	if((int32_t)(GenerateRandomNumber()>>5)<mo){
+		tm=(int32_t)(GenerateRandomNumber()>>34-LENGTHPOW);
+	}
+	if((int32_t)(GenerateRandomNumber()>>5)<(it<<ct)){
+		ct=(ct+1)&1;
+		disp_d1=ct;
+		MTOFEXTENDED((int32_t)GenerateRandomNumber>>4,rate)
+	}
+	phs+=rate;
+	if((ct)&&(phs>0)){
+	delay+=tm;
+	}
+}
+else if(mo<1){md=0;}
+*/
+MTOFEXTENDED(inlet_rate,rate)
+
+if(inlet_modify>0){
+	phs+=rate;
+	if(!md){md=1;phs=1;}
+	if(phs>0){
+		
+		delay+=inlet_timemod>>27-LENGTHPOW;
+	}
+}
+else if(inlet_modify<1){md=0;}
+
+for(i=0;i<BUFSIZE;i++){
+	
+	int32_t tmp=(array[((delay++)+16) & LENGTHMASK]<<14);
+     HP+= ___SMMUL(tmp-HP,hfrq)<<1;
+	tmp=HP-tmp;
+	LP+=___SMMUL(tmp-LP,lfrq)<<1;
+	fd[i]=-___SMMUL(inlet_feedback<<3,LP<<2);
+}
+	f1.pCoeffs = (q31_t*)inlet_coefs;
+arm_fir_fast_q31(
+  &f1,
+  (q31_t*)fd,
+  FD,
+  BUFSIZE);
+  for(i=0;i<BUFSIZE;i++){
+	int32_t in=inlet_in[i]+FD[i];
+	in=__SSAT(in+__SSAT(__SSAT(___SMMUL(in,param_gainIn)<<5,24)<<4,29),29);
+	in=in>0?in:-in;
+	accum=in>accum?in:(accum+(___SMMUL(in-accum,rel)>>4));
+	
+}
+
+int32_t inlog = frac_log(accum);
+int32_t treshlog = frac_log(param_tresh);
+int32_t over = inlog-treshlog;
+
+int32_t gain;
+if (over<0){
+	over=over>-4<<26?over:-4<<26;
+
+	int32_t tmp=frac_exp(over+(___SMMUL(___SMMUL(over>>1,over>0?over:-over)-(over>>1),param_slope)<<5))<<8;
+	tmp=(___SMMUL(tmp,-0x80000+frac_exp(-___SMMUL(over,param_ratio)<<5))<<5);
+	gain = 0x80000+(___SMMUL(tmp,param_expand)<<5);
+} else {
+	gain = frac_exp(-___SMMUL(over,param_ratio)<<5);
+}
+gain = (gain<<8);
+
+step = (gain - prev)>>4;
+   int32_t D = prev;
+   prev = gain;
+for(i=0;i<BUFSIZE;i++){
+	lp=D<lp?D:(lp+(___SMMUL(D-lp,rel)>>4));
+	int32_t in=inlet_in[i]+FD[i];
+	in=__SSAT(in+__SSAT(__SSAT(___SMMUL(in,param_gainIn)<<5,24)<<4,29),29);
+	outlet_out[i] =  ___SMMUL(in,lp)<<5;
+	D += step;
+
+     
+     
+	writepos = (writepos + 1)&LENGTHMASK;
+     array[writepos] = __SSAT(___SMMUL(in,lp)>>9,16);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

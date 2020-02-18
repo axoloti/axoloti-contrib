@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="TriPM" uuid="3d2e1953-40d1-4480-aa27-c7e792752e53">
+      <sDescription>(First order differentiated polynomial).</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>TriPM.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer.bipolar name="mod"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="tri"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="mod"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, dp;
+float x0, x1;
+float y0Saw;
+float y0Sqr;
+float y0Tri, y1Tri;]]></code.declaration>
+<code.init><![CDATA[
+p = 32;
+x0 = 0;
+y0Saw = 0;
+y0Sqr = 0;
+y0Tri = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(0.25f/(1<<30));]]></code.krate>
+      <code.srate><![CDATA[p += dp;
+if(p > 33){
+  p -= 1;
+  x0 -= 1;
+}
+x1 = x0;
+y1Tri = y0Tri;
+float pm = p + arm::q_to_float(___SMMUL(inlet_mod, param_mod), 27-6);
+x0 = pm;
+pm -= (int32_t)pm;
+float saw = pm * 2 - 1;
+y0Saw = saw * saw;
+float sqr = saw > 0 ? 1.0f : -1.0f;
+y0Sqr = 2 * fabs(saw) - 1; //tri
+y0Tri = y0Sqr * y0Sqr * sqr - sqr; //sine
+float xs = pm <= 0.5f ? pm : 1.0f - pm;
+float x1_x0 = x1 - x0;
+if(fabs(x1_x0) > 0.0001f){
+  float _x1_x0 = 1.0f / x1_x0;
+  outlet_tri = arm::float_to_q((y1Tri - y0Tri) * _x1_x0, 27-3);
+} else {
+  outlet_tri = arm::float_to_q(y0Sqr, 27);
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

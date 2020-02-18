@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="trippass" uuid="7cdfc959-e8dd-4273-b9d0-820d76f18702">
+      <sDescription>tripple allpass filter using three different allpass-topologies:
+
+1=Phaser: delayline based &quot;phaser&quot; allpass. Delays the incoming signal at audio-frequency delaytimes.
+
+2=biquad allpass
+
+3=(2x)6dB LP/-HP allpass: inverses the lowpass and adds back to the highpass. The toggle switch allows to do second order, creating a band-pass that is inverted.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="i1"/>
+         <frac32buffer name="frq1"/>
+         <frac32buffer name="frq2"/>
+         <frac32buffer name="frq3"/>
+         <frac32 name="feed"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o1"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="frq1"/>
+         <frac32.s.map name="frq2"/>
+         <frac32.s.map.pitch name="frq3"/>
+         <bool32.tgl name="2nd"/>
+         <frac32.u.map.gain name="feed"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t All;
+int32_t bs[4][2];
+int32_t LP1;
+int32_t LP2;
+uint32_t v30=1<<30;
+int32_t TMP;
+static const uint32_t LENGTHPOW = 11;
+static const uint32_t LENGTH = (1<<11);
+static const uint32_t LENGTHMASK = ((1<<11)-1);
+int32_t *array;
+uint32_t writepos;
+int32_t PHASER(int32_t in,uint32_t tmp_d,int I){
+	 uint32_t LT=LENGTH*I;
+      array[writepos+LT] = __SSAT(in,28)<<2;
+      uint32_t tmp_di = writepos - (tmp_d>>16) -1;
+      uint32_t tmp_w1 = (tmp_d<<(14)) & 0x3FFFFFFF;
+      uint32_t tmp_w2 = v30 - tmp_w1;
+      int32_t tmp_a1 = array[(tmp_di&LENGTHMASK)+LT];
+      int32_t tmp_a2 = array[((tmp_di+1)&LENGTHMASK)+LT];
+      TMP = tmp_a1+___SMMUL(tmp_a2-tmp_a1,tmp_w1)>>2;
+
+
+}
+
+int32_t ALLPASS(int32_t in,int32_t pitch,int I){
+int32_t Frq;
+SINE2TINTERP(pitch<<3,Frq)
+bs[I][1]=___SMMUL(-in<<1,Frq)+bs[I][0]+___SMMUL(bs[I][1]<<1,Frq);
+All=bs[I][1];
+bs[I][0]=in;
+}]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[1<<12]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<(LENGTH<<1);i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t feed=__USAT((param_feed>>4)+inlet_feed,27)<<4;]]></code.krate>
+      <code.srate><![CDATA[writepos = (writepos + 1)&LENGTHMASK;
+int32_t FRQ;
+uint32_t Tm;
+MTOF(param_frq2+inlet_frq2,FRQ)
+MTOFEXTENDED(-param_frq3-inlet_frq3,Tm)
+Tm=__USAT(Tm>>3,27);
+
+
+PHASER(inlet_i1+___SMMUL(feed,-TMP<<1),Tm,0);
+ALLPASS(TMP,param_frq1+(inlet_frq1>>1),0);
+//ALLPASS(All,param_frq1+(inlet_frq1>>1),1);
+LP1=___SMMLA((All-LP1)<<1,FRQ,LP1);
+All-=LP1<<1;
+if(param_2nd>0){					
+LP2=___SMMLA((All-LP2)<<1,FRQ,LP2);
+All-=LP2<<1;
+}
+TMP=All;
+outlet_o1=TMP>>1;]]></code.srate>
+   </obj.normal>
+</objdefs>

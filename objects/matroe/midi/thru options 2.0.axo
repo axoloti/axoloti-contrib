@@ -1,0 +1,181 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="thru options 2.0" uuid="82845489-382b-4781-aa53-0c8945fc2eda">
+      <sDescription>super midi thru object with loads of options!</sDescription>
+      <author>Mattilyn Mattroe</author>
+      <license>You have to listen to madvilliany twice every time you use this object at a gig</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="input">
+            <MenuEntries>
+               <string>omni</string>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>dev == MIDI_DEVICE_DIN &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 3</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 4</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_DEVICE &amp;&amp; port == 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="inchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+         <combo name="output">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="outchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+         <combo name="notes">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <spinner name="lowestnote" MinValue="0" MaxValue="126" DefaultValue="0"/>
+         <spinner name="highestnote" MinValue="0" MaxValue="127" DefaultValue="127"/>
+         <combo name="ccs">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="clock">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="ChPressure">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="PolyPressure">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="ProgramCh">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="bend">
+            <MenuEntries>
+               <string>off&apos;</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.midihandler><![CDATA[if(attr_input) {
+        uint8_t status_type = status;
+        if (attr_ccs){
+            if ((status_type == MIDI_CONTROL_CHANGE+(attr_inchannel-1)))
+                {
+                    MidiSend3((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1,data2);
+            	} 
+            }
+        if (attr_notes){
+            if (((status_type == MIDI_NOTE_OFF+(attr_inchannel-1))&&(data1>=attr_lowestnote)&&(data1<=attr_highestnote)) ||
+                ((status_type == MIDI_NOTE_ON+(attr_inchannel-1))&&(data1>=attr_lowestnote)&&(data1<=attr_highestnote))) {
+                    MidiSend3((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1,data2);
+            	} 
+            }
+        if (attr_bend){
+	        	if (status_type == MIDI_PITCH_BEND+(attr_inchannel-1)) {
+	                    MidiSend3((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1,data2);
+	            } 
+        	}
+        if (attr_clock){
+	        if ((status == MIDI_TIMING_CLOCK) ||
+	      			(status == MIDI_START) ||
+	    				(status == MIDI_CONTINUE) ||
+	      			(status == MIDI_STOP)) {
+	    				MidiSend1((midi_device_t) attr_output,status);
+	  				}
+        		}    
+            
+        if (attr_PolyPressure){
+	            if ((status_type == MIDI_POLY_PRESSURE+(attr_inchannel-1))&&(data1>=attr_lowestnote)&&(data1<=attr_highestnote)) {
+	                
+	                    MidiSend3((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1,data2);
+	            	} 
+            }
+       if (attr_ProgramCh){    
+	       if  (status_type == MIDI_PROGRAM_CHANGE+(attr_inchannel-1)){
+	       
+	           MidiSend2((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1);
+	      	 }
+       	}
+       if (attr_ChPressure){
+	       if (status_type == MIDI_CHANNEL_PRESSURE+(attr_inchannel-1)) {
+	           MidiSend2((midi_device_t) attr_output,status_type+((attr_outchannel-1)-(attr_inchannel-1)),data1);
+	       	}
+       	}
+
+       
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

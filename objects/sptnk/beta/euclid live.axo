@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="euclid live" uuid="ab7f6734-9c91-4382-88c3-8b658214c651">
+      <sDescription>Euclidean rhythm generator. Chainable. Notes specifics the number of active steps, length the number of steps of the sequence. Inlet in specifics what step to read, like sel i 16/32  or disp/ibar . If outside the range the default inlet will be outputted (like said objects).
+Dynamic algorithm, 10% dsp load worst case with 63 notes and 64 rests.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>sequencer.axh</helpPatch>
+      <inlets>
+         <int32.positive name="in" description="step select"/>
+         <bool32 name="default" description="default value to chain objects"/>
+         <int32.positive name="length" description="length of the pattern"/>
+         <frac32.positive name="notes" description="percent of active notes"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="chain" description="chain output"/>
+         <bool32 name="out" description="bool out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool sequence[128];]]></code.declaration>
+      <code.krate><![CDATA[int notes=___SMMUL(inlet_length<<5,__USAT(inlet_notes,27));
+int rests = inlet_length - notes;
+int length = __USAT(inlet_length,7);
+
+
+
+outlet_chain=inlet_in-length;
+if (rests){
+	if (notes<rests)
+	{
+		int mul=rests/notes;
+		int rem=rests-(mul*notes);
+		int ii=0;
+		int temp;
+	
+		for (int i=0;i<notes;i+=1)
+		{
+			if (i<rem)
+			{
+				temp=ii;
+				sequence[ii]=1;
+				for(ii=temp+1;ii<temp+mul+2;ii+=1)
+				sequence[ii]=0;			
+			}
+			else
+			{
+				temp=ii;
+				sequence[ii]=1;
+				for(ii=temp+1;ii<temp+mul+1;ii+=1)
+				sequence[ii]=0;	
+			}
+		}
+	}
+	else if (notes>rests)
+	{
+		int mul=notes/rests;
+		int rem=notes-(mul*rests);
+		int ii=0;
+		int temp;
+		
+		for (int i=0;i<rests;i+=1)
+		{
+			if (i<rem)
+			{
+				
+				sequence[ii]=1;
+				ii+=1;
+				sequence[ii]=0;
+				temp=ii;
+				for(ii=temp+1;ii<temp+mul+1;ii+=1)
+				sequence[ii]=1;				
+			}
+			else
+			{
+				sequence[ii]=1;
+				ii+=1;
+				sequence[ii]=0;
+				temp=ii;
+				for(ii=temp+1;ii<temp+mul;ii+=1)
+				sequence[ii]=1;	
+			}
+		}
+		
+		
+	}
+	else
+	{
+		sequence[0]=1;
+		for (int i=1;i<length;i+=1)
+		sequence[i]=!sequence[i-1];
+	}
+}else
+{
+for (int ii=0;ii<length;ii+=1)
+sequence[ii]=1; }
+
+
+if (inlet_in>=0 && inlet_in <length)
+	outlet_out=sequence[inlet_in];
+else
+	outlet_out=inlet_default;]]></code.krate>
+   </obj.normal>
+</objdefs>

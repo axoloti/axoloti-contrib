@@ -1,0 +1,149 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="112" y="0">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="17.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/saw down" uuid="d831d6b82b3d559c3ba7b1b487fb292d7998fd08" name="saw_1" x="378" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <hyperlink type="patch/hyperlink" name="http://community.axoloti.com/t/tiar-smashedtransistors-contributions/2737/128" x="546" y="84"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="0" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="98" y="196">
+      <params>
+         <frac32.u.map name="gain1" value="0.09999990463256836"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/tuning/DetHz" uuid="22b0c9b2-8c97-4210-bcde-a39f0c789e6f" name="DetHz_1" x="182" y="196">
+      <params>
+         <frac32.s.map name="detHz" value="0.4099998474121094"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="280" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/multiPM" uuid="b0db11d4-8363-46cc-9d6b-40add12ba6ac" name="multiPM_1" x="378" y="196">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="mod" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/mux/smux4_1" uuid="c0a37610-fd59-4e9e-a3de-ed951ea9bce3" name="smux4_1_1" x="560" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="700" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="756" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="14" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="multiPM_1" outlet="saw"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="smux4_1_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="multiPM_1" inlet="pitch"/>
+         <dest obj="DetHz_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="multiPM_1" outlet="sqr"/>
+         <dest obj="smux4_1_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="smux4_1_1" outlet="o"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="multiPM_1" outlet="tri"/>
+         <dest obj="smux4_1_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="multiPM_1" outlet="sin"/>
+         <dest obj="smux4_1_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="multiPM_1" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="DetHz_1" outlet="pitch"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="smux4_1_1" inlet="s"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>Smashed Transistors</Author>
+      <License>LGPL</License>
+      <Saturate>false</Saturate>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>516</x>
+      <y>9</y>
+      <width>1387</width>
+      <height>787</height>
+   </windowPos>
+</patch-1.0>

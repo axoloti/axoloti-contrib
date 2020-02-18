@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led clear" uuid="f8bfc892-24e2-47d9-a044-c486df16caa1">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="clear"/>
+         <int32 name="row"/>
+         <bool32.rising name="clearAll"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="LED"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool dorow;
+bool trigall;
+bool doall;
+uint8_t count;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_clear && ( !trig && !count)) {trig = 1;dorow = 1;}
+if (dorow && !attr_LED.ROW){
+	dorow = 0;
+	memset(&attr_LED.array [(inlet_row*77) + 8],32,68);
+	attr_LED.ROW = inlet_row + 1;
+	}	
+if (!inlet_clear && !dorow) trig = 0;
+
+if (inlet_clearAll && !trigall) {trigall = 1;count = 4;attr_LED.LOCKED = 1;}
+
+if (count && !attr_LED.ROW){
+	memset(&attr_LED.array [((count -1)*77) + 8],32,68);
+	attr_LED.ROW = count;
+	count --;	
+	if (!count) attr_LED.LOCKED = 0;
+	}
+
+if (!inlet_clearAll && !count) trigall = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

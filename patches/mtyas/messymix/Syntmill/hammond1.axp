@@ -1,0 +1,607 @@
+<patch-1.0 appVersion="1.0.10">
+   <patchobj type="patch/object" uuid="8b03c296-8c05-4a5c-9658-abcad2174dcf" name="object_1" x="14" y="14">
+      <params>
+         <frac32.u.map name="f1" MidiCC="91" value="0.0"/>
+         <frac32.u.map name="f2" MidiCC="93" value="0.0"/>
+         <frac32.u.map name="f3" MidiCC="74" value="0.0"/>
+         <frac32.u.map name="f4" MidiCC="71" value="0.0"/>
+         <frac32.u.map name="f5" MidiCC="73" value="0.0"/>
+         <frac32.u.map name="f6" MidiCC="75" value="0.0"/>
+         <frac32.u.map name="f7" MidiCC="72" value="63.99999952316284"/>
+         <frac32.u.map name="f8" MidiCC="10" value="63.99999952316284"/>
+         <frac32.u.map name="f9" MidiCC="1" value="63.99999952316284"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="8b03c296-8c05-4a5c-9658-abcad2174dcf">
+         <sDescription>description</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <inlets/>
+         <outlets>
+            <frac32buffer.bipolar name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="f1"/>
+            <frac32.u.map name="f2"/>
+            <frac32.u.map name="f3"/>
+            <frac32.u.map name="f4"/>
+            <frac32.u.map name="f5"/>
+            <frac32.u.map name="f6"/>
+            <frac32.u.map name="f7"/>
+            <frac32.u.map name="f8"/>
+            <frac32.u.map name="f9"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[static const int ntw = 91;
+uint8_t keys[128];
+uint32_t phasor[ntw];
+uint32_t amp[ntw+48];
+uint32_t twf[ntw]={
+(uint32_t)((1u<<31)*(	32.692	/24000.f)),
+(uint32_t)((1u<<31)*(	34.634	/24000.f)),
+(uint32_t)((1u<<31)*(	36.712	/24000.f)),
+(uint32_t)((1u<<31)*(	38.889	/24000.f)),
+(uint32_t)((1u<<31)*(	41.2	/24000.f)),
+(uint32_t)((1u<<31)*(	43.636	/24000.f)),
+(uint32_t)((1u<<31)*(	46.25	/24000.f)),
+(uint32_t)((1u<<31)*(	49	/24000.f)),
+(uint32_t)((1u<<31)*(	51.892	/24000.f)),
+(uint32_t)((1u<<31)*(	55	/24000.f)),
+(uint32_t)((1u<<31)*(	58.261	/24000.f)),
+(uint32_t)((1u<<31)*(	61.714	/24000.f)),
+(uint32_t)((1u<<31)*(	65.385	/24000.f)),
+(uint32_t)((1u<<31)*(	69.268	/24000.f)),
+(uint32_t)((1u<<31)*(	73.425	/24000.f)),
+(uint32_t)((1u<<31)*(	77.778	/24000.f)),
+(uint32_t)((1u<<31)*(	82.4	/24000.f)),
+(uint32_t)((1u<<31)*(	87.273	/24000.f)),
+(uint32_t)((1u<<31)*(	92.5	/24000.f)),
+(uint32_t)((1u<<31)*(	98	/24000.f)),
+(uint32_t)((1u<<31)*(	103.784	/24000.f)),
+(uint32_t)((1u<<31)*(	110	/24000.f)),
+(uint32_t)((1u<<31)*(	116.522	/24000.f)),
+(uint32_t)((1u<<31)*(	123.429	/24000.f)),
+(uint32_t)((1u<<31)*(	130.769	/24000.f)),
+(uint32_t)((1u<<31)*(	138.537	/24000.f)),
+(uint32_t)((1u<<31)*(	146.849	/24000.f)),
+(uint32_t)((1u<<31)*(	155.556	/24000.f)),
+(uint32_t)((1u<<31)*(	164.8	/24000.f)),
+(uint32_t)((1u<<31)*(	174.545	/24000.f)),
+(uint32_t)((1u<<31)*(	185	/24000.f)),
+(uint32_t)((1u<<31)*(	196	/24000.f)),
+(uint32_t)((1u<<31)*(	207.568	/24000.f)),
+(uint32_t)((1u<<31)*(	220	/24000.f)),
+(uint32_t)((1u<<31)*(	233.043	/24000.f)),
+(uint32_t)((1u<<31)*(	246.857	/24000.f)),
+(uint32_t)((1u<<31)*(	261.538	/24000.f)),
+(uint32_t)((1u<<31)*(	277.073	/24000.f)),
+(uint32_t)((1u<<31)*(	293.699	/24000.f)),
+(uint32_t)((1u<<31)*(	311.111	/24000.f)),
+(uint32_t)((1u<<31)*(	329.6	/24000.f)),
+(uint32_t)((1u<<31)*(	349.091	/24000.f)),
+(uint32_t)((1u<<31)*(	370	/24000.f)),
+(uint32_t)((1u<<31)*(	392	/24000.f)),
+(uint32_t)((1u<<31)*(	415.135	/24000.f)),
+(uint32_t)((1u<<31)*(	440	/24000.f)),
+(uint32_t)((1u<<31)*(	466.087	/24000.f)),
+(uint32_t)((1u<<31)*(	493.714	/24000.f)),
+(uint32_t)((1u<<31)*(	523.077	/24000.f)),
+(uint32_t)((1u<<31)*(	554.146	/24000.f)),
+(uint32_t)((1u<<31)*(	587.397	/24000.f)),
+(uint32_t)((1u<<31)*(	622.222	/24000.f)),
+(uint32_t)((1u<<31)*(	659.2	/24000.f)),
+(uint32_t)((1u<<31)*(	698.182	/24000.f)),
+(uint32_t)((1u<<31)*(	740	/24000.f)),
+(uint32_t)((1u<<31)*(	784	/24000.f)),
+(uint32_t)((1u<<31)*(	830.27	/24000.f)),
+(uint32_t)((1u<<31)*(	880	/24000.f)),
+(uint32_t)((1u<<31)*(	932.174	/24000.f)),
+(uint32_t)((1u<<31)*(	987.429	/24000.f)),
+(uint32_t)((1u<<31)*(	1046.154	/24000.f)),
+(uint32_t)((1u<<31)*(	1108.293	/24000.f)),
+(uint32_t)((1u<<31)*(	1174.795	/24000.f)),
+(uint32_t)((1u<<31)*(	1244.444	/24000.f)),
+(uint32_t)((1u<<31)*(	1318.4	/24000.f)),
+(uint32_t)((1u<<31)*(	1396.364	/24000.f)),
+(uint32_t)((1u<<31)*(	1480	/24000.f)),
+(uint32_t)((1u<<31)*(	1568	/24000.f)),
+(uint32_t)((1u<<31)*(	1660.541	/24000.f)),
+(uint32_t)((1u<<31)*(	1760	/24000.f)),
+(uint32_t)((1u<<31)*(	1864.348	/24000.f)),
+(uint32_t)((1u<<31)*(	1974.857	/24000.f)),
+(uint32_t)((1u<<31)*(	2092.308	/24000.f)),
+(uint32_t)((1u<<31)*(	2216.585	/24000.f)),
+(uint32_t)((1u<<31)*(	2349.589	/24000.f)),
+(uint32_t)((1u<<31)*(	2488.889	/24000.f)),
+(uint32_t)((1u<<31)*(	2636.8	/24000.f)),
+(uint32_t)((1u<<31)*(	2792.727	/24000.f)),
+(uint32_t)((1u<<31)*(	2960	/24000.f)),
+(uint32_t)((1u<<31)*(	3136	/24000.f)),
+(uint32_t)((1u<<31)*(	3321.081	/24000.f)),
+(uint32_t)((1u<<31)*(	3520	/24000.f)),
+(uint32_t)((1u<<31)*(	3728.696	/24000.f)),
+(uint32_t)((1u<<31)*(	3949.714	/24000.f)),
+(uint32_t)((1u<<31)*(	4189.091	/24000.f)),
+(uint32_t)((1u<<31)*(	4440	/24000.f)),
+(uint32_t)((1u<<31)*(	4704	/24000.f)),
+(uint32_t)((1u<<31)*(	4981.622	/24000.f)),
+(uint32_t)((1u<<31)*(	5280	/24000.f)),
+(uint32_t)((1u<<31)*(	5593.043	/24000.f)),
+(uint32_t)((1u<<31)*(	5924.571	/24000.f))
+};
+
+]]></code.declaration>
+         <code.init><![CDATA[int i;
+for(i=0;i<ntw;i++) {
+	phasor[ntw]=0;
+	amp[ntw]=0;
+}
+amp[ntw-1]=1<<28;
+]]></code.init>
+         <code.krate><![CDATA[
+int i;
+for(i=0;i<ntw;i++){
+	amp[i]=0;
+}
+
+int32_t f1 = param_f1>>5;
+int32_t f2 = param_f2>>5;
+int32_t f3 = param_f3>>5;
+int32_t f4 = param_f4>>5;
+int32_t f5 = param_f5>>5;
+int32_t f6 = param_f6>>5;
+int32_t f7 = param_f7>>5;
+int32_t f8 = param_f8>>5;
+int32_t f9 = param_f9>>5;
+
+for(i=0;i<ntw;i++){
+	if (keys[i+24]) {
+		amp[i] += f1;
+		amp[i+19] += f2;
+		amp[i+12] += f3;
+		amp[i+24] += f4;
+		amp[i+31] += f5;
+		amp[i+36] += f6;
+		amp[i+40] += f7;
+		amp[i+43] += f8;
+		amp[i+48] += f9;
+	}
+}
+
+for(i=0;i<BUFSIZE;i++) {
+	outlet_out[i]=0;
+}
+
+int j;
+
+for(i=0;i<ntw;i++) {
+	for(j=0;j<BUFSIZE;j++) {
+		uint32_t p2 = phasor[i];
+		p2 += twf[i];
+		phasor[i] = p2;
+		int32_t r;	
+		SINE2TINTERP(p2,r)
+		outlet_out[j] = __SMMLA(r,amp[i],outlet_out[j]);
+	}
+}
+]]></code.krate>
+         <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+   keys[data1]=1;
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel)) {
+   keys[data1]=0;
+}]]></code.midihandler>
+      </object>
+   </patchobj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="98" y="14">
+      <params>
+         <frac32.u.map name="amp" value="9.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="210" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dist/rectifier full" uuid="bdd28e370b58801ee42bcae7bcdf8602d6181602" name="rectifier_1" x="826" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="fx/chorus" uuid="222924b0-d303-45d6-8ae5-45f77ac802e1" name="obj_1" x="714" y="56">
+      <params>
+         <frac32.u.map name="depth" value="0.05">
+            <modulators>
+               <modulation sourceName="modsource_1" modName="" value="4.0"/>
+            </modulators>
+         </frac32.u.map>
+         <frac32.s.map name="speed" value="-29.0">
+            <modulators>
+               <modulation sourceName="modsource_2" modName="" value="26.0"/>
+            </modulators>
+         </frac32.s.map>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_3" x="952" y="56">
+      <params>
+         <frac32.u.map name="gain1" value="6.5"/>
+         <frac32.u.map name="gain2" value="53.5"/>
+         <frac32.u.map name="gain3" value="4.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1106" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="406" y="84">
+      <params>
+         <frac32.u.map name="amp" MidiCC="7" value="58.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="280" y="112">
+      <params>
+         <frac32.u.map name="gain1" value="13.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_2" x="868" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="126" y="182">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/dist/fatbasterd" uuid="747c9caf-f9c5-4840-99b3-e82645d9f1a3" name="fatbasterd_1" x="700" y="210">
+      <params>
+         <frac32.u.map name="gain" value="13.5"/>
+         <frac32.u.map name="max" value="5.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="266" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="406" y="252">
+      <params>
+         <frac32.s.map name="pitch" value="-20.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="546" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dist/rectifier full" uuid="bdd28e370b58801ee42bcae7bcdf8602d6181602" name="rectifier_2" x="840" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="952" y="266">
+      <params>
+         <frac32.u.map name="gain1" value="8.0"/>
+         <frac32.u.map name="gain2" value="56.0"/>
+         <frac32.u.map name="gain3" value="5.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="126" y="308">
+      <params>
+         <frac32.s.map name="a" value="-60.0"/>
+         <frac32.s.map name="d" value="3.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="560" y="322">
+      <params>
+         <frac32.s.map name="pitch" value="-7.0"/>
+         <frac32.u.map name="reso" value="34.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_3" x="868" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="252" y="336">
+      <params>
+         <frac32.u.map name="amp" value="37.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_1" x="504" y="490">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA4 (ADC1_IN4)"/>
+      </attribs>
+   </obj>
+   <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_1" x="686" y="504">
+      <params>
+         <frac32.u.map name="time" value="46.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/change" uuid="42071f8cb4cfe1f35956c0bd5a313a57e049bec4" name="change_1" x="826" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/modsource" uuid="c98f018a8d204ef6df1bf7008af6fd7d20f12fe4" name="modsource_1" x="938" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_4" x="42" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB8"/>
+         <combo attributeName="mode" selection="pullup"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_2" x="490" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA5 (ADC1_IN5)"/>
+      </attribs>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="168" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/smooth" uuid="6c5d08c282bb08bff24af85b4891447f99bcbc97" name="smooth_2" x="714" y="602">
+      <params>
+         <frac32.u.map name="time" value="44.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/modsource" uuid="c98f018a8d204ef6df1bf7008af6fd7d20f12fe4" name="modsource_2" x="938" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/change" uuid="42071f8cb4cfe1f35956c0bd5a313a57e049bec4" name="change_2" x="826" y="644">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/&lt;c" uuid="852c84e7bd967ee4a44cc553fcf6e3fc9d8b92c4" name="&lt;c_2" x="196" y="658">
+      <params>
+         <frac32.u.map name="c" value="2.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_11" x="42" y="672">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="364" y="672">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_12" x="42" y="742">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC2 (ADC1_IN12)"/>
+      </attribs>
+   </obj>
+   <obj type="math/&lt;c" uuid="852c84e7bd967ee4a44cc553fcf6e3fc9d8b92c4" name="&lt;c_1" x="238" y="742">
+      <params>
+         <frac32.u.map name="c" value="2.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_3" x="476" y="742">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/load" uuid="634bf1f8c313920d7f19fc402ba937fd1ee27802" name="load_2" x="560" y="742">
+      <params/>
+      <attribs>
+         <table attributeName="filename" table="/start.bin"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/in/digital" uuid="f59f139e8da912742832dc541157f20f30b7ac1b" name="digital_5" x="84" y="812">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PB9"/>
+         <combo attributeName="mode" selection="pullup"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_2" x="364" y="812">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_3" x="224" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="obj_1" outlet="L"/>
+         <dest obj="rectifier_1" inlet="in"/>
+         <dest obj="soft_2" inlet="in"/>
+         <dest obj="mix_3" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="object_1" outlet="out"/>
+         <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="soft_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="ad_1" outlet="env"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="vcf3_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="ad_1" inlet="trig"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="hp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="fatbasterd_1" inlet="in"/>
+         <dest obj="obj_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="soft_1" outlet="out"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="soft_2" outlet="out"/>
+         <dest obj="mix_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="R"/>
+         <dest obj="rectifier_2" inlet="in"/>
+         <dest obj="soft_3" inlet="in"/>
+         <dest obj="mix_2" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="mix_3" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="soft_3" outlet="out"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="digital_4" outlet="out"/>
+         <dest obj="inv_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="digital_5" outlet="out"/>
+         <dest obj="inv_3" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_3" outlet="o"/>
+         <dest obj="and_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="analog_12" outlet="out"/>
+         <dest obj="&lt;c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_11" outlet="out"/>
+         <dest obj="&lt;c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="&lt;c_2" outlet="out"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="&lt;c_1" outlet="out"/>
+         <dest obj="and_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="and_2" outlet="o"/>
+         <dest obj="and_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="and_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="and_3" outlet="o"/>
+         <dest obj="load_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="analog_1" outlet="out"/>
+         <dest obj="smooth_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_2" outlet="out"/>
+         <dest obj="smooth_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="trig"/>
+         <dest obj="modsource_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="change_2" outlet="trig"/>
+         <dest obj="modsource_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="smooth_1" outlet="out"/>
+         <dest obj="change_1" inlet="in"/>
+         <dest obj="modsource_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="smooth_2" outlet="out"/>
+         <dest obj="change_2" inlet="in"/>
+         <dest obj="modsource_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="fatbasterd_1" outlet="out"/>
+         <dest obj="mix_2" inlet="in1"/>
+         <dest obj="mix_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="rectifier_1" outlet="out"/>
+         <dest obj="mix_3" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="rectifier_2" outlet="out"/>
+         <dest obj="mix_2" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="hp_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>266</x>
+      <y>145</y>
+      <width>1375</width>
+      <height>641</height>
+   </windowPos>
+</patch-1.0>

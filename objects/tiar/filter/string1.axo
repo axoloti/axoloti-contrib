@@ -1,0 +1,257 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="string1" uuid="9696178e-650d-49d8-b6fb-3d7fc1cd2ba5">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>string1.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="Preset" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="12"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t d[256];
+uint8_t w;]]></code.declaration>
+      <code.init><![CDATA[
+	  w = 0;
+	  for(int i = 0; i < 256; i++){ d[i] = 0; }]]></code.init>
+      <code.krate><![CDATA[if(param_Preset == 1){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2) 
+    + d[(uint8_t)(w+((uint8_t)53))] 
+    - d[(uint8_t)(w+((uint8_t)62))] 
+    - d[(uint8_t)(w+((uint8_t)71))] 
+    - d[(uint8_t)(w+((uint8_t)73))] 
+    - d[(uint8_t)(w+((uint8_t)147))] 
+    + d[(uint8_t)(w+((uint8_t)233))] 
+    + d[(uint8_t)(w+((uint8_t)252))];
+  }
+} else if(param_Preset == 2){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2) 
+    + d[(uint8_t)(w+((uint8_t)37))] 
+    - d[(uint8_t)(w+((uint8_t)43))] 
+    - d[(uint8_t)(w+((uint8_t)48))] 
+    - d[(uint8_t)(w+((uint8_t)61))] 
+    - d[(uint8_t)(w+((uint8_t)124))] 
+    + d[(uint8_t)(w+((uint8_t)148))] 
+    + d[(uint8_t)(w+((uint8_t)155))];
+  }
+} else if(param_Preset == 3){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2) 
+    - d[(uint8_t)(w+((uint8_t)3))] 
+    + d[(uint8_t)(w+((uint8_t)32))] 
+    + d[(uint8_t)(w+((uint8_t)35))] 
+    - d[(uint8_t)(w+((uint8_t)87))] 
+    - d[(uint8_t)(w+((uint8_t)117))] 
+    - d[(uint8_t)(w+((uint8_t)249))] 
+    + d[(uint8_t)(w+((uint8_t)255))];
+  }
+
+} else if(param_Preset == 4){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = (inlet_in[i]>>2) & 0xFFFFF000) 
+    + d[(uint8_t)(w+((uint8_t)23))] 
+    - d[(uint8_t)(w+((uint8_t)28))] 
+    - d[(uint8_t)(w+((uint8_t)83))] 
+    + d[(uint8_t)(w+((uint8_t)87))] 
+    + d[(uint8_t)(w+((uint8_t)177))] 
+    - d[(uint8_t)(w+((uint8_t)183))] 
+    - d[(uint8_t)(w+((uint8_t)227))]
+    ;
+    d[w] += (
+    - d[(uint8_t)(w+((uint8_t)17))] 
+    + d[(uint8_t)(w+((uint8_t)35))]
+    - d[(uint8_t)(w+((uint8_t)59))] 
+    + d[(uint8_t)(w+((uint8_t)65))]
+    - d[(uint8_t)(w+((uint8_t)73))] 
+    + d[(uint8_t)(w+((uint8_t)83))]
+    + d[(uint8_t)(w+((uint8_t)117))] 
+    - d[(uint8_t)(w+((uint8_t)153))]
+    + d[(uint8_t)(w+((uint8_t)175))] 
+    - d[(uint8_t)(w+((uint8_t)181))]
+    + d[(uint8_t)(w+((uint8_t)243))] 
+    - d[(uint8_t)(w+((uint8_t)255))]    
+    )>>3;
+  }
+} else if(param_Preset == 5){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>1)  
+    - d[(uint8_t)(w+((uint8_t)47))]
+    - d[(uint8_t)(w+((uint8_t)137))]
+    + d[(uint8_t)(w+((uint8_t)255))] ;
+
+  }
+
+} else if(param_Preset == 6){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
+- d[(uint8_t)(w+(uint8_t)1)]
+- d[(uint8_t)(w+(uint8_t)5)]
+- d[(uint8_t)(w+(uint8_t)6)]
++ d[(uint8_t)(w+(uint8_t)7)]
+- d[(uint8_t)(w+(uint8_t)12)]
++ d[(uint8_t)(w+(uint8_t)15)]
++ d[(uint8_t)(w+(uint8_t)17)]
+- d[(uint8_t)(w+(uint8_t)26)]
++ d[(uint8_t)(w+(uint8_t)38)]
++ d[(uint8_t)(w+(uint8_t)49)]
+- d[(uint8_t)(w+(uint8_t)70)]
+- d[(uint8_t)(w+(uint8_t)80)]
++ d[(uint8_t)(w+(uint8_t)138)]
++ d[(uint8_t)(w+(uint8_t)191)]
+- d[(uint8_t)(w+(uint8_t)255)];
+  }
+  } else if(param_Preset == 7){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
++ d[(uint8_t)(w+(uint8_t)1)]
++ d[(uint8_t)(w+(uint8_t)2)]
++ d[(uint8_t)(w+(uint8_t)3)]
+- d[(uint8_t)(w+(uint8_t)9)]
+- d[(uint8_t)(w+(uint8_t)11)]
+- d[(uint8_t)(w+(uint8_t)13)]
+- d[(uint8_t)(w+(uint8_t)16)]
++ d[(uint8_t)(w+(uint8_t)23)]
++ d[(uint8_t)(w+(uint8_t)26)]
+- d[(uint8_t)(w+(uint8_t)56)]
+- d[(uint8_t)(w+(uint8_t)104)]
+- d[(uint8_t)(w+(uint8_t)130)]
+- d[(uint8_t)(w+(uint8_t)158)]
++ d[(uint8_t)(w+(uint8_t)212)]
++ d[(uint8_t)(w+(uint8_t)230)];
+
+} 
+  }  else if(param_Preset == 8){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
+- d[(uint8_t)(w+(uint8_t)1)]
++ d[(uint8_t)(w+(uint8_t)2)]
+- d[(uint8_t)(w+(uint8_t)4)]
++ d[(uint8_t)(w+(uint8_t)5)]
++ d[(uint8_t)(w+(uint8_t)35)]
+- d[(uint8_t)(w+(uint8_t)36)]
+- d[(uint8_t)(w+(uint8_t)41)]
++ d[(uint8_t)(w+(uint8_t)70)]
+- d[(uint8_t)(w+(uint8_t)74)]
+- d[(uint8_t)(w+(uint8_t)134)]
++ d[(uint8_t)(w+(uint8_t)143)]
+- d[(uint8_t)(w+(uint8_t)174)]
++ d[(uint8_t)(w+(uint8_t)175)]
+- d[(uint8_t)(w+(uint8_t)217)]
++ d[(uint8_t)(w+(uint8_t)251)];
+} 
+  }  else if(param_Preset == 9){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
++ d[(uint8_t)(w+(uint8_t)3)]
++ d[(uint8_t)(w+(uint8_t)11)]
++ d[(uint8_t)(w+(uint8_t)13)]
++ d[(uint8_t)(w+(uint8_t)16)]
+- d[(uint8_t)(w+(uint8_t)30)]
+- d[(uint8_t)(w+(uint8_t)31)]
+- d[(uint8_t)(w+(uint8_t)33)]
+- d[(uint8_t)(w+(uint8_t)35)]
+- d[(uint8_t)(w+(uint8_t)37)]
++ d[(uint8_t)(w+(uint8_t)55)]
+- d[(uint8_t)(w+(uint8_t)98)]
+- d[(uint8_t)(w+(uint8_t)104)]
+- d[(uint8_t)(w+(uint8_t)111)]
++ d[(uint8_t)(w+(uint8_t)135)]
++ d[(uint8_t)(w+(uint8_t)246)]
+;
+} 
+  }
+  
+else if(param_Preset == 10){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
++ d[(uint8_t)(w+(uint8_t)1)]
+- d[(uint8_t)(w+(uint8_t)2)]
+- d[(uint8_t)(w+(uint8_t)4)]
+- d[(uint8_t)(w+(uint8_t)6)]
++ d[(uint8_t)(w+(uint8_t)12)]
++ d[(uint8_t)(w+(uint8_t)21)]
+- d[(uint8_t)(w+(uint8_t)25)]
+- d[(uint8_t)(w+(uint8_t)26)]
+- d[(uint8_t)(w+(uint8_t)28)]
++ d[(uint8_t)(w+(uint8_t)29)]
++ d[(uint8_t)(w+(uint8_t)30)]
++ d[(uint8_t)(w+(uint8_t)89)]
+- d[(uint8_t)(w+(uint8_t)90)]
++ d[(uint8_t)(w+(uint8_t)97)]
+- d[(uint8_t)(w+(uint8_t)98)]
+;
+  } 
+}
+else if(param_Preset == 11){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
+- d[(uint8_t)(w+(uint8_t)1)]
++ d[(uint8_t)(w+(uint8_t)2)]
+- d[(uint8_t)(w+(uint8_t)3)]
+- d[(uint8_t)(w+(uint8_t)4)]
+- d[(uint8_t)(w+(uint8_t)7)]
+- d[(uint8_t)(w+(uint8_t)11)]
++ d[(uint8_t)(w+(uint8_t)17)]
++ d[(uint8_t)(w+(uint8_t)20)]
++ d[(uint8_t)(w+(uint8_t)25)]
++ d[(uint8_t)(w+(uint8_t)27)]
+- d[(uint8_t)(w+(uint8_t)31)]
++ d[(uint8_t)(w+(uint8_t)36)]
+- d[(uint8_t)(w+(uint8_t)49)]
++ d[(uint8_t)(w+(uint8_t)63)]
+- d[(uint8_t)(w+(uint8_t)84)]
+;
+  } 
+}
+else if(param_Preset == 12){
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    outlet_out[i] = (d[w] = inlet_in[i]>>2)  
++ d[(uint8_t)(w+(uint8_t)2)]
++ d[(uint8_t)(w+(uint8_t)3)]
+- d[(uint8_t)(w+(uint8_t)4)]
+- d[(uint8_t)(w+(uint8_t)13)]
++ d[(uint8_t)(w+(uint8_t)19)]
+- d[(uint8_t)(w+(uint8_t)20)]
+- d[(uint8_t)(w+(uint8_t)28)]
+- d[(uint8_t)(w+(uint8_t)29)]
+- d[(uint8_t)(w+(uint8_t)31)]
++ d[(uint8_t)(w+(uint8_t)51)]
+- d[(uint8_t)(w+(uint8_t)65)]
++ d[(uint8_t)(w+(uint8_t)66)]
++ d[(uint8_t)(w+(uint8_t)84)]
++ d[(uint8_t)(w+(uint8_t)87)]
+- d[(uint8_t)(w+(uint8_t)122)]
+;
+  } 
+}   
+  else{
+  for(int i = 0; i < BUFSIZE; i++){
+    w--;
+    d[w] = inlet_in[i]>>2;
+    outlet_out[i] = inlet_in[i];
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="APC4" uuid="97d71cb6-d37d-4f13-b604-a02e46ae949a">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>APC4.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="freq1"/>
+         <frac32 name="freq2"/>
+         <frac32 name="freq3"/>
+         <frac32 name="freq4"/>
+         <frac32 name="fb"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[class APC{
+  public:
+  int32_t v[4];
+  int32_t g[4];
+  void init(void){
+    for(int i = 0; i < 4; i++)
+      v[i] = 0;
+  }
+  int32_t aProc(int32_t x){
+    int32_t y = x;
+    for(int p = 0; p < 4; p++){
+      int32_t u = ___SMMLA(g[p], v[p] << 1, y   );
+      y         = ___SMMLS(g[p], u    << 1, v[p]);
+      v[p] = u;
+    }
+    return y;
+  }
+};
+APC apc;
+int32_t v;]]></code.declaration>
+      <code.init><![CDATA[apc.init();
+      v = 0;]]></code.init>
+      <code.krate><![CDATA[apc.g[0] = 0x7FFFFFFF - (__USAT(inlet_freq1, 27) << 4);
+apc.g[1] = 0x7FFFFFFF - (__USAT(inlet_freq2, 27) << 4);
+apc.g[2] = 0x7FFFFFFF - (__USAT(inlet_freq3, 27) << 4);
+apc.g[3] = 0x7FFFFFFF - (__USAT(inlet_freq4, 27) << 4);
+int32_t fb = __USAT((inlet_fb), 27)<<4; // q31]]></code.krate>
+      <code.srate><![CDATA[// nested all pass chain
+int32_t u  = ___SMMLA(fb, v << 1, inlet_in);
+outlet_out = ___SMMLS(fb, u << 1, v);
+v = apc.aProc(u>>8)<<8;]]></code.srate>
+   </obj.normal>
+</objdefs>

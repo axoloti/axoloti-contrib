@@ -1,0 +1,160 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb touch" uuid="edfcb4cfd5b2064e95f5a7ee644bca56252ec11f" name="keyb_1" x="112" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="224" y="14">
+      <params>
+         <frac32.s.map name="a" value="21.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="38.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/lfo/triphase_vlfo" uuid="fda37e83-8355-4909-ac55-e642dcec5a20" name="triphase_vlfo_1" x="448" y="14">
+      <params>
+         <frac32.u.map name="cycle" value="11.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/math/triple *c" uuid="0f343bc4-c26f-4f4d-a51f-c4ca50531593" name="triple_1" x="560" y="14">
+      <params>
+         <frac32.u.map name="amp" value="9.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="616" y="238" text="Stereo modulated soft filters for slow modulations"/>
+   <obj type="tiar/noise/rain" uuid="c922db6c-044a-4eed-942a-641881daddc7" name="rain_1" x="252" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="350" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="406" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_1" x="602" y="280">
+      <params>
+         <frac32.u.map name="freq" value="45.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_1" x="798" y="280">
+      <params>
+         <frac32.u.map name="freq" value="27.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/noise/rain" uuid="c922db6c-044a-4eed-942a-641881daddc7" name="rain_2" x="252" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="350" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="406" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1 m" uuid="18b561d14f9175f5380e6a1d9d55ca41e0e61974" name="lp1_2" x="602" y="504">
+      <params>
+         <frac32.u.map name="freq" value="45.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp1 m" uuid="db72e08c265817674e56af3855bfca7a58b65e87" name="hp1_2" x="770" y="504">
+      <params>
+         <frac32.u.map name="freq" value="27.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="868" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+         <dest obj="vca_2" inlet="v"/>
+      </net>
+      <net>
+         <source obj="rain_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="scope_2" inlet="in"/>
+         <dest obj="lp1_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rain_2" outlet="out"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="lp1_1" outlet="out"/>
+         <dest obj="hp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp1_2" outlet="out"/>
+         <dest obj="hp1_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="triphase_vlfo_1" outlet="phi 0"/>
+         <dest obj="triple_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="triphase_vlfo_1" outlet="phi 120"/>
+         <dest obj="triple_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="lp1_1" inlet="in"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="triphase_vlfo_1" outlet="phi 240"/>
+         <dest obj="triple_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="triple_1" outlet="out1"/>
+         <dest obj="lp1_1" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="triple_1" outlet="out2"/>
+         <dest obj="lp1_2" inlet="freq"/>
+         <dest obj="hp1_1" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="hp1_1" outlet="out"/>
+         <dest obj="out_2" inlet="left"/>
+      </net>
+      <net>
+         <source obj="hp1_2" outlet="out"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="triple_1" outlet="out3"/>
+         <dest obj="hp1_2" inlet="freq"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>158</x>
+      <y>236</y>
+      <width>1411</width>
+      <height>745</height>
+   </windowPos>
+</patch-1.0>

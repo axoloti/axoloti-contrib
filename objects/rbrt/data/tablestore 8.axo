@@ -1,0 +1,130 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="tablestore 8" uuid="736a5df0-09ec-472a-a4ba-fde5617e1001">
+      <sDescription>writes and outputs 8 values to a table.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+         <frac32 name="v5"/>
+         <frac32 name="v6"/>
+         <frac32 name="v7"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+         <bool32.risingfalling name="write" description="if &apos;write&apos; is set to on and an input is changed,the value is stored at the input&apos;s index plus the &apos;offset&apos;and passed to the output."/>
+         <bool32.risingfalling name="thru" description="if &apos;thru&apos; is on,the input is passed through to the respective output without being stored."/>
+      </inlets>
+      <outlets>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+         <frac32 name="v5"/>
+         <frac32 name="v6"/>
+         <frac32 name="v7"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t prev0;
+      uint32_t prev1;
+         uint32_t prev2;
+      uint32_t prev3;
+       uint32_t prev4;
+      uint32_t prev5;
+         uint32_t prev6;
+      uint32_t prev7;]]></code.declaration>
+      <code.init><![CDATA[prev0 = 0;
+prev1 = 0;
+prev2 = 0;
+prev3 = 0;
+prev4 = 0;
+prev5 = 0;
+prev6 = 0;
+prev7 = 0;]]></code.init>
+      <code.krate><![CDATA[
+if (!inlet_write){
+	prev0=inlet_v0;
+	prev1=inlet_v1;
+	prev2=inlet_v2;
+	prev3=inlet_v3;
+	prev4=inlet_v4;
+	prev5=inlet_v5;
+	prev6=inlet_v6;
+	prev7=inlet_v7;
+}
+
+if ((inlet_v0 != prev0)&& (inlet_write)){
+attr_table.array[inlet_offset + 0]=__SSAT(inlet_v0,28)>>attr_table.GAIN;
+outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev0 = inlet_v0;
+}
+else {outlet_v0= attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v0 = inlet_v0;}
+
+if ((inlet_v1 != prev1)&& (inlet_write)){
+attr_table.array[inlet_offset + 1]=__SSAT(inlet_v1,28)>>attr_table.GAIN;
+outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev1 = inlet_v1;
+}
+else {outlet_v1= attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v1 = inlet_v1;}
+
+if ((inlet_v2 != prev2)&& (inlet_write)){
+attr_table.array[inlet_offset + 2]=__SSAT(inlet_v2,28)>>attr_table.GAIN;
+outlet_v2= attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev2 = inlet_v2;
+}
+else {outlet_v2= attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v2 = inlet_v2;}
+
+if ((inlet_v3 != prev3)&& (inlet_write)){
+attr_table.array[inlet_offset + 3]=__SSAT(inlet_v3,28)>>attr_table.GAIN;
+outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev3 = inlet_v3;
+}
+else {outlet_v3= attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v3 = inlet_v3;}
+
+if ((inlet_v4 != prev4)&& (inlet_write)){
+attr_table.array[inlet_offset + 4]=__SSAT(inlet_v4,28)>>attr_table.GAIN;
+outlet_v4= attr_table.array[__USAT((inlet_offset + 4),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev4 = inlet_v4;
+}
+else {outlet_v4= attr_table.array[__USAT((inlet_offset + 4),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v4 = inlet_v4;}
+
+if ((inlet_v5 != prev5)&& (inlet_write)){
+attr_table.array[inlet_offset + 5]=__SSAT(inlet_v5,28)>>attr_table.GAIN;
+outlet_v5= attr_table.array[__USAT((inlet_offset + 5),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev5 = inlet_v5;
+}
+else {outlet_v5= attr_table.array[__USAT((inlet_offset + 5),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v5 = inlet_v5;}
+
+if ((inlet_v6 != prev6)&& (inlet_write)){
+attr_table.array[inlet_offset + 6]=__SSAT(inlet_v6,28)>>attr_table.GAIN;
+outlet_v6= attr_table.array[__USAT((inlet_offset + 6),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev6 = inlet_v6;
+}
+else {outlet_v6= attr_table.array[__USAT((inlet_offset + 6),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v6 = inlet_v6;}
+
+if ((inlet_v7 != prev7)&& (inlet_write)){
+attr_table.array[inlet_offset + 7]=__SSAT(inlet_v7,28)>>attr_table.GAIN;
+outlet_v7= attr_table.array[__USAT((inlet_offset + 7),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+prev7 = inlet_v7;
+}
+else {outlet_v7= attr_table.array[__USAT((inlet_offset + 7),attr_table.LENGTHPOW)]<<attr_table.GAIN;}
+if (inlet_thru){outlet_v7 = inlet_v7;}
+
+
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

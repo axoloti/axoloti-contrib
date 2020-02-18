@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="quadVCA" uuid="42261418-75f2-437d-97ea-98fe65c66a77">
+      <sDescription>quad &quot;voltage controlled amplifier&quot;, multiplies v and a inputs, with linear interpolation from k- to s-rate</sDescription>
+      <author>Johannes Taelman edit by Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="a1" description="audio input"/>
+         <frac32buffer name="a2"/>
+         <frac32buffer name="a3"/>
+         <frac32buffer name="a4"/>
+         <frac32 name="v1" description="gain input"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[   int32_t prev1;
+   int32_t step1;
+   int32_t prev2;
+   int32_t step2;
+   int32_t prev3;
+   int32_t step3;
+   int32_t prev4;
+   int32_t step4;]]></code.declaration>
+      <code.krate><![CDATA[   step1 = (inlet_v1 - prev1)>>4;
+   int32_t i1 = prev1;
+   prev1 = inlet_v1;
+
+   step2 = (inlet_v2 - prev2)>>4;
+   int32_t i2 = prev2;
+   prev2 = inlet_v2;
+
+   step3 = (inlet_v3 - prev3)>>4;
+   int32_t i3 = prev1;
+   prev3 = inlet_v3;
+
+   step4 = (inlet_v4 - prev4)>>4;
+   int32_t i4 = prev4;
+   prev4 = inlet_v4;]]></code.krate>
+      <code.srate><![CDATA[   i1 += step1;
+   i2 += step2;
+   i3 += step3;
+   i4 += step4;
+   
+   outlet_o =  ___SMMUL(inlet_a1,i1)<<5;
+   outlet_o +=  ___SMMUL(inlet_a2,i2)<<5;
+   outlet_o +=  ___SMMUL(inlet_a3,i3)<<5;
+   outlet_o +=  ___SMMUL(inlet_a4,i4)<<5;]]></code.srate>
+   </obj.normal>
+</objdefs>

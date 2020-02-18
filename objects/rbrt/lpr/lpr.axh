@@ -1,0 +1,1030 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="0" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="84" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/threshold" uuid="9ba5d6ca-e589-4bd0-acff-b2edc2b5fd41" name="RECORDING THRESHOLD" x="182" y="0">
+      <params>
+         <frac32.u.map name="threshold" value="11.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="1barLength" x="532" y="0">
+      <params>
+         <int32 name="value" value="3"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="REC trigger" x="322" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="RECORD" x="448" y="14">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="602" y="14" text="set the maximum length of 1 bar in seconds;"/>
+   <comment type="patch/comment" x="602" y="28" text="if the first recording is longer,this will result in a 2-bar-loop"/>
+   <comment type="patch/comment" x="434" y="70" text="arm for recording and"/>
+   <obj type="rbrt/control/rec wait" uuid="df39af67-15a3-41b3-a1eb-851288b914c8" name="rec_1" x="574" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/lpr/find empty slot" uuid="cc4190ea-ccbf-449e-aed1-5e24106a9c1e" name="FIND AN EMPTY SLOT" x="714" y="70">
+      <params/>
+      <attribs>
+         <objref attributeName="lpr" obj="lpr"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="420" y="84" text="stop recording once recording"/>
+   <comment type="patch/comment" x="126" y="98" text="adjust to match the noise level of your input source"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="no wait/wait" x="476" y="98">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="WAITING" x="994" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="FULL" x="1064" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="CLEAR SLOT" x="1134" y="98">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="448" y="154" text="if ON,recording will start immediately"/>
+   <obj type="logic/flipflop" uuid="f9b15363f5ee203152e062c08a8846f0074b0ea5" name="flipflop_1" x="896" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="RECORDING" x="994" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="REMAINING" x="1134" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/t2p inv" uuid="6a8a7c63-345c-4cd5-a1e8-12b25eb4f47e" name="recording done" x="728" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="182" text="..an 8-track syncing loopstation"/>
+   <comment type="patch/comment" x="1232" y="182" text="remaining recording time of the selected slot"/>
+   <comment type="patch/comment" x="70" y="196" text="HERE&apos;S THE RULES:"/>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="602" y="196">
+      <params>
+         <frac32.u.map name="amp" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="POST-REC" x="994" y="210">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="224" text="-the first recording sets the &apos;master-tempo&apos;."/>
+   <comment type="patch/comment" x="70" y="238" text="hit &apos;RECORD&apos; to arm the recorder,once the incoming signal is above RECORDING THRESHOLD,"/>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="TRANSPORT" x="1134" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="252" text="recording will start.hitting RECORD again will stop the recording"/>
+   <comment type="patch/comment" x="1232" y="252" text="transport position inside the playing bar"/>
+   <comment type="patch/comment" x="938" y="266" text="waiting for where recording started.."/>
+   <comment type="patch/comment" x="70" y="280" text="if the recording is longer than 3 seconds,it will be considered a 2-bar (or x-bar) loop."/>
+   <comment type="patch/comment" x="602" y="280" text="LOWER this if you use fades"/>
+   <comment type="patch/comment" x="602" y="294" text="to avoid clipping"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="CLEAR ALL" x="756" y="294">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="308" text="-the following loops will be recorded in sync, and always have a length of the multiple of the master-length."/>
+   <obj type="rbrt/control/i radio 8 set" uuid="65668cba-fc1b-477f-a1da-53b75e26b06e" name="set the slot to record into" x="980" y="308">
+      <params>
+         <int32.hradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="322" text="that means,when you start recording at beat 2.5, after you stop recording, recording will go on"/>
+   <comment type="patch/comment" x="1876" y="322" text="the master slot&apos;s parameters."/>
+   <comment type="patch/comment" x="70" y="336" text="until the global clock reaches beat 2.5 again. (in the next bar,right..)"/>
+   <comment type="patch/comment" x="1904" y="336" text="1. offset inside the table"/>
+   <comment type="patch/comment" x="70" y="350" text="&apos;lpr&apos;, the object that does the actual recording, also has an outlet &apos;postrec&apos; which is ON when in post-rec-state"/>
+   <comment type="patch/comment" x="1904" y="350" text="2. length of the recording in fraction of the table"/>
+   <comment type="patch/comment" x="1904" y="364" text="3. playmode (0 = no recording present,when there is a recording,the default that is set by &apos;lpr&apos; is 1)"/>
+   <comment type="patch/comment" x="70" y="378" text="&apos;lpr&apos; has internal parameters where the startpoint of your loop is stored."/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="STOP ALL" x="756" y="378">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1904" y="378" text="3. startpoint of the recording in the actual bar"/>
+   <comment type="patch/comment" x="70" y="392" text="-so , if you stop a loop and restart it later on,it will be restarted in sync."/>
+   <obj type="patch/recv i" uuid="c57c3fb0d08bcb566403f4fb43426338bd37ce1f" name="which is the master-slot" x="532" y="392">
+      <params/>
+      <attribs>
+         <objref attributeName="sender" obj="master slot"/>
+      </attribs>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="MASTER" x="686" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop1" x="840" y="392">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop2" x="910" y="392">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop3" x="980" y="392">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop4" x="1050" y="392">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1134" y="406" text="set VOLUME and REVERB SEND for the slected slot"/>
+   <obj type="rbrt/lpr/clear" uuid="6339490a-a636-4b9a-8384-a48e47cc8f0a" name="clear a slot or ALL" x="1722" y="406">
+      <params/>
+      <attribs>
+         <objref attributeName="lpr" obj="lpr"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="offset" x="2072" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="range" x="2156" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="mode" x="2240" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="startpoint" x="2296" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="420" text="-if NO loop is playing,the first loop that starts playing will be the new &apos;master-slot.&apos;"/>
+   <comment type="patch/comment" x="1134" y="420" text="you can set to which value these will be initialized to "/>
+   <comment type="patch/comment" x="1134" y="434" text="further to the right at &apos;slot FX parameters&apos;"/>
+   <obj type="rbrt/lpr/slot params" uuid="08a36fe5-f6ea-4ef7-a6e5-5da76d06a2f9" name="slot_2" x="1876" y="434">
+      <params/>
+      <attribs>
+         <objref attributeName="lpr" obj="lpr"/>
+         <objref attributeName="wave" obj="rec"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="70" y="448" text="-you CANNOT record into a slot that already contains a loop,"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop5" x="840" y="448">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop6" x="910" y="448">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop7" x="980" y="448">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="loop8" x="1050" y="448">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="462" text="you have to CLEAR it via &apos;CLEAR SLOT&apos; (or CLEAR ALL,to clear all slots)."/>
+   <obj type="patch/recv i" uuid="c57c3fb0d08bcb566403f4fb43426338bd37ce1f" name="how many are playing" x="532" y="462">
+      <params/>
+      <attribs>
+         <objref attributeName="sender" obj="running"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/disp/disp p" uuid="493b8c16-dba6-479f-9fbe-840d6128d607" name="playing" x="728" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/data/tableread 8" uuid="e91f7d4e-591f-49b4-8277-241cf4661605" name="tableread_1" x="1162" y="462">
+      <params>
+         <int32 name="offset" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="playstate"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/encode i 8" uuid="26359004-edeb-4014-9fd4-4419339b9eb7" name="encode_2" x="1302" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="== master slot" x="1442" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="476" text="BUT, the object &apos;lpr/find empty slot&apos; will automagically find an empty slot if there is one."/>
+   <comment type="patch/comment" x="840" y="518" text="toggle the slots playback"/>
+   <obj type="rbrt/disp/disp bool 8" uuid="67ffe427-2184-4c45-a18b-3865ce888bc5" name="disp_1" x="980" y="518">
+      <params>
+         <int32 name="offset" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="playstate"/>
+      </attribs>
+   </obj>
+   <obj type="patch/recv i" uuid="c57c3fb0d08bcb566403f4fb43426338bd37ce1f" name="recv_2" x="2044" y="518">
+      <params/>
+      <attribs>
+         <objref attributeName="sender" obj="running"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_3" x="1568" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="1652" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_2" x="1722" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="1806" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="i_2" x="532" y="546">
+      <params>
+         <int32 name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 16b" uuid="597fcaac36aa638ba120b0fbdcadcde4ad405a7e" name="playstate" x="840" y="546">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="drj/math/== const i" uuid="36ae23539d64bc2fb798a1b4a65cf9dda17a1952" name="only 1 slot playing" x="1442" y="546">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="70" y="574" text="BTW: 8 loops is about the maximum with axo&apos;s SDram,"/>
+   <obj type="rbrt/lpr/lpr" uuid="997c98cc-fcf7-4c85-a84a-35b8dff0422f" name="lpr" x="1876" y="574">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <frac32.s.map name="release" value="-64.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="rec"/>
+         <combo attributeName="slots" selection="8"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="70" y="588" text="if you want MORE loops,each of them would be a bit too short"/>
+   <comment type="patch/comment" x="70" y="602" text="in this patch,ALL SDram is allocated for the loops,so adding objects that use SDram"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="LOAD" x="532" y="602">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="4cc578b9-11dc-4cc8-8c5f-f624dfa57cc6" name="SAVE YOUR SET" x="658" y="602">
+      <params/>
+      <attribs/>
+      <subpatch appVersion="1.0.12">
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="bank" x="112" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rbrt/string/prefix 000" uuid="879f7941-83c3-4d5d-820d-d61e67c7d6cc" name="prefix_1" x="196" y="126">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="4track"/>
+               <spinner attributeName="maxLength" value="16"/>
+            </attribs>
+         </obj>
+         <obj type="rbrt/string/suffix 4" uuid="0df6fa7f-2a92-462b-bd18-dfa343b02e9e" name="suffix_1" x="392" y="126">
+            <params/>
+            <attribs>
+               <table attributeName="suffix1" table=".raw"/>
+               <table attributeName="suffix2" table=".lpr"/>
+               <table attributeName="suffix3" table=""/>
+               <table attributeName="suffix4" table=""/>
+               <spinner attributeName="maxLength" value="16"/>
+            </attribs>
+         </obj>
+         <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_1" x="588" y="126">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_1" x="728" y="126">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="load" x="98" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/save" uuid="3e4108b607d56d9e1cd10abb898b58eea11e53b2" name="save_2" x="588" y="210">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../lpr"/>
+            </attribs>
+         </obj>
+         <obj type="table/load" uuid="600cc22c6734d23a82620da1a14e78782a7e168e" name="load_2" x="728" y="210">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../lpr"/>
+            </attribs>
+         </obj>
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="save" x="98" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <patchobj type="patch/object" uuid="b46f7c38-d1a2-4bfc-89fc-a3805975a5d1" name="suffix_2" x="322" y="336">
+            <params/>
+            <attribs>
+               <table attributeName="suffix1" table=""/>
+               <table attributeName="suffix2" table=""/>
+               <spinner attributeName="maxLength" value="16"/>
+            </attribs>
+            <object id="patch/object" uuid="b46f7c38-d1a2-4bfc-89fc-a3805975a5d1">
+               <sDescription>appends a suffix to an input-string.
+BEWARE:maximum length of input and suffix may not exceed 16 characters.</sDescription>
+               <author>Robert Schirmer</author>
+               <license>BSD</license>
+               <inlets>
+                  <charptr32 name="str1"/>
+               </inlets>
+               <outlets>
+                  <charptr32 name="out1" description="string"/>
+                  <charptr32 name="out2"/>
+               </outlets>
+               <displays/>
+               <params/>
+               <attribs>
+                  <table name="suffix1"/>
+                  <table name="suffix2"/>
+                  <spinner name="maxLength" MinValue="1" MaxValue="32" DefaultValue="16"/>
+               </attribs>
+               <includes/>
+               <code.declaration><![CDATA[char c1[attr_maxLength];
+char c2[attr_maxLength];]]></code.declaration>
+               <code.krate><![CDATA[strcpy(&c1[0],inlet_str1);
+strcat(&c1[0],"attr_suffix1");
+outlet_out1 = &c1[0];
+
+strcpy(&c2[0],inlet_str1);
+strcat(&c2[0],"attr_suffix2");
+outlet_out2 = &c2[0];]]></code.krate>
+            </object>
+         </patchobj>
+         <nets>
+            <net>
+               <source obj="prefix_1" outlet="out"/>
+               <dest obj="suffix_1" inlet="str1"/>
+            </net>
+            <net>
+               <source obj="suffix_1" outlet="out1"/>
+               <dest obj="save_1" inlet="filename"/>
+               <dest obj="load_1" inlet="filename"/>
+            </net>
+            <net>
+               <source obj="suffix_1" outlet="out2"/>
+               <dest obj="save_2" inlet="filename"/>
+               <dest obj="load_2" inlet="filename"/>
+            </net>
+            <net>
+               <source obj="bank" outlet="inlet"/>
+               <dest obj="prefix_1" inlet="index"/>
+            </net>
+            <net>
+               <source obj="load" outlet="inlet"/>
+               <dest obj="load_1" inlet="trig"/>
+               <dest obj="load_2" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="save" outlet="inlet"/>
+               <dest obj="save_1" inlet="trig"/>
+               <dest obj="save_2" inlet="trig"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>957</width>
+            <height>619</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="rbrt/control/encode i 8" uuid="26359004-edeb-4014-9fd4-4419339b9eb7" name="encode_1" x="1302" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/t2p inv" uuid="6a8a7c63-345c-4cd5-a1e8-12b25eb4f47e" name="recording DONE" x="2044" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="2296" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="616" text="(like that fancy MI-reverb)"/>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="2212" y="616">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="630" text="will NOT work"/>
+   <comment type="patch/comment" x="980" y="630" text="playback state of the slots"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="1526" y="630">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="644" text="SOLUTION:reduce to only 4 slots "/>
+   <comment type="patch/comment" x="70" y="658" text="(don&apos;t forget to adjust the number of slots in the &apos;lpr&apos; - object,"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="SAVE" x="532" y="658">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="70" y="672" text="in the object called &apos;poly&apos; AND in the polyphonic player-subpatch to 4)"/>
+   <obj type="rbrt/poly/polymaster smplr" uuid="1771493d-a722-476c-80ac-d56580beaeb5" name="poly" x="2254" y="672">
+      <params>
+         <bool32.tgl name="steal" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="polyphony" selection="8"/>
+         <objref attributeName="smplr" obj="lpr"/>
+         <spinner attributeName="loopFlag" value="1"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="57e2f68e-24b1-4407-9fd6-8d8fd13a2a80" name="patcher_1" x="2436" y="672">
+      <params/>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="stop all" x="28" y="42">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rbrt/poly/polyslave" uuid="17143e14-287d-4ef0-ae89-018eed856032" name="polyslave_1" x="126" y="42">
+            <params/>
+            <attribs>
+               <objref attributeName="polymaster" obj="../poly"/>
+            </attribs>
+         </obj>
+         <obj type="rbrt/lpr/slot params" uuid="08a36fe5-f6ea-4ef7-a6e5-5da76d06a2f9" name="slot_1" x="294" y="42">
+            <params/>
+            <attribs>
+               <objref attributeName="lpr" obj="../lpr"/>
+               <objref attributeName="wave" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="running" x="28" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="phase" x="28" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rbrt/lpr/lpr launch" uuid="6fb2e070-404c-4930-b56d-7707ad9a234e" name="obj_1" x="490" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet f" uuid="5c585d2dcd9c05631e345ac09626a22a639d7c13" name="start point" x="28" y="210">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rbrt/looper/ldrive loop" uuid="50a04ed3-8ca2-4cfb-ab23-e53c0e8cbbf4" name="ldrive_1" x="714" y="280">
+            <params>
+               <frac32.s.map name="speed" value="64.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="table/read" uuid="57c0d2f661ccce53e64e9d4653918bc7a74f311e" name="read_1" x="896" y="280">
+            <params/>
+            <attribs>
+               <objref attributeName="table" obj="../rec"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="wave" x="1358" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rbrt/poly/envstate" uuid="a6831ec4-2523-4ac5-9682-2eb30024b2cd" name="envstate_1" x="868" y="364">
+            <params/>
+            <attribs>
+               <objref attributeName="statemap" obj="../playstate"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet i" uuid="aae2176b26209e34e4fdeba5edb1ace82d178655" name="loop playing" x="1358" y="364">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="slot_1" outlet="offset"/>
+               <dest obj="ldrive_1" inlet="offset"/>
+            </net>
+            <net>
+               <source obj="slot_1" outlet="range"/>
+               <dest obj="ldrive_1" inlet="range"/>
+            </net>
+            <net>
+               <source obj="ldrive_1" outlet="pos"/>
+               <dest obj="read_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="polyslave_1" outlet="note"/>
+               <dest obj="envstate_1" inlet="note"/>
+               <dest obj="slot_1" inlet="slot"/>
+            </net>
+            <net>
+               <source obj="stop all" outlet="inlet"/>
+               <dest obj="polyslave_1" inlet="stop"/>
+            </net>
+            <net>
+               <source obj="polyslave_1" outlet="gate"/>
+               <dest obj="loop playing" inlet="outlet"/>
+               <dest obj="obj_1" inlet="slot gate"/>
+            </net>
+            <net>
+               <source obj="obj_1" outlet="gate"/>
+               <dest obj="ldrive_1" inlet="play"/>
+               <dest obj="ldrive_1" inlet="r2offset"/>
+               <dest obj="envstate_1" inlet="envstate"/>
+            </net>
+            <net>
+               <source obj="phase" outlet="inlet"/>
+               <dest obj="obj_1" inlet="master phase"/>
+            </net>
+            <net>
+               <source obj="start point" outlet="inlet"/>
+               <dest obj="obj_1" inlet="master start"/>
+            </net>
+            <net>
+               <source obj="slot_1" outlet="startpoint"/>
+               <dest obj="obj_1" inlet="slot start"/>
+            </net>
+            <net>
+               <source obj="running" outlet="inlet"/>
+               <dest obj="obj_1" inlet="wait"/>
+            </net>
+            <net>
+               <source obj="read_1" outlet="o"/>
+               <dest obj="wave" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>-8</x>
+            <y>-8</y>
+            <width>1616</width>
+            <height>876</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="rbrt/patching/automux i 2" uuid="04976af6-f239-40a0-95b7-2da458fe9ab3" name="automux_1" x="2086" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_2" x="2632" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="2716" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="266" y="700" text="and set this --&gt;&gt;"/>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="rec" x="378" y="700">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="4194304"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="266" y="714" text="to 2097152"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_2" x="2086" y="742">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/t2p" uuid="e076e6e6-f59e-429e-b4ca-c0f3e55f074a" name="t2p_2" x="2730" y="798">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="2982" y="812" text="returns the slot&apos;s length in samples"/>
+   <obj type="patch/send i" uuid="452e1d7a88de691f954015e6fec2f6994e1b35fc" name="running" x="2730" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/latch" uuid="2a50e4657301542464c6a97931847b5e8e0e6d2b" name="latch_1" x="2898" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/lpr/slot length" uuid="0c7c80b3-75df-4518-a03c-61cb54122393" name="slot_1" x="2982" y="840">
+      <params/>
+      <attribs>
+         <objref attributeName="smplr" obj="lpr"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/lfo/sphasor scaled" uuid="f518c941-8a6a-4ed5-b6f1-adc9a1e6eb3c" name="sphasor_1" x="3122" y="840">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/send i" uuid="452e1d7a88de691f954015e6fec2f6994e1b35fc" name="master slot" x="3122" y="924">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="in_1" outlet="left"/>
+         <dest obj="+_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="right"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="RECORDING THRESHOLD" inlet="wave"/>
+         <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="+_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="lpr" outlet="recstate"/>
+         <dest obj="recording DONE" inlet="trig"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="lpr" outlet="remain"/>
+         <dest obj="REMAINING" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="loop playing"/>
+         <dest obj="t2p_2" inlet="trig"/>
+         <dest obj="running" inlet="v"/>
+      </net>
+      <net>
+         <source obj="how many are playing" outlet="v"/>
+         <dest obj="and_2" inlet="i2"/>
+         <dest obj="playing" inlet="in"/>
+         <dest obj="only 1 slot playing" inlet="in"/>
+         <dest obj="lpr" inlet="sync"/>
+      </net>
+      <net>
+         <source obj="STOP ALL" outlet="o"/>
+         <dest obj="or_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="lpr" outlet="recslot"/>
+         <dest obj="automux_1" inlet="i0"/>
+         <dest obj="poly" inlet="startnote"/>
+      </net>
+      <net>
+         <source obj="loop4" outlet="o"/>
+         <dest obj="encode_1" inlet="b4"/>
+      </net>
+      <net>
+         <source obj="loop3" outlet="o"/>
+         <dest obj="encode_1" inlet="b3"/>
+      </net>
+      <net>
+         <source obj="loop2" outlet="o"/>
+         <dest obj="encode_1" inlet="b2"/>
+      </net>
+      <net>
+         <source obj="loop1" outlet="o"/>
+         <dest obj="encode_1" inlet="b1"/>
+      </net>
+      <net>
+         <source obj="recording DONE" outlet="pulse"/>
+         <dest obj="poly" inlet="start"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v0"/>
+         <dest obj="encode_2" inlet="b1"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v1"/>
+         <dest obj="encode_2" inlet="b2"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v2"/>
+         <dest obj="encode_2" inlet="b3"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v3"/>
+         <dest obj="encode_2" inlet="b4"/>
+      </net>
+      <net>
+         <source obj="t2p_2" outlet="pulse"/>
+         <dest obj="latch_1" inlet="trig"/>
+         <dest obj="sphasor_1" inlet="rphase"/>
+         <dest obj="sphasor_1" inlet="rspeed"/>
+      </net>
+      <net>
+         <source obj="which is the master-slot" outlet="v"/>
+         <dest obj="MASTER" inlet="in"/>
+         <dest obj="slot_2" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="recv_2" outlet="v"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="lpr" outlet="postrec"/>
+         <dest obj="POST-REC" inlet="in"/>
+      </net>
+      <net>
+         <source obj="latch_1" outlet="o"/>
+         <dest obj="master slot" inlet="v"/>
+         <dest obj="slot_1" inlet="slot"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="sphasor_1" outlet="wave"/>
+         <dest obj="TRANSPORT" inlet="in"/>
+         <dest obj="*_1" inlet="a"/>
+         <dest obj="patcher_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="slot_1" outlet="smps"/>
+         <dest obj="sphasor_1" inlet="smps"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="lpr" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="and_2" outlet="o"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="== master slot" outlet="out"/>
+         <dest obj="and_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="only 1 slot playing" outlet="out"/>
+         <dest obj="and_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="and_3" outlet="o"/>
+         <dest obj="inv_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="and_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="encode_1" outlet="out"/>
+         <dest obj="poly" inlet="note"/>
+      </net>
+      <net>
+         <source obj="encode_1" outlet="active"/>
+         <dest obj="poly" inlet="velo"/>
+      </net>
+      <net>
+         <source obj="encode_2" outlet="out"/>
+         <dest obj="== master slot" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="1barLength" outlet="out"/>
+         <dest obj="sphasor_1" inlet="1barLength"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="+_2" inlet="in2"/>
+         <dest obj="lpr" inlet="wave"/>
+      </net>
+      <net>
+         <source obj="poly" outlet="note"/>
+         <dest obj="latch_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="patcher_1" inlet="running"/>
+      </net>
+      <net>
+         <source obj="FIND AN EMPTY SLOT" outlet="found"/>
+         <dest obj="flipflop_1" inlet="set"/>
+         <dest obj="set the slot to record into" inlet="set"/>
+      </net>
+      <net>
+         <source obj="set the slot to record into" outlet="out"/>
+         <dest obj="clear a slot or ALL" inlet="slot"/>
+         <dest obj="== master slot" inlet="in2"/>
+         <dest obj="FIND AN EMPTY SLOT" inlet="slot"/>
+         <dest obj="lpr" inlet="slot"/>
+         <dest obj="automux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="rec_1" outlet="rec"/>
+         <dest obj="recording done" inlet="trig"/>
+         <dest obj="FIND AN EMPTY SLOT" inlet="findEmpty"/>
+      </net>
+      <net>
+         <source obj="RECORD" outlet="o"/>
+         <dest obj="rec_1" inlet="wait"/>
+      </net>
+      <net>
+         <source obj="rec_1" outlet="waitstate"/>
+         <dest obj="WAITING" inlet="in"/>
+      </net>
+      <net>
+         <source obj="no wait/wait" outlet="o"/>
+         <dest obj="rec_1" inlet="nowait"/>
+      </net>
+      <net>
+         <source obj="CLEAR ALL" outlet="o"/>
+         <dest obj="or_1" inlet="i1"/>
+         <dest obj="clear a slot or ALL" inlet="clearAll"/>
+      </net>
+      <net>
+         <source obj="or_1" outlet="o"/>
+         <dest obj="patcher_1" inlet="stop all"/>
+      </net>
+      <net>
+         <source obj="automux_1" outlet="o"/>
+         <dest obj="poly" inlet="stopnote"/>
+      </net>
+      <net>
+         <source obj="or_2" outlet="o"/>
+         <dest obj="poly" inlet="stop"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="RECORDING" inlet="in"/>
+         <dest obj="lpr" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="recording done" outlet="pulse"/>
+         <dest obj="flipflop_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="CLEAR SLOT" outlet="o"/>
+         <dest obj="clear a slot or ALL" inlet="clearSlot"/>
+         <dest obj="or_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="FIND AN EMPTY SLOT" outlet="slot"/>
+         <dest obj="set the slot to record into" inlet="setTo"/>
+      </net>
+      <net>
+         <source obj="FIND AN EMPTY SLOT" outlet="full"/>
+         <dest obj="FULL" inlet="in"/>
+      </net>
+      <net>
+         <source obj="slot_2" outlet="startpoint"/>
+         <dest obj="patcher_1" inlet="start point"/>
+         <dest obj="startpoint" inlet="in"/>
+      </net>
+      <net>
+         <source obj="RECORDING THRESHOLD" outlet="over"/>
+         <dest obj="rec_1" inlet="go"/>
+         <dest obj="REC trigger" inlet="in"/>
+      </net>
+      <net>
+         <source obj="LOAD" outlet="o"/>
+         <dest obj="SAVE YOUR SET" inlet="load"/>
+      </net>
+      <net>
+         <source obj="SAVE" outlet="o"/>
+         <dest obj="SAVE YOUR SET" inlet="save"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="SAVE YOUR SET" inlet="bank"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v4"/>
+         <dest obj="encode_2" inlet="b5"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v5"/>
+         <dest obj="encode_2" inlet="b6"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v6"/>
+         <dest obj="encode_2" inlet="b7"/>
+      </net>
+      <net>
+         <source obj="tableread_1" outlet="v7"/>
+         <dest obj="encode_2" inlet="b8"/>
+      </net>
+      <net>
+         <source obj="loop5" outlet="o"/>
+         <dest obj="encode_1" inlet="b5"/>
+      </net>
+      <net>
+         <source obj="loop6" outlet="o"/>
+         <dest obj="encode_1" inlet="b6"/>
+      </net>
+      <net>
+         <source obj="loop7" outlet="o"/>
+         <dest obj="encode_1" inlet="b7"/>
+      </net>
+      <net>
+         <source obj="loop8" outlet="o"/>
+         <dest obj="encode_1" inlet="b8"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="wave"/>
+         <dest obj="+_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="lpr" outlet="recstart"/>
+         <dest obj="or_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="slot_2" outlet="offset"/>
+         <dest obj="offset" inlet="in"/>
+      </net>
+      <net>
+         <source obj="slot_2" outlet="range"/>
+         <dest obj="range" inlet="in"/>
+      </net>
+      <net>
+         <source obj="slot_2" outlet="playmode"/>
+         <dest obj="mode" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

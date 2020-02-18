@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="led row text" uuid="43793979-28d1-4c2a-a691-3a8868d7bca6">
+      <license>GPL</license>
+      <inlets>
+         <bool32.rising name="redraw"/>
+         <int32 name="row"/>
+         <charptr32 name="text0"/>
+         <charptr32 name="text1"/>
+         <charptr32 name="text2"/>
+         <charptr32 name="text3"/>
+         <charptr32 name="text4"/>
+         <charptr32 name="text5"/>
+         <charptr32 name="text6"/>
+         <charptr32 name="text7"/>
+         <bool32.risingfalling name="mute"/>
+      </inlets>
+      <outlets>
+         <int32 name="test"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="LEDmaster"/>
+         <spinner name="row" MinValue="0" MaxValue="3" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+bool mtrig;
+bool doit;
+uint8_t prerow;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_mute){
+		if (inlet_redraw && !trig){trig = 1;doit = 1;}
+		if (!inlet_mute && !mtrig){mtrig = 1;doit = 1;}	
+		if (inlet_row != prerow) {doit = 1;prerow = inlet_row;}			
+		if (doit && !attr_LEDmaster.ROW) {
+			doit = 0;
+			memset(&attr_LEDmaster.array[8],32,68);
+			memcpy(&attr_LEDmaster.array[8],inlet_text0,strlen (inlet_text0));
+			memcpy(&attr_LEDmaster.array[17],inlet_text1,strlen (inlet_text1));
+			memcpy(&attr_LEDmaster.array[25],inlet_text2,strlen (inlet_text2));
+			memcpy(&attr_LEDmaster.array[34],inlet_text3,strlen (inlet_text3));
+			memcpy(&attr_LEDmaster.array[42],inlet_text4,strlen (inlet_text4));
+			memcpy(&attr_LEDmaster.array[51],inlet_text5,strlen (inlet_text5));
+			memcpy(&attr_LEDmaster.array[59],inlet_text6,strlen (inlet_text6));
+			memcpy(&attr_LEDmaster.array[68],inlet_text7,strlen (inlet_text7));
+			attr_LEDmaster.array[16] = 32;
+			attr_LEDmaster.array[33] = 32;
+			attr_LEDmaster.array[50] = 32;
+			attr_LEDmaster.array[67] = 32;
+			attr_LEDmaster.ROW = ((inlet_row + attr_row) + 1) %5;
+		}	
+}
+if (inlet_mute) mtrig = 0;
+if (!inlet_redraw) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

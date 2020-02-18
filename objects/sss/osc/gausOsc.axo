@@ -1,0 +1,85 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="gausOsc" uuid="94065417-87c5-4414-acf7-fb0f088f1f01">
+      <sDescription>seeded noise oscillator based on pseudo gaussian noise factory module.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>gaussian.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch"/>
+         <frac32 name="seed"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="white noise"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.s.map.pitch name="damp"/>
+         <frac32.s.map.pitch name="rate"/>
+         <frac32.s.map name="seed"/>
+         <bool32.mom name="rnd"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t seeds[16];
+int trig;
+int32_t phase;
+int32_t n;
+int rnd;
+int32_t val;]]></code.declaration>
+      <code.init><![CDATA[seeds[8] = 0x21c32332 + GenerateRandomNumber();
+seeds[9] = 0xfbc57f7a + GenerateRandomNumber();
+seeds[10] = 0x7dd1ef4a + GenerateRandomNumber();
+seeds[11] = 0xe4ec34ad + GenerateRandomNumber();
+seeds[12] = 0x72007b2f + GenerateRandomNumber();
+seeds[13] = 0x3d1e9783 + GenerateRandomNumber();
+seeds[14] = 0xa4a8f892 + GenerateRandomNumber();
+seeds[15] = 0xc82c5e28 + GenerateRandomNumber();
+seeds[0] = seeds[8];
+seeds[1] = seeds[9];
+seeds[2] = seeds[10];
+seeds[3] = seeds[11];
+seeds[4] = seeds[12];
+seeds[5] = seeds[13];
+seeds[6] = seeds[14];
+seeds[7] = seeds[15];]]></code.init>
+      <code.krate><![CDATA[if((param_rnd>0)&&!rnd){
+	rnd=1;
+	seeds[8] = 0x21c32332 + GenerateRandomNumber();
+seeds[9] = 0xfbc57f7a + GenerateRandomNumber();
+seeds[10] = 0x7dd1ef4a + GenerateRandomNumber();
+seeds[11] = 0xe4ec34ad + GenerateRandomNumber();
+seeds[12] = 0x72007b2f + GenerateRandomNumber();
+seeds[13] = 0x3d1e9783 + GenerateRandomNumber();
+seeds[14] = 0xa4a8f892 + GenerateRandomNumber();
+seeds[15] = 0xc82c5e28 + GenerateRandomNumber();
+}
+else if(param_rnd==0){rnd=0;}
+
+int32_t freq;
+MTOFEXTENDED(inlet_pitch+param_pitch,freq)
+int32_t g;
+MTOF(param_damp+inlet_pitch+param_pitch,g)
+int32_t R;
+MTOF(param_rate,R)
+int32_t Seed=param_seed+inlet_seed;]]></code.krate>
+      <code.srate><![CDATA[phase+=freq;
+if((phase>0)&&!trig){
+	trig=1;
+seeds[0] = seeds[8]+___SMMUL(Seed<<3,seeds[13]<<2);
+seeds[1] = seeds[9]+___SMMUL(Seed<<3,seeds[15]<<2);
+seeds[2] = seeds[10]+___SMMUL(Seed<<3,seeds[9]<<2);
+seeds[3] = seeds[11]+___SMMUL(Seed<<3,seeds[11]<<2);
+seeds[4] = seeds[12]+___SMMUL(Seed<<3,seeds[10]<<2);
+seeds[5] = seeds[13]+___SMMUL(Seed<<3,seeds[14]<<2);
+seeds[6] = seeds[14]+___SMMUL(Seed<<3,seeds[8]<<2);
+seeds[7] = seeds[15]+___SMMUL(Seed<<3,seeds[12]<<2);
+}
+else if (phase<0){trig=0;}
+int i;
+for(i=0;i<8;i++){
+   seeds[i] = ___SMMLA(((seeds[i] * 196314165 + 907633515)-seeds[i])<<1,R,seeds[i]);   n = ___SMMLA(((((int32_t)(seeds[i]))>>4)-n)<<1,g,n);
+}
+val+=n-val>>10;
+outlet_wave= n-val;]]></code.srate>
+   </obj.normal>
+</objdefs>

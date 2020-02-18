@@ -1,0 +1,52 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="fibonacci a*b" uuid="7at41ba8y330e54e5f5cd12da5dbe5a74ba854a5">
+      <sDescription>A variation on the Fibonacci sequencer. Every time trig is activated, the sequencer goes one cycle forward. At every cycle the output is calculated with the formula o=i1*i2, where i2 is the first preceding output, and i1 is the second preceding output. At reset i1=1 , i2=2 unless i1 and i2 are connected.</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>sequencer.axh</helpPatch>
+      <inlets>
+         <int32 name="i1" description="first number of the serie"/>
+         <int32 name="i2" description="second number of the serie"/>
+         <bool32.rising name="trig" description="trigger"/>
+         <bool32.rising name="r" description="reset"/>
+      </inlets>
+      <outlets>
+         <int32 name="o" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[   int ntrig;
+   int rtrig;
+   int i1;
+   int i2;]]></code.declaration>
+      <code.init><![CDATA[   ntrig = 0;
+   rtrig = 0;
+   i1 = 1;
+   i2 = 2;
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+	int temp=i2;
+   i2=i1*i2;
+   i1=temp;
+   ntrig=1;
+}
+else if (!(inlet_trig>0)) ntrig=0;
+
+if ((inlet_r>0) && !rtrig) {
+	if ((inlet_i1+inlet_i2)+(inlet_i1*inlet_i2))
+	{
+		i1=inlet_i1; 
+		i2=inlet_i2; 
+	}
+	else
+	{
+		i1=1;
+		i2=2;
+	}
+	rtrig = 1;}
+else if (!(inlet_r>0)) rtrig=0;
+outlet_o= i2;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

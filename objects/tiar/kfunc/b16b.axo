@@ -1,0 +1,158 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="b16b" uuid="16163bac-cd4b-4a5b-901f-cd0cfaada94c">
+      <sDescription>A bipolar k rate function defined by 16 segments.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>b16b.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.mapvsl name="p0" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p1" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p2" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p3" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p4" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p5" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p6" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p7" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p8" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p9" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p10" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p11" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p12" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p13" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p14" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p15" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+         <frac32.s.mapvsl name="p16" noLabel="true">
+            <MinValue v="0.0"/>
+            <MaxValue v="64.0"/>
+         </frac32.s.mapvsl>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int32_t in = (inlet_in + (1<<27)) >> 1;
+if(in >= (1<<27))
+  outlet_out = param_p16;
+else if(in <= 0)
+  outlet_out = param_p0;
+else{
+  int32_t i = in >> (27-4);              // i [0 16[
+  int32_t a = (in & ((1<<(27-4)) - 1));  // a q23
+  if(i < 8){
+    if(i < 4){ // [0 4[
+      if(i < 2){ // [0 2[
+        if(i < 1){ // [0 1[             q27         q24   q18           q27 
+          outlet_out = ___SMMLA(param_p1 - param_p0, a, param_p0 >> 9) << 9;
+        } else {   // [1 2[
+          outlet_out = ___SMMLA(param_p2 - param_p1, a, param_p1 >> 9) << 9;
+        }
+      } else { // [2 4[
+        if(i < 3){ // [2 3[
+          outlet_out = ___SMMLA(param_p3 - param_p2, a, param_p2 >> 9) << 9;
+        } else {   // [3 4[
+          outlet_out = ___SMMLA(param_p4 - param_p3, a, param_p3 >> 9) << 9;
+        }
+      }
+    } else { // [4 8[
+      if(i < 6){ // [4 6[
+        if(i < 5){ // [4 5[
+          outlet_out = ___SMMLA(param_p5 - param_p4, a, param_p4 >> 9) << 9;
+        } else {   // [5 6[
+          outlet_out = ___SMMLA(param_p6 - param_p5, a, param_p5 >> 9) << 9;
+        }
+      } else { // [6 8[
+        if(i < 7){ // [6 7[
+          outlet_out = ___SMMLA(param_p7 - param_p6, a, param_p6 >> 9) << 9;
+        } else {   // [7 8[
+          outlet_out = ___SMMLA(param_p8 - param_p7, a, param_p7 >> 9) << 9;
+        }
+      }
+    }
+  } else {
+    if(i < 12){ // [8 12[
+      if(i < 10){ // [8 10[
+        if(i < 9){ // [8 9[              q27         q24   q18           q27 
+          outlet_out = ___SMMLA(param_p9  - param_p8, a, param_p8 >> 9) << 9;
+        } else {   // [9 10[
+          outlet_out = ___SMMLA(param_p10 - param_p9, a, param_p9 >> 9) << 9;
+        }
+      } else { // [10 12[
+        if(i < 11){ // [10 11[
+          outlet_out = ___SMMLA(param_p11 - param_p10, a, param_p10 >> 9) << 9;
+        } else {    // [11 12[
+          outlet_out = ___SMMLA(param_p12 - param_p11, a, param_p11 >> 9) << 9;
+        }
+      }
+    } else { // [12 16[
+      if(i < 14){ // [12 14[
+        if(i < 13){ // [12 13[
+          outlet_out = ___SMMLA(param_p13 - param_p12, a, param_p12 >> 9) << 9;
+        } else {    // [13 14[
+          outlet_out = ___SMMLA(param_p14 - param_p13, a, param_p13 >> 9) << 9;
+        }
+      } else { // [14 16[
+        if(i < 15){ // [14 15[
+          outlet_out = ___SMMLA(param_p15 - param_p14, a, param_p14 >> 9) << 9;
+        } else {    // [15 16[
+          outlet_out = ___SMMLA(param_p16 - param_p15, a, param_p15 >> 9) << 9;
+        }
+      }
+    }
+  }
+}
+]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pulse delay" uuid="34b44c7c-842a-4c08-9101-68cb67de4685">
+      <sDescription>delays a pulse by a period specified in &apos;k-ticks&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <int32 name="kticks"/>
+         <bool32.rising name="trig" description="reset phase"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="kticks" MinValue="0" MaxValue="10000000" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t Phase;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_trig = 0;  
+if (inlet_trig > 0)  {Phase = 0;ntrig = 1;}
+if (ntrig) Phase ++;
+if (ntrig && (Phase >= (attr_kticks + inlet_kticks))) {outlet_trig = 1;ntrig = 0;}]]></code.krate>
+   </obj.normal>
+</objdefs>

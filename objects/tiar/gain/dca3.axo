@@ -1,0 +1,50 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dca3" uuid="13c838a7-a7de-4c03-ad05-309f17497344">
+      <sDescription>3 input dca</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>dca3.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1"/>
+         <frac32 name="g1"/>
+         <frac32buffer name="in2"/>
+         <frac32 name="g2"/>
+         <frac32buffer name="in3"/>
+         <frac32 name="g3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="mix out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool i1, i2, i3;
+int32_t g1, g2, g3;]]></code.declaration>
+<code.init><![CDATA[
+i1 = i2 = i3 = false;
+g1 = g2 = g3 = 0;
+]]></code.init>
+
+      <code.krate><![CDATA[for(int i = 0; i < BUFSIZE; i++){
+  int32_t in = inlet_in1[i];
+  bool ic = in > 0;
+  if(i1 != ic) g1 = inlet_g1;
+  i1 = ic;
+  outlet_out[i] = ___SMMUL(in, g1);
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t in = inlet_in2[i];
+  bool ic = in > 0;
+  if(i2 != ic) g2 = inlet_g2;
+  i1 = ic;
+  outlet_out[i] = ___SMMLA(in, g2, outlet_out[i]);
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t in = inlet_in3[i];
+  bool ic = in > 0;
+  if(i3 != ic) g3 = inlet_g3;
+  i1 = ic;
+  outlet_out[i] = ___SMMLA(in, g3, outlet_out[i]) << 5;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

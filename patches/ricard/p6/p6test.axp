@@ -1,0 +1,1482 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="ricard/disp/lcdctrl" uuid="e3e1aa60-f366-4efc-9c21-0a8d7fd3e368" name="lcdctrl_1" x="56" y="0">
+      <params/>
+      <attribs>
+         <combo attributeName="d4" selection="PB10"/>
+         <combo attributeName="d5" selection="PB14"/>
+         <combo attributeName="d6" selection="PB11"/>
+         <combo attributeName="d7" selection="PB15"/>
+         <combo attributeName="rs" selection="PC0"/>
+         <combo attributeName="e" selection="PC1"/>
+         <spinner attributeName="qsize" value="10"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="448" y="0" text="=== Please note! This patch runs on the Audiothingies P6 only! ==="/>
+   <patchobj type="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678" name="memory_1" x="882" y="0">
+      <params>
+         <frac32.u.map name="patch" value="16.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="type" selection="24C512"/>
+         <spinner attributeName="patchsize" value="1024"/>
+         <combo attributeName="bus" selection="I2C1"/>
+         <combo attributeName="altfunc" selection="AF4"/>
+         <combo attributeName="clock" selection="PB6"/>
+         <combo attributeName="data" selection="PB7"/>
+         <spinner attributeName="pinaddr" value="0"/>
+         <objref attributeName="parhand" obj="parhand_1"/>
+      </attribs>
+      <object id="patch/object" uuid="9fe1546f-e45c-41b5-b8a8-8ace2cfd3678">
+         <sDescription>Eeprom manager</sDescription>
+         <author>Ricard Wanderlof</author>
+         <license>BSD</license>
+         <inlets>
+            <bool32.rising name="read" description="Read trigger"/>
+            <bool32.rising name="write" description="Write trigger"/>
+         </inlets>
+         <outlets>
+            <bool32.pulse name="ready" description="Read ready"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="patch"/>
+         </params>
+         <attribs>
+            <combo name="type" description="EEPROM type">
+               <MenuEntries>
+                  <string>24C512</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>EEPROM_TYPE_24C512</string>
+               </CEntries>
+            </combo>
+            <spinner name="patchsize" description="Patch size" MinValue="2" MaxValue="2048" DefaultValue="512"/>
+            <combo name="bus" description="I2C bus">
+               <MenuEntries>
+                  <string>I2C1</string>
+                  <string>I2C2</string>
+                  <string>I2C3</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>I2CD1</string>
+                  <string>I2CD2</string>
+                  <string>I2CD3</string>
+               </CEntries>
+            </combo>
+            <combo name="altfunc" description="Alternate function name for the pins">
+               <MenuEntries>
+                  <string>AF4</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>4</string>
+               </CEntries>
+            </combo>
+            <combo name="clock" description="I2C clock pin">
+               <MenuEntries>
+                  <string>PB6</string>
+                  <string>PB8</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>GPIOB,6</string>
+                  <string>GPIOB,8</string>
+               </CEntries>
+            </combo>
+            <combo name="data" description="I2C data pin">
+               <MenuEntries>
+                  <string>PB7</string>
+                  <string>PB9</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>GPIOB,7</string>
+                  <string>GPIOB,9</string>
+               </CEntries>
+            </combo>
+            <spinner name="pinaddr" description="Address set by chip pins" MinValue="0" MaxValue="7" DefaultValue="0"/>
+            <objref name="parhand" description="Parameter handler "/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[#include <eeprom.h>
+int first = 1; // only execute init code once
+int prev_rdtrig;
+int prev_wrtrig;
+enum eeprom_state{ NONE, READING, READ_UNPACK, WRITE_PACK, WRITING };
+enum eeprom_state state = NONE;
+EepromStatus_t *eeprom_status_p; // status from framework
+void *handle; // handle to framework for current eprom
+int pagesize; // size of eeprom page from framework
+uint8_t *buf; // pointer to eeprom buffer, holding pagesizey bytes, from framework
+uint16_t addr; // current address
+uint16_t pageaddr; // address within current page
+unsigned int paramidx; // current parameter index]]></code.declaration>
+         <code.init><![CDATA[palSetPadMode(attr_clock, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
+palSetPadMode(attr_data, PAL_MODE_ALTERNATE(attr_altfunc) | PAL_STM32_OTYPE_OPENDRAIN);
+handle = eeprom_setup(attr_type, &attr_bus, attr_pinaddr);
+buf = eeprom_get_pagebuf(handle, &pagesize);]]></code.init>
+         <code.dispose><![CDATA[eeprom_teardown(handle);]]></code.dispose>
+         <code.krate><![CDATA[// simple read test: rd trig always read 128 bytes of data from addr patch * 128 in memory, send memory printout over USB
+//
+if (first && attr_parhand.init_done) { // first time but wait for parhand to complete
+	first = 0;
+	// Debug: dump all known parameter exchange key-value pairs.
+	LogTextMessage("NPEXCH: %d, toplevel_kvp:", NPEXCH);
+	for (int i = 0; i < NPEXCH; i++) {
+		struct KeyValuePair *kvp = attr_parhand.param_data[i].toplevel_kvpp;
+		LogTextMessage("%d: %s: val %d, min %d, max %d, hash %u, signal %u",
+		               i, kvp->keyname, kvp->ipvp.PEx->value >> 21, kvp->ipvp.minvalue >> 21, kvp->ipvp.maxvalue >> 21, attr_parhand.hash(kvp->keyname) & 0xffffff, kvp->ipvp.PEx->signals);
+	}
+}
+// To set parameter value, use PExParameterChange(kvp->ipvp.PEx, newvalue, signals <0xFFFFFFE7>)
+#define read_data  buf
+if (inlet_read && !prev_rdtrig && state == NONE) {
+	unsigned int patch = param_patch >> 20;
+	addr = patch * attr_patchsize;
+	pageaddr = 0;
+	LogTextMessage("Read patch #%d", patch);
+	eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
+     state = READING;
+}
+if (state == READING && !eeprom_status_p->busy) {
+	// operation completed, print it
+	LogTextMessage("Status: %sbusy, %sok", eeprom_status_p->busy ? "": "not ", eeprom_status_p->ok ? "" : "not ");
+	state = READ_UNPACK;
+	//uint8_t *read_data = eeprom_get_pagebuf(handle, NULL);
+#if 1 // debug, print data
+	for (int i = 0; i < 64; i += 8)
+	LogTextMessage("Data %d: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x", i,
+	               read_data[i+0], read_data[i+1], read_data[i+2], read_data[i+3], read_data[i+4], read_data[i+5], read_data[i+6], read_data[i+7]);
+#endif
+}
+if (state == READ_UNPACK) {
+	u32 hash = buf[pageaddr++] << 16;
+	hash |= buf[pageaddr++] << 8;
+	hash |= buf[pageaddr++];
+	s32 value = ((signed char)buf[pageaddr++]) << 21;
+	//if (value & (1 << 27)) value |= 0xf0000000U; // sign extend from bit 6 in the stored parameter
+	LogTextMessage("Read: got hash 0x%08x", hash);
+	if (hash == 0) state = NONE; // done!
+	else {
+		// search for parameter!
+		for (int pidx = 0; pidx < attr_parhand.nparams; pidx++) {
+			if (((hash ^ attr_parhand.param_data[pidx].name_hash) & 0xffffff) == 0) {
+				// hashes match: found it!
+				LogTextMessage("Found parameter: %s, value %d", attr_parhand.param_data[pidx].toplevel_kvpp->keyname, value >> 21);
+				PExParameterChange(attr_parhand.param_data[pidx].toplevel_kvpp->ipvp.PEx, value, 0xFFFFFFE7);
+				break;
+			}
+		}
+	}
+	if (pageaddr >= pagesize) {
+		pageaddr = 0;
+		addr += pagesize;
+		eeprom_status_p = eeprom_read_data(handle, addr, pagesize); // trigger read
+		state = READING;
+	}
+}
+if (inlet_write && !prev_wrtrig && state == NONE) {
+	unsigned int patch = param_patch >> 20;
+	addr = patch * attr_patchsize;
+	pageaddr = 0; // start of page
+	paramidx = 0;
+	state = WRITE_PACK;
+}
+if (state == WRITE_PACK) {
+	if (paramidx < attr_parhand.nparams) {
+		if (attr_parhand.param_setup[paramidx].save) { // only save parameters with the save flag set
+			struct KeyValuePair *kvp = attr_parhand.param_data[paramidx].toplevel_kvpp;
+			uint32_t hash = attr_parhand.param_data[paramidx].name_hash;
+			buf[pageaddr++] = (hash >> 16) & 0xff; // low 24 bits of hash
+			buf[pageaddr++] = (hash >> 8) & 0xff;
+			buf[pageaddr++] = hash & 0xff;
+			buf[pageaddr++] = kvp->ipvp.PEx->value >> 21;
+			LogTextMessage("Param idx %d, hash 0x%08x, value %d", paramidx, hash, kvp->ipvp.PEx->value >> 21);
+		}
+	} else {
+		buf[pageaddr++] = 0; // end of list marker
+		buf[pageaddr++] = 0;
+		buf[pageaddr++] = 0;
+		buf[pageaddr++] = 0;
+		LogTextMessage("End of stored param data reached");
+	}
+	paramidx++;
+	if (pageaddr >= pagesize || paramidx > NPEXCH) {
+		LogTextMessage("Have %d bytes to write, now writing", pageaddr);
+		eeprom_status_p = eeprom_write_data(handle, addr, pageaddr); // trigger write
+		state = WRITING;
+		addr += pagesize; // for next page
+		pageaddr = 0; // for next page
+	}
+}
+if (state == WRITING && !eeprom_status_p->busy) { // write done
+	if (paramidx > NPEXCH)
+	     state = NONE;
+	else
+		state = WRITE_PACK;
+}
+prev_rdtrig = inlet_read;
+prev_wrtrig = inlet_write;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="./simplesynth" uuid="9d1d87e1-bfec-4cc1-8d9c-5a9f7cb343d6" name="simplesynth_1" x="1120" y="0">
+      <params>
+         <frac32.u.map name="osc_mix:gain1" value="63.0"/>
+         <frac32.u.map name="osc_mix:gain2" value="64.0"/>
+         <frac32.s.map name="lp_1:pitch" value="18.0"/>
+         <frac32.u.map name="lp_1:reso" value="0.0"/>
+         <frac32.u.map name="f_fmix:gain1" value="64.0"/>
+         <frac32.u.map name="f_fmix:gain2" value="64.0"/>
+         <frac32.s.map name="a_env:a" value="-64.0"/>
+         <frac32.s.map name="a_env:d" value="-24.0"/>
+         <frac32.u.map name="a_env:s" value="64.0"/>
+         <frac32.s.map name="a_env:r" value="-12.0"/>
+         <frac32.s.map name="f_env:a" value="-64.0"/>
+         <frac32.s.map name="f_env:d" value="-64.0"/>
+         <frac32.u.map name="f_env:s" value="13.0"/>
+         <frac32.s.map name="f_env:r" value="11.0"/>
+         <frac32.u.map name="osc2_fmix:gain2" value="0.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="12"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1246" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/165ctrl v" uuid="0c9bfe43-cf10-4cf6-8d85-096f6c56f8d0" name="165ctrl_1" x="168" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="data" selection="PA0"/>
+         <combo attributeName="clock" selection="PA1"/>
+         <combo attributeName="latch" selection="PA3"/>
+         <combo attributeName="inh" selection="PA2"/>
+         <spinner attributeName="bits" value="24"/>
+         <combo attributeName="rate" selection="full"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595ctrl" uuid="0e1dc991-a882-4470-a263-8c1d1326f546" name="595ctrl_1" x="294" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="data" selection="PA6"/>
+         <combo attributeName="clock" selection="PA7"/>
+         <combo attributeName="latch" selection="PA8"/>
+         <combo attributeName="oe" selection="PA5"/>
+         <spinner attributeName="bits" value="8"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="d2dd1ce0-2a63-4425-a5b3-84bd441590e2" name="parhand_1" x="420" y="14">
+      <params/>
+      <attribs>
+         <spinner attributeName="nparams" value="17"/>
+         <text attributeName="setup">
+            <sText><![CDATA[{ "lp_1:pitch", "f1 frq", F_PNFULL, 1 },
+{ "lp_1:reso", "f1 q", F_DPOS, 1 },
+{ "f_env:a", "fenv a", F_PNFULL, 1 },
+{ "f_env:d", "fenv d", F_PNFULL, 1 },
+{ "f_env:s", "fenv s", F_DPOS, 1 },
+{ "f_env:r", "fenv r", F_PNFULL, 1 },
+{ "a_env:a", "aenv a", F_PNFULL, 1 },
+{ "a_env:d", "aenv d", F_PNFULL, 1 },
+{ "a_env:s", "aenv s", F_DPOS, 1 },
+{ "a_env:r", "aenv r", F_PNFULL, 1 },
+{ "osc_mix:gain1", "osc1 lvl", F_DPOS, 1 },
+{ "osc_mix:gain2", "osc2 lvl", F_DPOS, 1 },
+{ "f_fmix:gain1", "f1 envamt", F_DPOS, 1 },
+{ "f_fmix:gain2", "f1 kbdtrk", F_DPOS, 1 },
+{ "osc2_fmix:gain2", "osc2 detune", F_DPOS, 1 },
+{ "dial_2", "osc1 modsrc", F_2, 1 },
+{ "memory_1", "patch", F_DPOS, 0 },
+{ "clock_1", "bpm", F_DPOS, 1 }]]></sText>
+         </text>
+         <spinner attributeName="types" value="4"/>
+         <text attributeName="tlist">
+            <sText><![CDATA[{ 4, 3, "SAWSQUSWQRNG" },
+{ 3, 3, "ENVLFOBND" }]]></sText>
+         </text>
+      </attribs>
+      <object id="patch/object" uuid="d2dd1ce0-2a63-4425-a5b3-84bd441590e2">
+         <sDescription>Parameter handler for IPVP parameters</sDescription>
+         <author>Ricard Wanderlof</author>
+         <inlets/>
+         <outlets/>
+         <displays/>
+         <params/>
+         <attribs>
+            <spinner name="nparams" description="Number of parameters" MinValue="0" MaxValue="128" DefaultValue="0"/>
+            <text name="setup" description="Parameter definitions"/>
+            <spinner name="types" description="Number of discrete value parameter types" MinValue="0" MaxValue="20" DefaultValue="0"/>
+            <text name="tlist" description="Definitions of discrete value parameters"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int first;
+int init_done = 0;
+
+enum formats { F_POSNEG = -3, F_POS, F_DPOS, F_PNFULL, F_1, F_2, F_3, F_4, F_5, F_6, F_7, F_8, F_9, F_10, F_11, F12 };
+//             -64..+64       0..64  0..128 -64..+64 -> 0..128 
+// Formats with discrete string values
+struct type {
+	int values; // number of values for this format
+	int vlen;   // length of the substring for each value
+	const char *vstrings; // all values concatenated into one string
+};
+const struct type types[attr_types] = { attr_tlist };
+
+int nparams = attr_nparams;
+
+struct KeyValuePair toplevel_kvp[NPEXCH]; // created kvp's for all parameters, including subpatch
+
+struct ParamSetup {
+	const char *param_name; // e.g. "lp_1:freq"
+	const char *hash_name; // e.g. "cutoff frq". NULL means 'same as param_name'
+	enum formats format; // e.,g. F_POSNEG
+	bool save; // 1 => parameter to be saved in EEPROM
+};
+// The order of parameter info in param_setup is governed by the tlist attribute,
+// and is intended to ultimately potentially be the same order as in the EEPROM
+struct ParamSetup param_setup[NPEXCH] = { attr_setup };
+
+struct ParamData
+{
+		struct KeyValuePair *toplevel_kvpp;
+		//struct ParamSetup *setup;
+		u32 name_hash;
+};
+// The order of parameter info in param_data is the same as in toplevel_kvp.
+struct ParamData param_data[NPEXCH];
+// The following two have been put in param_data[]
+//struct KeyValuePair *toplevel_kvpp[NPEXCH]; // pointers to kvp's, either to toplevel_kvp[foo], or to existing 
+//u32 hashes[NPEXCH];
+
+/* djb2 string hash. */
+/* From Dan Bernstein many years ago in comp.lang.c (via http://www.cse.yorku.ca/~oz/hash.html) */
+__attribute__ ((noinline)) u32 hash(const char *str)
+{
+	u32 hash = 5381;
+	const unsigned char *ustr = (const unsigned char *)str;
+	int c;
+
+	while (c = *ustr++)
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	return hash;
+}
+// Increment parameter number par
+__attribute__ ((noinline)) int par_inc(int par)
+{
+	enum formats format = param_setup[par].format;
+	struct KeyValuePair *kvp = param_data[par].toplevel_kvpp;
+	if (!kvp) return 0;
+	if (format < F_1 || (kvp->ipvp.PEx->value >> 21) + 1 < types[format - 1].values) {
+		 KVP_Increment(kvp);
+		 if (format == F_PNFULL && ((kvp->ipvp.PEx->value >> 20) & 1))
+			KVP_Increment(kvp); // skip every second value so that 0..256 behaves as 0..128
+		 //LogTextMessage("Par %d Val %d", par, kvp->ipvp.PEx->value >> 20);
+	    	 return 1;
+	}
+	return 0;
+}
+// Decrement parameter number par
+__attribute__ ((noinline)) int par_dec(int par)
+{
+	enum formats format = param_setup[par].format;
+	struct KeyValuePair *kvp = param_data[par].toplevel_kvpp;
+	if (!kvp) return 0;
+	KVP_Decrement(kvp); 
+	if (format == F_PNFULL && ((kvp->ipvp.PEx->value >> 20) & 1))
+		KVP_Decrement(kvp); // skip every second value so that 0..256 behaves as 0..128
+	return 1;
+}
+__attribute__ ((noinline)) void printval(char *str, int par)
+{     
+     int i = param_data[par].toplevel_kvpp->ipvp.PEx->value; // fetch current value
+     enum formats format = param_setup[par].format;
+	int shift = (format == F_DPOS) ? 20 : 21;
+	i >>= shift;
+	
+	// handle string types
+	if (format > 0) {
+		int type = format - 1;
+
+		if (i < 0) return;
+		if (i >= types[type].values) i = types[type].values - 1;
+		memcpy(str, &types[type].vstrings[types[type].vlen * i], types[type].vlen);
+		str[types[type].vlen] = '\0';
+		return;
+	}
+
+	// numeric: bipolar or unipolar
+	int digit;
+	int digits = 0;
+	if (format == F_POSNEG) {
+		if (i < 0) {
+			*str++ = '-';
+			i = -i;
+		} else {
+			*str++ = '+';
+		}
+	}
+
+     if (format == F_PNFULL) i += 64;
+	if (format == F_POS || format == F_DPOS || format == F_PNFULL) {
+		digit = i / 100;
+		if (digit) { *str++ = '0' + digit; digits++; } else *str++ = ' ';
+		i -= digit * 100;
+	}
+	
+	digit = i / 10;
+	if (digit || digits) { *str++ = '0' + digit; digits++; } else *str++ = ' ';
+	i -= digit * 10;
+	
+	*str++ = '0' + i;
+	*str = '\0';
+}]]></code.declaration>
+         <code.init><![CDATA[first = 1;
+LogTextMessage("This is the menu handler initializing");
+LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);]]></code.init>
+         <code.krate><![CDATA[if (first) {
+	first = 0;
+	LogTextMessage("# params at run time: %d\n", ObjectKvpRoot->apvp.length);
+#if 1
+	// Debugging: just print out all parameters
+	for (int i = 0; i < ObjectKvpRoot->apvp.length; i++) {
+		struct KeyValuePair *kvp = (struct KeyValuePair *) (ObjectKvpRoot->apvp.array[i]);
+		LogTextMessage("Param %d: \"%s\" type %d", i, kvp->keyname, kvp->kvptype);
+		//LogTextMessage("Param %d: \"%s\" type %d", i, ObjectKvps[i]->keyname, ObjectKvps[i]->kvptype);
+	}
+#endif
+	// patchMeta.pEXch[] contains all the top level PEx's, NPEXCH of them
+	// For pEXch, if it is a subpatch parameter, pfunction will be PropagateToSub. In this case,
+	// Axoloti stores a pointer to the PEx's for the subpatch in the finalvalue field.
+	// The subpatch in turn contains a pointer to the PEx's for the voices in the finalvalue field.
+	// Take the one for the first voice, and scan the ObjectKvpRoot for a kvp with a matching PEx.
+	// Once we've found it, create a new KeyValuePair, taking the name and min and max values from the
+	// found kvp. Set a pointer to the new KeyValuePair for runtime use.
+	// If it's not a subpatch parameter, scan the ObjectKvpRoot for the corresponding PEx, and set a
+	// pointer to it.
+	for (int tpar = 0; tpar < NPEXCH; tpar++) {
+		ParameterExchange_t *pex;
+		if (patchMeta.pPExch[tpar].pfunction == PropagateToSub) {
+			LogTextMessage("Param %d propagates to sub", tpar);
+			// Axoloti puts a pointer to the subpatch PEx in the finalvalue field
+			ParameterExchange_t *subpex = (ParameterExchange_t *)patchMeta.pPExch[tpar].finalvalue;
+			// The PEx of the subpatch in turn points to the PEx of the first voice;
+			// Axlloti puts a pointer to the PEx of the first voice in the finalvalue field
+			pex = (ParameterExchange_t *)subpex->finalvalue;
+			LogTextMessage("Voicepex 0x%08x", pex);
+		} else {
+			pex = &patchMeta.pPExch[tpar];
+		}
+		// Scan list of key-value pairs for all parameters to find the correponding parameter
+		for (int kvpno = 0; kvpno < ObjectKvpRoot->apvp.length; kvpno++) {
+			struct KeyValuePair *kvp = (struct KeyValuePair *) (ObjectKvpRoot->apvp.array[kvpno]);
+			if (kvp->ipvp.PEx == pex) {
+				LogTextMessage("Param %d: found kvp %s", tpar, kvp->keyname);
+				// Found it!
+				SetKVP_IPVP(&toplevel_kvp[tpar], ObjectKvpRoot, kvp->keyname,
+		 				  &patchMeta.pPExch[tpar], kvp->ipvp.minvalue, kvp->ipvp.maxvalue);
+	 			// Using a pointer runtime means we can use NULL to mean 'disabled'
+	 			// Need to find corresponding entry in setup array
+	 			for (int parno = 0; parno < nparams; parno++) {
+	 				if (strcmp(kvp->keyname, param_setup[parno].param_name) == 0) {
+	 					LogTextMessage("PEx %d = setup %d (%s)", tpar, parno, kvp->keyname);
+	 					param_data[parno].toplevel_kvpp = &toplevel_kvp[tpar];
+	 			 		const char *name = param_setup[parno].hash_name;
+	 					if (!name) name = param_setup[parno].param_name;
+		 				param_data[parno].name_hash = hash(name);
+		 				break;
+	 				}
+	 			}
+	 			break; // found our kvp
+			}
+		}
+	}
+#if 0
+	// Debug: dump all known parameter exchange key-value pairs.
+	LogTextMessage("NPEXCH: %d, toplevel_kvp:", NPEXCH);
+	for (int i = 0; i < NPEXCH; i++) {
+		struct KeyValuePair *kvp = toplevel_kvpp[i];
+		LogTextMessage("%d: %s: min %d, max %d, hash %u, signal %u",
+		               i, kvp->keyname, kvp->ipvp.minvalue, kvp->ipvp.maxvalue, hash(kvp->keyname) & 0xffffff, kvp->ipvp.PEx->signals);
+	}
+#endif
+	init_done = 1;
+}]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="ricard/logic/qdecodectrl" uuid="0b7e6601-bb89-4d6d-90bb-d85b9841c833" name="qctrl_1" x="518" y="14">
+      <params/>
+      <attribs>
+         <combo attributeName="rate" selection="half"/>
+         <spinner attributeName="debounce" value="8"/>
+         <spinner attributeName="factor" value="4"/>
+         <spinner attributeName="thresh" value="50"/>
+      </attribs>
+   </obj>
+   <obj type="logic/decode/int 4" uuid="a9b111f292909123d27b4cda86d43c5fb9f9f17c" name="int_1" x="658" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="read" x="770" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="1036" y="14">
+      <params>
+         <frac32.s.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="write" x="770" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="1036" y="98">
+      <params>
+         <frac32.u.map name="value" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_3" x="56" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="2"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_1" x="182" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_1" x="322" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="10"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_3" x="448" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_9" x="588" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="18"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_5" x="728" y="140">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_4" x="56" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="3"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_2" x="322" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="11"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="1036" y="182">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_10" x="588" y="196">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="19"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_5" x="56" y="252">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="6"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="f5b0622e-53b1-4585-a994-e8f5ff429233" name="menu_1" x="882" y="252">
+      <params/>
+      <attribs>
+         <objref attributeName="lcdctrl" obj="lcdctrl_1"/>
+         <objref attributeName="parhand" obj="parhand_1"/>
+         <spinner attributeName="menus" value="15"/>
+         <text attributeName="setup">
+            <sText><![CDATA[{ "Axoloti on P6!",
+  { NULL, NULL, NULL, NULL, NULL, NULL } },
+{ "Loaded!" ,
+  { NULL, NULL, NULL, NULL, NULL, NULL } },
+{ "Saved!" ,
+  { NULL, NULL, NULL, NULL, NULL, NULL } },
+{ "Load",
+  { "patch", NULL, NULL, NULL, NULL, NULL } },
+{ "Save",
+  { "patch", NULL, NULL, NULL, NULL, NULL } },
+{ "OSC1 Frq Bnd Snc Mod Lvl",
+  { "dial_2", "osc1_fmix:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "osc1 lvl" } },
+{ "OSC2 Frq Bnd Snc Mod Lvl",
+  { "dial_2", "osc2 detune", "lp1:bend", "lp1:sync", "lp1:mod", "osc2 lvl" } },
+{ "OSC3 Frq Bnd Snc Mod Lvl",
+  { "osc1 modsrc", "mix_3:gain2", "lp1:bend", "lp1:sync", "lp1:mod", "lp1:level" } },
+{ "MIX  Lv1 Lv2 Lv3",
+  { NULL, "osc1 lvl", "osc2 lvl", "osc3 lvl", NULL, NULL } },
+{ "FILT Frq Res Env Kbd", 
+  { NULL, "f1 frq","f1 q","f1 envamt","f1 kbdtrk",NULL } },
+{ "FENV Atk Dec Sus Rel Val", 
+  { NULL, "fenv a","fenv d","fenv s","fenv r", "f1 envamt"  } },
+{ "AENV Atk Dec Sus Rel Val", 
+  { NULL, "aenv a","aenv d","aenv s","aenv r", "vol"  } },
+{ "LFO  Frq Pha Wav Dst Lvl",
+  { NULL, "lfo frq", "lfo pha", "lfo wav", "lfo dst", "lfo lvl" } },
+{ "ARP  Bpm", 
+  { NULL, "bpm", NULL, NULL, NULL, NULL } },
+{ "GLOB Tun Voc MCh Loc Vol",
+  { NULL, NULL, NULL, NULL, NULL, NULL } },
+]]></sText>
+         </text>
+      </attribs>
+      <object id="patch/object" uuid="f5b0622e-53b1-4585-a994-e8f5ff429233">
+         <sDescription>Menu manager for 6 parameters</sDescription>
+         <author>Ricard Wanderlof</author>
+         <license>BSD</license>
+         <inlets>
+            <bool32.rising name="inc0"/>
+            <bool32.rising name="dec0"/>
+            <bool32.rising name="inc1"/>
+            <bool32.rising name="dec1"/>
+            <bool32.rising name="inc2"/>
+            <bool32.rising name="dec2"/>
+            <bool32.rising name="inc3"/>
+            <bool32.rising name="dec3"/>
+            <bool32.rising name="inc4"/>
+            <bool32.rising name="dec4"/>
+            <bool32.rising name="inc5"/>
+            <bool32.rising name="dec5"/>
+            <int32 name="menu"/>
+         </inlets>
+         <outlets/>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="lcdctrl" description="LCD handler"/>
+            <objref name="parhand" description="Parameter handler"/>
+            <spinner name="menus" description="Number of menus" MinValue="1" MaxValue="20" DefaultValue="1"/>
+            <text name="setup" description="Menu definitions"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[int first;
+struct setup {
+	const char *menuline;
+	const char *keyids[6];
+};
+const struct setup setup[attr_menus] = { attr_setup };
+int menu;
+struct KeyValuePair **kvps; // need fast access as we scan for updates on each k cycle
+int parno_matrix[attr_menus][6];
+int *parnos;
+const char * const *keyids;
+// temp buffer for output string
+char printstring[5*6];
+// handle inc/dec from inlets
+#define INCDEC(N) \
+if (parnos[N] >= 0) { \
+	if (inlet_inc ## N) { if (attr_parhand.par_inc(parnos[N])) printpar(N); } \
+	else if (inlet_dec ## N) { if (attr_parhand.par_dec(parnos[N])) printpar(N); } \
+}
+// local functions
+__attribute__ ((noinline)) void printpar(int par)
+{
+	char *str = &printstring[5 * par]; 
+	//printval(str + 1, kvps[par]->ipvp.PEx->value, formats[par]);
+	attr_parhand.printval(str + 1, parnos[par]);
+	attr_lcdctrl.print(str);
+}]]></code.declaration>
+         <code.init><![CDATA[first = 1;
+menu = -1; // force printout as inlet_menu will be != menu first time
+LogTextMessage("This is the parhand initializing!");
+LogTextMessage("# params at init time: %d\n", ObjectKvpRoot->apvp.length);
+keyids = setup[0].keyids;
+parnos = parno_matrix[0];]]></code.init>
+         <code.krate><![CDATA[//extern struct KeyValuePair *ObjectKvps[];
+if (first && attr_parhand.init_done) { // Wait for parhand
+	first = 0;
+	// Map up all keyids to corresponding parameters, set cursor positions for parameters
+	for (int menu = 0; menu < attr_menus; menu++) {
+		for (int param = 0; param < 6; param++) {
+			parno_matrix[menu][param] = -1;
+			if (setup[menu].keyids[param]) {
+				for (int parno = 0; parno < attr_parhand.nparams; parno++) {
+					const char *setup_name = setup[menu].keyids[param];
+					const char *hash_name = attr_parhand.param_setup[parno].hash_name;
+					const char *param_name = attr_parhand.param_setup[parno].param_name;
+					LogTextMessage("Check if param #%d (%s) is %s (%s)", parno, setup_name, param_name, hash_name);
+					// Search all defined parameters for something that matches our current menu entry
+					//struct KeyValuePair *kvp = attr_parhand.param_data[kvpno].toplevel_kvpp;
+					// Check both hash_name and param_name for a match
+					if (strcmp(hash_name, setup_name) == 0 || strcmp(param_name, setup_name) == 0) {
+						LogTextMessage("Found %s (%s) for menu #%d param #%d: 0x%08x", param_name, hash_name, menu, param, attr_parhand.param_data[parno].toplevel_kvpp);
+						parno_matrix[menu][param] = parno;
+						break;
+					}
+				}
+			}
+		}
+	}
+#if 0
+	//Kludge
+	static KeyValuePair fkvp;
+	SetKVP_IPVP(&fkvp,ObjectKvpRoot, "lp_1:pitch" ,&patchMeta.pPExch[0], -1<<27, 1<<27);
+	kvps_matrix[2][0] = &fkvp;
+#endif
+	// Set up cursor control part of printstrings once and for all.
+	for (int i = 0; i < 6; i++) {
+		printstring[i * 5] = 0xc0 + 4 * i + (i != 0); // cursor control for parameter position
+		//printstring[i * 5 + 4] = 0; // NUL terminate param string
+	}
+
+#if 0
+	// Debug: dump all known parameter exchange key-value pairs.
+	LogTextMessage("NPEXCH: %d, toplevel_kvp:", NPEXCH);
+	for (int i = 0; i < NPEXCH; i++) {
+		struct KeyValuePair *kvp = attr_parhand.param_data[i].toplevel_kvpp;
+		LogTextMessage("%d: %s: min %d, max %d, hash %u, signal %u",
+		               i, kvp->keyname, kvp->ipvp.minvalue, kvp->ipvp.maxvalue, hash(kvp->keyname) & 0xffffff, kvp->ipvp.PEx->signals);
+	}
+#endif
+}
+if (menu != inlet_menu && inlet_menu < attr_menus) {
+	LogTextMessage("menu %d, inlet_menu %d", menu, inlet_menu);
+	menu = inlet_menu;
+	parnos = parno_matrix[menu];
+	//LogTextMessage("Parnos: %d %d %d %d %d %d", parnos[0], parnos[1], parnos[2], parnos[3], parnos[4], parnos[5]);
+	attr_lcdctrl.print("\xb0\xf1\x80"); // clear screen, cur(0,0)
+	if (setup[menu].menuline) attr_lcdctrl.print(setup[menu].menuline);
+	// load kvps[] and print values
+	for (int i = 0; i < 6; i++) {
+		if (parnos[i] >= 0) { // exists a parameter for this position
+			kvps[i] = attr_parhand.param_data[parnos[i]].toplevel_kvpp;
+			printpar(i);
+		} else {
+			kvps[i] = NULL;
+		}
+	}
+}
+// Print parameters when updated externally (i.e. in Patcher)
+// As it turns out, this happens the first time too.
+// Therefore we put it after the menu update above so if we overflow the lcdctrl we won't loose printouts
+for (int i = 0; i < 6; i++) {
+	if (kvps[i] && (kvps[i]->ipvp.PEx->signals & 0x4)) {
+		kvps[i]->ipvp.PEx->signals &= ~0x4;
+		printpar(i);
+	}
+}
+#if 0 // original version, with debug texts
+if (kvps[0] && (inlet_inc0 || inlet_dec0)) {
+	if (inlet_inc0) KVP_Increment(kvps[0]); else KVP_Decrement(kvps[0]);
+	//LogTextMessage("New value %d\n", ObjectKvps[0]->ipvp.PEx->value >> 20);
+	//printstring[0] = '\xc0';
+	//printval(printstring+1, kvps[0]->ipvp.PEx->value >> 21);
+	printpar(0);
+}
+#endif
+INCDEC(0);
+INCDEC(1);
+INCDEC(2);
+INCDEC(3);
+INCDEC(4);
+INCDEC(5);]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_2" x="182" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_7" x="322" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="14"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_4" x="448" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_11" x="588" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="22"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_4" x="1036" y="266">
+      <params>
+         <frac32.u.map name="value" value="34.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ricard/logic/qdecode" uuid="969ec1f5-2d66-4dab-b72f-9c6526e03b90" name="qdecode_6" x="728" y="280">
+      <params/>
+      <attribs>
+         <objref attributeName="ctrl" obj="qctrl_1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_6" x="56" y="308">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="7"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_8" x="322" y="322">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="15"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_12" x="588" y="322">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="23"/>
+      </attribs>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="1036" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="700" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_1" x="56" y="420">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PC6"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_13" x="168" y="420">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_14" x="294" y="420">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="4"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/logic/bitval 9" uuid="4dad9b21-d0ac-4ba4-b902-eeab9fb134ad" name="bitval_1" x="434" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="0f377dfb-fab6-4069-a11c-1cc4fc205f0d" name="state_1" x="532" y="434">
+      <params/>
+      <attribs>
+         <spinner attributeName="transitions" value="17"/>
+         <text attributeName="states">
+            <sText><![CDATA[S_HOME, S_LOADED, S_SAVED, S_LOAD, S_SAVE, S_OSC1, S_OSC2, S_OSC3, S_OSCMIX,
+S_FILT, S_FENV, S_AENV, S_LFO, S_ARP, S_GLOBALS]]></sText>
+         </text>
+         <text attributeName="buttons">
+            <sText><![CDATA[B_HOME = 0x1,
+B_OSC = 0x2,
+B_FILT = 0x4,
+B_ENV = 0x8,
+B_LFO = 0x10,
+B_MATRIX = 0x20,
+B_ARP = 0x40,
+B_GLOBALS = 0x80,
+B_LOAD = 0x100]]></sText>
+         </text>
+         <text attributeName="leds">
+            <sText><![CDATA[L_HOME = 0x1,
+L_OSC = 0x2,
+L_FILT = 0x4,
+L_ENV = 0x8,
+L_LFO = 0x10,
+L_MATRIX = 0x20,
+L_ARP = 0x40,
+L_GLOBALS = 0x80,
+L_LOAD = 0x100]]></sText>
+         </text>
+         <text attributeName="ttable">
+            <sText><![CDATA[{ S_LOAD, B_LOAD, B_NONE, S_LOADED, L_LOAD },
+{ S_SAVE, B_LOAD, B_NONE, S_SAVED, L_HOME | L_LOAD },
+{ S_ANY, B_LOAD, B_NONE, S_LOAD, L_LOAD },
+{ S_ANY, B_LOAD, B_HOME, S_SAVE, L_HOME | L_LOAD },
+{ S_ANY, B_HOME, B_NONE, S_HOME, L_HOME },
+{ S_OSC1, B_OSC, B_NONE, S_OSC2, L_OSC },
+{ S_OSC2, B_OSC, B_NONE, S_OSC3, L_OSC },
+{ S_ANY, B_OSC, B_NONE, S_OSC1, L_OSC },
+{ S_ANY, B_OSC, B_HOME, S_OSCMIX, L_HOME | L_OSC },
+{ S_ANY, B_FILT, B_NONE, S_FILT, L_FILT },
+{ S_FENV, B_ENV, B_NONE, S_AENV, L_ENV },
+{ S_ANY, B_ENV, B_NONE, S_FENV, L_ENV },
+{ S_ANY, B_LFO, B_NONE, S_LFO, L_LFO },
+{ S_ANY, B_ARP, B_NONE, S_ARP, L_ARP },
+{ S_ANY, B_GLOBALS, B_NONE, S_GLOBALS, L_GLOBALS }
+]]></sText>
+         </text>
+      </attribs>
+      <object id="patch/object" uuid="0f377dfb-fab6-4069-a11c-1cc4fc205f0d">
+         <sDescription>Menu manager</sDescription>
+         <inlets>
+            <int32 name="buttons" description="Bit vector representing buttons"/>
+         </inlets>
+         <outlets>
+            <int32 name="state" description="State otput, 0 .."/>
+            <int32 name="leds" description="Value of leds member of latest transition"/>
+            <bool32 name="trig" description="Trigger pulse when state transition occurs"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <spinner name="transitions" description="Number of transitions in transition table" MinValue="1" MaxValue="50" DefaultValue="0"/>
+            <text name="states" description="State names"/>
+            <text name="buttons" description="Button names"/>
+            <text name="leds" description="LED names"/>
+            <text name="ttable" description="Transition table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[struct transition {    // Explanation:
+	int state;        // If we are in this state...
+	int newbuttons;   // And this button gets pressed...
+	int downbuttons;  // While these buttons are held...
+	int newstate;     // Then go to this state...
+	int leds;         // And output this LED code.
+};
+enum states { S_ANY = -1, attr_states };
+enum buttons { B_NONE = 0, attr_buttons };
+enum leds { L_NONE = 0, attr_leds };
+const struct transition transitions[attr_transitions] = { attr_ttable };
+int oldbuttons;
+int changedbuttons;
+int newdown;
+int cur_state;
+int cur_leds;
+int debounce_counter = 0;]]></code.declaration>
+         <code.init><![CDATA[oldbuttons = 0;
+changedbuttons = 0;
+newdown = 0;
+cur_state = 0;
+cur_leds = 0;]]></code.init>
+         <code.krate><![CDATA[if (debounce_counter) debounce_counter--;
+else {
+	changedbuttons = oldbuttons ^ inlet_buttons;
+	newdown = changedbuttons & inlet_buttons;
+	outlet_trig = 0;
+	if (newdown) {
+		debounce_counter = 3 * 50; // 50 ms
+		LogTextMessage("Button(s) down 0x%x", newdown);	
+		for (int i = 0; i < sizeof(transitions)/sizeof(struct transition); i++) {
+			const struct transition *transition = &transitions[i];
+			if (transition->state == -1 || transition->state == cur_state) {
+				if (transition->newbuttons == newdown && transition->downbuttons == oldbuttons) {
+					cur_state = transition->newstate;
+    	       			cur_leds = transition->leds;
+    	       			outlet_trig = 1;
+    	       			//LogTextMessage("New state %d at line #%d, led 0x%x", cur_state, i, transition->leds);
+    	       			break;
+		    	     }
+    	   		}
+    		}
+	}
+	oldbuttons = inlet_buttons; // for next time
+	outlet_state = cur_state;
+	outlet_leds = cur_leds;
+}]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_5" x="728" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_3" x="56" y="504">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PC8"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_15" x="168" y="504">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="8"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_16" x="294" y="504">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="12"/>
+      </attribs>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="742" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_1" x="644" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/in/digital_ext" uuid="5b62baad-e376-4fad-9098-dde84e81b486" name="digital_ext_2" x="56" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PC9"/>
+         <combo attributeName="mode" selection="pulldown"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_17" x="168" y="588">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="16"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/in/165in" uuid="d5a0414b-4490-4f28-9d8b-cb1edee698e6" name="165in_18" x="294" y="588">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="165ctrl_1"/>
+         <spinner attributeName="bit" value="20"/>
+      </attribs>
+   </obj>
+   <patchobj type="patch/object" uuid="44bbf5eb-2a08-4402-a526-88ae5e2be174" name="clock_1" x="980" y="588">
+      <params>
+         <frac32.u.map name="bpm" value="0.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="device" selection="din"/>
+      </attribs>
+      <object id="patch/object" uuid="44bbf5eb-2a08-4402-a526-88ae5e2be174">
+         <sDescription>Midi clock master, als outputs Midi clock, start, stop, and continue messages</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>midi_out.axh</helpPatch>
+         <inlets>
+            <bool32 name="run" description="Run"/>
+            <bool32.rising name="rst" description="Reset"/>
+         </inlets>
+         <outlets>
+            <bool32 name="active" description="Song is playing"/>
+            <int32 name="pos4ppq" description="Position in 4 counts per quarter"/>
+            <int32 name="pos24ppq" description="Position in 24 counts per quarter"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.u.map name="bpm"/>
+         </params>
+         <attribs>
+            <combo name="device">
+               <MenuEntries>
+                  <string>din</string>
+                  <string>usb host port 1</string>
+                  <string>usb host port 2</string>
+                  <string>usb host port 3</string>
+                  <string>usb host port 4</string>
+                  <string>internal port 1</string>
+                  <string>internal port 2</string>
+                  <string>usb device port 1</string>
+               </MenuEntries>
+               <CEntries>
+                  <string>MIDI_DEVICE_DIN, 1</string>
+                  <string>MIDI_DEVICE_USB_HOST, 1</string>
+                  <string>MIDI_DEVICE_USB_HOST, 2</string>
+                  <string>MIDI_DEVICE_USB_HOST, 3</string>
+                  <string>MIDI_DEVICE_USB_HOST, 4</string>
+                  <string>MIDI_DEVICE_INTERNAL, 1</string>
+                  <string>MIDI_DEVICE_INTERNAL, 2</string>
+                  <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+               </CEntries>
+            </combo>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[bool _active;
+int32_t _posfrac;
+int32_t _pos24ppq;
+bool rstp;
+]]></code.declaration>
+         <code.init><![CDATA[_active = 0;
+_posfrac = 0;
+_pos24ppq = 0;
+rstp = 0;]]></code.init>
+         <code.krate><![CDATA[if (inlet_rst & !rstp){
+   rstp = 1;
+   _posfrac = 0;
+   _pos24ppq = 0;
+} else if (!inlet_rst){
+   rstp = 0;
+}
+if (inlet_run && !_active) {
+  _active = 1;
+  if (_pos24ppq)     MidiSend1((midi_device_t) attr_device, MIDI_CONTINUE);
+  else     MidiSend1((midi_device_t) attr_device, MIDI_START);
+} else if (!inlet_run && _active){
+  _active = 0;
+  MidiSend1((midi_device_t) attr_device, MIDI_STOP);
+}if (_active) {
+  _posfrac += param_bpm / 2;
+  if (_posfrac & 1<<31) {
+    _posfrac &= (1<<31)-1;
+    _pos24ppq++;
+    MidiSend1((midi_device_t) attr_device,MIDI_TIMING_CLOCK);
+  }
+}
+outlet_pos4ppq = _pos24ppq/6;
+outlet_pos24ppq = _pos24ppq;
+outlet_active = _active;]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="logic/decode/bin 8" uuid="dfc0a6e9d7e817cec64fd01f6972f64d897863a4" name="bin_1" x="42" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/out/led2" uuid="3d7a4c75d1f9901181a17ba5de752782de911803" name="led2_1" x="196" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_1" x="294" y="686">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_3" x="420" y="686">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="2"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_5" x="546" y="686">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="4"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_7" x="672" y="686">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="6"/>
+      </attribs>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_3" x="812" y="700">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="3"/>
+      </attribs>
+   </obj>
+   <obj type="math/bitand" uuid="2c64c2fc476c4ad689eba1bd0adfba7691b913f1" name="bitand_1" x="952" y="728">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/==" uuid="deaf0d36642c57876c4101e86f8a0b6a06021ab2" name="==_1" x="1050" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_2" x="294" y="770">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_4" x="420" y="770">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="3"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_6" x="546" y="770">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="5"/>
+      </attribs>
+   </obj>
+   <obj type="ricard/gpio/out/595out" uuid="498b3ea0-aa0a-496d-a51a-302dd60395c5" name="595out_8" x="672" y="770">
+      <params/>
+      <attribs>
+         <objref attributeName="port" obj="595ctrl_1"/>
+         <spinner attributeName="bit" value="7"/>
+      </attribs>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_4" x="952" y="784">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="165in_3" outlet="out"/>
+         <dest obj="qdecode_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_4" outlet="out"/>
+         <dest obj="qdecode_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="qdecode_1" outlet="down"/>
+         <dest obj="menu_1" inlet="dec0"/>
+      </net>
+      <net>
+         <source obj="165in_5" outlet="out"/>
+         <dest obj="qdecode_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_6" outlet="out"/>
+         <dest obj="qdecode_2" inlet="b"/>
+      </net>
+      <net>
+         <source obj="qdecode_2" outlet="up"/>
+         <dest obj="menu_1" inlet="inc1"/>
+      </net>
+      <net>
+         <source obj="qdecode_2" outlet="down"/>
+         <dest obj="menu_1" inlet="dec1"/>
+      </net>
+      <net>
+         <source obj="qdecode_1" outlet="up"/>
+         <dest obj="menu_1" inlet="inc0"/>
+      </net>
+      <net>
+         <source obj="165in_1" outlet="out"/>
+         <dest obj="qdecode_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_2" outlet="out"/>
+         <dest obj="qdecode_3" inlet="b"/>
+      </net>
+      <net>
+         <source obj="qdecode_3" outlet="up"/>
+         <dest obj="menu_1" inlet="inc2"/>
+      </net>
+      <net>
+         <source obj="qdecode_3" outlet="down"/>
+         <dest obj="menu_1" inlet="dec2"/>
+      </net>
+      <net>
+         <source obj="165in_7" outlet="out"/>
+         <dest obj="qdecode_4" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_8" outlet="out"/>
+         <dest obj="qdecode_4" inlet="b"/>
+      </net>
+      <net>
+         <source obj="qdecode_4" outlet="up"/>
+         <dest obj="menu_1" inlet="inc3"/>
+      </net>
+      <net>
+         <source obj="qdecode_4" outlet="down"/>
+         <dest obj="menu_1" inlet="dec3"/>
+      </net>
+      <net>
+         <source obj="165in_9" outlet="out"/>
+         <dest obj="qdecode_5" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_10" outlet="out"/>
+         <dest obj="qdecode_5" inlet="b"/>
+      </net>
+      <net>
+         <source obj="165in_11" outlet="out"/>
+         <dest obj="qdecode_6" inlet="a"/>
+      </net>
+      <net>
+         <source obj="165in_12" outlet="out"/>
+         <dest obj="qdecode_6" inlet="b"/>
+      </net>
+      <net>
+         <source obj="digital_ext_1" outlet="out"/>
+         <dest obj="bitval_1" inlet="b0"/>
+      </net>
+      <net>
+         <source obj="165in_13" outlet="out"/>
+         <dest obj="bitval_1" inlet="b1"/>
+      </net>
+      <net>
+         <source obj="165in_14" outlet="out"/>
+         <dest obj="bitval_1" inlet="b2"/>
+      </net>
+      <net>
+         <source obj="digital_ext_3" outlet="out"/>
+         <dest obj="bitval_1" inlet="b3"/>
+      </net>
+      <net>
+         <source obj="165in_15" outlet="out"/>
+         <dest obj="bitval_1" inlet="b4"/>
+      </net>
+      <net>
+         <source obj="165in_16" outlet="out"/>
+         <dest obj="bitval_1" inlet="b5"/>
+      </net>
+      <net>
+         <source obj="digital_ext_2" outlet="out"/>
+         <dest obj="bitval_1" inlet="b6"/>
+      </net>
+      <net>
+         <source obj="165in_17" outlet="out"/>
+         <dest obj="bitval_1" inlet="b7"/>
+         <dest obj="clock_1" inlet="rst"/>
+      </net>
+      <net>
+         <source obj="bitval_1" outlet="value"/>
+         <dest obj="i_1" inlet="in"/>
+         <dest obj="state_1" inlet="buttons"/>
+      </net>
+      <net>
+         <source obj="simplesynth_1" outlet="outlet_1"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="165in_18" outlet="out"/>
+         <dest obj="flipflop_1" inlet="trig"/>
+         <dest obj="bitval_1" inlet="b8"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="clock_1" inlet="run"/>
+      </net>
+      <net>
+         <source obj="clock_1" outlet="pos4ppq"/>
+         <dest obj="bitand_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="i_3" outlet="out"/>
+         <dest obj="bitand_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="==_1" outlet="out"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="clock_1" outlet="active"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="bitand_1" outlet="out"/>
+         <dest obj="==_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="i_4" outlet="out"/>
+         <dest obj="==_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="state_1" outlet="state"/>
+         <dest obj="i_5" inlet="in"/>
+         <dest obj="int_1" inlet="i1"/>
+         <dest obj="menu_1" inlet="menu"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o0"/>
+         <dest obj="led2_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o1"/>
+         <dest obj="595out_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="state_1" outlet="leds"/>
+         <dest obj="i_2" inlet="in"/>
+         <dest obj="bin_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o2"/>
+         <dest obj="595out_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o3"/>
+         <dest obj="595out_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o4"/>
+         <dest obj="595out_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o5"/>
+         <dest obj="595out_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o6"/>
+         <dest obj="595out_6" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="o7"/>
+         <dest obj="595out_7" inlet="in"/>
+      </net>
+      <net>
+         <source obj="bin_1" outlet="chain"/>
+         <dest obj="595out_8" inlet="in"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o1"/>
+         <dest obj="read" inlet="in"/>
+         <dest obj="memory_1" inlet="read"/>
+      </net>
+      <net>
+         <source obj="qdecode_5" outlet="up"/>
+         <dest obj="menu_1" inlet="inc4"/>
+      </net>
+      <net>
+         <source obj="qdecode_5" outlet="down"/>
+         <dest obj="menu_1" inlet="dec4"/>
+      </net>
+      <net>
+         <source obj="qdecode_6" outlet="up"/>
+         <dest obj="menu_1" inlet="inc5"/>
+      </net>
+      <net>
+         <source obj="qdecode_6" outlet="down"/>
+         <dest obj="menu_1" inlet="dec5"/>
+      </net>
+      <net>
+         <source obj="int_1" outlet="o2"/>
+         <dest obj="write" inlet="in"/>
+         <dest obj="memory_1" inlet="write"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>64</x>
+      <y>25</y>
+      <width>1271</width>
+      <height>718</height>
+   </windowPos>
+</patch-1.0>

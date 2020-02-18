@@ -1,0 +1,109 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sl new" uuid="9de2a92e-6463-46dc-ae75-db56bccc1d38">
+      <license>GPL</license>
+      <inlets>
+         <charptr32 name="filename"/>
+         <bool32.rising name="load"/>
+         <int32.positive name="offset"/>
+         <bool32.rising name="save"/>
+         <int32.positive name="start"/>
+         <int32.positive name="length"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[bool trig;
+bool load;
+bool save;
+uint32_t length;
+uint32_t offset;
+uint8_t bytes;
+int rem_sz;
+
+FILINFO fno;
+DIR dir;
+FIL FileObject;
+FRESULT err;
+UINT bytes_written;
+UINT bytes_read;
+
+// load file from SD:: fload (filename,destination table adress,start index,length)
+void fload (const char* fn ,char* table,int start,int bytes_rem)__attribute__((noinline)) {
+    err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,fn);return;}
+    int offset = 0;
+    while (bytes_rem>0) {
+      if (bytes_rem>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy(table + offset + start,(char *)fbuff,bytes_read);
+        bytes_rem -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff,bytes_rem,&bytes_read);
+        memcpy(table + offset + start,(char *)fbuff,bytes_read);
+        bytes_rem = 0;
+      }
+    }  
+    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
+    err = f_close(&FileObject);
+}
+
+//save array to SD::fsave (filename,source table adress,start index,length)
+void fsave(const char* fn,char* table,int start,int bytes_rem)__attribute__((noinline)) {
+    err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
+    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
+    int offset = 0;
+    while (bytes_rem>0) {
+      if (bytes_rem>sizeof(fbuff)) {
+        memcpy((char *)fbuff,table + offset + start, sizeof(fbuff));
+        err = f_write(&FileObject, fbuff, sizeof(fbuff),&bytes_written);
+        bytes_rem -= sizeof(fbuff);
+        offset += sizeof(fbuff);
+      } else {
+        memcpy((char *)fbuff,table + offset + start, bytes_rem);
+        err = f_write(&FileObject, fbuff,bytes_rem, &bytes_written);
+        bytes_rem = 0;
+      }
+    } 
+    if (err != FR_OK) {report_fatfs_error(err,fn);return;}
+    err = f_close(&FileObject);
+}
+
+// get file length in 8-bit bytes::fsize (filename)
+int fsize (const char* fn) __attribute__((noinline)){
+          err = f_open( &FileObject, fn, FA_READ );
+          if( err != FR_OK ) {
+              report_fatfs_error( err, fn );
+              return 0;
+            }
+          else   {
+              return f_size( &FileObject );
+             err =  f_close( &FileObject );
+            }
+}]]></code.declaration>
+      <code.init><![CDATA[bytes = sizeof(*attr_table.array);]]></code.init>
+      <code.krate><![CDATA[if (inlet_load && !trig) {trig = 1;load = 1;}
+if (inlet_save && !trig) {trig = 1;save = 1;}
+
+if (load) {
+	load = 0;
+	int filesize = fsize(inlet_filename)/bytes;
+	rem_sz = (((filesize + inlet_offset) > attr_table.LENGTH) ? attr_table.LENGTH : filesize) * bytes;		
+	fload(inlet_filename,(char *) &attr_table.array[0],inlet_offset * bytes,rem_sz);
+		}
+if (save) {
+	save = 0;
+	rem_sz = (((inlet_length +inlet_start) > attr_table.LENGTH) ? attr_table.LENGTH - inlet_start : inlet_length)* bytes;		
+	fsave(inlet_filename,(char *) &attr_table.array[0],inlet_start * bytes,rem_sz);
+	}
+
+if (!inlet_load && !inlet_save) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

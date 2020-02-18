@@ -1,0 +1,299 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="gen" uuid="ec13dbe5-078e-47b3-b71e-ce71caba1b6d">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>gen.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <text name="function"/>
+         <combo name="size">
+            <MenuEntries>
+               <string>256</string>
+               <string>512</string>
+               <string>16</string>
+               <string>32</string>
+               <string>64</string>
+               <string>128</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>IntRAM</string>
+               <string>ExtRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[#if attr_location == 0
+	#define LOCATION
+#else
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+static const uint32_t LENGTHPOW = attr_size;
+static const uint32_t LENGTH = 1<<attr_size;
+static const uint32_t LENGTHMASK = (1<<attr_size)-1;
+static const uint32_t BITS = 32;
+static const uint32_t GAIN = 7;  // q20 to q27
+uint32_t const TSAL[16]={
+              0x0000FFFFU,
+              0xFF00FF00U,
+              0x0FF0F00FU,
+              0xF0F0F0F0U,
+  0b00111100001111001100001111000011U,
+  0b11000011001111001100001100111100U,
+  0b00110011110011001100110000110011U,
+  0b11001100110011001100110011001100U,
+  0b01100110011001101001100110011001U,
+  0b10011001011001101001100101100110U,
+  0b01101001100101101001011001101001U,
+  0b10010110100101101001011010010110U,
+  0b01011010010110101010010110100101U,
+  0b10100101010110101010010101011010U,
+  0b01010101101010101010101001010101U,
+  0b10101010101010101010101010101010U
+};
+
+int32_t *v;
+float *fv; //in place
+int32_t *array;
+int32_t *Iv;
+
+static float rnd(float x) {return (((((int32_t)(x))*69069+1)*69069+1)*69069)>0 ? 1 : -1;}
+static float rndf(float x) {return arm::q_to_float(((arm::float_to_q(x,31)*69069+1)*69069+1)*69069,31);}
+static float mod1(float x) { return (x + 128) - ((int)(x + 128)); }
+static float saw(float x){ return 2 * mod1(x) - 1; }
+static float rect(float x,float r) {x = mod1(x); return x < r ? -1 : 1;}
+static float sqr(float x) {return rect(x, 0.5f); }
+static float tri(float x,float r){ // r: cyclic ratio 0.5f => middle
+  x = mod1(x);
+  if(x < r) return -1 + (2 * x / r);
+  else      return 1 - 2 * (x - r) / (1.0f - r);
+}
+static float tri(float x){ return tri(x,0.5f); }
+static float cos1(float x, float r){ x = tri(x, r); return -x * (1.5708f + x*x * (-0.6422f +0.0714f * x*x));      }
+static float cos1(float x){ return cos1(x, 0.5f);      }
+static float sin1(float x){ return cos1(x-0.25f); }
+
+//additive Synth from 3 to 10 harmonics
+//ex: addSynth(x, 0.2f,0.5f,0.33f,0.25f,0.2f,0.1667f, 1.0f, 0.125f)
+static float addSynth(float x, float h1, float h2, float h3){
+  return h1 * sin1(x) + h2 * sin1(2*x) + h3 * sin1(3*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4){
+  return addSynth(x,h1,h2,h3) + h4 * sin1(4*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5){
+  return addSynth(x,h1,h2,h3,h4) + h5 * sin1(5*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6){
+  return addSynth(x,h1,h2,h3,h4,h5) + h6 * sin1(6*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7){
+  return addSynth(x,h1,h2,h3,h4,h5,h6) + h7 * sin1(7*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7) + h8 * sin1(8*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8, float h9){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7,h8) + h9 * sin1(9*x);}
+static float addSynth(float x, float h1, float h2, float h3, float h4, float h5, float h6, float h7, float h8, float h9, float h10){
+  return addSynth(x,h1,h2,h3,h4,h5,h6,h7,h8,h9) + h10 * sin1(10*x);}
+  
+
+  
+  
+static float clip(float x){ return x > 1.0f ? 1.0f : x < -1.0f ? -1.0f : x;}
+static float sat(float x){ x = clip(x); return x * (1.5f - 0.5f * x * x);     }
+static float pow(float x, int N){
+  float y = 1.0f;
+  if(N >= 0)
+    for(int i = 0; i <  N; i++) y *=  x;
+  else { float _x = 1.0f / x;
+    for(int i = 0; i < -N; i++) y *= _x;  
+  }
+  return y;
+}
+static float exp1(float x) {
+  x = 1 + x * (1 / 256.0f);
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+  return x;
+}
+static float exp(float x){
+  float coef = 1;
+  while(x > 1){ x-=1.0f; coef *=     2.718281828f; }
+  while(x < 0){ x+=1.0f; coef *= 1 / 2.718281828f; }
+  return exp1(x) * coef;
+}
+static float hann(float x){ return 0.5f - 0.5f * cos1(x); }
+static float quant(float x, float step) {     
+  return (((int)(x / step + 100.5f)) - 100) * step;
+}
+/*
+ xfade(w, tri(x*(1+5*w)), sin1(x*(1+5*w)))
+ higher order can be used for segments
+ xfade(x,1,0.1f,0,0,0) // pulsaw
+*/
+static float xf(float x, float v0, float v1){
+  return v0 + x * (v1 - v0);
+}
+static float xfade(float x, float v0, float v1){
+  if(x<=0) return v0;
+  if(x>=1) return v1;
+  return v0 + x * (v1 - v0);
+}
+static float xfade(float x, float v0, float v1, float v2){
+  if(x<=0) return v0;
+  if(x>=1) return v2;
+  return x < 0.5f ? 
+  xf( x      *2, v0, v1)
+: xf((x-0.5f)*2, v1, v2);
+}
+static float xfade(float x, float v0, float v1, float v2, float v3){
+  if(x<=0) return v0;
+  if(x>=1) return v3;
+return 
+x < 1.0f/3 ? 
+  xf(x*3, v0, v1)
+: (x < 2.0f/3 ?
+     xf((x-1.0f/3)*3, v1, v2)
+   : xf((x-2.0f/3)*3, v2, v3));
+}
+static float xfade(float x, float v0, float v1, float v2, float v3, float v4){
+  if(x<=0) return v0;
+  if(x>=1) return v4;
+  if(x < 0.25f) return xf( x          * 4, v0, v1);
+  if(x < 0.50f) return xf((x - 0.25f) * 4, v1, v2);
+  if(x < 0.75f) return xf((x - 0.50f) * 4, v2, v3);
+  return               xf((x - 0.75f) * 4, v3, v4);
+}
+static float xfade(float x, float v0, float v1, float v2, float v3, float v4, float v5){
+  if(x<=0) return v0;
+  if(x>=1) return v5;
+  if(x < 0.2f) return xf( x         * 5, v0, v1);
+  if(x < 0.4f) return xf((x - 0.2f) * 5, v1, v2);
+  if(x < 0.6f) return xf((x - 0.4f) * 5, v2, v3);
+  if(x < 0.8f) return xf((x - 0.6f) * 5, v3, v4);
+  return              xf((x - 0.8f) * 5, v4, v5);
+}
+static float bt(float x, uint32_t bin){
+  return ((bin>>(arm::float_to_q(x, 5) & 31)) & 1) == 0 ? -1 : 1;
+}
+// n [1,16]
+float sal(float x, int n){ 
+  if(n > 16) n = 16;
+  else if(n < 1) n = 1;
+  return bt(x, TSAL[n - 1]); 
+}
+float sal(float x,float a1, float a2,float a3,float a4,float a5,float a6,float a7,float a8){
+  int o = arm::float_to_q(x, 5) & 31;
+  float a;
+  a  = ((TSAL[0]>>o)&1) == 0 ? -a1 : a1;
+  a += ((TSAL[1]>>o)&1) == 0 ? -a2 : a2;
+  a += ((TSAL[2]>>o)&1) == 0 ? -a3 : a3;
+  a += ((TSAL[3]>>o)&1) == 0 ? -a4 : a4;
+  a += ((TSAL[4]>>o)&1) == 0 ? -a5 : a5;
+  a += ((TSAL[5]>>o)&1) == 0 ? -a6 : a6;
+  a += ((TSAL[6]>>o)&1) == 0 ? -a7 : a7;
+  a += ((TSAL[7]>>o)&1) == 0 ? -a8 : a8;
+  return a;
+}
+float sal(float x,
+float a1, float a2,float a3,float a4,float a5,float a6,float a7,float a8,
+float a9, float a10,float a11,float a12,float a13,float a14,float a15,float a16
+){
+  int o = arm::float_to_q(x, 5) & 31;
+  float a;
+  a  = ((TSAL[ 0]>>o)&1) == 0 ? -a1  : a1;
+  a += ((TSAL[ 1]>>o)&1) == 0 ? -a2  : a2;
+  a += ((TSAL[ 2]>>o)&1) == 0 ? -a3  : a3;
+  a += ((TSAL[ 3]>>o)&1) == 0 ? -a4  : a4;
+  a += ((TSAL[ 4]>>o)&1) == 0 ? -a5  : a5;
+  a += ((TSAL[ 5]>>o)&1) == 0 ? -a6  : a6;
+  a += ((TSAL[ 6]>>o)&1) == 0 ? -a7  : a7;
+  a += ((TSAL[ 7]>>o)&1) == 0 ? -a8  : a8;
+  a += ((TSAL[ 8]>>o)&1) == 0 ? -a9  : a9;
+  a += ((TSAL[ 9]>>o)&1) == 0 ? -a10 : a10;
+  a += ((TSAL[10]>>o)&1) == 0 ? -a11 : a11;
+  a += ((TSAL[11]>>o)&1) == 0 ? -a12 : a12;
+  a += ((TSAL[12]>>o)&1) == 0 ? -a13 : a13;
+  a += ((TSAL[13]>>o)&1) == 0 ? -a14 : a14;
+  a += ((TSAL[14]>>o)&1) == 0 ? -a15 : a15;
+  a += ((TSAL[15]>>o)&1) == 0 ? -a16 : a16;
+  return a;
+}
+
+//usage
+//sal(x,(int)(w*16+1.0f))
+//        1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16
+//sal(x, 16,   8,   0,   4,   0,   0,   0,   2,   0,   0,   0,   0, 3*w,   0,   0,   1)
+
+void prepare(void){
+  //pre integrate
+  float moy = 0.0f;
+  for(int i = 0; i < LENGTH; i++){
+    moy += fv[i];
+  }
+  moy *= 1.0f / LENGTH;
+  float M = 0.0f;
+  for(int i = 0; i < LENGTH; i++){
+    fv[i] -= moy;
+    if(fabs(fv[i]) > M) M = fabs(fv[i]);
+  }
+  // normalise
+  if(M != 0.0f){
+    M = 1.0f / M;
+    for(int i = 0; i < LENGTH; i++){
+      fv[i] *= M;
+    }
+  }
+  // convert
+  for(int i = 0; i < LENGTH; i++){
+    v[i] = arm::float_to_q(fv[i], 27-GAIN);
+  }
+  v[LENGTH] = v[0]; // for easy dv: dv = v[i+1] - v[i]
+  // integrate (checked)
+  int32_t I1 = 0;
+  for(int i = 0; i < LENGTH; i++){
+    Iv[i] = I1;
+    I1 += v[i] + (v[i+1]-v[i])/2; 
+  }
+}
+// used by tiar/PIWT/oscLight
+int32_t I1p32(uint32_t p){
+  // the interpolation coefficient
+  int32_t a  = (p & 0x003FFFFF) << 9;  // 0 -> 1 q31   
+  // the segment number
+  uint32_t i = (p & (LENGTHMASK << 22)) >> 22;  // [0 LENGTH-1]
+  // polynomial calc of the integrand on segment i at position a
+  // the polynomial is
+  // I1_0 = Iv + a * v + (a^2/2) dv
+  // it is the integrand of v + a*dv
+  //                                         a2/2 q31            I1_0
+  return Iv[i] + (___SMMLA(v[i+1] - v[i], ___SMMUL(a, a), ___SMMUL( v[i], a)) << 1);
+}]]></code.declaration>
+      <code.init><![CDATA[static int32_t v_[attr_poly][LENGTH+1] LOCATION;
+static int32_t Iv_[attr_poly][LENGTH] LOCATION;
+#undef LOCATION
+v = &v_[parent->polyIndex][0];
+fv = (float *)v; //in place
+array = v;
+Iv = &Iv_[parent->polyIndex][0];
+      
+for(int i = 0; i < LENGTH; i++){
+  float x = arm::q_to_float(i, LENGTHPOW);
+  fv[i] = (float)(
+  	attr_function  
+);
+}
+prepare();]]></code.init>
+   </obj.normal>
+</objdefs>

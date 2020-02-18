@@ -1,0 +1,72 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="peakdist" uuid="6ec51961-0d28-4753-b311-a9565316d929">
+      <sDescription>Peak distortion and sine-wrapping module to use with the chainFX effects chainer module.
+Controls can easily be editted for external control</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="gain"/>
+         <frac32.u.map.gain name="volume"/>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t v30=(uint32_t)1<<30;
+uint32_t v26=(uint32_t)1<<26;
+uint32_t v27=(uint32_t)1<<27;
+int32_t outL;
+int32_t outR;
+int32_t hpL;
+int32_t hpR;
+int32_t IL;
+int32_t IR;
+uint32_t gain;
+uint32_t volume;
+
+bool bypass,solo;
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2){
+	int32_t GN1=__SSAT(gain+CV1+CV2,28)<<4;
+	int32_t GN2=__SSAT(gain+CV1-CV2,28)<<4;
+	int32_t tmp;
+	IL=inL;
+	IR=inR;
+	if(inL>0){
+	inL+=___SMMUL(GN1,inL)<<1;
+	inL=inL<<8;
+	SINE2TINTERP(-v30+inL,inL)
+	inL=(inL>>5)+v26;
+	}
+	else{
+	inL+=___SMMUL(GN1,inL)<<1;
+	inL=inL<<8;
+	SINE2TINTERP(v30+inL,inL)
+	inL=(inL>>5)-v26;	
+	}
+	if(inR>0){
+	inR+=___SMMUL(GN2,inR)<<1;
+	inR=inR<<8;
+	SINE2TINTERP(-v30+inR,inR)
+	inR=(inR>>5)+v26;
+	}
+	else{
+	inR+=___SMMUL(GN2,inR)<<1;
+	inR=inR<<8;
+	SINE2TINTERP(v30+inR,inR)
+	inR=(inR>>5)-v26;	
+	}
+outL=___SMMUL(inL<<1,volume);
+outR=___SMMUL(inR<<1,volume);
+if(bypass>0){
+outL=IL;
+outR=IR;
+}
+};]]></code.declaration>
+      <code.krate><![CDATA[gain=param_gain;
+volume=param_volume;
+bypass=param_bypass;
+solo=param_solo;]]></code.krate>
+   </obj.normal>
+</objdefs>

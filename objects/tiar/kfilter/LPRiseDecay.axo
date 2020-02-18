@@ -1,0 +1,24 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="LPRiseDecay" uuid="51ef2ec2-064a-4803-a37d-3e0db690311e">
+      <sDescription>A first order LP filter with distinct rising and falling rates.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>LPRiseDecay.axh</helpPatch>
+      <inlets>
+         <frac32 name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="Rise"/>
+         <frac32.s.map.lfopitch name="Decay"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t y = 0;]]></code.declaration>
+      <code.krate><![CDATA[int32_t f;
+MTOF((inlet_in > y ? param_Rise : param_Decay), f);
+outlet_out = y = ___SMMLA((inlet_in - y) << 1, f, y);]]></code.krate>
+   </obj.normal>
+</objdefs>

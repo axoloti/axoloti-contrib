@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="divremcPend" uuid="ab6a86c3-8d6a-4605-8d3e-0a3688cf119d">
+      <sDescription>divide integer with constant, also outputs remainder (modulo). Uses integer input to set denominator</sDescription>
+      <author>Johannes Taelman, changed by Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <int32 name="a" description="nominator"/>
+         <int32 name="denominator" description="denominator"/>
+      </inlets>
+      <outlets>
+         <int32 name="rem" description="remainder of division by denominator"/>
+         <int32 name="div" description="a divided by denominator"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="pendulum" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int r;
+int denominator=inlet_denominator*(1+param_pendulum);
+if (inlet_a >=0)
+  r = ((unsigned int)inlet_a)/denominator;
+else  r = -(((unsigned int)(denominator-inlet_a))/denominator);
+outlet_div= r;
+r = inlet_a-(r*denominator);
+outlet_rem=r>inlet_denominator?(inlet_denominator<<1)-r:r;]]></code.krate>
+   </obj.normal>
+</objdefs>

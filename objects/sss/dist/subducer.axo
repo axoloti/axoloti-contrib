@@ -1,0 +1,55 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="subducer" uuid="b4c04a55-bde9-4b02-a20d-a5cb056074cb">
+      <sDescription>a sub-octave generator that has it&apos;s highest possible frequency fixed in a particular frequency region no matter the octave of the incoming signal.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>counter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="trig"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="rate"/>
+         <frac32.s.map.pitch name="slew"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig;
+   int count;
+   int cnt;
+
+   uint32_t val;
+   int32_t v26=1<<26;
+   int32_t vel;]]></code.declaration>
+      <code.init><![CDATA[count=0;
+   ntrig = 0;
+cnt=0;]]></code.init>
+      <code.krate><![CDATA[int32_t slew;
+MTOFEXTENDED(param_slew,slew)
+int32_t rate;
+MTOFEXTENDED(param_rate,rate)]]></code.krate>
+      <code.srate><![CDATA[rate=rate>>2;
+
+val=__USAT(val-rate,31);
+if ((inlet_trig>0) && !ntrig) {
+   count += 1;
+   if (count>=1<<cnt) {
+   cnt+=1;
+   count = 0;
+
+   if(val<1){
+   	vel=vel>0?-v26:v26;
+   val=1<<30;
+   count=0;
+   cnt=0;
+   }
+   }
+   ntrig=1;
+}
+else if (!(inlet_trig>0)) ntrig=0;
+
+outlet_o= vel;]]></code.srate>
+   </obj.normal>
+</objdefs>

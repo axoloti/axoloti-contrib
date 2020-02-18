@@ -1,0 +1,108 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pianobar" uuid="3c792b58-3c2e-486c-aab0-540c4f0ffdd0">
+      <sDescription>Polyphonic piano-bar sequencer with 3 velocity levels (set with pianoDecoder).
+Retriggers if velocity changes, even when gates are connected, otherwise, if same velocity, sustains the gate.
+Used in combination with the pianoDecoder which outputs polyphonic midi internally/externally.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="count" description="chainable counter input"/>
+         <frac32buffer name="notes" description="chainable notes input"/>
+         <bool32 name="clear" description="clear pattern"/>
+         <int32 name="oct" description="select octave"/>
+      </inlets>
+      <outlets>
+         <int32 name="chain"/>
+         <frac32buffer name="notes"/>
+      </outlets>
+      <displays>
+         <int32.bar16 name="count" noLabel="true"/>
+      </displays>
+      <params>
+         <bool32.mom name="clear" description="clear pattern"/>
+         <int32 name="oct" description="select octave">
+            <MinValue i="0"/>
+            <MaxValue i="5"/>
+         </int32>
+         <int2x16 name="B"/>
+         <int2x16 name="Bb"/>
+         <int2x16 name="A"/>
+         <int2x16 name="Ab"/>
+         <int2x16 name="G"/>
+         <int2x16 name="Gb"/>
+         <int2x16 name="F"/>
+         <int2x16 name="E"/>
+         <int2x16 name="Eb"/>
+         <int2x16 name="D"/>
+         <int2x16 name="Db"/>
+         <int2x16 name="C"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t LENGTH=72;
+int32_t *array;
+int i;
+uint32_t prv;
+int32_t sel;
+bool clr;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[72]  __attribute__ ((section (".sdram")));
+array = &_array[0];]]></code.init>
+      <code.krate><![CDATA[int oct=param_oct+inlet_oct;
+oct=oct<0?0:(param_oct>5?5:oct);
+int clear=param_clear||inlet_clear;
+if(clear&&!clr){
+	clr=1;
+	sel=-1;
+	for(i=0;i<72;i++){
+		array[i]=0;
+	}
+}
+else if(!clear){clr=0;}
+
+if(!(oct*12==sel)){
+	sel=oct*12;
+	for(i=0;i<12;i++){
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_C-i],array[i+sel],0xFFFD);
+	}
+}
+disp_count=inlet_count;
+int32_t sum=param_B+param_Bb+param_A+param_Ab+param_G+param_Gb+param_F+param_E+param_Eb+param_D+param_Db+param_C;
+if(!(prv==sum)){
+	array[sel]=param_C;
+	array[sel+1]=param_Db;
+	array[sel+2]=param_D;
+	array[sel+3]=param_Eb;
+	array[sel+4]=param_E;
+	array[sel+5]=param_F;
+	array[sel+6]=param_Gb;
+	array[sel+7]=param_G;
+	array[sel+8]=param_Ab;
+	array[sel+9]=param_A;
+	array[sel+10]=param_Bb;
+	array[sel+11]=param_B;
+}
+prv=sum;
+
+
+int32_t cnt=inlet_count;
+for(int j=0;j<12;j++){
+	outlet_notes[j]=0;
+}
+
+if((cnt>-1)&&(cnt<32)){
+for(i=0;i<6;i++){
+	int k=i*12;
+	for(int j=0;j<12;j++){
+     outlet_notes[j]+=(((array[j+k]>>(cnt<<1))&1)||((inlet_notes[j]>>(cnt<<1))&1))<<(i<<1);
+     outlet_notes[j]+=(((array[j+k]>>((cnt<<1)+1))&1)||((inlet_notes[j]>>((cnt<<1)+1))&1))<<((i<<1)+1);
+	}
+
+}
+}
+else{
+	for(i=0;i<12;i++){
+		outlet_notes[i]=inlet_notes[i];
+	}
+}
+outlet_chain=inlet_count-16;]]></code.krate>
+   </obj.normal>
+</objdefs>

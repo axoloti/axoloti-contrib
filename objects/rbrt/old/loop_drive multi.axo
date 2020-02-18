@@ -1,0 +1,43 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="loop_drive multi" uuid="a0f884ef-fd71-4e4a-bc08-a8bbb0339a76">
+      <sDescription>drives the transport for reading/writing data from/to tables.
+the phase is translated to an index,defined by &apos;range&apos; and &apos;offset&apos;
+the speed is defined by &apos;freq&apos;.
+the phase will be reset to &apos;start&apos; when re-setting
+the phase</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <helpPatch>lfo.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="sets the offset"/>
+         <frac32.positive name="range" description="sets a range"/>
+         <frac32.positive name="freq" description="speed"/>
+         <frac32.positive name="start" description="offset inside the range"/>
+         <bool32.rising name="reset" description="reset phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="slot" description="phase to read from an area of a table,defined by range and offset"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t Phase;
+uint32_t out;
+uint32_t r;]]></code.declaration>
+      <code.init><![CDATA[Phase = 0;
+   r = 1;]]></code.init>
+      <code.srate><![CDATA[{
+      if (inlet_reset && r) {
+         r = 0;
+         Phase = (inlet_start >> 5);
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += inlet_freq>>6;
+      }
+
+      out = (Phase >> 5);
+    
+         outlet_slot = ((___SMMUL(inlet_range,(out)) << 5) + inlet_offset);
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>

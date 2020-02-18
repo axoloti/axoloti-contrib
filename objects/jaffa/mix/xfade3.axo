@@ -1,0 +1,41 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="xfade3" uuid="4c337564-56e7-49f1-abc6-2551a5733f8f">
+      <sDescription>This is an equal powered crossfader. The crossfade scaling is based on
+an offset and limited cosine, using the last 1/4 of the cosine wave to create a smooth crossfade curve, instead of a completely linear crossfader. Stereo version of mix/xfade2.</sDescription>
+      <author>Jaffasplaffa</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="a1" description="input"/>
+         <frac32buffer name="a2" description="input"/>
+         <frac32buffer name="b1"/>
+         <frac32buffer name="b2"/>
+         <frac32.positive name="c" description="control"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="a" description="output"/>
+         <frac32buffer name="b"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[// Cosine
+       int32_t r;
+       SINE2TINTERP((inlet_c <<3)+(1<<30),r)
+       int32_t cosine= (-(r>>4)) +(1<<27); // - = inverted cosine
+       
+       int32_t ccompl = ((128<<20)-cosine);
+   	  // int32_t ccompl = ((128<<20)-cosine);]]></code.krate>
+      <code.srate><![CDATA[{
+      int64_t a = (int64_t)inlet_a2 * cosine;
+      a += (int64_t)inlet_a1 * ccompl;
+      outlet_a= a>>27;
+   }
+
+
+   {
+      int64_t b = (int64_t)inlet_b2 * cosine;
+      b += (int64_t)inlet_b1 * ccompl;
+      outlet_b= b>>27;
+   }]]></code.srate>
+   </obj.normal>
+</objdefs>

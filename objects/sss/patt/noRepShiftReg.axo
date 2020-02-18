@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="noRepShiftReg" uuid="8b921da5-38bc-4513-b77a-354a848fff98">
+      <sDescription>No-repeating shift register
+
+When the add input goes high:
+-All values at the d1-d8 outputs will shift down one output, d8 will be removed.
+-Except when the new value is somewhere in the middle. In that case, this output is removed and only from the first output up to that output, the outputs are shifted down.
+-The value at the index input will always be send to the first output (d1)
+
+Useful for manually making orders of index numbers that may not be repeated in the order.
+eg. a set of footswitches that you can press to set an order of an fx-chain, where each footswitch selects it&apos;s own index number to enter.
+ps. if you only need 4 outputs, use the upper four.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="add"/>
+         <int32 name="index"/>
+         <bool32 name="rnd"/>
+      </inlets>
+      <outlets>
+         <int32 name="d1"/>
+         <int32 name="d2"/>
+         <int32 name="d3"/>
+         <int32 name="d4"/>
+         <int32 name="d5"/>
+         <int32 name="d6"/>
+         <int32 name="d7"/>
+         <int32 name="d8"/>
+      </outlets>
+      <displays>
+         <int32.label name="d1"/>
+         <int32.label name="d2"/>
+         <int32.label name="d3"/>
+         <int32.label name="d4"/>
+         <int32.label name="d5"/>
+         <int32.label name="d6"/>
+         <int32.label name="d7"/>
+         <int32.label name="d8"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int A[8];
+int w;
+bool trg;
+int i;
+bool t;
+int T;
+bool rnd;
+int B[8];
+int left;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<8;i++){
+	A[i]=i;
+}]]></code.init>
+      <code.krate><![CDATA[if((inlet_rnd>0)&&!rnd){
+	rnd=1;
+	for(i=0;i<8;i++){
+		B[i]=i;
+	}
+	left=8;
+	for(i=0;i<8;i++){
+	int32_t tmp=(int32_t)(GenerateRandomNumber()%left);
+	left-=1;
+	A[i]=B[tmp];
+	for(int j=tmp;j<(left);j++){
+	B[j]=B[j+1];
+	}
+	}
+}
+else if(inlet_rnd<1){rnd=0;}
+
+if((inlet_add>0)&&!trg){
+trg=1;
+T=-1;
+for(i=0;i<8;i++){
+if(A[(w-i)&7]==inlet_index){
+	T=i;
+}
+}
+if(T>=0){
+for(i=T;i>0;i--){
+A[(w-i)&7]=A[(w-(i-1))&7];
+}
+
+}
+else{w=(w+1)&7;}
+
+
+A[w]=inlet_index;
+}
+else if(inlet_add<1){trg=0;}
+
+outlet_d8=disp_d8=A[w];
+outlet_d7=disp_d7=A[(w-1)&7];
+outlet_d6=disp_d6=A[(w-2)&7];
+outlet_d5=disp_d5=A[(w-3)&7];
+outlet_d4=disp_d4=A[(w-4)&7];
+outlet_d3=disp_d3=A[(w-5)&7];
+outlet_d2=disp_d2=A[(w-6)&7];
+outlet_d1=disp_d1=A[(w-7)&7];]]></code.krate>
+   </obj.normal>
+</objdefs>

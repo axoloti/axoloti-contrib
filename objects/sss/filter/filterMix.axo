@@ -1,0 +1,99 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="filterMix" uuid="fd6103d6-b9bb-4acf-8ece-0100c6050a38">
+      <sDescription>1st order HP, BP and LP filters and unity-gain mixer (actually, this module only needs 2 6dB LP filters to do the job).
+2 cutoff controls
+ability to morph the inputs over the different filters one by one at unity gain.
+3 seperate resonance paths</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="HP" description="input"/>
+         <frac32buffer name="BP"/>
+         <frac32buffer name="LP"/>
+         <frac32.bipolar name="HiCut"/>
+         <frac32.bipolar name="LoCut"/>
+         <frac32.bipolar name="ResHP"/>
+         <frac32.bipolar name="ResBP"/>
+         <frac32.bipolar name="ResLP"/>
+         <frac32 name="Morph"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+         <frac32 name="morph1"/>
+         <frac32 name="morph2"/>
+         <frac32 name="morph3"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.freq name="HiCut"/>
+         <frac32.u.map.freq name="LoCut"/>
+         <frac32.s.map name="ResHP"/>
+         <frac32.s.map name="ResBP"/>
+         <frac32.s.map name="ResLP"/>
+         <frac32.u.map name="morph"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val1;
+int32_t val2;
+int32_t feedHP;
+int32_t feedBP;
+int32_t feedLP;
+int32_t HP;
+int32_t BP;
+int32_t LP;
+int32_t hp;
+int32_t bp;
+int32_t lp;
+int32_t morph;
+int32_t mrph1;
+int32_t mrph2;
+int32_t mrph3;
+int32_t res1;
+int32_t res2;
+int32_t res3;]]></code.declaration>
+      <code.init><![CDATA[val1 = 0;
+val2 = 0;
+int32_t HP=0;
+int32_t BP=0;
+int32_t LP=0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_HiCut+inlet_HiCut,f);
+int32_t g;
+   MTOF(param_LoCut+inlet_LoCut,g);
+   morph=(inlet_Morph+param_morph)&((1<<27)-1);
+   mrph1=((1<<27)-((morph*3)))>0?(1<<27)-((morph*3)):0;
+   mrph1=((morph*3)-(1<<27))>0?((morph*3)-(2<<27)):mrph1;
+   mrph1=mrph1>0?mrph1:0;
+   
+   morph=(inlet_Morph+param_morph+((2<<27)/3))&((1<<27)-1);
+   mrph2=((1<<27)-((morph*3)))>0?(1<<27)-((morph*3)):0;
+   mrph2=((morph*3)-(1<<27))>0?((morph*3)-(2<<27)):mrph2;
+   mrph2=mrph2>0?mrph2:0;
+   
+   morph=(inlet_Morph+param_morph+((1<<27)/3))&((1<<27)-1);
+   mrph3=((1<<27)-((morph*3)))>0?(1<<27)-((morph*3)):0;
+   mrph3=((morph*3)-(1<<27))>0?((morph*3)-(2<<27)):mrph3;
+   mrph3=mrph3>0?mrph3:0;
+
+  outlet_morph1=mrph1;
+  outlet_morph2=mrph2;
+  outlet_morph3=mrph3;
+  res1=__SSAT(inlet_ResHP+param_ResHP,27);
+  res2=__SSAT(inlet_ResBP+param_ResBP,27);
+  res3=__SSAT(inlet_ResLP+param_ResLP,27);]]></code.krate>
+      <code.srate><![CDATA[   hp=(inlet_HP);
+   bp=(inlet_BP);
+   lp=(inlet_LP);
+   HP=___SMMUL(mrph1<<3,hp<<1)+___SMMUL(mrph3<<3,bp<<1)+___SMMUL(mrph2<<3,lp<<1)+feedHP;
+   BP=___SMMUL(mrph2<<3,hp<<1)+___SMMUL(mrph1<<3,bp<<1)+___SMMUL(mrph3<<3,lp<<1)+feedBP;
+   LP=___SMMUL(mrph3<<3,hp<<1)+___SMMUL(mrph2<<3,bp<<1)+___SMMUL(mrph1<<3,lp<<1)+feedLP;
+   
+   val1 = ___SMMLA(((-HP+BP)-val1)<<1,f,val1);
+   val2= ___SMMLA(((-(val1+HP)+LP)-val2)<<1,g,val2);
+   outlet_out=val2+val1+HP;
+   feedHP=___SMMUL(outlet_out<<3,res1<<2);
+   feedBP=___SMMUL(outlet_out<<3,res2<<2);
+   feedLP=___SMMUL(outlet_out<<3,res3<<2);]]></code.srate>
+   </obj.normal>
+</objdefs>

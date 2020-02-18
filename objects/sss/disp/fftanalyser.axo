@@ -1,0 +1,205 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fftanalyser" uuid="68628daa-1c9d-42ee-b731-12a05cab3426">
+      <sDescription>extra big spectral analyzer display using 512 input points fft</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>rfft 128.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <bool32 name="hold" description="hold"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <vscale name="dB"/>
+         <frac4ubyte.vbar name="v0" noLabel="true"/>
+         <frac4ubyte.vbar name="v1" noLabel="true"/>
+         <frac4ubyte.vbar name="v2" noLabel="true"/>
+         <frac4ubyte.vbar name="v3" noLabel="true"/>
+         <frac4ubyte.vbar name="v4" noLabel="true"/>
+         <frac4ubyte.vbar name="v5" noLabel="true"/>
+         <frac4ubyte.vbar name="v6" noLabel="true"/>
+         <frac4ubyte.vbar name="v7" noLabel="true"/>
+         <frac4ubyte.vbar name="v8" noLabel="true"/>
+         <frac4ubyte.vbar name="v9" noLabel="true"/>
+         <frac4ubyte.vbar name="v10" noLabel="true"/>
+         <frac4ubyte.vbar name="v11" noLabel="true"/>
+         <frac4ubyte.vbar name="v12" noLabel="true"/>
+         <frac4ubyte.vbar name="v13" noLabel="true"/>
+         <frac4ubyte.vbar name="v14" noLabel="true"/>
+         <frac4ubyte.vbar name="v15" noLabel="true"/>
+         <frac4ubyte.vbar name="v16" noLabel="true"/>
+         <frac4ubyte.vbar name="v17" noLabel="true"/>
+         <frac4ubyte.vbar name="v18" noLabel="true"/>
+         <frac4ubyte.vbar name="v19" noLabel="true"/>
+         <frac4ubyte.vbar name="v20" noLabel="true"/>
+         <frac4ubyte.vbar name="v21" noLabel="true"/>
+         <frac4ubyte.vbar name="v22" noLabel="true"/>
+         <frac4ubyte.vbar name="v23" noLabel="true"/>
+         <frac4ubyte.vbar name="v24" noLabel="true"/>
+         <frac4ubyte.vbar name="v25" noLabel="true"/>
+         <frac4ubyte.vbar name="v26" noLabel="true"/>
+         <frac4ubyte.vbar name="v27" noLabel="true"/>
+         <frac4ubyte.vbar name="v28" noLabel="true"/>
+         <frac4ubyte.vbar name="v29" noLabel="true"/>
+         <frac4ubyte.vbar name="v30" noLabel="true"/>
+         <frac4ubyte.vbar name="v31" noLabel="true"/>
+         <frac4ubyte.vbar name="v32" noLabel="true"/>
+         <frac4ubyte.vbar name="v33" noLabel="true"/>
+         <frac4ubyte.vbar name="v34" noLabel="true"/>
+         <frac4ubyte.vbar name="v35" noLabel="true"/>
+         <frac4ubyte.vbar name="v36" noLabel="true"/>
+         <frac4ubyte.vbar name="v37" noLabel="true"/>
+         <frac4ubyte.vbar name="v38" noLabel="true"/>
+         <frac4ubyte.vbar name="v39" noLabel="true"/>
+         <frac4ubyte.vbar name="v40" noLabel="true"/>
+         <frac4ubyte.vbar name="v41" noLabel="true"/>
+         <frac4ubyte.vbar name="v42" noLabel="true"/>
+         <frac4ubyte.vbar name="v43" noLabel="true"/>
+         <frac4ubyte.vbar name="v44" noLabel="true"/>
+         <frac4ubyte.vbar name="v45" noLabel="true"/>
+         <frac4ubyte.vbar name="v46" noLabel="true"/>
+         <frac4ubyte.vbar name="v47" noLabel="true"/>
+         <frac4ubyte.vbar name="v48" noLabel="true"/>
+         <frac4ubyte.vbar name="v49" noLabel="true"/>
+         <frac4ubyte.vbar name="v50" noLabel="true"/>
+         <frac4ubyte.vbar name="v51" noLabel="true"/>
+         <frac4ubyte.vbar name="v52" noLabel="true"/>
+         <frac4ubyte.vbar name="v53" noLabel="true"/>
+         <frac4ubyte.vbar name="v54" noLabel="true"/>
+         <frac4ubyte.vbar name="v55" noLabel="true"/>
+         <frac4ubyte.vbar name="v56" noLabel="true"/>
+         <frac4ubyte.vbar name="v57" noLabel="true"/>
+         <frac4ubyte.vbar name="v58" noLabel="true"/>
+         <frac4ubyte.vbar name="v59" noLabel="true"/>
+         <frac4ubyte.vbar name="v60" noLabel="true"/>
+         <frac4ubyte.vbar name="v61" noLabel="true"/>
+         <frac4ubyte.vbar name="v62" noLabel="true"/>
+         <frac4ubyte.vbar name="v63" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[static const int size1=512;
+static const int size2=1024;
+int32_t inbuf[size1];
+int32_t outbuf[size1];
+    int32_t fftbuf[size2];
+    int32_t hanning_q31[size1];
+    arm_rfft_instance_q31 rfft;
+    arm_cfft_radix4_instance_q31 cfft;
+int32_t state;
+msg_t ThreadX2(){
+      int i;
+      int n = size1;
+      arm_rfft_init_q31(&rfft, size1,0,1);
+      for(i=0;i<n;i++){
+        hanning_q31[i] = (int32_t)(0.5f*2147483647.0f*(1.0f-cosf(2.0f*PI*i/n)));
+      }
+      while (!chThdShouldTerminate()) {
+        chThdSleepMilliseconds(20);
+        if (state == size1) {
+          arm_mult_q31(hanning_q31, &inbuf[0],&inbuf[0], n);
+          arm_rfft_q31(&rfft, &inbuf[0], &fftbuf[0]);
+          arm_cmplx_mag_q31(&fftbuf[0], outbuf, n/2);
+          // reduce to packed 8bit
+          for(i=0;i<n/8;i++){
+            int32_t ni;
+            uint8_t *nc;
+            nc = (uint8_t *)&ni;
+            nc[0] = 0xFF & (outbuf[i*4]>>19);
+            nc[1] = 0xFF & (outbuf[i*4+1]>>19);
+            nc[2] = 0xFF & (outbuf[i*4+2]>>19);
+            nc[3] = 0xFF & (outbuf[i*4+3]>>19);
+            outbuf[i] = ni;
+          }
+          state = size1+1;
+        }
+      }
+}
+static msg_t ThreadX(void *arg) {
+((attr_parent *)arg)->ThreadX2();
+}
+WORKING_AREA(waThreadX, 16384);
+Thread *Thd;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<size1;i++) inbuf[i]=0;
+for(i=0;i<size1;i++) outbuf[i]=0;
+state = 0;
+  Thd = chThdCreateStatic(waThreadX, sizeof(waThreadX),
+                    NORMALPRIO, ThreadX, (void *)this);]]></code.init>
+      <code.dispose><![CDATA[chThdTerminate(Thd);]]></code.dispose>
+      <code.krate><![CDATA[if (state<size1){
+   int i;
+   for(i=0;i<16;i++)
+      inbuf[state++] = inlet_in[i];
+}
+else if (state == (size1+1)){
+   state = 0;
+if (!inlet_hold){    
+    disp_v0=outbuf[0]<<1;
+    disp_v1=outbuf[1]<<1;
+    disp_v2=outbuf[2]<<1;
+    disp_v3=outbuf[3]<<1;
+    disp_v4=outbuf[4]<<1;
+    disp_v5=outbuf[5]<<1;
+    disp_v6=outbuf[6]<<1;
+    disp_v7=outbuf[7]<<1;
+    disp_v8=outbuf[8]<<1;
+    disp_v9=outbuf[9]<<1;
+    disp_v10=outbuf[10]<<1;
+    disp_v11=outbuf[11]<<1;
+    disp_v12=outbuf[12]<<1;
+    disp_v13=outbuf[13]<<1;
+    disp_v14=outbuf[14]<<1;
+    disp_v15=outbuf[15]<<1;
+    disp_v16=outbuf[16]<<1;
+    disp_v17=outbuf[17]<<1;
+    disp_v18=outbuf[18]<<1;
+    disp_v19=outbuf[19]<<1;
+    disp_v20=outbuf[20]<<1;
+    disp_v21=outbuf[21]<<1;
+    disp_v22=outbuf[22]<<1;
+    disp_v23=outbuf[23]<<1;
+    disp_v24=outbuf[24]<<1;
+    disp_v25=outbuf[25]<<1;
+    disp_v26=outbuf[26]<<1;
+    disp_v27=outbuf[27]<<1;
+    disp_v28=outbuf[28]<<1;
+    disp_v29=outbuf[29]<<1;
+    disp_v30=outbuf[30]<<1;
+    disp_v31=outbuf[31]<<1;
+    disp_v32=outbuf[32]<<1;
+    disp_v33=outbuf[33]<<1;
+    disp_v34=outbuf[34]<<1;
+    disp_v35=outbuf[35]<<1;
+    disp_v36=outbuf[36]<<1;
+    disp_v37=outbuf[37]<<1;
+    disp_v38=outbuf[38]<<1;
+    disp_v39=outbuf[39]<<1;
+    disp_v40=outbuf[40]<<1;
+    disp_v41=outbuf[41]<<1;
+    disp_v42=outbuf[42]<<1;
+    disp_v43=outbuf[43]<<1;
+    disp_v44=outbuf[44]<<1;
+    disp_v45=outbuf[45]<<1;
+    disp_v46=outbuf[46]<<1;
+    disp_v47=outbuf[47]<<1;
+    disp_v48=outbuf[48]<<1;
+    disp_v49=outbuf[49]<<1;
+    disp_v50=outbuf[50]<<1;
+    disp_v51=outbuf[51]<<1;
+    disp_v52=outbuf[52]<<1;
+    disp_v53=outbuf[53]<<1;
+    disp_v54=outbuf[54]<<1;
+    disp_v55=outbuf[55]<<1;
+    disp_v56=outbuf[56]<<1;
+    disp_v57=outbuf[57]<<1;
+    disp_v58=outbuf[58]<<1;
+    disp_v59=outbuf[59]<<1;
+    disp_v60=outbuf[60]<<1;
+    disp_v61=outbuf[61]<<1;
+    disp_v62=outbuf[62]<<1;
+    disp_v63=outbuf[63]<<1;
+}}]]></code.krate>
+   </obj.normal>
+</objdefs>

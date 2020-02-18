@@ -1,0 +1,39 @@
+<objdefs>
+   <obj.normal id="lp x2" uuid="c90f4a2f810448378993289366041ea7" sha="487021658b614b978df00b28a3bec6a5">
+      <upgradeSha>79e9d661e723f1d5c847baa56e4131fece43b89</upgradeSha>
+      <sDescription>Oversampled 2-pole resonant low-pass filter (biquad)</sDescription>
+      <author>Johannes Taelman, Jan Hofmann</author>
+      <license>BSD</license>
+      <helpPatch>lp x2.axh</helpPatch>
+      <inlets>
+        <frac32buffer name="in_1st" description="filter input, 1st part"/>
+        <frac32buffer name="in_2nd" description="filter input, 2nd part"/>
+      </inlets>
+      <outlets>
+        <frac32buffer name="out_1st" description="filter output, 1st part"/>
+        <frac32buffer name="out_2nd" description="filter output, 2nd part"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+        <bool32.tgl name="Fx2"/>
+        <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+     <includes>
+       <include>./jho_filter.h</include>
+     </includes>
+     <code.declaration><![CDATA[biquad_state bs;biquad_coefficients bc;
+]]></code.declaration>
+      <code.init><![CDATA[biquad_clearstate(&bs);
+]]></code.init>
+      <code.krate><![CDATA[      int32_t freq = param_pitch;
+      if (!param_Fx2)
+          freq -= 12<<21;
+      MTOF(freq,freq);
+      biquad_lp_coefs(&bc,freq,INT_MAX - (__USAT(param_reso,27)<<4));
+      jho_biquad_dsp(&bs,&bc,inlet_in__1st,outlet_out__1st);
+      jho_biquad_dsp(&bs,&bc,inlet_in__2nd,outlet_out__2nd);
+]]></code.krate>
+   </obj.normal>
+</objdefs>

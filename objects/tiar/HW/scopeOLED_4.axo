@@ -1,0 +1,70 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scopeOLED_4" uuid="13befa0e-8300-4d50-a8df-a5b3ec7112be">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32buffer.bipolar name="in" description="input"/>
+         <frac32 name="pitch"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="info"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="title"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t t[128];
+uint32_t phi; //internal osc
+int16_t subCpt, ind;
+int gain;
+int mx;
+char c[7+strlen("attr_title")];
+char *p=c+strlen("attr_title");]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < 128; i++) t[i] = 0;
+ind = 0;
+gain = 0;
+mx=0;
+strcpy(&c[0],"attr_title");]]></code.init>
+      <code.krate><![CDATA[int32_t dp;
+MTOFEXTENDED(inlet_pitch, dp);
+dp>>=2;
+for(int i = 0; i < BUFSIZE; i++){
+	//sync to internal osc
+	phi += dp;
+	if(phi < dp && ind >= 128){
+		ind = 0;
+		subCpt = 0;
+		if(mx<8<<21)
+			gain=3;
+		else if(mx<16<<21)
+			gain=2;
+		else if(mx<32<<21)
+			gain=1;
+		else
+			gain=0;
+		mx=0;
+	}
+	//undersample
+	if((subCpt & 3) == 0 && ind < 128){
+		int32_t ai = abs(inlet_in[i]);
+		mx=ai>mx?ai:mx;
+		//remanance
+		if(t[ind] == 1 || t[ind] == -1) t[ind] = 0;
+		int32_t v = (t[ind]<<2) + (inlet_in[i]>>(27-8-gain));
+		t[ind] = (int8_t)__SSAT(v>>3, 7); 
+		ind++;
+	}
+	subCpt++;
+}
+if(gain==0){
+	p[0]=' ';
+	p[1]=' ';
+}else{
+	p[0]='x';
+	p[1] = gain == 1 ? '2' : (gain == 2 ? '4' : '8');	
+}
+outlet_info= c;]]></code.krate>
+   </obj.normal>
+</objdefs>

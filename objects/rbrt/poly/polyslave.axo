@@ -1,0 +1,74 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="polyslave" uuid="17143e14-287d-4ef0-ae89-018eed856032">
+      <sDescription>works only inside a polyphonic sub-patch.
+routes note and velocity to a specific voice,
+and gives feedback to the &apos;mother-object&apos; about the current playback state of that voice.
+inlet &apos;envstate&apos; provides &apos;polyhandler slave&apos; with information about the state of a 
+release-envelope if there is one.
+otherwise ,&apos;polyhandler slave&apos; will work without</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>poly.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="stop"/>
+         <frac32.positive name="envstate"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="note"/>
+         <int32.positive name="velo"/>
+         <bool32 name="gate"/>
+         <bool32.pulse name="retrig"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="polymaster"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t pren;
+uint8_t prev;
+uint8_t velon;
+bool gate;
+uint8_t index;
+bool stop;
+bool trigon;
+bool trigoff;
+uint8_t note;
+uint8_t velo;]]></code.declaration>
+      <code.init><![CDATA[index = parent->polyIndex;
+pren = 0;
+prev = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_retrig = 0;
+trigon = 0;
+trigoff = 0;
+
+note = attr_polymaster.Snote [index] -1;
+velo = attr_polymaster.Svelo [index];
+	if ((note != pren) ||(velo != prev) || (stop && velo)){
+	stop = 0;
+	pren = note;
+	prev = velo;
+	if (prev) {
+	trigon = 1;
+	velon = prev;
+	if (inlet_envstate) outlet_retrig = 1;
+	}
+	else trigoff = 1;
+	}
+	
+if (trigon && !gate) gate = 1;
+if (trigoff && gate) gate = 0;
+if (inlet_stop && !stop) {
+	gate = 0;
+	stop = 1;
+	attr_polymaster.Svelo [index] = 0;
+	attr_polymaster.Rhold [index] = 0;
+	}
+
+if (inlet_envstate) attr_polymaster.Rrelease [index] = pren + 1;
+else attr_polymaster.Rrelease [index] = 0;
+
+outlet_gate = gate;
+outlet_note = pren;
+outlet_velo = velon;]]></code.krate>
+   </obj.normal>
+</objdefs>

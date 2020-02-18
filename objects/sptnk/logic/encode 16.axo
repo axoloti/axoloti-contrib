@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="encode 16" uuid="dfc0a6e9d7e237cec64fd01f6972f64d897863a4">
+      <sDescription>binary encoder (16 bit plus sign bit) </sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="b0" description="bit 0 LSB"/>
+         <bool32 name="b1" description="bit 1"/>
+         <bool32 name="b2" description="bit 2"/>
+         <bool32 name="b3" description="bit 3"/>
+         <bool32 name="b4" description="bit 4"/>
+         <bool32 name="b5" description="bit 5"/>
+         <bool32 name="b6" description="bit 6"/>
+         <bool32 name="b7" description="bit 7"/>
+         <bool32 name="b8" description="bit 8"/>
+         <bool32 name="b9" description="bit 9"/>
+         <bool32 name="b10" description="bit 10"/>
+         <bool32 name="b11" description="bit 11"/>
+         <bool32 name="b12" description="bit 12"/>
+         <bool32 name="b13" description="bit 13"/>
+         <bool32 name="b14" description="bit 14"/>
+         <bool32 name="b15" description="bit 15 MSB"/>
+         <bool32 name="sign" description="sign bit"/>
+      </inlets>
+      <outlets>
+         <int32 name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int i_out;]]></code.declaration>
+      <code.krate><![CDATA[
+	  i_out = inlet_b0*1 + inlet_b1*2 + inlet_b2*4 + inlet_b3*8 + inlet_b4*16 + inlet_b5*32 + inlet_b6*64 + inlet_b7*128 + inlet_b8*256 + inlet_b9*512 + inlet_b10*1024 + inlet_b11*2048 + inlet_b12*4096 +  inlet_b13*8192 + inlet_b14*16384 + inlet_b15*32768;
+	  if (inlet_sign==1)
+	  i_out=-1-i_out;
+	  outlet_out = i_out;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

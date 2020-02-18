@@ -1,0 +1,90 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="crvShape" uuid="fbaecf2b-7036-40b9-ac00-17d3587281a1">
+      <sDescription>Curve-shaper for phase distortion.
+
+Curve is created by the exp and mod controls.
+negative exp=exponential
+positive exp=inverse exponential
+negative mod= inverse s-curve
+positive mod= s-curve.
+
+mod is actually a modulation of the exp input by the signal itself, fading from exponential to inverse exponential (or the other way around) and added to the exp-control.
+
+SO:
+When you want an (inverse) exponential curve, only use the exp-control
+When you want a S-curve, first dial in the mod-control and use the exp-control to offset the center of the s-curve.
+
+offset adds an offset to the output, eg. to offset the phase.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer.positive name="in"/>
+         <frac32 name="exp"/>
+         <frac32 name="mod"/>
+         <frac32 name="offset"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="exp"/>
+         <int32 name="stack">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <frac32.s.map name="mod"/>
+         <frac32.s.map name="offset"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int i;
+int32_t expo[32];
+int dir;
+int32_t pEXP;
+int32_t sEXP;
+int32_t pMOD;
+int32_t sMOD;
+int32_t sOFS;
+int32_t pOFS;]]></code.declaration>
+      <code.krate><![CDATA[int32_t EXP=param_exp+inlet_exp;
+int32_t MOD=param_mod+inlet_mod;
+int32_t OFS=param_offset+inlet_offset;
+
+   sEXP = (EXP - pEXP)>>4;
+   int32_t S1 = pEXP;
+   pEXP = EXP;
+   
+   sMOD = (MOD - pMOD)>>4;
+   int32_t S2 = pMOD;
+   pMOD = MOD;
+
+   sOFS = (OFS - pOFS)>>4;
+   int32_t S3 = pOFS;
+   pOFS = OFS;]]></code.krate>
+      <code.srate><![CDATA[S1 += sEXP;
+S2 += sMOD;
+S3 += sOFS;
+
+int32_t IN=__SSAT(inlet_in,28);
+int32_t inexpo=__SSAT(S1+___SMMUL((IN-(1<<26))<<3,S2<<3),28);
+dir=inexpo>0?1:-1;
+inexpo=inexpo>0?inexpo:-inexpo;
+int32_t inv=(1<<27)-inexpo;
+
+
+int dar;
+dar=inlet_in>0?1:-1;
+int32_t pos=IN;
+pos=pos>0?pos:-pos;
+if(dir>0)
+{expo[0]=___SMMUL(pos<<3,(inv+___SMMUL(inexpo<<3,pos<<2))<<2);}
+if(dir<0)
+{expo[0]=___SMMUL(((1<<27)-pos)<<3,(inv+___SMMUL(inexpo<<3,((1<<27)-pos)<<2))<<2);}
+for(i=1;i<=param_stack;i++)
+expo[i]=___SMMUL(expo[i-1]<<3,(inv+___SMMUL(inexpo<<3,expo[i-1]<<2))<<2);
+if(dir>0)
+{outlet_out=(expo[param_stack]*dar)+S3;}
+if(dir<0)
+{outlet_out=(((1<<27)-expo[param_stack])*dar)+S3;}]]></code.srate>
+   </obj.normal>
+</objdefs>

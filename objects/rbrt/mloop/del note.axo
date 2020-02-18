@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="del note" uuid="42b836e0-2c24-45f2-aad7-8658fe215f39">
+      <sDescription>records notes,as pitch and velocity,to a table with the same name as the object.
+after recording,the recorded notes are translated to a sequence with 512ppq resolution.
+the maximum recording length is 42 seconds,with a maxium of 512 events (or,256 notes played)
+outlet &apos;length&apos; provides the recording length,in order to drive a &apos;ktransport&apos; -object.
+use &apos;note play&apos; to play the sequence.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <int32.positive name="note"/>
+         <bool32.rising name="delNote"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.declaration><![CDATA[bool dtrig;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_delNote && !dtrig){
+	dtrig = 1;
+	int i;
+	for (i = 0;i < 512;i ++) if ((attr_seq.array [i] & 255) -1 == inlet_note) attr_seq.array[i] = 0;
+}
+if (!inlet_delNote) dtrig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

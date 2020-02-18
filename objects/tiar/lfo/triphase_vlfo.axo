@@ -1,0 +1,35 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="triphase_vlfo" uuid="fda37e83-8355-4909-ac55-e642dcec5a20">
+      <sDescription>Very Low Frequency Oscillator
+cycle is the time of a cycle in seconds (up to 64s)
+120° separated outputs.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>triphase_lfo.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="phi 0" description="0° sine"/>
+         <frac32.bipolar name="phi 120" description="120° sine"/>
+         <frac32.bipolar name="phi 240" description="240° sine"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="cycle" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t p;]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t dp;
+
+dp = 5592 * (0x7FFFFFFF/(param_cycle>11185?param_cycle:11185));
+
+p += dp>>2;
+int32_t r;
+SINE2TINTERP(p,r)
+outlet_phi_space_0 = (r>>4);
+SINE2TINTERP(p+1431655765UL,r)
+outlet_phi_space_120 = (r>>4);
+SINE2TINTERP(p+2*1431655765UL,r)
+outlet_phi_space_240 = (r>>4);]]></code.krate>
+   </obj.normal>
+</objdefs>

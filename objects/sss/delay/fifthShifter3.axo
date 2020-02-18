@@ -1,0 +1,208 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fifthShifter3" uuid="513e9eaf-c947-45dd-aebc-ebcca833879b">
+      <sDescription>this is a quad-delayline pitchshifter/delay with 6dB crossover filters.
+The low frequency region will be pitched up by a fifth, the high frequency region will be pitched down by an octave.
+The &quot;crossover&quot; parameter sets the crossover frequency for the input, to send low frequencies to the fifth-up and high frequencies to the octave-down delayline.
+After each delayline there is a seperate 6dB crossover filter that sends the feedback to either up/down delayline when the audio passes the cutoff frequency. This way a frequency band can be set between which the audio will be pitched up/down in the feedback path.
+The pitchshifter delaysize is set with the &quot;window&quot; attribute and parameter.
+The max-delaytime is set using the &quot;size&quot; attribute and time parameter.
+Mostly usable for drony stuff.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+         <frac32 name="crossover"/>
+         <frac32 name="highest"/>
+         <frac32 name="lowest"/>
+         <frac32 name="rate"/>
+         <frac32 name="window"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="crossover" description="sets &quot;mid&quot; crossover frequency. The pitchshifter/delay will mostly focus around this point"/>
+         <frac32.s.map.pitch name="highest"/>
+         <frac32.s.map.pitch name="lowest"/>
+         <frac32.s.map.lfopitch name="panRate"/>
+         <frac32.u.map.gain name="window"/>
+         <frac32.u.map name="delay"/>
+         <frac32.u.map.gain name="feed"/>
+         <frac32.u.map.gain name="dry"/>
+         <frac32.u.map.gain name="wet"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <combo name="window">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_window);
+static const uint32_t LENGTH = (1<<attr_window);
+static const uint32_t LENGTHMASK = ((1<<attr_window)-1);
+static const uint32_t LP = (attr_size);
+static const uint32_t LH = (1<<attr_size);
+static const uint32_t LM = ((1<<attr_size)-1);
+int16_t *arrayL;
+int16_t *arrayH;
+uint32_t writepos;
+uint32_t WP;
+int16_t *ArrayL;
+int16_t *ArrayH;
+uint32_t readL;
+uint32_t readH;
+int32_t low;
+int32_t high;
+int32_t feedL;
+int32_t feedH;
+int32_t lp1;
+int32_t lp2;
+int32_t v27=1<<27;
+int32_t v8=1<<8;
+uint32_t LFO;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _arrayL[1<<attr_window]  __attribute__ ((section (".sdram")));
+arrayL = &_arrayL[0];
+static int16_t _arrayH[1<<attr_window]  __attribute__ ((section (".sdram")));
+arrayH = &_arrayH[0];
+static int16_t _ArrayL[1<<attr_size]  __attribute__ ((section (".sdram")));
+ArrayL = &_ArrayL[0];
+static int16_t _ArrayH[1<<attr_size]  __attribute__ ((section (".sdram")));
+ArrayH = &_ArrayH[0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) {
+   	arrayL[i] = 0;
+   	arrayH[i] = 0;
+   }
+   for(i=0;i<LH;i++) {
+   	ArrayL[i] = 0;
+   	ArrayH[i] = 0;
+   }]]></code.init>
+      <code.krate><![CDATA[int32_t frq;
+MTOF(param_crossover+inlet_crossover,frq)
+int32_t LOW;
+int32_t HIGH;
+MTOF(param_highest+inlet_highest,LOW)
+MTOF(param_lowest+inlet_lowest,HIGH)
+
+
+int32_t rate;
+MTOFEXTENDED(param_panRate+inlet_rate,rate)
+rate=rate>>5;
+int32_t window=v8+___SMMUL(__USAT((param_window>>4)+inlet_window,27)<<4,LENGTHMASK-v8<<1);
+uint32_t RD=param_delay>>27-LP;]]></code.krate>
+      <code.srate><![CDATA[LFO+=rate;
+int32_t sine;
+SINE2TINTERP(LFO,sine)
+sine=(sine>>3)+(1<<29);
+int32_t in=__SSAT(inlet_in,28);//+___SMMUL(-feed<<1,param_feed)
+low=___SMMLA((in-low)<<1,frq,low);
+high=in-low;
+writepos = (writepos + 1)&LENGTHMASK;
+WP = (WP + 1)&LM;
+arrayL[writepos] = __SSAT(low+feedL>>14,16);
+arrayH[writepos] = __SSAT(high+feedH>>14,16);
+readL=(readL + 2);
+readH=(readH + 1);
+readL-=readL>=window?window:0;
+readH-=readH>=window?window:0;
+int32_t readbL=readL+(window>>1);
+int32_t readbH=readH+(window>>1);
+readbL-=readbL>=window?window:0;
+readbH-=readbH>=window?window:0;
+int32_t outLA=arrayL[(writepos+readL)&LENGTHMASK]<<14;
+int32_t outLB=arrayL[(writepos+(readbL))&LENGTHMASK]<<14;
+int32_t outHA=arrayH[(writepos-(readH>>1))&LENGTHMASK]<<14;
+int32_t outHB=arrayH[(writepos-(readbH>>1))&LENGTHMASK]<<14;
+int32_t mixL=readL>(window>>1)?window-readL:readL;
+mixL=((int64_t)mixL<<31)/window;
+int32_t mixH=readH>(window>>1)?window-readH:readH;
+mixH=((int64_t)mixH<<31)/window;
+int32_t LW=(outLB+___SMMUL(outLA-outLB<<2,mixL));
+int32_t HG=(outHB+___SMMUL(outHA-outHB<<2,mixH));
+ArrayL[WP] = __SSAT(LW>>14,16);
+ArrayH[WP] = __SSAT(HG>>14,16);
+LW=ArrayL[(WP-RD)&LM]<<14;
+HG=ArrayH[(WP-RD)&LM]<<14;
+int32_t OUT=LW+HG;
+int32_t dry=__SSAT(___SMMUL(inlet_in<<1,param_dry),28);
+outlet_outL=__SSAT(dry+__SSAT(___SMMUL(LW+___SMMUL(HG-LW<<2,sine)<<1,param_wet)<<1,28),28);
+outlet_outR=__SSAT(dry+__SSAT(___SMMUL(HG+___SMMUL(LW-HG<<2,sine)<<1,param_wet)<<1,28),28);
+lp1=___SMMLA((LW-lp1)<<1,LOW,lp1);
+lp2=___SMMLA((HG-lp2)<<1,HIGH,lp2);
+feedL=-___SMMUL(lp1+lp2,param_feed)<<1;
+feedH=-___SMMUL((HG-lp2)+(LW-lp1),param_feed)<<1;
+
+//ArrayL[WP] = __SSAT(feedL>>14,16);
+//ArrayH[WP] = __SSAT(feedH>>14,16);
+//feedL=ArrayL[(WP-RD)&LM]<<14;
+//feedH=ArrayH[(WP-RD)&LM]<<14;]]></code.srate>
+   </obj.normal>
+</objdefs>

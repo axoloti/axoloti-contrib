@@ -1,0 +1,71 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="combinator" uuid="aa17ffc3-5e35-48c0-8345-a5114ccee8a7">
+      <sDescription>Combine two signals (after bitshifting them) with bitwise operations (and, or, xor) plus final bitshifting</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="shift1" description="positive - leftshift / neegative - rightshift">
+            <MinValue i="-31"/>
+            <MaxValue i="31"/>
+         </int32>
+         <int32 name="shift2" description="positive - leftshift / neegative - rightshift">
+            <MinValue i="-31"/>
+            <MaxValue i="31"/>
+         </int32>
+         <int32.hradio name="operation" description="and/or/xor">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <int32 name="shift3" description="positive - leftshift / neegative - rightshift">
+            <MinValue i="-31"/>
+            <MaxValue i="31"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t s1;
+int32_t s2;
+int32_t val;]]></code.declaration>
+      <code.init><![CDATA[s1=0;
+s2=0;
+val =0;]]></code.init>
+      <code.krate><![CDATA[if (param_shift1>0)
+s1 = inlet_i1<<param_shift1;
+else if (param_shift1<0)
+s1 = inlet_i1>>-param_shift1;
+else 
+s1 = inlet_i1;
+
+if (param_shift2>0)
+s2 = inlet_i2<<param_shift2;
+else if (param_shift2<0)
+s2 = inlet_i2>>-param_shift2;
+else 
+s2 = inlet_i2;
+
+switch (param_operation)
+{
+case 0: val = s1&s2 ; break;
+case 1: val = s1|s2 ; break;
+case 2: val = s1^s2; break;
+}
+
+
+
+
+
+
+if (param_shift3>0)
+outlet_o = val<<param_shift3;
+else if (param_shift3<0)
+outlet_o = val>>-param_shift3;
+else 
+outlet_o = val;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,118 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive multi test" uuid="39074967-3390-4a16-92ac-115078b4b558">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>loop_multi.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.positive name="startpoint" description="position inside range on reset"/>
+         <frac32.positive name="loopstart" description="loopstart inside range"/>
+         <frac32.bipolar name="speed" description="speed modulation"/>
+         <bool32.risingfalling name="play" description="play or dont"/>
+         <bool32.rising name="reset" description="reset to startpoint"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="pos" description="drive table/read"/>
+         <int32 name="count" description="loop count since reset"/>
+         <int32 name="kpos" description="lenght of the loop in samples"/>
+         <int32 name="kmul"/>
+         <int32 name="kdiv"/>
+         <int32 name="length"/>
+         <int32 name="test"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="speed" description="speed ,+ 64 normal speed forward, - 64 backward" noLabel="true"/>
+         <int32 name="mul">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="div">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[float32_t index;
+uint32_t indexk;
+uint32_t indexm;
+uint32_t indexd;
+uint32_t r;
+uint32_t pos;
+uint32_t posm;
+uint32_t posd;
+int shift;
+int range;
+int t_speed;
+int loopstart;
+int reset;
+int count;
+bool add;]]></code.declaration>
+      <code.init><![CDATA[index = 0;
+   r = 1;
+
+   //set 'shift factor' for storing the recording length/the sync output
+    if (attr_table.LENGTH == 2048){shift = 16; }
+    if (attr_table.LENGTH == 4096){shift = 15; }
+    if (attr_table.LENGTH == 8192){shift = 14; }
+    if (attr_table.LENGTH == 16384){shift = 13; }
+    if (attr_table.LENGTH == 32768){shift = 12; }
+    if (attr_table.LENGTH == 65536){shift = 11; }
+    if (attr_table.LENGTH == 131072){shift = 10;}
+    if (attr_table.LENGTH == 262144){shift = 9;}
+    if (attr_table.LENGTH == 524288){shift = 8;}
+    if (attr_table.LENGTH == 1048576 ){shift = 7;}
+    if (attr_table.LENGTH == 2097152 ){shift = 6;}
+    if (attr_table.LENGTH == 4194304 ){shift = 5;}]]></code.init>
+      <code.krate><![CDATA[range = (inlet_range >> shift);
+loopstart = (___SMMUL(range,inlet_loopstart)<<5);
+t_speed = (inlet_speed + param_speed);
+
+reset = (___SMMUL(range,inlet_startpoint)<<5);
+
+outlet_length = (range - loopstart) >> 4;
+
+      if (inlet_reset && r) {
+         index = reset;
+         indexm = reset >>4;
+         indexd = (reset >>4)* param_div;
+         r = 0;
+         count = 0;
+      } else if (!inlet_reset) r = 1;
+
+
+     
+
+if (indexm >= (outlet_length)) indexm = 0;
+if (indexd >= (outlet_length * param_div)) indexd = 0;
+
+indexm += (((t_speed * param_mul)*(float)(1.0f/(1<<27))));
+indexd += (t_speed*(float)(1.0f/(1<<27)));
+
+outlet_kmul = indexm;
+outlet_kdiv = (indexd / param_div);
+outlet_count = count;
+outlet_kpos = indexk >> 4;]]></code.krate>
+      <code.srate><![CDATA[index += (t_speed*(float)(1.0f/(1<<27)));
+indexk = index;
+     pos = (index + loopstart);  
+      add = range;
+
+//set a range
+
+      if (t_speed > 0){
+      if (pos >= range){index = 0;count += add; } 
+      } 
+      else{
+      if (pos <= loopstart){ index = (range-loopstart);count +=add;}  
+          }    
+        
+
+if (inlet_play) outlet_pos = ((pos << shift)+inlet_offset);
+      else outlet_pos = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

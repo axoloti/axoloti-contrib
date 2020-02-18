@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="EPTRSaw" uuid="a5527e0c-4023-49b1-9aaf-a2f2847bdc7b">
+      <sDescription>Low CPU Anti Aliased Sawtooth using second order EPTR algoroithm (one correction point).</sDescription>
+      <author>Smashed Transistors, Ricard Wanderlof</author>
+      <license>LGPL</license>
+      <helpPatch>PTRSaw.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="saw" description="sawtooth wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[float p, dp, y;
+// Sawtooth EPTR polynomial
+float corr(float p, float dp) {
+	return p - p/dp + 1/dp - 1;
+}]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t idp;
+MTOFEXTENDED(param_pitch + inlet_pitch, idp);
+dp = idp*(0.25f/(1<<30));]]></code.krate>
+      <code.srate><![CDATA[p += 2*dp;
+if (p > 1 - dp) {
+	y = corr(p, dp);
+	p -= 2; // wrap phase
+} else {
+	y = p;
+}
+outlet_saw = (int32_t) (y * (1 << 27));]]></code.srate>
+   </obj.normal>
+</objdefs>

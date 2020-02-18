@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="randomdrift" uuid="dae2ee73-886c-4b88-8c27-7e8a1b0054b9">
+      <sDescription>random drift with new-value-offset width and output smoothing</sDescription>
+      <author>Remco van der most</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets>
+         <frac32.bipolar name="random"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="width"/>
+         <frac32.s.map.lfopitch name="smooth"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t rnd1;
+int32_t rnd2;
+uint32_t smooth;]]></code.declaration>
+      <code.krate><![CDATA[rnd1 = rnd1+___SMMUL(((int32_t)(GenerateRandomNumber())),param_width);
+rnd2=rnd1>0?rnd1:-rnd1;
+
+int32_t f;
+   MTOF(param_smooth,f);
+   smooth = ___SMMLA((rnd2-smooth)<<1,f,smooth);
+
+outlet_random=smooth>>4;]]></code.krate>
+   </obj.normal>
+</objdefs>

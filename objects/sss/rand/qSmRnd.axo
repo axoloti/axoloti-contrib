@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="qSmRnd" uuid="6331dd33-6ce4-46e4-881f-d0f8e8b45314">
+      <sDescription>With each trigger, the algorithm will randomly choose to go up or down a set value. The value depends on the &quot;div&quot; input, dividing the 0 to 64 range into an &quot;x&quot; amount of steps.
+The rate controls the change-rate at each new value.</sDescription>
+      <author>Remco van der most</author>
+      <license>GPL</license>
+      <inlets>
+         <bool32 name="trig"/>
+         <int32 name="div"/>
+         <frac32 name="rate"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="rate" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t pos;
+int gtrig;
+int32_t val;
+int32_t out;]]></code.declaration>
+      <code.krate><![CDATA[int32_t step=(1<<27)/inlet_div;
+int dir;
+if((inlet_trig>0)&&!gtrig)
+{
+	gtrig=1;
+	dir=GenerateRandomNumber()&1;
+	if(dir>0){pos+=step;}
+	else{pos-=step;}
+	pos=pos<0?-pos:pos;
+	pos=pos>(1<<27)?(1<<28)-pos:pos;
+	pos=pos/step*step;
+	
+}
+else if(inlet_trig==0){gtrig=0;}
+int32_t F;
+MTOF(param_rate+inlet_rate,F)
+val=___SMMLA(((pos-out)-val)<<1,F>>1,val);
+out=___SMMLA(val<<1,F>>2,out);
+outlet_out=out;]]></code.krate>
+   </obj.normal>
+</objdefs>

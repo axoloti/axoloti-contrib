@@ -1,0 +1,23 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="pan gain c" uuid="19e8d144-023d-407d-9416-a319b9ca60e7">
+      <sDescription>stereo balance (panorama) with gain (amp)</sDescription>
+      <author>Johannes Taelman  philoop</author>
+      <license>BSD</license>
+      <helpPatch>pan.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i1" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="left" description="output"/>
+         <frac32buffer name="right" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="gain"/>
+         <frac32.s.map.ratio name="pan"/>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[outlet_left = ___SMMUL((1<<29)-(param_pan<<2),(inlet_i1*param_gain))<<2;
+outlet_right = ___SMMUL((1<<29)+(param_pan<<2),(inlet_i1*param_gain))<<2;]]></code.srate>
+   </obj.normal>
+</objdefs>

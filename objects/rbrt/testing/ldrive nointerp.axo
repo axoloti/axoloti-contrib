@@ -1,0 +1,90 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive nointerp" uuid="b5982401-ba35-49a1-866a-4fe1af76684d">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>loop_multi.axh</helpPatch>
+      <inlets>
+         <frac32.positive name="offset" description="offset inside the table"/>
+         <frac32.positive name="range" description="length of the area to index,or loop end"/>
+         <frac32.positive name="startpoint" description="position inside range on reset"/>
+         <frac32.positive name="loopstart" description="loopstart inside range"/>
+         <bool32 name="direction"/>
+         <bool32 name="play"/>
+         <bool32.rising name="r2zero"/>
+         <bool32.rising name="r2start" description="reset to startpoint"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="audio out"/>
+         <frac32buffer name="phase" description="plaback phase in fraction of table"/>
+         <int32 name="count" description="loop count since reset"/>
+         <int32 name="spos" description="playhead position inside loop in samples"/>
+         <int32 name="stotal" description="length of range in samples"/>
+         <int32 name="sloop" description="length of loop in samples"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.hradio name="direction" noLabel="true">
+            <MaxValue i="2"/>
+         </int32.hradio>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t index1;
+int32_t index2;
+int32_t index3;
+
+bool r;
+uint8_t shift;
+
+int32_t dir;
+int32_t loopstart;
+int32_t reset;
+uint32_t count;
+bool add;
+
+
+uint32_t offset;]]></code.declaration>
+      <code.init><![CDATA[//set 'shift factor' for storing the recording length/the sync output
+shift =     (27-attr_table.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[offset = ___SMMUL(inlet_offset,(attr_table.LENGTH << 5));
+loopstart = ___SMMUL(inlet_range,inlet_loopstart)<<5;
+dir = ((((!(inlet_direction || param_direction)) <<1) -1) << 27)>> attr_table.LENGTHPOW;
+add = inlet_range;
+
+reset = (___SMMUL(inlet_range,inlet_startpoint)<<5);
+
+      if (inlet_r2start && (!r)) {
+         index1 = reset;
+         r = 1;
+         count = 0;
+      }
+
+      if (inlet_r2zero && (!r)) {
+         index1 = 0;
+         r = 1;
+         count = 0;
+      }
+if ((!inlet_r2start) && (!inlet_r2zero)) r = 0;
+
+outlet_count = count;
+outlet_spos    =  index1 >> shift;
+outlet_stotal = inlet_range >> shift;
+outlet_sloop = (inlet_range - loopstart)>>shift;]]></code.krate>
+      <code.srate><![CDATA[if (dir > 0){
+      if (index1 >= inlet_range){index1 = loopstart;count += add;} 
+      } 
+      else{
+      if (index1 <= loopstart){ index1 = inlet_range;count +=add;}  
+          }    
+
+outlet_phase = __USAT(index1 + inlet_offset,27);
+
+
+outlet_wave =  attr_table.array[outlet_phase >> shift]<<attr_table.GAIN;
+
+if (inlet_play) index1 += dir;
+else outlet_wave = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

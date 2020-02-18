@@ -1,0 +1,91 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="csustain" uuid="1bf7ac50-52fb-4aa3-87ce-eb27976abef0">
+      <sDescription>sustain module to use with the chainFX effects chainer module.
+Will push any signal above treshold level to the sustain level at a certain rate (attack/release). Decay sets the envelope decay of the envelope follower for the sustain level.
+Controls can easily be editted for external control</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map.gain name="sustain"/>
+         <frac32.s.map name="rate"/>
+         <frac32.u.map.squaregain name="treshold"/>
+         <bool32.tgl name="bypass"/>
+         <bool32.tgl name="solo"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t v30=(uint32_t)1<<30;
+uint32_t v26=(uint32_t)1<<26;
+uint32_t v27=(uint32_t)1<<27;
+int32_t outL;
+int32_t outR;
+int32_t decay;
+int32_t sustain;
+int32_t rate;
+int32_t valL;
+int32_t valR;
+int32_t onT;
+int32_t GL;
+int32_t GR;
+int32_t gnL;
+int32_t gnR;
+int32_t hpL;
+int32_t hpR;
+int32_t LOG(int32_t in){
+	Float_t f;
+f.f = in;
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+return r3 = r1 + r3;
+}
+
+int32_t EXP(int32_t in){
+	int8_t s = (in>>24)+4;
+uint8_t ei = in>>16;
+int32_t OT;
+if (s>=0){
+     return OT = expt[ei]<<s;}
+else {return OT = expt[ei]>>(-s);}
+}
+
+bool bypass,solo;
+int32_t FX(int32_t inL,int32_t inR,int32_t CV1,int32_t CV2){
+hpL+=inL-hpL>>9;
+hpR+=inR-hpR>>9;
+inL-=hpL;
+inR-=hpR;
+int32_t IL=inL;
+int32_t IR=inR;
+inL=inL>0?inL:-inL;
+inR=inR>0?inR:-inR;
+if(inL>GL){GL=inL;}
+else{GL+=inL-GL>>18;}
+if(inR>GR){GR=inR;}
+else{GR+=inR-GR>>18;}
+
+if(inL>valL){valL=inL;}
+else{valL+=___SMMUL(inL-valL,rate)<<1;}
+if(inR>valR){valR=inR;}
+else{valR+=___SMMUL(inR-valR,rate)<<1;}
+valL=valL>onT?valL:onT;
+valR=valR>onT?valR:onT;
+gnL=LOG(GL)-LOG(valL);
+gnR=LOG(GR)-LOG(valR);
+MTOFEXTENDED(___SMMUL(sustain,gnL)<<1,gnL)
+MTOFEXTENDED(___SMMUL(sustain,gnR)<<1,gnR)
+outL=___SMMUL(IL<<1,gnL)<<6;
+outR=___SMMUL(IR<<1,gnR)<<6;
+if(bypass>0){
+outL=IL;
+outR=IR;
+}
+};]]></code.declaration>
+      <code.krate><![CDATA[bypass=param_bypass;
+solo=param_solo;
+sustain=param_sustain;
+onT=param_treshold>>4;
+MTOF(param_rate,rate)]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,101 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="SN2" uuid="fb233262-0506-4974-878d-ea1f457ee3a9">
+      <sDescription>Snare drum
+Two oscillators, two frequencies (fA, FB), but one frequency &quot;hit&quot; starting point (Pamt)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="trig"/>
+         <frac32 name="pitch"/>
+         <frac32 name="negDec"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.kdecaytime name="hit"/>
+         <frac32.u.map.kdecaytime name="tail"/>
+         <frac32.s.map name="Pamt"/>
+         <frac32.s.map name="fA"/>
+         <frac32.u.map name="AmixB"/>
+         <frac32.s.map name="fB"/>
+         <frac32.u.map name="FM"/>
+         <frac32.s.map.pitch name="cut"/>
+         <frac32.u.map.filterq name="reso"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t P[2];
+int32_t R[2];
+int32_t S[2];
+int32_t V[2];
+int32_t C[2];
+int32_t N[2];
+bool trig;
+int32_t env;
+int32_t Env;
+int i;
+int32_t low[2];
+int32_t band[2];
+int32_t freq[2];
+int32_t K;
+int32_t Vdec;
+int32_t Pdec;]]></code.declaration>
+      <code.krate><![CDATA[env=env-___SMMUL(Vdec,env);
+Env=Env-___SMMUL(Pdec,Env);
+if((inlet_trig>0)&&!trig){
+	MTOF(-param_tail+___SMMUL(inlet_negDec<<2,param_tail<<2),Vdec)
+	MTOF(-param_hit+(1<<26)+___SMMUL(inlet_negDec<<2,param_hit<<2),Pdec)
+	trig=1;
+	env=(inlet_trig);
+	Env=(inlet_trig);
+	K=(inlet_trig<<1)-(1<<27);	
+}
+else if(inlet_trig==0){trig=0;}
+int32_t Venv=env;
+int32_t Penv=Env>(1<<26)?(1<<27):0;
+Venv=___SMMUL(Venv<<3,Venv<<2);
+
+
+Venv=Penv>Venv?Penv:Venv;
+Venv=___SMMUL(Venv<<3,Venv<<2);
+Venv=___SMMUL(Venv<<3,Venv<<2);
+Venv=___SMMUL(Venv<<3,Venv<<2);
+
+
+
+
+int32_t p1=param_fA+inlet_pitch>>2;
+int32_t p2=param_fB>>2;
+int32_t Pamt=param_Pamt>>2;
+MTOFEXTENDED(p1+(Penv>0?Pamt-p1:0),R[0])
+
+MTOFEXTENDED(p1+p2+(Penv>0?Pamt-p1-p2:0),R[1])
+MTOF(p1+param_cut+(Penv>>1),C[0])
+MTOF(p1+p2+param_cut+(Penv>>1),C[1])
+int32_t mix=__USAT(param_AmixB+Vdec,27);
+int32_t cmix=(1<<27)-mix;
+
+int32_t damp = (0x80<<24) - (param_reso<<4);
+damp = ___SMMUL(damp,damp);
+int32_t alpha;
+
+MTOFEXTENDED(__SSAT(p1+param_cut+(Penv>>1)-(1<<32)+K,28),alpha);
+SINE2TINTERP(alpha,freq[0]);
+MTOFEXTENDED(__SSAT(p1+p2+param_cut+(Penv>>1)-(1<<32)+K,28),alpha);
+SINE2TINTERP(alpha,freq[1]);]]></code.krate>
+      <code.srate><![CDATA[int32_t noise=(int32_t)(GenerateRandomNumber)();
+if(noise>0){N[0]+=noise-(1<<31);}
+else{N[1]+=noise+(1<<31);}
+
+for(i=0;i<2;i++){
+int32_t notch = N[i] - (___SMMUL(damp,band[i])<<1);
+low[i] = low[i] + (___SMMUL(freq[i],band[i])<<1);
+int32_t high  = notch - low[i];
+band[i] = (___SMMUL(freq[i],high)<<1) + band[i];
+P[i]+=R[i];
+V[i]=___SMMLA(((S[i]>>4)-V[i])<<1,C[i],V[i]);
+SINE2TINTERP(P[i]+(___SMMUL(___SMMUL(param_FM<<3,band[i]<<2)<<4,V[(i+1)&1]<<2)<<3),S[i])}
+outlet_out=___SMMUL(___SMMUL(cmix,S[0])+___SMMUL(mix,S[1])<<2,Venv+Penv<<2);]]></code.srate>
+   </obj.normal>
+</objdefs>

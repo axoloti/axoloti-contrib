@@ -1,0 +1,576 @@
+<objdefs appVersion="1.0.9">
+  <obj.normal id="seq_clk_sync" uuid="de6909eb627413af5b43f97184c1306f4b3a4793">
+    <sDescription>Sequencer clock controller, midi/24ppq sync</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <frac32.bipolar  name="tempo"       description="Clock frequency mod"/>
+      <frac32.bipolar  name="gatelength"  description="Gate length mod"/>
+      <bool32          name="run"         description="Run/stop"/>
+      <!--bool32          name="runsync"    description="Run/stop synced to next clock"/ -->
+      <bool32          name="reverse"     description="Play backwards"/>
+      <bool32          name="upndown"     description="Play steps counting up and down"/>
+      <bool32          name="endrep"      description="Repeat end steps for upndown mode"/>
+      <int32           name="firststep"   description="First step number, 0..N"/>
+      <int32           name="laststep"    description="Last step number, 0..N"/>
+      <bool32.rising   name="rstsync"     description="Reset to step 0 synved to next clock"/>
+      <bool32.rising   name="rstimm"      description="Reset to step 0 immediately"/>
+      <int32           name="clkoverride" description="Override clocksource attribute, 0,1,2,3,4 = attr,int,ext,midi,midi-omni"/>
+      <int32           name="divoverride" description="Override clockdiv parameter, values above 0 overrides clockdiv"/>
+      <bool32.rising   name="24ppq"       description="External 24 PPQ clock"/>
+    </inlets>
+    <outlets>
+      <int32  name="step"        description="Step number out"/>
+      <bool32 name="gate"        description="Gate/clock out"/>
+      <bool32.pulse name="clock" description="Step clock output"/>
+      <bool32.pulse name="start" description="Pulse when step 1 starts"/>
+      <bool32.pulse name="24ppq" description="24 PPQ clock output"/>
+    </outlets>
+    <displays/>
+    <params>
+      <int32 name="clockdiv" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+      <bool32.tgl            name="miditransport" description="Obey MIDI transport messages"/>
+      <frac32.s.map.lfopitch name="tempo"         description="Clock frequency modulation"/>
+      <frac32.u.map.ratio    name="gatelength"    description="Gate length"/>
+      <int32 name="seqlength" noLabel="false">
+         <MinValue i="0"/>
+         <MaxValue i="64"/>
+      </int32>
+    </params>
+    <attribs>
+      <combo name="clocksource">
+        <MenuEntries>
+          <string>Internal</string>
+          <string>External</string>
+          <string>MIDI</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+        </CEntries>
+      </combo>
+      <combo name="device">
+        <MenuEntries>
+          <string>omni</string>
+          <string>din</string>
+          <string>usb host port 1</string>
+          <string>usb host port 2</string>
+          <string>usb host port 3</string>
+          <string>usb host port 4</string>
+          <string>internal port 1</string>
+          <string>internal port 2</string>
+          <string>usb device port 1</string>
+        </MenuEntries>
+        <CEntries>
+          <string>MIDI_DEVICE_OMNI, 0</string>
+          <string>MIDI_DEVICE_DIN, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 2</string>
+          <string>MIDI_DEVICE_USB_HOST, 3</string>
+          <string>MIDI_DEVICE_USB_HOST, 4</string>
+          <string>MIDI_DEVICE_INTERNAL, 1</string>
+          <string>MIDI_DEVICE_INTERNAL, 2</string>
+          <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+        </CEntries>
+      </combo>
+    </attribs>
+    <code.declaration><![CDATA[
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      //#define USE_CLOCK_SMOOTHING
+
+      enum
+      {
+        CLOCK_SOURCE_internal  = 0,
+        CLOCK_SOURCE_external  = 1,
+        CLOCK_SOURCE_midi      = 2,
+        CLOCK_SOURCE_midi_omni = 3
+      } CLOCK_SOURCE;
+
+      uint32_t  start_sequence;
+      uint32_t  first_run;        // To catch first iteration for startup conditions
+      uint32_t  sync_count;
+      uint32_t  ktimer;           // 3kHz timer
+      uint32_t  phase;
+      uint32_t  old_phase;
+      uint32_t  old_24ppq;
+      uint32_t  old_reset_sync;
+      uint32_t  old_reset_imm;
+      uint32_t  reset_sync;
+      uint32_t  reset_imm;
+      uint32_t  supress_trig;     // Avoid new gate on current step for stop -> run
+      uint32_t  enforce_trig;     // Ensure that we get a retrigger on reset immediate if pressed when gate was on
+      int32_t   first_step;
+      int32_t   last_step;
+      int32_t   step_count;       // The step counter
+      int32_t   next_step_count;  // Pending new step number, or -1
+      int32_t   old_step_count;
+      int32_t   step_direction;
+      int32_t   clock_source;
+      int32_t   clock_divider;
+      uint32_t  midi_last_ktime;  // MIDI/24PPQ clock capture
+      uint32_t  midi_clock_24;
+      int32_t   midi_clock_freq;
+      int32_t   midi_clock_run;
+      int32_t   midi_clock_count;
+      int32_t   midi_transport;
+
+#ifdef USE_CLOCK_SMOOTHING
+      float     midi_last_period;
+#endif
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int midi_device_test( midi_device_t dev, uint8_t port, int selected_dev, uint8_t selected_port )
+      {
+        if(    (selected_dev == MIDI_DEVICE_OMNI)
+            || (selected_dev == dev && selected_port == port)
+            )
+          return 1;
+        return 0;
+      }
+
+      void on_sync_clock( void )
+      {
+        if( midi_clock_run == 1  )
+          {
+            midi_clock_count++;
+
+            // Find noof sample periods since last time;
+            float period    = (ktimer - midi_last_ktime) * 16 * clock_divider;
+            midi_last_ktime = ktimer;
+#ifdef USE_CLOCK_SMOOTHING
+            // Leaky integrator to avoid spiky clock on tempo changes
+            period = period + 0.5f * (midi_last_period - period);
+            midi_last_period = period;
+#endif
+            if( sync_count < 2 )
+              {
+                sync_count++;
+              }
+            else
+              {
+                if( period < 1.0f )
+                  {
+                    period = 1.0f;
+                  }
+                // Using slightly lower frequency (63.99 vs 64.0) so we avoid leading edge spikes from late phase resets.
+                float f_clock = SAMPLERATE / period;
+                double freq = 63.99 * (double)(1 << 30) * f_clock / (SAMPLERATE * 1.0);
+                midi_clock_freq  = (uint32_t)freq;
+                midi_clock_24    = 1;
+                if( midi_clock_count >= clock_divider )
+                  {
+                    phase            = 0;
+                    midi_clock_count = 0;
+                  }
+              }
+          }
+      }
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      start_sequence   = 0;
+      first_run        = 1;
+      sync_count       = 0;
+      ktimer           = 0;
+      phase            = 0;
+      old_phase        = 0;
+      old_24ppq        = 0;
+      old_reset_sync   = 0;
+      old_reset_imm    = 0;
+      reset_sync       = 0;
+      reset_imm        = 0;
+      supress_trig     = 0;
+      enforce_trig     = 0;
+      first_step       = 0;
+      last_step        = 7;
+      step_count       = 0;
+      next_step_count  = -1;
+      old_step_count   = 0;
+      step_direction   = 1;
+      clock_source     = CLOCK_SOURCE_internal;
+      clock_divider    = 12;
+      midi_last_ktime  = 0;
+      midi_clock_24    = 0;
+      midi_clock_freq  = 0;
+      midi_clock_run   = 1;
+      midi_clock_count = 0;
+      midi_transport   = 0;
+#ifdef USE_CLOCK_SMOOTHING
+      midi_last_period = 0.0f;
+#endif
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      int32_t freq;
+      int32_t gatelength;
+
+      first_step = inlet_firststep;
+      last_step  = param_seqlength == 0 ? inlet_laststep : param_seqlength - 1;
+
+      // Reset output pulses
+      outlet_clock = 0;
+      outlet_24ppq = 0;
+      outlet_start = 0;
+
+      // Need some variable copies to resolve scope...
+      midi_transport = param_miditransport;
+
+      // Prevent MIDI sync from starting without a MIDI start message
+      if( start_sequence < 2 )
+        {
+          if( param_miditransport == 1 )
+            {
+              midi_clock_run = 0;
+            }
+
+          if( inlet_reverse )
+            {
+              //step_count     = param_seqlength - 1;
+              step_count     = last_step;
+              step_direction = -1;
+            }
+
+          start_sequence++;
+        }
+
+      // Live overrides for the clock source and clock divider parameters.
+      // Allow clock selection without restarting the patch is good :)
+      // (The int32 spinbox is not CC assignable...(bug?))
+      // Starting to get a bit much - look into amortizing the less urgent stuff like this?
+
+      if( inlet_clkoverride > 0 )
+        {
+          clock_source = inlet_clkoverride - 1;
+          if( clock_source > CLOCK_SOURCE_midi_omni )
+            {
+              clock_source = CLOCK_SOURCE_midi_omni;
+            }
+          else if( clock_source < CLOCK_SOURCE_internal )
+            {
+              clock_source = CLOCK_SOURCE_internal;
+            }
+        }
+      else
+        {
+          clock_source = attr_clocksource;
+        }
+
+      if( inlet_divoverride > 0 )
+        {
+          clock_divider = inlet_divoverride;
+          if( clock_divider < 1 )
+            {
+              clock_divider = 1;
+            }
+        }
+      else
+        {
+          clock_divider = param_clockdiv;
+        }
+
+
+      // 24 PPQ sync input
+      if( clock_source == CLOCK_SOURCE_external )
+        {
+          // Must keep the clock sync process running for external clock
+          // unless we obey the MIDI transport messages.
+          if( param_miditransport == 0 )
+            {
+              midi_clock_run = 1;
+            }
+
+          if( inlet_24ppq && !old_24ppq )
+            {
+              on_sync_clock();
+            }
+        }
+
+      // Catch counter reset requests, with immediate reset taking priority
+
+      if( inlet_rstimm && !old_reset_imm )
+        {
+          reset_imm = 1;
+        }
+      else if( inlet_rstsync && !old_reset_sync )
+        {
+          reset_sync = 1;
+        }
+
+      if(     inlet_run == 1
+          && (clock_source == CLOCK_SOURCE_internal || midi_clock_run == 1)
+        )
+        {
+          if( clock_source == CLOCK_SOURCE_internal )
+            {
+              MTOFEXTENDED( param_tempo + inlet_tempo, freq );
+              phase += freq>>2;
+            }
+          else
+            {
+              // Reclocking the internal LFO
+              phase += midi_clock_freq;
+
+              // Maintain 24 PPQ clock pulse
+              if( midi_clock_24 )
+                {
+                  outlet_24ppq  = 1;
+                  midi_clock_24 = 0;
+                }
+            }
+
+          if( first_run )
+            {
+              DEBUGF( "%d : FIRST RUN", ktimer  );
+              // Need to force a start pulse the very first run, since no count++ will trigger before the second step
+              outlet_start = 1;
+              first_run    = 0;
+            }
+          else if( phase < old_phase )
+            {
+              // Clock! Update counter, taking any queued song position into account.
+
+              if( next_step_count >= 0 )
+                {
+                  step_count = next_step_count;
+                  next_step_count = -1;
+                }
+              else
+                {
+                  if( inlet_upndown )
+                    {
+                      step_count += step_direction;
+                      //if( step_count < 0 )
+                      if( step_count < first_step )
+                        {
+                          step_direction = 1;
+                          if( inlet_endrep )
+                            {
+                              //step_count = 0;
+                              step_count = first_step;
+                            }
+                          else
+                            {
+                              //step_count = 1;
+                              step_count = first_step + 1;
+                            }
+                        }
+                      //else if( step_count >= param_seqlength )
+                      else if( step_count > last_step )
+                        {
+                          step_direction = -1;
+                          if( inlet_endrep )
+                            {
+                              //step_count = param_seqlength - 1;
+                              step_count = last_step;
+                            }
+                          else
+                            {
+                              //step_count = param_seqlength - 2;
+                              step_count = last_step - 1;
+                            }
+                        }
+                    }
+                  else
+                    {
+                      step_direction = 1;
+                      if( inlet_reverse )
+                        {
+                          step_count--;
+                        }
+                      else
+                        {
+                          step_count++;
+                        }
+                    }
+                }
+
+              if( !inlet_upndown )
+                {
+                  //if( step_count < 0 )
+                  if( step_count < first_step )
+                    {
+                      //step_count = param_seqlength - 1;
+                      step_count = last_step;
+                    }
+                  //else if( step_count >= param_seqlength )
+                  else if( step_count > last_step )
+                    {
+                      //step_count = 0;
+                      step_count = first_step;
+                    }
+                }
+
+              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+              // 05.05.2016 02:39 - continue with the first_step/last_step paradigm!
+              //                    done below, continue upwards!
+              // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+              //if( step_count == 0 )
+              if( step_count == first_step )
+                {
+                  outlet_start = 1;
+                }
+
+              outlet_clock = 1;
+
+              DEBUGF("%d : COUNT: count = %d,  next = %d", ktimer, step_count, next_step_count );
+            }
+
+          // Handle sequencer reset, either immediate or synchronized to the next step
+
+          if( reset_imm )
+            {
+              DEBUGF( "RESET IMM" );
+              phase        = 0;
+              reset_imm    = 0;
+              reset_sync   = 0;
+              enforce_trig = 1;
+              if( inlet_reverse )
+                {
+                  //step_count     = param_seqlength - 1;
+                  step_count     = last_step;
+                  step_direction = -1;
+                }
+              else
+                {
+                  //step_count     = 0;
+                  step_count     = first_step;
+                  step_direction = 1;
+                }
+            }
+          else if( reset_sync )
+            {
+              if( phase < old_phase )
+                {
+                  DEBUGF( "RESET SYNC" );
+                  phase      = 0;
+                  reset_imm  = 0;
+                  reset_sync = 0;
+                  if( inlet_reverse )
+                    {
+                      //step_count     = param_seqlength - 1;
+                      step_count     = last_step;
+                      step_direction = -1;
+                    }
+                  else
+                    {
+                      //step_count     = 0;
+                      step_count     = first_step;
+                      step_direction = 1;
+                    }
+                }
+            }
+
+          // The gate length is variable from 0% to 100%
+
+          gatelength = param_gatelength + inlet_gatelength;
+          if( gatelength > (1<<27) )
+            {
+              gatelength  = (1<<27);
+            }
+          else if( gatelength < 0 )
+            {
+              gatelength  = 0;
+            }
+
+          // Handle the gate correctly for all cases
+          //   Supressed trigger : avoids new gate on current step for stop -> run
+          //   Enforced trigger  : force a new gate on reset immediate if pressed when the gate was on
+          //   Normal trigger    : running gate pulse with variable gate length
+
+          if( supress_trig )
+            {
+              DEBUGF( "SUPRESS TRIG" );
+              outlet_gate = 0;
+              if( step_count != old_step_count )
+                {
+                  supress_trig = 0;
+                }
+            }
+          else if( enforce_trig )
+            {
+              DEBUGF( "ENFORCE TRIG" );
+              outlet_gate  = 0;
+              enforce_trig = 0;
+            }
+          else
+            {
+              if( (phase>>5) > gatelength )
+                {
+                  outlet_gate = 0;
+                }
+              else
+                {
+                  outlet_gate = 1;
+                }
+            }
+
+          outlet_step    = step_count;
+          old_step_count = step_count;
+          old_phase      = phase;
+        }
+      else
+        {
+          outlet_step  = step_count;
+          outlet_gate  = 0;
+          supress_trig = 1;
+        }
+
+      old_24ppq      = inlet_24ppq;
+      old_reset_sync = inlet_rstsync;
+      old_reset_imm  = inlet_rstimm;
+      ktimer++;
+
+    ]]></code.krate>
+    <code.midihandler><![CDATA[
+
+      // http://www.blitter.com/~russtopia/MIDI/~jglatt/tech/midispec/seq.htm
+      // http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_real.htm
+
+      if(  clock_source == CLOCK_SOURCE_midi_omni
+        || (clock_source == CLOCK_SOURCE_midi && midi_device_test( dev, port, attr_device ) == 1)
+        )
+        {
+          if( status == MIDI_TIMING_CLOCK )
+            {
+              on_sync_clock();
+            }
+          else if( midi_transport )
+            {
+              if( status == MIDI_START )
+                {
+                  // Start on the first incoming clock.
+                  // 25.04.2016 00:24 - Start is not bang on? Resync clock?
+                  midi_clock_run   = 1;
+                  midi_clock_count = clock_divider; // Start on first midi clock to arrive!
+                  step_count       = first_step;
+                  next_step_count  = 0;
+                }
+              else if( status == MIDI_STOP )
+                {
+                  midi_clock_run = 0;
+                }
+              else if( status == MIDI_CONTINUE )
+                {
+                  midi_clock_run = 1;
+                }
+              else if( status == MIDI_SONG_POSITION )
+                {
+                  midi_clock_count = 0; // ...or not?
+                  next_step_count  = 6 * ( (data2<<7) + data1 );
+                  next_step_count  =  first_step
+                                    + (next_step_count % (last_step - first_step + 1));
+                }
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+</objdefs>

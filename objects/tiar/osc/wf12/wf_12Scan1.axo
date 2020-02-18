@@ -1,0 +1,66 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="wf_12Scan1" uuid="3fd1705e-c8f9-4fda-9c05-dbf021a21128">
+      <sDescription>For use with O2_12Steps(Sync)</sDescription>
+      <author>Thierry Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>wf_12Scan1.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32 name="scan"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wf12"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="scan"/>
+         <bool32.tgl name="mode"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[const int8_t tableWf_12ScanGen1[12*17+4]={
+   0,   50,   87,  100,   87,   50,    0,  -50,  -87, -100,  -87,  -50,   // 0
+   0,   33,   67,  100,   67,   33,    0,  -33,  -67, -100,  -67,  -33,   // 1
+   0,   50,  100,  100,  100,   50,    0,  -50, -100, -100, -100,  -50,   // 2
+   0,  100,  100,  100,  100,  100,    0, -100, -100, -100, -100, -100,   // 3
+   0,   54,  100,  100,  100,  100,  100,   46,  -67, -100, -100, -100,   // 4
+   0,   36,   78,  100,  100,  100,  100,   31,  -45, -100, -100,  -98,   // 5
+   0,    7,   26,   58,   97,  100,  100,  100,   52,  -58, -100, -100,   // 6
+   0,   28,   58,   84,   99,   96,   71,   24,  -34,  -84, -100,  -69,   // 7
+   0,   64,   98,   93,   66,   36,   12,   -8,  -33,  -67,  -98,  -84,   // 8
+   0,   87,   92,   43,    2,  -11,   -4,    8,    8,  -20,  -77,  -95,   // 9
+   0,  100,   45,  -31,  -56,  -41,    0,   41,   56,   31,  -45, -100,   // 10
+   0,  100,   45,   31,   48,   43,    0,  -43,  -48,  -31,  -45, -100,   // 11
+   0,   94,   45,   81,  100,   97,    0,  -97, -100,  -81,  -45,  -94,   // 12
+   0,   99,   37,   38,   86,   97,   52,  -80,  -96, -100,  -64,  -88,   // 13
+   0,   83,   91,   87,   16,   19,  -43,  -81,  -53,  -87,  -99,  -95,   // 14
+   0,   75,   96,   87,   29,    6,  -43,  -73,  -64,  -87, -100,  -89,   // 15
+   0,   50,   87,  100,   87,   50,    0,  -50,  -87, -100,  -87,  -50,   // guard repeat
+   0,   33,   67,  100 // guard
+};]]></code.declaration>
+      <code.krate><![CDATA[if(param_mode == 0){
+  //ScanWave mode
+  //v = (1-a)*t[i] +a*t[i+1]
+  // t:q7 v:q27 => a:q20
+  int32_t scan = 12 * ((param_scan + inlet_scan) & 0x07FFFFFF);
+  int32_t i = scan >> (27 - 4); // [0 12*16-1]
+  int32_t a = scan & ((1 << (27 - 4)) - 1); // q23
+  a >>= 3; //q20
+  int32_t _a = (1 << 20) - a;
+  for(int j = 0; j < 12; j++){
+    outlet_wf12[j] = _a * tableWf_12ScanGen1[i] + a * tableWf_12ScanGen1[i+1];
+    i++;
+  }
+} else {
+  //TransWave mode
+  int32_t pos = (param_scan + inlet_scan) & 0x07FFFFFF;
+  int32_t i = (pos >> (27-4)) * 12; // [0 15]*12
+  int32_t a = pos & ((1 << (27 - 4)) - 1); // q23
+  a >>= 3; //q20
+  int32_t _a = (1 << 20) - a;
+  for(int j = 0; j < 12; j++){
+    outlet_wf12[j] = _a * tableWf_12ScanGen1[i] + a * tableWf_12ScanGen1[i+12];
+    i++;
+  }
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

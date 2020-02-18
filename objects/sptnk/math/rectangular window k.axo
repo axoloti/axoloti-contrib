@@ -1,0 +1,34 @@
+<objdefs appVersion="1.0.9">
+   <obj.normal id="rectangular window k" uuid="e3997dfa-0acd-48e9-9a80-12340c88b8ff">
+      <sDescription>Rectangular window, with variable center and width</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <frac32 name="in" description="in"/>
+      </inlets>
+      <outlets>
+         <bool32 name="out" description="out"/>
+         <bool32 name="inv" description="inverted output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="center"/>
+         <frac32.u.map name="width"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t center;
+int32_t width;
+bool o;]]></code.declaration>
+      <code.krate><![CDATA[center=param_center;
+width=param_width;
+
+if (inlet_in>center-width && inlet_in<center+width)
+o=1;
+else
+o=0;
+
+outlet_out=o;
+outlet_inv=!o;]]></code.krate>
+   </obj.normal>
+</objdefs>

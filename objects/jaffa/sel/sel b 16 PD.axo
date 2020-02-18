@@ -1,0 +1,33 @@
+<objdefs>
+   <obj.normal id="sel b 16 pulseD" uuid="52cb3f17717137ff41f7a8475d55b67f6c030b3e" sha="89b7aface6588eec79a3b843127c9608508ed8fa">
+      <upgradeSha>1cf670bf70a03bd809b4e6a7cedffcf2298f833b</upgradeSha>
+      <sDescription>select one out of 16 booleans, chainable. Pulse output.</sDescription>
+      <author>Johannes Taelman Edited by Jaffasplaffa</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="in" description="in"/>
+         <bool32 name="def" description="default value"/>
+      </inlets>
+      <outlets>
+         <int32 name="chain" description="chain out (in-16)"/>
+         <bool32.pulse name="o" description="output"/>
+      </outlets>
+      <displays>
+         <int32.bar16 name="in" noLabel="true"/>
+      </displays>
+      <params>
+         <bin16 name="b16" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int in_prev;
+]]></code.declaration>
+      <code.init><![CDATA[in_prev = 0;
+]]></code.init>
+      <code.krate><![CDATA[if ((inlet_in>=0)&&(inlet_in<16))   outlet_o=(in_prev!=inlet_in)&&(param_b16&(1<<inlet_in));
+else outlet_o = inlet_def;
+outlet_chain = inlet_in-16;
+disp_in=inlet_in;
+in_prev = inlet_in;
+]]></code.krate>
+   </obj.normal>
+</objdefs>

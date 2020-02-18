@@ -1,0 +1,29 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lsync" uuid="d4ffa565-d2dd-4829-a48d-002d15c23152">
+      <sDescription>if &apos;wait&apos; is high,&apos;loop_sync&apos; will wait until the signal at &apos;pos&apos; reaches the value defined by &apos;start&apos;.
+then, a pulse is put out at outlet &apos;trig&apos;.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>math.axh</helpPatch>
+      <inlets>
+         <bool32.risingfalling name="wait" description="wait "/>
+         <frac32.positive name="pos"/>
+         <frac32.positive name="start" description="sync position"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trig" description="sync trigger"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int shift;]]></code.declaration>
+      <code.init><![CDATA[shift = 1 << 18;]]></code.init>
+      <code.krate><![CDATA[int csample = inlet_pos;
+int spos =    inlet_start;
+
+
+if ((inlet_wait) && ((csample > (spos -shift)) && (csample < (spos +shift)))) outlet_trig = 1; 
+      else 
+      outlet_trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,38 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rms meter" uuid="19a127f7-a7de-4c03-ad05-137f17497344">
+      <sDescription>rms meter</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>rms meter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="pitch"/>
+      </inlets>
+      <outlets>
+         <frac32 name="rms"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+int32_t ms; //mean square
+float rms;
+]]></code.declaration>
+<code.init><![CDATA[
+ms = 0;
+rms = 0;
+]]></code.init>
+
+      <code.krate><![CDATA[outlet_rms = arm::float_to_q(rms, 27);
+rms = sqrtf(arm::q_to_float(ms, 27));
+// low pass coefficient can be controlled by input pitch
+uint32_t coef;
+MTOFEXTENDED(param_pitch + inlet_pitch, coef);
+coef >>= 3;]]></code.krate>
+      <code.srate><![CDATA[
+ ms = ___SMMLA(coef, (___SMMUL(inlet_in, inlet_in)<<5) - ms, ms);
+]]></code.srate>
+   </obj.normal>
+</objdefs>

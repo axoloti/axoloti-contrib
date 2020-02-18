@@ -1,0 +1,175 @@
+<patch-1.0 appVersion="1.0.8">
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="854" y="56">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="-17.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2" uuid="30c04239c88e09d3fa5c333b784ecf54f1b0e268" name="mix_1" x="1036" y="154">
+      <params>
+         <frac32.u.map name="gain1" value="51.0"/>
+         <frac32.u.map name="gain2" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="Master Volume" x="1134" y="154">
+      <params>
+         <frac32.u.map name="amp" value="23.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1246" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="966" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="182">
+      <params>
+         <frac32.s.map name="pitch" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="toneburst/pattern/nmpgen3" uuid="f4aa3eb936415b6fc796e576dde754a273a022ac" name="nmpgen3_1" x="224" y="182">
+      <params>
+         <frac32.u.map name="bank" value="0.0"/>
+         <frac32.u.map name="index" value="0.0"/>
+         <frac32.u.map name="trigthresh" value="32.0"/>
+         <frac32.u.map name="length" value="32.0"/>
+         <frac32.u.map name="offset" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*_2" x="504" y="182">
+      <params>
+         <frac32.u.map name="amp" value="13.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/-c" uuid="bc70bed87e5405985ade03f4806b9450609a9093" name="-c_1" x="616" y="182">
+      <params>
+         <frac32.u.map name="c" value="37.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="harmony/note quantizer" uuid="d5343a4fea87a3e4f4dae20287226084550ea8d3" name="note_1" x="686" y="182">
+      <params>
+         <bin12 name="b12" value="2349"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/pwm" uuid="a6b40ff63f161d8bac8ea2eba5b0dbffcf49b472" name="saw_1" x="854" y="182">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="126" y="196" text="Trigger Input Pulse"/>
+   <comment type="patch/comment" x="378" y="196" text="Pattern Output"/>
+   <comment type="patch/comment" x="154" y="224" text="Reset Pulse"/>
+   <comment type="patch/comment" x="378" y="224" text="Trigger Pattern Out"/>
+   <comment type="patch/comment" x="378" y="252" text="Bank Select"/>
+   <comment type="patch/comment" x="378" y="280" text="Pattern Index"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="Reset" x="42" y="294">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 b" uuid="e71f3dd9bc5b799ad703079e63fb929dd75def0" name="Pattern" x="546" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/kscope 128 p" uuid="664f9317a38a6910ae9bc020e00ca2dd2ee692fa" name="Trigger" x="700" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="edrum/hh" uuid="049f14d5-61dc-48fb-93c5-b528cfd26085" name="obj_1" x="854" y="294">
+      <params>
+         <frac32.s.map name="env" value="-26.0"/>
+         <frac32.s.map name="bpf:pitch" value="64.0"/>
+         <frac32.u.map name="bpf:reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="378" y="322" text="Trigger Threshold"/>
+   <comment type="patch/comment" x="378" y="350" text="Pattern Length"/>
+   <comment type="patch/comment" x="378" y="378" text="Pattern Offset"/>
+   <nets>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="ad_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="ad_1" inlet="trig"/>
+         <dest obj="nmpgen3_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="note_1" outlet="note"/>
+         <dest obj="saw_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="Master Volume" inlet="in"/>
+      </net>
+      <net>
+         <source obj="Master Volume" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="*_2" outlet="out"/>
+         <dest obj="-c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="-c_1" outlet="out"/>
+         <dest obj="note_1" inlet="note"/>
+      </net>
+      <net>
+         <source obj="Reset" outlet="o"/>
+         <dest obj="nmpgen3_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="nmpgen3_1" outlet="pattern"/>
+         <dest obj="*_2" inlet="in"/>
+         <dest obj="Pattern" inlet="in"/>
+      </net>
+      <net>
+         <source obj="nmpgen3_1" outlet="trigger"/>
+         <dest obj="Trigger" inlet="in"/>
+         <dest obj="obj_1" inlet="trig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>toneburst</Author>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>0</x>
+      <y>90</y>
+      <width>1418</width>
+      <height>755</height>
+   </windowPos>
+</patch-1.0>

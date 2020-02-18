@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="jazz r" uuid="17c70407-2d50-4367-bec6-a8cd420a74dd">
+      <sDescription>Generates the seven notes of a scale. You can select the mode between the 4 modes of the diatonic scale and the alteration of the scale. Relative values</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="mode" description="mode of the scale (0=ion, 1=dor, 2=phy, 3=lyd, 4=myx, 5=aeo, 6=loc)"/>
+         <int32 name="alteration" description="scale alteration(0=no alteration, 1=based on harmonic minor, 2= based on melodic minor, 4= based on  harmonic major)"/>
+         <int32 name="offset"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="I"/>
+         <int32.positive name="II"/>
+         <int32.positive name="III"/>
+         <int32.positive name="IV"/>
+         <int32.positive name="V"/>
+         <int32.positive name="VI"/>
+         <int32.positive name="VII"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t scale[4] = {//these are all ionian scales! 
+	0x024579B0,//no alteration: 0, 2, 4, 5, 7, 9, 11
+	0x024589B0,//harm min base: 0, 2, 4, 5, 8, 9, 11 (augmented fifth)
+	0x024689B0,//melo min base: 0, 2, 4, 6, 8, 9, 11 (augmented fourth and fifth)
+	0x024578B0 //harm maj base: 0, 2, 4, 5, 7, 8, 11 (diminished sixth)
+};
+//every 4 bits represent a note, starting from bits 31-28 -> root note
+//bits 3-0 are meaningless
+
+uint32_t mask = 0xF0000000;]]></code.declaration>
+      <code.krate><![CDATA[uint32_t alt = inlet_alteration & 3;
+uint32_t mode = (inlet_mode)<7?(inlet_mode>-1?inlet_mode:0):0;
+uint32_t ofs = (inlet_offset)<7?(inlet_offset>-1?inlet_offset:0):0;
+
+uint32_t first = ((scale[alt]<<(mode*4))&mask) >> 28;
+
+uint32_t o[7];
+
+for (int i=mode;i<7;i++)
+o[i-mode] = (((scale[alt]<<(i*4))&mask)>>28) - first;
+for (int i=0;i<mode;i++)
+o[7+i-mode] = 12 + (((scale[alt]<<(i*4))&mask)>>28) - first;
+
+
+
+
+outlet_I = (0+ofs)>6?  12+o[0+ofs-6]:o[0+ofs];
+outlet_II = (1+ofs)>6?  12+o[1+ofs-6]:o[1+ofs];
+outlet_III = (2+ofs)>6?  12+o[2+ofs-6]:o[2+ofs];
+outlet_IV = (3+ofs)>6?  12+o[3+ofs-6]:o[3+ofs];
+outlet_V = (4+ofs)>6?  12+o[4+ofs-6]:o[4+ofs];
+outlet_VI = (5+ofs)>6?  12+o[5+ofs-6]:o[5+ofs];
+outlet_VII = (6+ofs)>6?  12+o[6+ofs-6]:o[6+ofs];]]></code.krate>
+   </obj.normal>
+</objdefs>

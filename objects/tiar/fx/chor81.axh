@@ -1,0 +1,479 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="378" y="28" text="The chorus"/>
+   <comment type="patch/comment" x="14" y="42" text="A simple saw polysynth"/>
+   <comment type="patch/comment" x="322" y="42" text="You can change it&apos;s rate with the knob"/>
+   <comment type="patch/comment" x="14" y="56" text="with two oscs per voice"/>
+   <comment type="patch/comment" x="350" y="56" text="and/or the rate inlet"/>
+   <comment type="patch/comment" x="644" y="56" text="Mix Chorus and Direct"/>
+   <patcher type="patch/patcher" uuid="c9414d31-763b-4499-9adf-531361a93673" name="patcher_1" x="28" y="84">
+      <params>
+         <frac32.s.map name="adsr_1:a" value="-64.0"/>
+         <frac32.s.map name="adsr_1:d" value="14.0"/>
+         <frac32.u.map name="adsr_1:s" value="46.5"/>
+         <frac32.s.map name="adsr_1:r" value="-64.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="7"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="0" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="112" y="0">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="210" y="0">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-61.0"/>
+               <frac32.s.map name="d" onParent="true" value="30.0"/>
+               <frac32.u.map name="s" onParent="true" value="21.5"/>
+               <frac32.s.map name="r" onParent="true" value="15.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCAsm" uuid="39132bac-a14b-430b-901f-cdecf31d394c" name="DCAsm_1" x="308" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="406" y="0">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_2" x="112" y="98">
+            <params>
+               <frac32.s.map name="pitch" value="-12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCAsm" uuid="39132bac-a14b-430b-901f-cdecf31d394c" name="DCAsm_2" x="308" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="octDown" x="406" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="DCAsm_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="saw_1" inlet="pitch"/>
+               <dest obj="saw_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="DCAsm_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="DCAsm_1" inlet="gain"/>
+               <dest obj="DCAsm_2" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="DCAsm_2" outlet="out"/>
+               <dest obj="octDown" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="saw_2" outlet="wave"/>
+               <dest obj="DCAsm_2" inlet="in"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>0</NPresets>
+            <NPresetEntries>0</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>174</x>
+            <y>98</y>
+            <width>1500</width>
+            <height>872</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="tiar/fx/chor81" uuid="9d159638-70bf-4215-acbf-ccc2b95cd788" name="chor81_1" x="364" y="84">
+      <params>
+         <frac32.s.map name="rate" value="-15.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="depth" selection="full"/>
+      </attribs>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="574" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="644" y="84">
+      <params>
+         <frac32.u.map name="gain1" value="31.5"/>
+         <frac32.u.map name="gain2" value="0.0"/>
+         <frac32.u.map name="gain3" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_2" x="728" y="84">
+      <params>
+         <frac32.u.map name="gain1" value="33.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
+         <frac32.u.map name="gain3" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="140" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_1" x="0" y="588">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="2048 (42.66ms)"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_4" x="126" y="588">
+      <params>
+         <frac32.s.map name="pitch" value="-43.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="224" y="588">
+      <params>
+         <frac32.u.map name="amp" value="8.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="322" y="588">
+      <params>
+         <frac32.u.map name="value" value="59.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_1" x="406" y="588">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_1"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_1" x="588" y="588">
+      <params>
+         <frac32.s.map name="freq" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="reverb" x="756" y="616">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_2" x="0" y="700">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="4096 (85.33ms)"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_5" x="126" y="700">
+      <params>
+         <frac32.s.map name="pitch" value="-48.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_2" x="224" y="700">
+      <params>
+         <frac32.u.map name="amp" value="14.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="322" y="700">
+      <params>
+         <frac32.u.map name="value" value="59.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_2" x="406" y="700">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_2"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_2" x="588" y="700">
+      <params>
+         <frac32.s.map name="freq" value="63.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jaffa/mix/xfade3" uuid="4c337564-56e7-49f1-abc6-2551a5733f8f" name="xfade3_1" x="756" y="756">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_3" x="0" y="812">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="8192 (170ms)"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_6" x="126" y="812">
+      <params>
+         <frac32.s.map name="pitch" value="-51.859999656677246"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_3" x="224" y="812">
+      <params>
+         <frac32.u.map name="amp" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="322" y="812">
+      <params>
+         <frac32.u.map name="value" value="59.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_3" x="406" y="812">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_3"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_3" x="588" y="812">
+      <params>
+         <frac32.s.map name="freq" value="61.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="742" y="826" text="Feedback matrix"/>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="write_4" x="0" y="924">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="16384 (341ms)"/>
+      </attribs>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_7" x="126" y="924">
+      <params>
+         <frac32.s.map name="pitch" value="-51.859999656677246"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_4" x="224" y="924">
+      <params>
+         <frac32.u.map name="amp" value="7.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_4" x="322" y="924">
+      <params>
+         <frac32.u.map name="value" value="59.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="TSG/delay/read m interp" uuid="1267df5a-5e05-40dd-bace-29e94169e5bb" name="read_4" x="406" y="924">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="write_4"/>
+         <combo attributeName="interpol" selection="2pt"/>
+      </attribs>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_5" x="588" y="924">
+      <params>
+         <frac32.s.map name="freq" value="59.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/pata/orth6" uuid="66c838a7-a7de-4c03-ad05-137f17497344" name="rot6_1" x="742" y="924">
+      <params/>
+      <attribs>
+         <text attributeName="rotations">
+            <sText><![CDATA[randR(4);]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="840" y="924">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="252" y="1050" text="Modulated delay lines"/>
+   <comment type="patch/comment" x="588" y="1050" text="low pass filters"/>
+   <nets>
+      <net>
+         <source obj="chor81_1" outlet="out1"/>
+         <dest obj="+_1" inlet="in2"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="rot6_1" inlet="in0"/>
+         <dest obj="xfade3_1" inlet="a1"/>
+      </net>
+      <net>
+         <source obj="chor81_1" outlet="out0"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="+_1" inlet="in1"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+         <dest obj="mix_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="rot6_1" inlet="in1"/>
+         <dest obj="xfade3_1" inlet="b1"/>
+      </net>
+      <net>
+         <source obj="sine_4" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="read_2" outlet="out"/>
+         <dest obj="lp1_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="read_3" outlet="out"/>
+         <dest obj="lp1_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="read_1" inlet="time"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="read_1" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="out"/>
+         <dest obj="lp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_5" outlet="wave"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_6" outlet="wave"/>
+         <dest obj="*c_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="read_3" inlet="time"/>
+      </net>
+      <net>
+         <source obj="*c_3" outlet="out"/>
+         <dest obj="read_3" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="read_2" inlet="time"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="read_2" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="read_4" outlet="out"/>
+         <dest obj="lp1_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_7" outlet="wave"/>
+         <dest obj="*c_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dial_4" outlet="out"/>
+         <dest obj="read_4" inlet="time"/>
+      </net>
+      <net>
+         <source obj="*c_4" outlet="out"/>
+         <dest obj="read_4" inlet="mod"/>
+      </net>
+      <net>
+         <source obj="lp1_1" outlet="out"/>
+         <dest obj="rot6_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="lp1_2" outlet="out"/>
+         <dest obj="rot6_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="lp1_3" outlet="out"/>
+         <dest obj="rot6_1" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="lp1_5" outlet="out"/>
+         <dest obj="rot6_1" inlet="in5"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out5"/>
+         <dest obj="write_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out4"/>
+         <dest obj="write_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out3"/>
+         <dest obj="write_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out2"/>
+         <dest obj="write_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="mix_1" inlet="in3"/>
+         <dest obj="mix_2" inlet="in3"/>
+         <dest obj="chor81_1" inlet="in0"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out0"/>
+         <dest obj="xfade3_1" inlet="a2"/>
+      </net>
+      <net>
+         <source obj="rot6_1" outlet="out1"/>
+         <dest obj="xfade3_1" inlet="b2"/>
+      </net>
+      <net>
+         <source obj="xfade3_1" outlet="a"/>
+         <dest obj="out_2" inlet="left"/>
+      </net>
+      <net>
+         <source obj="xfade3_1" outlet="b"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+      <net>
+         <source obj="reverb" outlet="out"/>
+         <dest obj="xfade3_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="octDown"/>
+         <dest obj="chor81_1" inlet="in1"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>793</x>
+      <y>8</y>
+      <width>1032</width>
+      <height>1050</height>
+   </windowPos>
+</patch-1.0>

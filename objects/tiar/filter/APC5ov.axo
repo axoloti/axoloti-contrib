@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="APC5ov" uuid="e34912d9-0c1a-4d8b-8778-6b2bf3a03934">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>APC5ov.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="freq1"/>
+         <frac32 name="freq2"/>
+         <frac32 name="freq3"/>
+         <frac32 name="freq4"/>
+         <frac32 name="freq5"/>
+         <frac32 name="fb"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[class APC{
+  public:
+  int32_t v[5];
+  int32_t g[5];
+  void init(void){
+    for(int i = 0; i < 5; i++)
+      v[i] = 0;
+  }
+  int32_t aProc(int32_t x){
+    int32_t y = x;
+    for(int p = 0; p < 5; p++){
+      int32_t u = ___SMMLA(g[p], v[p] << 1, y   );
+      y         = ___SMMLS(g[p], u    << 1, v[p]);
+      v[p] = u;
+    }
+    return y;
+  }
+};
+APC apc;
+int32_t v;]]></code.declaration>
+      <code.init><![CDATA[apc.init();
+      v = 0;]]></code.init>
+      <code.krate><![CDATA[apc.g[0] = 0x7FFFFFFF - (__USAT(inlet_freq1, 27) << 2);
+apc.g[1] = 0x7FFFFFFF - (__USAT(inlet_freq2, 27) << 2);
+apc.g[2] = 0x7FFFFFFF - (__USAT(inlet_freq3, 27) << 2);
+apc.g[3] = 0x7FFFFFFF - (__USAT(inlet_freq4, 27) << 2);
+apc.g[4] = 0x7FFFFFFF - (__USAT(inlet_freq5, 27) << 2);
+int32_t fb = __USAT((inlet_fb), 27)<<4; // q31]]></code.krate>
+      <code.srate><![CDATA[// nested all pass chain
+int32_t u  = ___SMMLA(fb, v << 1, inlet_in);
+v = apc.aProc(u>>8)<<8;
+u  = ___SMMLA(fb, v << 1, inlet_in);
+v = apc.aProc(u>>8)<<8;
+u  = ___SMMLA(fb, v << 1, inlet_in);
+v = apc.aProc(u>>8)<<8;
+u  = ___SMMLA(fb, v << 1, inlet_in);
+outlet_out = ___SMMLS(fb, u << 1, v);
+v = apc.aProc(u>>8)<<8;]]></code.srate>
+   </obj.normal>
+</objdefs>

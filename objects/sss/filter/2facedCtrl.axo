@@ -1,0 +1,177 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="2facedCtrl" uuid="d703a4da-5772-46ec-9eba-626b3537426d">
+      <sDescription>Control module for the 2facedFilter-module
+Connect several modulation sources and an internal randomisable modulation matrix will control the modulation-widths of all the modulation-inputs for each output.
+Level-controls are there for easy control over overall max-modulation-widths.</sDescription>
+      <author>Remco van de Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="pitch" description="connect to oscillator&apos;s pitch (for key-tracking)"/>
+         <frac32 name="vol" description="connect to the velocity or volume envelope"/>
+         <frac32 name="env" description="connect to a dedicated filter-envelope"/>
+         <frac32 name="lfo" description="connect to a LFO"/>
+         <frac32 name="mod" description="connect a pattern/CV generator"/>
+         <bool32 name="glide" description="when high, glide is applied to the channels that have their glide selected(random)"/>
+         <int32 name="preset" description="connect to pattern/CV generator to automate modulation-width-presets"/>
+         <int32 name="filter1" description="connect to the filter1 selector for automatic modulation-direction-adjustments for the different filter-types"/>
+         <int32 name="filter2" description="connect to the filter2 selector for automatic modulation-direction-adjustments for the different filter-types"/>
+      </inlets>
+      <outlets>
+         <frac32 name="t1"/>
+         <frac32 name="f1"/>
+         <frac32 name="t2"/>
+         <frac32 name="f2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pitch" description="main pitch-offset for both time and frequency"/>
+         <frac32.s.map.kdecaytime.exp name="glide" description="sets glide-rate when glide is used"/>
+         <int32 name="preset" description="select which preset will be used for automation-width-control">
+            <MinValue i="0"/>
+            <MaxValue i="32"/>
+         </int32>
+         <bool32.mom name="rnd" description="only randomises modulation-widths of selected preset"/>
+         <bool32.mom name="allRnd" description="randomises modulation-widths for alll presets"/>
+         <frac32.u.map.gain name="track" description="sets modulation width of tracking the pitch"/>
+         <frac32.u.map.gain name="spread" description="sets modulation width of &quot;fixed&quot; spreading"/>
+         <frac32.u.map.gain name="vol" description="sets modulation width of vol-input"/>
+         <frac32.u.map.gain name="env" description="sets modulation width of env-input"/>
+         <frac32.u.map.gain name="lfo" description="sets modulation width of lfo-input"/>
+         <frac32.u.map.gain name="mod" description="sets modulation width of mod-input"/>
+         <frac32.u.map.gain name="FM" description="controls overall frequency-modulation width"/>
+         <frac32.u.map.gain name="TM" description="controls overall time-modulation width"/>
+      </params>
+      <attribs>
+         <spinner name="presets" MinValue="1" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTH=(28*attr_presets);
+int32_t t[4];
+int32_t T[4];
+int16_t *array;
+bool rnd;
+int i;
+bool all;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[LENGTH] __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+for(i=0;i<LENGTH;i++){
+		array[i]=(int32_t)(GenerateRandomNumber());
+	}]]></code.init>
+      <code.krate><![CDATA[int32_t glide;
+MTOF(-param_glide,glide)
+int32_t preset=param_preset+inlet_preset;
+preset=preset-preset/attr_presets*attr_presets;
+preset+=preset<0?attr_presets:0;
+preset=preset*28;
+int mode[2];
+mode[0]=(inlet_filter1&3);
+mode[1]=(inlet_filter2&3);
+if((param_rnd>0)&&!rnd){
+	rnd=1;
+	for(i=preset;i<(28+preset);i++){
+		array[i]=(int32_t)(GenerateRandomNumber());
+	}
+}
+else if(param_rnd<1){rnd=0;}
+
+if((param_allRnd>0)&&!all){
+	all=1;
+	for(i=0;i<LENGTH;i++){
+		array[i]=(int32_t)(GenerateRandomNumber());
+	}
+}
+else if(param_allRnd<1){all=0;}
+for(i=0;i<4;i++){
+t[i]=param_pitch>>16;
+int32_t r;
+int dir;
+//inlet_pitch
+r=array[preset+i];
+if(r>0)
+{
+	t[i]=__SSAT(t[i]+___SMMUL(___SMMUL(r,inlet_pitch)<<1,param_track),13);
+}
+//inlet_vol
+r=array[preset+i+4];
+if(r>0)
+{	
+	
+	if(((i==1)||(i==3))&&(mode[i>>1]==1)){
+		r=-r;
+	}
+	else{r-=(1<<14);}
+	r=___SMMUL(r,inlet_vol)<<1;
+	t[i]=__SSAT(t[i]+___SMMUL(r,param_vol),13);
+}
+//inlet_env
+r=array[preset+i+8];
+if(r>0)
+{
+	if((i==1)||(i==3)){
+		if(mode[i>>1]==1){
+		r=-r;}
+		else if(mode[i>>1]>1){
+		r-=(1<<14);
+		}
+	}
+	else{r-=(1<<14);}
+	r=___SMMUL(r,inlet_env)<<1;
+	t[i]=__SSAT(t[i]+___SMMUL(r,param_env),13);
+}
+//inlet_lfo
+r=array[preset+i+12];
+if(r>0)
+{	int32_t lfo=inlet_lfo;
+	if(((i==1)||(i==3))&&((mode[i>>1]==1)||(mode[i>>1]==3))){
+		lfo=-lfo;
+	}
+	t[i]=__SSAT(t[i]+___SMMUL(___SMMUL(r-(1<<14),inlet_lfo)<<1,param_lfo),13);
+}
+//inlet_mod
+r=array[preset+i+16];
+if(r>0)
+{	
+	if((i==1)||(i==3)){
+		if(mode[i>>1]==1){
+		r=-r;}
+		else if(mode[i>>1]>1){
+		r-=(1<<14);
+		}
+	}
+	else{r-=(1<<14);}
+	r=___SMMUL(r,inlet_mod)<<1;
+	t[i]=__SSAT(t[i]+___SMMUL(r,param_mod),13);
+}
+//spread
+r=array[preset+i+20];
+
+if(r>0)
+{
+	if((i==0)||(i==2)){
+	t[i]=__SSAT(t[i]+___SMMUL(r-(1<<14),param_spread>>3),13);
+	}
+	else if(mode[i>>1]==1){
+	t[i]=__SSAT(t[i]+___SMMUL((r>>1)-(1<<15),param_spread>>3),13);
+	}
+	else if(mode[i>>1]<1){
+	t[i]=__SSAT(t[i]+___SMMUL((r>>1),param_spread>>3),13);
+	}
+	else if(mode[i>>1]>1){
+	t[i]=__SSAT(t[i]+___SMMUL(r-(1<<14),param_spread>>3),13);
+	}
+}
+
+//glide
+if(array[preset+24+i]<=0){
+T[i]=(__SSAT(t[i],13)<<16);
+}
+else if((array[preset+24+i]>0)&&(inlet_glide>0)){
+T[i]=___SMMLA(((__SSAT(t[i],13)<<16)-T[i])<<1,glide,T[i]);
+}
+}
+outlet_t1=___SMMUL(T[0],param_TM)<<1;
+outlet_f1=___SMMUL(T[1],param_FM)<<1;
+outlet_t2=___SMMUL(T[2],param_TM)<<1;
+outlet_f2=___SMMUL(T[3],param_FM)<<1;]]></code.krate>
+   </obj.normal>
+</objdefs>

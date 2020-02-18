@@ -1,0 +1,111 @@
+/* 	script for Euxoloti 1.0
+	by Paul |at| irieelectronics.de
+
+uint8_t *txbuf;
+uint8_t *rxbuf;
+
+int pin = 0;
+
+void setup(void){
+	static uint8_t _txbuf[8] __attribute__ ((section (".sram2")));
+	static uint8_t _rxbuf[8] __attribute__ ((section (".sram2")));
+	txbuf = _txbuf;
+	rxbuf = _rxbuf;
+
+	palSetPadMode(GPIOA,2,PAL_MODE_OUTPUT_PUSHPULL);
+	palWritePad(GPIOA,2,1);
+	palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
+	palWritePad(GPIOA,3,1);
+}
+
+void loop(void){
+
+	
+	txbuf[2] = 0b00000000;
+ 	
+    	for(int pin=0; pin<8; pin++){
+ 
+	        txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
+	 
+	        if (pin % 4 == 0) { // pin == 0 || pin == 4
+	            txbuf[1] = 0b00000000;
+	        } else if (pin % 4 == 1) { // pin == 1 || pin == 5
+	            txbuf[1] = 0b00000010;
+	        } else if (pin % 4 == 2) { // pin == 2 || pin == 6
+	            txbuf[1] = 0b00000001;
+	        } else {
+	            txbuf[1] = 0b00000011;
+	        }
+			
+
+
+		
+		palWritePad(GPIOA,3,0);
+		spiSelect(&SPID1);		// START SPI
+		spiSend(&SPID1,3,txbuf);
+		spiReceive(&SPID1,3,rxbuf);
+		spiUnselect(&SPID1);
+		palWritePad(GPIOA,3,1);
+
+	
+		int z = (rxbuf[1] << 8| rxbuf[0]) << 16;
+
+		switch(pin){
+			case 1: cvin1 = z;
+			case 2: cvin2 = z;
+			case 3: cvin3 = z;
+			case 4: cvin4 = z;
+			case 5: cvin5 = z;
+			case 6: cvin6 = z;
+			case 7: cvin7 = z;
+			case 8: cvin8 = z;
+		}
+		chThdSleepMilliseconds(1);
+
+    	}
+    	
+    	txbuf[2] = 0b00000000;
+ 	
+    	for(int pin=0; pin<8; pin++){
+ 
+	        txbuf[0] = pin < 4 ? 0b01100000 : 0b11100000;
+	 
+	        if (pin % 4 == 0) { // pin == 0 || pin == 4
+	            txbuf[1] = 0b00000000;
+	        } else if (pin % 4 == 1) { // pin == 1 || pin == 5
+	            txbuf[1] = 0b00000010;
+	        } else if (pin % 4 == 2) { // pin == 2 || pin == 6
+	            txbuf[1] = 0b00000001;
+	        } else {
+	            txbuf[1] = 0b00000011;
+	        }
+			
+
+
+		
+		palWritePad(GPIOA,2,0);
+		spiSelect(&SPID1);		// START SPI
+		spiSend(&SPID1,3,txbuf);
+		spiReceive(&SPID1,3,rxbuf);
+		spiUnselect(&SPID1);
+		palWritePad(GPIOA,2,1);
+
+	
+		int z = 0x07FFFFFF - ((rxbuf[1] << 8| rxbuf[0]) << 16);
+	
+	
+		switch(pin){
+			case 1: pot1 = z;
+			case 2: pot2 = z;
+			case 3: pot3 = z;
+			case 4: pot4 = z;
+			case 5: pot5 = z;
+			case 6: pot6 = z;
+			case 7: pot7 = z;
+			case 8: pot8 = z;
+		}
+		
+		chThdSleepMilliseconds(1);
+    	}
+	
+}

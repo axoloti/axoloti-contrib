@@ -1,0 +1,156 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="966" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_2" x="1106" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="0" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="-41.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="112" y="28">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="16.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="448" y="28" text="1. Select &quot;bassdrum with noise&quot;"/>
+   <comment type="patch/comment" x="448" y="42" text="2. There are noise during silent expected"/>
+   <comment type="patch/comment" x="448" y="56" text="3. Set gate noise knob to 64 : the noise is suppressed"/>
+   <comment type="patch/comment" x="448" y="70" text="4. Change signal to &quot;sine wave&quot; and play with noise gate to see artefact"/>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="252" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="112" y="168">
+      <params>
+         <frac32.s.map name="pitch" value="2.1999998092651367"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 v" uuid="b610704137c90b0e43464440b84bfb4fb7d2bb30" name="i_2" x="490" y="224">
+      <params>
+         <int32.vradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="574" y="266" text="sine wave"/>
+   <comment type="patch/comment" x="574" y="280" text="bassdrum with noise"/>
+   <comment type="patch/comment" x="574" y="294" text="bassdrum with noise reduction by filter"/>
+   <obj type="noise/uniform" uuid="a3926ef22ae9ac217cd09933d90101848796eb78" name="uniform_1" x="0" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="98" y="322">
+      <params>
+         <frac32.u.map name="amp" value="1.3499999046325684"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_1" x="210" y="322">
+      <params>
+         <frac32.s.map name="freq" value="7.299999713897705"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="322" y="322">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 3" uuid="8e20982407718ae2b4e3cd55c79b04e53bb23457" name="mux_1" x="602" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gao/dist/biscuitage_r" uuid="5a98aff88952993f8088a0d9aaffde9acf5bf85b" name="biscuitage_r_1" x="854" y="406">
+      <params>
+         <bin12 name="p1" value="2048"/>
+         <frac32.u.map name="noisegate" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/lp" uuid="1427779cf086ab83c8b03eeeac69c2a97759c651" name="lp_1" x="462" y="420">
+      <params>
+         <frac32.s.map name="pitch" value="-22.0"/>
+         <frac32.u.map name="reso" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1162" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="biscuitage_r_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="ad_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="mux_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="ad_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="lp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp1_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="lp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="biscuitage_r_1" outlet="b"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="scope_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>55</x>
+      <y>24</y>
+      <width>1311</width>
+      <height>744</height>
+   </windowPos>
+</patch-1.0>

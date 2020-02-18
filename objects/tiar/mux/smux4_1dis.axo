@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smux4_1dis" uuid="c0a37610-fd10-4e9e-a3de-ed951ea9bce3">
+      <sDescription>Smooth multiplexer. Works like multiple cross fades. dis0 to dis3 can be used to disable unused objects (CPU optimisation).</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>smux4_1dis.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i0" description="input 0"/>
+         <frac32buffer name="i1" description="input 1"/>
+         <frac32buffer name="i2" description="input 2"/>
+         <frac32buffer name="i3" description="input 3"/>
+         <frac32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o" description="output"/>
+         <bool32 name="dis0" description="output"/>
+         <bool32 name="dis1" description="output"/>
+         <bool32 name="dis2" description="output"/>
+         <bool32 name="dis3" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.krate><![CDATA[int32_t sel = (inlet_s) & 0x07FFFFFF;
+
+const int32_t *s0, *s1;
+switch(sel >> (27-2)){
+  case 0:  s0 = inlet_i0;  s1 = inlet_i1; outlet_dis0 = false; outlet_dis1 = false; outlet_dis2 =  true; outlet_dis3 =  true; break;
+  case 1:  s0 = inlet_i1;  s1 = inlet_i2; outlet_dis0 =  true; outlet_dis1 = false; outlet_dis2 = false; outlet_dis3 =  true; break;
+  case 2:  s0 = inlet_i2;  s1 = inlet_i3; outlet_dis0 =  true; outlet_dis1 =  true; outlet_dis2 = false; outlet_dis3 = false; break;
+  case 3:  s0 = inlet_i3;  s1 = inlet_i0; outlet_dis0 = false; outlet_dis1 =  true; outlet_dis2 =  true; outlet_dis3 = false; break;
+} 
+int32_t a = (sel << 2) & 0x07FFFFFF;
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t _s0 = s0[i];
+  outlet_o[i] = ___SMMLA(a, s1[i] - _s0, _s0 >> 5) << 5;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,39 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="rain" uuid="c922db6c-044a-4eed-942a-641881daddc7">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>rain.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t r;      // audio random
+int32_t rdir;   // random direction
+int32_t rdirf;  // lp filtered random direction
+int32_t rs;]]></code.declaration>
+      <code.init><![CDATA[r = GenerateRandomNumber();
+rdir = GenerateRandomNumber();
+rs = GenerateRandomNumber();]]></code.init>
+      <code.srate><![CDATA[//rdirf = 0;
+
+rdir = rdir * 69069 + 1;
+rdirf = ___SMMLA(0x10000000, (rdir>>2) - rdirf, rdirf);
+if(rdirf > 0){
+  //forward
+  r = r * 69069 + 1;
+  outlet_out = r >> 4;
+} else {
+  //backward
+  r = -1511872763 * (r - 1);
+  outlet_out = -r >> 4;
+}
+if(rdir>0x50000000){
+  if(rdir>0x70000000)
+    rs = rs * 69069 + 1;
+  r=rs;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

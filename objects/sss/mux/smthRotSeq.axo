@@ -1,0 +1,153 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="smthRotSeq" uuid="df4b6506-5fd0-4209-b59a-70f61d64cfed">
+      <sDescription>Smooth input rotator. Smoothly rotates all the inputs along the 8 outputs.
+This new version has internal 16-step sequences for each output for rotating through the inputs.
+
+How to use:
+-first select which output you want to make the sequence for.
+-then press the buttons in the order you want them to morph/rotate
+-redo this for all the outputs
+-when the max of 16 steps is reached, it will restart the count and overwrite the oldest selected inputs.
+
+it will save how many inputs are added (max 16) and will keep cycling through them in a 16-step sequence.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>mux.axh</helpPatch>
+      <inlets>
+         <frac32 name="i0" description="input 0"/>
+         <frac32 name="i1" description="input 1"/>
+         <frac32 name="i2" description="input 2"/>
+         <frac32 name="i3" description="input 3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="i7"/>
+         <frac32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o0" description="output"/>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="o4"/>
+         <frac32 name="o5"/>
+         <frac32 name="o6"/>
+         <frac32 name="o7"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32.vradio name="output">
+            <MaxValue i="8"/>
+         </int32.vradio>
+         <bool32.mom name="i0"/>
+         <bool32.mom name="i1"/>
+         <bool32.mom name="i2"/>
+         <bool32.mom name="i3"/>
+         <bool32.mom name="i4"/>
+         <bool32.mom name="i5"/>
+         <bool32.mom name="i6"/>
+         <bool32.mom name="i7"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int C1[8];
+int C2[8];
+
+int array[8][18];
+int atrig;
+int32_t in[8];
+int i;
+int j;]]></code.declaration>
+      <code.init><![CDATA[for(i=0;i<8;i++){
+for(j=1;j<16;j++){
+array[i][j]=(j+i)&7;
+array[i][0]=1;
+C1[i]=0;
+C2[i]=0;
+}
+}
+]]></code.init>
+      <code.krate><![CDATA[   int32_t a1;
+   int32_t b1;
+   int32_t c1;
+   int32_t d1;
+   int32_t e1;
+   int32_t f1;
+   int32_t g1;
+   int32_t h1;
+   int32_t a2;
+   int32_t b2;
+   int32_t c2;
+   int32_t d2;
+   int32_t e2;
+   int32_t f2;
+   int32_t g2;
+   int32_t h2;
+   int32_t x;
+   int32_t y;
+
+   int32_t selectbase;
+   int32_t select1;
+   int32_t select2;
+   in[0]=inlet_i0;
+   in[1]=inlet_i1;
+   in[2]=inlet_i2;
+   in[3]=inlet_i3;
+   in[4]=inlet_i4;
+   in[5]=inlet_i5;
+   in[6]=inlet_i6;
+   in[7]=inlet_i7;
+   
+int add=param_i0+param_i1*2+param_i2*3+param_i3*4+param_i4*5+param_i5*6+param_i6*7+param_i7*8;
+
+if((add>0)&&!atrig){
+	atrig=1;
+	C1[param_output]+=1;
+	C2[param_output]+=1;
+	C1[param_output]=C1[param_output]&15;
+	C2[param_output]=C2[param_output]>15?15:C2[param_output];
+	array[param_output][0]=C2[param_output];
+	array[param_output][C1[param_output]]=add-1;
+}
+else if(add==0){atrig=0;}
+
+   
+   selectbase=((inlet_s>>23));
+   select1=(selectbase);
+   select2=((selectbase+1));
+
+   
+a1=in[array[0][select1-(select1/array[0][0])*array[0][0]+1]];
+a2=in[array[0][select2-(select2/array[0][0])*array[0][0]+1]];
+b1=in[array[1][select1-(select1/array[1][0])*array[1][0]+1]];
+b2=in[array[1][select2-(select2/array[1][0])*array[1][0]+1]];
+c1=in[array[2][select1-(select1/array[2][0])*array[2][0]+1]];
+c2=in[array[2][select2-(select2/array[2][0])*array[2][0]+1]];
+d1=in[array[3][select1-(select1/array[3][0])*array[3][0]+1]];
+d2=in[array[3][select2-(select2/array[3][0])*array[3][0]+1]];
+e1=in[array[4][select1-(select1/array[4][0])*array[4][0]+1]];
+e2=in[array[4][select2-(select2/array[4][0])*array[4][0]+1]];
+f1=in[array[5][select1-(select1/array[5][0])*array[5][0]+1]];
+f2=in[array[5][select2-(select2/array[5][0])*array[5][0]+1]];
+g1=in[array[6][select1-(select1/array[6][0])*array[6][0]+1]];
+g2=in[array[6][select2-(select2/array[6][0])*array[6][0]+1]];
+h1=in[array[7][select1-(select1/array[7][0])*array[7][0]+1]];
+h2=in[array[7][select2-(select2/array[7][0])*array[7][0]+1]];  
+
+x= (inlet_s-(selectbase<<23));
+y=((1<<23)-x)<<5;
+x=x<<5;
+
+
+
+outlet_o0= ___SMMUL(y,a1<<4)+___SMMUL(x,a2<<4);
+outlet_o1= ___SMMUL(y,b1<<4)+___SMMUL(x,b2<<4);
+outlet_o2= ___SMMUL(y,c1<<4)+___SMMUL(x,c2<<4);
+outlet_o3= ___SMMUL(y,d1<<4)+___SMMUL(x,d2<<4);
+outlet_o4= ___SMMUL(y,e1<<4)+___SMMUL(x,e2<<4);
+outlet_o5= ___SMMUL(y,f1<<4)+___SMMUL(x,f2<<4);
+outlet_o6= ___SMMUL(y,g1<<4)+___SMMUL(x,g2<<4);
+outlet_o7= ___SMMUL(y,h1<<4)+___SMMUL(x,h2<<4);
+
+]]></code.krate>
+   </obj.normal>
+</objdefs>

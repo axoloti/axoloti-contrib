@@ -1,0 +1,30 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tinit 1" uuid="3b574c71-e751-42cb-a564-523ba4f6f068">
+      <sDescription>sets the index of table to the value of the dial at index &apos;offset&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset"/>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map name="v" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="offset" MinValue="0" MaxValue="100000000" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int ntrig;]]></code.declaration>
+      <code.init><![CDATA[int ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+      ntrig=1;
+      
+         attr_table.array[inlet_offset + attr_offset]=__SSAT(param_v,28)>>attr_table.GAIN;
+        
+   }
+   if (!(inlet_trig>0)) ntrig=0;]]></code.krate>
+   </obj.normal>
+</objdefs>

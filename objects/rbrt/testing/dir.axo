@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="dir" uuid="4a362fd7-4aa3-49ef-8300-67d15357e4ba">
+      <sDescription>load table from sdcard</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="getDir" description="trigger"/>
+         <int32.positive name="index"/>
+         <bool32.rising name="delete"/>
+         <charptr32 name="fn"/>
+      </inlets>
+      <outlets>
+         <int32 name="test"/>
+         <charptr32 name="out1"/>
+         <charptr32 name="out2"/>
+         <charptr32 name="out3"/>
+         <charptr32 name="out4"/>
+         <bool32 name="trig"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="filter"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[bool trig;
+bool dtrig;
+bool test;
+int count;
+
+char out1[8];
+char out2[8];
+char out3[8];
+char out4[8];
+
+uint8_t pre;
+char wrk[4];
+char del[16];
+uint8_t *fout;]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _fout[attr_poly][1024] __attribute__ ((section (".sdram")));
+fout = &_fout[parent->polyIndex][0];
+int i;
+for(i=0;i<1024;i++) fout[i]=0;]]></code.init>
+      <code.krate><![CDATA[outlet_trig = 0;
+//FS_RPATH = 0;
+    FIL FileObject;
+    FRESULT res;
+    FILINFO fno;
+    DIR dir;
+
+        #if _USE_LFN
+    fno.lfname = 0;
+    fno.lfsize = 0;
+    #endif
+        
+if (inlet_getDir && !trig){
+	trig = 1;
+	count = 0;
+	f_opendir(&dir,"/");
+	int i;
+		while (count < 128){
+			res = f_readdir(&dir, &fno);
+			int cut = strlen(fno.fname) - 4;
+			if (res != FR_OK || fno.fname[0] == 0) break;
+			memcpy(&wrk[0],&fno.fname [cut],4);
+		if (!strcmp (wrk,"attr_filter")){
+			memcpy(&fout[count <<3],fno.fname,cut %9);
+               count ++;
+			}
+		}
+}
+
+if (!inlet_getDir) trig = 0;
+outlet_test = count;
+
+if (inlet_index != pre){
+	pre = inlet_index;
+	memcpy (&out1[0],&fout[(pre+0)<<3],8);
+	memcpy (&out2[0],&fout[(pre+1)<<3],8);
+	memcpy (&out3[0],&fout[(pre+2)<<3],8);
+	memcpy (&out4[0],&fout[(pre+3)<<3],8);
+	outlet_trig = 1;
+}
+outlet_out1 = &out1[0];
+outlet_out2 = &out2[0];
+outlet_out3 = &out3[0];
+outlet_out4 = &out4[0];
+
+
+if (inlet_delete && !dtrig){
+	dtrig = 1;
+	del[0] = '/';
+	strcpy(&del[1],inlet_fn);
+	f_unlink (&del[0]);
+}
+if (!inlet_delete) dtrig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

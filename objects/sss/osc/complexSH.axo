@@ -1,0 +1,179 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="complexSH" uuid="1c43089c-c903-416c-9e20-2c2c42db278e">
+      <sDescription>oscillator based on a S&amp;H module and a random table for amplitudes and S&amp;H times.
+Note though, that this oscillator is mostly usable for bass as a high pitch will make the S&amp;H unstable.
+&quot;Mix&quot; mixes between two tables for amplitude and timing of the S&amp;H and is a kind of complex pulsewidth modulation.
+&quot;Timbre&quot; controls the overall rate of the timing of the S&amp;H (higher pitch-&gt;faster pulses-&gt;higher timbre)
+Features several kinds of sync that can be stacked up on each other.
+Instead of giving them all their own off/on inputs, these are externally controlled by an integer value in which each bit stands for it&apos;s own sync off/on. Use a &quot;DAC&quot; to convert bits to externally control the sync type or just a random value generator.
+0/1=hardsync
+0/2=softsync
+0/4=reverse
+0/8=swap
+0/16=direction
+0/32,64,96,128..etc=wave (0 up to 15, but multiplied by 32)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="mix" description="level input"/>
+         <bool32 name="rnd" description="randomise S&amp;H array"/>
+         <frac32 name="pitch" description="course"/>
+         <frac32 name="timbre" description="main rate of the S&amp;H"/>
+         <frac32buffer name="sync" description="use the smodes and sync options to select sync types"/>
+         <int32 name="smodes" description="bitwise off/on of individual sync modes-&gt; hardsync =1, softsync=2,reverse=4, swap=8,direction=16,wave=32+an offset for subdividing (64,96,128,160,192, etc.)"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="audio output"/>
+         <frac32buffer name="phase"/>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <bool32.mom name="rnd"/>
+         <frac32.u.map name="mix"/>
+         <frac32.s.map name="track"/>
+         <frac32.s.map name="timbre"/>
+         <bool32.tgl name="hardsync"/>
+         <bool32.tgl name="softsync"/>
+         <bool32.tgl name="reverse"/>
+         <bool32.tgl name="swap"/>
+         <bool32.tgl name="direction"/>
+         <int32 name="wave">
+            <MinValue i="0"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[static const int blepvoices = 16;
+  int16_t *oscp[blepvoices];
+  int32_t vgain[blepvoices];
+  uint32_t nextvoice;
+  uint32_t phase;
+  int32_t phs;
+  int32_t i0;
+  int32_t in0;
+  int32_t acc,hp;
+int32_t cnt,ct,CT;
+int32_t array[2][2][16];
+int rnd,snc,dir,swp,dr,pos;
+int i;
+int j;]]></code.declaration>
+      <code.init><![CDATA[for(j=0;j<blepvoices;j++)
+    oscp[j] = &blept[BLEPSIZE-1];
+  nextvoice = 0;
+  i0 = 0;
+  in0 = 0;
+  acc = 0;
+  phase=0;
+  cnt=0;
+  ct=0;
+dir=1;
+swp=1;
+dr=1;
+for(i=0;i<2;i++){
+  for(j=0;j<16;j++){
+  	array[i][0][j]=(int32_t)(GenerateRandomNumber())>>4;
+  	int32_t tmp;
+  	MTOFEXTENDED((int32_t)(GenerateRandomNumber())>>4,tmp)
+  	array[i][1][j]=tmp;
+  }
+}]]></code.init>
+      <code.krate><![CDATA[int16_t *lastblep = &blept[BLEPSIZE-1];
+int32_t frq;
+MTOFEXTENDED(param_pitch+inlet_pitch,frq)
+outlet_pitch=param_pitch+inlet_pitch;
+int32_t ifrq;
+MTOFEXTENDED((___SMMUL(param_track,param_pitch+inlet_pitch)<<5)+param_timbre+inlet_timbre,ifrq)
+
+int ss,hs,rv,sp,DR,wv;
+	hs=param_hardsync||(inlet_smodes&1);
+  	ss=param_softsync||((inlet_smodes>>1)&1);
+  	rv=param_reverse||((inlet_smodes>>2)&1);
+	sp=param_swap||((inlet_smodes>>3)&1);
+	DR=param_direction||((inlet_smodes>>4)&1);
+	wv=param_wave+((inlet_smodes>>5)&15);
+	wv=wv&1?wv:0;
+
+int RND=inlet_rnd||param_rnd;
+if(RND&&!rnd){
+	rnd=1;
+	  for(i=0;i<2;i++){
+  for(j=0;j<16;j++){
+  	array[i][0][j]=(int32_t)(GenerateRandomNumber())>>4;
+  	int32_t tmp;
+  	MTOFEXTENDED((int32_t)(GenerateRandomNumber())>>4,tmp)
+  	array[i][1][j]=tmp;
+  }
+}
+}
+  else if(!RND){rnd=0;}
+  for(j=0;j<BUFSIZE;j++){
+  	phs-=phs>>7;
+  	int32_t mix=__USAT(param_mix+inlet_mix[j],27)<<4;
+  	uint32_t p1=phase+phs;
+  	phase+=frq*dir;
+  	
+  		if((inlet_sync[j]>0)&&!snc)
+  		{
+  			snc=1;
+  			uint32_t tphs=phase;
+  			if(ss){phs+=(int32_t)(phase);phase=0;}
+  			if(hs){phase-=tphs;}
+  			if(rv){dir=dir>0?-1:1;phase+=frq*dir<<1;}else{dir=1;}
+  			if(sp){swp=swp>0?-1:1;}
+  			if(DR){dr=dr>0?-1:1;}else{dr=1;}
+  			if(wv){ct=pos;if(CT<1){pos=(pos+1)&15;}CT=(CT+1)%wv;}
+  		}
+  		else if(inlet_sync[j]<0){snc=0;}
+  	//int32_t p2=phase+phs;
+  	if((phase+phs)<p1){
+  		
+  		ct=wv>0?pos:0;
+  		
+  		int32_t tm=array[0][1][ct];
+  		tm+=___SMMUL(mix,array[1][1][ct]-tm)<<1;
+  		cnt=tm;
+  	}
+	cnt-=ifrq;//___SMMUL(frq,ifrq)<<1;
+	int TRG=-1;
+	if(cnt<0){
+		ct=(ct+dr)&15;
+		int32_t tm=array[0][1][ct];
+  		tm+=___SMMUL(mix,array[1][1][ct]-tm)<<1;
+  		cnt=tm;
+		TRG=1;
+	}
+  	
+    int i;
+    int i1 = TRG<<21;
+    int32_t pos=array[0][0][ct];
+      pos+=___SMMUL(mix,array[1][0][ct]-pos)<<1;
+    if ((i1>0)&&!(i0>0)){   // dispatch
+      nextvoice = (nextvoice+1)&(blepvoices-1);
+      int32_t x = (i1<<6)/(i1-i0);
+      oscp[nextvoice] = &blept[x];
+      
+      int32_t val = (((64-x)*(pos>>2)) + (x*(in0>>2)))>>6;
+      vgain[nextvoice] = (acc-val)<<2;
+      acc = val;
+    }
+    int32_t sum=0;
+    i0 = i1;
+    in0 = pos;
+    for(i=0;i<blepvoices;i++){ // sample
+      int16_t *t = oscp[i];
+      sum =___SMMLA((16384-(*t))<<16,vgain[i],sum);
+      t+=64;
+      if (t>=lastblep) {        t=lastblep;
+        vgain[i] = 0;
+      }
+      oscp[i]=t;
+    }
+    sum=((sum+acc)<<1)*swp;
+    hp+=sum-hp>>9;
+    outlet_out[j]=sum-hp;
+    outlet_phase[j]=((uint32_t)phase)>>5;
+  }]]></code.krate>
+   </obj.normal>
+</objdefs>

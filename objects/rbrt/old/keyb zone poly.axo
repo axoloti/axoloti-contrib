@@ -1,0 +1,96 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="keyb zone poly" uuid="38bbcba5-2158-4c00-90e1-5dabcde796f8">
+      <sDescription>an approach to midi polyphony.a &apos;map&apos; of currently active notes is stored in a table with the same name as the object that can be referenced from &apos;outside&apos;.
+currentNote,gate and velo correspond to the actual events,noteOn issues a pulse whenever a note-on occurs.
+notecount puts out the number of notes curently on hold,hold is 1 if any keys are on hold.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>poly.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="clear"/>
+      </inlets>
+      <outlets>
+         <int32 name="currentNote" description="note number of active key"/>
+         <bool32 name="currentGate" description="key pressed or released ?"/>
+         <frac32.positive name="currentVelo" description="velocity of active key"/>
+         <bool32.pulse name="noteOn" description="pulse on note-on"/>
+         <bool32.pulse name="noteOff"/>
+         <int32 name="notecount" description="number of notes currently held down"/>
+         <bool32 name="hold" description="any notes on hold?"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="startNote" MinValue="0" MaxValue="127" DefaultValue="0"/>
+         <spinner name="endNote" MinValue="0" MaxValue="127" DefaultValue="127"/>
+      </attribs>
+      <code.declaration><![CDATA[int8_t _note;
+uint8_t _gate;
+uint8_t _velo;
+uint8_t _rvelo;
+uint8_t _touch;
+uint8_t count;
+bool trig;
+bool trigoff;
+bool rtrig;
+
+static const uint32_t LENGTHPOW = 7;
+static const uint32_t LENGTH = 1<<7;
+static const uint32_t LENGTHMASK = (1<<7)-1;
+static const uint32_t BITS = 8;
+static const uint32_t GAIN = 20;
+int8_t array [LENGTH];]]></code.declaration>
+      <code.init><![CDATA[_gate = 0;
+_note = 0;
+_touch = 0;]]></code.init>
+      <code.krate><![CDATA[outlet_currentNote= _note;
+outlet_currentGate= _gate<<27;
+outlet_currentVelo= _velo<<20;
+
+outlet_noteOn = trig;
+outlet_noteOff = trigoff;
+trig = 0;
+trigoff = 0;
+
+outlet_notecount  =count;
+outlet_hold = bool (count);
+
+if (inlet_clear && !rtrig) {
+	{ 
+  int i;
+  for(i=0;i<LENGTH;i++) array[i]=0;
+}
+	rtrig = 1;
+	count = 0;
+}
+
+if (!inlet_clear) rtrig =  0;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  if ((data1 >= attr_startNote)&&(data1 <= attr_endNote))
+  {
+    _velo = data2;
+    if ( !array [data1]) trig = 1;
+    _note = data1;
+    _gate = 1;
+    count += 1;
+    array [data1] = _velo;
+  }
+}
+if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||(status == MIDI_NOTE_OFF + attr_midichannel)) 
+{
+ if ((data1 >= attr_startNote)&&(data1 <= attr_endNote))
+{
+	if ( array [data1]) trigoff = 1;
+	array [data1] = 0;
+if (count) count -= 1;
+	_velo = data2;
+	_note = data1;
+   	_gate = 0;
+}
+ }
+
+else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+   _gate = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

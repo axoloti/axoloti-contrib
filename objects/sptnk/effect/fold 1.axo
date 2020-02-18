@@ -1,0 +1,191 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fold 1" uuid="9661e134-1afa-4901-a674-883d0293f9ab">
+      <sDescription>Polynomial waveshaper with mild wavefolding happening. Useful for dank memes</sDescription>
+      <author>Sputnki</author>
+      <license>BSD</license>
+      <helpPatch>waveshapers.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="m" description="shape parameter"/>
+         <frac32 name="chain" description="&quot;rule&quot; for m parameter in chained units"/>
+         <frac32 name="feed" description="global feedback"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="m" description="shape parameter"/>
+         <frac32.s.map name="chain" description="&quot;rule&quot; for m parameter in chained units"/>
+         <frac32.s.map name="feed" description="global feedback"/>
+      </params>
+      <attribs>
+         <spinner name="chain" description="amount of individual waveshaper units chained together" MinValue="1" MaxValue="8" DefaultValue="1"/>
+      </attribs>
+      <code.declaration><![CDATA[//see init code for some info on the object
+
+//defining some data structures and functions for the object. Hackable.
+typedef struct {
+	int32_t k0 =0;
+	int32_t k1 =0;
+	int32_t k2 =0;
+	int32_t k0_2 = 0;
+	int32_t k1_4 = 0;
+	int32_t k2_6 = 0; 
+	int32_t mul = 0;
+} wavefolder_coefs;
+
+typedef struct {
+	int32_t x_old =0;
+	int32_t Y_old =0; 
+} wavefolder_state;
+
+void wavefolder_setcoefs(wavefolder_state *state, wavefolder_coefs *coefs, int32_t m)
+{
+	
+
+	//k in Q25 format. This way i can go up to k = 64 (massive wavefolding)
+	int32_t k0 = m;	
+	int32_t k1 = 83886080 - (k0<<1);//////   5/2 -2k0     
+	int32_t k2 = k0 - 50331648; ///k0 -3/2
+	int32_t k0_2 = k0>>1;
+	int32_t k1_4 = k1>>2;
+	int32_t k2_6 = k2/6;
+			
+	int32_t max = 1<<22;
+	int32_t kdiff = k0 - 62914560; //15/8 in Q25 format
+	if (kdiff>0)
+	{
+		max = ___SMMLA(18770000<<3,kdiff,max);
+	}
+	
+	int32_t mul = 2147483647.f * 4194304.f/((float)max); 	//Q31
+	//2^27 = 134217728
+
+	(coefs -> k0) = k0;
+	(coefs -> k1) = k1;
+	(coefs -> k2) = k2;
+	(coefs -> k0_2) = k0_2;
+	(coefs -> k1_4) = k1_4;
+	(coefs -> k2_6) = k2_6;
+	(coefs -> mul) = mul;
+	
+	int32_t x_old = (state -> x_old);
+	
+	int32_t x1 = x_old;
+	int32_t x2= ___SMMUL(x1<<2,x1<<3);
+	int32_t x4= ___SMMUL(x2<<2,x2<<3);
+	int32_t x6= ___SMMUL(x2<<2,x4<<3);
+
+	
+	
+	//x_n are in Q27 format. k_m are in Q25 format. I want to come out in Q24 format
+	
+	int32_t Y =___SMMUL(x2<<3,k0_2) + ___SMMUL(x4<<3,k1_4) + ___SMMUL(x6<<3,k2_6); // 0.5*k0*x2 + 0.25*k1*x4 + 1.f/6.f*k2*x6;
+	
+	(state -> Y_old) = Y;
+}
+
+int32_t wavefolder_process(wavefolder_state *state, wavefolder_coefs *coefs, int32_t input_Q27)
+{
+	int32_t x1 = __SSAT(input_Q27,28);
+	int32_t x2= ___SMMUL(x1<<2,x1<<3);
+	int32_t x3= ___SMMUL(x1<<2,x2<<3);
+	int32_t x4= ___SMMUL(x1<<2,x3<<3);
+	int32_t x5= ___SMMUL(x1<<2,x4<<3);
+	int32_t x6= ___SMMUL(x1<<2,x5<<3);
+
+	int32_t k0 = (coefs -> k0);
+	int32_t k1 = (coefs -> k1);
+	int32_t k2 = (coefs -> k2);
+	int32_t k0_2 = (coefs -> k0_2);
+	int32_t k1_4 = (coefs -> k1_4);
+	int32_t k2_6 = (coefs -> k2_6);
+
+	int32_t mul = (coefs -> mul);
+
+	int32_t x_old = (state -> x_old);
+	int32_t Y_old = (state -> Y_old);
+
+	
+	
+	//x_n are in Q27 format. k_m are in Q25 format. I want to come out in Q24 format
+	
+	int32_t y =___SMMUL(x1<<3,k0) + ___SMMUL(x3<<3,k1) + ___SMMUL(x5<<3,k2); // x1*k0 + x3*k1 + x5*k2;
+	int32_t Y =___SMMUL(x2<<3,k0_2) + ___SMMUL(x4<<3,k1_4) + ___SMMUL(x6<<3,k2_6); // 0.5*k0*x2 + 0.25*k1*x4 + 1.f/6.f*k2*x6;
+	
+	int32_t dx = x1-x_old;
+	int32_t dY = Y-Y_old;
+	
+	int32_t dx_abs = dx>0?dx:-dx;
+	
+	(state -> Y_old) = Y;
+	(state -> x_old) = x1;
+	
+	int32_t dY_dx = dY*134217728.0f/((float)dx);
+	int32_t out;
+	
+	if (dx_abs>1<<8)
+		out = ___SMMUL(dY_dx<<2,mul)<<3;
+	else
+		out = ___SMMUL(y<<2,mul)<<3;
+
+	return out;
+}
+
+
+wavefolder_coefs wf_c[attr_chain];
+wavefolder_state wf_s[attr_chain];
+int32_t buffer[attr_chain +1];]]></code.declaration>
+      <code.init><![CDATA[/*
+ * Hey, it's me, Sputnki. If you're reading this, it means you're interested in hacking this object:
+ * I'm totally not okay with that, go away. Really. Don't even try to hack this object, because it's copyrighted in Italy under Waveshaper Act, art.11 .
+ * I mean it. Go steal someone else's work.
+ * 
+ * Still here?
+ * 
+ * Ok, so here's how it works:
+ * 
+ * This object is no more than a polynomial waveshaper. The function i'm using is y = ax + bx^3 + cx^5
+ * The implementation is in fixed point format (i started with floating point, but it was 10x more cpu intensive.
+ * I used several fixed point formats, it was a big trial and error process until i got a decent result.
+ * The object also uses pre integration as a way to reduce aliasing (it's a big topic and you should read Thierry Rochebois articles, they're very didactic in this sense. 
+ * 
+ * 
+ * How are coefficients calculated? Why a 5th order polynomial?
+ * 
+ * y = k0x + k1x^3 + k2x^5
+ * 
+ * The user is allowed to operate on the "k0" coefficient, that represents the angular coefficient at x=0
+ * I want the function to output 1 (or -1) when the input is 1 (or -1) (normalized, ofc)
+ * I want the derivative to be 0 when the input is 1 or -1
+ * 
+ * Solving this system of equations gives k1 = 5/2 - 2k0
+ * 							   and k2 = k0 - 3/2
+ * 
+ * I also wish to have a function that stays bound inside -1 , 1 when the input is inside -1 , 1
+ * Unfortunately i don't have any more degrees of freedom to work on. 
+ * Doing some clever math i've calculated the range of k0 in which y=f(k0,x) satisfies the condition 
+ * That range is k = [0,15/8]
+ * 
+ * (if you want to know how i got that number: i calculated y = f'(x) (derivative). The points of local maximum will have f'(x) = 0. 
+ * That's a 4th order polynomial, there's not a formula to calculate roots of 4th order polynomial. But since i defined the function this way,
+ * i know that (x-1),(x+1) are two roots for the polynomial. I divided f'(x)/(x-1)(x+1) in wolfram alpha and found a 2nd order polynomial.
+ * Again, setting such polynomial to 0 (in wolfram alpha) allowed me to find the values of x that satisfied the condition of local maximum.
+ * xmax = g(k0) should be >1 in order to keep the function bound in the -1 , 1 range. 
+ * 
+ * The waveshaper limited to such range sounded pretty dull. So, again, i calculated the value of f(x) at x=xmax, as a function of k.
+ * This function is pretty nonlinear, as it's a rational function with square roots and stuff. However, luckily, it can be approximated as h = ax.
+ * 
+ * I should say more about the object, but i seriously doubt people will read this. Farewell.
+ */]]></code.init>
+      <code.krate><![CDATA[int32_t feed = __SSAT(param_feed+inlet_feed,28);
+int32_t chain = param_chain + inlet_chain;
+for (int i=0;i<attr_chain;i++)
+wavefolder_setcoefs(&wf_s[i],&wf_c[i],__USAT(param_m+inlet_m+(i*(chain/attr_chain)),27)<<3);]]></code.krate>
+      <code.srate><![CDATA[buffer[0] = inlet_in +  ___SMMUL(feed<<2,buffer[attr_chain]<<3);
+for (int i=0;i<attr_chain;i++)
+buffer[i+1] = wavefolder_process(&wf_s[i], &wf_c[i], buffer[i]);
+outlet_out = buffer[attr_chain];]]></code.srate>
+   </obj.normal>
+</objdefs>

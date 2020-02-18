@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sb params" uuid="dbec7f6e-7bdf-47c4-a66c-f03d5b2f0354">
+      <sDescription>translates sample start-and end information created by &apos;sb rec&apos; -objects
+from samples into fraction of a table,to be used by &apos;ldrive&apos; - objects</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>brec.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="offset" description="sample start in fraction of the table"/>
+         <frac32.positive name="range" description="sample length in fraction of the table"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="data"/>
+         <objref name="wave"/>
+      </attribs>
+      <code.declaration><![CDATA[bool full;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[shift =     (27-attr_wave.LENGTHPOW);]]></code.init>
+      <code.krate><![CDATA[outlet_offset  = attr_data.array [inlet_slot << 1] << shift;
+outlet_range  = (attr_data.array [(inlet_slot << 1) + 1] - attr_data.array [inlet_slot << 1]) << shift;]]></code.krate>
+   </obj.normal>
+</objdefs>

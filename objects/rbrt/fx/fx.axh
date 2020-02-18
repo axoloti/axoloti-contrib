@@ -1,0 +1,160 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="rbrt/fx/sat" uuid="c3a0d24c-0395-484d-8398-210f944454fa" name="sat_2" x="630" y="126">
+      <params>
+         <frac32.u.map name="drive" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="56" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="-17.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/edrum/BD2" uuid="c9816334-296a-4806-8f9b-80e22e654c98" name="BD2_1" x="168" y="154">
+      <params>
+         <frac32.s.map name="pitch" value="-30.0"/>
+         <frac32.u.map name="Penv" value="47.0"/>
+         <frac32.u.map name="Pdec" value="52.0"/>
+         <frac32.u.map name="Vdec" value="56.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="280" y="154">
+      <params>
+         <frac32.u.map name="amp" value="8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/fx/filter range" uuid="63f5134d-19de-4961-a09a-6fdb0d75fe07" name="filter_1" x="392" y="154">
+      <params>
+         <frac32.u.map name="basefreq" value="0.0"/>
+         <frac32.u.map name="width" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 4" uuid="e511105cf5630d1a0b4a144dc3fabb3cc7c07bd" name="mux_1" x="840" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="952" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1036" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/fx/sat fat" uuid="4eaa7f67-68a1-4bf4-a856-9360d8065075" name="sat_1" x="630" y="224">
+      <params>
+         <frac32.u.map name="drive" value="64.0"/>
+         <int32.hradio name="fat" value="4"/>
+         <bool32.tgl name="smooth" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/fx/shaper 16" uuid="b9a3bf48-45ba-4220-a609-0625b3f0d1e5" name="shaper_1" x="630" y="364">
+      <params>
+         <frac32.s.mapvsl name="b0" value="-64.0"/>
+         <frac32.s.mapvsl name="b1" value="-14.0"/>
+         <frac32.s.mapvsl name="b2" value="19.0"/>
+         <frac32.s.mapvsl name="b3" value="-21.0"/>
+         <frac32.s.mapvsl name="b4" value="38.0"/>
+         <frac32.s.mapvsl name="b5" value="-44.0"/>
+         <frac32.s.mapvsl name="b6" value="30.0"/>
+         <frac32.s.mapvsl name="b7" value="-44.0"/>
+         <frac32.s.mapvsl name="b8" value="-64.0"/>
+         <frac32.s.mapvsl name="b9" value="64.0"/>
+         <frac32.s.mapvsl name="b10" value="52.0"/>
+         <frac32.s.mapvsl name="b11" value="42.0"/>
+         <frac32.s.mapvsl name="b12" value="53.0"/>
+         <frac32.s.mapvsl name="b13" value="-18.0"/>
+         <frac32.s.mapvsl name="b14" value="48.0"/>
+         <frac32.s.mapvsl name="b15" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dry/wet" x="322" y="420">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="fx" x="322" y="518">
+      <params>
+         <int32.hradio name="value" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="322" y="588" text="1=filter"/>
+   <comment type="patch/comment" x="322" y="616" text="2=filter and sat"/>
+   <comment type="patch/comment" x="322" y="644" text="2=filter and sat fat"/>
+   <comment type="patch/comment" x="322" y="672" text="3=filter and shaper 16"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_8" x="378" y="784">
+      <params>
+         <frac32.u.map name="value" value="58.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="xfade_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="xfade_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="filter_1" outlet="out"/>
+         <dest obj="sat_1" inlet="in"/>
+         <dest obj="shaper_1" inlet="in"/>
+         <dest obj="sat_2" inlet="in"/>
+         <dest obj="mux_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="BD2_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="BD2_1" outlet="wave"/>
+         <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="filter_1" inlet="in"/>
+         <dest obj="xfade_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="dry/wet" outlet="out"/>
+         <dest obj="xfade_1" inlet="c"/>
+      </net>
+      <net>
+         <source obj="fx" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="sat_2" outlet="out"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="sat_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="shaper_1" outlet="out"/>
+         <dest obj="mux_1" inlet="i3"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,275 @@
+<patch-1.0 appVersion="1.0.10">
+   <comment type="patch/comment" x="14" y="14" text="This is a &quot;workbench&quot; patch, exploring new techniques in development"/>
+   <comment type="patch/comment" x="14" y="42" text="Square wave oscillator based on a three-stage CIC filter and 32x oversampling"/>
+   <comment type="patch/comment" x="14" y="56" text="Comments welcome on the forum thread: http://community.axoloti.com/t/pdm-domain-processing/1712"/>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="14" y="98">
+      <params>
+         <frac32.s.map name="pitch" value="-37.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="126" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="238" y="98">
+      <params>
+         <frac32.u.map name="gain1" value="34.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="126" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f" name="square_osc_cic3" x="14" y="252">
+      <params>
+         <frac32.s.map name="pitch" value="36.0"/>
+      </params>
+      <attribs/>
+      <object id="patch/object" uuid="ae5ef3cf-ae38-4534-87b8-33bdc7680f0f">
+         <sDescription>square wave oscillator 
+based on a three stage CIC filter</sDescription>
+         <author>Johannes Taelman</author>
+         <license>GPL</license>
+         <inlets>
+            <frac32.bipolar name="pitch"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out"/>
+         </outlets>
+         <displays/>
+         <params>
+            <frac32.s.map.pitch name="pitch"/>
+         </params>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int phase=0;
+
+const int16_t *p_cic_i32_int;
+
+int accu[3];
+int p1=0;
+int p2=0;
+int p3=0;
+int p4=0;
+
+__attribute__ ( ( always_inline ) ) void cic31_i32_lut(int i32, int *acc) {
+/*
+meaning of argument i32:
+i32= 0:10000000000000000000000000000000
+i32= 1:11000000000000000000000000000000
+...
+i32=29:11111111111111111111111111111100
+i32=30:11111111111111111111111111111110
+i32=31:11111111111111111111111111111111
+i32=32:01111111111111111111111111111111
+i32=33:00111111111111111111111111111111
+...
+i32=61:00000000000000000000000000000011
+i32=62:00000000000000000000000000000001
+i32=63:00000000000000000000000000000000
+*/
+  int i32x4=i32<<2;
+  int16_t c1=p_cic_i32_int[i32x4];
+  int16_t c2=p_cic_i32_int[i32x4+1];
+  int16_t c3=p_cic_i32_int[i32x4+2];
+  int a0 = c1 + acc[0];
+  int a1 = c2 + acc[1] + 32*acc[0];
+  int a2 = c3 + acc[2] + 32*acc[1] + 528*acc[0];
+  accu[0]=a0;
+  accu[1]=a1;
+  accu[2]=a2;
+}
+]]></code.declaration>
+         <code.init><![CDATA[// CIC magic table
+// pre-integrated 32 subsamples
+static const int16_t cic_i32_int[] = {
+1, 1, 1, 0, 2, 3, 4, 0, 3, 6, 10, 0, 4, 10, 20, 0, 
+5, 15, 35, 0, 6, 21, 56, 0, 7, 28, 84, 0, 8, 36, 120, 0, 
+9, 45, 165, 0, 10, 55, 220, 0, 11, 66, 286, 0, 12, 78, 364, 0, 
+13, 91, 455, 0, 14, 105, 560, 0, 15, 120, 680, 0, 16, 136, 816, 0, 
+17, 153, 969, 0, 18, 171, 1140, 0, 19, 190, 1330, 0, 20, 210, 1540, 0, 
+21, 231, 1771, 0, 22, 253, 2024, 0, 23, 276, 2300, 0, 24, 300, 2600, 0, 
+25, 325, 2925, 0, 26, 351, 3276, 0, 27, 378, 3654, 0, 28, 406, 4060, 0, 
+29, 435, 4495, 0, 30, 465, 4960, 0, 31, 496, 5456, 0, 32, 528, 5984, 0, 
+31, 527, 5983, 0, 30, 525, 5980, 0, 29, 522, 5974, 0, 28, 518, 5964, 0, 
+27, 513, 5949, 0, 26, 507, 5928, 0, 25, 500, 5900, 0, 24, 492, 5864, 0, 
+23, 483, 5819, 0, 22, 473, 5764, 0, 21, 462, 5698, 0, 20, 450, 5620, 0, 
+19, 437, 5529, 0, 18, 423, 5424, 0, 17, 408, 5304, 0, 16, 392, 5168, 0, 
+15, 375, 5015, 0, 14, 357, 4844, 0, 13, 338, 4654, 0, 12, 318, 4444, 0, 
+11, 297, 4213, 0, 10, 275, 3960, 0, 9, 252, 3684, 0, 8, 228, 3384, 0, 
+7, 203, 3059, 0, 6, 177, 2708, 0, 5, 150, 2330, 0, 4, 122, 1924, 0, 
+3, 93, 1489, 0, 2, 63, 1024, 0, 1, 32, 528, 0, 0, 0, 0, 0 };
+
+p_cic_i32_int=&cic_i32_int[0];
+
+accu[0]=0;
+accu[1]=0;
+accu[2]=0;
+]]></code.init>
+         <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq);
+freq=freq>>5;
+
+int freq_x32=freq*32;
+int freq_inv=0xFFFFFFFFu/(unsigned int)freq;
+]]></code.krate>
+         <code.srate><![CDATA[phase+=freq_x32;
+if ((phase&0x80000000)!=0) {
+	if ((phase-0x80000000)>freq_x32){
+		cic31_i32_lut(31,&accu[0]);
+	 } else {
+//		int f32=(phase-0x80000000)/freq;
+		int f32=___SMMUL(phase-0x80000000,freq_inv);
+		cic31_i32_lut(f32,&accu[0]);
+	 }
+} else {
+	if (phase>freq_x32){
+		cic31_i32_lut(63,&accu[0]);
+	} else {
+//		int f32=phase/freq;
+//		cic31_i32_lut(32+f32,&accu[0]);
+		int f32=___SMMLA(phase,freq_inv,32);
+		cic31_i32_lut(f32,&accu[0]);		
+	}
+}
+int d = accu[2];
+// differentiator stages
+int d_1 = d-p1; 
+int d_2 = d_1-p2;
+int d_3 = d_2-p3;
+p1 = d;
+p2 = d_1;
+p3 = d_2;
+// add null at nyquist
+outlet_out=(d_3+p4-(1<<15))<<11;
+p4 = d_3;
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_3" x="126" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="238" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="336" y="280">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/square" uuid="aa9592566d3673fe64dcaede132e9ebd45d2202f" name="square_1" x="14" y="378">
+      <params>
+         <frac32.s.map name="pitch" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_4" x="126" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_2" x="238" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_5" x="336" y="392">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 2 v" uuid="77fcdb5018cb76ee8fce628eb2b57f1adeecc835" name="i_1" x="98" y="476">
+      <params>
+         <int32.vradio name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="182" y="518" text="the new CIC oscillator"/>
+   <comment type="patch/comment" x="182" y="532" text="the old BLT oscillator"/>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="14" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b trig" uuid="11747dcd1dc9afe4919f537c861fb18b80b4e4e" name="scope_1" x="98" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="252" y="560">
+      <params>
+         <frac32.u.map name="amp" value="8.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="252" y="658">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_2" outlet="t"/>
+         <dest obj="-_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_3" outlet="t"/>
+         <dest obj="-_1" inlet="in1"/>
+         <dest obj="-_2" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_1" outlet="out"/>
+         <dest obj="i_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="square_osc_cic3" outlet="out"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_4" outlet="t"/>
+         <dest obj="-_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="-_2" outlet="out"/>
+         <dest obj="i_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="mix_1" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="square_1" inlet="pitch"/>
+         <dest obj="square_osc_cic3" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>460</x>
+      <y>195</y>
+      <width>589</width>
+      <height>899</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pink9octs" uuid="26c493af-69c8-4d04-a326-f72d00f8a303">
+      <sDescription>pink noise</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>pink9octs.axh</helpPatch>
+      <inlets/>
+      <outlets>
+         <frac32buffer.bipolar name="out" description="pink noise"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t r = 0;
+const int32_t rnd(void){
+  return (r = r * 69069 ) >> 7;
+}
+
+uint8_t k_i;
+int32_t k_r[5];
+int32_t* k_rt[16] = {
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +     3,
+k_r, k_r + 1,
+k_r, k_r +   2,
+k_r, k_r + 1,
+k_r, k_r +       4};
+int32_t rt0 = 0, rt1 = 0, rt2 = 0, rt3 = 0;
+int32_t acc = 0;]]></code.declaration>
+      <code.init><![CDATA[for(uint8_t i = 0; i < 5; i++){
+  k_r[i] = 0;
+}
+r = GenerateRandomNumber();]]></code.init>
+      <code.krate><![CDATA[acc -= rt0; { outlet_out[ 0] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 1] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[ 2] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt2; { outlet_out[ 3] = rnd() + (acc += rt2 = rnd()); }
+acc -= rt0; { outlet_out[ 4] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 5] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[ 6] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt3; { outlet_out[ 7] = rnd() + (acc += rt3 = rnd()); }
+acc -= rt0; { outlet_out[ 8] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[ 9] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[10] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt2; { outlet_out[11] = rnd() + (acc += rt2 = rnd()); }
+acc -= rt0; { outlet_out[12] = rnd() + (acc += rt0 = rnd()); }
+acc -= rt1; { outlet_out[13] = rnd() + (acc += rt1 = rnd()); }
+acc -= rt0; { outlet_out[14] = rnd() + (acc += rt0 = rnd()); }
+acc -= *k_rt[k_i];  outlet_out[15] = rnd() + (acc += *k_rt[k_i] = rnd());
+
+k_i++; k_i &= 15;
+
+r ^= GenerateRandomNumber();]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="character" uuid="d127a0ba-092d-4134-8a08-8cd7a734d674">
+      <sDescription>Clipping distortion based on a lowpass filter.
+Will lower the filter cutoff to 0hz when reaching maximum levels.
+pitch: controls maximum filter cutoff (no ducking)
+Strength: controls the strength/rate of the ducking-&gt;lowering the maximum output level.
+Gain: adds gain to the input signal AND signal controlling the clipping
+Clip: adds gain only to the signal controlling the clipping
+Quant: quantizes the signal controlling the clipping.
+
+The strength, clip and quant controls could be seen as &quot;character&quot; controls, changing the respective amplitudes of the created overtones, creating different distortions.
+The gain control nicely warps this distortion-character up the frequency spectrum.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="strength"/>
+         <frac32 name="gain"/>
+         <frac32 name="clip"/>
+         <frac32 name="quant"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="freq" noLabel="true"/>
+         <frac32.u.map name="strength"/>
+         <frac32.u.map name="gain"/>
+         <frac32.u.map name="clip"/>
+         <frac32.u.map name="quant"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+
+int32_t quant=__USAT(param_quant+inlet_quant,27);
+quant=___SMMUL(quant<<3,quant<<2)+1;
+int32_t gain=__USAT(param_gain+inlet_gain,28);
+int32_t strength=__USAT(param_strength+inlet_strength,27);
+strength=___SMMUL(strength<<3,(62<<23));
+int32_t clip=__USAT(param_clip+inlet_clip,27);]]></code.krate>
+      <code.srate><![CDATA[int32_t av=val+inlet_in+___SMMUL(gain<<3,inlet_in<<3)>>1;
+   av=av/quant*quant;
+   av=__SSAT(av+___SMMUL(av<<4,clip<<3),28);
+   av=(av>0?av:-av);
+   av=___SMMUL(av<<3,av<<2);
+   av=___SMMUL(av<<3,av<<2);
+   av=(1<<27)-___SMMUL(___SMMUL(av<<3,av<<2)<<3,strength<<2);
+   MTOF(param_freq,f);
+   f=___SMMUL(av<<3,f)<<2;
+   val = ___SMMLA((inlet_in-val)<<1,f,val);
+   outlet_out= val;]]></code.srate>
+   </obj.normal>
+</objdefs>

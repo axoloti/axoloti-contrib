@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tri_p" uuid="d041ea9a-732b-483b-94aa-a6115e3321fa">
+      <sDescription>Dual phase triangle LFO, positive outpuit</sDescription>
+      <author>Are Leistad</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="phase"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="out1"/>
+         <frac32.positive name="out2"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t p;]]></code.declaration>
+      <code.init><![CDATA[p = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t dp;
+MTOFEXTENDED( param_pitch + inlet_pitch, dp );
+p += dp>>2;
+outlet_out1 = abs(p)>>4;
+outlet_out2 = abs(p+(inlet_phase<<4))>>4;]]></code.krate>
+   </obj.normal>
+</objdefs>

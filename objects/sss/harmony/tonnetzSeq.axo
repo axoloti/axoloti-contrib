@@ -1,0 +1,352 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tonnetzSeq" uuid="e6b18336-0b9d-4645-a982-692a06d09a22">
+      <sDescription>A tonnetz-sequence generator.
+
+Several gates/triggers are used to make chord progression based on the tonnetz theory.
+
+First three are &quot;toggled gate&quot; controlled: when the input is high, it goes in &quot;the other&quot; mode, when gate is low, it switches back.
+P=parallel: switches the major for the minor and reverse.
+R=relative: switches over to the relative of the chord
+L=leading tone: switches between leading tones
+
+Next four inputs are triggered: every time the input goes high, it adds/subtracts a fourth or a fifth to/from all note in the chord.
+pF=add a fifth to all notes in the chord (5th can be multiplied by Fmode-selector to make bigger jumps. Eg. going from F(IV) to G(V) would be Fmode=2)
+nF=subtract a fifth from all notes in the chord
+pf=add a fourth to all notes in the chord(4th can be multiplied by fmode-selector)
+nf=subtract a fourth from all notes in the chord
+iU=inverse the chord up by adding an octave to the lowest note in the chord.
+iD=inverse the chord down by subtracting an octave from the highest note in the chord.
+
+Note! Internally the octaves are wrapped back (pendulum-wise) when going above the max-octave setting, this will cause the octave to step down to 0 before going up again (only noticable when octave is set to 3 or higher). This will only influence the octave-number, not the note being played.
+
+Next to the basic triad, four additional notes are being generated based on the notes of the triad. Together with the notes of the triad, these can be used to generate a melody next to the chord.
+
+The sequence can be forced to reset at a note and mode (major/minor).
+Next to this, the amount of octaves that can be played, can be set using the &quot;octaves&quot; selector. Note that this responds in a &quot;pendulum-wise&quot; manner, though the notes stay the same. So if a note internally goes up one octave, but passes the max-octave setting, it actually goes down one octave at the output.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32 name="P" description="parallel motion (toggling gate-&gt;gate high is parallel)"/>
+         <bool32 name="R" description="relative motion (toggling gate)"/>
+         <bool32 name="L" description="leading tone exchange (toggling gate)"/>
+         <bool32 name="N" description="N(?) motion, only has 1 note in common"/>
+         <bool32 name="S" description="S(?) motion, only has 1 note in common"/>
+         <bool32 name="Q" description="Q(I actually made this name up) motion, only has 1 note in common"/>
+         <bool32 name="pF" description="+fifth motion (trigger), has no notes in common, but transposes all notes by a fifth"/>
+         <bool32 name="nF" description="-fifth motion (trigger), has no notes in common, but transposes all notes by a fifth"/>
+         <bool32 name="pf" description="+fourth motion (trigger),, has no notes in common, but transposes all notes by a fourth"/>
+         <bool32 name="nf" description="-fourth motion (trigger), has no notes in common, but transposes all notes by a fourth"/>
+         <bool32 name="iU" description="up inverse of chord (depending on current octave positions of notes)"/>
+         <bool32 name="iD" description="down inverse of chord (depending on current octave positions of notes)"/>
+         <bool32 name="oU" description="transposes up one octave"/>
+         <bool32 name="oD" description="transposes down one octave"/>
+      </inlets>
+      <outlets>
+         <frac32 name="o1"/>
+         <frac32 name="o2"/>
+         <frac32 name="o3"/>
+         <frac32 name="n1"/>
+         <frac32 name="n2"/>
+         <frac32 name="n3"/>
+         <frac32 name="n4"/>
+         <bool32 name="mode"/>
+      </outlets>
+      <displays>
+         <note.label name="d1"/>
+         <note.label name="d2"/>
+         <note.label name="d3"/>
+         <bool32 name="d4"/>
+      </displays>
+      <params>
+         <bool32.tgl name="P" description="when switched, goes to parallel chord"/>
+         <bool32.tgl name="L" description="when switched, goes to relative chord"/>
+         <bool32.tgl name="R" description="when switched, exchanges leading tone"/>
+         <bool32.tgl name="N" description="N(?) motion, only has 1 note in common"/>
+         <bool32.tgl name="S" description="S(?) motion, only has 1 note in common"/>
+         <bool32.tgl name="Q" description="Q(I actually made this name up) motion, only has 1 note in common"/>
+         <bool32.mom name="pF" description="adds a fifth to all chord-notes"/>
+         <bool32.mom name="nF" description="subtracts a fifth from all chord-notes"/>
+         <bool32.mom name="pf" description="adds a fourth to all chord-notes"/>
+         <bool32.mom name="nf" description="subtracts a fourth form all chord-notes"/>
+         <bool32.mom name="oU" description="transposes up one octave"/>
+         <bool32.mom name="oD" description="transposes down one octave"/>
+         <int32 name="Fmode" description="multiplies the 5th with an integer amount of steps">
+            <MinValue i="1"/>
+            <MaxValue i="3"/>
+         </int32>
+         <int32 name="fmode" description="mutiplies the 4th with an integer amount of steps">
+            <MinValue i="1"/>
+            <MaxValue i="3"/>
+         </int32>
+         <bool32.mom name="rst" description="when clicked, resets the chord to the note and mode set below"/>
+         <int32 name="note" description="sets chord root-note for reset">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <bool32.tgl name="mode" description="sets chord-mode (major/minor) for reset"/>
+         <int32 name="octaves" description="sets amount of octaves the triad-output can reach (4 extra notes can go higher then this!)">
+            <MinValue i="1"/>
+            <MaxValue i="6"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int nt[3];
+int NT[3];
+int tmp[3];
+int mode;
+bool P;
+bool L;
+bool R;
+bool S;
+bool Q;
+bool PF;
+bool NF;
+bool pf;
+bool nf;
+bool Pf;
+bool Nf;
+bool DO;
+bool BO;
+bool OCT;
+bool NN;
+bool rst;
+int i;
+bool up;
+bool down;]]></code.declaration>
+      <code.init><![CDATA[mode=0;
+DO=1;
+
+nt[0]=-4;
+nt[1]=0;
+nt[2]=3;]]></code.init>
+      <code.krate><![CDATA[int p=(param_P+inlet_P)&1;
+int l=(param_L+inlet_L)&1;
+int r=(param_R+inlet_R)&1;
+int nn=(param_N+inlet_N)&1;
+int s=(param_S+inlet_S)&1;
+int q=(param_Q+inlet_Q)&1;
+int pF=(param_pF+inlet_pF)&1;
+int nF=(param_nF+inlet_nF)&1;
+int pf=(param_pf+inlet_pf)&1;
+int nf=(param_nf+inlet_nf)&1;
+int oU=(param_oU+inlet_oU)&1;
+int oD=(param_oD+inlet_oD)&1;
+int32_t max=24*param_octaves;
+//reset to note/mode
+if((param_rst>0)&&!rst){
+	rst=1;
+	nt[0]=param_note-4;
+	nt[1]=param_mode>0?param_note-1:param_note;
+	nt[2]=param_note+3;
+for(i=0;i<3;i++){
+nt[i]=nt[i]-nt[i]/max*max;
+nt[i]+=nt[i]<0?max:0;
+}
+}
+else if(param_rst==0){rst=0;}
+//reset P/L/R at start
+if(DO==1){
+DO=0;
+P=p;
+L=l;
+R=r;
+}
+
+
+//parallel shift
+if(!(P==p)){
+if(mode==0){
+mode=1;
+nt[1]-=1;
+}
+else if(mode==1){
+mode=0;
+nt[1]+=1;
+}
+}
+//leading tone shift
+if(!(L==l)){
+if(mode==0){
+mode=1;
+tmp[0]=nt[1];
+tmp[1]=nt[2];
+tmp[2]=nt[0]-1;
+}
+else if(mode==1){
+mode=0;
+tmp[1]=nt[0];
+tmp[2]=nt[1];
+tmp[0]=nt[2]+1;
+}
+nt[0]=tmp[0];
+nt[1]=tmp[1];
+nt[2]=tmp[2];
+}
+
+//relative shift
+if(!(R==r)){
+if(mode==0){
+mode=1;
+tmp[1]=nt[0];
+tmp[2]=nt[1];
+tmp[0]=nt[2]+2;
+
+}
+else if(mode==1){
+mode=0;
+tmp[0]=nt[1];
+tmp[1]=nt[2];
+tmp[2]=nt[0]-2;
+}
+nt[0]=tmp[0];
+nt[1]=tmp[1];
+nt[2]=tmp[2];
+}
+
+if(!(NN==nn)){
+	if(mode==0){
+	mode=1;
+	tmp[0]=nt[1]+1;
+	tmp[1]=nt[2]+1;
+	tmp[2]=nt[0];
+	}
+	else if(mode==1){
+	mode=0;
+	tmp[0]=nt[2];
+	tmp[1]=nt[0]-1;
+	tmp[2]=nt[1]-1;
+	}
+	nt[0]=tmp[0];
+	nt[1]=tmp[1];
+	nt[2]=tmp[2];	
+}
+
+if(!(S==s)){
+	if(mode==0){
+	mode=1;
+	nt[0]=nt[0]+1;
+	nt[2]=nt[2]+1;
+	}
+	else if(mode==1){
+	mode=0;
+	nt[0]=nt[0]-1;
+	nt[2]=nt[2]-1;
+	}
+
+}
+
+if(!(Q==q)){
+	if(mode==0){
+	mode=1;
+	tmp[0]=nt[2];
+	tmp[1]=nt[0]-2;
+	tmp[2]=nt[1]-2;
+	}
+	else if(mode==1){
+	mode=0;
+	tmp[0]=nt[1]+2;
+	tmp[1]=nt[2]+2;
+	tmp[2]=nt[0];
+	}
+	nt[0]=tmp[0];
+	nt[1]=tmp[1];
+	nt[2]=tmp[2];	
+}
+
+//up 5th
+if((pF>0)&&!PF){
+PF=1;
+for(i=0;i<3;i++){
+nt[i]+=7;
+}
+}
+else if(pF==0){PF=0;}
+//down 5th
+if((nF>0)&&!NF){
+NF=1;
+for(i=0;i<3;i++){
+nt[i]-=7*param_Fmode;
+}
+}
+else if(nF==0){NF=0;}
+//down 3rd
+if((pf>0)&&!Pf){
+Pf=1;
+for(i=0;i<3;i++){
+nt[i]+=4;
+}
+}
+else if(pf==0){Pf=0;}
+//down 3rd
+if((nf>0)&&!Nf){
+Nf=1;
+for(i=0;i<3;i++){
+nt[i]-=4*param_Fmode;
+}
+}
+else if(nf==0){Nf=0;}
+//inverse up
+if((inlet_iU>0)&&!up){
+	up=1;
+	int K=nt[1]>nt[0]?(nt[2]>nt[0]?0:1):(nt[2]>nt[1]?1:2);
+	nt[K]+=12;
+}
+else if(inlet_iU==0){up=0;}
+//inverse down
+if((inlet_iD>0)&&!down){
+	down=1;
+	int K=nt[1]<nt[0]?(nt[2]<nt[0]?0:1):(nt[2]<nt[1]?1:2);
+	nt[K]-=12;
+}
+else if(inlet_iD==0){down=0;}
+
+
+
+
+
+//octave up/down
+if((oU>0)||(oD>0)&&!OCT){
+	OCT=1;
+	if(oU>0){
+	nt[0]+=12;
+	nt[1]+=12;
+	nt[2]+=12;
+	}
+	if(oD>0){
+	nt[0]-=12;
+	nt[1]-=12;
+	nt[2]-=12;
+	}
+}
+else if(!((oU)||(oD>0))){OCT=0;}
+for(i=0;i<3;i++){
+nt[i]=nt[i]-nt[i]/max*max;
+nt[i]+=nt[i]<0?max:0;
+}
+P=p;
+L=l;
+R=r;
+NN=nn;
+S=s;
+Q=q;
+for(i=0;i<3;i++){
+int oct=nt[i]/12-(nt[i]<0?1:0);
+int note=nt[i]-oct*12;
+oct=oct>=(param_octaves)?(param_octaves)-oct:oct;
+NT[i]=note+oct*12;
+}
+
+disp_d1=NT[0]<<21;
+disp_d2=NT[1]<<21;
+disp_d3=NT[2]<<21;
+disp_d4=BO;
+outlet_o1=NT[0]<<21;
+outlet_o2=NT[1]<<21;
+outlet_o3=NT[2]<<21;
+outlet_n1=(mode>0?NT[1]+7:NT[0]+5)<<21;
+outlet_n2=(mode>0?NT[1]+10:NT[2]+7)<<21;
+outlet_n3=(mode>0?NT[1]+5:NT[1]+5)<<21;
+outlet_n4=(mode>0?NT[2]+7:NT[1]+7)<<21;
+outlet_mode=mode;]]></code.krate>
+   </obj.normal>
+</objdefs>

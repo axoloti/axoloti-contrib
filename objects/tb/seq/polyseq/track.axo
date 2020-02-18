@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="track" uuid="c191d319-bd56-493a-922c-c30dd9c7fcfe">
+      <sDescription>Polyphonic, Polyrythmic, Polymetric sequencer
+outputs the current step for a give track and pulse for each step change, connect to polyseq/read or polyseq/note</sDescription>
+      <author>Mark Harris</author>
+      <license>GPL</license>
+      <helpPatch>polyseq.axh</helpPatch>
+      <inlets>
+         <int32.positive name="trkIdx"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="trkIdx"/>
+         <int32 name="stepIdx"/>
+         <bool32.pulse name="stepTrig"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t count_=0;
+uint32_t step_=0;]]></code.declaration>
+      <code.krate><![CDATA[int32_t trkIdx = inlet_trkIdx < attr_seq.maxTracks_ ? inlet_trkIdx : attr_seq.maxTracks_ - 1;
+
+
+outlet_stepTrig = false;
+if(attr_seq.clkTrig_) {
+	int32_t clkDiv = attr_seq.seqClkDivs_[trkIdx];
+	count_ = (++count_) % clkDiv; 
+	if(!count_) {
+		int32_t maxStep = attr_seq.seqSteps_[trkIdx];
+		step_ = (++step_) % maxStep;
+		outlet_stepTrig = true;
+	}
+}
+
+outlet_stepIdx = step_;
+outlet_trkIdx = trkIdx;]]></code.krate>
+   </obj.normal>
+</objdefs>

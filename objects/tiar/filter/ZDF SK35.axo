@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ZDF SK35" uuid="eff2de14-6eff-4b4f-88b7-dfdc8c16ebff">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>SK35.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="x" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="lp12" description="filter output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Q"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t u, y;]]></code.declaration>
+      <code.init><![CDATA[u=y=0;]]></code.init>
+      <code.krate><![CDATA[float Q = __USAT(param_Q + inlet_reso, 27) * (15.0f/(1<<27));
+Q = 2.0f-1.0f/(0.1*Q*Q+0.5)  +0.000015f*Q*Q*Q;
+
+uint32_t alpha;
+MTOFEXTENDED(param_pitch + inlet_pitch-(525<<14), alpha);
+float Freq = arm::q_to_float(alpha,32);
+Freq*=(1.0f/32);
+
+
+
+float a = Freq;
+float b = 1 - Freq;
+float c = -Freq * Q;
+float e = Freq;
+
+for(int i = 0; i < 8; i++){
+  float ce = c * e;
+  a = a * (1 + b) + c * (1 - b) - ce;
+  float bbc = b + b - c;
+  b = b * b + ce;
+  c *= bbc;
+  e *= bbc;
+}
+int32_t A = arm::float_to_q(a, 27);
+int32_t B = arm::float_to_q(b, 27);
+int32_t C = arm::float_to_q(c, 27);
+int32_t E = arm::float_to_q(e, 27);
+
+int32_t F = B - C;
+int32_t D = (1<<27) - B - E;
+
+
+
+for(int i = 0; i < BUFSIZE; i++){
+  u = __SSAT(u,30);
+  y = __SSAT(y,30);
+  int32_t         nu = ___SMMLA(A, inlet_x[i], ___SMMLA(B, u, ___SMMUL(C, y))) << 5;
+  outlet_lp12[i] = y = ___SMMLA(D, inlet_x[i], ___SMMLA(E, u, ___SMMUL(F, y))) << 5;
+  u = nu;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

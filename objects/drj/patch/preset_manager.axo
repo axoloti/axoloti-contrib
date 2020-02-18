@@ -1,0 +1,1151 @@
+<objdefs appVersion="1.0.8">
+  <obj.normal id="preset_manager" uuid="awca12227f535a1288055669829101d3ee7f0189">
+    <sDescription>Preset save/load manager
+    </sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+      <int32 name="preset" description="Preset number"/>
+      <bool32.rising name="load" description="Trigger to load preset"/>
+      <bool32.rising name="save" description="Trigger to save preset"/>
+      <charptr32 name="prefix" description="File name prefix"/>
+    </inlets>
+    <outlets>
+      <int32 name="preset" description="The current preset number"/>
+      <bool32.pulse name="load" description="Pulse signals loading"/>
+      <bool32.pulse name="save" description="Pulse signals saving"/>
+      <frac32.positive name="volume" description="Volume for avoiding glitches on save/load"/>
+    </outlets>
+    <displays>
+      <int32.label name="current  "/>
+    </displays>
+    <params>
+      <bool32.mom name="load" description="Click to load preset"/>
+      <int32 name="preset" description="Preset number to save or load">
+        <MinValue i="0"/>
+        <MaxValue i="999"/>
+      </int32>
+      <bool32.mom name="save" description="Click to save preset"/>
+    </params>
+    <attribs>
+      <combo name="volfade">
+         <MenuEntries>
+            <string>Immediate</string>
+            <string>Fade 0.02s</string>
+            <string>Fade 0.10s</string>
+            <string>Fade 0.50s</string>
+         </MenuEntries>
+         <CEntries>
+            <string>(0x08000000)</string>
+            <string>((0x08000000)/60)</string>
+            <string>((0x08000000)/300)</string>
+            <string>((0x08000000)/1500)</string>
+         </CEntries>
+      </combo>
+      <combo name="savemode">
+         <MenuEntries>
+            <string>Global</string>
+            <string>SubPatch</string>
+            <string>SubPatchV1</string>
+         </MenuEntries>
+         <CEntries>
+            <string>0</string>
+            <string>1</string>
+            <string>2</string>
+         </CEntries>
+      </combo>
+      <combo name="pgmchange">
+         <MenuEntries>
+            <string>Disabled</string>
+            <string>Enabled</string>
+         </MenuEntries>
+         <CEntries>
+            <string>0</string>
+            <string>1</string>
+         </CEntries>
+      </combo>
+      <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+      <spinner name="presetcc" MinValue="-1" MaxValue="127" DefaultValue="125"/>
+      <spinner name="loadcc" MinValue="-1" MaxValue="127" DefaultValue="126"/>
+      <spinner name="savecc" MinValue="-1" MaxValue="127" DefaultValue="-1"/>
+      <spinner name="autoload" MinValue="-1" MaxValue="999" DefaultValue="-1"/>
+    </attribs>
+    <includes>
+       <include>codec.h</include>
+    </includes>
+    <depends>
+      <depend>fatfs</depend>
+    </depends>
+    <code.declaration><![CDATA[
+
+      /*
+       *  The preset manager saves and loads the parameters in the
+       *  patch/subpatch it appears in or all parameters in all sub patches
+       *  depending on the selected save mode, "Global" or "SubPatch".
+       *  In SubPatch mode, each sub patch may need their own preset manager
+       *  object to handle its parameters. Choose save mode and placement
+       *  of preset manager objects depending on what you want saved.
+       *
+       *  There are 4 ways to load and save presets:
+       *    1 - Using MIDI by sending standard program change messages.
+       *    2 - Using MIDI by sending designated CCs set the preset number
+       *        and trigger load and save operations.
+       *    3 - Using the preset number spinbox and load and save buttons
+       *        on the module for managing presets from the patch windows.
+       *    3 - Using the preset, load and save inputs to set
+       *        the preset number and trigger load and save operations.
+       *
+       *  The savemode menu select the scope of the save opration.
+       *
+       *  The pgmchange menu enables or disables MIDI program changes.
+       *
+       *  The channel spinbox sets the MIDI channel that will
+       *  be used for MIDI control.
+       *
+       *  The presetcc, loadcc and savecc spinboxes selects the MIDI CC
+       *  numbers used for controlling the preset manager. The preset number
+       *  to load or save is set with presetcc, the load action is triggered
+       *  by loadcc and the save action is triggered by savecc. Set the CC
+       *  numbers to -1 to disable their corresponding functions.
+       *
+       *  The autoload spinbox selects a preset number which will be loaded
+       *  automatically when the patch starts. Set autoload to -1 for no preset
+       *  to be loaded.
+       *
+       *  The preset spinbox, and load and save buttons control the
+       *  load and save operations directly from a patch window.
+       *
+       *  The preset output and the save and load pulse outputs can
+       *  be used to chain save/load actions to sub patches by connecting
+       *  to the corresponding inputs of other preset managers.
+       *  If managing presets by MIDI only, the preset managers
+       *  (in the various sub patches) that listens to MIDI does
+       *  not need to be chained together. When a preset manager gets
+       *  a change message via MIDI, it will not send save/load pulses
+       *  to avoid multiple load/save triggers.
+       *
+       *  The filenames are constructed of a prefix, taken form the prefix
+       *  string input, a three digit zero padded preset number and a file
+       *  extension. The preset files are saved in the SD card directory of
+       *  the current patch. So a preset filename looks like e.g.:
+       *    0:/my_patch/foo001.pst
+       *
+       *  This means there are 1000 preset slots, although only the first 128
+       *  can be accessed via MIDI (for now).
+       *
+       *  If a patch has multiple preset managers throughout its sub patches,
+       *  each preset manager needs a unique string for the prefix. This allows
+       *  each sub patch to save its parameters to separate files that can be
+       *  reloaded later by the same sub patch in a different context.
+       *  As an example, saving preset number 123 for "my_patch",
+       *  containing two preset managers with the prefixes "syn" and "echo",
+       *  results in the following files being created:
+       *    0:/my_patch/syn123.pst
+       *    0:/my_patch/echo123.pst
+       *
+       *  The file format consist of a string of 32 bit words, with a 3 word header:
+       *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
+       *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode
+       *    word 2   =>  header, number of parameters
+       *    word 3   =>  first parameter name hash
+       *    word 4   =>  first parameter value
+       *    ..
+       *    word N   =>  last parameter name hash
+       *    word N+1 =>  last parameter value
+       *
+       *  Possible workaround for global parameter access (see macro USE_PATCHES_FILE):
+       *  When using a patch parent table (in an SD card file if it has to be so, using a preset_manager master
+       *  with preset_slave modules in the sub patches), the parameters will be grouped by sub patch:
+       *
+       *    word 0   =>  header, "PRSx", file type identifier string, where x is the version
+       *    word 1   =>  header, save mode, 0 = global mode and 1 = sub patch mode, 2 = patch-parent-table?
+       *    word 3   =>  header, number of patches
+       *    word 4   =>  first patch header, patch id
+       *    word 5   =>  first patch header, number of parameters for this patch
+       *    word 6   =>  first patch, first parameter name hash
+       *    word 7   =>  first patch, first parameter value
+       *    ..
+       *    word N   =>  first patch, last parameter name hash
+       *    word N+1 =>  first patch, last parameter value
+       *    word N+2 =>  second patch header, patch id
+       *    word N+3 =>  second patch header, number of parameters for this patch
+       *    ...
+       *
+       *  Possible TBIs:
+       *
+       *   - Avoiding audio glitches by calling codec_clearbuffer() before save/load operations
+       *   - Avoiding audio glitches by providing a gain coefficiant outlet with fade in/out
+       *     before and after save/load operations (DONE, SEE: attr_volfade)
+       *   - Much faster loading by scanning the directory and pre-loading all presets into DRAM
+       *     on module startup and preset save operations. Challenges: memory mamangement, sparse preset sets.
+       *   - Polyphonic parameter access, ref. methods from xpatch.cpp:
+       *
+       *        static voice * getVoices(void){
+       *             static voice v[3];
+       *            return v;
+       *        }
+       *        static void PropagateToVoices(ParameterExchange_t *origin) {
+       *              ParameterExchange_t *pex = (ParameterExchange_t *)origin->finalvalue;
+       *              int vi;
+       *              for (vi = 0; vi < 3; vi++) {
+       *                PExParameterChange(pex,origin->modvalue,0xFFFFFFEE);
+       *                  pex = (ParameterExchange_t *)((int)pex + sizeof(voice)); // dirty trick...
+       *              }
+       *        }
+       *
+       *
+       *        int vi; for(vi=0;vi<3;vi++) {
+       *           voice *v = &getVoices()[vi];
+       *           v->polyIndex = vi;
+       *           v->common = this;
+       *           v->Init(&getVoices()[vi]);
+       *           notePlaying[vi]=0;
+       *           voicePriority[vi]=0;
+       *           for (j = 0; j < v->NPEXCH; j++) {
+       *              v->PExch[j].value = 0;
+       *              v->PExch[j].modvalue = 0;
+       *           }
+       *        }
+       */
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      //#define USE_PATCHES_FILE
+
+      //#define USE_NOOF_PARAMS_TEST
+
+      int32_t     start_sequence;
+      int32_t     preset_no;
+      int32_t     preset_candidate;
+      int32_t     midi_preset_no;
+      int32_t     old_inlet_save;
+      int32_t     old_param_save;
+      int32_t     old_inlet_load;
+      int32_t     old_param_load;
+      int32_t     load_pulse;
+      int32_t     save_pulse;
+      const char  *magic_v2;
+      const char  *suffix;
+      const char  *prefix_copy;
+      int32_t     gain_coeff;
+#if attr_volfade < (1<<27)
+      int32_t     fade_rate;
+      int32_t     save_load_state;
+#endif
+
+#ifdef USE_PATCHES_FILE
+      const char  *patches_filename;
+#endif
+
+      typedef struct _PresetFileHeader
+      {
+        char      magic[4];
+        int32_t   savemode;
+        int32_t   n_params;
+      } PresetFileHeader;
+
+      enum
+      {
+        PRESET_MANAGER_SAVE_MODE_global = 0,
+        PRESET_MANAGER_SAVE_MODE_subpatch = 1,
+        PRESET_MANAGER_SAVE_MODE_subpatch_v1 = 2
+      } PRESET_MANAGER_SAVE_MODE;
+
+      #define PRESET_MANAGER_PE_SIGNAL_MASK 0xFFFD
+
+      enum
+      {
+        PRESET_MANAGER_SAVE_LOAD_STATE_idle = 0,
+        PRESET_MANAGER_SAVE_LOAD_STATE_save,
+        PRESET_MANAGER_SAVE_LOAD_STATE_load
+      } PRESET_MANAGER_SAVE_LOAD_STATE;
+
+
+      /*
+       *  Constructs a filename to use
+       */
+
+      void prepare_filename( char *filename, int buflen, const char *prefix, int preset_no )
+      {
+        int offset = 0;
+        if( prefix != NULL )
+          {
+            strncpy( filename, prefix, buflen );
+            offset = strlen( filename );
+          }
+        if( buflen >= offset + 4 )
+          {
+            filename[offset++] = '0' + (preset_no / 100) % 10;
+            filename[offset++] = '0' + (preset_no / 10) % 10;
+            filename[offset++] = '0' + preset_no % 10;
+            filename[offset]   = 0;
+          }
+        strncpy( filename + offset, suffix, buflen - offset );
+        filename[buflen-1]   = 0;
+      };
+
+      /*
+       *  Handle file errors by reporting an clsing the file
+       */
+
+      int file_error( FIL *FileObject, FRESULT err, const char *filename )
+      {
+        if( err != FR_OK )
+          report_fatfs_error( err, filename );
+        if( FileObject != NULL )
+          f_close( FileObject );
+        return -1;
+      }
+
+      /*
+       *  Determines the number of global parameters to save or load.
+       */
+
+      int get_noof_global_IPVP_params( void )
+      {
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        int n_params = 0;
+        for( int i = 0; i < ObjectKvpRoot->apvp.length; i++ )
+          {
+            if( ObjectKvps[i]->kvptype == KVP_TYPE_IPVP )
+              {
+                n_params++;
+              }
+          }
+        return n_params;
+      }
+
+      /*
+       *  Determines the number of patch parameters to save or load.
+       *  These are the parameters that has a matching PExch[] address
+       *  at both patch and global level.
+       *  Some parameters may be skipped bacuse of an xpatch.cpp bug
+       *  where some parameters don't get registered in the global table.
+       */
+
+      int get_noof_patch_IPVP_params( void )
+      {
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        int n_params = 0;
+        for( int patch_i = 0; patch_i < parent->NPEXCH; patch_i++ )
+          {
+            for( int global_i = 0; global_i < ObjectKvpRoot->apvp.length; global_i++ )
+              {
+                if( &parent->PExch[patch_i] == ObjectKvps[global_i]->ipvp.PEx )
+                //if( ObjectKvps[global_i]->kvptype == KVP_TYPE_IPVP && &parent->PExch[patch_i] == ObjectKvps[global_i]->ipvp.PEx )
+                  {
+                    n_params++;
+                  }
+              }
+          }
+        return n_params;
+      }
+
+      /*
+       *  Find the parameter in the global ObjectKvps table which matches the given name hash.
+       */
+
+      int get_global_param_index( uint32_t name_hash )
+      {
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        for( int i = 0; i < ObjectKvpRoot->apvp.length; i++ )
+          {
+            if( name_hash == CalcCRC32( (uint8_t*) ObjectKvps[i]->keyname, strlen(ObjectKvps[i]->keyname ) ) )
+              {
+                return i;
+              }
+          }
+        return -1;
+      }
+
+      /*
+       *  Saves a preset to the SD card
+       */
+
+      int preset_save( const char *prefix, int preset_no )
+      {
+        FRESULT       err;
+        FIL           FileObject;
+        char          filename[64];
+
+        prepare_filename( filename, 64, prefix, preset_no );
+        err = f_open( &FileObject, filename, FA_WRITE | FA_CREATE_ALWAYS );
+        if( err != FR_OK )
+          return file_error( NULL, err, filename );
+
+        DEBUGF("preset_manager::preset_save(): file open OK, name = '%s'", filename );
+
+        if( attr_savemode == PRESET_MANAGER_SAVE_MODE_global )
+          {
+            err = preset_save_global( &FileObject );
+            if( err == FR_OK )
+              LogTextMessage("Global params saved to '%s'", filename );
+          }
+        else if( attr_savemode == PRESET_MANAGER_SAVE_MODE_subpatch )
+          {
+            err = preset_save_subpatch( &FileObject );
+            if( err == FR_OK )
+              LogTextMessage("Sub patch params saved to '%s'", filename );
+          }
+        else if( attr_savemode == PRESET_MANAGER_SAVE_MODE_subpatch_v1 )
+          {
+            err = preset_save_subpatch_v1( &FileObject );
+            if( err == FR_OK )
+              LogTextMessage("Sub patch v1 params saved to '%s'", filename );
+          }
+
+
+        if( err != FR_OK )
+          {
+            return file_error( &FileObject, err, filename );
+          }
+
+        err = f_close( &FileObject );
+        if( err != FR_OK )
+          {
+            return file_error( NULL, err, filename );
+          }
+
+        return 0;
+      }
+
+      FRESULT preset_save_header( FIL *FileObject, const char *magic, int32_t savemode, int32_t n_params )
+      {
+        unsigned int     bytes_written;
+        FRESULT          err;
+        PresetFileHeader header;
+
+        memcpy( header.magic, magic, sizeof( header.magic ) );
+        header.savemode = savemode;
+        header.n_params = n_params;
+        return f_write( FileObject, (uint8_t *) &header, sizeof( PresetFileHeader ), &bytes_written );
+      }
+
+      FRESULT preset_save_global( FIL *FileObject )
+      {
+        FRESULT       err;
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        unsigned int  bytes_written;
+        int           n_params;
+
+        n_params = get_noof_global_IPVP_params();
+        preset_save_header( FileObject, magic_v2, PRESET_MANAGER_SAVE_MODE_global, n_params );
+        if( err != FR_OK )
+          return err;
+
+        DEBUGF("preset_manager::preset_save_global(): header written OK, n_params = %d", n_params );
+
+        // Generate a hash of each parameter name and store (hash,value) pairs.
+        for( int i = 0; i < ObjectKvpRoot->apvp.length; i++ )
+          {
+            uint32_t pair[2];
+            if( ObjectKvps[i]->kvptype == KVP_TYPE_IPVP )
+              {
+                if( ObjectKvps[i]->keyname != NULL )  // Should probably never be NULL
+                  pair[0] = CalcCRC32( (uint8_t*) ObjectKvps[i]->keyname, strlen(ObjectKvps[i]->keyname) );
+                else
+                  pair[0] = 0;
+                pair[1] = ObjectKvps[i]->ipvp.PEx->value;
+
+                DEBUGF( "preset_manager::preset_save_global(): name = '%s', hash= 0x%08x, value = 0x%08x",
+                    ObjectKvps[i]->keyname != NULL ? ObjectKvps[i]->keyname : "NULL",
+                    pair[0],
+                    ObjectKvps[i]->ipvp.PEx->value );
+
+                err = f_write( FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_written );
+                if( err != FR_OK )
+                  return err;
+              }
+          }
+        return FR_OK;
+      };
+
+      FRESULT preset_save_subpatch( FIL *FileObject )
+      {
+        FRESULT       err;
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        unsigned int  bytes_written;
+        int           n_params;
+        int           n_saved_params = 0;
+
+        n_params = get_noof_patch_IPVP_params();
+        err = preset_save_header( FileObject, magic_v2, PRESET_MANAGER_SAVE_MODE_subpatch, n_params );
+        if( err != FR_OK )
+          return err;
+
+        DEBUGF("preset_manager::preset_save_subpatch(): header written OK, n_params = %d", n_params );
+
+        for( int patch_i = 0; patch_i < parent->NPEXCH; patch_i++ )
+          {
+            for( int global_i = 0; global_i < ObjectKvpRoot->apvp.length; global_i++ )
+              {
+                if( &parent->PExch[patch_i] == ObjectKvps[global_i]->ipvp.PEx /*&& ObjectKvps[global_i]->kvptype == KVP_TYPE_IPVP*/  )
+                  {
+                    /*
+                     *  At this point we can save parent->PExch[patch_i] since it has a name
+                     *  in ObjectKvps[global_i] that we can take a hash of and store.
+                     *  On loading, we need to do this again, I.e. ensure thar the named parameters
+                     *  PEx has an address that's a match in both the global ObjectKvps[] and the sub patch parent->PExch[]
+                     */
+                    uint32_t pair[2];
+
+                    if( ObjectKvps[global_i]->keyname != NULL )
+                      pair[0] = CalcCRC32( (uint8_t*) ObjectKvps[global_i]->keyname, strlen(ObjectKvps[global_i]->keyname) );
+                    else
+                      pair[0] = 0;
+                    pair[1] = ObjectKvps[global_i]->ipvp.PEx->value;
+
+                    DEBUGF( "preset_manager::preset_save_subpatch(): name = '%s', hash= 0x%08x, value = 0x%08x",
+                        ObjectKvps[global_i]->keyname != NULL ? ObjectKvps[global_i]->keyname : "NULL",
+                        pair[0],
+                        pair[1] );
+
+                    err = f_write( FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_written );
+                    if( err != FR_OK )
+                      return err;
+
+                    n_saved_params++;
+                    break;
+                  }
+              }
+          }
+        if( n_saved_params < parent->NPEXCH )
+          {
+            LogTextMessage("%d non registered params were skipped!", parent->NPEXCH - n_saved_params );
+          }
+        return FR_OK;
+      };
+
+
+      FRESULT preset_save_subpatch_v1( FIL *FileObject )
+      {
+        FRESULT       err;
+        unsigned int  bytes_written;
+        int32_t       value;
+
+        DEBUGF("preset_manager::preset_save_subpatch_v1(): file open OK, name = '%s'", filename );
+
+        // Write header word 1: type and version identifier
+        err = f_write( FileObject, (uint8_t *) "PRS1", 4, &bytes_written );
+        if( err != FR_OK )
+          return err;
+
+        // Write header word 2: number of parameters
+        value = parent->NPEXCH;
+        err = f_write( FileObject, (uint8_t *) &value, sizeof(int32_t), &bytes_written );
+        if( err != FR_OK )
+          return err;
+
+        DEBUGF("preset_manager::preset_save_subpatch_v1(): header written OK" );
+
+        for( int i = 0; i < parent->NPEXCH; i++ )
+          {
+            value = parent->PExch[i].value;
+            DEBUGF("preset_manager::preset_save_subpatch_v1(): 0x%08x", value );
+            err = f_write( FileObject, (uint8_t *) &value, sizeof(int32_t), &bytes_written );
+            if( err != FR_OK )
+              return err;
+         }
+        return FR_OK;
+      };
+
+      /*
+       *  Loads a preset from the SD card
+       */
+
+      int preset_load( const char *prefix, int preset_no )
+      {
+        FRESULT           err;
+        FIL               FileObject;
+        PresetFileHeader  header;
+        unsigned int      bytes_read;
+        char              filename[64];
+
+        prepare_filename( filename, 64, prefix, preset_no );
+        err = f_open( &FileObject, filename, FA_READ | FA_OPEN_EXISTING );
+        if( err != FR_OK )
+          return file_error( NULL, err, filename );
+
+        DEBUGF("preset_manager::preset_load(): file opened OK, name = '%s'", filename );
+
+        err = f_read( &FileObject, (uint8_t *) &header, sizeof( PresetFileHeader ), &bytes_read );
+        if( err != FR_OK )
+          return file_error( &FileObject, err, filename );
+
+        // Check id and version, call the right loader.
+        for( int i = 0; i < 3; i++ )
+          {
+            if( header.magic[i] != magic_v2[i] )
+              {
+                LogTextMessage("Preset file header id mismatch" );
+                return file_error( &FileObject, FR_OK, filename );
+              }
+          }
+        int32_t file_version = header.magic[3];
+
+        if( file_version == '1' )
+          {
+            DEBUGF("preset_manager::preset_load(): loading file version 1" );
+            err = preset_load_subpatch_v1( &FileObject, &header );
+            if( err == FR_OK )
+              LogTextMessage("V1 Sub patch params loaded from '%s'", filename );
+          }
+        else if( file_version == '2' )
+          {
+            DEBUGF("preset_manager::preset_load(): loading file version 2" );
+            if( header.savemode == PRESET_MANAGER_SAVE_MODE_global )
+              {
+                err = preset_load_global( &FileObject, &header );
+                if( err == FR_OK )
+                  LogTextMessage("Global params loaded from '%s'", filename );
+              }
+            else if( header.savemode == PRESET_MANAGER_SAVE_MODE_subpatch )
+              {
+                err = preset_load_subpatch( &FileObject, &header );
+                if( err == FR_OK )
+                  LogTextMessage("Sub patch params loaded from '%s'", filename );
+              }
+          }
+
+        if( err != FR_OK )
+          {
+            file_error( &FileObject, err, filename );
+            return -1;
+          }
+
+        err = f_close( &FileObject );
+        if( err != FR_OK )
+          {
+            file_error( &FileObject, err, filename );
+            return -1;
+          }
+
+        return 0;
+      }
+
+      /*
+       *  This is the intial simple test implentation.
+       *  This support will be ditched soon since we have better use for the SRAM.
+       */
+
+      FRESULT preset_load_subpatch_v1( FIL *FileObject, PresetFileHeader *header )
+      {
+        FRESULT       err;
+        unsigned int  bytes_read;
+        int           n_params;
+
+        DEBUGF("preset_manager::preset_load_subpatch_v1(): header n params = %d, & NPEXCH = %d", n_params, parent->NPEXCH );
+
+        // Yeah... This is messy, but teh V! loadin WILL be ditched ASAP!
+        f_lseek( FileObject, 8 );
+        n_params = header->savemode;
+
+        if( n_params != parent->NPEXCH )
+          {
+            DEBUGF("preset_manager::preset_load_subpatch_v1(): n params mismatch" );
+            return FR_DENIED;
+          }
+
+        DEBUGF("preset_manager::preset_load_subpatch_v1(): n params match OK" );
+
+        /*
+         *  Read the parameters from the file and write them to the patch
+         *  PExParameterChange() signaling mask:
+         *    0x00000001 -> USB parameter exchange
+         *    0x00000002 -> DIN MIDI port
+         *    0x00000004 -> Display
+         *    0x00000008 -> buttons and dials
+         *    0x00000010 -> polling readback enabled (never clear this) (OBSOLETE)
+         */
+        for( int param_i = 0; param_i < n_params; param_i++ )
+          {
+            int32_t value;
+            err = f_read( FileObject, (uint8_t *) &value, sizeof( int32_t ), &bytes_read );
+            if( err != FR_OK )
+              return err;
+            DEBUGF("preset_manager::preset_load_subpatch_v1(): param_i = %d, 0x%08x", param_i, value );
+            PExParameterChange( &parent->PExch[param_i], value, PRESET_MANAGER_PE_SIGNAL_MASK );
+          }
+
+        return FR_OK;
+      }
+
+      FRESULT preset_load_global( FIL *FileObject, PresetFileHeader *header )
+      {
+        FRESULT       err;
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        unsigned int  bytes_read;
+        int           n_params;
+
+        /*
+         *  This is the global name/value pair loading.
+         *  We may get name clashes with this is there are identically named parameters
+         *  in different sub patches.
+         */
+        DEBUGF("preset_manager::preset_load_global(): loading file saved with global mode" );
+
+        n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
+        int n_global_IPVP_params = get_noof_global_IPVP_params();
+        if( n_params != n_global_IPVP_params )
+          {
+            DEBUGF("preset_manager::preset_load_global(): noof params mismatch %d vs %d", n_params, n_global_IPVP_params );
+            return FR_DENIED;
+          }
+#endif
+
+        /*
+         *  Read each parameter (hash,value) pair from the file and find a matching ObjectKvps[] entry
+         */
+        for( int param_i = 0; param_i < n_params; param_i++ )
+          {
+            uint32_t  pair[2];
+
+            err = f_read( FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_read );
+            if( err != FR_OK )
+              return err;
+
+            int global_index = get_global_param_index( pair[0] );
+            if( global_index >= 0 )
+              {
+                DEBUGF( "preset_manager::preset_load_global(): PARAM_LOADED OK => name = '%s', value = 0x%08x", ObjectKvps[global_index]->keyname, pair[1] );
+                PExParameterChange( ObjectKvps[global_index]->ipvp.PEx, pair[1], PRESET_MANAGER_PE_SIGNAL_MASK );
+              }
+            else
+              {
+                DEBUGF("preset_manager::preset_load_global(): parameter name mismatch" );
+                return FR_DENIED;
+              }
+          }
+        return FR_OK;
+      }
+
+      FRESULT preset_load_subpatch( FIL *FileObject, PresetFileHeader *header )
+      {
+        FRESULT       err;
+        extern struct KeyValuePair *ObjectKvpRoot;
+        extern struct KeyValuePair *ObjectKvps[];
+        unsigned int  bytes_read;
+        int           n_params;
+        int           n_loaded_params = 0;
+
+        DEBUGF("preset_manager::preset_load_subpatch(): loading file saved with sub patch mode" );
+
+        n_params = header->n_params;
+#ifdef USE_NOOF_PARAMS_TEST
+        int n_patch_IPVP_params = get_noof_patch_IPVP_params();
+        if( n_params != n_patch_IPVP_params )
+          {
+            DEBUGF("preset_manager::preset_load_subpatch(): noof params mismatch" );
+            return FR_DENIED;
+          }
+#endif
+
+        /*
+         *  Read each parameter (hash,value) pair from the file and search for a matching
+         *  ObjectKvps[] entry to find the right one in case the same param name appears
+         *  several times in different subpatches.
+         *  Since some parameters aren't registered globally, we must skip those sub patch
+         *  params which we can't match with a registered one.
+         */
+        bool param_found = true;
+        for( int patch_i = 0; patch_i < parent->NPEXCH; patch_i++ )
+          {
+            uint32_t  pair[2];
+
+            /*
+             *  If the previous parameter in the sub patch was not found in the global registry,
+             *  that means it was skipped on save, and so the last parameter we read from file
+             *  is still "the next one" and so we must retry that parameter again.
+             */
+            if( param_found == true )
+              {
+                err = f_read( FileObject, (uint8_t *) pair, sizeof( pair ), &bytes_read );
+                if( err != FR_OK )
+                  return err;
+              }
+
+            param_found = false;
+            for( int global_i = 0; global_i < ObjectKvpRoot->apvp.length; global_i++ )
+              {
+
+                //DEBUGF("preset_manager::preset_load_subpatch(): patch_i = %d, global_i = %d", patch_i, global_i );
+                //DEBUGF("preset_manager::preset_load_subpatch(): &parent->PExch[patch_i] = 0x%08x, ObjectKvps[global_i]->ipvp.PEx = 0x%08x", &parent->PExch[patch_i], ObjectKvps[global_i]->ipvp.PEx );
+                //DEBUGF("preset_manager::preset_load_subpatch(): pair[0] = 0x%08x, ObjectKvps[global_i] hash = 0x%08x, name = %s", pair[0], CalcCRC32( (uint8_t*) ObjectKvps[global_i]->keyname, strlen(ObjectKvps[global_i]->keyname ) ), ObjectKvps[global_i]->keyname );
+
+                if(    &parent->PExch[patch_i] == ObjectKvps[global_i]->ipvp.PEx
+                    && pair[0]                 == CalcCRC32( (uint8_t*) ObjectKvps[global_i]->keyname, strlen(ObjectKvps[global_i]->keyname ) )
+                  )
+                  {
+                    DEBUGF( "preset_manager::preset_load_subpatch(): PARAM LOADED OK => name = '%s', value = 0x%08x", ObjectKvps[global_i]->keyname, pair[1] );
+                    PExParameterChange( &parent->PExch[patch_i], pair[1], PRESET_MANAGER_PE_SIGNAL_MASK );
+                    param_found = true;
+                    n_loaded_params++;
+                  }
+              }
+          }
+        if( n_loaded_params < parent->NPEXCH )
+          {
+            LogTextMessage("%d params less than in current sub patch!", parent->NPEXCH - n_loaded_params );
+          }
+        return FR_OK;
+      }
+
+#ifdef USE_PATCHES_FILE
+      /*
+       *  Creates the patches.ppp file where all (sub)patches will register their
+       *  parent rootc structure and the number of parameters (NPEXCH is static!).
+       *    word 0:   first patch parent->PExch
+       *    word 1:   first patch parent->NPEXCH
+       *    ..
+       *    word N:   last patch parent->PExch
+       *    word N+1: last patch parent->NPEXCH
+       */
+      void preset_create_patches_file( void )
+      {
+        FRESULT       err;
+        FIL           FileObject;
+        unsigned int  bytes_written;
+
+        LogTextMessage("preset_manager: creating %s", patches_filename  );
+
+        err = f_open( &FileObject, patches_filename, FA_WRITE | FA_CREATE_ALWAYS );
+        if( err != FR_OK )
+          {
+            report_fatfs_error( err, patches_filename );
+          }
+        else
+          {
+            int32_t pair[2];
+            pair[0] = reinterpret_cast<int32_t>( parent );
+            pair[1] = parent->NPEXCH;
+
+            f_lseek( &FileObject, 0 );
+            err = f_write( &FileObject, (uint8_t *) &pair, sizeof(pair), &bytes_written );
+            if( err != FR_OK )
+              {
+                report_fatfs_error( err, patches_filename );
+              }
+            else
+              {
+                LogTextMessage("preset_manager: registered parent patch 0x%08x with %d params", parent, parent->NPEXCH );
+              }
+            f_close( &FileObject );
+            if( err != FR_OK )
+              {
+                report_fatfs_error( err, patches_filename );
+              }
+          }
+      }
+
+      /*
+       *  Dump the contents of the patches.ppp file for diagnostics
+       */
+      void preset_dump_patches_file( void )
+      {
+        FRESULT       err;
+        FIL           FileObject;
+        unsigned int  bytes_written;
+
+        LogTextMessage("preset_manager: checking %s for registered patches:", patches_filename  );
+
+        err = f_open( &FileObject, patches_filename, FA_READ | FA_OPEN_EXISTING );
+        if( err != FR_OK )
+          {
+            report_fatfs_error( err, patches_filename );
+          }
+        else
+          {
+            int32_t       pair[2];
+            rootc         *parent_patch;
+            int32_t       n_patches = f_size( &FileObject ) / sizeof( pair );
+            unsigned int  bytes_read;
+            for( int i = 0; i < n_patches; i++ )
+              {
+                err = f_read( &FileObject, (uint8_t *) &pair, sizeof( pair ), &bytes_read );
+                if( err != FR_OK )
+                  {
+                    report_fatfs_error( err, patches_filename );
+                    break;
+                  }
+                parent_patch = reinterpret_cast<rootc*>( pair[0] );
+                LogTextMessage("preset_manager: patch %d: PExch = 0x%08x with %d params", i, parent_patch->PExch, pair[1] );
+              }
+            f_close( &FileObject );
+            if( err != FR_OK )
+              {
+                report_fatfs_error( err, patches_filename );
+              }
+          }
+      }
+#endif
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      start_sequence  = 0;
+      preset_no       = 0;
+      midi_preset_no  = 0;
+      old_inlet_save  = 0;
+      old_param_save  = 0;
+      old_inlet_load  = 0;
+      old_param_load  = 0;
+      load_pulse      = 0;
+      save_pulse      = 0;
+      magic_v2        = "PRS2";         // The file header magic word, version 2
+      suffix          = ".prs";         // The file extension
+      prefix_copy     = "";             // Need the inlet_prefix pointer in the MIDI handler
+      gain_coeff      = (1<<27);        // Current volume output, used for fade out/in on save/load
+#if attr_volfade < (1<<27)
+      fade_rate       = 0;
+      save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+#endif
+#ifdef USE_PATCHES_FILE
+      patches_filename= "patches.ppr";  // The "Patch Preset Registry" file
+#endif
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      if( start_sequence < 3 )
+        {
+          /*
+           *  We need to wait one k-rate iteration for signal driven startup actions.
+           *  At start_sequence == 0 we do nothing, but wait for signals to propagate in the patch.
+           *  At start_sequence == 1 we can reliably read inputs, parameters and attributes,
+           *  and we perform the optional autoloading of a preset.
+           */
+          LogTextMessage("preset_manager: start_sequence = %d", start_sequence );
+
+          if( start_sequence == 0 )
+            {
+#ifdef USE_PATCHES_FILE
+              preset_create_patches_file();
+#endif
+
+#if 0
+              // This is only for diagnostics, listing all parameters in all sub patches
+              {
+                extern struct KeyValuePair *ObjectKvpRoot;
+                extern struct KeyValuePair *ObjectKvps[];
+                DEBUGF( "preset_manager::krate(): ObjectKvpRoot = 0x%08x, ObjectKvps[%d] = 0x%08x",
+                        ObjectKvpRoot, ObjectKvpRoot->apvp.length, ObjectKvps );
+                for( int i = 0; i < ObjectKvpRoot->apvp.length; i++ )
+                  {
+                    switch( ObjectKvps[i]->kvptype )
+                      {
+                        case KVP_TYPE_IPVP :
+                          DEBUGF( "KVP_TYPE_IPVP: .keyname = '%s', .value = 0x%08x",
+                            ObjectKvps[i]->keyname != NULL ? ObjectKvps[i]->keyname : "NULL",
+                            ObjectKvps[i]->ipvp.PEx->value );
+                          break;
+                        case KVP_TYPE_IVP :
+                          DEBUGF( "KVP_TYPE_IPVP: .keyname = '%s', .value = 0x%08x",
+                            ObjectKvps[i]->keyname != NULL ? ObjectKvps[i]->keyname : "NULL",
+                            ObjectKvps[i]->ivp.value );
+                          break;
+                        default :
+                          DEBUGF( "KVP_TYPE_ = %d", ObjectKvps[i]->kvptype );
+                          break;
+                      }
+                  }
+              }
+#endif
+            }
+#ifdef USE_PATCHES_FILE
+          else if( start_sequence == 2 )
+            {
+              // The master preset_manager can pick up the patches file here.
+              // This is just for diagnostics - we'll pick up the file when save/load is triggered
+              // the appropriate loader will be called by preset_load().
+              preset_dump_patches_file();
+            }
+#endif
+          else if( start_sequence == 1 )
+            {
+              /*
+               *  Check for autoload.
+               */
+              prefix_copy    = inlet_prefix;
+              preset_no      = param_preset;
+              midi_preset_no = preset_no;
+
+              if( attr_autoload >= 0 )
+                {
+                  DEBUGF("preset_manager::krate(): preset autoload" );
+                  if( preset_load( inlet_prefix, attr_autoload ) == FR_OK )
+                    {
+                      load_pulse = 1;
+                      preset_no  = attr_autoload;
+                    }
+                }
+            }
+          start_sequence++;
+        }
+      else if(   (old_inlet_load != inlet_load && inlet_load != 0)
+              || (old_param_load != param_load && param_load == 0)
+             )
+        {
+          /*
+           *  Load triggered
+           */
+          DEBUGF("preset_manager::krate(): load_triggered");
+          if( old_param_load != param_load && param_load == 0 )
+            {
+              preset_candidate = param_preset;
+            }
+          else
+            {
+              preset_candidate = inlet_preset;
+            }
+
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_load;
+#else
+          // Use immediate switching
+          codec_clearbuffer();
+          if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
+            {
+              load_pulse = 1;
+              preset_no  = preset_candidate;
+            }
+#endif
+        }
+      else if(   (old_inlet_save != inlet_save && inlet_save != 0)
+              || (old_param_save != param_save && param_save == 0)
+             )
+        {
+          /*
+           *  Save triggered
+           */
+          DEBUGF("preset_manager::krate(): save_triggered" );
+          if( old_param_save != param_save && param_save == 0 )
+            {
+              preset_candidate = param_preset;
+            }
+          else
+            {
+              preset_candidate = inlet_preset;
+            }
+
+#if attr_volfade < (1<<27)
+          // Start fade out
+          fade_rate       = -attr_volfade;
+          save_load_state =  PRESET_MANAGER_SAVE_LOAD_STATE_save;
+#else
+          // Use immediate switching
+          codec_clearbuffer();
+          if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
+            {
+              // 12.04.2016 17:02 - No save pulse on global saves?
+              //                    One more savemode = "GobalNoTrig" for this
+              //                    or just skip the pulse?
+              //                    or let users do "responsible patching" to avoid trigger loops and such.
+              save_pulse = 1;
+              preset_no  = preset_candidate;
+            }
+#endif
+        }
+
+#if attr_volfade < (1<<27)
+      /*
+       *  Waits for the volume to ramp down before performing deferred saving or loading
+       *  then ramps the volume back up when save or load is done.
+       *  We save this codespace if immedate presetc switching is used.
+       */
+      if( fade_rate < 0 )
+        {
+          // Fading out before save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff <= 0 )
+            {
+              gain_coeff     = 0;
+              fade_rate      = 0;
+              codec_clearbuffer();
+              if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_load )
+                {
+                  if( preset_load( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      load_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                }
+              else if( save_load_state == PRESET_MANAGER_SAVE_LOAD_STATE_save )
+                {
+                  if( preset_save( inlet_prefix, preset_candidate ) == FR_OK )
+                    {
+                      save_pulse = 1;
+                      preset_no  = preset_candidate;
+                    }
+                }
+              // Start fade in after save/load
+              fade_rate = attr_volfade;
+              save_load_state = PRESET_MANAGER_SAVE_LOAD_STATE_idle;
+            }
+        }
+      else if( fade_rate > 0 )
+        {
+          // Fading in after save/load
+          gain_coeff += fade_rate;
+          if( gain_coeff >= 1<<27 )
+            {
+              gain_coeff     = 1<<27;
+              fade_rate      = 0;
+            }
+        }
+#endif
+
+      outlet_volume   = gain_coeff;
+      disp_current    = preset_no;
+      outlet_preset   = preset_no;
+      outlet_load     = load_pulse;
+      outlet_save     = save_pulse;
+      old_inlet_load  = inlet_load;
+      old_param_load  = param_load;
+      old_inlet_save  = inlet_save;
+      old_param_save  = param_save;
+      load_pulse      = 0;
+      save_pulse      = 0;
+
+    ]]></code.krate>
+    <code.midihandler><![CDATA[
+
+      /*
+       *  The MIDI code is untested!
+       *  Include listening for program/bank change messages, CC 0 (MSB) and 32 (LSB)?
+       */
+      if( status == attr_channel + MIDI_PROGRAM_CHANGE )
+        {
+          if( attr_pgmchange == 1 && preset_load( prefix_copy, data1 ) == FR_OK )
+            {
+              preset_no = data1;
+            }
+        }
+      else if( status == attr_channel + MIDI_CONTROL_CHANGE )
+        {
+          if( data1 == attr_presetcc )
+            {
+              midi_preset_no = data2;
+            }
+          else if( data1 == attr_loadcc && preset_load( prefix_copy, midi_preset_no ) == FR_OK )
+            {
+              preset_no = midi_preset_no;
+            }
+          else if( data1 == attr_savecc && preset_save( prefix_copy, midi_preset_no ) == FR_OK )
+            {
+              preset_no = midi_preset_no;
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+</objdefs>

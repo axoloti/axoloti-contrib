@@ -1,0 +1,145 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="multiRepeater" uuid="5b953b83-f992-4816-a95d-eb76a5e6b0a8">
+      <sDescription>multi repeating delay
+-features multiple write and read position to create a repeating effect
+
+inputs:
+-in1: this is fed into both the first delay-writer as the following &quot;repeater&quot; delay-writers (stacks with multiple readers)
+-in2: this is fed only to the first delay-writer, so only repeats according to the amount of &quot;repeating&quot; delay readers.
+
+controls/inputs:
+-timeWrite: maximum writing time (all written repeats are within this time)
+-timeRead: maximum reading time (all read repeats are within this time)
+-repeatWrite: repeats the writer this many times in the given reading time with an equal offset between all writers (timeRead)
+-repeatRead: repeats the reader this many times in the given reading time with an equal offset between al writers(timeRead)
+-freeze: freezes the writing process of the delay, causing the readers to keep repeating what&apos;s in the buffer.
+
+Time offsetting the reading-process:
+-startNom: sets the multiplication of the total writeTime
+-startDiv: sets the division of the multiplied total writeTime.
+This read-offset is used for offsetting the reading-process by a division of the writing time. This way, you can easily making a complex shuffling delay which keeps track of the writing-rate, filling in the gaps.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in1" description="wave input"/>
+         <frac32buffer name="in2"/>
+         <frac32 name="timeRead"/>
+         <frac32 name="timeWrite"/>
+         <int32 name="repeatRead"/>
+         <int32 name="repeatWrite"/>
+         <int32 name="startNom"/>
+         <int32 name="startDiv"/>
+         <bool32 name="freeze"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+         <int32 name="pow"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="timeWrite"/>
+         <frac32.u.map name="timeRead"/>
+         <int32 name="repeatWrite">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="repeatRead">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <frac32.s.map name="wet"/>
+         <int32 name="startNom">
+            <MinValue i="0"/>
+            <MaxValue i="64"/>
+         </int32>
+         <int32 name="startDiv">
+            <MinValue i="1"/>
+            <MaxValue i="64"/>
+         </int32>
+         <bool32.tgl name="freeze"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int32_t *array;
+uint32_t writepos;
+int i;
+uint32_t Timeread;
+uint32_t Timewrite;
+int64_t TIME;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _array[1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[0];
+
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;
+]]></code.init>
+      <code.krate><![CDATA[int freeze=param_freeze+inlet_freeze;
+int repeatread=param_repeatRead+inlet_repeatRead;
+int repeatwrite=param_repeatWrite+inlet_repeatWrite;
+int startNom=param_startNom+inlet_startNom;
+int startDiv=param_startDiv+inlet_startDiv;
+if(freeze==0){
+TIME=inlet_timeWrite+param_timeWrite;
+TIME=(TIME*startNom/startDiv)>>(27-LENGTHPOW);
+Timeread=(param_timeRead+inlet_timeRead)>>(27-LENGTHPOW);
+Timewrite=(param_timeWrite+inlet_timeWrite)>>(27-LENGTHPOW);}
+
+
+outlet_pow=attr_size;
+
+]]></code.krate>
+      <code.srate><![CDATA[   uint32_t delayread = writepos - Timeread;
+   uint32_t delaywrite = writepos - Timewrite;
+int32_t sum=0;
+  writepos = (writepos + 1)&LENGTHMASK;
+if(freeze==0)
+{array[writepos] = inlet_in1+inlet_in2;}
+
+   for(i=1;i<repeatread+1;i++)
+   {sum+=array[(writepos-Timeread/repeatread*i)& LENGTHMASK];}
+if(freeze==0){
+   for(i=1;i<repeatwrite;i++){
+  array[(writepos-Timeread/repeatwrite*i-TIME)& LENGTHMASK]+=inlet_in1;}}
+  //for(i=1;i<repeatread;i++){
+  //sum=array[(writepos-Timeread)& LENGTHMASK];}
+  outlet_out= ___SMMUL(sum<<3,param_wet<<2)+inlet_in1+inlet_in2;
+]]></code.srate>
+   </obj.normal>
+</objdefs>

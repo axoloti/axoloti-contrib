@@ -1,0 +1,139 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="arrayEdit" uuid="420cee6e-e685-44c5-ba85-32c3ca952df1">
+      <sDescription>This module is used to alter the patterns in the &quot;polycountMan&quot; module and &quot;polyRyTrig&quot; module (set module-name in &quot;core&quot; attribute).
+First 16 selectors set up the values within the pattern.
+For &quot;polycountMan&quot; in controls the amount of measures for each stage.
+For &quot;polyRyTrig&quot; it controls the amount of triggers that will be generated within the set amount of measures.
+
+&quot;length&quot; sets the amount of selectors that will actually be used.
+eg. for a 32-step loop with a stage-length of 10, the measures-per-stage could be:
+5,3,5,2,1,5,3,5,1,1,1
+if using the polyRyTrig and it would be set to:
+5,4,5,2,3,5,3,5,2,1,3
+it will create a &quot;normal&quot; count where the values are the same (like the 5&apos;s in the upper row). But by using a higher rate for the single measures (1&apos;s), you can make halves, tripples, quarters etc etc.
+The first &quot;3&quot; has 4 triggers, generating 4 triggers within 3 measures, speeding up the rythm a bit.
+
+&quot;pattern&quot; sets which pattern in the core-module is being controlled by the arrayEdit module. This knob is scaled to the amount of patterns made available by the core-module and is midiCC controllable.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32.mini name="def">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <bool32.mom name="set"/>
+         <int32.mini name="i0" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i1" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i2" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i3" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i4" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i5" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i6" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i7" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i8" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i9" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i10" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i11" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i12" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i13" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i14" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="i15" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="99"/>
+         </int32.mini>
+         <int32.mini name="length">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32.mini>
+         <frac32.u.map name="pattern"/>
+      </params>
+      <attribs>
+         <objref name="core"/>
+      </attribs>
+      <code.declaration><![CDATA[int prev;
+int prv;]]></code.declaration>
+      <code.krate><![CDATA[int32_t P=___SMMUL(param_pattern<<3,attr_core.patt<<2)*attr_core.LENGTH;
+int i;
+if(!(prev==param_pattern)){
+	for(i=0;i<attr_core.LENGTH;i++){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_i0+i],attr_core.array[i+P],0xFFFD);
+}
+}
+if(!(prv==param_set)){
+	for(i=0;i<attr_core.LENGTH;i++){
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_i0+i],param_def,0xFFFD);
+}
+}
+
+
+
+attr_core.array[0+P]=param_i0;
+attr_core.array[1+P]=param_i1;
+attr_core.array[2+P]=param_i2;
+attr_core.array[3+P]=param_i3;
+attr_core.array[4+P]=param_i4;
+attr_core.array[5+P]=param_i5;
+attr_core.array[6+P]=param_i6;
+attr_core.array[7+P]=param_i7;
+attr_core.array[8+P]=param_i8;
+attr_core.array[9+P]=param_i9;
+attr_core.array[10+P]=param_i10;
+attr_core.array[11+P]=param_i11;
+attr_core.array[12+P]=param_i12;
+attr_core.array[13+P]=param_i13;
+attr_core.array[14+P]=param_i14;
+attr_core.array[15+P]=param_i15;
+attr_core.length=param_length;
+prv=param_set;
+prev=param_pattern;]]></code.krate>
+   </obj.normal>
+</objdefs>

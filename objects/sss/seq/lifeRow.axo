@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.10">
+   <obj.normal id="lifeRow" uuid="c4dbec92-8b6d-48f2-95fa-f5988e55483f">
+      <sDescription>This module reads an entire row as a 32-bit value, which can be scaled with the min/max knobs between a minimum and maximum value.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <int32 name="row"/>
+         <frac32 name="max"/>
+         <frac32 name="min"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="row">
+            <MinValue i="0"/>
+            <MaxValue i="15"/>
+         </int32>
+         <frac32.s.map name="max"/>
+         <frac32.s.map name="min"/>
+      </params>
+      <attribs>
+         <objref name="ref"/>
+      </attribs>
+      <code.krate><![CDATA[int32_t out=(uint32_t)(attr_ref.param[(param_row+inlet_row)&15]>>5)+(1<<26);
+int32_t max=__SSAT(param_max+inlet_max,27);
+int32_t min=__SSAT(param_min+inlet_min,27);
+
+int32_t width=max-min;
+outlet_out=___SMMUL(out,width)+min;]]></code.krate>
+   </obj.normal>
+</objdefs>

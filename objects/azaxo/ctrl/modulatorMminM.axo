@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="modulatorMminM" uuid="ba429e46-8861-4e90-8390-a5a8cd91888f">
+      <sDescription>General purpose modulator object with two masters. Used to modulate other object through other objects.</sDescription>
+      <author>Albert van der Zee</author>
+      <license>GPL</license>
+      <inlets>
+         <frac32.positive name="In"/>
+         <frac32.bipolar name="ModIn"/>
+         <frac32.positive name="ModHeadroom"/>
+         <frac32.positive name="Master1Min"/>
+         <frac32.positive name="Master1"/>
+         <frac32.positive name="Master2"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="Out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t oud_in;
+int32_t oud_parameter;
+int32_t output;]]></code.declaration>
+      <code.init><![CDATA[oud_in = 0;
+oud_parameter = 0;
+output = 0;]]></code.init>
+      <code.krate><![CDATA[// modulate ModIn
+int32_t accum = __SSAT(inlet_ModIn + inlet_In,28);
+
+// modulate ModHeadroom
+accum = ___SMMLA((0x07FFFFFF - accum)<<3,inlet_ModHeadroom<<2,accum); 
+
+
+// apply master 1 control
+accum = ___SMMUL(accum,inlet_Master1>inlet_Master1Min?inlet_Master1:inlet_Master1Min);
+accum = __SSAT( (accum<<5),28);
+
+// apply master 2 control
+accum = ___SMMUL(accum,inlet_Master2);
+accum = __SSAT( (accum<<5),28);
+
+// schrijf naar output
+outlet_Out= accum;]]></code.krate>
+   </obj.normal>
+</objdefs>

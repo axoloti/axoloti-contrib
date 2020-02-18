@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="blepSlave" uuid="12634860-8264-4cac-b67c-0c4f4b51d503">
+      <sDescription>Multi wave oscillator with sync and FM modulation
+Bandwith limited</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>saw sync.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32buffer name="sync" description="sync, resets oscillator phase on rising zero-crossing"/>
+         <frac32buffer name="mod"/>
+         <int32 name="wave"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="saw wave, anti-aliased"/>
+         <frac32 name="pitch"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <int32.hradio name="wave">
+            <MaxValue i="4"/>
+         </int32.hradio>
+         <frac32.s.map name="fm"/>
+         <bool32.tgl name="snc"/>
+      </params>
+      <attribs>
+         <objref name="core"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t osc_p;
+uint32_t uosc_p;
+  static const int blepvoices = 8;
+  const int16_t *uoscp[blepvoices];
+  int16_t *oscp[blepvoices];
+  int32_t vgain[blepvoices];
+  uint32_t nextvoice;
+  int32_t i0;
+  int i;]]></code.declaration>
+      <code.init><![CDATA[int j;
+    for(j=0;j<blepvoices;j++)
+      oscp[j] = &blept[BLEPSIZE-1];   nextvoice = 0;  i0 = 0;]]></code.init>
+      <code.krate><![CDATA[for(i=0;i<blepvoices;i++){
+	attr_core.oscp[i]=oscp[i];
+	attr_core.uoscp[i]=uoscp[i];
+	attr_core.vgain[i]=vgain[i];
+}
+for(i=0;i<BUFSIZE;i++){
+	attr_core.sync[i]=param_snc>0?inlet_sync[i]:0;
+	attr_core.mod[i]=___SMMUL(inlet_mod[i]<<2,param_fm<<3);
+}
+attr_core.i0=i0;
+attr_core.osc_p=osc_p;
+attr_core.uosc_p=uosc_p;
+attr_core.nextvoice=nextvoice;
+int wave=(param_wave+inlet_wave)&3;
+switch(wave){
+case 0: attr_core.OSC_SIN(param_pitch+inlet_pitch);	break;
+case 1: attr_core.OSC_TRI(param_pitch+inlet_pitch);	break;
+case 2: attr_core.OSC_SAW(param_pitch+inlet_pitch);	break;
+case 3: attr_core.OSC_SQR(param_pitch+inlet_pitch);	break;
+}
+for(i=0;i<BUFSIZE;i++){
+	outlet_wave[i]=attr_core.wave[i];
+}
+for(i=0;i<blepvoices;i++){
+	oscp[i]=attr_core.oscp[i];
+	uoscp[i]=attr_core.uoscp[i];
+	vgain[i]=attr_core.vgain[i];
+}
+i0=attr_core.i0;
+osc_p=attr_core.osc_p;
+uosc_p=attr_core.uosc_p;
+nextvoice=attr_core.nextvoice;
+
+outlet_pitch=param_pitch+inlet_pitch;]]></code.krate>
+   </obj.normal>
+</objdefs>

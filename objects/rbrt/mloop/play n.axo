@@ -1,0 +1,72 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="play n" uuid="65386957-c344-49fa-befc-c52624a6db38">
+      <sDescription>play back a sequence recorded with &apos;note rec&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <int32.positive name="index" description="index (0 - 512)"/>
+         <bool32.risingfalling name="play" description="start/stop"/>
+         <bool32.rising name="stopall" description="stop all active notes"/>
+      </inlets>
+      <outlets>
+         <int32 name="note" description=""/>
+         <int32 name="velo"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="seq"/>
+      </attribs>
+      <code.declaration><![CDATA[uint16_t v;
+uint8_t *active;
+uint8_t note;
+uint8_t velo;
+bool sa;
+bool play;
+uint8_t stoplist [32];
+uint8_t stopcount;
+
+void stopall () {
+	stopcount = 0;
+		int i;
+	for (i = 0; i < 128;i ++) {
+		if (active [i]) {
+			stoplist [stopcount] = i;
+			stopcount ++;
+		}
+	}
+	return;
+}]]></code.declaration>
+      <code.init><![CDATA[static uint8_t _active[attr_poly][128]  __attribute__ ((section (".sdram")));
+active = &_active[parent->polyIndex][0];
+
+{ 
+  int i;
+  for(i=0;i<128;i++) active[i]=0;
+}]]></code.init>
+      <code.krate><![CDATA[if (inlet_play && !play) play = 1;
+if (!inlet_play && play) {play = 0;stopall();}
+
+if (play) {
+	v = attr_seq.array [inlet_index];
+	if (v ){
+		note = (v & 255) - 1;
+		velo = v >> 8;
+		active [note]  = velo;
+	}
+}
+
+if (inlet_stopall && !sa) {stopall ();sa = 1;}
+if (!inlet_stopall) sa = 0;
+
+if (stopcount) {
+	note = stoplist [stopcount -1];
+	velo = 0;
+	stopcount --;
+}
+
+outlet_note = note;
+outlet_velo = velo;]]></code.krate>
+   </obj.normal>
+</objdefs>

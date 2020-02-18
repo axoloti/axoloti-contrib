@@ -1,0 +1,23 @@
+<objdefs appVersion="1.0.11">
+   <obj.normal id="uniform trig fp" uuid="e10c0150-22a5-47be-a7e1-7d46f0e33954">
+      <sDescription>uniform distributed (white) noise, triggered generation. Range 0-64</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="rand"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[uint32_t val;
+int ntrig;]]></code.declaration>
+      <code.init><![CDATA[val = (int32_t)(GenerateRandomNumber())>>4;
+ntrig = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) { val = (uint32_t)(GenerateRandomNumber())>>5; ntrig=1;}
+   else if (!(inlet_trig>0)) ntrig=0;
+   outlet_rand= val;]]></code.krate>
+   </obj.normal>
+</objdefs>

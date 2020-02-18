@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="clockswing3" uuid="193bf425-5035-4ae1-a122-4fe8d4eb9632">
+      <sDescription>adds swing to a trigger signal
+First gate/trigger is let through as a short trigger
+Second gate/trigger resets the internal counter and only generates a short trigger if the internal counter passes the swing value. Internal counter is at krate. Most swing values will be between 0 (no swing) and 200. If the swing value is so high that the counter will be reset before it has generated a trigger, it won&apos;t generate a trigger. So it&apos;s useful to add a reset signal (once every 64 steps? or more?) to both the swing module and the sequencer that you&apos;re providing the swing to.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="trigIn" description="uses a gate/trigger signal (eg for sequencers)"/>
+         <bool32 name="reset" description="resets internal 1st/2nd trigger counter"/>
+         <int32 name="swing" description="sets swing position (the higher the value, the later the 2nd trigger will be generated)"/>
+      </inlets>
+      <outlets>
+         <bool32.pulse name="trigOut"/>
+      </outlets>
+      <displays/>
+      <params>
+         <int32 name="swing" noLabel="true">
+            <MinValue i="0"/>
+            <MaxValue i="999"/>
+         </int32>
+         <int32 name="repeat">
+            <MinValue i="2"/>
+            <MaxValue i="16"/>
+         </int32>
+         <int32 name="range">
+            <MinValue i="1"/>
+            <MaxValue i="128"/>
+         </int32>
+         <frac32.u.map name="in"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int array1[64];
+int16_t cnt;
+int cot;
+int cat;
+int ttrig;
+int dtrig;
+int swingOn;
+int gtrig;
+int16_t swingsize;]]></code.declaration>
+      <code.init><![CDATA[cnt=999;]]></code.init>
+      <code.krate><![CDATA[int32_t repeat=param_repeat;
+outlet_trigOut=0;
+cnt=__USAT(cnt-1,27);
+
+if((inlet_trigIn>0) && (!(ttrig)))
+{
+swingsize=___SMMUL((inlet_swing>>15)/repeat<<3,param_in<<2)+param_swing;
+ttrig=1;
+cnt=cot*swingsize+1;
+cat+=1;
+cat=cat-cat/param_range*param_range;
+cot=cat-(cat/repeat)*repeat;
+
+}
+else if (!(inlet_trigIn>0)){ttrig=0;}
+
+
+
+outlet_trigOut=cnt==1;]]></code.krate>
+   </obj.normal>
+</objdefs>

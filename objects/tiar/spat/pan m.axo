@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pan m" uuid="32ac1138-0263-4773-b00b-48cd84a9869c">
+      <sDescription>Constant gain^2 pan with param and modulation inputs</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>pan m.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+         <frac32 name="pan" description="pan control"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="left" description="output"/>
+         <frac32buffer name="right" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="pan" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t gLeft, gRight;]]></code.declaration>
+      <code.krate><![CDATA[int32_t a = __USAT((inlet_pan + param_pan) + (1<<27), 28) << 2;  // q30
+SINE2TINTERP(a,        gRight)
+SINE2TINTERP(a+(1<<30), gLeft)]]></code.krate>
+      <code.srate><![CDATA[outlet_left  = ___SMMUL(gLeft,  inlet_in)<<1;
+outlet_right = ___SMMUL(gRight, inlet_in)<<1;]]></code.srate>
+   </obj.normal>
+</objdefs>

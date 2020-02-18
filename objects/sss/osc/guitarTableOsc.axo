@@ -1,0 +1,127 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="guitarTableOsc" uuid="5ec444b9-5f52-4378-bfa7-305cef8d1d37">
+      <sDescription>this is the module to use with the guitarTable module in a polyphonic synthesizer.
+The guitarTable module will create a complex waveform and this module is able to play that waveform. This was needed, otherwise, in a polyphonic setting, each module would create it&apos;s own table, filling up the available memory really quickly.
+
+-features pulsewidth, start-shift (start) and pick-up (mod) modulation, all extern controllable. (though these are all only approximations to the changes made by the &quot;fixed settings&quot;, reshaping the wavetable)</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32 name="pwm"/>
+         <frac32 name="mod"/>
+         <frac32 name="start"/>
+         <int32 name="preset"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+         <frac32.u.map name="pwm"/>
+         <frac32.u.map name="mod"/>
+         <frac32.u.map name="start"/>
+         <frac32.u.map name="preset"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t phase;
+int i;
+
+
+float32_t A;
+float32_t B;
+uint32_t PM;
+uint32_t Pm;
+   int32_t prev1;
+   int32_t prev2;
+   int32_t prev3;
+   float32_t prev4;
+   float32_t prev5;
+   int32_t step1;
+   int32_t step2;
+   int32_t step3;
+   float32_t step4;
+   float32_t step5;
+   int preset;]]></code.declaration>
+      <code.init><![CDATA[phase=0;]]></code.init>
+      <code.krate><![CDATA[int32_t freq;
+MTOFEXTENDED(param_pitch + inlet_pitch,freq)
+PM=param_pwm+inlet_pwm;
+PM=PM>0?PM:-PM;
+PM=PM&((1<<28)-1);
+PM=PM>(1<<27)?(2<<27)-PM:PM;
+PM=__USAT(PM+1,27)<<4;
+A=((float32_t)(1<<31))/((float32_t)(PM<<1));
+B=((float32_t)(1<<31))/((float32_t)(((1<<31)-PM)<<1));
+PM=PM<<1;
+int32_t mod1=param_mod+inlet_mod;
+mod1=mod1>0?mod1:-mod1;
+mod1=mod1&((1<<28)-1);
+mod1=mod1>(1<<27)?(2<<27)-mod1:mod1;
+mod1=mod1<<4;
+int32_t mod2;
+mod2=mod1*3;
+
+int32_t Start=param_start+inlet_start;
+Start=Start>0?Start:-Start;
+Start=Start&((1<<28)-1);
+Start=Start>(1<<27)?(2<<27)-Start:Start;
+
+   step1 = ((((int32_t)(PM))+(1<<31)) - prev1)>>4;
+   int32_t i1 = prev1;
+   prev1 = ((int32_t)(PM))+(1<<31);
+
+   step2 = (mod1 - prev2)>>4;
+   int32_t i2 = prev2;
+   prev2 = mod1;
+
+   step3 = (Start - prev3)>>4;
+   int32_t i3 = prev3;
+   prev3 = Start;
+
+   step4 = (A - prev4)/(float32_t)16;
+   float32_t i4 = prev4;
+
+   
+   prev4 = A;
+
+   step5 = (B - prev5)/(float32_t)16;
+   float32_t i5 = prev5;
+   prev5 = B;
+
+   preset=param_preset+inlet_preset;
+   preset=___SMMUL(preset<<3,attr_table.presets<<2);
+   preset=preset-(preset/attr_table.presets)*attr_table.presets;
+   preset=preset<0?preset+attr_table.presets:preset;
+   preset=preset*attr_table.LENGTH;]]></code.krate>
+      <code.srate><![CDATA[uint32_t Phase;
+phase += freq;
+
+uint32_t PHase=phase;
+if(phase<(1<<31)){
+PHase=___SMMUL(phase,i3<<4)<<2;
+}
+else{
+PHase=(___SMMUL(phase,((1<<27)-i3)<<4)<<2);
+}
+
+if(PHase<Pm){
+Phase=(1<<31)+((int32_t)(PHase*i4))+i2;}
+if(PHase>=Pm){Phase=((uint32_t)((PHase-Pm)*i5-(1<<31)))+i2+(1<<31);}
+
+outlet_wave=attr_table.array[((Phase>>32-attr_table.LENGTHPOW)&attr_table.LENGTHMASK)+preset];
+
+
+   i1 += step1;
+   i2 += step2;
+   i3 += step3;
+   i4 += step4;
+   i5 += step5;
+
+Pm=(uint32_t)(i1)+(1<<31);]]></code.srate>
+   </obj.normal>
+</objdefs>

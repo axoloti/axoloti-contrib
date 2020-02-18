@@ -1,0 +1,277 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="InDev6" uuid="1a435fe9-0cbf-4d5d-9983-b36213f60796">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>InDev6.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="vib0"/>
+         <frac32.bipolar name="vib1"/>
+         <frac32.bipolar name="vib2"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="outA" description=""/>
+         <frac32buffer.bipolar name="outB" description=""/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="L2A"/>
+         <frac32.s.map.kdecaytime.exp name="A2A"/>
+         <frac32.s.map.kdecaytime.exp name="R2A"/>
+         <frac32.u.map name="L4A"/>
+         <frac32.s.map.kdecaytime.exp name="A4A"/>
+         <frac32.s.map.kdecaytime.exp name="R4A"/>
+         <frac32.u.map name="L8A"/>
+         <frac32.s.map.kdecaytime.exp name="A8A"/>
+         <frac32.s.map.kdecaytime.exp name="R8A"/>
+         <frac32.u.map name="L2B"/>
+         <frac32.s.map.kdecaytime.exp name="D2B"/>
+         <frac32.u.map name="L4B"/>
+         <frac32.s.map.kdecaytime.exp name="D4B"/>
+         <frac32.u.map name="L8B"/>
+         <frac32.s.map.kdecaytime.exp name="D8B"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[class Blit {
+  public:
+  float ctrlAmpA[8];  // amp from control
+  float ampA[8];      // amp for a complete cycle
+  float ctrlAmpB[8];  // amp from control
+  float ampB[8];      // amp for a complete cycle
+  
+  float period;      // period in sample
+  float fPeriod;
+  int32_t iPeriod;
+  uint32_t nextSpl;
+
+  float subSpl;
+  uint16_t cpt;      // step counter
+  
+  void setF(float f){
+    period = 48000.0f / f;
+    iPeriod = (int32_t)period;
+    fPeriod = period - iPeriod;
+  }
+  void init(float f){
+    setF(f);
+    for(int i = 0; i < 8; i++){
+      ctrlAmpA[i] = 0.0f;
+      ampA[i] = 0.0f;
+      ctrlAmpB[i] = 0.0f;
+      ampB[i] = 0.0f;
+    }
+  }  
+};
+
+uint32_t spl = 0;
+Blit blits[12];
+float z0A = 0, z1A = 0, ZA = 0, DCZA = 0;
+float y0A = 0, y1A = 0, YA = 0, DCYA = 0;
+float z0B = 0, z1B = 0, ZB = 0, DCZB = 0;
+float y0B = 0, y1B = 0, YB = 0, DCYB = 0;
+
+int8_t gates[128];
+int8_t trigs[128];
+int32_t envs2A[8*12];
+int32_t envs4A[8*12];
+int32_t envs8A[8*12];
+int32_t envcA[8*12];
+int32_t envs2B[8*12];
+int32_t envs4B[8*12];
+int32_t envs8B[8*12];
+int32_t envcB[8*12];
+
+
+]]></code.declaration>
+      <code.init><![CDATA[float f = 4186.009f*2;
+for(int i =0;i<12;i++){
+  blits[i].init(f);
+  f *= 1.059463094f;
+}
+
+
+for(int i = 0; i < 128; i++){
+	gates[i] = 0;
+  trigs[i] = 0;
+}
+for(int i = 0; i < 8*12; i++){
+	envs4A[i] =	envs2A[i] = envs8A[i] =	envcA[i] = 0;
+	envs4B[i] =	envs2B[i] = envs8B[i] =	envcB[i] = 0;
+}]]></code.init>
+      <code.krate><![CDATA[float vib0 = inlet_vib0 * 1e-10f;
+float vib1 = inlet_vib1 * 1e-10f;
+float vib2 = inlet_vib2 * 1e-10f;
+//C#
+float f = 2.0f*4186.009f*1.059463094f;
+blits[0].setF(f*vib0+f);  f *= 1.059463094f;
+blits[1].setF(0.5f*f*vib0+f);  f *= 1.059463094f;
+blits[2].setF(-f*vib0+f);  f *= 1.059463094f;
+blits[3].setF(f*vib1+f);  f *= 1.059463094f;
+blits[4].setF(-f*vib1+f);  f *= 1.059463094f;
+blits[5].setF(-f*vib2+f);  f *= 1.059463094f;
+blits[6].setF(0.9f*f*vib2+f);  f *= 1.059463094f;
+blits[7].setF(-0.9f*f*vib1+f);  f *= 1.059463094f;
+blits[8].setF(f*vib1+f);  f *= 1.059463094f;
+blits[9].setF(-f*vib0+f);  f *= 1.059463094f;
+blits[10].setF(0.7f*f*vib2+f);  f *= 1.059463094f;
+blits[11].setF(0.5f*f*vib2+f); 
+
+
+int32_t cA4 = 0x7FFFFFFF - param_A4A;
+float envTotA = 0;
+for(int i = 0; i <8*12; i++){
+  int32_t b = envs4A[i];
+  if(gates[13 + i] > 10) envs4A[i] = ___SMMLA(cA4, param_L4A-b, b>>1)<<1; // ascending
+  else                   envs4A[i] = ___SMMUL(b, param_R4A)<<1;
+  envTotA += envs4A[i];
+}
+int32_t cA8 = 0x7FFFFFFF - param_A8A;
+for(int i = 0; i <8*12-12; i++){
+  int32_t b = envs8A[i];
+  if(gates[13+12 + i] > 10) envs8A[i] = ___SMMLA(cA8, param_L8A-b, b>>1)<<1; // ascending
+  else                      envs8A[i] = ___SMMUL(b, param_R8A)<<1;
+  envTotA += envs8A[i];
+}
+int32_t cA2 = 0x7FFFFFFF - param_A2A;
+for(int i = 12; i < 8*12; i++){
+  int32_t b = envs2A[i];
+  if(gates[13-12 + i] > 10) envs2A[i] = ___SMMLA(cA2, param_L2A-b, b>>1)<<1; // ascending
+  else                      envs2A[i] = ___SMMUL(b, param_R2A)<<1;
+  envTotA += envs2A[i];
+}
+int32_t compA = arm::float_to_q(10000000/sqrtf(envTotA+(1<<27)), 27);
+for(int i = 0; i < 8*12; i++){
+	envcA[i] = ___SMMUL(envs4A[i] + envs2A[i] + envs8A[i], compA);
+}
+float totAmpA=0;
+for(int i = 0; i < 12; i++){
+	for(int oct = 0; oct < 8; oct++){
+	  totAmpA += (blits[i].ctrlAmpA[oct] = arm::q_to_float(envcA[i + 12*oct], 27)) ;
+	}
+}
+// _____________________________________________________________________
+float envTotB = 0;
+for(int i = 12; i <8*12; i++){
+  int32_t b = envs2B[i];
+  if(trigs[13-12 + i] > 10) envs2B[i] = param_L2B; 
+  else                      envs2B[i] = ___SMMUL(b, param_D2B)<<1;
+  envTotB += envs2B[i];
+}
+for(int i = 0; i <8*12; i++){
+  int32_t b = envs4B[i];
+  if(trigs[13 + i] > 10) envs4B[i] =  param_L4B; 
+  else                   envs4B[i] = ___SMMUL(b, param_D4B)<<1;
+  envTotB += envs4B[i];
+}
+for(int i = 0; i <8*12-12; i++){
+  int32_t b = envs8B[i];
+  if(trigs[13+12 + i] > 10) envs8B[i] = param_L8B;
+  else                      envs8B[i] = ___SMMUL(b, param_D8B)<<1;
+  envTotB += envs8B[i];
+}
+int32_t compB = arm::float_to_q(10000000 / sqrtf(envTotB + (1<<27)), 27);
+for(int i = 0; i <8*12; i++){
+	envcB[i] = ___SMMUL(envs4B[i] + envs2B[i] + envs8B[i], compB);
+}
+float totAmpB=0;
+for(int i = 0; i <12; i++){
+	for(int oct = 0; oct < 8; oct++){
+	  totAmpB+= (blits[i].ctrlAmpB[oct] = arm::q_to_float(envcB[i + 12*oct], 27)) ;
+	}
+}
+for(int i = 0; i < 128; i++){
+  trigs[i] = 0;
+}
+// _____________________________________________________________________]]></code.krate>
+      <code.srate><![CDATA[for(int nBlit = 0; nBlit < 12; nBlit++){
+  Blit *blit = blits + nBlit;
+  if(spl == blit->nextSpl){
+    float *ampA = blit->ampA;
+    float *ampB = blit->ampB;
+    float gyA = 0, gzA = 0, gyB = 0, gzB = 0;
+    float coefZ = (1.0f/128) / blit->period;
+    uint16_t cpt = blit->cpt;
+
+    //  \                     \
+    //  | \                   | \
+    //  |   \_________________|   \_________________
+
+    uint16_t c = cpt;
+    uint16_t m = 4*128 * 2; //3 * (1<<7) * 2
+    uint16_t p = 256;
+    for(int oct = 0; oct < 8; oct++){
+      m >>= 1;
+      if(c >= m) c -= m;
+      //0
+      if(c == 0) {
+        float a = (ampA[oct] = blit->ctrlAmpA[oct]); 
+        gyA += a;
+        gzA -= a * coefZ;   
+        a = (ampB[oct] = blit->ctrlAmpB[oct]); 
+        gyB += a;
+        gzB -= a * coefZ;   
+      }
+      //1
+      p >>= 1;
+      if(c == p) {
+        gzA +=ampA[oct] * coefZ; 
+        gzB +=ampB[oct] * coefZ; 
+      }
+      coefZ *= 2;
+    }
+    cpt++;
+    if(cpt >= 512) cpt -= 512;
+    float a = blit->subSpl;
+    float _a = 1 - a;
+    y0A += gyA * a;    y1A += gyA * _a;
+    z0A += gzA * a;    z1A += gzA * _a;
+    y0B += gyB * a;    y1B += gyB * _a;
+    z0B += gzB * a;    z1B += gzB * _a;
+    blit->nextSpl += blit->iPeriod;
+    blit->subSpl  += blit->fPeriod;
+    if(blit->subSpl >= 1){
+      blit->subSpl -= 1;
+      blit->nextSpl++;
+    }
+    blit->cpt = cpt;
+  }
+}
+//__________________________________________________
+
+ZA = (ZA + z1A - 0.0001f * DCZA);
+z1A = z0A; z0A = 0;
+
+YA = (YA * 0.999999f + y1A + ZA - DCZA) ;
+DCZA += 0.01f * (y1A + ZA - DCZA);
+
+float outA = YA - totAmpA * (1.0f/16);
+DCYA += 0.0001f * (outA - DCYA);
+
+y1A = y0A; y0A = 0;
+
+outlet_outA = arm::float_to_q(outA - DCYA, 30);
+
+//__________________________________________________
+ZB = (ZB + z1B - 0.0001f * DCZB) ;
+z1B = z0B; z0B = 0;
+
+YB = (YB * 0.999999f + y1B + ZB - DCZB) ;
+DCZB += 0.01f*(y1B + ZB - DCZB);
+
+float outB = YB - totAmpB * (1.0f/16);
+DCYB += 0.0001f * (outB - DCYB);
+
+y1B = y0B; y0B = 0;
+
+outlet_outB = arm::float_to_q(outB - DCYB, 30);
+
+spl++;]]></code.srate>
+      <code.midihandler><![CDATA[if(status == MIDI_NOTE_ON + attr_midichannel) {
+  gates[data1 & 0x7F] = data2 ? 100:0;
+  trigs[data1 & 0x7F] = data2 ? 100:0;
+} else if(status == MIDI_NOTE_OFF + attr_midichannel) {
+  gates[data1 & 0x7F] = 0;
+} else if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 == MIDI_C_ALL_NOTES_OFF)) {
+  for(int i = 0; i < 128; i++) gates[data1 & 0x7F] = 0;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
