@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="txt disp" uuid="88639139-fd98-4224-b2e3-84e1718b2386">
+      <sDescription>Sends sysex for displaying text on launchpad pro (version 1).</sDescription>
+      <author>Mattilyn Mattroe</author>
+      <license>you have to give me two cheese triangles and a pack of mini cheddars if  you ever use this at a child&apos;s 7th birthday party. otherwise, do as you wil</license>
+      <inlets>
+         <bool32 name="send"/>
+         <charptr32 name="text"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <bool32.tgl name="loop"/>
+         <int32 name="speed">
+            <MinValue i="1"/>
+            <MaxValue i="7"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="output">
+            <MenuEntries>
+               <string>usb host port 2</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int strig;
+uint8_t speed;]]></code.declaration>
+      <code.krate><![CDATA[speed=param_speed;
+uint8_t sysexArray[32] = {240,0,32,41,2,16,20,127,param_loop,speed,inlet_text[0],inlet_text[1],inlet_text[2],inlet_text[3],inlet_text[4],inlet_text[5],inlet_text[6],inlet_text[7],inlet_text[8],inlet_text[9],inlet_text[10],inlet_text[11],inlet_text[12],inlet_text[13],inlet_text[14],inlet_text[15],inlet_text[16],inlet_text[17],inlet_text[18],inlet_text[19],inlet_text[20], 247};
+
+
+if (inlet_send&&!strig){
+	MidiSendSysEx(MIDI_DEVICE_USB_HOST, 2, sysexArray ,32);
+	strig=1;
+}
+
+if (!inlet_send){strig=0;}]]></code.krate>
+   </obj.normal>
+</objdefs>
