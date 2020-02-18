@@ -1,0 +1,80 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="364" y="56" text="as soon as an external midi clock is recieved the internal clock stops (and starts thru-ing the external clock if output on)"/>
+   <comment type="patch/comment" x="364" y="70" text="You can re-start the internal clock only when the external clock has stopped"/>
+   <comment type="patch/comment" x="364" y="112" text="start/stop internal clock"/>
+   <comment type="patch/comment" x="518" y="112" text="internal clock speed"/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="364" y="126">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="518" y="126">
+      <params>
+         <frac32.u.map name="value" value="29.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="matroe/midi/clock auto" uuid="c11d6aad-f8b7-4f4c-bee4-93c1376de1f3" name="clock_1" x="476" y="238">
+      <params>
+         <bool32.tgl name="onA" value="0"/>
+         <bool32.tgl name="onB" value="0"/>
+         <bool32.tgl name="onC" value="0"/>
+         <bool32.tgl name="onD" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="Aoutput" selection="din"/>
+         <combo attributeName="Boutput" selection="din"/>
+         <combo attributeName="Coutput" selection="din"/>
+         <combo attributeName="Doutput" selection="din"/>
+      </attribs>
+   </obj>
+   <obj type="midi/in/clock" uuid="f1aa3a79d6de9bd6d38dc64c9d4bb5c9de4f4198" name="clock_2" x="826" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="938" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="938" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="938" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="clock_1" inlet="run"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="clock_1" inlet="bpm"/>
+      </net>
+      <net>
+         <source obj="clock_2" outlet="active"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="clock_2" outlet="pos24ppq"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="clock_2" outlet="pos4ppq"/>
+         <dest obj="i_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1616</width>
+      <height>876</height>
+   </windowPos>
+</patch-1.0>

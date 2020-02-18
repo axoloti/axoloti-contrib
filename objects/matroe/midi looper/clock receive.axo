@@ -1,0 +1,332 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="clock receive" uuid="cbfd4c82-9cf4-4739-b6d0-a70bd87f757b">
+      <sDescription>Midi clock reciever designed for the midi looper objects.
+might be useful in other patches...
+
+has a 96ppq output
+a trigger every bar.
+a trigger half a 16th before every bar. because, y&apos;know... stuff... and junk.
+a qstep outlet that counts to twelve at 96ppq.
+a step outlet that counts to 16ths in 16ths
+an initrig output that triggers on the 2nd 16th after the clock starts. it&apos;s, like, well useful mate.
+an early output... if this is at 2 it means there&apos;s no quantizing (in the looper objects). if it&apos;s 0 it means the current position is just before the next 16th. if it&apos;s late the current position is just after the next 16th. None of this probably makes any sense. trust me, it&apos;s for quantizing stuff.
+the metoronom just puts out a 4 to the floor pulse (banging)</sDescription>
+      <author>Mattilyn Mattroe</author>
+      <license>two slices of cheese per every time the object is used to play a frat party, please</license>
+      <helpPatch>midi looper help.axh</helpPatch>
+      <inlets>
+         <bool32 name="quantize"/>
+      </inlets>
+      <outlets>
+         <bool32 name="active"/>
+         <bool32.pulse name="4ppq" description="Clock output"/>
+         <bool32.pulse name="96ppq"/>
+         <bool32.pulse name="bartrigger"/>
+         <bool32.pulse name="recbartrigger"/>
+         <int32 name="qstep"/>
+         <int32 name="step"/>
+         <bool32.pulse name="initrig"/>
+         <int32 name="early"/>
+         <bool32.pulse name="metronom"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t _activeB;
+int32_t _pos;
+int32_t _pos_shadow;
+
+int32_t _posfrac;
+int32_t _pos24ppq;
+bool _active;
+bool rstp;
+
+      
+      uint32_t  syncedx4;
+      uint32_t  ktimerx4;
+      uint32_t  last_ktimex4;
+      uint32_t  periodx4;
+      uint32_t  last_periodx4;
+      uint32_t  remaining_clocksx4;
+      uint32_t  old_clkx4;
+	 uint32_t  clockx4;
+	int run;
+	int postrig;
+	int startrig;
+	int metronom;
+	int prevmet;
+	int reclock;
+	int internalreclck;
+	int internalreclock;
+	int prevreclck;
+	int locked;
+int initrig;
+int early;
+int runwait;	 
+int prevclk;
+int internalclck;
+int internalclock;
+int masterclock;
+int reset;
+int resetwait;
+
+int step;
+int init;
+int runtrig;
+
+int initstep;
+int recbartrigout;
+int length;
+
+int rtrig;
+int dtrig;
+int rectrig;
+int reccount;
+int bartrig;
+int bartrigger;
+int barcount;
+int recbartrig;
+int rstep;
+int qtrig;
+int qstep;]]></code.declaration>
+      <code.init><![CDATA[_activeB = 0;
+_pos = 0;
+_pos_shadow = 0;
+_active = 0;
+_posfrac = 0;
+_pos24ppq = 0;
+rstp = 0;
+
+     
+
+      syncedx4           = 0;
+      ktimerx4           = 0;
+      last_ktimex4       = ktimerx4;
+      periodx4           = 1;
+      last_periodx4      = periodx4;
+      remaining_clocksx4 = 0;
+      old_clkx4          = 0;
+
+ 
+ 
+   dtrig = 0;
+   rtrig = 0;
+   runtrig=0;]]></code.init>
+      <code.krate><![CDATA[//internal clock
+initrig=0;
+reset=0;
+bartrigger=0;
+
+recbartrigout=0;
+outlet_metronom=0;
+internalclock=0;
+
+
+
+
+
+
+
+	internalclck=	_pos/6;
+	internalreclck=_pos/3;
+	
+
+if (internalclck!=prevclk){
+	internalclock=1;
+	prevclk=internalclck;
+}
+
+
+if ((internalreclck!=prevreclck)){
+	internalreclock=1;
+	prevreclck=internalreclck;
+}
+else internalreclock=0;
+reclock=0;
+masterclock = internalclock;
+if (internalreclock&&!locked){
+	locked=1;
+	reclock=1;
+}
+if (masterclock&&locked){
+	locked=0;
+}
+
+outlet_4ppq= masterclock;
+
+
+
+ ///////////////////////////multiply by 4
+       clockx4 = 0;
+
+      if( postrig && !old_clkx4 )
+        {
+          float tmp_periodx4 = (ktimerx4 - last_ktimex4);
+          periodx4           = (int32_t) ((tmp_periodx4 / 4) + 0.5f);
+          if( periodx4 < 2 )
+            {
+              periodx4 = 2;
+            }
+          last_ktimex4        = ktimerx4;
+          last_periodx4       = periodx4;
+          remaining_clocksx4  = 4 - 1;
+          if( syncedx4 < 2 )
+            {
+              syncedx4++;
+            }
+          else
+            {
+              clockx4 = 1;
+            }
+        }
+      else if( syncedx4 >= 2 && remaining_clocksx4 > 0 && --periodx4 == 0 )
+        {
+          remaining_clocksx4--;
+          periodx4     = last_periodx4;
+          clockx4 = 1;
+        }
+
+      old_clkx4 = postrig;
+      ktimerx4++;
+
+
+
+
+// length bar counter
+
+if ((masterclock>0) && !bartrig) {
+   barcount += 1; 
+ //  qstep=0;
+   qtrig-1;
+   step +=1 ;
+   initstep+=1;
+   
+   if (step>=16) {step=0;bartrigger=1;}
+   bartrig=1;
+}
+else if (!(masterclock>0)) bartrig=0;
+
+// length bar counter
+
+
+
+
+// qstep clock && stepunq
+if ((clockx4>0) && !qtrig) {
+   qstep += 1;  
+   if (qstep>=12) {qstep = 0;}
+   qtrig=1;
+}
+else if (!(clockx4>0)) qtrig=0;
+
+
+
+//steprec clock
+
+if ((reclock>0) && !rectrig) {
+   reccount += 1; 
+  
+   if (reccount>=16) {reccount = 0; recbartrigout=1;}
+  
+   rectrig=1;
+}
+else if (!(reclock>0)) rectrig=0;
+
+//outputs
+
+
+
+
+//reset sync
+	if (run && !runtrig) {runtrig=1; init=0; runwait=1;locked=1;}
+	else if (!run){runtrig=0;}
+	
+if (runwait){
+	initstep=0;
+	step=0;
+	reset=1;
+	barcount = 0; 
+	reccount = 0; 
+	bartrigger=1;
+   
+	
+   	runwait=0;
+   
+   	
+}
+
+
+
+
+
+//reset
+
+
+
+
+if ((initstep==2) && !init) { reccount=2;qstep=0;    step=2;init=1;initrig=1;}
+
+
+if ((inlet_quantize)){
+		if ((reccount!=step)) {
+			early=1;
+			
+			
+		}
+		if ((reccount==step)) 
+		{
+			early=0;
+			
+			
+			
+		}
+	}
+	if (!inlet_quantize){
+		early=3;
+	}
+	metronom=step>>2;
+if ((metronom!=prevmet)||reset){outlet_metronom=1;prevmet=metronom;}
+
+outlet_4ppq= masterclock;
+outlet_qstep=qstep;
+outlet_bartrigger=bartrigger;
+outlet_recbartrigger=recbartrigout;
+
+
+outlet_step=step;
+
+outlet_early=early;
+outlet_96ppq=clockx4;
+
+outlet_active=run;
+
+
+
+outlet_initrig=initrig;
+postrig=0;]]></code.krate>
+      <code.midihandler><![CDATA[if (status == MIDI_TIMING_CLOCK) {
+	
+  _pos_shadow++;
+  _pos = _pos_shadow;
+  postrig=1;
+} else if (status == MIDI_START) {
+	
+  _activeB = 1;
+  run=1;
+  runwait=1;
+  _pos = 0;
+  _pos_shadow = -1;
+} else if (status == MIDI_STOP) {
+	
+  _activeB = 0;
+  _pos = -1;
+  startrig=0;
+  run=0;
+} else if (status == MIDI_CONTINUE) {
+	run=1;
+  _activeB = 1;
+} else if (status == MIDI_SONG_POSITION) {
+  _pos_shadow = 6*((data2<<7)+data1)-1;
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

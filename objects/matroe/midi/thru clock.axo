@@ -1,0 +1,117 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="thru clock" uuid="1db36a48-9e05-4831-9cf0-7112db1c1f52">
+      <sDescription>Midi clock thru object. 
+Thru&apos;s clock from the input to the outputs. can send to two outputs</sDescription>
+      <author>Mattilyn Mattroe</author>
+      <license>if you use this you have to give me a doughnut every time you go to the cinema</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="input" description="clock source">
+            <MenuEntries>
+               <string>omni</string>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>true</string>
+               <string>dev == MIDI_DEVICE_DIN &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 3</string>
+               <string>dev == MIDI_DEVICE_USB_HOST &amp;&amp; port == 4</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 1</string>
+               <string>dev == MIDI_DEVICE_INTERNAL &amp;&amp; port == 2</string>
+               <string>dev == MIDI_DEVICE_USB_DEVICE &amp;&amp; port == 1</string>
+            </CEntries>
+         </combo>
+         <combo name="outputA" description="first output">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <combo name="onA" description="Turn on first output">
+            <MenuEntries>
+               <string>off</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="outputB" description="second output">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <combo name="onB" description="Turn on second output">
+            <MenuEntries>
+               <string>off</string>
+               <string>on</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.midihandler><![CDATA[if(attr_input) {
+        if ((status == MIDI_TIMING_CLOCK) ||
+      			(status == MIDI_START) ||
+    				(status == MIDI_CONTINUE) ||
+      			(status == MIDI_STOP)) {
+      				if (attr_onA){
+    				MidiSend1((midi_device_t) attr_outputA,status);
+      				}
+      				if (attr_onB){
+    				MidiSend1((midi_device_t) attr_outputB,status);
+      				}
+      				
+      				
+  				}
+        }]]></code.midihandler>
+   </obj.normal>
+</objdefs>
