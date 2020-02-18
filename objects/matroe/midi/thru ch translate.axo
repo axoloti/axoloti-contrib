@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="thru ch translate" uuid="a720e98b-3ffb-434d-976b-d0e91ac54068">
+      <sDescription>Midi thru with channel translate,
+messages on the inchannel are sent as the outchannel to the device</sDescription>
+      <author>Mattilyn Mattroe</author>
+      <license>You have to take me out for a night on the town if you use this more than 3000 times</license>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="device" description="output device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="inchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+         <spinner name="outchannel" MinValue="1" MaxValue="16" DefaultValue="1"/>
+      </attribs>
+      <code.midihandler><![CDATA[if (status == MIDI_NOTE_ON + (attr_inchannel-1)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_outchannel-1),data1,data2);
+}
+if (status == MIDI_NOTE_OFF + (attr_inchannel-1)) {
+MidiSend3((midi_device_t) attr_device, MIDI_NOTE_OFF + (attr_outchannel-1),data1,data2);
+}
+if (status == (attr_inchannel-1)+MIDI_CONTROL_CHANGE) {
+MidiSend3((midi_device_t) attr_device, (attr_outchannel-1)+MIDI_CONTROL_CHANGE,data1,data2);
+}
+
+
+if (status == MIDI_POLY_PRESSURE + (attr_inchannel-1)) {
+MidiSend3((midi_device_t) attr_device, MIDI_POLY_PRESSURE + (attr_outchannel-1),data1,data2);
+}
+if (status == MIDI_PROGRAM_CHANGE + (attr_inchannel-1)) {
+MidiSend3((midi_device_t) attr_device, MIDI_PROGRAM_CHANGE + (attr_outchannel-1),data1,data2);
+}
+if (status == MIDI_PITCH_BEND + (attr_inchannel-1)) {
+MidiSend3((midi_device_t) attr_device, MIDI_PITCH_BEND + (attr_outchannel-1),data1,data2);
+}
+if (status == MIDI_CHANNEL_PRESSURE + (attr_inchannel-1)) {
+MidiSend2((midi_device_t) attr_device, MIDI_CHANNEL_PRESSURE + (attr_outchannel-1),data1);
+}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
