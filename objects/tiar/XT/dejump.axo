@@ -3,7 +3,6 @@
       <sDescription>1st order lowpass filter and high pass filter.</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch></helpPatch>
       <inlets>
          <frac32buffer name="in" description="input"/>
          <bool32.rising name="trig"/>
@@ -15,10 +14,10 @@
       <params/>
       <attribs/>
       <code.declaration><![CDATA[int32_t y;
-bool atrig,aatrig;]]></code.declaration>
+bool atrig;]]></code.declaration>
       <code.init><![CDATA[y = 0;
-atrig = aatrig = false;]]></code.init>
-      <code.krate><![CDATA[if(atrig && !aatrig){
+atrig = false;]]></code.init>
+      <code.krate><![CDATA[if(inlet_trig && !atrig){
 	int32_t a = (1<<27)/16; //1/16
 	for(int i = 0; i < BUFSIZE; i++){
 		outlet_out[i] = y = ___SMMLA(a, inlet_in[i] - y, y>>5)<<5;
@@ -29,7 +28,6 @@ atrig = aatrig = false;]]></code.init>
 		outlet_out[i] = y = inlet_in[i];
 	}
 }
-aatrig = atrig;
 atrig = inlet_trig;]]></code.krate>
    </obj.normal>
 </objdefs>
