@@ -6,7 +6,7 @@
       <helpPatch>dptrisaw.axh</helpPatch>
       <inlets>
          <frac32.bipolar name="pitch" description="pitch"/>
-         <frac32.positive name="sym"/>
+         <frac32.bipolar name="sym"/>
       </inlets>
       <outlets>
          <frac32buffer.bipolar name="wave" description="sine wave"/>
@@ -14,19 +14,21 @@
       <displays/>
       <params>
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
-         <frac32.u.map name="sym"/>
+         <frac32.s.map name="sym"/>
       </params>
       <attribs/>
       <code.declaration><![CDATA[int32_t p, x1;]]></code.declaration>
       <code.init><![CDATA[p = x1 = 0;]]></code.init>
       <code.krate><![CDATA[int32_t dp;
 MTOFEXTENDED(inlet_pitch + param_pitch, dp);
-int32_t m = 0x7FFFFFFF - (__USAT(inlet_sym + param_sym, 27)<<4);
+int32_t m = 0x7FFFFFFF - (__USAT(abs(inlet_sym + param_sym), 27)<<4);
 if(m < (1<<20)) m = 1<<20; //min ratio 1/128
 
 float g = (0.5f + arm::q_to_float(m, 32))
        / arm::q_to_float(___SMMUL(m, dp), 25);
        
+if(inlet_sym + param_sym < 0)
+  m = -m;       
 //                  q31      q30       q29 
 x1 = ___SMMLS(p, ___SMMUL(p, p), p>>2);
 int32_t pm = p + m;
