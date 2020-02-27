@@ -16,9 +16,33 @@
          <frac32.s.map.pitch name="pitch" noLabel="true"/>
          <frac32.s.map name="sym"/>
       </params>
-      <attribs/>
-      <code.declaration><![CDATA[int32_t p, x1;]]></code.declaration>
-      <code.init><![CDATA[p = x1 = 0;]]></code.init>
+      <attribs>
+         <combo name="update">
+            <MenuEntries>
+               <string>krate</string>
+               <string>zeroCross</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t I(int32_t p){
+	 return ___SMMLS(p, ___SMMUL(p, p), p>>2);
+}
+
+int32_t p, x1;
+#if attr_update==1
+int32_t c_m, c_dp;
+float c_g;
+#endif]]></code.declaration>
+      <code.init><![CDATA[p = x1 = 0;
+#if attr_update==1
+c_g = 0.0f;
+c_m = 0x40000000;
+c_dp = 1<<29;
+#endif]]></code.init>
       <code.krate><![CDATA[int32_t dp;
 MTOFEXTENDED(inlet_pitch + param_pitch, dp);
 int32_t m = 0x7FFFFFFF - (__USAT(abs(inlet_sym + param_sym), 27)<<4);
@@ -29,16 +53,26 @@ float g = (0.5f + arm::q_to_float(m, 32))
        
 if(inlet_sym + param_sym < 0)
   m = -m;       
-//                  q31      q30       q29 
-x1 = ___SMMLS(p, ___SMMUL(p, p), p>>2);
-int32_t pm = p + m;
-x1 -= ___SMMLS(pm, ___SMMUL(pm, pm), pm>>2);]]></code.krate>
-      <code.srate><![CDATA[p += dp;
-//                  q31      q30       q29 
-int32_t x0 = ___SMMLS(p, ___SMMUL(p, p), p>>2);
-int32_t pm = p + m;
-x0 -= ___SMMLS(pm, ___SMMUL(pm, pm), pm>>2);
-outlet_wave = (int32_t)((x0 - x1) * g);
-x1 = x0;]]></code.srate>
+m >>= 1;
+#if attr_update==0
+x1 = I(p-m) - I(p+m);
+#endif]]></code.krate>
+      <code.srate><![CDATA[#if attr_update==0
+	p += dp;
+	int32_t x0 = I(p-m) - I(p+m);
+	outlet_wave = (int32_t)((x0 - x1) * g);
+	x1 = x0;
+#else
+	int32_t x0 = I(p - c_m) - I(p + c_m);
+	outlet_wave = (int32_t)((x0 - x1) * c_g);
+	p += c_dp;
+	x1 = x0;
+	if(((uint32_t)p) < c_dp){
+		c_m = m;
+		c_g = g;
+		c_dp = dp;
+		x1 = I(p-c_dp - c_m) - I(p-c_dp + c_m);
+	}
+#endif]]></code.srate>
    </obj.normal>
 </objdefs>
