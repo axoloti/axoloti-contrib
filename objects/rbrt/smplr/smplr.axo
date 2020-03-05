@@ -90,7 +90,9 @@ void defrag ()__attribute__((noinline)){
 						array[shift_index + 28] -= length;
 						array[shift_index + 29] -= length;
 						}			
-				memmove (&WAVE[start],&WAVE[end],(REC_HEAD - end) << 2);						
+				int move_samples;
+				for(move_samples=end;move_samples < REC_HEAD;move_samples++) 
+				WAVE[move_samples - length] = WAVE[move_samples];							
 				int shift_chunks;
 				for (shift_chunks = 0;shift_chunks < delcount;shift_chunks += 2)
 					if (del_array[shift_chunks] >= end ) {del_array [shift_chunks] -=length;del_array [shift_chunks+1] -= length;}
