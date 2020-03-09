@@ -9,46 +9,77 @@
          <frac32.bipolar name="rate1"/>
          <frac32.bipolar name="rate2"/>
          <bool32.rising name="reset"/>
-         <bool32 name="sync"/>
+         <int32 name="sync"/>
       </inlets>
       <outlets>
          <frac32.positive name="out" description="saw wave"/>
       </outlets>
       <displays/>
       <params/>
-      <attribs/>
-      <code.declaration><![CDATA[float r, v;
+      <attribs>
+         <combo name="sync2limit">
+            <MenuEntries>
+               <string>63/64</string>
+               <string>7/8</string>
+               <string>3/4</string>
+            </MenuEntries>
+            <CEntries>
+               <string>(4*63.0f/64.0f)</string>
+               <string>(4*7.0f/8.0f)</string>
+               <string>(4*3.0f/4.0f)</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[float reScale(float x){
+	float y = fabsf(x) * 1.01f - 0.01f;
+	if(y < 0) y = 0;   //central zero
+	y = y*y*(1+y*(1+y));  //y2+y3+y4
+	y *= (5/3000.0f);
+	return x>=0?y:-y;
+}
+
+float r, v;
 bool atrig;
 int state;]]></code.declaration>
       <code.init><![CDATA[r = v = 0;
 atrig = false;
 state = 0;]]></code.init>
-      <code.krate><![CDATA[float r1 = arm::q_to_float(inlet_rate1, 27);
-r1 = r1*r1*r1;
-r1 *= (30/3000.0f);
-float r2 = arm::q_to_float(inlet_rate2, 27);
-r2 = r2*r2*r2;
-r2 *= (30/3000.0f);
+      <code.krate><![CDATA[float r1 = reScale(arm::q_to_float(inlet_rate1, 27));
+float r2 = reScale(arm::q_to_float(inlet_rate2, 27));
 
-bool trig=inlet_reset && !atrig;
+bool trig = inlet_reset && !atrig;
 atrig = inlet_reset;
-bool sync=inlet_sync;;
+int32_t sync = inlet_sync;
 if(r1 > 0){
 	if(r2 > 0){
-		if(sync){ //two rate ramp
+		if(sync==1){ //two rate ramp
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
+			if(trig) {state = 0; v=0;}  //start segment 
+			//if(v > 1){state = 1;}
+			state = ((int)(v+4))&1;
+			v += state == 0 ? r1 : r2;
+
+		} else if(sync==2){ //two rate ramp
+			if(v<0) v+=4;
+			if(v<0) v+=4;
 			if(trig) {state = 0; v=0;}  //start segment 
 			if(v > 1){state = 1;}
 			v += state == 0 ? r1 : r2;
-			if(v >= 4) v -= 8;
+			float start = 4*arm::q_to_float(inlet_start,27);
+			if(v >= attr_sync2limit-start) v = attr_sync2limit-start;  // 4*63.0f/64.0f = 3.9375f
 		} else {  //free run alternating rates ramp			
-               state = ((int)(v+4))&1;
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
+            	state = ((int)(v+4))&1;
 			v += state == 0 ? r1 : r2;
-			if(v >= 4) v -= 8;
 		}
-	} else {
-		if(sync){ //synched LFO
+	} else { //r1>0 r2<=0
+		if(v >= 2) v -= 4;
+		if(v < -2) v += 4;
+		if(sync>0){ //synched LFO
 			if(trig)  {state = 0; v = 0;}  //start segment 
-               if(v  > 1){state = 1; v = 1;}
+            	if(v >= 1){state = 1; v = 1;}
 			if(v <= 0){state = 0; v = 0;}
 			v += state == 0 ? r1 : r2;			
 		} else { //free run LFO
@@ -59,34 +90,50 @@ if(r1 > 0){
 	}
 } else {
 	if(r2 > 0){
-		if(sync){//synched neg LFO
+		if(sync>=1){//synched neg LFO
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
 			if(trig) {state = 0; v=0;}  //start segment 
 			if(v<=-1){state=1;v=-1;}
 			if(v>0){state=0;v=0;}
 			v += state == 0 ? r1 : r2;
 		} else {// free un neg LFO
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
 			if(v<=-1){state=1;v=-1;}
 			if(v>0){state=0;v=0;}
 			v += state == 0 ? r1 : r2;	
 		}
 	} else {
-		if(sync){//two rate neg ramp
+		if(sync==1){//two rate neg ramp
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
+			if(trig) { v=0;}  //start segment 
+			//if(v < -1){state = 1;}
+			state = ((int)(v+4))&1;
+			v += state == 0 ? r2 : r1;
+			
+		}else if(sync==2){//two rate neg ramp
+			if(v>0)v-=4;
+			if(v>0)v-=4;
 			if(trig) {state = 0; v=0;}  //start segment 
 			if(v < -1){state = 1;}
 			v += state == 0 ? r1 : r2;
-			if(v < -4) v += 8;
+			float start = 4*arm::q_to_float(inlet_start,27);
+			if(v <= -start) v = -start;  
 			
 		}else{//free run alternating rates neg ramp			
+			if(v >= 2) v -= 4;
+			if(v < -2) v += 4;
 			state = ((int)(v+4))&1;
-			v += state == 0 ? r2 : r1;
-			if(v < -4) v += 8;
+			v += state == 0 ? r1 : r2;
 		}
 	}
 }
 
 
-float s=16+8*arm::q_to_float(inlet_start,27);
-float fv=(v+s)*0.125f;
+float s=16+4*arm::q_to_float(inlet_start,27);
+float fv=(v+s)*0.25f;
 outlet_out = arm::float_to_q((fv-floorf(fv)), 27);]]></code.krate>
    </obj.normal>
 </objdefs>
