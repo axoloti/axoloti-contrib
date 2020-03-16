@@ -1,0 +1,247 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="0055fa00-ba9f-41a2-8db4-2a8e5c9c96e3" name="patcher_1" x="322" y="378">
+      <params>
+         <frac32.s.map name="ad_1:a" value="-64.0"/>
+         <frac32.s.map name="ad_1:d" value="-48.0"/>
+         <frac32.u.map name="mix_1:gain2" value="0.5"/>
+         <frac32.s.map name="noisin_1:pitch" value="-12.0"/>
+         <frac32.u.map name="noisin_1:noise" value="0.0"/>
+         <frac32.s.map name="sine_1" value="19.0"/>
+         <frac32.u.map name="*c_4" value="38.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="98" y="84">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="-48.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="462" y="112">
+            <params>
+               <frac32.u.map name="c" value="27.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/half" uuid="d3aa9c64dbf1ec7871bbc3e2d8905f8e443c9823" name="half_1" x="406" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="98" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 2" uuid="682ea5496ded046d981e26b720a6e7f8eca97541" name="mix_1" x="238" y="196">
+            <params>
+               <frac32.u.map name="gain1" value="2.0"/>
+               <frac32.u.map name="gain2" onParent="true" value="0.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="350" y="196">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="0.0"/>
+               <frac32.u.map name="s" value="27.0"/>
+               <frac32.s.map name="r" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="448" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/noisin" uuid="4ad36376-e633-426d-b555-061c38b0dae4" name="noisin_1" x="518" y="196">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.u.map name="noise" onParent="true" value="21.0"/>
+               <frac32.u.map name="amp" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="630" y="196">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="742" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="854" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_4" x="924" y="196">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="50.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1036" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="112" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="half_1" inlet="in"/>
+               <dest obj="*_2" inlet="b"/>
+            </net>
+            <net>
+               <source obj="noisin_1" outlet="wave"/>
+               <dest obj="sine_1" inlet="phase"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+               <dest obj="*_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="noisin_1" inlet="amp"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="half_1" outlet="out"/>
+               <dest obj="noisin_1" inlet="noise"/>
+               <dest obj="+c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="+c_1" outlet="out"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="*c_4" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_4" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="*_2" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="noisin_1" inlet="pitch"/>
+               <dest obj="sine_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="bend_1" outlet="bend"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="ad_1" outlet="env"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1277</width>
+            <height>843</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="TSG/dist/diodeSat" uuid="97810a83-53ff-40dd-97dd-1f1e3ab9d4e9" name="diodeSat_1" x="462" y="378">
+      <params>
+         <frac32.u.map name="gain" value="23.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jt/dist/class a" uuid="2e434261-5101-486e-8685-800ec8406675" name="class_1" x="574" y="378">
+      <params>
+         <frac32.u.map name="drive" value="48.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp" uuid="7829b56456e975f1d89bda2ad1c7ad678080a73b" name="hp_1" x="672" y="378">
+      <params>
+         <frac32.s.map name="pitch" value="-28.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="980" y="378">
+      <params>
+         <frac32.u.map name="amount" value="16.5"/>
+         <frac32.u.map name="time" value="40.0"/>
+         <frac32.u.map name="diffusion" value="35.0"/>
+         <frac32.u.map name="gain" value="9.5"/>
+         <frac32.u.map name="lowpass" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1106" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="diodeSat_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="diodeSat_1" outlet="out"/>
+         <dest obj="class_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="class_1" outlet="out"/>
+         <dest obj="hp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="hp_1" outlet="out"/>
+         <dest obj="reverb_1" inlet="r"/>
+         <dest obj="reverb_1" inlet="l"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>2576</width>
+      <height>1456</height>
+   </windowPos>
+</patch-1.0>

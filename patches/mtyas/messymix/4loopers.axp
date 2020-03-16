@@ -1,0 +1,931 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t1" x="350" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t2" x="490" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t3" x="630" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="table/alloc 32b sdram" uuid="1a4546b7b52747ea765093ac97444601c44721e8" name="t4" x="770" y="70">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_1" x="112" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="952" y="126" text="scales the master phasor to the loops length,"/>
+   <comment type="patch/comment" x="952" y="140" text="relative to the table size"/>
+   <comment type="patch/comment" x="728" y="154" text="writes the master loop to the table"/>
+   <patchobj type="patch/object" uuid="fc158713-9a2f-403e-8e09-662170419890" name="read_4" x="966" y="168">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="fc158713-9a2f-403e-8e09-662170419890">
+         <sDescription>read from table, nearest neighbour</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="a" description="index in fraction of table size"/>
+            <frac32 name="l"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="pos"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[  uint32_t pos;]]></code.declaration>
+         <code.srate><![CDATA[outlet_pos = ___SMMUL(inlet_l,inlet_a) << 5;
+]]></code.srate>
+      </object>
+   </patchobj>
+   <patchobj type="rbrt/looper/looper_FB_mono" uuid="de42afeb-d1c7-4de1-9225-a216e22501c5" name="looper_FB_mono_4" x="728" y="182">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+      <object id="patch/object" uuid="de42afeb-d1c7-4de1-9225-a216e22501c5">
+         <sDescription>a looper with overdub and feedback</sDescription>
+         <author>Robert Schirmer</author>
+         <license>who cares</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="wave"/>
+            <bool32.risingfalling name="rec" description="record"/>
+         </inlets>
+         <outlets>
+            <frac32.positive name="length"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[bool rec;
+int recpos;
+int shift;
+]]></code.declaration>
+         <code.init><![CDATA[recpos =0;
+rec = 0;
+
+]]></code.init>
+         <code.krate><![CDATA[
+ 
+
+
+//set 'shift factor' for storing the recording length/the sync output
+    if (attr_table.LENGTH == 8192){shift = 14; }
+    if (attr_table.LENGTH == 16384){shift = 13; }
+    if (attr_table.LENGTH == 32768){shift = 12; }
+    if (attr_table.LENGTH == 65536){shift = 11; }
+    if (attr_table.LENGTH == 131072){shift = 10;}
+    if (attr_table.LENGTH == 262144){shift = 9;}
+    if (attr_table.LENGTH == 524288){shift = 8;}
+    if (attr_table.LENGTH == 1048576 ){shift = 7;}
+
+
+
+
+     
+
+
+
+   
+    
+
+
+  
+]]></code.krate>
+         <code.srate><![CDATA[  
+  if ((inlet_rec) && !rec) {
+      rec = 1;
+      recpos = 0;
+  } else if (!(inlet_rec)) {
+      rec = 0;
+        }
+ 
+
+
+
+
+	 //record
+   if (rec)  {
+              recpos ++;
+              attr_table.array[recpos] = __SSAT(inlet_wave,28 );
+              attr_table.array[attr_table.LENGTH -1 ] = (recpos << shift) ;
+   }
+   
+outlet_length = (attr_table.array[attr_table.LENGTH -1 ] );
+
+
+
+
+ 
+ 	  
+     
+	
+
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="322" y="196">
+      <params>
+         <frac32.u.map name="amp" value="39.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d" name="sync_1_1" x="1162" y="210">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+      <object id="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d">
+         <sDescription>write to table</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="pos"/>
+            <frac32buffer name="wave"/>
+            <bool32 name="rec"/>
+            <bool32 name="play"/>
+            <bool32 name="dub"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="wave"/>
+            <bool32 name="dub"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[
+  uint32_t data;
+  int rec;
+  uint32_t spos;
+  uint32_t csample;
+ int count;
+ bool dub;
+  bool rollover;
+    bool play;
+]]></code.declaration>
+         <code.init><![CDATA[  
+rec = 0 ;]]></code.init>
+         <code.krate><![CDATA[
+
+]]></code.krate>
+         <code.srate><![CDATA[csample =   (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+     rollover = count;
+	data = (attr_table.array[csample]);
+
+	 //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      spos = csample;
+      count = -1;
+
+ } else if (!(inlet_rec)) {
+      rec = 0;
+      spos = 0;
+      play = inlet_play;
+       }
+
+       //playback
+	uint32_t asat = __USAT(inlet_pos,27);
+    int index = asat>>(27-attr_table.LENGTHPOW);
+    int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+    int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+    int frac = (asat - (index<<(27-attr_table.LENGTHPOW)))<<(attr_table.LENGTHPOW+3);
+    int32_t rr;
+    rr = ___SMMUL(y1,(1<<30)-frac);
+    rr = ___SMMLA(y2,frac,rr);
+    outlet_wave=  (rr<<2)* play ;
+
+// rec + count
+ if (rec){
+if (csample == spos){
+	count ++ ;}
+	attr_table.array[csample] = __SSAT((inlet_wave),28);
+	play= (inlet_play && rollover);
+}
+
+
+//overdub
+    dub = (inlet_dub && play);
+	if (dub) {
+	attr_table.array[csample] = (__SSAT((inlet_wave),28 ) + data);
+}
+	 outlet_dub = dub;
+
+
+]]></code.srate>
+      </object>
+   </patchobj>
+   <comment type="patch/comment" x="882" y="224" text="loop length"/>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_2" x="1344" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="882" y="266" text="(as fraction of the table&apos;s size)"/>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_2" x="1078" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="MasterDub" x="938" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 5" uuid="60fd43468dd62b4c6df760fdfae121797a778e82" name="mix_1" x="1624" y="308">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+         <frac32.u.map name="gain4" value="32.0"/>
+         <frac32.u.map name="gain5" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1792" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="294" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="994" y="364" text="dub "/>
+   <comment type="patch/comment" x="1162" y="364" text="plays the master loop"/>
+   <comment type="patch/comment" x="658" y="378" text="master phasor!!piu-piu"/>
+   <obj type="rbrt/control/timer" uuid="d4a352fc-5acf-466d-b462-079a1b5a2b41" name="timer_1" x="378" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/k2f" uuid="46f94bfc-0747-4651-9944-a499a21e4caf" name="k2f_1" x="476" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="574" y="406">
+      <params>
+         <frac32.u.map name="amp" value="50.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/osc/phasor" uuid="8015d52c-de35-43b7-af2c-e01f5e6d9128" name="phasor_1" x="672" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="rec1" x="1176" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d" name="sync_1_2" x="1344" y="420">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t2"/>
+      </attribs>
+      <object id="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d">
+         <sDescription>write to table</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="pos"/>
+            <frac32buffer name="wave"/>
+            <bool32 name="rec"/>
+            <bool32 name="play"/>
+            <bool32 name="dubkeep"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="wave"/>
+            <bool32 name="dub"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[
+  uint32_t data;
+  int rec;
+  uint32_t spos;
+  uint32_t csample;
+ int count;
+ bool dub;
+  bool rollover;
+    bool play;
+]]></code.declaration>
+         <code.init><![CDATA[  
+rec = 0 ;]]></code.init>
+         <code.krate><![CDATA[
+
+]]></code.krate>
+         <code.srate><![CDATA[csample =   (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+     rollover = count;
+	data = (attr_table.array[csample]);
+
+	 //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      spos = csample;
+      count = -1;
+
+ } else if (!(inlet_rec)) {
+      rec = 0;
+      spos = 0;
+      play = inlet_play;
+       }
+
+       //playback
+	uint32_t asat = __USAT(inlet_pos,27);
+    int index = asat>>(27-attr_table.LENGTHPOW);
+    int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+    int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+    int frac = (asat - (index<<(27-attr_table.LENGTHPOW)))<<(attr_table.LENGTHPOW+3);
+    int32_t rr;
+    rr = ___SMMUL(y1,(1<<30)-frac);
+    rr = ___SMMLA(y2,frac,rr);
+    outlet_wave=  (rr<<2)* play ;
+
+// rec + count
+ if (rec){
+if (csample == spos){
+	count ++ ;}
+	attr_table.array[csample] = __SSAT((inlet_wave),28);
+	play= (inlet_play && rollover);
+}
+
+
+//overdub
+    dub = (inlet_dubkeep && play);
+	if (dub) {
+	attr_table.array[csample] = (__SSAT((inlet_wave),28 ) + data);
+}
+	 outlet_dub = dub;
+
+
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_3" x="1484" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="master_rec" x="168" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_7" x="1092" y="448">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial b" uuid="9ffed04e6a3052d9001eda83bae7024cb6d17037" name="dial_1" x="700" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_10" x="1092" y="476">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="play1" x="1204" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1470" y="490" text="shows the current state of dub/keep"/>
+   <comment type="patch/comment" x="126" y="518" text="record a master loop and set the global tempo"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="420" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="1246" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="322" y="574">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="700" y="574" text="tempo (hz)"/>
+   <comment type="patch/comment" x="1344" y="574" text="record another loop in sync"/>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="dub1" x="1106" y="588">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1344" y="588" text="with the master!!"/>
+   <comment type="patch/comment" x="686" y="616" text="master step generator"/>
+   <comment type="patch/comment" x="1274" y="616" text="dubkeep logic::"/>
+   <comment type="patch/comment" x="1274" y="630" text="when rec is on and dubkeep is on,"/>
+   <comment type="patch/comment" x="322" y="644" text="reset to zero"/>
+   <patchobj type="patch/object" uuid="80af19bf-ecbb-4d61-a4eb-1dc6b7e1b051" name="square_1" x="686" y="644">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="80af19bf-ecbb-4d61-a4eb-1dc6b7e1b051">
+         <sDescription>square wave LFO, boolean output, frequency input</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>lfo.axh</helpPatch>
+         <inlets>
+            <frac32.bipolar name="pitch" description="pitch"/>
+            <bool32.rising name="reset" description="reset phase"/>
+         </inlets>
+         <outlets>
+            <bool32 name="wave" description="square wave"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int32_t Phase;
+uint32_t r;
+]]></code.declaration>
+         <code.init><![CDATA[   Phase = 0;
+   r = 1;
+]]></code.init>
+         <code.krate><![CDATA[   {
+      if (inlet_reset && r) {
+         Phase = 0;
+         r = 0;
+      } else {
+         if (!inlet_reset) r = 1;
+         Phase += inlet_pitch << 2;
+      }
+      outlet_wave= (Phase>0)?1:0;
+   }]]></code.krate>
+      </object>
+   </patchobj>
+   <comment type="patch/comment" x="1274" y="644" text="the table&apos;s contents will be erased on the first run of sync-recording"/>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="784" y="658">
+      <params>
+         <int32 name="maximum" value="16"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/ibar 16" uuid="302bfed4cde8894229679ce81f6b8a5c5212dd98" name="ibar_1" x="868" y="658">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1274" y="658" text="afterwards,overdub is automatically switched on."/>
+   <comment type="patch/comment" x="1274" y="686" text="when rec is on and dubkeep is off,"/>
+   <comment type="patch/comment" x="1274" y="700" text="the table&apos;s contents will be erased on the next loop"/>
+   <obj type="drj/math/!= const i" uuid="3673539d698a1bc2fb17a19524a65cf9dd11e24b" name="!=_1" x="910" y="728">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="1274" y="728" text="when play is on and dubkeep is on,"/>
+   <comment type="patch/comment" x="1148" y="742" text="avoid fucked up noises when the global transport is not running"/>
+   <comment type="patch/comment" x="1274" y="742" text="it&apos;s &apos;normal&apos; non-destructive overdubbin"/>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="rec2" x="42" y="770">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="1064" y="770">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="play2" x="70" y="826">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d" name="sync_1_3" x="336" y="854">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t3"/>
+      </attribs>
+      <object id="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d">
+         <sDescription>write to table</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="pos"/>
+            <frac32buffer name="wave"/>
+            <bool32 name="rec"/>
+            <bool32 name="play"/>
+            <bool32 name="dubkeep"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="wave"/>
+            <bool32 name="dub"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[
+  uint32_t data;
+  int rec;
+  uint32_t spos;
+  uint32_t csample;
+ int count;
+ bool dub;
+  bool rollover;
+    bool play;
+]]></code.declaration>
+         <code.init><![CDATA[  
+rec = 0 ;]]></code.init>
+         <code.krate><![CDATA[
+
+]]></code.krate>
+         <code.srate><![CDATA[csample =   (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+     rollover = count;
+	data = (attr_table.array[csample]);
+
+	 //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      spos = csample;
+      count = -1;
+
+ } else if (!(inlet_rec)) {
+      rec = 0;
+      spos = 0;
+      play = inlet_play;
+       }
+
+       //playback
+	uint32_t asat = __USAT(inlet_pos,27);
+    int index = asat>>(27-attr_table.LENGTHPOW);
+    int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+    int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+    int frac = (asat - (index<<(27-attr_table.LENGTHPOW)))<<(attr_table.LENGTHPOW+3);
+    int32_t rr;
+    rr = ___SMMUL(y1,(1<<30)-frac);
+    rr = ___SMMLA(y2,frac,rr);
+    outlet_wave=  (rr<<2)* play ;
+
+// rec + count
+ if (rec){
+if (csample == spos){
+	count ++ ;}
+	attr_table.array[csample] = __SSAT((inlet_wave),28);
+	play= (inlet_play && rollover);
+}
+
+
+//overdub
+    dub = (inlet_dubkeep && play);
+	if (dub) {
+	attr_table.array[csample] = (__SSAT((inlet_wave),28 ) + data);
+}
+	 outlet_dub = dub;
+
+
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_4" x="476" y="854">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="rec3" x="966" y="854">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d" name="sync_1_4" x="1204" y="854">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t4"/>
+      </attribs>
+      <object id="patch/object" uuid="5ec3f336-c85e-46d8-9c95-b67ac9a7a55d">
+         <sDescription>write to table</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>table.axh</helpPatch>
+         <inlets>
+            <frac32buffer.positive name="pos"/>
+            <frac32buffer name="wave"/>
+            <bool32 name="rec"/>
+            <bool32 name="play"/>
+            <bool32 name="dubkeep"/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="wave"/>
+            <bool32 name="dub"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs>
+            <objref name="table"/>
+         </attribs>
+         <includes/>
+         <code.declaration><![CDATA[
+  uint32_t data;
+  int rec;
+  uint32_t spos;
+  uint32_t csample;
+ int count;
+ bool dub;
+  bool rollover;
+    bool play;
+]]></code.declaration>
+         <code.init><![CDATA[  
+rec = 0 ;]]></code.init>
+         <code.krate><![CDATA[
+
+]]></code.krate>
+         <code.srate><![CDATA[csample =   (__USAT(inlet_pos,27)>>(27-attr_table.LENGTHPOW));
+
+     rollover = count;
+	data = (attr_table.array[csample]);
+
+	 //record
+   if ((inlet_rec) && !rec) {
+      rec = 1;
+      spos = csample;
+      count = -1;
+
+ } else if (!(inlet_rec)) {
+      rec = 0;
+      spos = 0;
+      play = inlet_play;
+       }
+
+       //playback
+	uint32_t asat = __USAT(inlet_pos,27);
+    int index = asat>>(27-attr_table.LENGTHPOW);
+    int32_t y1 = attr_table.array[index]<<attr_table.GAIN;
+    int32_t y2 = attr_table.array[(index+1)&attr_table.LENGTHMASK]<<attr_table.GAIN;
+    int frac = (asat - (index<<(27-attr_table.LENGTHPOW)))<<(attr_table.LENGTHPOW+3);
+    int32_t rr;
+    rr = ___SMMUL(y1,(1<<30)-frac);
+    rr = ___SMMLA(y2,frac,rr);
+    outlet_wave=  (rr<<2)* play ;
+
+// rec + count
+ if (rec){
+if (csample == spos){
+	count ++ ;}
+	attr_table.array[csample] = __SSAT((inlet_wave),28);
+	play= (inlet_play && rollover);
+}
+
+
+//overdub
+    dub = (inlet_dubkeep && play);
+	if (dub) {
+	attr_table.array[csample] = (__SSAT((inlet_wave),28 ) + data);
+}
+	 outlet_dub = dub;
+
+
+]]></code.srate>
+      </object>
+   </patchobj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_5" x="1344" y="854">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="play3" x="994" y="910">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="714" y="924" text="shows the current state of dub/keep"/>
+   <comment type="patch/comment" x="1582" y="924" text="shows the current state of dub/keep"/>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="dub2" x="42" y="938">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_3" x="490" y="980">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="588" y="1008" text="record another loop in sync"/>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_4" x="1148" y="1008">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1456" y="1008" text="record another loop in sync"/>
+   <comment type="patch/comment" x="588" y="1022" text="with the master!!"/>
+   <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="dub3" x="966" y="1022">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1456" y="1022" text="with the master!!"/>
+   <nets>
+      <net>
+         <source obj="master_rec" outlet="inlet"/>
+         <dest obj="or_1" inlet="i1"/>
+         <dest obj="timer_1" inlet="toggle"/>
+         <dest obj="inv_1" inlet="i"/>
+         <dest obj="looper_FB_mono_4" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="looper_FB_mono_4" inlet="wave"/>
+         <dest obj="sync_1_1" inlet="wave"/>
+         <dest obj="sync_1_2" inlet="wave"/>
+         <dest obj="sync_1_4" inlet="wave"/>
+         <dest obj="sync_1_3" inlet="wave"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="k2f_1" outlet="freq"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="phasor_1" outlet="wave"/>
+         <dest obj="read_4" inlet="a"/>
+      </net>
+      <net>
+         <source obj="timer_1" outlet="t"/>
+         <dest obj="k2f_1" inlet="kticks"/>
+         <dest obj="!=_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="phasor_1" inlet="freq"/>
+         <dest obj="dial_1" inlet="in"/>
+         <dest obj="square_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="read_4" outlet="pos"/>
+         <dest obj="sync_1_1" inlet="pos"/>
+         <dest obj="sync_1_2" inlet="pos"/>
+         <dest obj="sync_1_4" inlet="pos"/>
+         <dest obj="sync_1_3" inlet="pos"/>
+      </net>
+      <net>
+         <source obj="looper_FB_mono_4" outlet="length"/>
+         <dest obj="read_4" inlet="l"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="or_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="or_1" outlet="o"/>
+         <dest obj="phasor_1" inlet="reset"/>
+         <dest obj="counter_1" inlet="r"/>
+         <dest obj="square_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="counter_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="ibar_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sync_1_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="sync_1_1" inlet="play"/>
+      </net>
+      <net>
+         <source obj="sync_1_1" outlet="dub"/>
+         <dest obj="bool_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sync_1_2" outlet="dub"/>
+         <dest obj="bool_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="!=_1" outlet="out"/>
+         <dest obj="bool_1" inlet="in"/>
+         <dest obj="and_1" inlet="i2"/>
+         <dest obj="and_2" inlet="i2"/>
+         <dest obj="and_4" inlet="i2"/>
+         <dest obj="and_3" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="sync_1_2" inlet="dubkeep"/>
+      </net>
+      <net>
+         <source obj="and_2" outlet="o"/>
+         <dest obj="sync_1_1" inlet="dub"/>
+      </net>
+      <net>
+         <source obj="sync_1_3" outlet="dub"/>
+         <dest obj="bool_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sync_1_4" outlet="dub"/>
+         <dest obj="bool_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="and_4" outlet="o"/>
+         <dest obj="sync_1_4" inlet="dubkeep"/>
+      </net>
+      <net>
+         <source obj="inlet_1" outlet="inlet"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sync_1_2" outlet="wave"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="sync_1_4" outlet="wave"/>
+         <dest obj="mix_1" inlet="in5"/>
+      </net>
+      <net>
+         <source obj="sync_1_3" outlet="wave"/>
+         <dest obj="mix_1" inlet="in4"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="outlet_1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="MasterDub" outlet="inlet"/>
+         <dest obj="and_2" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="rec1" outlet="inlet"/>
+         <dest obj="sync_1_2" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="play1" outlet="inlet"/>
+         <dest obj="sync_1_2" inlet="play"/>
+      </net>
+      <net>
+         <source obj="dub1" outlet="inlet"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="rec2" outlet="inlet"/>
+         <dest obj="sync_1_3" inlet="rec"/>
+      </net>
+      <net>
+         <source obj="play2" outlet="inlet"/>
+         <dest obj="sync_1_3" inlet="play"/>
+      </net>
+      <net>
+         <source obj="and_3" outlet="o"/>
+         <dest obj="sync_1_3" inlet="dubkeep"/>
+      </net>
+      <net>
+         <source obj="dub2" outlet="inlet"/>
+         <dest obj="and_3" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="dub3" outlet="inlet"/>
+         <dest obj="and_4" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="play3" outlet="inlet"/>
+         <dest obj="sync_1_4" inlet="play"/>
+      </net>
+      <net>
+         <source obj="rec3" outlet="inlet"/>
+         <dest obj="sync_1_4" inlet="rec"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1936</width>
+      <height>1096</height>
+   </windowPos>
+</patch-1.0>

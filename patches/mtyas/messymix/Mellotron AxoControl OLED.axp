@@ -1,0 +1,633 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="djrm/logic/counter2_init_start" uuid="d5936f238ab92e53ac93d5927c3b43ceef998dc1" name="counter2_init_start_1" x="182" y="28">
+      <params>
+         <int32 name="maximum" value="9"/>
+         <int32 name="init" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="24527a50-7612-40ea-b5e8-d8e77e44c863" name="Mellotron voice" x="378" y="28">
+      <params>
+         <frac32.u.map name="pitch" value="32.0">
+            <modulators/>
+         </frac32.u.map>
+         <frac32.s.map name="env:a" value="-30.0">
+            <modulators/>
+         </frac32.s.map>
+         <frac32.s.map name="env:r" value="0.0">
+            <modulators/>
+         </frac32.s.map>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="6"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="patch/inlet i" uuid="f11927f00c59219df0c50f73056aa19f125540b7" name="snd_no" x="14" y="14">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="abhoth/wave/polyplay" uuid="2e6265136ddaaf4d885a669520546de2e3306819" name="pitch" x="392" y="14">
+            <params>
+               <frac32.u.map name="rate" onParent="true" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="audio out" x="686" y="14">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="timer/delayedpulse" uuid="3f05ee534ca67755fb20c7437f9e4de3d4c2f73d" name="delayedpulse_1" x="238" y="28">
+            <params>
+               <frac32.s.map name="delay" value="-64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="546" y="28">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_1" x="882" y="28">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_cho/choir_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <patchobj type="patch/object" uuid="72fa51d0-f30f-4c96-9634-283773f3796a" name="Sound selector" x="1092" y="28">
+            <params/>
+            <attribs/>
+            <object id="patch/object" uuid="72fa51d0-f30f-4c96-9634-283773f3796a">
+               <sDescription>constant string</sDescription>
+               <author>Johannes Taelman</author>
+               <license>BSD</license>
+               <inlets>
+                  <charptr32 name="i1"/>
+                  <charptr32 name="i2"/>
+                  <charptr32 name="i3"/>
+                  <charptr32 name="i4"/>
+                  <charptr32 name="i5"/>
+                  <charptr32 name="i6"/>
+                  <charptr32 name="i7"/>
+                  <charptr32 name="i8"/>
+                  <charptr32 name="i9"/>
+                  <charptr32 name="i10"/>
+                  <int32.positive name="index"/>
+               </inlets>
+               <outlets>
+                  <charptr32 name="out" description="string"/>
+               </outlets>
+               <displays/>
+               <params/>
+               <attribs/>
+               <includes/>
+               <code.krate><![CDATA[if (inlet_index == 0)
+	outlet_out = (char*)inlet_i1;
+else if (inlet_index == 1)
+	outlet_out = (char*)inlet_i2;
+else if (inlet_index == 2)
+	outlet_out = (char*)inlet_i3;
+else if (inlet_index == 3)
+	outlet_out = (char*)inlet_i4;
+else if (inlet_index == 4)
+	outlet_out = (char*)inlet_i5;
+else if (inlet_index == 5)
+	outlet_out = (char*)inlet_i6;
+else if (inlet_index == 6)
+	outlet_out = (char*)inlet_i7;
+else if (inlet_index == 7)
+	outlet_out = (char*)inlet_i8;
+else if (inlet_index == 8)
+	outlet_out = (char*)inlet_i9;
+else if (inlet_index == 9)
+	outlet_out = (char*)inlet_i10;]]></code.krate>
+            </object>
+         </patchobj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_2" x="882" y="112">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_cel/cello_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <patchobj type="patch/object" uuid="9d62cf62-adc3-43a0-8fae-2650bb169a97" name="mpe_1" x="42" y="140">
+            <params/>
+            <attribs/>
+            <object id="patch/object" uuid="9d62cf62-adc3-43a0-8fae-2650bb169a97">
+               <sDescription>Controller input for MIDI Polyphonic Expression</sDescription>
+               <author>Mark Harris</author>
+               <license>BSD</license>
+               <helpPatch>mpe.axh</helpPatch>
+               <inlets/>
+               <outlets>
+                  <frac32.bipolar name="note" description="midi note number (-64..63)"/>
+                  <bool32 name="gate" description="key pressed, no retrigger legato"/>
+                  <bool32 name="gate2" description="key pressed, retrigger on legato"/>
+                  <frac32.positive name="velocity" description="note-on velocity"/>
+                  <frac32.positive name="releaseVelocity" description="note-off velocity"/>
+                  <frac32.positive name="pressure" description="continuous pressure"/>
+                  <frac32 name="bend" description="continuous pitchbend (-64..63)"/>
+                  <frac32 name="timbre" description="continuous timbre (-64..63)"/>
+                  <frac32 name="pitch" description="pitch including pitchbend"/>
+                  <int32.positive name="midinote" description="midi note number"/>
+               </outlets>
+               <displays/>
+               <params/>
+               <attribs/>
+               <includes/>
+               <code.declaration><![CDATA[int8_t _note;
+int32_t _gate;
+int32_t _gate2;
+uint32_t _velo;
+uint32_t _rvelo;
+uint32_t _pressure;
+int32_t _bend;
+int32_t _timbre;
+uint8_t _lastRPN_LSB;
+uint8_t _lastRPN_MSB;
+uint8_t _bendRange;
+int32_t _pitch;
+uint32_t _midinote;
+int32_t _xl,_yl,_zl;static const uint8_t xccl = 85;static const uint8_t yccl = 87;static const uint8_t zccl = 86;]]></code.declaration>
+               <code.init><![CDATA[_gate = 0;
+_note = 0;
+_midinote = 0;
+_pressure = 0;
+_bend = 0;
+_timbre = 0;
+_bendRange = 48;
+_xl=_yl=_zl=0;]]></code.init>
+               <code.krate><![CDATA[outlet_note= _note<<21;
+outlet_gate= _gate;
+outlet_gate2= _gate2;
+_gate2 = _gate;
+outlet_velocity= _velo;
+outlet_releaseVelocity= _rvelo;
+outlet_pressure = _pressure;
+outlet_bend = _bend;
+outlet_timbre = _timbre;
+outlet_pitch = _pitch;
+outlet_midinote = _midinote;]]></code.krate>
+               <code.midihandler><![CDATA[if ((status == MIDI_NOTE_ON + attr_midichannel) && (data2)) {
+  _velo = data2<<20;
+  _note = data1-64;
+  _midinote = data1;
+  _gate = 1<<27;
+  _gate2 = 0;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (((status == MIDI_NOTE_ON + attr_midichannel) && (!data2))||
+          (status == MIDI_NOTE_OFF + attr_midichannel)) {
+  if (_note == data1-64) {
+    _rvelo = data2<<20;
+    _gate = 0;
+    _pressure = 0;
+  }
+} else if (status == attr_midichannel + MIDI_CHANNEL_PRESSURE) {
+  _pressure = (data1<<20) + _zl;
+} else if (status == attr_midichannel + MIDI_PITCH_BEND) {
+  _bend = (((int)((data2<<7)+data1)-0x2000)<<14) + _xl;
+  _pitch = (_note << 21) + ((_bend >> 6)* _bendRange );
+} else if (status == attr_midichannel + MIDI_CONTROL_CHANGE) {
+  if (data1 == MIDI_C_TIMBRE) {
+    _timbre = (((int)(data2<<7)-0x2000)<<14) + _yl;
+  } else if (data1 == zccl) {
+   _zl = data2 << 13;  } else if (data1 == xccl) {
+   _xl = data2 << 7;  } else if (data1 == yccl) {
+   _yl = data2 << 14;  } else if(data1 == MIDI_C_ALL_NOTES_OFF) {
+    _gate = 0;
+  } else if (data1 == MIDI_C_RPN_MSB || data1 == MIDI_C_RPN_LSB || data1 == MIDI_C_DATA_ENTRY) {
+    switch(data1) {
+         case MIDI_C_RPN_LSB: _lastRPN_LSB = data2; break;
+         case MIDI_C_RPN_MSB: _lastRPN_MSB = data2; break;
+         case MIDI_C_DATA_ENTRY: {
+              if (_lastRPN_LSB == 0 && _lastRPN_MSB == 0) {
+                _bendRange = data2;
+              }
+            }
+            break;
+        default: break;
+    }
+  }
+}]]></code.midihandler>
+            </object>
+         </patchobj>
+         <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="182" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="timer/delayedpulsem" uuid="edae71bda6092aa94232876fd3f8a107bdb9ebcf" name="delayedpulsem_1" x="252" y="168">
+            <params>
+               <frac32.s.map name="delay" value="16.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr m" uuid="98bd39fb828c392b28126d259cb5175e6f6ea34b" name="env" x="406" y="168">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="0.0"/>
+               <frac32.s.map name="d" value="-64.0"/>
+               <frac32.u.map name="s" value="64.0"/>
+               <frac32.s.map name="r" value="-16.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_3" x="882" y="196">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_m3a/m3a_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="env:r" x="252" y="280">
+            <params>
+               <frac32.s.map name="value" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_4" x="882" y="280">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_m3b/m3b_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_5" x="882" y="364">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_br/m3bra_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_6" x="882" y="448">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_mkbr/mk2br_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_7" x="882" y="532">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_mkfl/mk2fl_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_8" x="882" y="616">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_mkvi/mk2vi_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_9" x="882" y="700">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_str/stri_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <obj type="string/indexed" uuid="a28740deef67c39ffc65bd0f341a47c9b196f46" name="indexed_10" x="882" y="784">
+            <params/>
+            <attribs>
+               <table attributeName="prefix" table="/m_wwi/woodw_"/>
+               <table attributeName="suffix" table=".raw"/>
+            </attribs>
+         </obj>
+         <nets>
+            <net>
+               <source obj="env" outlet="env"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="audio out" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="inv_1" outlet="o"/>
+               <dest obj="delayedpulsem_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="env:r" outlet="out"/>
+               <dest obj="delayedpulsem_1" inlet="delay"/>
+               <dest obj="env" inlet="r"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="midinote"/>
+               <dest obj="indexed_1" inlet="index"/>
+               <dest obj="indexed_2" inlet="index"/>
+               <dest obj="indexed_3" inlet="index"/>
+               <dest obj="indexed_4" inlet="index"/>
+               <dest obj="indexed_5" inlet="index"/>
+               <dest obj="indexed_6" inlet="index"/>
+               <dest obj="indexed_7" inlet="index"/>
+               <dest obj="indexed_8" inlet="index"/>
+               <dest obj="indexed_9" inlet="index"/>
+               <dest obj="indexed_10" inlet="index"/>
+            </net>
+            <net>
+               <source obj="indexed_1" outlet="out"/>
+               <dest obj="Sound selector" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="indexed_2" outlet="out"/>
+               <dest obj="Sound selector" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="snd_no" outlet="inlet"/>
+               <dest obj="Sound selector" inlet="index"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="gate"/>
+               <dest obj="delayedpulse_1" inlet="trig"/>
+               <dest obj="env" inlet="gate"/>
+               <dest obj="inv_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="indexed_3" outlet="out"/>
+               <dest obj="Sound selector" inlet="i3"/>
+            </net>
+            <net>
+               <source obj="indexed_4" outlet="out"/>
+               <dest obj="Sound selector" inlet="i4"/>
+            </net>
+            <net>
+               <source obj="indexed_5" outlet="out"/>
+               <dest obj="Sound selector" inlet="i5"/>
+            </net>
+            <net>
+               <source obj="indexed_6" outlet="out"/>
+               <dest obj="Sound selector" inlet="i6"/>
+            </net>
+            <net>
+               <source obj="indexed_7" outlet="out"/>
+               <dest obj="Sound selector" inlet="i7"/>
+            </net>
+            <net>
+               <source obj="indexed_8" outlet="out"/>
+               <dest obj="Sound selector" inlet="i8"/>
+            </net>
+            <net>
+               <source obj="indexed_9" outlet="out"/>
+               <dest obj="Sound selector" inlet="i9"/>
+            </net>
+            <net>
+               <source obj="indexed_10" outlet="out"/>
+               <dest obj="Sound selector" inlet="i10"/>
+            </net>
+            <net>
+               <source obj="delayedpulsem_1" outlet="pulse"/>
+               <dest obj="pitch" inlet="stop"/>
+            </net>
+            <net>
+               <source obj="delayedpulse_1" outlet="pulse"/>
+               <dest obj="pitch" inlet="start"/>
+            </net>
+            <net>
+               <source obj="Sound selector" outlet="out"/>
+               <dest obj="pitch" inlet="filename"/>
+            </net>
+            <net>
+               <source obj="pitch" outlet="out"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyexpression</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>0</NPresets>
+            <NPresetEntries>0</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>50</x>
+            <y>87</y>
+            <width>1277</width>
+            <height>681</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="616" y="28">
+      <params>
+         <frac32.u.map name="amount" value="0.0">
+            <modulators>
+               <modulation sourceName="mod_a" modName="" value="64.0"/>
+            </modulators>
+         </frac32.u.map>
+         <frac32.u.map name="time" value="34.5"/>
+         <frac32.u.map name="diffusion" value="51.0"/>
+         <frac32.u.map name="gain" value="43.5"/>
+         <frac32.u.map name="lowpass" value="22.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="756" y="28">
+      <params>
+         <frac32.u.map name="volume" value="64.0">
+            <modulators/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1050" y="28" text="TAPES:"/>
+   <comment type="patch/comment" x="1050" y="42" text="01: Choir"/>
+   <comment type="patch/comment" x="1050" y="56" text="02: Cello"/>
+   <comment type="patch/comment" x="1050" y="70" text="03: M300 A"/>
+   <comment type="patch/comment" x="1050" y="84" text="04: M300 B"/>
+   <comment type="patch/comment" x="1050" y="98" text="05: M300 Brass"/>
+   <obj type="a773/axocontrol" uuid="751b3605-f062-4660-8406-3eb1c2b3d526" name="axocontrol_1" x="14" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1050" y="112" text="06: mk2 Brass"/>
+   <comment type="patch/comment" x="1050" y="126" text="07: mk2  Flute"/>
+   <comment type="patch/comment" x="1050" y="140" text="08: mk2 Violins"/>
+   <obj type="TSG/patch/modsource auto" uuid="4ab1c80f-6017-44dc-aba7-1b9ad3949c81" name="mod_a" x="182" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="1050" y="154" text="09: String Section"/>
+   <comment type="patch/comment" x="1050" y="168" text="10: Woodwinds"/>
+   <obj type="tiar/disp/scope" uuid="0991142e-58fa-47e6-9f89-32da05f9fe41" name="scope_1" x="518" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/HW/OLED128x64" uuid="5bde8c3d-fe37-40b3-848e-edb192767bc8" name="OLED128x64_1" x="854" y="294">
+      <params/>
+      <attribs>
+         <objref attributeName="scope" obj="scope_1"/>
+         <combo attributeName="type" selection="SH1106"/>
+         <combo attributeName="I2CADDR" selection="0x3C"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_1" x="1050" y="448">
+      <params>
+         <int32.hradio name="value" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_2" x="210" y="504">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="Choir"/>
+      </attribs>
+   </obj>
+   <obj type="mux10" uuid="" name="mux10_1" x="462" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_7" x="826" y="504">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="mk2Brass"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_3" x="210" y="574">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="Cello"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_8" x="826" y="574">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="mk2Flute"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_4" x="210" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="M300A"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_9" x="826" y="644">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="mk2Violins"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_5" x="210" y="714">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="M300B"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_10" x="826" y="714">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="StringSec"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_6" x="210" y="784">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="M300Brass"/>
+      </attribs>
+   </obj>
+   <obj type="string/c" uuid="4aa90a90c435a742ddfa152d232883fc5b2f1b3" name="c_11" x="826" y="784">
+      <params/>
+      <attribs>
+         <table attributeName="str" table="Wwinds"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="counter2_init_start_1" outlet="o"/>
+         <dest obj="Mellotron voice" inlet="snd_no"/>
+         <dest obj="mux10_1" inlet="sel"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="Mellotron voice" outlet="audio out"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="reverb_1" inlet="l"/>
+         <dest obj="reverb_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="axocontrol_1" outlet="buttonB"/>
+         <dest obj="counter2_init_start_1" inlet="inc"/>
+      </net>
+      <net>
+         <source obj="axocontrol_1" outlet="buttonA"/>
+         <dest obj="counter2_init_start_1" inlet="dec"/>
+      </net>
+      <net>
+         <source obj="counter2_init_start_1" outlet="c"/>
+         <dest obj="axocontrol_1" inlet="PB0"/>
+      </net>
+      <net>
+         <source obj="axocontrol_1" outlet="knob1"/>
+         <dest obj="mod_a" inlet="v"/>
+      </net>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="OLED128x64_1" inlet="mode"/>
+      </net>
+      <net>
+         <source obj="c_2" outlet="out"/>
+         <dest obj="mux10_1" inlet="i0"/>
+      </net>
+      <net>
+         <source obj="c_3" outlet="out"/>
+         <dest obj="mux10_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="c_4" outlet="out"/>
+         <dest obj="mux10_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="c_5" outlet="out"/>
+         <dest obj="mux10_1" inlet="i3"/>
+      </net>
+      <net>
+         <source obj="c_6" outlet="out"/>
+         <dest obj="mux10_1" inlet="i4"/>
+      </net>
+      <net>
+         <source obj="c_7" outlet="out"/>
+         <dest obj="mux10_1" inlet="i5"/>
+      </net>
+      <net>
+         <source obj="c_8" outlet="out"/>
+         <dest obj="mux10_1" inlet="i6"/>
+      </net>
+      <net>
+         <source obj="c_9" outlet="out"/>
+         <dest obj="mux10_1" inlet="i7"/>
+      </net>
+      <net>
+         <source obj="c_10" outlet="out"/>
+         <dest obj="mux10_1" inlet="i8"/>
+      </net>
+      <net>
+         <source obj="c_11" outlet="out"/>
+         <dest obj="mux10_1" inlet="i9"/>
+      </net>
+      <net>
+         <source obj="mux10_1" outlet="out"/>
+         <dest obj="OLED128x64_1" inlet="line1"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>polyphonic</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>0</NPresets>
+      <NPresetEntries>0</NPresetEntries>
+      <NModulationSources>0</NModulationSources>
+      <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>260</x>
+      <y>21</y>
+      <width>1529</width>
+      <height>974</height>
+   </windowPos>
+</patch-1.0>

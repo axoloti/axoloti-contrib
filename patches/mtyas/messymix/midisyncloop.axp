@@ -1,0 +1,388 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="t1" x="0" y="0">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="2097152"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <obj type="audio/inconfig l" uuid="7007d026acb7c3586f60a7f0898718d1ca7e0607" name="inconfig_1" x="322" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="gain" selection="0dB"/>
+         <combo attributeName="boost" selection="0dB"/>
+      </attribs>
+   </obj>
+   <obj type="midi/in/clock" uuid="f1aa3a79d6de9bd6d38dc64c9d4bb5c9de4f4198" name="clock_1" x="0" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="238" y="70">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/change" uuid="96e39ae624c3f3c952cec4a95e1986ee0104f718" name="change_1" x="84" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/c 64" uuid="9116584b9960241e86c12effea4ce12d13871e77" name="c_1" x="0" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_1" x="0" y="196">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="24"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="784" y="210" text="overdub on/off"/>
+   <comment type="patch/comment" x="882" y="210" text="default is going into overdub "/>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="button_1" x="784" y="224">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="882" y="224" text="directly after recording"/>
+   <comment type="patch/comment" x="0" y="266" text="quantize value"/>
+   <comment type="patch/comment" x="0" y="280" text="0 = 1count"/>
+   <comment type="patch/comment" x="0" y="294" text="1 = 2count"/>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_6" x="784" y="294">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="0" y="308" text="2 = 4count"/>
+   <comment type="patch/comment" x="434" y="308" text="scale the counter to 0-64"/>
+   <obj type="timer/delayedpulse" uuid="3f05ee534ca67755fb20c7437f9e4de3d4c2f73d" name="delayedpulse_1" x="882" y="308">
+      <params>
+         <frac32.s.map name="delay" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="0" y="322" text="3 = 8count"/>
+   <obj type="math/*" uuid="6a31299e3a491edd8c4df0e809a519a35cc08a3b" name="*_1" x="168" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dynamic counter" uuid="5ce3406f0bf9385cd5284c5079d0a25e506adced" name="dynamic_1" x="224" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_3" x="392" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <patchobj type="patch/object" uuid="2b690c2e-3122-4ea2-8de9-c8f7229042d2" name="k2f_3" x="434" y="322">
+      <params/>
+      <attribs/>
+      <object id="patch/object" uuid="2b690c2e-3122-4ea2-8de9-c8f7229042d2">
+         <sDescription>divides &apos;blue float&apos; by &apos;green int&apos;.result = &apos;blue float&apos;</sDescription>
+         <author>robert schirmer</author>
+         <license>BSD</license>
+         <helpPatch>timeri.axh</helpPatch>
+         <inlets>
+            <int32 name="a"/>
+            <int32 name="b"/>
+         </inlets>
+         <outlets>
+            <frac32.bipolar name="float"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.declaration><![CDATA[int64_t va;]]></code.declaration>
+         <code.krate><![CDATA[va = inlet_a;
+
+
+outlet_float = (float)((va <<21)/inlet_b);]]></code.krate>
+      </object>
+   </patchobj>
+   <obj type="math/*" uuid="13882852b58661ad012ffbe246470b5df4b6c5d1" name="*_2" x="504" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/dial b" uuid="9ffed04e6a3052d9001eda83bae7024cb6d17037" name="dial_1" x="560" y="322">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i radio 4 h" uuid="f87ae81e3162014f3bdca0f56dbbdf9322e69dfd" name="i_2" x="0" y="336">
+      <params>
+         <int32.hradio name="value" value="2"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="phi/math/exp i" uuid="060989f4-14ed-4fcc-8353-1345fg98050c" name="exp_1" x="84" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop toggle" uuid="195e489e5fc3d275944b0de56c7a91c8641ea22a" name="flipflop_2" x="1022" y="378">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_4" x="0" y="406">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="210" y="406" text="record"/>
+   <comment type="patch/comment" x="280" y="406" text="wait till next clock trigger"/>
+   <obj type="rbrt/testing/lrec multi_new" uuid="af7b4fa2-0707-4548-8118-c7454b4250e7" name="lrec_1" x="560" y="406">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+         <combo attributeName="slots" selection="1"/>
+      </attribs>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_2" x="1148" y="406">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="210" y="420">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="280" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop" uuid="f9b15363f5ee203152e062c08a8846f0074b0ea5" name="flipflop_1" x="406" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="350" y="434">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="700" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="854" y="490" text="how many ppq ist the loop long"/>
+   <obj type="mux/mux 2" uuid="e1c92bc92f4d191bfadf0efeae4503b458a4e440" name="mux_1" x="700" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="770" y="504">
+      <params>
+         <int32 name="maximum" value="65536"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+1" uuid="13c1a4574bb81783beb8839e81782b9a34e3fc17" name="+1_1" x="854" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_5" x="910" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/looper/ldrive multi" uuid="e6ef57fe-d5fa-4353-a558-bdcb571a99a8" name="ldrive_1" x="1078" y="504">
+      <params>
+         <frac32.s.map name="speed" value="64.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="table/read" uuid="57c0d2f661ccce53e64e9d4653918bc7a74f311e" name="read_1" x="1204" y="504">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1330" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1400" y="504">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="490" y="532">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="910" y="560" text="retrigger"/>
+   <obj type="dynamic counter" uuid="5ce3406f0bf9385cd5284c5079d0a25e506adced" name="dynamic_2" x="910" y="574">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/looper/ldub" uuid="1f2dfd57-1d7f-4000-b54b-4d4e2f81ae39" name="ldub_1" x="1204" y="574">
+      <params>
+         <frac32.u.map name="feedback" value="64.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="t1"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="i_1" outlet="out"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="exp_1" outlet="out"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="exp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*_1" outlet="result"/>
+         <dest obj="dynamic_1" inlet="max"/>
+         <dest obj="k2f_3" inlet="b"/>
+      </net>
+      <net>
+         <source obj="change_1" outlet="trig"/>
+         <dest obj="dynamic_1" inlet="trig"/>
+         <dest obj="and_1" inlet="i2"/>
+         <dest obj="mux_1" inlet="i2"/>
+         <dest obj="dynamic_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="dynamic_1" outlet="o"/>
+         <dest obj="i_3" inlet="in"/>
+         <dest obj="*_2" inlet="b"/>
+      </net>
+      <net>
+         <source obj="k2f_3" outlet="float"/>
+         <dest obj="*_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="*_2" outlet="result"/>
+         <dest obj="dial_1" inlet="in"/>
+         <dest obj="lrec_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="c_1" outlet="o"/>
+         <dest obj="k2f_3" inlet="a"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="lrec_1" inlet="wave"/>
+         <dest obj="+_1" inlet="in1"/>
+         <dest obj="ldub_1" inlet="wave"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="offset"/>
+         <dest obj="ldrive_1" inlet="offset"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="range"/>
+         <dest obj="ldrive_1" inlet="range"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="startpoint"/>
+         <dest obj="ldrive_1" inlet="startpoint"/>
+      </net>
+      <net>
+         <source obj="ldrive_1" outlet="pos"/>
+         <dest obj="read_1" inlet="a"/>
+         <dest obj="ldub_1" inlet="pos"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="o"/>
+         <dest obj="+_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="+_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="and_1" inlet="i1"/>
+         <dest obj="inv_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="flipflop_1" inlet="set"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="flipflop_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="lrec_1" inlet="rec"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="i_4" outlet="out"/>
+         <dest obj="lrec_1" inlet="sync"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="rec"/>
+         <dest obj="inv_2" inlet="i"/>
+         <dest obj="counter_1" inlet="r"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="ldrive_1" inlet="play"/>
+         <dest obj="dynamic_2" inlet="r"/>
+         <dest obj="flipflop_2" inlet="set"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="counter_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="+1_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="+1_1" outlet="result"/>
+         <dest obj="i_5" inlet="in"/>
+         <dest obj="dynamic_2" inlet="max"/>
+      </net>
+      <net>
+         <source obj="dynamic_2" outlet="c"/>
+         <dest obj="ldrive_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="flipflop_2" outlet="o"/>
+         <dest obj="ldub_1" inlet="overdub"/>
+         <dest obj="bool_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="i_6" outlet="out"/>
+         <dest obj="delayedpulse_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="delayedpulse_1" outlet="pulse"/>
+         <dest obj="flipflop_2" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="button_1" outlet="o"/>
+         <dest obj="flipflop_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="clock_1" outlet="pos24ppq"/>
+         <dest obj="change_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="clock_1" outlet="active"/>
+         <dest obj="dynamic_1" inlet="r"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>0</x>
+      <y>23</y>
+      <width>1430</width>
+      <height>829</height>
+   </windowPos>
+</patch-1.0>

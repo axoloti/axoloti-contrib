@@ -1,0 +1,314 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="stomps/delay" uuid="edbd92f5-3696-4acb-b62d-c4fa166ff693" name="obj_2" x="658" y="98">
+      <params>
+         <bool32.tgl name="on" value="1"/>
+         <frac32.u.map name="fdbk" value="36.5"/>
+         <frac32.u.map name="time" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="798" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="phi/delay/delay write pow out" uuid="84fdbd34-833c-42fe-b765-b7611551d7d4" name="delay_1" x="224" y="182">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="65536 (1.36s)"/>
+      </attribs>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="518" y="238">
+      <params>
+         <frac32.s.map name="pitch" value="53.0"/>
+         <frac32.u.map name="reso" value="41.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="stomps/delay" uuid="edbd92f5-3696-4acb-b62d-c4fa166ff693" name="obj_1" x="672" y="238">
+      <params>
+         <bool32.tgl name="on" value="1"/>
+         <frac32.u.map name="fdbk" value="40.0"/>
+         <frac32.u.map name="time" value="1.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="122855da-c763-4886-877b-0d89411b079c" name="patcher_1" x="0" y="266">
+      <params>
+         <frac32.s.map name="d_1" value="-42.0"/>
+         <frac32.s.map name="adsr_1:a" value="-64.0"/>
+         <frac32.s.map name="adsr_1:d" value="64.0"/>
+         <frac32.u.map name="adsr_1:s" value="64.0"/>
+         <frac32.s.map name="adsr_1:r" value="-40.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="9"/>
+      </attribs>
+      <subpatch appVersion="1.0.10">
+         <comment type="patch/comment" x="28" y="28" text="play with the piano!"/>
+         <obj type="midi/in/keyb" sha="b8deb97637e54be31fcb62e849e4fa406e72256e" name="keyb1" x="28" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="noise/uniform" sha="117e0adca76d1dc3810e120a06d022ef06093103" name="rand_1" x="308" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet f" uuid="d18a9a550bcaaebac94e25983bd0e27dbfd7233c" name="outlet_2" x="938" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <comment type="patch/comment" x="406" y="70" text="generates a short burst of noise"/>
+         <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="d_1" x="308" y="98">
+            <params>
+               <frac32.s.map name="d" onParent="true" value="-42.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" sha="6bbeaeb94e74091879965461ad0cb043f2e7f6cf" name="vca_1" x="420" y="98">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="154" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="602" y="140">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="0.0"/>
+               <frac32.s.map name="d" onParent="true" value="0.0"/>
+               <frac32.u.map name="s" onParent="true" value="0.0"/>
+               <frac32.s.map name="r" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="896" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <comment type="patch/comment" x="28" y="224" text="compute the right delay time from pitch"/>
+         <comment type="patch/comment" x="336" y="224" text="interpolating delayline read"/>
+         <comment type="patch/comment" x="532" y="224" text="99% feedback"/>
+         <comment type="patch/comment" x="644" y="224" text="delayline write"/>
+         <obj type="delay/mtod" sha="60139378b4e43b414539a7911c172765f979796" name="mtod_1" x="70" y="266">
+            <params>
+               <frac32.s.map name="pitch" value="8.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/-c" sha="7e5ae2d57dd806e6c238ad9acbb5efbd70dc7d10" name="-c1" x="182" y="266">
+            <params>
+               <frac32.u.map name="c" value="0.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="conv/interp" sha="5a9175b8d44d830756d1599a86b4a6a49813a19b" name="interp_1" x="252" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="delay/read interp" sha="6fda3a4b04cc8fc49e63240c2fff115695ec7a7" name="delread2__1" x="336" y="266">
+            <params>
+               <frac32.u.map name="time" value="0.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="delayname" obj="d1"/>
+            </attribs>
+         </obj>
+         <obj type="mix/mix 1" uuid="e8f482af5b1ec4a2e9cf8ac7ce09e7c0e43cea08" name="mix_1" x="532" y="266">
+            <params>
+               <frac32.u.map name="gain1" value="63.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="delay/write" sha="c573b27a5ebc2efb2d1e8ec173ff4793a2acbae2" name="d1" x="644" y="266">
+            <params/>
+            <attribs>
+               <combo attributeName="size" selection="2048 (42.66ms)"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="938" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="854" y="280">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="658" y="350">
+            <params>
+               <frac32.u.map name="amp" value="15.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <comment type="patch/comment" x="70" y="364" text="bug: tuning reference is incorrect"/>
+         <nets>
+            <net>
+               <source obj="d_1" outlet="env"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="rand_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="d1" inlet="in"/>
+               <dest obj="*c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="interp_1" outlet="o"/>
+               <dest obj="delread2__1" inlet="time"/>
+            </net>
+            <net>
+               <source obj="-c1" outlet="out"/>
+               <dest obj="interp_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="keyb1" outlet="note"/>
+               <dest obj="mtod_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mtod_1" outlet="delay"/>
+               <dest obj="-c1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="delread2__1" outlet="out"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="*c_1" outlet="out"/>
+               <dest obj="vca_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb1" outlet="velocity"/>
+               <dest obj="*_1" inlet="b"/>
+               <dest obj="unipolar2bipolar_1" inlet="i"/>
+               <dest obj="outlet_2" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vca_2" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_2" inlet="v"/>
+            </net>
+            <net>
+               <source obj="unipolar2bipolar_1" outlet="o"/>
+               <dest obj="d_1" inlet="d"/>
+            </net>
+            <net>
+               <source obj="keyb1" outlet="gate2"/>
+               <dest obj="d_1" inlet="trig"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>251</x>
+            <y>92</y>
+            <width>1204</width>
+            <height>728</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="sss/fx/pitchshifter2" uuid="83a522af-b079-4d6e-b1f3-9965d7c8c915" name="pitchshifter2_1" x="196" y="266">
+      <params/>
+      <attribs>
+         <objref attributeName="delayname" obj="delay_1"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_1" x="560" y="350">
+      <params>
+         <frac32.s.map name="value" value="-2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_2" x="658" y="350">
+      <params>
+         <frac32.s.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_3" x="742" y="364">
+      <params>
+         <frac32.s.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="dial_4" x="252" y="518">
+      <params>
+         <frac32.s.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="delay_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="pitchshifter2_1" inlet="semitone"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="pitchshifter2_1" inlet="harmshift"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="pitchshifter2_1" inlet="ratioshift"/>
+      </net>
+      <net>
+         <source obj="delay_1" outlet="pow"/>
+         <dest obj="pitchshifter2_1" inlet="samplelength"/>
+      </net>
+      <net>
+         <source obj="dial_4" outlet="out"/>
+         <dest obj="pitchshifter2_1" inlet="windowratio"/>
+      </net>
+      <net>
+         <source obj="pitchshifter2_1" outlet="AudioOut"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="obj_1" inlet="in"/>
+         <dest obj="obj_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="obj_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-7</x>
+      <y>0</y>
+      <width>974</width>
+      <height>1087</height>
+   </windowPos>
+</patch-1.0>

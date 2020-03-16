@@ -1,0 +1,223 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_1" x="378" y="140">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808bd"/>
+      </attribs>
+   </obj>
+   <obj type="env/follower" uuid="356ce1d18ac6b51704833f94dac5dea823fb8223" name="follower_1" x="504" y="140">
+      <params/>
+      <attribs>
+         <combo attributeName="time" selection="1.3ms"/>
+      </attribs>
+   </obj>
+   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_1" x="672" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="bb4006b0-c148-490f-a1bf-e749fc38b0dd" name="patcher_1" x="224" y="182">
+      <params/>
+      <attribs/>
+      <subpatch appVersion="1.0.10">
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="112" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="outlet_1" x="644" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="inlet_1" x="126" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/&gt;" uuid="8112942c245dbc2edf7d7de122fe83b0dcd0a391" name="&gt;_1" x="294" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="504" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_2" x="210" y="224">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="outlet_2" x="644" y="238">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/xor 2" uuid="7902b0001a2672a9008b3882d3681ec3e33fec74" name="xor_1" x="504" y="252">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/toggle" uuid="f42f0d3aab552c17bc78b9e65f85dc24f977503d" name="toggle_1" x="112" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/&lt;" uuid="c624e28be64ac9dad61b6dcd4ae6f241d2879167" name="&lt;_1" x="294" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_3" x="210" y="280">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="outlet_3" x="644" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/toggle" uuid="f42f0d3aab552c17bc78b9e65f85dc24f977503d" name="toggle_2" x="112" y="308">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_4" x="210" y="336">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="outlet_4" x="644" y="350">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="inlet_1" outlet="inlet"/>
+               <dest obj="uniform_1" inlet="trig"/>
+               <dest obj="toggle_1" inlet="trig"/>
+               <dest obj="uniform_3" inlet="trig"/>
+               <dest obj="toggle_2" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="uniform_1" outlet="rand"/>
+               <dest obj="&gt;_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="uniform_2" outlet="rand"/>
+               <dest obj="&gt;_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="toggle_1" outlet="o"/>
+               <dest obj="uniform_2" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="uniform_3" outlet="rand"/>
+               <dest obj="&lt;_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="uniform_4" outlet="rand"/>
+               <dest obj="&lt;_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="toggle_2" outlet="o"/>
+               <dest obj="uniform_4" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="&gt;_1" outlet="out"/>
+               <dest obj="and_1" inlet="i1"/>
+               <dest obj="outlet_2" inlet="outlet"/>
+               <dest obj="xor_1" inlet="i1"/>
+            </net>
+            <net>
+               <source obj="&lt;_1" outlet="out"/>
+               <dest obj="and_1" inlet="i2"/>
+               <dest obj="outlet_3" inlet="outlet"/>
+               <dest obj="xor_1" inlet="i2"/>
+            </net>
+            <net>
+               <source obj="and_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="xor_1" outlet="o"/>
+               <dest obj="outlet_4" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>916</width>
+            <height>856</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_2" x="378" y="196">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808lotom"/>
+      </attribs>
+   </obj>
+   <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_3" x="378" y="252">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808midtom"/>
+      </attribs>
+   </obj>
+   <obj type="toneburst/osc/toneburst/osc/sinesync" uuid="6e0087345cca76a9dbf7ebfa72e44e4700d2b3ba" name="sinesync_1" x="532" y="252">
+      <params>
+         <frac32.s.map name="pitch" value="-10.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_4" x="378" y="308">
+      <params/>
+      <attribs>
+         <combo attributeName="sample" selection="808hitom"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="flashplay_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_4"/>
+         <dest obj="flashplay_4" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_3"/>
+         <dest obj="flashplay_3" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_2"/>
+         <dest obj="flashplay_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="flashplay_1" outlet="out"/>
+         <dest obj="follower_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="flashplay_2" outlet="out"/>
+         <dest obj="sinesync_1" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="flashplay_3" outlet="out"/>
+         <dest obj="sinesync_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="sinesync_1" outlet="wave"/>
+         <dest obj="*_1" inlet="b"/>
+      </net>
+      <net>
+         <source obj="follower_1" outlet="amp"/>
+         <dest obj="sinesync_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="flashplay_4" outlet="out"/>
+         <dest obj="*_1" inlet="a"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>374</x>
+      <y>267</y>
+      <width>1393</width>
+      <height>791</height>
+   </windowPos>
+</patch-1.0>

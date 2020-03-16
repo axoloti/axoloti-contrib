@@ -1,0 +1,376 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="98" y="28">
+      <params>
+         <frac32.u.map name="value" value="6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/lfo/square" uuid="5d7c2cad-0bfe-4285-8376-ac9152e2db30" name="midiclksimulator" x="182" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="rec" x="280" y="28">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/flipflop" uuid="f9b15363f5ee203152e062c08a8846f0074b0ea5" name="flipflop_3" x="364" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="e1c92bc92f4d191bfadf0efeae4503b458a4e440" name="mux_2" x="462" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 16b sdram" uuid="6d8eb0fd68f404cb5d14e7d4c8c146c8ccf09da1" name="r" x="546" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="524288"/>
+         <text attributeName="init">
+            <sText><![CDATA[]]></sText>
+         </text>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="70" y="140" text="rec is on at the first clock input after toggle is true, off at the completion of the 24ppq cycle after toggle is false"/>
+   <comment type="patch/comment" x="742" y="140" text="this should avoid clicks at the beginning and end of the recording"/>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="i_2" x="70" y="168">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="1"/>
+      </attribs>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="168" y="168">
+      <params>
+         <int32 name="maximum" value="24"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="16f90f81694766b0bc8187bfcba5a021e5701d81" name="mux_1" x="266" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/math/== const i" uuid="36ae23539d64bc2fb798a1b4a65cf9dda17a1952" name="==_1" x="350" y="168">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="logic/flipflop" uuid="f9b15363f5ee203152e062c08a8846f0074b0ea5" name="flipflop_1" x="476" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="658" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dist/slew" uuid="707ebc5c162f073ad14978244bc6dda1984b8955" name="slew_1" x="742" y="168">
+      <params>
+         <frac32.u.map name="slew" value="1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="812" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/math/&gt; const i" uuid="a498caeb4da17a59588d64bcf9d5e9b4a652362f" name="&gt;_4" x="882" y="168">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/looper/lrec" uuid="2e5874a9-b38b-40bf-8dda-03863ab6ca59" name="lrec_1" x="994" y="168">
+      <params>
+         <frac32.s.map name="attack" value="-64.0"/>
+         <bool32.tgl name="hard" value="0"/>
+         <frac32.s.map name="release" value="0.0"/>
+         <bool32.tgl name="nofade" value="0"/>
+      </params>
+      <attribs>
+         <objref attributeName="table" obj="r"/>
+         <combo attributeName="slots" selection="1"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="630" y="280" text="clearing audio outside the range of the recording that can be unwantedly reproduced being inside the synced loop"/>
+   <comment type="patch/comment" x="224" y="294" text="how many quarters is the loop long?"/>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_3" x="924" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/record" uuid="2f8909f3691be093f0b8cf6532d4acff2dcb1a9f" name="clear" x="994" y="294">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="r"/>
+      </attribs>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="112" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/latch" uuid="2a50e4657301542464c6a97931847b5e8e0e6d2b" name="latch_1" x="182" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_2" x="266" y="308">
+      <params>
+         <int32 name="maximum" value="65536"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/+1" uuid="13c1a4574bb81783beb8839e81782b9a34e3fc17" name="+1_1" x="364" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="e1c92bc92f4d191bfadf0efeae4503b458a4e440" name="mux_3" x="434" y="308">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sptnk/sequencer/24ppq2click" uuid="4d377328-a4b6-4296-8994-9fb0bd32cf8a" name="click" x="602" y="336">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="602" y="420" text="this should avoid clicks if the clock increase its speed"/>
+   <obj type="logic/or 2" uuid="3805d3c84d30032a44fbdbe42d9a2988a1790a3e" name="or_1" x="84" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="phi/logic/counter i" uuid="49f45a5d-b235-47ff-a47d-20cc357198ea" name="counter_3" x="168" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/math/== const i" uuid="36ae23539d64bc2fb798a1b4a65cf9dda17a1952" name="==_2" x="294" y="448">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="mux/mux 2" uuid="e1c92bc92f4d191bfadf0efeae4503b458a4e440" name="mux_4" x="420" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="timer/pulselength" uuid="ca68725237d8ba8407773340801660a9fd9b0dba" name="pulselength_1" x="504" y="448">
+      <params>
+         <frac32.s.map name="delay" value="-33.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_2" x="616" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dist/slew" uuid="707ebc5c162f073ad14978244bc6dda1984b8955" name="slew_3" x="686" y="448">
+      <params>
+         <frac32.u.map name="slew" value="7.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/math/!= const i" uuid="3673539d698a1bc2fb17a19524a65cf9dd11e24b" name="!=_1" x="756" y="448">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="table/play" uuid="53c499b6f6fbdcc25b48906393123ca10030ed45" name="play_1" x="882" y="448">
+      <params/>
+      <attribs>
+         <objref attributeName="table" obj="r"/>
+      </attribs>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1022" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="8be16f2156012a4a8974804178cece51555f272b" name="mix_1" x="1092" y="448">
+      <params>
+         <frac32.u.map name="gain1" value="8.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+         <frac32.u.map name="gain3" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1190" y="448">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="24ppq" x="434" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="quarters" x="490" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="quantd action" x="546" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="midiclksimulator" outlet="wave"/>
+         <dest obj="counter_1" inlet="trig"/>
+         <dest obj="mux_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="rec" outlet="o"/>
+         <dest obj="mux_1" inlet="s"/>
+         <dest obj="flipflop_3" inlet="set"/>
+         <dest obj="or_1" inlet="i2"/>
+         <dest obj="slew_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="==_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="mux_1" inlet="i1"/>
+         <dest obj="24ppq" inlet="in"/>
+         <dest obj="click" inlet="24ppq"/>
+      </net>
+      <net>
+         <source obj="==_1" outlet="out"/>
+         <dest obj="flipflop_1" inlet="reset"/>
+      </net>
+      <net>
+         <source obj="i_2" outlet="out"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="flipflop_1" outlet="o"/>
+         <dest obj="mux_3" inlet="s"/>
+         <dest obj="inv_1" inlet="i"/>
+         <dest obj="quantd action" inlet="in"/>
+      </net>
+      <net>
+         <source obj="flipflop_3" outlet="o"/>
+         <dest obj="mux_2" inlet="s"/>
+      </net>
+      <net>
+         <source obj="mux_2" outlet="o"/>
+         <dest obj="flipflop_3" inlet="reset"/>
+         <dest obj="flipflop_1" inlet="set"/>
+         <dest obj="counter_1" inlet="r"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="counter_2" inlet="r"/>
+         <dest obj="latch_1" inlet="trig"/>
+         <dest obj="mux_4" inlet="s"/>
+         <dest obj="or_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="midiclksimulator" inlet="hz"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="c"/>
+         <dest obj="mux_3" inlet="i2"/>
+         <dest obj="counter_3" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="mux_3" outlet="o"/>
+         <dest obj="counter_2" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="counter_2" outlet="o"/>
+         <dest obj="latch_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="latch_1" outlet="o"/>
+         <dest obj="+1_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="+1_1" outlet="result"/>
+         <dest obj="quarters" inlet="in"/>
+         <dest obj="counter_3" inlet="count"/>
+      </net>
+      <net>
+         <source obj="play_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="mux_4" outlet="o"/>
+         <dest obj="pulselength_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="counter_3" outlet="o"/>
+         <dest obj="==_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="==_2" outlet="out"/>
+         <dest obj="mux_4" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="or_1" outlet="o"/>
+         <dest obj="counter_3" inlet="r"/>
+      </net>
+      <net>
+         <source obj="click" outlet="o"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="slew_3" outlet="out"/>
+         <dest obj="vca_1" inlet="v"/>
+         <dest obj="!=_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="wave"/>
+         <dest obj="mix_1" inlet="in3"/>
+         <dest obj="vca_2" inlet="a"/>
+      </net>
+      <net>
+         <source obj="pulselength_1" outlet="pulse"/>
+         <dest obj="inv_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="inv_2" outlet="o"/>
+         <dest obj="slew_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="!=_1" outlet="out"/>
+         <dest obj="play_1" inlet="start"/>
+      </net>
+      <net>
+         <source obj="slew_1" outlet="out"/>
+         <dest obj="vca_2" inlet="v"/>
+         <dest obj="&gt;_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="vca_2" outlet="o"/>
+         <dest obj="lrec_1" inlet="wave"/>
+      </net>
+      <net>
+         <source obj="&gt;_4" outlet="out"/>
+         <dest obj="lrec_1" inlet="rec"/>
+         <dest obj="inv_3" inlet="i"/>
+      </net>
+      <net>
+         <source obj="lrec_1" outlet="range"/>
+         <dest obj="clear" inlet="pos"/>
+      </net>
+      <net>
+         <source obj="inv_3" outlet="o"/>
+         <dest obj="clear" inlet="start"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-1</x>
+      <y>0</y>
+      <width>1368</width>
+      <height>743</height>
+   </windowPos>
+</patch-1.0>

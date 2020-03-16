@@ -1,0 +1,110 @@
+<patch-1.0 appVersion="1.0.11">
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_1" x="14" y="154">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
+      </attribs>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="154" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_2" x="294" y="154">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PC0 (ADC1_IN10)"/>
+      </attribs>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_2" x="434" y="154">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="182" y="210">
+      <params>
+         <frac32.s.map name="pitch" value="-61.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="392" y="210">
+      <params>
+         <frac32.u.map name="amp" value="7.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/delay/shimmerDelay" uuid="564a039f-d1ad-42f4-a640-2fa9743abc84" name="shimmerDelay_1" x="518" y="210">
+      <params>
+         <frac32.s.map name="rate" value="-8.0"/>
+         <frac32.u.map name="feed" value="43.5"/>
+         <frac32.u.map name="slope" value="54.0"/>
+         <frac32.u.map name="depth" value="4.5"/>
+         <frac32.u.map name="spread" value="22.5"/>
+         <frac32.s.map name="damp" value="47.0"/>
+         <frac32.s.map name="panRate" value="8.0"/>
+         <int32 name="panSpread" value="2"/>
+         <frac32.u.map name="wet" value="34.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="size" selection="262144 (5.46s)"/>
+         <spinner attributeName="stages" value="8"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="784" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="182" y="350">
+      <params>
+         <frac32.s.map name="pitch" value="-51.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="shimmerDelay_1" outlet="outR"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="shimmerDelay_1" outlet="outL"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="shimmerDelay_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_2" outlet="wave"/>
+         <dest obj="sine_1" inlet="freq"/>
+         <dest obj="sine_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="analog_1" outlet="out"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="analog_2" outlet="out"/>
+         <dest obj="unipolar2bipolar_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_2" outlet="o"/>
+         <dest obj="sine_2" inlet="pitch"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>0</x>
+      <y>0</y>
+      <width>933</width>
+      <height>1005</height>
+   </windowPos>
+</patch-1.0>

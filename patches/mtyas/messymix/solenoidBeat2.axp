@@ -1,0 +1,102 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="14" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="13.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rand/pink oct" uuid="3620b367bdce1ff32d38b1013d599e26a3308e30" name="pink_1" x="308" y="42">
+      <params/>
+      <attribs>
+         <combo attributeName="octaves" selection="1"/>
+      </attribs>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="462" y="56">
+      <params>
+         <frac32.u.map name="amp" value="0.05000000000000007"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="364" y="84">
+      <params>
+         <int32 name="maximum" value="64"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 32 2t" uuid="a875b31a4ebfcd2c3edce6291740edd441a9ac8a" name="sel_1" x="84" y="196">
+      <params>
+         <bin32 name="p1" value="1343229968"/>
+         <bin32 name="p2" value="1157694721"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 32 2t" uuid="a875b31a4ebfcd2c3edce6291740edd441a9ac8a" name="sel_2" x="476" y="196">
+      <params>
+         <bin32 name="p1" value="1225805840"/>
+         <bin32 name="p2" value="1427178753"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gpio/out/digital" uuid="320eed040f6c55bb24c56416596ac2e67d0c82bc" name="digital_5" x="882" y="266">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PA5"/>
+         <combo attributeName="mode" selection="Push pull"/>
+      </attribs>
+   </obj>
+   <obj type="gpio/out/digital" uuid="320eed040f6c55bb24c56416596ac2e67d0c82bc" name="digital_1" x="882" y="364">
+      <params/>
+      <attribs>
+         <combo attributeName="pad" selection="PA4"/>
+         <combo attributeName="mode" selection="Push pull"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="counter_1" outlet="o"/>
+         <dest obj="sel_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="counter_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="sel_1" outlet="chain"/>
+         <dest obj="sel_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sel_2" outlet="o1"/>
+         <dest obj="digital_5" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sel_2" outlet="o2"/>
+         <dest obj="digital_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sel_1" outlet="o1"/>
+         <dest obj="sel_2" inlet="def1"/>
+      </net>
+      <net>
+         <source obj="sel_1" outlet="o2"/>
+         <dest obj="sel_2" inlet="def2"/>
+      </net>
+      <net>
+         <source obj="pink_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="square_1" inlet="pitch"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>94</x>
+      <y>66</y>
+      <width>1043</width>
+      <height>806</height>
+   </windowPos>
+</patch-1.0>

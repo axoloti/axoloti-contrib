@@ -1,0 +1,337 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="70" y="84">
+      <params>
+         <frac32.s.map name="pitch" value="5.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="770" y="98" text="Input"/>
+   <comment type="patch/comment" x="1176" y="98" text="Volume"/>
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_2" x="1428" y="98">
+      <params>
+         <frac32.u.map name="gain1" value="40.0"/>
+         <frac32.u.map name="gain2" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="1526" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="dist/schmitttrigger" uuid="1de995431cbdc67ce917dc0d48c5f7889adcf449" name="schmitttrigger_1" x="588" y="112">
+      <params>
+         <frac32.u.map name="hysteresis" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/write sdram" uuid="5ae03f8d7b815edcfc40585d8bbac2ed48460fba" name="maw" x="700" y="112">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="256 (5.33ms)"/>
+      </attribs>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="1176" y="112">
+      <params>
+         <frac32.u.map name="amp" value="6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="1288" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="7ddc30df-52ce-4608-9a36-ce1c0053d4ea" name="patcher_1" x="252" y="140">
+      <params>
+         <frac32.u.map name="mix_1:gain1" value="21.5"/>
+         <frac32.u.map name="mix_1:gain2" value="21.0"/>
+         <frac32.u.map name="mix_1:gain3" value="23.0"/>
+         <frac32.u.map name="mix_1:gain4" value="22.0"/>
+      </params>
+      <attribs/>
+      <subpatch appVersion="1.0.10">
+         <obj type="patch/inlet b" uuid="3b0d3eacb5bb978cb05d1372aa2714d5a4790844" name="inlet_1" x="84" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_1" x="532" y="196">
+            <params/>
+            <attribs>
+               <combo attributeName="sample" selection="808bd"/>
+            </attribs>
+         </obj>
+         <obj type="sel/sel b 16 4t pulse" uuid="888c8955ae75a9e7e3ed641fa9084d6b52e9fee9" name="sel_1" x="280" y="210">
+            <params>
+               <bin16 name="p1" value="20789"/>
+               <bin16 name="p2" value="10376"/>
+               <bin16 name="p3" value="10410"/>
+               <bin16 name="p4" value="33280"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 4 g" uuid="36f472cd81da2e17bd4b4ee11b53b4c82527220c" name="mix_1" x="728" y="210">
+            <params>
+               <frac32.u.map name="gain1" onParent="true" value="32.0"/>
+               <frac32.u.map name="gain2" onParent="true" value="32.0"/>
+               <frac32.u.map name="gain3" onParent="true" value="32.0"/>
+               <frac32.u.map name="gain4" onParent="true" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_2" x="532" y="252">
+            <params/>
+            <attribs>
+               <combo attributeName="sample" selection="808snare"/>
+            </attribs>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="868" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="140" y="294">
+            <params>
+               <int32 name="maximum" value="16"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_3" x="532" y="308">
+            <params/>
+            <attribs>
+               <combo attributeName="sample" selection="808hatclose"/>
+            </attribs>
+         </obj>
+         <obj type="wave/flashplay" uuid="52d45940d1971e7b0eab14ec136b7616d95bc997" name="flashplay_4" x="532" y="364">
+            <params/>
+            <attribs>
+               <combo attributeName="sample" selection="808hatopen"/>
+            </attribs>
+         </obj>
+         <nets>
+            <net>
+               <source obj="counter_1" outlet="o"/>
+               <dest obj="sel_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="inlet_1" outlet="inlet"/>
+               <dest obj="counter_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="sel_1" outlet="o1"/>
+               <dest obj="flashplay_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="sel_1" outlet="o2"/>
+               <dest obj="flashplay_2" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="sel_1" outlet="o3"/>
+               <dest obj="flashplay_3" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="sel_1" outlet="o4"/>
+               <dest obj="flashplay_4" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="flashplay_1" outlet="out"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="flashplay_2" outlet="out"/>
+               <dest obj="mix_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="flashplay_3" outlet="out"/>
+               <dest obj="mix_1" inlet="in3"/>
+            </net>
+            <net>
+               <source obj="flashplay_4" outlet="out"/>
+               <dest obj="mix_1" inlet="in4"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1027</width>
+            <height>829</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <comment type="patch/comment" x="1232" y="224" text="Ana Pot iv"/>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_4" x="1232" y="238">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA0 (ADC1_IN0)"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_4" x="1386" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="504" y="336" text="Ana Pot i"/>
+   <comment type="patch/comment" x="952" y="336" text="Drive"/>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_1" x="504" y="350">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PB1 (ADC1_IN9)"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_1" x="644" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="delay/mtod" uuid="bbaeb53acbf18f926c5febae31d8bf2f52725ee" name="mtod_1" x="728" y="350">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_1" x="840" y="350">
+      <params>
+         <frac32.u.map name="time" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="delayname" obj="maw"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="1288" y="364" text="EQ"/>
+   <obj type="filter/lp m" uuid="1aa1bc51da479ed92429af700591f9d7b9f45f22" name="lp_1" x="1218" y="378">
+      <params>
+         <frac32.s.map name="pitch" value="32.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 2 g" uuid="221f038da51943034a75e442c90624fcebfe6112" name="mix_1" x="1022" y="392">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+         <frac32.u.map name="gain2" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="504" y="504" text="Ana Pot ii"/>
+   <comment type="patch/comment" x="952" y="504" text="Drive ii"/>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_2" x="504" y="518">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PB0 (ADC1_IN8)"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_2" x="644" y="518">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="delay/mtod" uuid="bbaeb53acbf18f926c5febae31d8bf2f52725ee" name="mtod_2" x="728" y="518">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="delay/read" uuid="9323a43569373145e559ad309eaf65a47b14cb54" name="read_2" x="840" y="518">
+      <params>
+         <frac32.u.map name="time" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="delayname" obj="maw"/>
+      </attribs>
+   </obj>
+   <comment type="patch/comment" x="1344" y="546" text="Ana Pot iii"/>
+   <obj type="gpio/in/analog" uuid="1c0c845ed2d7e06ae5f377ba13d9d09f4747ac87" name="analog_3" x="1274" y="560">
+      <params/>
+      <attribs>
+         <combo attributeName="channel" selection="PA7 (ADC1_IN7)"/>
+      </attribs>
+   </obj>
+   <obj type="disp/dial p" uuid="44fd18b562e434b3230441681132dbeabb15cdc5" name="dial_3" x="1400" y="560">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="schmitttrigger_1" outlet="out"/>
+         <dest obj="maw" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_1" outlet="out"/>
+         <dest obj="mtod_1" inlet="pitch"/>
+         <dest obj="dial_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mtod_1" outlet="delay"/>
+         <dest obj="read_1" inlet="time"/>
+      </net>
+      <net>
+         <source obj="read_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="read_2" outlet="out"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="analog_2" outlet="out"/>
+         <dest obj="mtod_2" inlet="pitch"/>
+         <dest obj="dial_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="mtod_2" outlet="delay"/>
+         <dest obj="read_2" inlet="time"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="lp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="lp_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_3" outlet="out"/>
+         <dest obj="lp_1" inlet="pitch"/>
+         <dest obj="dial_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="analog_4" outlet="out"/>
+         <dest obj="vca_1" inlet="v"/>
+         <dest obj="dial_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="schmitttrigger_1" inlet="in"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="patcher_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="mix_2" inlet="bus_in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>0</x>
+      <y>22</y>
+      <width>1740</width>
+      <height>953</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,188 @@
+<patch-1.0 appVersion="1.0.10">
+   <patcher type="patch/patcher" uuid="99ffb0ab-2f95-42f5-9a70-1bb7cb258055" name="patcher_1" x="336" y="98">
+      <params>
+         <frac32.u.map name="gain" value="37.5"/>
+         <frac32.u.map name="feed" value="15.0"/>
+         <frac32.u.map name="*c_1" value="64.0"/>
+         <frac32.u.map name="power" value="20.5"/>
+         <frac32.u.map name="*c_2" value="64.0"/>
+         <frac32.s.map name="pitch" value="-5.0"/>
+      </params>
+      <attribs/>
+      <subpatch appVersion="1.0.10">
+         <obj type="sss/dist/analogue" uuid="a593e734-a265-40e8-828b-1d1bb04d7887" name="analogue_1" x="322" y="84">
+            <params>
+               <frac32.u.map name="risetime" value="0.0"/>
+               <frac32.u.map name="falltime" value="0.0"/>
+               <frac32.u.map name="LPHP" value="0.0"/>
+               <frac32.s.map name="Freq" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_1" x="42" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/inlet a" uuid="b577fe41e0a6bc7b5502ce33cb8a3129e2e28ee5" name="inlet_2" x="42" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="630" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/i radio 8 v" uuid="577436e6982cb8ac1f816144195641eeb6846f79" name="i_1" x="168" y="210">
+            <params>
+               <int32.vradio name="value" value="4"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="gain" x="56" y="238">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="49.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_2" x="644" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="feed" x="56" y="322">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="15.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="sss/dist/analogue" uuid="a593e734-a265-40e8-828b-1d1bb04d7887" name="analogue_2" x="322" y="350">
+            <params>
+               <frac32.u.map name="risetime" value="0.0"/>
+               <frac32.u.map name="falltime" value="0.0"/>
+               <frac32.u.map name="LPHP" value="0.0"/>
+               <frac32.s.map name="Freq" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="462" y="378">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="power" x="56" y="406">
+            <params>
+               <frac32.u.map name="value" onParent="true" value="20.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="462" y="462">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="pitch" x="56" y="490">
+            <params>
+               <frac32.s.map name="value" onParent="true" value="-5.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="*c_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="analogue_1" outlet="out"/>
+               <dest obj="*c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="analogue_2" outlet="out"/>
+               <dest obj="*c_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_2" outlet="out"/>
+               <dest obj="outlet_2" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="gain" outlet="out"/>
+               <dest obj="analogue_1" inlet="Gain"/>
+               <dest obj="analogue_2" inlet="Gain"/>
+            </net>
+            <net>
+               <source obj="feed" outlet="out"/>
+               <dest obj="analogue_1" inlet="Feed"/>
+               <dest obj="analogue_2" inlet="Feed"/>
+            </net>
+            <net>
+               <source obj="power" outlet="out"/>
+               <dest obj="analogue_1" inlet="Power"/>
+               <dest obj="analogue_2" inlet="Power"/>
+            </net>
+            <net>
+               <source obj="pitch" outlet="out"/>
+               <dest obj="analogue_1" inlet="Pitch"/>
+               <dest obj="analogue_2" inlet="Pitch"/>
+            </net>
+            <net>
+               <source obj="i_1" outlet="out"/>
+               <dest obj="analogue_1" inlet="Mode"/>
+               <dest obj="analogue_2" inlet="Mode"/>
+            </net>
+            <net>
+               <source obj="inlet_1" outlet="inlet"/>
+               <dest obj="analogue_1" inlet="Audio"/>
+            </net>
+            <net>
+               <source obj="inlet_2" outlet="inlet"/>
+               <dest obj="analogue_2" inlet="Audio"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>no</subpatchmode>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>400</width>
+            <height>400</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="546" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/in stereo" uuid="99848ad6d90a8e615e83b2e619cfc806f28e7281" name="in_1" x="140" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="in_1" outlet="right"/>
+         <dest obj="patcher_1" inlet="inlet_2"/>
+      </net>
+      <net>
+         <source obj="in_1" outlet="left"/>
+         <dest obj="patcher_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_2"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>685</x>
+      <y>339</y>
+      <width>874</width>
+      <height>660</height>
+   </windowPos>
+</patch-1.0>

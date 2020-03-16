@@ -1,0 +1,230 @@
+<patch-1.0 appVersion="1.0.10">
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="518" y="112">
+      <params>
+         <frac32.s.map name="pitch" value="46.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="616" y="112">
+      <params>
+         <frac32.u.map name="amp" value="24.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="dd1858c6-af68-4dc7-808b-0ca54ca70f34" name="patcher_1" x="210" y="126">
+      <params>
+         <frac32.s.map name="ahd_1:a" value="-64.0"/>
+         <frac32.s.map name="ahd_1:d" value="-63.0"/>
+         <frac32.s.map name="mandelbrot_1:re" value="0.0"/>
+         <frac32.s.map name="mandelbrot_1:im" value="0.0"/>
+         <int32 name="mandelbrot_1:limit" value="27"/>
+         <bool32.tgl name="mandelbrot_1:3oct" value="0"/>
+         <bool32.tgl name="mandelbrot_1:autoadjust" value="1"/>
+         <bool32.tgl name="mandelbrot_1:interp" value="1"/>
+         <frac32.s.map name="vcf3_2:pitch" value="0.0"/>
+         <frac32.u.map name="vcf3_2:reso" value="0.0"/>
+         <frac32.s.map name="vcf3_1:pitch" value="0.0"/>
+         <frac32.u.map name="vcf3_1:reso" value="0.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="12"/>
+      </attribs>
+      <subpatch appVersion="1.0.10">
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="476" y="56">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/ahd" uuid="2139369d6de2ba5ddf76e602d1d25df653ca9eed" name="ahd_1" x="266" y="70">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="-20.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="70" y="126">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_2" x="462" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="560" y="154">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="sptnk/osc/mandelbrot" uuid="1ae2064a-3efe-45f1-a1d9-43c8629ed497" name="mandelbrot_1" x="252" y="182">
+            <params>
+               <frac32.s.map name="re" onParent="true" value="14.0"/>
+               <frac32.s.map name="im" onParent="true" value="15.0"/>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <int32 name="limit" onParent="true" value="16"/>
+               <bool32.tgl name="3oct" onParent="true" value="0"/>
+               <bool32.tgl name="autoadjust" onParent="true" value="1"/>
+               <bool32.tgl name="interp" onParent="true" value="1"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="798" y="196">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="560" y="238">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_2" x="798" y="266">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/inv" uuid="565521d3699b36d8095aa1c79b9ad0046fb133ce" name="inv_1" x="140" y="350">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="280" y="420">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.u.map name="reso" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="280" y="560">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.u.map name="reso" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="mandelbrot_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mandelbrot_1" outlet="Re"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="ahd_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+               <dest obj="*_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="ahd_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="mandelbrot_1" outlet="Im"/>
+               <dest obj="vca_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="mandelbrot_1" inlet="Re"/>
+               <dest obj="*_1" inlet="b"/>
+               <dest obj="*_2" inlet="b"/>
+               <dest obj="inv_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="vcf3_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="vca_2" outlet="o"/>
+               <dest obj="vcf3_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="vcf3_1" outlet="out"/>
+               <dest obj="outlet_2" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vcf3_2" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vcf3_2" inlet="pitch"/>
+               <dest obj="vcf3_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="*_2" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+               <dest obj="vca_2" inlet="v"/>
+            </net>
+            <net>
+               <source obj="inv_1" outlet="out"/>
+               <dest obj="mandelbrot_1" inlet="Im"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1046</width>
+            <height>721</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="798" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="630" y="266">
+      <params>
+         <frac32.u.map name="amp" value="24.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_2" x="518" y="280">
+      <params>
+         <frac32.s.map name="pitch" value="54.0"/>
+         <frac32.u.map name="reso" value="18.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcf3_2" outlet="out"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_2"/>
+         <dest obj="vcf3_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>242</x>
+      <y>133</y>
+      <width>1000</width>
+      <height>829</height>
+   </windowPos>
+</patch-1.0>

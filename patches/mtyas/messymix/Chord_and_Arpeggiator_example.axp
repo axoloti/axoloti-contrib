@@ -1,0 +1,396 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="28" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="-3.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/and 2" uuid="c67031682f552aa0a80b23377495c51ea28a8c9c" name="and_1" x="126" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="210" y="14" text="This patch demonstrates the usage of the Chord and Arpeggiator subpatchs I&apos;ve built as part of a system of modules for creating tonal generative music using rules and randomness"/>
+   <comment type="patch/comment" x="1274" y="14" text="Either external MIDI or onboard 6 voice choir for output"/>
+   <comment type="patch/comment" x="210" y="28" text="Strum 2017"/>
+   <comment type="patch/comment" x="280" y="28" text="These modules are still at a beta stage, I&apos;ll turn them into objects and add some extra functionality to them when I get more time"/>
+   <comment type="patch/comment" x="210" y="56" text="Feel free to improve the output synth, I&apos;ve been testing these modules using the midi out into virtual synths on the PC and haven&apos;t put much work into the final output from Axo"/>
+   <obj type="./midi_outs" uuid="e79ce30e-6e5c-485f-b61c-1d9f3612be97" name="midi_outs_1" x="1274" y="56">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="1414" y="56">
+      <params>
+         <frac32.u.map name="volume" value="57.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="210" y="70" text="The subpatches don&apos;t use much system resources at all so there is still plenty of power left for better output synths and effects"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="28" y="112">
+      <params>
+         <bool32.tgl name="b" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="28" y="196" text="Random Chord From Major Scale length chord held set by counter"/>
+   <comment type="patch/comment" x="392" y="196" text="Randomly Adds chord extensions"/>
+   <comment type="patch/comment" x="574" y="196" text="Takes root and booleans and outputs chords"/>
+   <comment type="patch/comment" x="840" y="196" text="Cycles through voices of chord"/>
+   <comment type="patch/comment" x="1064" y="196" text="Randomly Gates Chords and Bass note"/>
+   <obj type="logic/counter" uuid="7a141ba82230e54e5f5cd12da5dbe5a74ba854a5" name="counter_1" x="28" y="224">
+      <params>
+         <int32 name="maximum" value="32"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jaffa/ctrl2/i8ms" uuid="67b40783-ebca-4435-9af2-32512064b176" name="i8ms_1" x="112" y="224">
+      <params>
+         <int32 name="sel" value="1"/>
+         <int32 name="1" value="0"/>
+         <int32 name="2" value="2"/>
+         <int32 name="3" value="4"/>
+         <int32 name="4" value="5"/>
+         <int32 name="5" value="7"/>
+         <int32 name="6" value="9"/>
+         <int32 name="7" value="11"/>
+         <int32 name="8" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="3rd" x="196" y="224">
+      <params>
+         <bin16 name="b16" value="102"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="392" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="./chord_machine_2" uuid="151f64be-c7b8-4562-bb83-065a0c0a39a4" name="chord_machine_2_1" x="574" y="224">
+      <params>
+         <int32 name="Pitch offset" value="-8"/>
+         <bool32.tgl name="Flatten 3rd_" value="0"/>
+         <bool32.tgl name="Flatten 5th_" value="0"/>
+         <bool32.tgl name="Flatten 7th_" value="0"/>
+         <bool32.tgl name="Flatten 6th" value="0"/>
+         <bool32.tgl name="Flatten 2nd" value="0"/>
+         <bool32.tgl name="Sharpen 4th" value="0"/>
+         <bool32.tgl name="Sharpen 5th" value="0"/>
+         <bool32.tgl name="Sharpen 2nd" value="0"/>
+         <bool32.tgl name="2 For 1" value="0"/>
+         <bool32.tgl name="4 For 3" value="0"/>
+         <bool32.tgl name="6 For 5" value="0"/>
+         <bool32.tgl name="1 For 7" value="0"/>
+         <bool32.tgl name="6 For 7" value="0"/>
+         <bool32.tgl name="Ext inv. Enable" value="1"/>
+         <int32 name="Inversion selector" value="0"/>
+         <bool32.tgl name="Ext. Voicing Enable" value="1"/>
+         <int32 name="Voicing selector" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="./arpeggiator_1" uuid="c0bc7bff-17ca-43f9-91b3-0feea87e2f28" name="arpeggiator_1_1" x="826" y="224">
+      <params>
+         <bool32.tgl name="RUN" value="1"/>
+         <bool32.tgl name="Constrain voices to one octave" value="0"/>
+         <bool32.tgl name="Enable ext Oct ctrl." value="0"/>
+         <int32 name="Number of octaves" value="3"/>
+         <bool32.tgl name="Enable ext  step num control" value="0"/>
+         <int32 name="Steps per Octave" value="4"/>
+         <bool32.tgl name="direction change" value="0"/>
+         <bool32.tgl name="direction change octaves" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_6" x="1064" y="224">
+      <params>
+         <frac32.u.map name="Bchance" value="47.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="./the_band" uuid="8f8e0517-3214-408c-8a09-4ef2da5d44a0" name="6 Voice Simple Saw Choir" x="1274" y="224">
+      <params>
+         <frac32.u.map name="mx4h_1:v1" value="26.0"/>
+         <frac32.u.map name="mx4h_1:v2" value="45.5"/>
+         <frac32.u.map name="mx4h_1:v3" value="23.5"/>
+         <frac32.u.map name="mx4h_1:v4" value="25.5"/>
+         <frac32.u.map name="mx4h_1:v5" value="27.5"/>
+         <frac32.u.map name="mx4h_1:v6" value="28.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="timer/pulselength" uuid="ca68725237d8ba8407773340801660a9fd9b0dba" name="pulselength_1" x="1162" y="238">
+      <params>
+         <frac32.s.map name="delay" value="-1.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_1" x="392" y="266">
+      <params>
+         <frac32.u.map name="Bchance" value="28.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="5th" x="196" y="280">
+      <params>
+         <bin16 name="b16" value="64"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform i" uuid="9b1f945f346af0165ed99b8e19136cdbf744e594" name="Random Voicing_" x="28" y="294">
+      <params>
+         <int32 name="max" value="6"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_7" x="1064" y="322">
+      <params>
+         <frac32.u.map name="Bchance" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="timer/pulselength" uuid="ca68725237d8ba8407773340801660a9fd9b0dba" name="pulselength_3" x="1162" y="322">
+      <params>
+         <frac32.s.map name="delay" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="7th" x="196" y="336">
+      <params>
+         <bin16 name="b16" value="118"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_4" x="70" y="350">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_3" x="392" y="350">
+      <params>
+         <frac32.u.map name="Bchance" value="31.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="b6" x="196" y="392">
+      <params>
+         <bin16 name="b16" value="100"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform i" uuid="9b1f945f346af0165ed99b8e19136cdbf744e594" name="Randominversion" x="490" y="420">
+      <params>
+         <int32 name="max" value="4"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="b2" x="196" y="448">
+      <params>
+         <bin16 name="b16" value="68"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_2" x="392" y="448">
+      <params>
+         <frac32.u.map name="Bchance" value="33.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform i" uuid="9b1f945f346af0165ed99b8e19136cdbf744e594" name="Random Voicing" x="490" y="476">
+      <params>
+         <int32 name="max" value="5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sel/sel b 16 old" uuid="92a0fdadbd955817214e2fc7345f6ceb7bb4ea36" name="#4" x="196" y="504">
+      <params>
+         <bin16 name="b16" value="8"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_4" x="392" y="546">
+      <params>
+         <frac32.u.map name="Bchance" value="32.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/logic/rndAB" uuid="7a93f82f-198d-47fe-bbd1-9427099b1341" name="rndAB_5" x="392" y="644">
+      <params>
+         <frac32.u.map name="Bchance" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="and_1" outlet="o"/>
+         <dest obj="inv_1" inlet="i"/>
+         <dest obj="Randominversion" inlet="trig"/>
+         <dest obj="Random Voicing" inlet="trig"/>
+         <dest obj="rndAB_6" inlet="trig"/>
+         <dest obj="rndAB_7" inlet="trig"/>
+         <dest obj="counter_1" inlet="trig"/>
+         <dest obj="arpeggiator_1_1" inlet="Clock Input"/>
+      </net>
+      <net>
+         <source obj="arpeggiator_1_1" outlet="Pitch"/>
+         <dest obj="midi_outs_1" inlet="Melody Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Melody Note"/>
+      </net>
+      <net>
+         <source obj="arpeggiator_1_1" outlet="Gate out"/>
+         <dest obj="midi_outs_1" inlet="Melody Gate"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Melody Gate"/>
+      </net>
+      <net>
+         <source obj="inv_1" outlet="o"/>
+         <dest obj="rndAB_1" inlet="trig"/>
+         <dest obj="rndAB_3" inlet="trig"/>
+         <dest obj="rndAB_2" inlet="trig"/>
+         <dest obj="rndAB_4" inlet="trig"/>
+         <dest obj="rndAB_5" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="rndAB_1" outlet="B"/>
+         <dest obj="chord_machine_2_1" inlet="2 For 1 Ext"/>
+      </net>
+      <net>
+         <source obj="rndAB_3" outlet="B"/>
+         <dest obj="chord_machine_2_1" inlet="4 For 3 Ext"/>
+      </net>
+      <net>
+         <source obj="rndAB_2" outlet="B"/>
+         <dest obj="chord_machine_2_1" inlet="6 For 5 Ext"/>
+      </net>
+      <net>
+         <source obj="rndAB_4" outlet="B"/>
+         <dest obj="chord_machine_2_1" inlet="1 For 7 Ext"/>
+      </net>
+      <net>
+         <source obj="rndAB_5" outlet="B"/>
+         <dest obj="chord_machine_2_1" inlet="6 For 7 Ext"/>
+      </net>
+      <net>
+         <source obj="Randominversion" outlet="v"/>
+         <dest obj="chord_machine_2_1" inlet="Iversion Select  Ext"/>
+      </net>
+      <net>
+         <source obj="Random Voicing" outlet="v"/>
+         <dest obj="chord_machine_2_1" inlet="Voicing Select  Ext"/>
+      </net>
+      <net>
+         <source obj="chord_machine_2_1" outlet="Root"/>
+         <dest obj="midi_outs_1" inlet="Bass Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Bass Note"/>
+      </net>
+      <net>
+         <source obj="chord_machine_2_1" outlet="Voice 4"/>
+         <dest obj="midi_outs_1" inlet="Chord Voice 4 Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Chord Voice 4"/>
+         <dest obj="arpeggiator_1_1" inlet="Voice 4 input"/>
+      </net>
+      <net>
+         <source obj="chord_machine_2_1" outlet="Voice 3"/>
+         <dest obj="midi_outs_1" inlet="Chord Voice 3 Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Chord Voice 3"/>
+         <dest obj="arpeggiator_1_1" inlet="Voice 3 input"/>
+      </net>
+      <net>
+         <source obj="chord_machine_2_1" outlet="Voice 2"/>
+         <dest obj="midi_outs_1" inlet="Chord Voice 2 Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Chord Voice 2"/>
+         <dest obj="arpeggiator_1_1" inlet="Voice 2 input"/>
+      </net>
+      <net>
+         <source obj="chord_machine_2_1" outlet="Voice 1"/>
+         <dest obj="midi_outs_1" inlet="Chord Voice 1 Note"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Chord Voice 1"/>
+         <dest obj="arpeggiator_1_1" inlet="Voice 1 input"/>
+      </net>
+      <net>
+         <source obj="rndAB_6" outlet="B"/>
+         <dest obj="pulselength_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="pulselength_1" outlet="pulse"/>
+         <dest obj="midi_outs_1" inlet="Bass Gate"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Bass Gate"/>
+      </net>
+      <net>
+         <source obj="pulselength_3" outlet="pulse"/>
+         <dest obj="midi_outs_1" inlet="Chord Gate"/>
+         <dest obj="6 Voice Simple Saw Choir" inlet="Chord Gate"/>
+      </net>
+      <net>
+         <source obj="rndAB_7" outlet="B"/>
+         <dest obj="pulselength_3" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="and_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="and_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="Random Voicing_" outlet="v"/>
+         <dest obj="i8ms_1" inlet="s"/>
+         <dest obj="3rd" inlet="in"/>
+         <dest obj="5th" inlet="in"/>
+         <dest obj="7th" inlet="in"/>
+         <dest obj="b6" inlet="in"/>
+         <dest obj="b2" inlet="in"/>
+         <dest obj="#4" inlet="in"/>
+         <dest obj="i_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="counter_1" outlet="c"/>
+         <dest obj="Random Voicing_" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="i8ms_1" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Pitch offset Ext"/>
+      </net>
+      <net>
+         <source obj="3rd" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Flatten 3rd Ext"/>
+      </net>
+      <net>
+         <source obj="5th" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Flatten 5th Ext"/>
+      </net>
+      <net>
+         <source obj="7th" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Flatten 7th Ext"/>
+      </net>
+      <net>
+         <source obj="b6" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Flatten 6th Ext"/>
+      </net>
+      <net>
+         <source obj="b2" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Flatten 2nd Ext"/>
+      </net>
+      <net>
+         <source obj="#4" outlet="o"/>
+         <dest obj="chord_machine_2_1" inlet="Sharpen 4th Ext"/>
+      </net>
+      <net>
+         <source obj="6 Voice Simple Saw Choir" outlet="L Out"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="6 Voice Simple Saw Choir" outlet="R Out"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-4</x>
+      <y>-4</y>
+      <width>1608</width>
+      <height>880</height>
+   </windowPos>
+</patch-1.0>

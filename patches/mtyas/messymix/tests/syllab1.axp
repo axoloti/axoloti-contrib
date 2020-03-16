@@ -1,0 +1,202 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="42" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="table/alloc 16b sdram load" uuid="e6b85dad3ab43565cda93ea4c43c73b668b1cd43" name="syl1" x="364" y="126">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="2097152"/>
+         <file attributeName="filename" file="C:\Users\matth_000\Documents\axoloti\WaveTables\sylab1.raw"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="b5f40927-2ed3-41b7-b57d-5fd756d971f6" name="patcher_1" x="28" y="224">
+      <params>
+         <frac32.u.map name="+c_1" value="0.05000000074505806"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="7"/>
+         <combo attributeName="midichannel" selection="7"/>
+         <combo attributeName="mididevice" selection="omni"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="574" y="28">
+            <params>
+               <frac32.s.map name="a" value="-64.0"/>
+               <frac32.s.map name="d" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="126" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="rand/uniform f trig" uuid="223873125a332e3b8a82795a3eef167993adb086" name="uniform_1" x="238" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/round" uuid="d0382003e049112e1746390d691d052ae1294db" name="round_1" x="364" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_1" x="448" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/inv" uuid="565521d3699b36d8095aa1c79b9ad0046fb133ce" name="inv_2" x="238" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="timer/delayedpulsedurationm" uuid="baa42acddc0dd015f9d2fc2a517295a7060e5e5" name="delayedpulsedurationm_1" x="308" y="140">
+            <params>
+               <frac32.s.map name="delay" value="-64.0"/>
+               <frac32.s.map name="pulselength" value="21.699999809265137"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="logic/inv" uuid="2bd44b865d3b63ff9b80862242bf5be779e3ad5" name="inv_1" x="490" y="140">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="table/play pitch" uuid="5632a54926261833bbb9fff049e71322c360e57e" name="play_1" x="588" y="140">
+            <params>
+               <frac32.s.map name="pitch" value="5.0"/>
+            </params>
+            <attribs>
+               <objref attributeName="table" obj="../syl1"/>
+            </attribs>
+         </obj>
+         <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="532" y="196">
+            <params>
+               <frac32.u.map name="c" onParent="true" value="0.009999999776482582"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="574" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="644" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="uniform_1" outlet="rand"/>
+               <dest obj="round_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="bipolar2unipolar_1" outlet="o"/>
+               <dest obj="+c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="round_1" outlet="out"/>
+               <dest obj="bipolar2unipolar_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate2"/>
+               <dest obj="uniform_1" inlet="trig"/>
+               <dest obj="delayedpulsedurationm_1" inlet="trig"/>
+               <dest obj="ad_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="play_1" inlet="pitch"/>
+               <dest obj="inv_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="delayedpulsedurationm_1" outlet="pulse"/>
+               <dest obj="play_1" inlet="start"/>
+               <dest obj="inv_1" inlet="i"/>
+            </net>
+            <net>
+               <source obj="inv_1" outlet="o"/>
+               <dest obj="play_1" inlet="stop"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="velocity"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="inv_2" outlet="out"/>
+               <dest obj="delayedpulsedurationm_1" inlet="pulselength"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="play_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="+c_1" outlet="out"/>
+               <dest obj="play_1" inlet="pos"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1189</width>
+            <height>686</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="574" y="224">
+      <params>
+         <frac32.u.map name="amount" value="15.0"/>
+         <frac32.u.map name="time" value="26.0"/>
+         <frac32.u.map name="diffusion" value="33.0"/>
+         <frac32.u.map name="gain" value="14.0"/>
+         <frac32.u.map name="lowpass" value="38.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="714" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="reverb_1" inlet="r"/>
+         <dest obj="reverb_1" inlet="l"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>7</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author></Author>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>2576</width>
+      <height>1456</height>
+   </windowPos>
+</patch-1.0>

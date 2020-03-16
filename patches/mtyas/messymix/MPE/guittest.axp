@@ -1,0 +1,247 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/midi/in/procCC74" uuid="cc749235-5516-4640-9979-2f39ecccb608" name="procCC74_1" x="84" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="internal port 1"/>
+      </attribs>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="364" y="112">
+      <params>
+         <frac32.u.map name="value" value="1.3999996185302734"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_2" x="434" y="112">
+      <params>
+         <frac32.u.map name="value" value="35.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_3" x="504" y="112">
+      <params>
+         <frac32.u.map name="value" value="6.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <patcher type="patch/patcher" uuid="8c231d67-a51f-4bb7-87d6-9c3f808ba299" name="patcher_1" x="56" y="224">
+      <params>
+         <frac32.u.map name="plucked_1:timbre" value="38.5"/>
+         <frac32.u.map name="plucked_1:color" value="17.0"/>
+         <frac32.u.map name="gain_1" value="5.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="4"/>
+         <combo attributeName="midichannel" selection="inherit"/>
+         <combo attributeName="mididevice" selection="internal"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="tiar/midi/in/mpe sbrd rise" uuid="B4323477e6476a10b9332922e5dfcd2705641af1" name="mpe_1" x="84" y="294">
+            <params/>
+            <attribs>
+               <combo attributeName="initTimbreMode" selection="pre NoteOn"/>
+            </attribs>
+         </obj>
+         <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="252" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/plucked" uuid="e78bfbb5-2963-49a0-8863-dead044d748c" name="plucked_1" x="350" y="294">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" onParent="true" value="33.0"/>
+               <frac32.u.map name="color" onParent="true" value="21.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/d m" uuid="85e82f54dfc28839d300cda777af8907ae2a28d0" name="d_1" x="462" y="294">
+            <params>
+               <frac32.s.map name="d" value="64.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="560" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="630" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="delay/echo fdbk" uuid="1f4503fa4cd020010f59ce3ffa860caf0cd850c5" name="echo_1" x="700" y="294">
+            <params/>
+            <attribs>
+               <spinner attributeName="delaylength" value="1000"/>
+            </attribs>
+         </obj>
+         <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="826" y="294">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="36.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="dist/soft" uuid="e680d76a805e4866027cdf654c7efd8b2e54622" name="soft_1" x="938" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/half" uuid="b4330593dc69e981ea5f406c90dfcdafa533b535" name="half_1" x="1008" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1078" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="mpe_1" outlet="pitch"/>
+               <dest obj="plucked_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="-_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="plucked_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="velocity"/>
+               <dest obj="plucked_1" inlet="timbre"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="echo_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="gain_1" outlet="out"/>
+               <dest obj="soft_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="initTimbre"/>
+               <dest obj="-_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="-_1" outlet="out"/>
+               <dest obj="plucked_1" inlet="color"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="gate2"/>
+               <dest obj="plucked_1" inlet="strike"/>
+               <dest obj="d_1" inlet="trig"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="d_1" outlet="env"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="*_1" inlet="b"/>
+               <dest obj="echo_1" inlet="feedback"/>
+            </net>
+            <net>
+               <source obj="soft_1" outlet="out"/>
+               <dest obj="half_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="echo_1" outlet="out"/>
+               <dest obj="gain_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="half_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyexpression</subpatchmode>
+            <MidiChannel>2</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1311</width>
+            <height>1002</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="252" y="224">
+      <params>
+         <frac32.s.map name="pitch" value="20.0"/>
+         <frac32.u.map name="reso" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mtyas/delay/long-delay" uuid="6e9aa055-33bd-42b8-a7df-9bb4cefd1bbc" name="obj_1" x="406" y="224">
+      <params>
+         <frac32.s.map name="lowpass_1" value="-53.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/dist/softComp" uuid="062a4db6-b35d-4638-a0fd-f3668746b611" name="softComp_1" x="560" y="224">
+      <params>
+         <frac32.u.map name="pre" value="12.5"/>
+         <frac32.u.map name="tresh" value="14.5"/>
+         <frac32.u.map name="soft" value="13.0"/>
+         <frac32.u.map name="ratio" value="58.0"/>
+         <frac32.u.map name="out" value="35.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="742" y="224">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="vcf3_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="softComp_1" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="vcf3_1" outlet="out"/>
+         <dest obj="obj_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="obj_1" outlet="outlet_1"/>
+         <dest obj="softComp_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="obj_1" inlet="speed"/>
+      </net>
+      <net>
+         <source obj="dial_3" outlet="out"/>
+         <dest obj="obj_1" inlet="amount"/>
+      </net>
+      <net>
+         <source obj="dial_2" outlet="out"/>
+         <dest obj="obj_1" inlet="feedback"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>333</x>
+      <y>264</y>
+      <width>1867</width>
+      <height>1068</height>
+   </windowPos>
+</patch-1.0>

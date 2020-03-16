@@ -1,0 +1,101 @@
+<patch-1.0 appVersion="1.0.11">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="294" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="3.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="*c_1" x="406" y="42">
+      <params>
+         <frac32.u.map name="amp" value="13.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jt/tuning/hammond" uuid="11fa8b6d-8b8e-489f-875e-54ba999bfaa1" name="hammond_1" x="154" y="84">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="854" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="jt/drawbars/switched" uuid="6b06b1dd-7e6d-40e5-8dc6-4c1e5ebf94e0" name="switched_1" x="154" y="140">
+      <params>
+         <frac32.u.map name="velosense" value="0.0"/>
+         <frac32.u.map name="f1" value="54.0"/>
+         <frac32.u.map name="f2" value="23.5"/>
+         <frac32.u.map name="f3" value="36.5"/>
+         <frac32.u.map name="f4" value="23.0"/>
+         <frac32.u.map name="f5" value="19.0"/>
+         <frac32.u.map name="f6" value="20.0"/>
+         <frac32.u.map name="f7" value="22.5"/>
+         <frac32.u.map name="f8" value="19.0"/>
+         <frac32.u.map name="f9" value="17.5"/>
+      </params>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <obj type="jt/tonewheels/tri dpw phasing" uuid="8b37e808-719b-4bec-9d45-2866af75a7ef" name="tri_1" x="378" y="140">
+      <params>
+         <frac32.s.map name="phase" value="0.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="amplitudes" obj="switched_1"/>
+         <objref attributeName="tuning" obj="hammond_1"/>
+      </attribs>
+   </obj>
+   <obj type="sss/filter/damper" uuid="8b26b890-a195-46af-b275-0d04dbfcf363" name="damper_1" x="560" y="140">
+      <params>
+         <frac32.u.map name="damp" value="43.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="jho/stomp/leslie" uuid="a8bc5ed0-190e-41d1-bd57-a7242bdb432e" name="obj_1" x="672" y="140">
+      <params>
+         <frac32.s.map name="speed" value="-30.0"/>
+         <frac32.u.map name="depth" value="14.5"/>
+         <frac32.s.map name="offset" value="-39.0"/>
+         <frac32.u.map name="wobble" value="2.0"/>
+         <frac32.s.map name="xover1" value="64.0"/>
+         <frac32.s.map name="xover2" value="38.0"/>
+         <frac32.u.map name="blend" value="12.0"/>
+         <bool32.tgl name="on" value="1"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="obj_1" outlet="outlet_1"/>
+         <dest obj="out_1" inlet="right"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="tri_1" inlet="phase"/>
+      </net>
+      <net>
+         <source obj="damper_1" outlet="out"/>
+         <dest obj="obj_1" inlet="inlet_1"/>
+      </net>
+      <net>
+         <source obj="tri_1" outlet="wave"/>
+         <dest obj="damper_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>788</x>
+      <y>149</y>
+      <width>1372</width>
+      <height>1003</height>
+   </windowPos>
+</patch-1.0>

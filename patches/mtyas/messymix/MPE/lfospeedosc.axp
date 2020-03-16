@@ -1,0 +1,239 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/midi/in/procCC74" uuid="cc749235-5516-4640-9979-2f39ecccb608" name="procCC74_1" x="84" y="28">
+      <params/>
+      <attribs>
+         <combo attributeName="device" selection="internal port 1"/>
+      </attribs>
+   </obj>
+   <patcher type="patch/patcher" uuid="b6a20291-f289-46b9-b633-34255e695480" name="patcher_1" x="56" y="224">
+      <params>
+         <frac32.s.map name="saw_1" value="7.623682975769043"/>
+         <frac32.s.map name="saw_2" value="-4.376316547393799"/>
+         <frac32.u.map name="sinefold_1:timbre" value="0.0"/>
+         <frac32.s.map name="vcf3_1:pitch" value="0.0"/>
+         <frac32.u.map name="trianglefold_1:timbre" value="0.0"/>
+         <frac32.s.map name="lowpass_1" value="15.0"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="5"/>
+         <combo attributeName="midichannel" selection="inherit"/>
+         <combo attributeName="mididevice" selection="internal"/>
+         <combo attributeName="midiport" selection="omni"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="lfo/saw down" uuid="d831d6b82b3d559c3ba7b1b487fb292d7998fd08" name="saw_1" x="504" y="126">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="lfo/saw down" uuid="d831d6b82b3d559c3ba7b1b487fb292d7998fd08" name="saw_2" x="238" y="140">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="-15.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="728" y="182">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="tiar/midi/in/mpe sbrd rise" uuid="B4323477e6476a10b9332922e5dfcd2705641af1" name="mpe_1" x="84" y="294">
+            <params/>
+            <attribs>
+               <combo attributeName="initTimbreMode" selection="post NoteOn"/>
+            </attribs>
+         </obj>
+         <obj type="math/-" uuid="3280bb759e9fc189e134300e48dda7e903c9a110" name="-_1" x="252" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/sinefold" uuid="31f491d0-217b-46d6-9f6b-05dfee4fb6b2" name="sinefold_1" x="350" y="294">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="timbre" onParent="true" value="33.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="588" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/half" uuid="b4330593dc69e981ea5f406c90dfcdafa533b535" name="half_1" x="658" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="filter/vcf3" uuid="92455c652cd098cbb682a5497baa18abbf2ef865" name="vcf3_1" x="728" y="294">
+            <params>
+               <frac32.s.map name="pitch" onParent="true" value="0.0"/>
+               <frac32.u.map name="reso" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="osc/brds/trianglefold" uuid="8e4b08de-947e-4c8b-940d-48e51aa96e94" name="trianglefold_1" x="826" y="294">
+            <params>
+               <frac32.s.map name="pitch" value="12.0"/>
+               <frac32.u.map name="timbre" onParent="true" value="12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_2" x="938" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/+" uuid="faedbea4612d9bd3644d6d3bf31946d848a70e19" name="+_1" x="1022" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="1106" y="294">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="238" y="350">
+            <params>
+               <frac32.s.map name="freq" onParent="true" value="-14.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="546" y="364">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="mpe_1" outlet="pitch"/>
+               <dest obj="trianglefold_1" inlet="pitch"/>
+               <dest obj="sinefold_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="timbre"/>
+               <dest obj="-_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="sinefold_1" outlet="wave"/>
+               <dest obj="vca_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="initTimbre"/>
+               <dest obj="-_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="pressure"/>
+               <dest obj="lowpass_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="lowpass_1" outlet="out"/>
+               <dest obj="unipolar2bipolar_1" inlet="i"/>
+               <dest obj="trianglefold_1" inlet="timbre"/>
+               <dest obj="*_3" inlet="b"/>
+            </net>
+            <net>
+               <source obj="mpe_1" outlet="gate"/>
+               <dest obj="saw_1" inlet="reset"/>
+            </net>
+            <net>
+               <source obj="half_1" outlet="out"/>
+               <dest obj="vcf3_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="vca_1" outlet="o"/>
+               <dest obj="half_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="+_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="vcf3_1" outlet="out"/>
+               <dest obj="+_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="trianglefold_1" outlet="wave"/>
+               <dest obj="vca_2" inlet="a"/>
+            </net>
+            <net>
+               <source obj="vca_2" outlet="o"/>
+               <dest obj="+_1" inlet="in2"/>
+            </net>
+            <net>
+               <source obj="-_1" outlet="out"/>
+               <dest obj="saw_1" inlet="pitch"/>
+               <dest obj="saw_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="*_3" outlet="result"/>
+               <dest obj="vca_2" inlet="v"/>
+            </net>
+            <net>
+               <source obj="saw_2" outlet="wave"/>
+               <dest obj="sinefold_1" inlet="timbre"/>
+               <dest obj="vca_1" inlet="v"/>
+            </net>
+            <net>
+               <source obj="unipolar2bipolar_1" outlet="o"/>
+               <dest obj="vcf3_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="saw_1" outlet="wave"/>
+               <dest obj="*_3" inlet="a"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyexpression</subpatchmode>
+            <MidiChannel>2</MidiChannel>
+            <HasMidiChannelSelector>true</HasMidiChannelSelector>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Author></Author>
+            <Saturate>true</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>1933</width>
+            <height>1273</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="fx/rngs/reverb" uuid="bb0fb9e0-aafe-4501-ba83-897f2530751d" name="reverb_1" x="336" y="224">
+      <params>
+         <frac32.u.map name="amount" value="17.5"/>
+         <frac32.u.map name="time" value="18.0"/>
+         <frac32.u.map name="diffusion" value="23.0"/>
+         <frac32.u.map name="gain" value="17.5"/>
+         <frac32.u.map name="lowpass" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="686" y="266">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="reverb_1" inlet="r"/>
+         <dest obj="reverb_1" inlet="l"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="l"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="reverb_1" outlet="r"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>604</x>
+      <y>550</y>
+      <width>1867</width>
+      <height>1068</height>
+   </windowPos>
+</patch-1.0>

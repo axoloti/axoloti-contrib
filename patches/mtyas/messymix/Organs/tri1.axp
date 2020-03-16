@@ -1,0 +1,142 @@
+<patch-1.0 appVersion="1.0.11">
+   <comment type="patch/comment" x="14" y="14" text="multi saw wave organ"/>
+   <obj type="midi/in/bend" uuid="7bd8cace52a8c26ed61d80f65e238408d5d621f4" name="bend_1" x="252" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="336" y="14">
+      <params>
+         <frac32.u.map name="gain1" value="2.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="434" y="14" text="bend"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="vibratospeed" x="14" y="126">
+      <params>
+         <frac32.u.map name="value" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/div 4" uuid="507955275561b256e540f7205386d31545a2828f" name="div_2" x="84" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="154" y="126">
+      <params>
+         <frac32.s.map name="pitch" value="4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/div 128" uuid="7e534ce0f62b1fddbad78a797d8c10c8d1a0b812" name="div_1" x="252" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_2" x="336" y="126">
+      <params>
+         <frac32.u.map name="gain1" MidiCC="1" value="28.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="434" y="126" text="vibrato"/>
+   <obj type="jt/tuning/hammond" uuid="11fa8b6d-8b8e-489f-875e-54ba999bfaa1" name="plop" x="504" y="126">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="280" y="266" text="LOTs of saw waves!"/>
+   <obj type="jt/drawbars/switched" uuid="6b06b1dd-7e6d-40e5-8dc6-4c1e5ebf94e0" name="switched_1" x="28" y="308">
+      <params>
+         <frac32.u.map name="velosense" value="8.0"/>
+         <frac32.u.map name="f1" value="46.0"/>
+         <frac32.u.map name="f2" value="46.5"/>
+         <frac32.u.map name="f3" value="40.5"/>
+         <frac32.u.map name="f4" value="24.5"/>
+         <frac32.u.map name="f5" value="28.0"/>
+         <frac32.u.map name="f6" value="19.5"/>
+         <frac32.u.map name="f7" value="21.5"/>
+         <frac32.u.map name="f8" value="13.0"/>
+         <frac32.u.map name="f9" value="10.5"/>
+      </params>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <obj type="jt/env/table/r" uuid="54152b22-8950-4963-bef3-a6abab0a76d8" name="r_1" x="154" y="322">
+      <params>
+         <frac32.s.map name="release" value="-28.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="input" obj="switched_1"/>
+      </attribs>
+   </obj>
+   <obj type="jt/tonewheels/tri dpw phasing" uuid="8b37e808-719b-4bec-9d45-2866af75a7ef" name="tri_1" x="294" y="462">
+      <params>
+         <frac32.s.map name="phase" value="-27.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="amplitudes" obj="r_1"/>
+         <objref attributeName="tuning" obj="plop"/>
+      </attribs>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_2" x="504" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="jt/tonewheels/tri dpw" uuid="5af710ec-399c-4e69-b0d3-fc2b3701a163" name="tri_2" x="294" y="588">
+      <params>
+         <frac32.s.map name="phase" value="19.0"/>
+      </params>
+      <attribs>
+         <objref attributeName="amplitudes" obj="r_1"/>
+         <objref attributeName="tuning" obj="plop"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="mix_2" inlet="bus_in"/>
+      </net>
+      <net>
+         <source obj="bend_1" outlet="bend"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="div_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="div_2" outlet="out"/>
+         <dest obj="sine_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="vibratospeed" outlet="out"/>
+         <dest obj="div_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="div_1" outlet="out"/>
+         <dest obj="mix_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="tri_1" outlet="wave"/>
+         <dest obj="out_2" inlet="left"/>
+      </net>
+      <net>
+         <source obj="mix_2" outlet="out"/>
+         <dest obj="plop" inlet="detune"/>
+      </net>
+      <net>
+         <source obj="tri_2" outlet="wave"/>
+         <dest obj="out_2" inlet="right"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>-8</x>
+      <y>-8</y>
+      <width>1936</width>
+      <height>1096</height>
+   </windowPos>
+</patch-1.0>
