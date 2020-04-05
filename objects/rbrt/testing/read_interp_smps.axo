@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="read_interp_smps" uuid="4435a11a-e23e-4a66-8802-2ba7a3d4737e">
+      <sDescription>read from table, linear interpolated</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <frac32buffer.positive name="smps" description="index in fraction of table size"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="table[a]"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="wave"/>
+      </attribs>
+      <code.srate><![CDATA[uint32_t asat = inlet_smps << (27-attr_wave.LENGTHPOW);
+   int32_t y1 = attr_wave.array[inlet_smps&attr_wave.LENGTHMASK]<<attr_wave.GAIN;
+   int32_t y2 = attr_wave.array[(inlet_smps+1)&attr_wave.LENGTHMASK]<<attr_wave.GAIN;
+   int frac = (asat - (inlet_smps<<(27-attr_wave.LENGTHPOW)))<<(attr_wave.LENGTHPOW+3);
+   int32_t rr;
+   rr = ___SMMUL(y1,(1<<30)-frac);
+   rr = ___SMMLA(y2,frac,rr); 
+   outlet_wave= rr<<2;]]></code.srate>
+   </obj.normal>
+</objdefs>

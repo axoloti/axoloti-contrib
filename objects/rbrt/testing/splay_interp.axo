@@ -1,0 +1,70 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="splay_interp" uuid="ba58980f-3749-466e-b40d-fe6a329a781f">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ldrive.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset"/>
+         <int32.positive name="range"/>
+         <frac32.bipolar name="direction"/>
+         <frac32.positive name="transpose" description="tansposition in semi-notes"/>
+         <bool32.risingfalling name="play" description="toggle playback"/>
+         <bool32.rising name="reset" description="reset to &apos;offset&apos; "/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="wave" description="position inside table"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="wave" description="table to index"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t index;
+uint8_t i_shift;
+int32_t i_inc;
+uint16_t l_div;
+bool play;
+bool rro;
+uint8_t shift;]]></code.declaration>
+      <code.init><![CDATA[uint8_t t_length = ((22-attr_wave.LENGTHPOW)>2) ? 2 : 22-attr_wave.LENGTHPOW;
+l_div = 1428 >> t_length;
+i_shift = 9 + t_length;
+shift = 27-attr_wave.LENGTHPOW;]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(inlet_transpose-(1 <<27) ,i_inc);
+i_inc = ___SMMUL(i_inc ,inlet_direction)<<5;
+i_inc = i_inc / l_div;
+
+if (inlet_play && !play) {
+	play = 1;
+	index = 0;
+	}
+if (!inlet_play) play = 0;
+	
+if (inlet_reset && (!rro)) {
+ 	index = 0; 	
+     rro = 1;
+      }
+if (!inlet_reset) rro = 0;
+if (!inlet_range) play = 0;]]></code.krate>
+      <code.srate><![CDATA[int32_t pos = index>>i_shift;
+uint32_t outpos = pos + inlet_offset;
+
+//play recording interpolated
+uint32_t asat = outpos << shift;
+int32_t y1 = attr_wave.array[outpos & attr_wave.LENGTHMASK]<<attr_wave.GAIN;
+int32_t y2 = attr_wave.array[(outpos + 1) & attr_wave.LENGTHMASK]<<attr_wave.GAIN;
+int frac = (asat - (outpos <<shift))<<(attr_wave.LENGTHPOW+3);
+int32_t rr;
+rr = ___SMMUL(y1,(1<<30)-frac);
+rr = ___SMMLA(y2,frac,rr); 
+outlet_wave = (play) ? rr<<2:0;
+
+//range-limiting
+index += i_inc;
+if (i_inc > 0){
+      if (pos >= inlet_range) index = 0;
+      } 
+      else if (pos <= 0) index = inlet_range << i_shift;]]></code.srate>
+   </obj.normal>
+</objdefs>

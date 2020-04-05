@@ -1,0 +1,31 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slot_params_smps" uuid="fa67c76f-3e54-442f-8add-9ffd160aa915">
+      <sDescription>reference sample information created by &apos;smplr&apos;.
+&apos;slot&apos; sets the sample bank slot to refer to.
+&apos;offset&apos; returns the start of the slot in fraction of the table&apos;s size,
+&apos;range&apos; returns the length.
+&apos;playmode&apos; returns the playmode the slot has been recorded with.
+&apos;Aux&apos; returns auxiliary information,like the recording startpoint.</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>lpr.axh</helpPatch>
+      <inlets>
+         <int32 name="slot" description="read sample data of the set slot"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="offset"/>
+         <int32.positive name="range"/>
+         <int32.positive name="playmode" description="playmode"/>
+         <frac32.positive name="startpoint"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="lpr"/>
+      </attribs>
+      <code.krate><![CDATA[outlet_offset  = attr_lpr.array [inlet_slot << 2];
+outlet_range  = (attr_lpr.array [(inlet_slot << 2) + 1] - attr_lpr.array [inlet_slot << 2]);
+outlet_playmode = attr_lpr.array [(inlet_slot << 2 )+ 2] ;
+outlet_startpoint = attr_lpr.array [(inlet_slot << 2 )+ 3] ;]]></code.krate>
+   </obj.normal>
+</objdefs>

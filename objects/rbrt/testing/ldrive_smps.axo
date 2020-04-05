@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ldrive_smps" uuid="bc47c787-4ec2-4d37-8247-3fafb8b6d21a">
+      <sDescription>drives a phasor (saw-wave) for reading/writing data</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>ldrive.axh</helpPatch>
+      <inlets>
+         <int32.positive name="offset"/>
+         <int32.positive name="range"/>
+         <frac32.bipolar name="direction"/>
+         <frac32.positive name="transpose" description="tansposition in semi-notes"/>
+         <bool32.risingfalling name="play" description="toggle playback"/>
+         <bool32.rising name="reset" description="reset to &apos;offset&apos; "/>
+      </inlets>
+      <outlets>
+         <frac32buffer.positive name="smps" description="position inside table"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="wave" description="table to index"/>
+         <spinner name="direction" description="forward or reverse" MinValue="-64" MaxValue="64" DefaultValue="64"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t index;
+int32_t pos;
+uint8_t i_shift;
+int32_t i_inc;
+uint16_t l_div;
+bool play;
+bool rro;]]></code.declaration>
+      <code.init><![CDATA[uint8_t t_length = ((22-attr_wave.LENGTHPOW)>2) ? 2 : 22-attr_wave.LENGTHPOW;
+l_div = 1428 >> t_length;
+i_shift = 9 + t_length;]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(inlet_transpose-(1 <<27) ,i_inc);
+i_inc = ___SMMUL(i_inc ,inlet_direction)<<5;
+i_inc = i_inc / l_div;
+
+if (inlet_play && !play) {
+	play = 1;
+	index = 0;
+	}
+if (!inlet_play) play = 0;
+	
+if (inlet_reset && (!rro)) {
+ 	index = 0; 	
+     rro = 1;
+      }
+if (!inlet_reset) rro = 0;
+if (!inlet_range) play = 0;]]></code.krate>
+      <code.srate><![CDATA[pos = index>>i_shift;
+outlet_smps = (play) ? pos+inlet_offset:0;
+index += i_inc;
+if (i_inc > 0){
+      if (pos >= inlet_range) index = 0;
+      } 
+      else if (pos <= 0) index = inlet_range << i_shift;]]></code.srate>
+   </obj.normal>
+</objdefs>
