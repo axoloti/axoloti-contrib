@@ -1,4 +1,4 @@
-<objdefs appVersion="1.0.11">
+<objdefs appVersion="1.0.12">
    <obj.normal id="s2f mul" uuid="a1db8831-b059-4adb-bbc8-45354ee29585">
       <sDescription>converts samples to units suitable for setting the frequency of oscillators.
 the result is multiplied with inle &apos;mul&apos;.</sDescription>
@@ -15,9 +15,13 @@ the result is multiplied with inle &apos;mul&apos;.</sDescription>
       <displays/>
       <params/>
       <attribs/>
-      <code.krate><![CDATA[if (inlet_smps) {
-      outlet_freq = (___SMMUL(inlet_mul,(int)(281474976710656.f/(inlet_smps * (128<<3))))<<5);
-    } else
-        outlet_freq = 0;]]></code.krate>
+      <code.krate><![CDATA[uint32_t freq;
+
+if (inlet_smps) {	
+  if (inlet_smps < (1 <<21)) freq = (int)(281474976710656.f/(inlet_smps * (128<<3)));
+  		else freq = (281474976710656>>10)/((inlet_smps>>10) * (128<<3));
+  		outlet_freq = ___SMMUL(inlet_mul,freq)<<5;
+    } 
+else outlet_freq = 0;]]></code.krate>
    </obj.normal>
 </objdefs>

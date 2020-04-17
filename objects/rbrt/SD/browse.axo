@@ -1,13 +1,19 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="browse" uuid="4565504e-b26f-49b4-a159-95f29ee77023">
+   <obj.normal id="browse" uuid="d879a702-92ad-4dc8-878f-e4163fd87304">
+      <sDescription>returns the name of an index in a directory (if existing)
+&apos;filter&apos; specifies a filetype to filter.
+when &apos;filter&apos; is active, the returned name will have the filetype-extension removed.
+&apos;directory&apos; can be either &apos;root&apos; or &apos;local&apos;.
+&apos;thin&apos; limits how often you can ask for a name.</sDescription>
+      <author>Robert Schirmer</author>
       <license>GPL</license>
+      <helpPatch>SD.axh</helpPatch>
       <inlets>
          <int32.positive name="getIndex"/>
          <charptr32 name="filter"/>
       </inlets>
       <outlets>
-         <charptr32 name="NameFlt"/>
-         <charptr32 name="NameRaw"/>
+         <charptr32 name="name"/>
          <bool32.pulse name="trig"/>
       </outlets>
       <displays/>
@@ -16,33 +22,31 @@
          <objref name="SDapi"/>
          <combo name="directory">
             <MenuEntries>
-               <string>local</string>
                <string>root</string>
+               <string>local</string>
             </MenuEntries>
             <CEntries>
                <string>0</string>
                <string>1</string>
             </CEntries>
          </combo>
+         <spinner name="thin" MinValue="1" MaxValue="128" DefaultValue="32"/>
       </attribs>
       <code.declaration><![CDATA[int prev;
-char outflt [16];
-char outraw [16];
 uint8_t thin;]]></code.declaration>
       <code.krate><![CDATA[//browse
 outlet_trig = 0;
 if ((inlet_getIndex != prev)&& !thin){
 	prev = inlet_getIndex;
-	if (attr_directory) attr_SDapi.getdir ("/",inlet_filter,prev);
-	else attr_SDapi.getdir ("",inlet_filter,prev);
+	if (!attr_directory) attr_SDapi.getdir ("/",inlet_filter,prev);
+		else attr_SDapi.getdir ("",inlet_filter,prev);
+	
 	if (strlen(attr_SDapi.fname_flt)){
+	outlet_name = &attr_SDapi.fname_flt[0];
 	outlet_trig = 1;
-	strcpy (outflt,attr_SDapi.fname_flt);
-	strcpy (outraw,attr_SDapi.fname_raw);
 	} 
 }
-outlet_NameFlt = &outflt[0];
-outlet_NameRaw = &outraw[0];
-thin ++;]]></code.krate>
+thin ++;
+thin = thin % attr_thin;]]></code.krate>
    </obj.normal>
 </objdefs>

@@ -1,13 +1,17 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="save load table" uuid="d46c1024-7725-4001-8232-71e0f20bfb14">
-      <sDescription>saves/loads an entire table to SD-card</sDescription>
+   <obj.normal id="save load table area" uuid="4324f1f6-fd3d-4d0c-b135-11b0643838bc">
+      <sDescription>saves an area of a table,specified by &apos;start&apos; and &apos;length&apos; , to SD-card.
+OR,loads a file from SD-card to a position specified by &apos;offset&apos;.</sDescription>
       <author>Robert Schirmer</author>
       <license>GPL</license>
       <helpPatch>SD.axh</helpPatch>
       <inlets>
          <charptr32 name="filename"/>
          <bool32.rising name="save"/>
+         <int32.positive name="start"/>
+         <int32.positive name="length"/>
          <bool32.rising name="load"/>
+         <int32.positive name="offset"/>
       </inlets>
       <outlets/>
       <displays/>
@@ -20,14 +24,14 @@
       <code.krate><![CDATA[if (inlet_load && !trig) {
 	trig = 1;
 	int filesize = attr_SDapi.fsize(inlet_filename);
-	int dstsize = attr_table.LENGTH * sizeof(*attr_table.array);
+	int dstsize = (attr_table.LENGTH - inlet_offset) * sizeof(*attr_table.array);
 	int rem_sz = (filesize > dstsize) ? dstsize : filesize;
-	attr_SDapi.fload(inlet_filename,(char *) &attr_table.array[0],rem_sz);
+	attr_SDapi.fload(inlet_filename,(char *) &attr_table.array[inlet_offset],rem_sz);
 		}
 if (inlet_save && !trig) {
 	trig = 1;
-	int rem_sz = attr_table.LENGTH * sizeof(*attr_table.array);
-	attr_SDapi.fsave(inlet_filename,(char *) &attr_table.array[0],rem_sz);
+	int rem_sz = inlet_length * sizeof(*attr_table.array);
+	attr_SDapi.fsave(inlet_filename,(char *) &attr_table.array[inlet_start],rem_sz);
 	}
 
 if (!inlet_load && !inlet_save) trig = 0;]]></code.krate>

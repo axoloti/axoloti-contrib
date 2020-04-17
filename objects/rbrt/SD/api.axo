@@ -1,6 +1,11 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="api" uuid="b7186964-e120-4dc5-aebf-2419999e987a">
+   <obj.normal id="api" uuid="508e3395-d5a8-4fb8-9b92-7370cbce97ee">
+      <sDescription>..contains several functions and references to libraries that handle SD-card IO.
+all put into one object to save precious SRAM.
+called &apos;api&apos; because the functions can be &apos;called&apos; from outside.</sDescription>
+      <author>Robert Schirmer</author>
       <license>GPL</license>
+      <helpPatch>SD.axh</helpPatch>
       <inlets/>
       <outlets/>
       <displays/>
@@ -17,9 +22,8 @@ UINT bytes_written;
 UINT bytes_read;
 
 char fname_flt [16];
-char fname_raw [16];
 
-// load file from SD:: fload (filename,destination table adress,start index,length)
+// load file from SD:: fload (filename,destination table adress,length)
 void fload (const char* fn ,char* table,int bytes_rem)__attribute__((noinline)) {
     err = f_open(&FileObject, fn, FA_READ | FA_OPEN_EXISTING);
     if (err != FR_OK) { report_fatfs_error(err,fn);return;}
@@ -41,7 +45,7 @@ void fload (const char* fn ,char* table,int bytes_rem)__attribute__((noinline)) 
     err = f_close(&FileObject);
 }
 
-//save array to SD::fsave (filename,source table adress,start index,length)
+//save array to SD::fsave (filename,source table adress,length)
 void fsave(const char* fn,char* table,int bytes_rem)__attribute__((noinline)) {
     err = f_open(&FileObject, fn, FA_WRITE | FA_CREATE_ALWAYS);
     if (err != FR_OK) {report_fatfs_error(err,fn);return;}
@@ -77,7 +81,6 @@ int fsize (const char* fn) __attribute__((noinline)){
        
 void getdir (const char* path,const char* filter,int start_index)__attribute__((noinline)){
 	memset (&fname_flt[0],0,16);
-	memset (&fname_raw[0],0,16);
 	int count = -1;
 	int fltlen = strlen (filter);
 	f_opendir(&dir,path);
@@ -85,12 +88,13 @@ void getdir (const char* path,const char* filter,int start_index)__attribute__((
 			err = f_readdir(&dir, &fno);			
 			if (err != FR_OK || fno.fname[0] == 0) break;
 				int filelen = strlen (fno.fname);
-				if (!memcmp (&filter[0],&fno.fname[filelen-fltlen],fltlen)||!strlen(filter)){
-					count ++;
-					if (count == start_index) {
-						memcpy(&fname_flt[0],fno.fname,filelen-fltlen);
-						memcpy(&fname_raw[0],fno.fname,filelen-fltlen);				
-						}
+				if (filelen > 2){
+				if (!memcmp (&filter[0],&fno.fname[filelen-fltlen],fltlen)){
+						count ++;
+						if (count == start_index) {
+							memcpy(&fname_flt[0],fno.fname,filelen-fltlen);			
+							}
+					}
 				}
 		}
 }
