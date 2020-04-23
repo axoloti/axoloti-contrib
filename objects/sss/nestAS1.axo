@@ -1,0 +1,95 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="nestAS1" uuid="18bcca4b-8817-46fd-b3e3-5a181b0a15a6">
+      <sDescription>modulatable nested scatter/allpass function for delaylines.
+Can be used with the factory delayline module to add diffusion to a delay</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="size"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="scatter"/>
+         <frac32.u.map name="size"/>
+         <int32.hradio name="mode" description="off,scatter,allpass">
+            <MaxValue i="3"/>
+         </int32.hradio>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <objref name="delayname"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t scatter=__USAT(param_scatter,27)<<4;
+int32_t wp=0;
+
+int32_t POS=attr_delayname.writepos-BUFSIZE-1-1;]]></code.krate>
+      <code.srate><![CDATA[if(param_mode>0){
+int32_t sz=__USAT(param_size+inlet_size,27);
+int32_t size=sz>>27-LENGTHPOW;
+int32_t mix=((uint32_t)sz<<5+LENGTHPOW)>>1;
+
+int32_t in=attr_delayname.array[POS]<<14;
+int32_t t1,t2,t3;
+t2=___SMMUL(in,scatter)<<1;
+t3=array[(writepos-size)&LENGTHMASK]<<14;
+t3+=___SMMUL((array[(writepos-size)&LENGTHMASK]<<14)-t3,mix)<<1;
+t1=___SMMUL(t3,scatter)<<1;
+
+array[writepos] = __SSAT(in+(param_mode>1?0:t2)-t1>>14,16);
+if(param_mode==1){
+attr_delayname.array[POS] = __SSAT(t2+t3-t1>>14,16);
+}
+else{
+attr_delayname.array[POS]=__SSAT(___SMMUL(in-t1<<1,scatter)+t3>>14,16);
+}
+
+writepos = (writepos + 1)&LENGTHMASK;
+POS=(POS+1)&attr_delayname.LENGTHMASK;
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

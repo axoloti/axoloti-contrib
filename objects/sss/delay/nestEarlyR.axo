@@ -1,0 +1,107 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="nestEarlyR" uuid="cd7b9d0e-699b-4137-aa1c-d02aa4bc0304">
+      <sDescription>Nested early reflections module.
+Put the name of a delayline module into the reference box to add early reflections to the delayline.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="spread" description="main spread size of delaytimes"/>
+         <frac32.s.map name="expo" description="exponential spreading of delaytimes"/>
+         <frac32.s.map name="curve" description="S-curve/inv-S-curve spreading of delaytimes"/>
+         <frac32.s.map name="damp" description="volume shape of early reflections"/>
+         <frac32.s.map name="vol" description="main volume reflections"/>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <objref name="delay"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t d[3],t[3];
+for(int i=0;i<3;i++)
+{
+	
+	int32_t T=(1<<25)*(1+i);
+	T=T+((i-1)*param_curve>>2);
+	if(param_expo>0)
+	{
+		T+=___SMMUL((1<<27)-T,param_expo)<<5;
+	}
+	else
+	{
+		T-=___SMMUL(T,-param_expo)<<5;
+	}
+
+	t[i]=___SMMUL(param_spread,T)>>22-LENGTHPOW;
+
+	int32_t D=param_vol;
+	if(i==0)
+	{
+		D-=___SMMUL(D,param_damp+(1<<27))<<3;
+	}
+	else if(i==1)
+	{
+		D=___SMMUL(D,(1<<28)-((param_damp>0?param_damp:-param_damp)>>1))<<4;
+	}
+	else
+	{
+		D-=___SMMUL(D,-param_damp+(1<<27))<<3;
+	}
+	d[i]=D;
+}
+
+int32_t POS=attr_delay.writepos-BUFSIZE-2;]]></code.krate>
+      <code.srate><![CDATA[array[writepos] = __SSAT(inlet_in>>14,16);
+
+
+attr_delay.array[(POS)&attr_delay.LENGTHMASK]=__SSAT((___SMMUL(array[(writepos-t[0])&LENGTHMASK]<<5,d[0])+___SMMUL(array[(writepos-t[1])&LENGTHMASK]<<5,d[1])+___SMMUL(array[(writepos-t[2])&LENGTHMASK]<<5,d[2]))+attr_delay.array[(POS)&attr_delay.LENGTHMASK],16);
+POS=(POS+1)&attr_delay.LENGTHMASK;writepos = (writepos + 1)&LENGTHMASK;]]></code.srate>
+   </obj.normal>
+</objdefs>

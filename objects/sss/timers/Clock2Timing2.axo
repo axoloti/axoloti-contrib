@@ -1,0 +1,121 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="Clock2Timing2" uuid="bfd600cf-4668-44ce-8d0e-6e0e42f637d1">
+      <sDescription>Version2 of the clock2timing module
+This version should take care of some alliasing issues at steady tempo while still being fast in updating at tempo changes.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="trig" description="trigger"/>
+         <int32 name="lengthpow" description="input"/>
+         <frac32 name="startrate"/>
+      </inlets>
+      <outlets>
+         <int32 name="samples" description="output"/>
+         <frac32 name="pitch"/>
+         <frac32 name="freq"/>
+         <frac32 name="delay"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int ntrig,cnt, tm[2][3],tw,sum;
+int32_t DO;
+
+int32_t LOG(int32_t in){
+	Float_t f;
+f.f = in;
+int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+r1 += r3;
+return r1;
+
+}
+
+
+int32_t FTOM(int32_t freq){
+	int32_t ptch;
+	int32_t mid;
+MTOFEXTENDED(0,mid);
+mid=LOG(mid);
+
+int32_t to;
+to=LOG(freq<<2);
+return ptch=(to-mid>>1)*3;
+};]]></code.declaration>
+      <code.init><![CDATA[DO=1;
+for(int i=0;i<3;i++)
+{
+	tm[0][i]=(1<<12);
+	tm[1][i]=(1<<12);
+}
+cnt=1<<12;
+sum=1<<12;]]></code.init>
+      <code.krate><![CDATA[/*get sample count and store it
+ * at first two triggers it starts at a fixed rate to prevent division by zero
+ * after this the rate is calculated based on two things:
+ * 1. does the samplecount change more then 2? Then it's no alliasing problem and the length is immediatly updating
+ * 2. if the samplecount doesn't change or changes by 1 sample, it's probably alliasing and an averaging algorithm is used.
+ *    this algorithm takes the average of the last 3 lengths TWICE, as even the first average might still fluctuate
+ *    the second averaging makes sure it's closest to it's actual rate
+ */
+
+if ((inlet_trig>0) && !ntrig)
+{
+	
+	ntrig=1;
+	if(DO>0)
+	{
+		int32_t sr;
+		MTOF(inlet_startrate,sr)
+		sr=((uint64_t)1<<34)/sr;
+		for(int i=0;i<3;i++)
+		{
+			tm[0][i]=sr;
+			tm[1][i]=sr;
+			sum=sr;
+		}
+		DO+=1;
+		if(DO>1)
+		{
+			DO=0;
+		}
+	}
+	else
+	{
+		int dif=sum-cnt;
+		dif=dif>0?dif:-dif;
+		if(dif>2)
+		{
+			for(int i=0;i<3;i++)
+			{
+				tm[0][i]=cnt;
+				tm[1][i]=cnt;
+				sum=cnt;
+			}
+		}
+		else{
+		tw=(tw+1)%3;
+		for(int i=0;i<2;i++){//average twice, first the actual countlength input, then the averaged countlength
+		tm[i][tw] = i>0?sum:cnt;
+		sum=(tm[i][0]+tm[i][1]+tm[i][2])/3;
+		}
+		}
+
+		
+	}
+	cnt=0;
+}
+else if (!(inlet_trig>0)) {ntrig=0;}
+
+//increment counting to get how many k-rate samples it takes till next trigger
+cnt+=1;
+
+//use the averaged countlength and calculate the timings for lfo's and delays
+int32_t freq=((uint64_t)1<<32)/sum;
+outlet_samples=sum;
+outlet_delay=sum<<27-inlet_lengthpow;
+outlet_freq=freq;
+outlet_pitch=FTOM(freq);]]></code.krate>
+   </obj.normal>
+</objdefs>

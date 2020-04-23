@@ -1,0 +1,131 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="nestAS4" uuid="ecdb52f8-6464-490c-a20d-36ee133af985">
+      <sDescription>modulatable nested scatter/allpass function for delaylines.
+Can be used with the factory delayline module to add diffusion to a delay</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>delay.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="size"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.u.map name="scatter"/>
+         <frac32.u.map name="size"/>
+         <int32.hradio name="mode" description="off,scatter,allpass">
+            <MaxValue i="3"/>
+         </int32.hradio>
+         <int32.hradio name="select">
+            <MaxValue i="4"/>
+         </int32.hradio>
+      </params>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>256 (5.33ms)</string>
+               <string>512 (10.66ms)</string>
+               <string>1024 (21.33ms)</string>
+               <string>2048 (42.66ms)</string>
+               <string>4096 (85.33ms)</string>
+               <string>8192 (170ms)</string>
+               <string>16384 (341ms)</string>
+               <string>32768 (682ms)</string>
+               <string>65536 (1.36s)</string>
+               <string>131072 (2.73s)</string>
+               <string>262144 (5.46s)</string>
+               <string>524288 (10.9s)</string>
+               <string>1048576 (21.8s)</string>
+               <string>2097152 (43.7s)</string>
+            </MenuEntries>
+            <CEntries>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+               <string>19</string>
+               <string>20</string>
+               <string>21</string>
+            </CEntries>
+         </combo>
+         <objref name="del1"/>
+         <objref name="del2"/>
+         <objref name="del3"/>
+         <objref name="del4"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+int16_t *array;
+uint32_t writepos;]]></code.declaration>
+      <code.init><![CDATA[static int16_t _array[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+array = &_array[parent->polyIndex][0];
+   int i;
+   writepos = 0;
+   for(i=0;i<LENGTH;i++) array[i] = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t scatter=__USAT(param_scatter,27)<<4;
+int32_t wp=0;
+
+int32_t POS;
+
+switch(param_select)
+{
+	case 0: POS=attr_del1.writepos-BUFSIZE-1-1; break;
+	case 1: POS=attr_del2.writepos-BUFSIZE-1-1; break;
+	case 2: POS=attr_del3.writepos-BUFSIZE-1-1; break;
+	case 3: POS=attr_del4.writepos-BUFSIZE-1-1; break;
+}]]></code.krate>
+      <code.srate><![CDATA[if(param_mode>0){
+int32_t sz=__USAT(param_size+inlet_size,27);
+int32_t size=sz>>27-LENGTHPOW;
+int32_t mix=((uint32_t)sz<<5+LENGTHPOW)>>1;
+
+int32_t in;
+switch(param_select)
+{
+	case 0:	in=attr_del1.array[POS]<<14;break;
+	case 1:	in=attr_del2.array[POS]<<14;break;
+	case 2:	in=attr_del3.array[POS]<<14;break;
+	case 3:	in=attr_del4.array[POS]<<14;break;
+}
+int32_t t1,t2,t3;
+t2=___SMMUL(in,scatter)<<1;
+t3=array[(writepos-size)&LENGTHMASK]<<14;
+t3+=___SMMUL((array[(writepos-size)&LENGTHMASK]<<14)-t3,mix)<<1;
+t1=___SMMUL(t3,scatter)<<1;
+
+array[writepos] = __SSAT(in+(param_mode>1?0:t2)-t1>>14,16);
+int32_t out;
+if(param_mode==1){
+	out = __SSAT(t2+t3-t1>>14,16);
+}
+else{
+	out=__SSAT(___SMMUL(in-t1<<1,scatter)+t3>>14,16);
+}
+
+switch(param_select)
+{
+	case 0: attr_del1.array[POS]=out; break;
+	case 1: attr_del2.array[POS]=out; break;
+	case 2: attr_del3.array[POS]=out; break;
+	case 3: attr_del4.array[POS]=out; break;
+}
+
+writepos = (writepos + 1)&LENGTHMASK;
+switch(param_select)
+{
+	case 0: POS=(POS+1)&attr_del1.LENGTHMASK; break;
+	case 1: POS=(POS+1)&attr_del2.LENGTHMASK; break;
+	case 2: POS=(POS+1)&attr_del3.LENGTHMASK; break;
+	case 3: POS=(POS+1)&attr_del4.LENGTHMASK; break;
+}
+}]]></code.srate>
+   </obj.normal>
+</objdefs>

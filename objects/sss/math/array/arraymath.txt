@@ -1,0 +1,64 @@
+#ifndef _arraymath_H
+#define _arraymath_H
+
+
+
+void arm_add_q31(
+  q31_t * pSrcA,
+  q31_t * pSrcB,
+  q31_t * pDst,
+  uint32_t blockSize)
+{
+  uint32_t blkCnt;                               /* loop counter */
+
+/* Run the below code for Cortex-M4 and Cortex-M3 */
+  q31_t inA1, inA2, inA3, inA4;
+  q31_t inB1, inB2, inB3, inB4;
+
+  /*loop Unrolling */
+  blkCnt = blockSize >> 2u;
+
+  /* First part of the processing with loop unrolling.  Compute 4 outputs at a time.    
+   ** a second loop below computes the remaining 1 to 3 samples. */
+  while(blkCnt > 0u)
+  {
+    /* C = A + B */
+    /* Add and then store the results in the destination buffer. */
+    inA1 = *pSrcA++;
+    inA2 = *pSrcA++;
+    inB1 = *pSrcB++;
+    inB2 = *pSrcB++;
+
+    inA3 = *pSrcA++;
+    inA4 = *pSrcA++;
+    inB3 = *pSrcB++;
+    inB4 = *pSrcB++;
+
+    *pDst++ = __USAT(__QADD(inA1>>1, inB1>>1),29)<<1;
+    *pDst++ = __USAT(__QADD(inA2>>1, inB2>>1),29)<<1;
+    *pDst++ = __USAT(__QADD(inA3>>1, inB3>>1),29)<<1;
+    *pDst++ = __USAT(__QADD(inA4>>1, inB4>>1),29)<<1;
+
+    /* Decrement the loop counter */
+    blkCnt--;
+  }
+
+  /* If the blockSize is not a multiple of 4, compute any remaining output samples here.    
+   ** No loop unrolling is used. */
+  blkCnt = blockSize % 0x4u;
+
+  while(blkCnt > 0u)
+  {
+    /* C = A + B */
+    /* Add and then store the results in the destination buffer. */
+    *pDst++ = __USAT(__QADD(*pSrcA++>>1, *pSrcB++>>1),29)<<1;
+
+    /* Decrement the loop counter */
+    blkCnt--;
+  }
+}
+
+
+
+
+#endif
