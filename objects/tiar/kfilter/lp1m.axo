@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lp1m" uuid="8ce516f4-5c2d-4310-8135-1ad2b90296e8">
+      <sDescription>1st order lowpass filter, control and inlet rate</sDescription>
+      <author>Based on Johannes Taelman kfilter/lowpass</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="in" description="input"/>
+         <frac32.bipolar name="freq"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.lfopitch name="freq" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+
+   MTOF(param_freq+inlet_freq,f);
+   val = ___SMMLA((inlet_in-val)<<1,f,val);
+   outlet_out= val;]]></code.krate>
+   </obj.normal>
+</objdefs>

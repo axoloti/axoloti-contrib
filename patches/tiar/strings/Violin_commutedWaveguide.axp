@@ -6,7 +6,7 @@
          <spinner attributeName="default" value="82"/>
       </attribs>
    </obj>
-   <patcher type="patch/patcher" uuid="b2a3d57c-e1b6-46b2-9c4b-5909442d8096" name="patcher_1" x="14" y="28">
+   <patcher type="patch/patcher" uuid="2d7285dc-6cd1-4168-a317-9013ec4c9932" name="patcher_1" x="14" y="28">
       <params>
          <frac32.s.map name="adsr_3:d" value="1.0"/>
          <frac32.u.map name="*c_2" value="6.0"/>
@@ -36,19 +36,6 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="140" y="42">
-            <params>
-               <frac32.s.map name="a" value="-54.0"/>
-               <frac32.s.map name="d" value="0.0"/>
-               <frac32.u.map name="s" value="64.0"/>
-               <frac32.s.map name="r" value="1.0"/>
-            </params>
-            <attribs/>
-         </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="238" y="42">
-            <params/>
-            <attribs/>
-         </obj>
          <obj type="midi/in/touch" uuid="7e3a4d718388f6d5213accadf5a80121a7c35cc9" name="touch_1" x="294" y="42">
             <params/>
             <attribs/>
@@ -57,17 +44,30 @@
             <params/>
             <attribs/>
          </obj>
-         <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="448" y="42">
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="476" y="42">
+            <params>
+               <frac32.s.map name="a" value="-54.0"/>
+               <frac32.s.map name="d" value="0.0"/>
+               <frac32.u.map name="s" value="64.0"/>
+               <frac32.s.map name="r" value="1.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="574" y="42">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="kfilter/lowpass" uuid="4f0d68b39b6f6b1c1d371b028d84391d14062d68" name="lowpass_1" x="630" y="42">
             <params>
                <frac32.s.map name="freq" value="22.0"/>
             </params>
             <attribs/>
          </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="560" y="42">
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_3" x="742" y="42">
             <params/>
             <attribs/>
          </obj>
-         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_4" x="616" y="42">
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_4" x="798" y="42">
             <params/>
             <attribs/>
          </obj>
@@ -260,6 +260,7 @@
             </params>
             <attribs>
                <combo attributeName="phase" selection="0"/>
+               <combo attributeName="env" selection="1/2"/>
             </attribs>
          </obj>
          <obj type="tiar/osc/SyncPM4" uuid="f3f70be2-3538-4568-a5bf-8e48c8f689da" name="SyncPM4_2" x="1428" y="644">
@@ -275,6 +276,7 @@
             </params>
             <attribs>
                <combo attributeName="phase" selection="180"/>
+               <combo attributeName="env" selection="1/2"/>
             </attribs>
          </obj>
          <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_4" x="1540" y="644">
@@ -483,7 +485,7 @@
             </net>
             <net>
                <source obj="keyb_2" outlet="touch"/>
-               <dest obj="*_1" inlet="a"/>
+               <dest obj="max_1" inlet="in2"/>
             </net>
             <net>
                <source obj="touch_1" outlet="o"/>
@@ -491,7 +493,7 @@
             </net>
             <net>
                <source obj="max_1" outlet="out"/>
-               <dest obj="lowpass_1" inlet="in"/>
+               <dest obj="*_1" inlet="a"/>
             </net>
             <net>
                <source obj="keyb_2" outlet="gate"/>
@@ -506,10 +508,6 @@
             <net>
                <source obj="adsr_2" outlet="env"/>
                <dest obj="*_1" inlet="b"/>
-            </net>
-            <net>
-               <source obj="*_1" outlet="result"/>
-               <dest obj="max_1" inlet="in2"/>
             </net>
             <net>
                <source obj="lowpass_1" outlet="out"/>
@@ -723,6 +721,10 @@
             <net>
                <source obj="vca_4" outlet="o"/>
                <dest obj="allpass_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="lowpass_1" inlet="in"/>
             </net>
          </nets>
          <settings>

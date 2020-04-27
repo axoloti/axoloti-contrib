@@ -1,0 +1,44 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="sdemux1_4" uuid="dea37610-fd59-4e9e-a3de-ed951ea9bce3">
+      <sDescription>Smooth demultiplexer. Works like multiple cross fades.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>sdemux1_4.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="i" description="input"/>
+         <frac32.positive name="s"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o0" description="output 0"/>
+         <frac32buffer name="o1" description="output 1"/>
+         <frac32buffer name="o2" description="output 2"/>
+         <frac32buffer name="o3" description="output 3"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[void proc(int32_t sel, int32_t *o0, int32_t *o1, int32_t *o2, int32_t *o3, const int32_t *in){
+  int32_t *s0, *s1, *s2, *s3;
+  switch(sel >> (27-2)){
+    case 0:  s0 = o0;  s1 = o1; s2 = o2; s3 = o3; break;
+    case 1:  s0 = o1;  s1 = o2; s2 = o3; s3 = o0;  break;
+    case 2:  s0 = o2;  s1 = o3; s2 = o0; s3 = o1; break;
+    case 3:  s0 = o3;  s1 = o0; s2 = o1; s3 = o2; break;
+  } 
+  int32_t a1 = (sel << 2) & 0x07FFFFFF;
+  int32_t a0 = 0x07FFFFFF-a1;
+  for(int i = 0; i < BUFSIZE; i++){
+    s0[i] = ___SMMUL(in[i], a0)<<5;
+    s1[i] = ___SMMUL(in[i], a1)<<5;
+    s2[i] = 0;
+    s3[i] = 0;
+  }
+}]]></code.declaration>
+      <code.krate><![CDATA[
+	  
+	  proc((inlet_s) & 0x07FFFFFF, outlet_o0, outlet_o1, outlet_o2, outlet_o3, inlet_i);
+	  
+	  
+	  ]]></code.krate>
+   </obj.normal>
+</objdefs>

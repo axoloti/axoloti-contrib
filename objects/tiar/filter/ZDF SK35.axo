@@ -20,10 +20,10 @@
       <code.declaration><![CDATA[int32_t u, y;]]></code.declaration>
       <code.init><![CDATA[u=y=0;]]></code.init>
       <code.krate><![CDATA[float Q = __USAT(param_Q + inlet_reso, 27) * (15.0f/(1<<27));
-Q = 2.0f-1.0f/(0.1*Q*Q+0.5)  +0.000015f*Q*Q*Q;
+Q = 2.0f - 1.0f / (0.1f * Q * Q + 0.5f) + 0.000015f * Q*Q*Q;
 
 uint32_t alpha;
-MTOFEXTENDED(param_pitch + inlet_pitch-(525<<14), alpha);
+MTOFEXTENDED(param_pitch + inlet_pitch - (525<<14), alpha);
 float Freq = arm::q_to_float(alpha,32);
 Freq*=(1.0f/32);
 
@@ -53,10 +53,9 @@ int32_t D = (1<<27) - B - E;
 
 
 for(int i = 0; i < BUFSIZE; i++){
-  u = __SSAT(u,30);
-  y = __SSAT(y,30);
-  int32_t         nu = ___SMMLA(A, inlet_x[i], ___SMMLA(B, u, ___SMMUL(C, y))) << 5;
-  outlet_lp12[i] = y = ___SMMLA(D, inlet_x[i], ___SMMLA(E, u, ___SMMUL(F, y))) << 5;
+  y = __SSAT(y, 30);
+  int32_t         nu = __SSAT(___SMMLA(A, inlet_x[i], ___SMMLA(B, u, ___SMMUL(C, y))) << 5,30);
+  outlet_lp12[i] = y =        ___SMMLA(D, inlet_x[i], ___SMMLA(E, u, ___SMMUL(F, y))) << 5;
   u = nu;
 }]]></code.krate>
    </obj.normal>
