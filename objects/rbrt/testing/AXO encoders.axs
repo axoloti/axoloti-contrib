@@ -1,4 +1,18 @@
 <patch-1.0 appVersion="1.0.12">
+   <obj type="rbrt/control/pulse delay" uuid="34b44c7c-842a-4c08-9101-68cb67de4685" name="pulse_1" x="406" y="14">
+      <params/>
+      <attribs>
+         <spinner attributeName="kticks" value="300"/>
+      </attribs>
+   </obj>
+   <obj type="rbrt/control/p2t" uuid="5051eb28-2556-42e9-a7e5-2aef68b09781" name="p2t_1" x="546" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/patching/loadbang" uuid="45d1f29d-ac62-4e5b-86f8-2201d2f6c689" name="loadbang_1" x="168" y="28">
+      <params/>
+      <attribs/>
+   </obj>
    <patchobj type="patch/object" uuid="8879f19b-f25f-4559-bdb2-f0a870d21624" name="master" x="182" y="98">
       <params/>
       <attribs>
@@ -294,7 +308,7 @@ if (inlet_clk && !prev) {
 prev = inlet_clk;]]></code.krate>
       </object>
    </patchobj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="inc1" x="882" y="140">
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="inc1" x="1036" y="140">
       <params/>
       <attribs/>
    </obj>
@@ -304,7 +318,11 @@ prev = inlet_clk;]]></code.krate>
          <spinner attributeName="value" value="60"/>
       </attribs>
    </obj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="dec1" x="882" y="196">
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="dec1" x="1036" y="196">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/control/gate i" uuid="1c6fad01-84d2-4635-9ce0-11270f15d835" name="gate_1" x="896" y="238">
       <params/>
       <attribs/>
    </obj>
@@ -320,7 +338,7 @@ prev = inlet_clk;]]></code.krate>
          <spinner attributeName="value" value="1"/>
       </attribs>
    </obj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="but1" x="882" y="252">
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="but1" x="1036" y="252">
       <params/>
       <attribs/>
    </obj>
@@ -371,7 +389,7 @@ if (inlet_clk && !prev) {
 prev = inlet_clk;]]></code.krate>
       </object>
    </patchobj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="inc2" x="896" y="350">
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="inc2" x="1036" y="378">
       <params/>
       <attribs/>
    </obj>
@@ -381,11 +399,7 @@ prev = inlet_clk;]]></code.krate>
          <spinner attributeName="value" value="60"/>
       </attribs>
    </obj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="dec2" x="896" y="406">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="but2" x="896" y="462">
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="dec2" x="1036" y="434">
       <params/>
       <attribs/>
    </obj>
@@ -400,6 +414,14 @@ prev = inlet_clk;]]></code.krate>
       <attribs>
          <spinner attributeName="value" value="1"/>
       </attribs>
+   </obj>
+   <obj type="rbrt/control/gate i" uuid="1c6fad01-84d2-4635-9ce0-11270f15d835" name="gate_2" x="896" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="patch/outlet b" uuid="191792f616d4835dba0b55375474a12942e5bcbd" name="but2" x="1036" y="490">
+      <params/>
+      <attribs/>
    </obj>
    <nets>
       <net>
@@ -459,10 +481,6 @@ prev = inlet_clk;]]></code.krate>
          <dest obj="dec1" inlet="outlet"/>
       </net>
       <net>
-         <source obj="&lt;_3" outlet="out"/>
-         <dest obj="but1" inlet="outlet"/>
-      </net>
-      <net>
          <source obj="Rotary_2" outlet="inc"/>
          <dest obj="inc2" inlet="outlet"/>
       </net>
@@ -472,6 +490,31 @@ prev = inlet_clk;]]></code.krate>
       </net>
       <net>
          <source obj="&lt;_6" outlet="out"/>
+         <dest obj="gate_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="loadbang_1" outlet="pulse"/>
+         <dest obj="pulse_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="pulse_1" outlet="trig"/>
+         <dest obj="p2t_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="p2t_1" outlet="o"/>
+         <dest obj="gate_1" inlet="control"/>
+         <dest obj="gate_2" inlet="control"/>
+      </net>
+      <net>
+         <source obj="gate_1" outlet="out"/>
+         <dest obj="but1" inlet="outlet"/>
+      </net>
+      <net>
+         <source obj="&lt;_3" outlet="out"/>
+         <dest obj="gate_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gate_2" outlet="out"/>
          <dest obj="but2" inlet="outlet"/>
       </net>
    </nets>
@@ -482,7 +525,7 @@ prev = inlet_clk;]]></code.krate>
    <windowPos>
       <x>0</x>
       <y>0</y>
-      <width>1213</width>
-      <height>711</height>
+      <width>1458</width>
+      <height>832</height>
    </windowPos>
 </patch-1.0>

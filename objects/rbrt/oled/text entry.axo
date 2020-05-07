@@ -1,0 +1,86 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="text entry" uuid="66dd7ea7-d8ee-4864-a791-90f9a0706fb7">
+      <sDescription>funny little text-entry tool for user interfacing,
+with a cute flashing cursor</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.rising name="add" description="add a character"/>
+         <bool32.rising name="undoAdd" description="like delete but different"/>
+         <bool32.rising name="delete" description="delete a character"/>
+         <bool32.rising name="inc" description="up one character"/>
+         <bool32.rising name="dec" description="down one character"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="disp" description="to display"/>
+         <charptr32 name="out" description="without the cursor"/>
+         <bool32 name="trig" description="trigger when &apos;disp&apos; changes"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="maxLength" description="maximum length" MinValue="1" MaxValue="32" DefaultValue="8"/>
+         <combo name="flash" description="enable flash">
+            <MenuEntries>
+               <string>off</string>
+               <string>slow</string>
+               <string>medium</string>
+               <string>fast</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string> 2000</string>
+               <string>1000</string>
+               <string>500</string>
+            </CEntries>
+         </combo>
+         <spinner name="char" description="set character for flashing" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[char cout[attr_maxLength+1];
+char cdisp[attr_maxLength+1];
+uint8_t pos;
+bool trig;
+uint8_t c;
+uint16_t count;
+bool toggle;
+bool disptrig;
+bool init;]]></code.declaration>
+      <code.init><![CDATA[memset (&cout[0],32,8);
+c = 17;
+init = 1;]]></code.init>
+      <code.krate><![CDATA[disptrig = 0;
+if ((inlet_add || inlet_inc || inlet_dec || init) && !trig) {
+	if (inlet_add && (pos < (attr_maxLength-1))) pos++;
+	if (inlet_inc) c++;
+	if (inlet_dec) c--;
+	c = c%43;
+	cout [pos] = c +48;
+	cout [pos +1] = '\0';
+	strcpy (cdisp,cout);
+	init = 0;
+	trig = 1;
+}
+
+if ((inlet_delete ||inlet_undoAdd) && !trig && (pos>0)){
+	trig = 1;
+	cout [pos] = '\0';
+	pos--;	
+	if (!inlet_undoAdd) c = cout[pos] -48;
+	strcpy (cdisp,cout);
+}
+
+if (!inlet_add && !inlet_inc && !inlet_dec && !inlet_delete && !inlet_undoAdd) trig = 0;
+
+if (!count && attr_flash) {
+	count = attr_flash;
+	toggle = !toggle;
+	cdisp[pos] = (toggle) ? attr_char : cout[pos];
+	disptrig = 1;		
+}
+count --;
+
+outlet_trig = trig || disptrig;
+outlet_disp = &cdisp[0];
+outlet_out = &cout[0];]]></code.krate>
+   </obj.normal>
+</objdefs>
