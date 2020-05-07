@@ -1,0 +1,47 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tablestore accum" uuid="49a2e983-8957-49e0-aac1-b4665b7b8e35">
+      <sDescription>writes and outputs 4 values to a table.</sDescription>
+      <author>robert schirmer</author>
+      <license>who cares</license>
+      <inlets>
+         <bool32.rising name="inc"/>
+         <bool32.rising name="dec"/>
+         <int32 name="offset" description="sets an offset for writing to the table"/>
+      </inlets>
+      <outlets>
+         <frac32 name="v0"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <combo name="increment">
+            <MenuEntries>
+               <string>0.25</string>
+               <string>0.5</string>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>4</string>
+               <string>8</string>
+               <string>16</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[bool trig;
+int add;]]></code.declaration>
+      <code.krate><![CDATA[int v = attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN;
+outlet_v0= v;
+
+if ((inlet_inc || inlet_dec) && !trig){
+trig = 1;
+attr_table.array[inlet_offset]= __SSAT(v + ((inlet_inc)? attr_increment <<19:(attr_increment<<19)* -1),28)>>attr_table.GAIN;
+}
+
+if (!inlet_inc && !inlet_dec) trig = 0;]]></code.krate>
+   </obj.normal>
+</objdefs>

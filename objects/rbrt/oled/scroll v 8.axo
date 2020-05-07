@@ -1,0 +1,77 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scroll v 8" uuid="90ae57dd-6065-440b-9354-a8678c799480">
+      <sDescription>a mod of tiar/HW/strbar for an OLED-display,
+change &apos;offset&apos; to scroll through a lot of lines vertically.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <int32.positive name="offset"/>
+         <frac32 name="v0"/>
+         <frac32 name="v1"/>
+         <frac32 name="v2"/>
+         <frac32 name="v3"/>
+         <frac32 name="v4"/>
+         <frac32 name="v5"/>
+         <frac32 name="v6"/>
+         <frac32 name="v7"/>
+      </inlets>
+      <outlets>
+         <charptr32 name="line1"/>
+         <charptr32 name="line2"/>
+         <charptr32 name="line3"/>
+         <charptr32 name="line4"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <table name="str0"/>
+         <table name="str1"/>
+         <table name="str2"/>
+         <table name="str3"/>
+         <table name="str4"/>
+         <table name="str5"/>
+         <table name="str6"/>
+         <table name="str7"/>
+      </attribs>
+      <code.declaration><![CDATA[char c[8][8];
+char null [1];
+
+void outstring (uint8_t target,int value)__attribute__((noinline)){
+int32_t v = __SSAT(value,28)>>21;
+if(v >= 0)
+  c[target][1] = (uint8_t)(v + 1);
+else 
+  c[target][1] = (uint8_t)(256 + v);
+}]]></code.declaration>
+      <code.init><![CDATA[strcpy(&c[0][2],"attr_str0");
+strcpy(&c[1][2],"attr_str1");
+strcpy(&c[2][2],"attr_str2");
+strcpy(&c[3][2],"attr_str3");
+strcpy(&c[4][2],"attr_str4");
+strcpy(&c[5][2],"attr_str5");
+strcpy(&c[6][2],"attr_str6");
+strcpy(&c[7][2],"attr_str7");
+
+c[0][0] = 1;
+c[1][0] = 1;
+c[2][0] = 1;
+c[3][0] = 1;
+c[4][0] = 1;
+c[5][0] = 1;
+c[6][0] = 1;
+c[7][0] = 1;]]></code.init>
+      <code.krate><![CDATA[outstring (0,inlet_v0);
+outstring (1,inlet_v1);
+outstring (2,inlet_v2);
+outstring (3,inlet_v3);
+outstring (4,inlet_v4);
+outstring (5,inlet_v5);
+outstring (6,inlet_v6);
+outstring (7,inlet_v7);
+
+outlet_line1=   ((0 + inlet_offset) < 8) ? &c[0 + inlet_offset][0] : &null[0];
+outlet_line2=   ((1 + inlet_offset) < 8) ? &c[1 + inlet_offset][0] : &null[0];
+outlet_line3=   ((2 + inlet_offset) < 8) ? &c[2 + inlet_offset][0] : &null[0];
+outlet_line4=   ((3 + inlet_offset) < 8) ? &c[3 + inlet_offset][0] : &null[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

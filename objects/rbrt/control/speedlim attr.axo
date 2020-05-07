@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="speedlim attr" uuid="312d9785-af8a-43d8-bee0-a4cc8e09fb54">
+      <sDescription>limits data rate.useful for debouncing.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32 name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="time" MinValue="1" MaxValue="65536" DefaultValue="100"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t prev;
+uint16_t count;]]></code.declaration>
+      <code.krate><![CDATA[if ((inlet_in != prev) && !count) {
+	count = attr_time;
+	prev = inlet_in;	
+}
+
+if (count) count --;
+
+outlet_out = prev;]]></code.krate>
+   </obj.normal>
+</objdefs>
