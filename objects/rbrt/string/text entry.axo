@@ -10,6 +10,7 @@ with a cute flashing cursor</sDescription>
          <bool32.rising name="delete" description="delete a character"/>
          <bool32.rising name="inc" description="up one character"/>
          <bool32.rising name="dec" description="down one character"/>
+         <bool32.rising name="clear" description="clears the text"/>
       </inlets>
       <outlets>
          <charptr32 name="disp" description="to display"/>
@@ -69,7 +70,15 @@ if ((inlet_delete ||inlet_undoAdd) && !trig && (pos>0)){
 	strcpy (cdisp,cout);
 }
 
-if (!inlet_add && !inlet_inc && !inlet_dec && !inlet_delete && !inlet_undoAdd) trig = 0;
+if (inlet_clear && !trig){
+	memset (&cout[0],32,8);
+	c = 17;
+	pos = 0;
+	init = 1;
+	trig = 1;
+}
+
+if (!inlet_add && !inlet_inc && !inlet_dec && !inlet_delete && !inlet_undoAdd && !inlet_clear ) trig = 0;
 
 if (!count && attr_flash) {
 	count = attr_flash;
