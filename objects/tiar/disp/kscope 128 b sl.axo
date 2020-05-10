@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="kscope 128 b sl" uuid="56b73158-9493-46f8-9b24-1a4c0758fb20">
+      <sDescription>slow positive control rate signal oscilloscope (time domain), showing 128 consecutive samples or sub samples.</sDescription>
+      <author>Smashed Transistors based on Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>kscope 128 b sl.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <frac32.positive name="in" description="input"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <int8array128.vbar name="scope" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="subSample" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="256"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int8_t t[128];
+int cpt;
+int index;]]></code.declaration>
+      <code.init><![CDATA[int i;
+for(i=0;i<128;i++) t[i]=0;
+index = 0;
+cpt=0;]]></code.init>
+      <code.krate><![CDATA[cpt++;
+if(cpt >= param_subSample){
+	cpt=0;
+	disp_scope[index] = t[index] = (uint8_t)(inlet_in>>21);
+
+  
+	index++;
+	if (index >= 128){
+		index = 0;
+	}
+
+	/*for(int i = 0; i < 128; i++)
+		disp_scope[i] = t[i];*/
+  
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

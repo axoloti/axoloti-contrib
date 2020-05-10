@@ -1,0 +1,73 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="gpio/i2c/config" uuid="b095a33e56de5fcd23740a7d983bc0bafb315d81" name="config_1" x="14" y="0">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="lfo/saw" uuid="ef2a162678b533c5e46c4e3c0decba17b1862d85" name="saw_1" x="28" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/kfunc/u8u" uuid="bf123bac-ca4b-430b-901f-cd0cfaad394c" name="u8u_1" x="126" y="42">
+      <params>
+         <frac32.u.mapvsl name="p0" value="22.0"/>
+         <frac32.u.mapvsl name="p1" value="46.5"/>
+         <frac32.u.mapvsl name="p2" value="59.0"/>
+         <frac32.u.mapvsl name="p3" value="38.5"/>
+         <frac32.u.mapvsl name="p4" value="38.5"/>
+         <frac32.u.mapvsl name="p5" value="16.0"/>
+         <frac32.u.mapvsl name="p6" value="6.5"/>
+         <frac32.u.mapvsl name="p7" value="14.5"/>
+         <frac32.u.mapvsl name="p8" value="22.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/chart p" uuid="58f42040a894006a5f73ed8cb8d0bd45481b28cd" name="chart_1" x="350" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="conv/unipolar2bipolar" uuid="efc8ee28c508740c5edf7995eaaa07a6d6818e5e" name="unipolar2bipolar_1" x="28" y="238">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/kscope 128 b sl" uuid="56b73158-9493-46f8-9b24-1a4c0758fb20" name="kscope_1" x="224" y="238">
+      <params>
+         <int32 name="subSample" value="64"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/HW/OLED128x64lite" uuid="a1d1616f-60a7-40b0-8283-66e2bc963a17" name="OLED128x64lite_1" x="406" y="238">
+      <params/>
+      <attribs>
+         <objref attributeName="scope" obj="kscope_1"/>
+         <combo attributeName="type" selection="SSD1306"/>
+         <combo attributeName="I2CADDR" selection="0x3C"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="u8u_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="unipolar2bipolar_1" outlet="o"/>
+         <dest obj="kscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="u8u_1" outlet="out"/>
+         <dest obj="chart_1" inlet="in"/>
+         <dest obj="unipolar2bipolar_1" inlet="i"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>988</x>
+      <y>234</y>
+      <width>834</width>
+      <height>580</height>
+   </windowPos>
+</patch-1.0>
