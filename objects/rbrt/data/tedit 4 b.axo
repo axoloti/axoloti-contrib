@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tedit 4 b" uuid="c8655fc3-3968-4bfc-a1e3-823b13841afa">
+      <sDescription>view and edit 4 elements of a table.
+&apos;offset&apos; changes the start to display/edit from.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>wave creator.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32 name="offset"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params>
+         <frac32.s.map name="b0"/>
+         <frac32.s.map name="b1"/>
+         <frac32.s.map name="b2"/>
+         <frac32.s.map name="b3"/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t prev[4];
+int32_t prevp[4];
+
+bool changed;
+
+int i;
+int32_t padr;]]></code.declaration>
+      <code.init><![CDATA[changed = 0;]]></code.init>
+      <code.krate><![CDATA[if (attr_table.array[i + inlet_offset] != prev [i ] ) {changed = 1; prev [i ] = attr_table.array [i + inlet_offset];}
+if (inlet_offset != padr){changed = 1; padr = inlet_offset;}
+
+if (changed) {
+changed = 0;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b0],attr_table.array[__USAT((inlet_offset + 0),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b1],attr_table.array[__USAT((inlet_offset + 1),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b2],attr_table.array[__USAT((inlet_offset + 2),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_b3],attr_table.array[__USAT((inlet_offset + 3),attr_table.LENGTHPOW)]<<attr_table.GAIN, 0xFFFD) ;
+}
+
+if (prevp [0] != param_b0) { attr_table.array[inlet_offset + 0]= param_b0 >> attr_table.GAIN; prevp [0] = param_b0 ; }
+if (prevp [1] != param_b1) { attr_table.array[inlet_offset + 1]= param_b1 >> attr_table.GAIN; prevp [1] = param_b1 ; }
+if (prevp [2] != param_b2) { attr_table.array[inlet_offset + 2]= param_b2 >> attr_table.GAIN; prevp [2] = param_b2 ; }
+if (prevp [3] != param_b3) { attr_table.array[inlet_offset + 3]= param_b3 >> attr_table.GAIN; prevp [3] = param_b3 ; }
+
+
+i++;
+i = i %4;]]></code.krate>
+   </obj.normal>
+</objdefs>

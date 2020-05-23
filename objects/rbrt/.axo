@@ -1,0 +1,63 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="" uuid="f4a6e105-7754-46d0-8db8-0d03e0f79ed0">
+      <sDescription>references a table, sends note and velocity when an index of the table changes.
+works good with &apos;holdmap&apos;</sDescription>
+      <author>robert schirmer</author>
+      <license>BSD</license>
+      <helpPatch>midi_out.axh</helpPatch>
+      <inlets>
+         <bool32.rising name="redraw"/>
+         <bool32.risingfalling name="mute"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="holdmap"/>
+         <spinner name="thin" MinValue="0" MaxValue="20" DefaultValue="10"/>
+         <combo name="device">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+         <spinner name="channel" MinValue="1" MaxValue="16" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[uint8_t preout [128];
+uint8_t counter;
+bool trig;
+uint8_t thin;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_mute){
+if (inlet_redraw && !trig) memset (&preout[0],128,128);
+if (!inlet_redraw) trig = 0;
+// send output map 
+if (!thin){
+	if ((attr_holdmap.array[counter] != preout [counter]) && !MidiGetOutputBufferPending(MIDI_DEVICE_USB_HOST)){
+				MidiSend3((midi_device_t) attr_device, MIDI_NOTE_ON + (attr_channel-1),counter ,attr_holdmap.array[counter]);
+				thin = attr_thin;
+				preout [counter] = attr_holdmap.array[counter];
+		}	
+	}
+else thin --;
+
+	counter ++;
+	counter = counter %128;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -31,6 +31,16 @@
                <string>16</string>
             </CEntries>
          </combo>
+         <combo name="mode">
+            <MenuEntries>
+               <string>bipolar</string>
+               <string>unipolar</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
       </attribs>
       <code.declaration><![CDATA[bool trig;
 int add;]]></code.declaration>
@@ -40,6 +50,7 @@ outlet_v0= v;
 if ((inlet_inc || inlet_dec) && !trig){
 trig = 1;
 attr_table.array[inlet_offset]= __SSAT(v + ((inlet_inc)? attr_increment <<19:(attr_increment<<19)* -1),28)>>attr_table.GAIN;
+if (attr_mode && (attr_table.array[inlet_offset] < 0)) attr_table.array[inlet_offset] = 0;
 }
 
 if (!inlet_inc && !inlet_dec) trig = 0;]]></code.krate>

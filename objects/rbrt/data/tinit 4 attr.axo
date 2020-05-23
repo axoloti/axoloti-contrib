@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="tinit 4 attr" uuid="6f84cfa5-70d1-4cb8-ad68-508167832ea0">
+      <sDescription>sets the indexes of table to the value of the attributes starting at index &apos;offset&apos;</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <int32.positive name="offset"/>
+         <bool32.rising name="trig"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+         <spinner name="a1" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="a2" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="a3" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+         <spinner name="a4" MinValue="-64" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t ntrig;]]></code.declaration>
+      <code.krate><![CDATA[if (inlet_trig && !ntrig) {
+      ntrig=1;   
+      attr_table.array[inlet_offset]= __SSAT((attr_a1 << 21),28) >>attr_table.GAIN;
+      attr_table.array[inlet_offset + 1]= __SSAT((attr_a2 << 21),28) >>attr_table.GAIN;
+      attr_table.array[inlet_offset + 2]= __SSAT((attr_a3 << 21),28) >>attr_table.GAIN;
+      attr_table.array[inlet_offset + 3]= __SSAT((attr_a4 << 21),28) >>attr_table.GAIN;
+          }
+   
+   if (!inlet_trig) ntrig=0;]]></code.krate>
+   </obj.normal>
+</objdefs>

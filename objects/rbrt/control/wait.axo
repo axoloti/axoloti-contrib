@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="wait" uuid="43fcbcce-1bdf-4d53-ba9a-90ead016c65a">
+      <sDescription>if &apos;wait&apos; is high, a pulse at inlet&apos;go&apos; will set outlet &apos;go&apos; to high.
+if &apos;wait&apos; is low, outlet &apos;go&apos; is low.</sDescription>
+      <author>Robert Schirmer</author>
+      <license>BSD</license>
+      <inlets>
+         <bool32.risingfalling name="wait" description="high = wait for trig at go.low = stop."/>
+         <bool32.rising name="go" description="go!"/>
+         <bool32 name="bypass"/>
+      </inlets>
+      <outlets>
+         <bool32 name="go" description="Go!"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[bool go;]]></code.declaration>
+      <code.krate><![CDATA[if (!inlet_bypass){
+if ((inlet_wait && !go)&& inlet_go) go = 1;
+if (!inlet_wait) go = 0;
+} else go = inlet_wait;
+
+outlet_go = go;]]></code.krate>
+   </obj.normal>
+</objdefs>
