@@ -294,16 +294,11 @@
          </combo>
       </attribs>
       <code.declaration><![CDATA[int32_t a_inF0[24], a_inF1[24], a_inF2[24], a_inF3[24];
-bool d_in[8];
-
-
 
 uint8_t multiplex_cpt;
-uint8_t kcycle2_cpt, kcycle3_cpt;]]></code.declaration>
-      <code.init><![CDATA[multiplex_cpt = kcycle2_cpt = kcycle3_cpt = 0;
-for(int i = 0; i < 8; i++) {
-	d_in[i] = false;
-}
+uint8_t kcycle2_cpt, kcycle24_cpt;]]></code.declaration>
+      <code.init><![CDATA[multiplex_cpt = kcycle2_cpt = kcycle24_cpt = 0;
+
 for(int i = 0; i < 24; i++) {
 	a_inF3[i] = a_inF2[i] = a_inF1[i] = a_inF0[i] = 0;
 }
@@ -318,7 +313,6 @@ kcycle2_cpt++;
 if(kcycle2_cpt == 2){
 	kcycle2_cpt = 0;
 
-	d_in[multiplex_cpt] = palReadPad(GPIOA, 0);
 	int32_t* a_in = a_inF0 + multiplex_cpt;
 	//LP with 0.25 coefficient
 	*a_in = ___SMMLA(0x40000000, (adcvalues[attr_Z0]<<15) - *a_in, *a_in);
@@ -336,13 +330,16 @@ palWritePad(attr_S0, (multiplex_cpt & 1) != 0);
 palWritePad(attr_S1, (multiplex_cpt & 2) != 0);
 palWritePad(attr_S2, (multiplex_cpt & 4) != 0);
 
-//Repartition des filtrages 'intelligent' des 24 entrees analogiques sur 24 kcycles 
+//Repartition des filtrages 'intelligent' des 24 entrees analogiques
 {
-	kcycle3_cpt++;
-	if(kcycle3_cpt == 3){
-		kcycle3_cpt = 0;
+	kcycle24_cpt++;
+	if(kcycle24_cpt == 24){
+		kcycle24_cpt = 0;
 	}
-	int i = ((multiplex_cpt - 1) & 7) + 8 * kcycle3_cpt;
+	int i = kcycle24_cpt;
+
+	//extends to  [0 64[ even if there is some noise
+	a_inF0[i]=__USAT(___SMMLA(a_inF0[i],0x40800000,-1<<17)<<2,27);
 	
 	if(abs(a_inF0[i] - a_inF1[i]) > (1<<21)){ //jump
 		 a_inF1[i] =  a_inF0[i];

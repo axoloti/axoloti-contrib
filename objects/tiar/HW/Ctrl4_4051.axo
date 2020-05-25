@@ -339,16 +339,11 @@
          </combo>
       </attribs>
       <code.declaration><![CDATA[int32_t a_inF0[32], a_inF1[32], a_inF2[32], a_inF3[32];
-bool d_in[8];
-
-
 
 uint8_t multiplex_cpt;
-uint8_t kcycle2_cpt, kcycle4_cpt;]]></code.declaration>
-      <code.init><![CDATA[multiplex_cpt = kcycle2_cpt = kcycle4_cpt = 0;
-for(int i = 0; i < 8; i++) {
-	d_in[i] = false;
-}
+uint8_t kcycle2_cpt, kcycle32_cpt;]]></code.declaration>
+      <code.init><![CDATA[multiplex_cpt = kcycle2_cpt = kcycle32_cpt = 0;
+
 for(int i = 0; i < 32; i++) {
 	a_inF3[i] = a_inF2[i] = a_inF1[i] = a_inF0[i] = 0;
 }
@@ -363,7 +358,6 @@ kcycle2_cpt++;
 if(kcycle2_cpt == 2){
 	kcycle2_cpt = 0;
 
-	d_in[multiplex_cpt] = palReadPad(GPIOA, 0);
 	int32_t* a_in = a_inF0 + multiplex_cpt;
 	//LP with 0.25 coefficient
 	*a_in = ___SMMLA(0x40000000, (adcvalues[attr_Z0]<<15) - *a_in, *a_in);
@@ -371,6 +365,8 @@ if(kcycle2_cpt == 2){
 	*a_in = ___SMMLA(0x40000000, (adcvalues[attr_Z1]<<15) - *a_in, *a_in);
 	a_in += 8; 
 	*a_in = ___SMMLA(0x40000000, (adcvalues[attr_Z2]<<15) - *a_in, *a_in);
+	a_in += 8; 
+	*a_in = ___SMMLA(0x40000000, (adcvalues[attr_Z3]<<15) - *a_in, *a_in);
 
 	// prepare next
 	multiplex_cpt++;
@@ -381,13 +377,16 @@ palWritePad(attr_S0, (multiplex_cpt & 1) != 0);
 palWritePad(attr_S1, (multiplex_cpt & 2) != 0);
 palWritePad(attr_S2, (multiplex_cpt & 4) != 0);
 
-//Repartition des filtrages 'intelligent' des 24 entrees analogiques sur 24 kcycles 
+//Repartition des filtrages 'intelligent' des 32 entrees analogiques 
 {
-	kcycle4_cpt++;
-	if(kcycle4_cpt == 4){
-		kcycle4_cpt = 0;
+	kcycle32_cpt++;
+	if(kcycle32_cpt == 32){
+		kcycle32_cpt = 0;
 	}
-	int i = ((multiplex_cpt - 1) & 7) + 8 * kcycle4_cpt;
+	int i = kcycle32_cpt;
+	
+	//extends to  [0 64[ even if there is some noise
+	a_inF0[i]=__USAT(___SMMLA(a_inF0[i],0x40800000,-1<<17)<<2,27);
 	
 	if(abs(a_inF0[i] - a_inF1[i]) > (1<<21)){ //jump
 		 a_inF1[i] =  a_inF0[i];
@@ -451,12 +450,6 @@ outlet_o27 = a_inF3[27];
 outlet_o28 = a_inF3[28];
 outlet_o29 = a_inF3[29];
 outlet_o30 = a_inF3[30];
-outlet_o31 = a_inF3[31];
-
-
-
-
-
-]]></code.krate>
+outlet_o31 = a_inF3[31];]]></code.krate>
    </obj.normal>
 </objdefs>
