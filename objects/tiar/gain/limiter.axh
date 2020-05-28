@@ -1,0 +1,252 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="350" y="14">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="444" y="27" text="&lt;--- Gain 1 to 8"/>
+   <patcher type="patch/patcher" uuid="c853e14c-4725-4b6e-bff7-9edc9d229f1b" name="patcher_1" x="42" y="112">
+      <params>
+         <frac32.s.map name="adsr_1:a" value="-64.0"/>
+         <frac32.s.map name="adsr_1:d" value="25.0"/>
+         <frac32.u.map name="adsr_1:s" value="64.0"/>
+         <frac32.s.map name="adsr_1:r" value="-1.0"/>
+         <frac32.u.map name="*c_1" value="18.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="154" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="266" y="84">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="18.0"/>
+               <frac32.u.map name="s" onParent="true" value="7.0"/>
+               <frac32.s.map name="r" onParent="true" value="-3.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="364" y="84">
+            <params>
+               <frac32.u.mapvsl name="p0" value="0.0"/>
+               <frac32.u.mapvsl name="p1" value="0.0"/>
+               <frac32.u.mapvsl name="p2" value="0.0"/>
+               <frac32.u.mapvsl name="p3" value="0.0"/>
+               <frac32.u.mapvsl name="p4" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_2" x="448" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="532" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="770" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="854" y="84">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="29.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="966" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="sine_1" inlet="pitch"/>
+               <dest obj="sine_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="*c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="DCA_1" inlet="gain"/>
+               <dest obj="u4u_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="sine_2" outlet="wave"/>
+               <dest obj="DCA_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="u4u_1" outlet="out"/>
+               <dest obj="DCA_2" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="DCA_2" outlet="out"/>
+               <dest obj="sine_1" inlet="phase"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>984</width>
+            <height>753</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="168" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/gain/limiter" uuid="9dffd097-79da-49ff-bb44-0faf9342c5b0" name="limiter_1" x="462" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_2" x="588" y="112">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="364" y="154" text="Gain 1 to 7 ---&gt;"/>
+   <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="350" y="364">
+      <params>
+         <frac32.u.mapvsl name="p0" value="8.0"/>
+         <frac32.u.mapvsl name="p1" value="20.0"/>
+         <frac32.u.mapvsl name="p2" value="35.0"/>
+         <frac32.u.mapvsl name="p3" value="50.0"/>
+         <frac32.u.mapvsl name="p4" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="434" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="490" y="364">
+      <params>
+         <frac32.u.map name="amp" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_3" x="588" y="364">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="237" y="367" text="for comparison"/>
+   <comment type="patch/comment" x="238" y="392" text="Gain 1 to 8 ---&gt;"/>
+   <comment type="patch/comment" x="238" y="406" text="with intrinsic"/>
+   <comment type="patch/comment" x="238" y="420" text="saturation"/>
+   <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="toggle_1" x="266" y="602">
+      <params>
+         <bool32.tgl name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mux/mux 2" uuid="539c246f4c360ac476e128cfbfa84348fb7f7e73" name="mux_1" x="378" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="532" y="602">
+      <params>
+         <frac32.u.map name="amp" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="630" y="602">
+      <params/>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="181" y="605" text="for comparison"/>
+   <comment type="patch/comment" x="184" y="626" text="intrinsic sat"/>
+   <comment type="patch/comment" x="182" y="644" text="vs limiter"/>
+   <comment type="patch/comment" x="532" y="701" text="output volume"/>
+   <comment type="patch/comment" x="532" y="714" text="to preserve your ears"/>
+   <nets>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="u4u_1" inlet="in"/>
+         <dest obj="limiter_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="limiter_1" outlet="out"/>
+         <dest obj="scope_2" inlet="in"/>
+         <dest obj="mux_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="limiter_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="u4u_1" outlet="out"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="gain_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="gain_1" outlet="out"/>
+         <dest obj="scope_3" inlet="in"/>
+         <dest obj="mux_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="toggle_1" outlet="o"/>
+         <dest obj="mux_1" inlet="s"/>
+      </net>
+      <net>
+         <source obj="mux_1" outlet="o"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>899</x>
+      <y>112</y>
+      <width>865</width>
+      <height>862</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,223 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="635171d0-950f-4d87-b2cd-61157ed2d8fd" name="patcher_1" x="14" y="98">
+      <params>
+         <frac32.s.map name="adsr_1:a" value="-64.0"/>
+         <frac32.s.map name="adsr_1:d" value="25.0"/>
+         <frac32.u.map name="adsr_1:s" value="64.0"/>
+         <frac32.s.map name="adsr_1:r" value="-1.0"/>
+         <frac32.u.map name="*c_1" value="18.5"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="154" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="266" y="84">
+            <params>
+               <frac32.s.map name="a" onParent="true" value="-64.0"/>
+               <frac32.s.map name="d" onParent="true" value="18.0"/>
+               <frac32.u.map name="s" onParent="true" value="7.0"/>
+               <frac32.s.map name="r" onParent="true" value="-3.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="364" y="84">
+            <params>
+               <frac32.u.mapvsl name="p0" value="0.0"/>
+               <frac32.u.mapvsl name="p1" value="0.0"/>
+               <frac32.u.mapvsl name="p2" value="0.0"/>
+               <frac32.u.mapvsl name="p3" value="0.0"/>
+               <frac32.u.mapvsl name="p4" value="0.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_2" x="448" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="532" y="84">
+            <params>
+               <frac32.s.map name="pitch" value="12.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="770" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="854" y="84">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="29.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="966" y="84">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="sine_1" outlet="wave"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="sine_1" inlet="pitch"/>
+               <dest obj="sine_2" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_1" inlet="gate"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="*c_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="adsr_1" outlet="env"/>
+               <dest obj="DCA_1" inlet="gain"/>
+               <dest obj="u4u_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_1" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="sine_2" outlet="wave"/>
+               <dest obj="DCA_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="u4u_1" outlet="out"/>
+               <dest obj="DCA_2" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="DCA_2" outlet="out"/>
+               <dest obj="sine_1" inlet="phase"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>0</NModulationSources>
+            <NModulationTargetsPerSource>0</NModulationTargetsPerSource>
+            <Author></Author>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>984</width>
+            <height>753</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <obj type="spat/pan" uuid="d2d291b66fd4487ac57ce44ae819db21c5aea43d" name="pan_1" x="126" y="140">
+      <params>
+         <frac32.s.map name="c" value="-6.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="252" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_4" x="392" y="294">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="14" y="392">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <comment type="patch/comment" x="98" y="406" text="&lt;--- Gain 1 to 8"/>
+   <obj type="tiar/gain/limiter st" uuid="8f76eb98-6f2e-4a86-9f29-9f62f3b59765" name="limiter_1" x="126" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_2" x="252" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_3" x="392" y="490">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="42" y="686">
+      <params>
+         <frac32.u.map name="amp" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="154" y="686">
+      <params>
+         <frac32.u.map name="amp" value="36.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="252" y="686">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="limiter_1" inlet="gain"/>
+      </net>
+      <net>
+         <source obj="limiter_1" outlet="outL"/>
+         <dest obj="scope_2" inlet="in"/>
+         <dest obj="*c_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="*c_1" outlet="out"/>
+         <dest obj="out_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="pan_1" inlet="i1"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="left"/>
+         <dest obj="scope_1" inlet="in"/>
+         <dest obj="limiter_1" inlet="inL"/>
+      </net>
+      <net>
+         <source obj="pan_1" outlet="right"/>
+         <dest obj="scope_4" inlet="in"/>
+         <dest obj="limiter_1" inlet="inR"/>
+      </net>
+      <net>
+         <source obj="*c_2" outlet="out"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="limiter_1" outlet="outR"/>
+         <dest obj="*c_2" inlet="in"/>
+         <dest obj="scope_3" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>641</x>
+      <y>111</y>
+      <width>1117</width>
+      <height>820</height>
+   </windowPos>
+</patch-1.0>

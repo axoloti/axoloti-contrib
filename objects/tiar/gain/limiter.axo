@@ -1,0 +1,46 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="limiter" uuid="9dffd097-79da-49ff-bb44-0faf9342c5b0">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>limiter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32 name="gain" description="gain input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float d[32];
+int cd=0;
+
+float gain, amp, scomp;]]></code.declaration>
+      <code.init><![CDATA[gain = amp = scomp = 0;
+for(int i = 0; i < 32; i++){d[i] = 0.0f;}]]></code.init>
+      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;]]></code.krate>
+      <code.srate><![CDATA[float x = arm::q_to_float(inlet_in, 27) * gain;
+
+//short delay line
+d[cd] = x;
+cd--;
+cd &= 15;
+
+// input
+float ax = fabsf(1.1f * x); // the 1.1f factor is a margin
+
+// amplitude detector
+amp = ax > amp ? ax : amp + 0.001f * (ax - amp);
+
+float comp = amp <= 1.0f ? 1.0f : 1.0f /  amp;
+
+//smoothed compression to avoid artifacts
+scomp += 0.1f * (comp - scomp);
+
+//the delayed output is used (it takes account of
+//the delay implied by the smoothed compression factor).
+
+outlet_out = arm::float_to_q(scomp * d[cd], 27);]]></code.srate>
+   </obj.normal>
+</objdefs>
