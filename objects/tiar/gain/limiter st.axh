@@ -5,10 +5,10 @@
          <frac32.s.map name="adsr_1:d" value="25.0"/>
          <frac32.u.map name="adsr_1:s" value="64.0"/>
          <frac32.s.map name="adsr_1:r" value="-1.0"/>
-         <frac32.u.map name="*c_1" value="18.5"/>
+         <frac32.u.map name="*c_1" value="16.0"/>
       </params>
       <attribs>
-         <combo attributeName="poly" selection="8"/>
+         <combo attributeName="poly" selection="4"/>
       </attribs>
       <subpatch appVersion="1.0.12">
          <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="28" y="84">
@@ -123,10 +123,14 @@
          </windowPos>
       </subpatch>
    </patcher>
-   <obj type="spat/pan" uuid="d2d291b66fd4487ac57ce44ae819db21c5aea43d" name="pan_1" x="126" y="140">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="182" y="112">
       <params>
-         <frac32.s.map name="c" value="-6.0"/>
+         <frac32.s.map name="pitch" value="-52.376316562295926"/>
       </params>
+      <attribs/>
+   </obj>
+   <obj type="spat/pan m" uuid="f6c6c0d7224841d9d76962e64d7f779d8194b7f9" name="pan_2" x="350" y="112">
+      <params/>
       <attribs/>
    </obj>
    <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_1" x="252" y="294">
@@ -188,17 +192,7 @@
       </net>
       <net>
          <source obj="patcher_1" outlet="outlet_1"/>
-         <dest obj="pan_1" inlet="i1"/>
-      </net>
-      <net>
-         <source obj="pan_1" outlet="left"/>
-         <dest obj="scope_1" inlet="in"/>
-         <dest obj="limiter_1" inlet="inL"/>
-      </net>
-      <net>
-         <source obj="pan_1" outlet="right"/>
-         <dest obj="scope_4" inlet="in"/>
-         <dest obj="limiter_1" inlet="inR"/>
+         <dest obj="pan_2" inlet="i1"/>
       </net>
       <net>
          <source obj="*c_2" outlet="out"/>
@@ -206,8 +200,22 @@
       </net>
       <net>
          <source obj="limiter_1" outlet="outR"/>
-         <dest obj="*c_2" inlet="in"/>
          <dest obj="scope_3" inlet="in"/>
+         <dest obj="*c_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="pan_2" outlet="left"/>
+         <dest obj="limiter_1" inlet="inL"/>
+         <dest obj="scope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="pan_2" outlet="right"/>
+         <dest obj="limiter_1" inlet="inR"/>
+         <dest obj="scope_4" inlet="in"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="pan_2" inlet="c"/>
       </net>
    </nets>
    <settings>
