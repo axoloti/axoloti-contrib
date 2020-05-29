@@ -9,6 +9,7 @@
       </inlets>
       <outlets>
          <frac32buffer name="out" description="output"/>
+         <bool32 name="active"/>
       </outlets>
       <displays/>
       <params/>
@@ -19,7 +20,8 @@ int cd;
 float gain, amp, scomp;]]></code.declaration>
       <code.init><![CDATA[gain = amp = scomp = cd = 0;
 for(int i = 0; i < 32; i++){d[i] = 0.0f;}]]></code.init>
-      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;]]></code.krate>
+      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;
+outlet_active = scomp < 0.99f;]]></code.krate>
       <code.srate><![CDATA[float x = arm::q_to_float(inlet_in, 27) * gain;
 
 //short delay line

@@ -11,6 +11,7 @@
       <outlets>
          <frac32buffer name="outL"/>
          <frac32buffer name="outR"/>
+         <bool32 name="active"/>
       </outlets>
       <displays/>
       <params/>
@@ -21,7 +22,8 @@ int cd = 0;
 float gain, ampL, ampR, scomp;]]></code.declaration>
       <code.init><![CDATA[gain = ampL = ampR = scomp = 0;
 for(int i = 0; i < 32; i++){dL[i] = dR[i] = 0.0f;}]]></code.init>
-      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;]]></code.krate>
+      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;
+outlet_active = scomp < 0.99f;]]></code.krate>
       <code.srate><![CDATA[{
 	float x = arm::q_to_float(inlet_inL, 27) * gain;	
 	//short delay line
