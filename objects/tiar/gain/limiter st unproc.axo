@@ -1,0 +1,67 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="limiter st" uuid="8f76eb98-6f2e-4a86-9f29-9f62f3b59700">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>limiter st.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="inL" description="audio input"/>
+         <frac32buffer name="inR"/>
+         <frac32 name="gain" description="gain input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="outL"/>
+         <frac32buffer name="outR"/>
+         <frac32buffer name="unprocL"/>
+         <frac32buffer name="unprocR"/>
+         <bool32 name="active"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[float dL[32], dR[32];
+int cd = 0;
+
+float gain, ampL, ampR, scomp;]]></code.declaration>
+      <code.init><![CDATA[gain = ampL = ampR = scomp = 0;
+for(int i = 0; i < 32; i++){dL[i] = dR[i] = 0.0f;}]]></code.init>
+      <code.krate><![CDATA[gain = arm::q_to_float(inlet_gain,27)*7.0f+1.0f;
+outlet_active = scomp < 0.99f;]]></code.krate>
+      <code.srate><![CDATA[{
+	float x = arm::q_to_float(inlet_inL, 27) * gain;	
+	//short delay line
+	dL[cd] = x;
+	// input
+	float ax = fabsf(1.1f * x); // the 1.1f factor is a margin
+	// amplitude detector
+	ampL = ax > ampL ? ax : ampL + 0.001f * (ax - ampL);
+}
+{
+	float x = arm::q_to_float(inlet_inR, 27) * gain;
+	//short delay line
+	dR[cd] = x;
+	// input
+	float ax = fabsf(1.1f * x); // the 1.1f factor is a margin
+	// amplitude detector
+	ampR = ax > ampR ? ax : ampR + 0.001f * (ax - ampR);
+}
+cd--;
+cd &= 15;
+
+float comp = ampL>ampR?ampL:ampR;
+comp = comp <= 1.0f ? 1.0f : 1.0f /  comp;
+
+//smoothed compression to avoid artifacts
+scomp += 0.1f * (comp - scomp);
+
+//the delayed output is used (it takes account of
+//the delay implied by the smoothed compression factor).
+
+outlet_outL = arm::float_to_q(scomp * dL[cd], 27);
+outlet_outR = arm::float_to_q(scomp * dR[cd], 27);
+outlet_unprocL = arm::float_to_q(dL[cd], 27);
+outlet_unprocR = arm::float_to_q(dR[cd], 27);
+
+
+]]></code.srate>
+   </obj.normal>
+</objdefs>
