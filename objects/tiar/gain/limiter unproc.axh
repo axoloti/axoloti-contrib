@@ -1,7 +1,7 @@
 <patch-1.0 appVersion="1.0.12">
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="350" y="14">
       <params>
-         <frac32.u.map name="value" value="24.5"/>
+         <frac32.u.map name="value" value="33.0"/>
       </params>
       <attribs/>
    </obj>
@@ -9,7 +9,7 @@
    <comment type="patch/comment" x="504" y="56" text="combining the processed and "/>
    <comment type="patch/comment" x="504" y="70" text="unprocessed outputs allows"/>
    <comment type="patch/comment" x="504" y="84" text="to make a compressor."/>
-   <patcher type="patch/patcher" uuid="a3086b07-96f8-4fc6-9249-5bace8e26791" name="patcher_1" x="42" y="112">
+   <patcher type="patch/patcher" uuid="f13376b0-9d3f-4bb0-b286-3b2f82509c7a" name="patcher_1" x="42" y="112">
       <params>
          <frac32.s.map name="adsr_1:a" value="-64.0"/>
          <frac32.s.map name="adsr_1:d" value="25.0"/>
@@ -27,7 +27,7 @@
          </obj>
          <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_2" x="154" y="84">
             <params>
-               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.s.map name="pitch" value="27.863137138648348"/>
             </params>
             <attribs/>
          </obj>
@@ -44,9 +44,9 @@
             <params>
                <frac32.u.mapvsl name="p0" value="8.0"/>
                <frac32.u.mapvsl name="p1" value="10.0"/>
-               <frac32.u.mapvsl name="p2" value="14.5"/>
-               <frac32.u.mapvsl name="p3" value="22.0"/>
-               <frac32.u.mapvsl name="p4" value="29.5"/>
+               <frac32.u.mapvsl name="p2" value="10.5"/>
+               <frac32.u.mapvsl name="p3" value="12.5"/>
+               <frac32.u.mapvsl name="p4" value="14.5"/>
             </params>
             <attribs/>
          </obj>
@@ -147,15 +147,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_2" x="714" y="112">
+   <obj type="tiar/gain/limiter" uuid="9dffd097-79da-49ff-bb44-0faf9342c5b0" name="limiter_2" x="686" y="112">
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/gain/limiter" uuid="9dffd097-79da-49ff-bb44-0faf9342c5b0" name="limiter_2" x="854" y="112">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_4" x="966" y="112">
+   <obj type="disp/scope 128 b" uuid="2b69f51a714fc276503ef10c349d6d253d1ae5e2" name="scope_4" x="812" y="112">
       <params/>
       <attribs/>
    </obj>
@@ -164,7 +160,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="434" y="322">
+   <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_1" x="434" y="322">
       <params>
          <frac32.u.map name="amp" value="7.5"/>
       </params>
@@ -174,7 +170,27 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="env/follower" uuid="356ce1d18ac6b51704833f94dac5dea823fb8223" name="follower_1" x="672" y="364">
+      <params/>
+      <attribs>
+         <combo attributeName="time" selection="42.6ms"/>
+      </attribs>
+   </obj>
+   <obj type="env/follower" uuid="356ce1d18ac6b51704833f94dac5dea823fb8223" name="follower_2" x="742" y="364">
+      <params/>
+      <attribs>
+         <combo attributeName="time" selection="42.6ms"/>
+      </attribs>
+   </obj>
    <comment type="patch/comment" x="434" y="420" text="output volume"/>
+   <obj type="disp/vbar" uuid="b529b8ea300b5858b0213ec07f522a0c4d84500d" name="vbar_1" x="672" y="420">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/vbar" uuid="b529b8ea300b5858b0213ec07f522a0c4d84500d" name="vbar_2" x="742" y="420">
+      <params/>
+      <attribs/>
+   </obj>
    <comment type="patch/comment" x="434" y="434" text="to preserve your ears"/>
    <nets>
       <net>
@@ -186,13 +202,14 @@
          <dest obj="mix_1" inlet="in1"/>
       </net>
       <net>
-         <source obj="*c_2" outlet="out"/>
+         <source obj="*c_1" outlet="out"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
       </net>
       <net>
          <source obj="patcher_1" outlet="outlet_1"/>
          <dest obj="scope_1" inlet="in"/>
+         <dest obj="follower_1" inlet="in"/>
          <dest obj="limiter_1" inlet="in"/>
       </net>
       <net>
@@ -205,13 +222,21 @@
       </net>
       <net>
          <source obj="mix_1" outlet="out"/>
-         <dest obj="scope_2" inlet="in"/>
          <dest obj="limiter_2" inlet="in"/>
       </net>
       <net>
          <source obj="limiter_2" outlet="out"/>
          <dest obj="scope_4" inlet="in"/>
-         <dest obj="*c_2" inlet="in"/>
+         <dest obj="*c_1" inlet="in"/>
+         <dest obj="follower_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="follower_1" outlet="amp"/>
+         <dest obj="vbar_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="follower_2" outlet="amp"/>
+         <dest obj="vbar_2" inlet="in"/>
       </net>
    </nets>
    <settings>
@@ -219,8 +244,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>259</x>
-      <y>36</y>
+      <x>34</x>
+      <y>214</y>
       <width>1256</width>
       <height>862</height>
    </windowPos>
