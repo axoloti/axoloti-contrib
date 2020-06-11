@@ -1,0 +1,26 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="mix2cs" uuid="05c222a7-a7de-4c03-ad05-309f17493ecc">
+      <sDescription>const + 2 input k-rate signed mixer</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <inlets>
+         <frac32 name="in1" description="input 1"/>
+         <frac32 name="in2" description="input 2"/>
+      </inlets>
+      <outlets>
+         <frac32 name="out" description="mix out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="const"/>
+         <frac32.s.map name="gain1"/>
+         <frac32.s.map name="gain2"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[{
+int32_t accum = ___SMMLA(inlet_in1, param_gain1, param_const>>5);
+accum = ___SMMLA(inlet_in2, param_gain2, accum);
+outlet_out = accum<<5;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

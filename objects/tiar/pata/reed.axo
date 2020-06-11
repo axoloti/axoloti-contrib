@@ -1,0 +1,88 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="reed" uuid="5c93ad3c-b48d-4d5e-91bd-21bcb40c73b0">
+      <sDescription>Reed</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>reed.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32 name="Fb gain"/>
+         <frac32 name="Fb LP"/>
+         <frac32 name="Fb delay"/>
+         <frac32 name="Fb phi"/>
+         <frac32 name="Out phi"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 6;
+static const uint32_t LENGTH = 1<<LENGTHPOW;
+static const uint32_t LENGTHMASK = LENGTH-1;
+
+static const uint32_t INTERP_RIGHT_SHIFT = 27 - LENGTHPOW;
+static const uint32_t INTERP_LEFT_SHIFT = 31 - INTERP_RIGHT_SHIFT;
+
+int32_t d[LENGTH];
+uint32_t ind;
+int32_t lpTheta;
+int32_t delay;
+int32_t fbPhi, outPhi;
+int32_t aIn;
+int32_t fbGain;
+
+
+int32_t interp(uint32_t ind, int32_t p){
+	//int32_t a = p&((1<<(27-LOG2))-1); //q27-LOG2
+	//a <<= 31-(27-LOG2); //q31
+
+	int32_t i = (ind + (p>>INTERP_RIGHT_SHIFT)) & LENGTHMASK;
+	int32_t d0 = d[i];
+	int32_t a = (p<<INTERP_LEFT_SHIFT) & 0x7FFFFFFF; //q31
+	return ___SMMLA(a, (d[(i + 1) & LENGTHMASK] - d0)<<1, d0);
+}]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < LENGTH; i++) d[i] = 0;
+lpTheta = 0;
+delay = 16<<21;
+fbPhi = outPhi = 0;
+aIn = 0;
+fbGain = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t lpCoef;
+MTOF(inlet_Fb_space_LP, lpCoef);
+
+// delay control is linearly interpolated
+int32_t newDelay = inlet_Fb_space_delay;
+if(newDelay <        0) newDelay = 0;
+if(newDelay > (63<<21)) newDelay = 63<<21;
+
+for(int smp = 0; smp < BUFSIZE; smp++){
+	
+	// parameters update on zero crossings
+	if((aIn < 0) != (inlet_in[smp] < 0)){
+		fbGain = inlet_Fb_space_gain;
+		fbPhi  = inlet_Fb_space_phi  + (16<<21); //(16<<21) offset sine -> cosine
+		outPhi = inlet_Out_space_phi + (16<<21); //(16<<21) offset sine -> cosine
+		delay  = newDelay;
+	}
+	aIn = inlet_in[smp]; 
+	
+	// delayed Theta
+	int32_t currentTheta = interp(ind, delay);
+	ind--; ind &= LENGTHMASK;
+	
+	//output
+	// sine2t -> 4096 entrie sine table, q31 fixed point format
+	int32_t cosOut = sine2t[((currentTheta + outPhi) & 0x07FFFFFF) >> 15];
+	outlet_out[smp] = ___SMMUL(cosOut, inlet_in[smp])<<1;
+	
+	//feedback
+	int32_t cosFb = sine2t[((currentTheta + fbPhi) & 0x07FFFFFF) >>15];
+	int32_t newTheta = ___SMMUL(cosFb, ___SMMUL(inlet_in[smp], fbGain)<<6);
+	lpTheta = ___SMMLA((newTheta - lpTheta)<<1, lpCoef, lpTheta);
+	d[ind] = lpTheta;
+
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
