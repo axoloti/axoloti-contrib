@@ -7,6 +7,7 @@
       <inlets>
          <frac32buffer name="in"/>
          <frac32 name="Fb gain"/>
+         <frac32 name="Fb HP"/>
          <frac32 name="Fb LP"/>
          <frac32 name="Fb delay"/>
          <frac32 name="Fb phi"/>
@@ -15,7 +16,9 @@
       <outlets>
          <frac32buffer name="out"/>
       </outlets>
-      <displays/>
+      <displays>
+         <int32.hexlabel name="lpCoef" noLabel="true"/>
+      </displays>
       <params/>
       <attribs/>
       <code.declaration><![CDATA[static const uint32_t LENGTHPOW = 6;
@@ -27,6 +30,7 @@ static const uint32_t INTERP_LEFT_SHIFT = 31 - INTERP_RIGHT_SHIFT;
 
 int32_t d[LENGTH];
 uint32_t ind;
+int32_t lhpTheta;
 int32_t lpTheta;
 int32_t delay;
 int32_t fbPhi, outPhi;
@@ -42,15 +46,28 @@ int32_t interp(uint32_t ind, int32_t p){
 	int32_t d0 = d[i];
 	int32_t a = (p<<INTERP_LEFT_SHIFT) & 0x7FFFFFFF; //q31
 	return ___SMMLA(a, (d[(i + 1) & LENGTHMASK] - d0)<<1, d0);
+}
+int32_t calcCoef(int32_t pitch){  //q30
+	uint32_t F;
+	MTOFEXTENDED(pitch, F);
+
+	int32_t a = (1<<30) - (F>>6);
+	for(int i = 0; i < 6; i++){
+	  a = ___SMMUL(a, a) << 2;
+	}
+	return (1<<30) - a;
 }]]></code.declaration>
       <code.init><![CDATA[for(int i = 0; i < LENGTH; i++) d[i] = 0;
-lpTheta = 0;
+lhpTheta = lpTheta = 0;
 delay = 16<<21;
 fbPhi = outPhi = 0;
 aIn = 0;
 fbGain = 0;]]></code.init>
-      <code.krate><![CDATA[int32_t lpCoef;
-MTOF(inlet_Fb_space_LP, lpCoef);
+      <code.krate><![CDATA[//int32_t lpCoef;
+//MTOF(inlet_Fb_space_LP, lpCoef);
+int32_t lpCoef = calcCoef(inlet_Fb_space_LP);
+disp_lpCoef=lpCoef;
+int32_t hpCoef = calcCoef(inlet_Fb_space_HP);
 
 // delay control is linearly interpolated
 int32_t newDelay = inlet_Fb_space_delay;
@@ -80,8 +97,9 @@ for(int smp = 0; smp < BUFSIZE; smp++){
 	//feedback
 	int32_t cosFb = sine2t[((currentTheta + fbPhi) & 0x07FFFFFF) >>15];
 	int32_t newTheta = ___SMMUL(cosFb, ___SMMUL(inlet_in[smp], fbGain)<<6);
-	lpTheta = ___SMMLA((newTheta - lpTheta)<<1, lpCoef, lpTheta);
-	d[ind] = lpTheta;
+	lpTheta = ___SMMLA((newTheta - lpTheta)<<2, lpCoef, lpTheta);
+	lhpTheta = ___SMMLA((lpTheta - lhpTheta)<<2, hpCoef, lhpTheta);
+	d[ind] = lpTheta - lhpTheta;
 
 }]]></code.krate>
    </obj.normal>
