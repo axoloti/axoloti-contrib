@@ -1,0 +1,68 @@
+<objdefs appVersion="1.0.12">
+<obj.normal id="string_muxer" uuid="4f2198f5-878b-4b26-8259-b8b1540e2a72">
+   <sDescription>String selector with value display</sDescription>
+   <author>Berend Klein Haneveld</author>
+   <inlets>
+      <int32 name="value"/>
+      <int32 name="index"/>
+   </inlets>
+   <outlets>
+      <charptr32 name="text" description="text"/>
+   </outlets>
+   <displays/>
+   <params/>
+   <attribs>
+      <table name="a1"/>
+      <table name="a2"/>
+      <table name="a3"/>
+      <table name="a4"/>
+      <table name="a5"/>
+      <table name="a6"/>
+      <table name="a7"/>
+      <table name="a8"/>
+      <table name="a9"/>
+      <table name="a10"/>
+   </attribs>
+   <includes/>
+   <code.declaration><![CDATA[const int offset = 8;
+char c[64];
+int pvalue = -1;
+int pindex = -1;]]></code.declaration>
+   <code.init><![CDATA[strcpy(&c[0], "attr_a1           ");
+pvalue = -1;
+pindex = -1;]]></code.init>
+   <code.krate><![CDATA[int index = inlet_index;
+int value = inlet_value;
+
+if (index != pindex) {
+    if (index == 0) { strcpy(&c[0], "attr_a1          "); }
+    else if (index == 1) { strcpy(&c[0], "attr_a2          "); }
+    else if (index == 2) { strcpy(&c[0], "attr_a3          "); }
+    else if (index == 3) { strcpy(&c[0], "attr_a4          "); }
+    else if (index == 4) { strcpy(&c[0], "attr_a5          "); }
+    else if (index == 5) { strcpy(&c[0], "attr_a6          "); }
+    else if (index == 6) { strcpy(&c[0], "attr_a7          "); }
+    else if (index == 7) { strcpy(&c[0], "attr_a8          "); }
+    else if (index == 8) { strcpy(&c[0], "attr_a9          "); }
+    else if (index == 9) { strcpy(&c[0], "attr_a10          "); }
+    pindex = index;
+}
+
+if (value != pvalue) {
+    int i = value;
+    int i0 = i/10;
+    c[offset+2] = '0'+i-10*i0;
+    i = i0;
+    i0 = i/10;
+    c[offset+1] = '0'+i-10*i0;
+    i = i0;
+    i0 = i/10;
+    c[offset+0] = '0'+i-10*i0;
+    // Make sure there is a space between text and value
+    c[offset-1] = ' ';
+    pvalue = value;
+}
+
+outlet_text = &c[0];]]></code.krate>
+</obj.normal>
+</objdefs>

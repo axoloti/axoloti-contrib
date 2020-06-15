@@ -1,0 +1,57 @@
+<patch-1.0 appVersion="1.0.12">
+   <comment type="patch/comment" x="42" y="14" text="Hohum Axoctrl Start-up patch"/>
+   <comment type="patch/comment" x="42" y="28" text="This patch loads the first path from the patch bank asap. This makes it possible to cycle through all the patches in the patch bank."/>
+   <comment type="patch/comment" x="42" y="56" text="Instructions:"/>
+   <comment type="patch/comment" x="42" y="70" text="Run &apos;Upload to SDCard as startup to make sure that on startup, this patch will make sure that the first patch of the patchbank will be loaded"/>
+   <obj type="const/i" uuid="e202f44b2df17ae0b3e663b98ea6b14c8ff00408" name="first_patch_index" x="182" y="98">
+      <params/>
+      <attribs>
+         <spinner attributeName="value" value="0"/>
+      </attribs>
+   </obj>
+   <obj type="patch/load i" uuid="b79124f5b7d1e8b39e187677ddab6260ce8c60a3" name="load_1" x="266" y="98">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rbrt/patching/loadbang" uuid="45d1f29d-ac62-4e5b-86f8-2201d2f6c689" name="loadbang_1" x="28" y="182">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="timer/delayedpulse" uuid="3f05ee534ca67755fb20c7437f9e4de3d4c2f73d" name="delayedpulse_1" x="154" y="182">
+      <params>
+         <frac32.s.map name="delay" value="8.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="first_patch_index" outlet="out"/>
+         <dest obj="load_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="delayedpulse_1" outlet="pulse"/>
+         <dest obj="load_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="loadbang_1" outlet="pulse"/>
+         <dest obj="delayedpulse_1" inlet="trig"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+      <MidiChannel>1</MidiChannel>
+      <NPresets>8</NPresets>
+      <NPresetEntries>32</NPresetEntries>
+      <NModulationSources>8</NModulationSources>
+      <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+      <Author>hohum_lab (berendkleinhaneveld)</Author>
+      <License>undefined</License>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>459</x>
+      <y>254</y>
+      <width>834</width>
+      <height>491</height>
+   </windowPos>
+</patch-1.0>

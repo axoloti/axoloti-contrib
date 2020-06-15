@@ -1,0 +1,94 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="auto_muxer" uuid="544250aa-1432-46ea-9294-7367d4864a60">
+      <author>Berend Klein Haneveld</author>
+      <license>GPL</license>
+      <inlets>
+         <frac32 name="i1"/>
+         <frac32 name="i2"/>
+         <frac32 name="i3"/>
+         <frac32 name="i4"/>
+         <frac32 name="i5"/>
+         <frac32 name="i6"/>
+         <frac32 name="i7"/>
+         <frac32 name="i8"/>
+         <frac32 name="i9"/>
+         <frac32 name="i10"/>
+      </inlets>
+      <outlets>
+         <int32 name="out"/>
+         <int32 name="index"/>
+         <int32 name="direction"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[#define INLET_COUNT 10
+
+int curr[INLET_COUNT];  // Value from current cycle
+int prev[INLET_COUNT];  // Value from previous cycle
+int direction[INLET_COUNT];  // 0 (no direction), -1 down, 1 up
+
+// Index of inlet that was chosen for last cycle
+int selected_index;
+int cycle_index;
+
+int imax(int a, int b) {
+    return a > b ? a : b;
+}
+
+int imin(int a, int b) {
+    return a < b ? a : b;
+}]]></code.declaration>
+      <code.init><![CDATA[for (int i = 0; i < INLET_COUNT; i++) {
+      curr[i] = 0;
+      prev[i] = 0;
+      direction[i] = 0;
+  }]]></code.init>
+      <code.krate><![CDATA[// Compare the values from the inlets with the previous values
+// >> 18 gives values between 0 and 512
+curr[0] = inlet_i1>>20;
+curr[1] = inlet_i2>>20;
+curr[2] = inlet_i3>>20;
+curr[3] = inlet_i4>>20;
+curr[4] = inlet_i5>>20;
+curr[5] = inlet_i6>>20;
+curr[6] = inlet_i7>>20;
+curr[7] = inlet_i8>>20;
+curr[8] = inlet_i9>>20;
+curr[9] = inlet_i10>>20;
+
+for (int i = 0; i < INLET_COUNT; i++) {
+    // Calculate the change since last cycle
+    int diff = curr[i] - prev[i];
+
+    // Check for significant change
+    if (abs(diff) > 1) {
+        // We have significant change!
+        selected_index = i;
+        // So now we update the last known direction
+        direction[i] = diff;
+    }
+
+    // Stabelize readings from the pot by doing the following:
+    // When direction is up, always take the max value of last
+    // known value and current value
+    if (direction[i] > 0) {
+        curr[i] = imax(curr[i], prev[i]);
+    } else if (direction[i] < 0) {
+        // Take the lowest value when the direction is down
+        curr[i] = imin(curr[i], prev[i]);
+    }
+
+    // Only update the last read value for the current pot
+    if (i == selected_index) {
+        prev[i] = curr[i];
+    }
+}
+
+// If the rounded value changes significantly from the last value, then
+// that index is sent out and its value
+outlet_out = curr[selected_index];
+outlet_index = selected_index;
+outlet_direction = direction[selected_index];]]></code.krate>
+   </obj.normal>
+</objdefs>
