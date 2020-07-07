@@ -1,0 +1,73 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="supersaw" uuid="1c5b1c0e-e496-4d4e-a045-9608d3fa08f2">
+      <sDescription>seven detuned saw wave oscillators
+compatible with the factory osc/supersaw
+- Lower and constant CPU cycles
+- aliasing limitation by Differentiated Polynomials.</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>supersaw.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <frac32.bipolar name="detune" description="detune"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="supersaw wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="detune"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[#define NBV 7
+int32_t tp[NBV];
+int32_t ax;]]></code.declaration>
+      <code.init><![CDATA[ax = 0;
+for(int i = 0; i < NBV; i++)
+    tp[i] = i<<28;]]></code.init>
+      <code.krate><![CDATA[int32_t tdp[NBV];
+
+int32_t f0;
+MTOFEXTENDED(inlet_pitch + param_pitch, f0)
+float _dp = 536870912.0f / f0;
+
+int32_t f0d = __USAT(param_detune + inlet_detune, 27);
+f0d = ___SMMUL(___SMMUL(f0d, f0d)<<8, f0);
+
+tdp[0] = ___SMMLA(f0d, -0x54321230, f0);
+tdp[1] = ___SMMLA(f0d, -0x31111110, f0);
+tdp[2] = ___SMMLA(f0d, -0x10203040, f0);
+tdp[3] = ___SMMLA(f0d,  0x10304500, f0);
+tdp[4] = ___SMMLA(f0d,  0x32121210, f0);
+tdp[5] = ___SMMLA(f0d,  0x55422110, f0);
+tdp[6] = f0;
+
+//first parabola
+int p = tp[0];
+int dp = tdp[0];
+tp[0] += dp<<4;
+for(int s = 0; s < BUFSIZE; s++){
+	p += dp;
+	outlet_wave[s] = ___SMMUL(p>>5, p);
+}
+
+//parabolae accumulantis
+for(int v = 1; v < NBV; v++){
+	p = tp[v];
+	dp = tdp[v];
+	tp[v] += dp<<4;
+	for(int s = 0; s < BUFSIZE; s++){
+		p += dp;
+		outlet_wave[s] = ___SMMLA(p>>5, p, outlet_wave[s]);
+	}
+}
+
+//diff
+for(int s = 0; s < BUFSIZE; s++){
+	int32_t x = outlet_wave[s];
+	outlet_wave[s] = (int32_t)(_dp * (x - ax));
+	ax = x;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
