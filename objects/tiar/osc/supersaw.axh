@@ -3,33 +3,56 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="98" y="14">
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="112" y="14">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_1" x="266" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="tiar/osc/supersaw" uuid="1c5b1c0e-e496-4d4e-a045-9608d3fa08f2" name="supersaw_1" x="210" y="14">
+   <obj type="tiar/osc/supersaw" uuid="1c5b1c0e-e496-4d4e-a045-9608d3fa08f2" name="supersaw_1" x="378" y="14">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
          <frac32.u.map name="detune" value="14.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="308" y="14">
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_2" x="476" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_2" x="420" y="14">
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_1" x="588" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="490" y="14">
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="658" y="14">
       <params/>
       <attribs/>
    </obj>
-   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="0" y="154">
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_3" x="728" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/supersaw" uuid="ece83feb36cfaee7dc3964b75c485774ea0309cf" name="supersaw_2" x="840" y="14">
       <params>
          <frac32.s.map name="pitch" value="0.0"/>
+         <frac32.u.map name="detune" value="14.5"/>
       </params>
+      <attribs/>
+   </obj>
+   <obj type="patch/cyclecounter" uuid="6b9e9c2187a0e07fb56029aef6ccaaf1f9621e35" name="cyclecounter_4" x="938" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/-" uuid="1643d55e6e7ce1c995a5e66db9f54fd969e6c9b7" name="-_3" x="1050" y="14">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_2" x="1120" y="14">
+      <params/>
       <attribs/>
    </obj>
    <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="98" y="154">
@@ -53,15 +76,21 @@
       <params/>
       <attribs/>
    </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_2" x="98" y="392">
+      <params/>
+      <attribs/>
+   </obj>
    <nets>
       <net>
          <source obj="sine_1" outlet="wave"/>
          <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
       </net>
       <net>
          <source obj="keyb_1" outlet="note"/>
          <dest obj="sine_1" inlet="pitch"/>
          <dest obj="supersaw_1" inlet="pitch"/>
+         <dest obj="supersaw_2" inlet="pitch"/>
       </net>
       <net>
          <source obj="supersaw_1" outlet="wave"/>
@@ -83,15 +112,31 @@
       </net>
       <net>
          <source obj="cyclecounter_2" outlet="t"/>
-         <dest obj="-_2" inlet="in1"/>
+         <dest obj="-_1" inlet="in1"/>
       </net>
       <net>
          <source obj="cyclecounter_1" outlet="t"/>
-         <dest obj="-_2" inlet="in2"/>
+         <dest obj="-_1" inlet="in2"/>
       </net>
       <net>
-         <source obj="-_2" outlet="out"/>
+         <source obj="-_1" outlet="out"/>
          <dest obj="i_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_4" outlet="t"/>
+         <dest obj="-_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="cyclecounter_3" outlet="t"/>
+         <dest obj="-_3" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="-_3" outlet="out"/>
+         <dest obj="i_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="supersaw_2" outlet="wave"/>
+         <dest obj="MIDscope_2" inlet="in"/>
       </net>
    </nets>
    <settings>

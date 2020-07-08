@@ -22,30 +22,25 @@ compatible with the factory osc/supersaw
       <attribs/>
       <code.declaration><![CDATA[#define NBV 7
 int32_t tp[NBV];
-int32_t ax;]]></code.declaration>
+int32_t ax;
+int32_t coef[7] = {
+	-0x54321230, -0x31111110,  -0x10203040,   0x10304500,   0x32121210,  0x55422110, 0
+};]]></code.declaration>
       <code.init><![CDATA[ax = 0;
 for(int i = 0; i < NBV; i++)
     tp[i] = i<<28;]]></code.init>
-      <code.krate><![CDATA[int32_t tdp[NBV];
-
-int32_t f0;
+      <code.krate><![CDATA[int32_t f0;
 MTOFEXTENDED(inlet_pitch + param_pitch, f0)
 float _dp = 536870912.0f / f0;
 
 int32_t f0d = __USAT(param_detune + inlet_detune, 27);
 f0d = ___SMMUL(___SMMUL(f0d, f0d)<<8, f0);
 
-tdp[0] = ___SMMLA(f0d, -0x54321230, f0);
-tdp[1] = ___SMMLA(f0d, -0x31111110, f0);
-tdp[2] = ___SMMLA(f0d, -0x10203040, f0);
-tdp[3] = ___SMMLA(f0d,  0x10304500, f0);
-tdp[4] = ___SMMLA(f0d,  0x32121210, f0);
-tdp[5] = ___SMMLA(f0d,  0x55422110, f0);
-tdp[6] = f0;
+
 
 //first parabola
-int p = tp[0];
-int dp = tdp[0];
+int32_t p = tp[0];
+int32_t dp = ___SMMLA(f0d, coef[0], f0);
 tp[0] += dp<<4;
 for(int s = 0; s < BUFSIZE; s++){
 	p += dp;
@@ -54,8 +49,8 @@ for(int s = 0; s < BUFSIZE; s++){
 
 //parabolae accumulantis
 for(int v = 1; v < NBV; v++){
+	dp = ___SMMLA(f0d, coef[v], f0);
 	p = tp[v];
-	dp = tdp[v];
 	tp[v] += dp<<4;
 	for(int s = 0; s < BUFSIZE; s++){
 		p += dp;
