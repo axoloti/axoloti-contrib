@@ -19,17 +19,41 @@ compatible with the factory osc/supersaw
          <frac32.s.map.pitch name="pitch"/>
          <frac32.u.map name="detune"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="algo">
+            <MenuEntries>
+               <string>DP</string>
+               <string>DP2</string>
+            </MenuEntries>
+            <CEntries>
+               <string>1</string>
+               <string>2</string>
+            </CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[#define NBV 7
 int32_t tp[NBV];
-int32_t ax;
 int32_t coef[7] = {
 	-0x54321230, -0x31111110,  -0x10203040,   0x10304500,   0x32121210,  0x55422110, 0
-};]]></code.declaration>
-      <code.init><![CDATA[ax = 0;
-for(int i = 0; i < NBV; i++)
-    tp[i] = i<<28;]]></code.init>
-      <code.krate><![CDATA[int32_t f0;
+};
+#if attr_algo==1
+int32_t ax;
+#else
+int32_t x1;
+float y1;
+#endif]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < NBV; i++)
+    tp[i] = i<<28;
+
+#if attr_algo==1
+ax = 0;
+#else
+x1 = 0;
+y1 = 0.0f;
+#endif]]></code.init>
+      <code.krate><![CDATA[#if attr_algo==1
+
+int32_t f0;
 MTOFEXTENDED(inlet_pitch + param_pitch, f0)
 float _dp = 536870912.0f / f0;
 
@@ -63,6 +87,45 @@ for(int s = 0; s < BUFSIZE; s++){
 	int32_t x = outlet_wave[s];
 	outlet_wave[s] = (int32_t)(_dp * (x - ax));
 	ax = x;
-}]]></code.krate>
+}
+#else
+int32_t f0;
+MTOFEXTENDED(inlet_pitch + param_pitch, f0)
+float _dp = (5<<26) / (float)f0;
+
+int32_t f0d = __USAT(param_detune + inlet_detune, 27);
+f0d = ___SMMUL(___SMMUL(f0d, f0d)<<8, f0);
+
+
+
+//first parabola
+int32_t p = tp[0];
+int32_t dp = ___SMMLA(f0d, coef[0], f0);
+tp[0] += dp<<4;
+for(int s = 0; s < BUFSIZE; s++){
+	p += dp;
+	outlet_wave[s] = ___SMMLS(___SMMUL(p, p), p,  p>>2)>>2;
+}
+
+//parabolae accumulantis
+for(int v = 1; v < NBV; v++){
+	dp = ___SMMLA(f0d, coef[v], f0);
+	p = tp[v];
+	tp[v] += dp<<4;
+	for(int s = 0; s < BUFSIZE; s++){
+		p += dp;
+		outlet_wave[s] += ___SMMLS(___SMMUL(p, p), p,  p>>2)>>2;
+	}
+}
+
+//diff
+for(int s = 0; s < BUFSIZE; s++){
+int32_t x0 = outlet_wave[s];
+	float y0 = (x0 - x1) * _dp; 
+	x1 = x0;
+	outlet_wave[s] = (int32_t)((y1 - y0) * _dp);
+	y1 = y0;
+}
+#endif]]></code.krate>
    </obj.normal>
 </objdefs>
