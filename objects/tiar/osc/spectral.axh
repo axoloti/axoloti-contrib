@@ -1,0 +1,168 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="14" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="rand/uniform i" uuid="9b1f945f346af0165ed99b8e19136cdbf744e594" name="uniform_1" x="126" y="42">
+      <params>
+         <int32 name="max" value="1504"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/osc/spectral" uuid="406d341d-f984-40ce-bb71-dc6214d6705e" name="spectral_1" x="294" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="434" y="42">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="532" y="42">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="280" y="140">
+      <params>
+         <frac32.s.map name="freq" value="-26.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_3" x="0" y="252">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="-3.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="98" y="252">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="43.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="mix/mix 3" uuid="7d947bff9b8466d81c2ddd49b4a7fb702302e05c" name="mix_1" x="196" y="252">
+      <params>
+         <frac32.u.map name="gain1" value="31.5"/>
+         <frac32.u.map name="gain2" value="41.0"/>
+         <frac32.u.map name="gain3" value="18.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/MgExp" uuid="e2961f59-06d5-4e85-9bde-5786a342a1d7" name="MgExp_1" x="280" y="252">
+      <params>
+         <frac32.s.map name="pitch" value="8.0"/>
+         <frac32.u.map name="reso" value="6.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/dist/sigmoid" uuid="41497886-5ba9-4afb-be6e-176d13f177fd" name="sigmoid_1" x="378" y="252">
+      <params>
+         <frac32.u.map name="InGain" value="64.0"/>
+         <frac32.u.map name="OutGain" value="33.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_2" x="532" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="154" y="462">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="64.0"/>
+         <frac32.u.map name="s" value="0.0"/>
+         <frac32.s.map name="r" value="-46.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="252" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="308" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="mix_1" inlet="in1"/>
+         <dest obj="spectral_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_1" inlet="left"/>
+         <dest obj="out_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="spectral_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+         <dest obj="hp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="MgExp_1" outlet="out"/>
+         <dest obj="sigmoid_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_2" outlet="env"/>
+         <dest obj="mix_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
+         <dest obj="MgExp_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="sigmoid_1" outlet="out"/>
+         <dest obj="vca_1" inlet="a"/>
+         <dest obj="MIDscope_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="adsr_3" outlet="env"/>
+         <dest obj="mix_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="uniform_1" outlet="v"/>
+         <dest obj="spectral_1" inlet="seed"/>
+      </net>
+      <net>
+         <source obj="keyb_1" outlet="gate"/>
+         <dest obj="adsr_2" inlet="gate"/>
+         <dest obj="adsr_3" inlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+         <dest obj="uniform_1" inlet="trig"/>
+      </net>
+      <net>
+         <source obj="hp1_1" outlet="out"/>
+         <dest obj="MgExp_1" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>618</x>
+      <y>58</y>
+      <width>1325</width>
+      <height>792</height>
+   </windowPos>
+</patch-1.0>

@@ -1,0 +1,57 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="spectral" uuid="406d341d-f984-40ce-bb71-dc6214d6705e">
+      <sDescription>spectral oscillator loosely inspired by the nord modular spectral oscillator.
+Basically it is a pseudo random generator with hard sync.
+A good oscillator for clavinet type of sounds.
+
+Aliasing limitation by box filtering (average over one sample).</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>spectral.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <int32 name="seed"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t r1;
+uint32_t p;
+int32_t a, _a;]]></code.declaration>
+      <code.krate><![CDATA[int32_t dp;
+MTOFEXTENDED(inlet_pitch + param_pitch, dp)
+float _fdp = 1073741824.0f / dp;]]></code.krate>
+      <code.srate><![CDATA[p += dp;
+int32_t r0;
+if(p < dp){
+	int32_t as = (int32_t)(p * _fdp);  //q30
+	if(a < as){
+		//sync happens before change
+		a = as;
+		_a = (1<<30) - a;
+		r0 = inlet_seed;
+		outlet_wave = ___SMMLA(a, r0, ___SMMUL(_a,r1))>>3;
+	} else {
+		//sync happens after change
+		r0 = 69069 * r1 + 1;
+		int32_t x = ___SMMUL(a - as, r0);
+		x = ___SMMLA(_a, r1, x);
+		a = as;
+		_a = (1<<30) - a;
+		r0 = inlet_seed;
+		x = ___SMMLA(a, r0, x);
+		outlet_wave = x>>3;
+	}
+} else { //no sync the mixture depends on the sub sample change position
+	r0 = 69069 * r1 + 1;
+	outlet_wave = ___SMMLA(a, r0, ___SMMUL(_a, r1)) >> 3;
+}
+
+r1 = r0;]]></code.srate>
+   </obj.normal>
+</objdefs>
