@@ -1,0 +1,153 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="spectral2" uuid="45023295-bb07-4ba6-8369-8eeb87ce4032">
+      <sDescription>spectral oscillator loosely inspired by the nord modular spectral oscillator.
+second order aliasing limitation (triangle window)
+types:
+0 all
+1 squarish
+2 33%
+3 25%
+4 20%
+5 1/6
+6 1/7</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>spectral2.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch" description="pitch"/>
+         <int32 name="seed"/>
+         <int32 name="type"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[class SpecGen{
+	public:
+	int32_t _a2,a2;
+	uint32_t p;
+	int32_t dp;
+	float _dp;
+	int32_t y0, y1;
+	int32_t z0;
+	int32_t r; //random
+	
+
+	void init(void){
+		_a2 = a2 = y0 = y1 = z0 = 0;
+	}
+	
+	void procSet(int32_t pitch, int32_t seed, int32_t *out){
+		MTOFEXTENDED(pitch, dp)
+		_dp = ((float)(1<<27)) / dp;
+
+		for(int s = 0; s < BUFSIZE; s++){
+			p += dp;
+			if(p < dp){
+				int32_t a = (int32_t)(p * _dp); //q27
+				//a2 =a^2/2
+				a2 = ___SMMUL(a, a)<<4; //q27
+				//_a2 = (1-a)^2/2;
+				_a2 = (1<<27) - a;
+				_a2 = ___SMMUL(_a2, _a2)<<4; //q27
+				y0 = y1;
+				y1 = r = seed;
+			} else {
+				y0 = y1;
+				y1 = (r = r * 69069 + 1);
+			}
+	
+			int32_t sortie = ___SMMLA(y1, a2, ___SMMLA((1<<26) - a2, y0, z0)); //q26 
+			z0 = ___SMMLA(y0, _a2,___SMMUL((1<<26)-_a2,y1));	
+			
+			out[s] = ___SMMUL(sortie, abs((int32_t)p))<<2;	//q27			
+		}
+	}
+	void procAdd(int32_t pitch, int32_t seed, int32_t *out){
+		MTOFEXTENDED(pitch, dp)
+		_dp = ((float)(1<<27)) / dp;
+
+		for(int s = 0; s < BUFSIZE; s++){
+			p += dp;
+			if(p < dp){
+				int32_t a = (int32_t)(p * _dp); //q27
+				//a2 =a^2/2
+				a2 = ___SMMUL(a, a)<<4; //q27
+				//_a2 = (1-a)^2/2;
+				_a2 = (1<<27) - a;
+				_a2 = ___SMMUL(_a2, _a2)<<4; //q27
+				y0 = y1;
+				y1 = r = seed;
+			} else {
+				y0 = y1;
+				y1 = (r = r * 69069 + 1);
+			}
+	
+			int32_t sortie = ___SMMLA(y1, a2, ___SMMLA((1<<26) - a2, y0, z0)); //q26 
+			z0 = ___SMMLA(y0, _a2,___SMMUL((1<<26)-_a2,y1));	
+			
+			out[s] += ___SMMUL(sortie, abs((int32_t)p))<<2;	//q27			
+		}
+	}	
+	void procSub(int32_t pitch, int32_t seed, int32_t *out){
+		MTOFEXTENDED(pitch, dp)
+		_dp = ((float)(1<<27)) / dp;
+
+		for(int s = 0; s < BUFSIZE; s++){
+			p += dp;
+			if(p < dp){
+				int32_t a = (int32_t)(p * _dp); //q27
+				//a2 =a^2/2
+				a2 = ___SMMUL(a, a)<<4; //q27
+				//_a2 = (1-a)^2/2;
+				_a2 = (1<<27) - a;
+				_a2 = ___SMMUL(_a2, _a2)<<4; //q27
+				y0 = y1;
+				y1 = r = seed;
+			} else {
+				y0 = y1;
+				y1 = (r = r * 69069 + 1);
+			}
+	
+			int32_t sortie = ___SMMLA(y1, a2, ___SMMLA((1<<26) - a2, y0, z0)); //q26 
+			z0 = ___SMMLA(y0, _a2,___SMMUL((1<<26)-_a2,y1));	
+			
+			out[s] -= ___SMMUL(sortie, abs((int32_t)p))<<2;	//q27			
+		}
+	}};
+
+
+
+
+SpecGen gen1, gen2;]]></code.declaration>
+      <code.init><![CDATA[gen1.init();
+gen2.init();]]></code.init>
+      <code.krate><![CDATA[//"all","squarish","33%","25%","20%","1/6","1/7"
+
+int32_t offset[7] = {
+2147483647, 2147483647, 1431655765, 1073741824, 858993459, 715827883, 613566757
+};
+int32_t type = inlet_type;
+if(type < 0) type = 0;
+if(type > 6) type = 6;
+
+gen2.p = gen1.p + offset[type];
+int32_t pitch = inlet_pitch + param_pitch;
+
+if(type == 0){
+	pitch -= (12<<21);	
+} 
+gen1.procSet(pitch, inlet_seed,(int32_t*)outlet_wave);	
+
+
+if(type == 0){
+	gen2.procAdd(pitch, inlet_seed,(int32_t*)outlet_wave);	
+}else{
+	gen2.procSub(pitch, inlet_seed,(int32_t*)outlet_wave);	
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
