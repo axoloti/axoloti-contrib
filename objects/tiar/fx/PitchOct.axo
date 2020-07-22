@@ -1,0 +1,120 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pitchoct" uuid="888cd2ed-e44b-47fd-9738-565690bfb4df">
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch>pitchoct.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <combo name="size">
+            <MenuEntries>
+               <string>4096</string>
+               <string>256</string>
+               <string>512</string>
+               <string>1024</string>
+               <string>2048</string>
+               <string>8192</string>
+               <string>16384</string>
+               <string>32768</string>
+               <string>65536</string>
+               <string>131072</string>
+               <string>262144</string>
+
+            </MenuEntries>
+            <CEntries>
+               <string>12</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+               <string>17</string>
+               <string>18</string>
+
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTHPOW = (attr_size);
+static const uint32_t LENGTH = (1<<attr_size);
+static const uint32_t LENGTHMASK = ((1<<attr_size)-1);
+static const uint32_t DELTAC = (1<<(32-LENGTHPOW-1));
+int32_t *buff;
+
+
+
+int32_t wi, ri1, ri2,ri3,ri4;
+uint32_t c1, c2,c3,c4;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _buff[attr_poly][1<<attr_size]  __attribute__ ((section (".sdram")));
+buff = &_buff[parent->polyIndex][0];
+
+for(int i=0;i<LENGTH;i++) buff[i] = 0;
+wi = 0;
+ri1 = ri2 = ri3 = ri4 = 0;
+
+c1 = 0;
+c2 = 0x5FFFFFFF;
+
+c3 = c1+0x50000000;
+c4 =  c2+0x72000000;]]></code.init>
+      <code.krate><![CDATA[for(int s = 0; s < BUFSIZE; s++){
+	if((s & 1) == 0){
+		buff[wi] = inlet_in[s] + inlet_in[s + 1]; //q28
+		wi++; wi &= LENGTHMASK;
+	}
+	//wi points on the older entry in the buffer
+	int32_t acc;
+	ri1++; ri1 &= LENGTHMASK;
+	c1 += DELTAC;
+	if(c1 < DELTAC){
+		ri1 = wi;
+		acc = 0;
+	} else {
+		int32_t e = (int32_t) c1;
+		e = abs(e>>1);
+		acc = ___SMMUL(e, buff[ri1]);  // q30 * q28 -> q26
+	}
+	
+	ri2++; ri2 &= LENGTHMASK;
+	c2 += DELTAC;
+	if(c2 < DELTAC){
+		ri2 = wi;
+	} else {
+		int32_t e = (int32_t) c2;
+		e = abs(e>>1);
+		acc = ___SMMLA(e, buff[ri2], acc);  // q30 * q28 -> q26
+	}
+	ri3++; ri3 &= LENGTHMASK;
+	c3 += DELTAC;
+	if(c3 < DELTAC){
+		ri3 = wi;
+	} else {
+		int32_t e = (int32_t) c3;
+		e = abs(e>>1);
+		acc = ___SMMLA(e, buff[ri3], acc);  // q30 * q28 -> q26
+	}
+	ri4++; ri4 &= LENGTHMASK;
+	c4 += DELTAC;
+	if(c4 < DELTAC){
+		ri4 = wi;
+	} else {
+		int32_t e = (int32_t) c4;
+		e = abs(e>>1);
+		acc = ___SMMLA(e, buff[ri4], acc);  // q30 * q28 -> q26
+	}
+
+
+	
+	outlet_out[s] = acc;
+	
+}]]></code.krate>
+   </obj.normal>
+</objdefs>
