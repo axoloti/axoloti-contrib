@@ -1,0 +1,24 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smoothSat" uuid="7c78778d-8a9c-4c40-9739-5d775cb762a5">
+      <sDescription></sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>smoothSat.axh</helpPatch>
+      <inlets>
+         <frac32buffer.bipolar name="in"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t LP;]]></code.declaration>
+      <code.init><![CDATA[LP = 0;]]></code.init>
+      <code.srate><![CDATA[LP=__SMMLA(0x50000000,inlet_in-LP,LP);
+int32_t HP = inlet_in-LP;
+int32_t x = __SSAT(LP,28);
+x=___SMMUL(___SMMLS(x,x,3<<22),x)<<10;
+outlet_out = __SSAT(___SMMLA(1431655765,x,HP),28);]]></code.srate>
+   </obj.normal>
+</objdefs>
