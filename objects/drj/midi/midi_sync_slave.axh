@@ -1,0 +1,179 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="lfo/square" uuid="de6909eb64db13af5b43f979a4c130024b3a4793" name="square_1" x="28" y="28">
+      <params>
+         <frac32.s.map name="pitch" value="38.650001525878906"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/midi/tempo_sync_slave" uuid="92a1ec6b4c48b3a010a7bab47eab6a12a35b1fbc" name="tempo_sync_slave_1" x="168" y="28">
+      <params>
+         <int32 name="clockdiv" value="6"/>
+         <int32 name="steps" value="4"/>
+         <int32 name="swing" value="75"/>
+         <int32 name="gate" value="35"/>
+      </params>
+      <attribs>
+         <combo attributeName="clocksource" selection="External"/>
+         <combo attributeName="device" selection="internal port 1"/>
+         <combo attributeName="bpmsmooth" selection="0"/>
+      </attribs>
+   </obj>
+   <obj type="disp/bool" uuid="a0ee71d48208b71752cbb8c05e55145106ef3946" name="bool_1" x="350" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/i" uuid="5e35fd0c62d81e70017289250cf28edd26e19e4a" name="i_1" x="434" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="disp/ibar 16" uuid="302bfed4cde8894229679ce81f6b8a5c5212dd98" name="ibar_1" x="490" y="28">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="Start" x="28" y="140">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="drj/seq/stepseq_4_b" uuid="118548e73bc123fd356ff0c14bff9cff999947ac" name="stepseq_4_b_1" x="350" y="168">
+      <params>
+         <frac32.s.map name="v1" value="0.0"/>
+         <frac32.s.map name="v2" value="4.0"/>
+         <frac32.s.map name="v3" value="7.0"/>
+         <frac32.s.map name="v4" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/pwm" uuid="a6b40ff63f161d8bac8ea2eba5b0dbffcf49b472" name="pwm_1" x="476" y="168">
+      <params>
+         <frac32.s.map name="pitch" value="-4.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_1" x="588" y="168">
+      <params>
+         <frac32.s.map name="a" value="-64.0"/>
+         <frac32.s.map name="d" value="-64.0"/>
+         <frac32.u.map name="s" value="64.0"/>
+         <frac32.s.map name="r" value="-64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="700" y="168">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="770" y="168">
+      <params>
+         <frac32.u.map name="volume" value="10.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="Stop" x="28" y="210">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="Continue" x="28" y="280">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/button" uuid="ef3d13774349df85aa9bfecf30dbc91ab8488b3f" name="Songpos" x="28" y="350">
+      <params>
+         <bool32.mom name="b" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="ctrl/i" uuid="a3786816db6ea5bc6ac4193a5cccdb2c83b83496" name="Pos 1/16" x="126" y="350">
+      <params>
+         <int32 name="value" value="0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="midi/clock_tx_test" uuid="92a7e23a28b3aab1201291ba35b1f49ec6b4c1ce" name="clock_tx_test_1" x="196" y="364">
+      <params>
+         <int32 name="bpm" value="1"/>
+         <int32 name="tenths" value="0"/>
+         <int32 name="clockdiv" value="1"/>
+         <int32 name="steps" value="1"/>
+         <bool32.mom name="start" value="0"/>
+         <bool32.mom name="stop" value="0"/>
+         <bool32.mom name="continue" value="0"/>
+         <bool32.tgl name="clockinhibit" value="0"/>
+      </params>
+      <attribs>
+         <combo attributeName="device" selection="din"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="square_1" outlet="wave"/>
+         <dest obj="tempo_sync_slave_1" inlet="clock"/>
+      </net>
+      <net>
+         <source obj="Stop" outlet="o"/>
+         <dest obj="tempo_sync_slave_1" inlet="stop"/>
+      </net>
+      <net>
+         <source obj="tempo_sync_slave_1" outlet="step"/>
+         <dest obj="i_1" inlet="in"/>
+         <dest obj="ibar_1" inlet="in"/>
+         <dest obj="stepseq_4_b_1" inlet="step"/>
+      </net>
+      <net>
+         <source obj="tempo_sync_slave_1" outlet="gate"/>
+         <dest obj="adsr_1" inlet="gate"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="pwm_1" outlet="wave"/>
+         <dest obj="vca_1" inlet="a"/>
+      </net>
+      <net>
+         <source obj="adsr_1" outlet="env"/>
+         <dest obj="vca_1" inlet="v"/>
+      </net>
+      <net>
+         <source obj="stepseq_4_b_1" outlet="out"/>
+         <dest obj="pwm_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="tempo_sync_slave_1" outlet="run"/>
+         <dest obj="bool_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="Continue" outlet="o"/>
+         <dest obj="tempo_sync_slave_1" inlet="continue"/>
+      </net>
+      <net>
+         <source obj="Songpos" outlet="o"/>
+         <dest obj="tempo_sync_slave_1" inlet="songpos"/>
+      </net>
+      <net>
+         <source obj="Pos 1/16" outlet="out"/>
+         <dest obj="tempo_sync_slave_1" inlet="position"/>
+      </net>
+      <net>
+         <source obj="Start" outlet="o"/>
+         <dest obj="tempo_sync_slave_1" inlet="start"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>647</x>
+      <y>160</y>
+      <width>1104</width>
+      <height>822</height>
+   </windowPos>
+</patch-1.0>

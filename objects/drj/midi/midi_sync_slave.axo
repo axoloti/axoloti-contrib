@@ -1,0 +1,528 @@
+<objdefs appVersion="1.0.9">
+
+  <obj.normal id="tempo_sync_slave" uuid="92a1ec6b4c48b3a010a7bab47eab6a12a35b1fbc">
+    <sDescription>Tempo sync slave</sDescription>
+    <author>Are Leistad</author>
+    <license>BSD</license>
+    <inlets>
+
+      <bool32 name="clock"    description="24PPQ clock"/>
+      <bool32 name="start"    description="Start"/>
+      <bool32 name="stop"     description="Stop"/>
+      <bool32 name="continue" description="Continue"/>
+      <bool32 name="songpos"  description="Song position"/>
+      <int32  name="position" description="Song position, 16th notes"/>
+
+    </inlets>
+    <outlets>
+
+      <bool32 name="run"      description="Running"/>
+      <bool32 name="beat"     description="Beat pulse"/>
+      <int32  name="step"     description="Step number"/>
+      <bool32 name="trig"     description="Step trigger"/>
+      <bool32 name="gate"     description="Step gate"/>
+
+    </outlets>
+    <displays>
+
+       <int32.label name="bpm"    noLabel="false"/>
+       <int32.label name="tenths" noLabel="false"/>
+
+    </displays>
+    <params>
+
+      <int32 name="clockdiv" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+
+      <int32 name="steps" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="128"/>
+      </int32>
+
+      <int32 name="swing" noLabel="false">
+         <MinValue i="50"/>
+         <MaxValue i="75"/>
+      </int32>
+
+      <int32 name="gate" noLabel="false">
+         <MinValue i="1"/>
+         <MaxValue i="100"/>
+      </int32>
+
+    </params>
+    <attribs>
+
+      <combo name="clocksource">
+        <MenuEntries>
+          <string>External</string>
+          <string>MIDI</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+        </CEntries>
+      </combo>
+
+      <combo name="device">
+        <MenuEntries>
+          <string>omni</string>
+          <string>din</string>
+          <string>usb host port 1</string>
+          <string>usb host port 2</string>
+          <string>usb host port 3</string>
+          <string>usb host port 4</string>
+          <string>internal port 1</string>
+          <string>internal port 2</string>
+          <string>usb device port 1</string>
+        </MenuEntries>
+        <CEntries>
+          <string>MIDI_DEVICE_OMNI, 1</string>
+          <string>MIDI_DEVICE_DIN, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 1</string>
+          <string>MIDI_DEVICE_USB_HOST, 2</string>
+          <string>MIDI_DEVICE_USB_HOST, 3</string>
+          <string>MIDI_DEVICE_USB_HOST, 4</string>
+          <string>MIDI_DEVICE_INTERNAL, 1</string>
+          <string>MIDI_DEVICE_INTERNAL, 2</string>
+          <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+        </CEntries>
+      </combo>
+
+      <combo name="bpmsmooth">
+        <MenuEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+          <string>3</string>
+          <string>4</string>
+        </MenuEntries>
+        <CEntries>
+          <string>0</string>
+          <string>1</string>
+          <string>2</string>
+          <string>3</string>
+          <string>4</string>
+        </CEntries>
+      </combo>
+
+    </attribs>
+    <code.declaration><![CDATA[
+
+      //#define DEBUGF LogTextMessage
+      #define DEBUGF(...) {}
+
+      #define TIMER_FREQ 3000
+      #define PPQ        24
+
+      enum
+      {
+        CLOCK_SOURCE_external  = 0,
+        CLOCK_SOURCE_midi      = 1,
+        CLOCK_SOURCE_midi_omni = 2,
+      } CLOCK_SOURCE;
+
+      uint32_t  initalized;
+
+      // User parameter capture variables
+      uint32_t uparam_clockdiv;
+      uint32_t uparam_swing;    // user swing parameter, 50% is no swing, 75% is maximum swing which adds a dot.
+      uint32_t uparam_gate;     // user gate time parameter, 1% to 100%
+      uint32_t uparam_steps;
+
+      // Input edge detectors
+      uint32_t old_sync_clock;
+      uint32_t old_sync_start;
+      uint32_t old_sync_stop;
+      uint32_t old_sync_continue;
+      uint32_t old_sync_songpos;
+
+      // K-rate time base
+      uint32_t  ktimer;
+
+      // Clock period and divider
+      uint32_t  clock_count;
+      uint32_t  clock_divpulse;
+      uint32_t  clock_last_time;
+      uint32_t  clock_period;
+
+      // BPM detector
+      uint32_t  bpm_clock_count;
+      uint32_t  bpm_last_ktime;
+      int32_t   bpm_int;
+      int32_t   bpm_tenths;
+
+      // Sequencer working variables
+      uint32_t  seq_has_started;    // true if MIDI Start has been received at least once
+      uint32_t  seq_swing_time;
+      uint32_t  seq_gate_time;
+      uint32_t  seq_running;
+      uint32_t  seq_step_count;
+      uint32_t  seq_step_start;     // scheduled time for start of step
+      uint32_t  seq_step_started;   // actual time for start of step
+      uint32_t  seq_step_delay;     // the step delay is 0 or seq_swing_time
+      uint32_t  seq_step_pending;   // step is ready to be dispatched
+      uint32_t  seq_gate;
+      uint32_t  seq_trig;
+      uint32_t  seq_step;
+
+      // Axolot MIDI device detection
+
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int midi_device_test( midi_device_t dev, uint8_t port, int selected_dev, uint8_t selected_port )
+      {
+        if(    (selected_dev == MIDI_DEVICE_OMNI)
+            || (selected_dev == dev && selected_port == port)
+            )
+          return 1;
+        return 0;
+      }
+
+#if attr_bpmsmooth>0
+      #define FIFO_EXP attr_bpmsmooth
+      #define FIFO_LEN (1<<FIFO_EXP)
+      #define FIFO_MASK (FIFO_LEN-1)
+      typedef struct _AveragerContext
+      {
+        int32_t fifo[FIFO_LEN];
+        int32_t fifo_i;
+        int32_t acc;
+      } AveragerContext;
+      AveragerContext avg;
+      __attribute__ ( ( always_inline ) ) __STATIC_INLINE int32_t moving_average( AveragerContext *avg, int32_t new_value )
+      {
+        avg->fifo_i             = (avg->fifo_i + 1) & FIFO_MASK;
+        avg->acc               -= avg->fifo[avg->fifo_i];
+        avg->acc               += new_value;
+        avg->fifo[avg->fifo_i]  = new_value;
+        return avg->acc >> FIFO_EXP;
+      }
+#endif
+
+      // Computes BPM for every clock - could do it, say, for every 24 clocks instead for greater accuracy
+
+      void clock_to_bpm( void )
+      {
+        if( ++bpm_clock_count >= 24 )
+          {
+            bpm_clock_count = 0;
+#if attr_bpmsmooth>0
+            int32_t bpm_period = moving_average( &avg, ktimer - bpm_last_ktime );
+#else
+            int32_t bpm_period = ktimer - bpm_last_ktime;
+#endif
+            bpm_last_ktime = ktimer;
+            if( bpm_period < 1 )
+              {
+                bpm_period = 1;
+              }
+            float bpm_float = (180000.0f) / bpm_period;
+            bpm_int     = (int32_t) bpm_float;
+            bpm_tenths  = (int32_t)((bpm_float - bpm_int) * 10);
+          }
+      }
+
+      // MIDI System Reset
+
+      void on_system_reset( void )
+      {
+        DEBUGF("r");
+        seq_step_count = 0;
+      }
+
+      // Sync event handlers
+
+      void on_sync_clock( void )
+      {
+        DEBUGF("c");
+        clock_divpulse = 0;
+        if( clock_count == 0 )
+          {
+            clock_divpulse = 1;
+          }
+        clock_period    = ktimer - clock_last_time;
+        clock_last_time = ktimer;
+        clock_to_bpm();
+
+        // Compute swing and gate times
+        // User swing parameter: 50% is no swing, 75% is maximum swing which adds a dot.
+        // User gate time parameter: 1% to 100%
+        seq_swing_time = (int32_t) ((uparam_clockdiv * clock_period) * ((uparam_swing - 50) * 0.01f));
+        seq_gate_time  = (int32_t) ((uparam_clockdiv * clock_period) * (uparam_gate * 0.01f));
+        if( seq_gate_time < 1 )
+          {
+            seq_gate_time = 1;
+          }
+
+        if( ++clock_count >= uparam_clockdiv )
+          {
+            clock_count = 0;
+          }
+      }
+
+      void on_sync_start( void )
+      {
+        // http://midi.teragonaudio.com/tech/midispec/seq.htm :
+        // "If a slave receives MIDI Start or MIDI Continue messages while it's in play,
+        // it should ignore those messages. Likewise, if it receives MIDI Stop messages while stopped, it ignores those."
+        // MxB Play-from-start button just sends a start, not a stop first - don't know what other gear does...
+        //if( !seq_running )
+          {
+            seq_running    = 1;
+            seq_step_count = 0;
+            clock_count    = 0; // arm playback on downbeat (next clock)
+            DEBUGF("> c = %d", clock_count);
+          }
+      }
+
+      void on_sync_stop( void )
+      {
+        DEBUGF("|");
+        seq_running      = 0;
+        seq_step_pending = 0;
+        seq_gate         = 0;
+      }
+
+      void on_sync_continue( void )
+      {
+        // http://midi.teragonaudio.com/tech/midispec/seq.htm :
+        // "If a slave receives MIDI Start or MIDI Continue messages while it's in play,
+        // it should ignore those messages. Likewise, if it receives MIDI Stop messages while stopped, it ignores those."
+        // MxB Play-from-start button just sends a start, not a stop first - don't know what other gear does...
+        //if( !seq_running )
+          {
+#if 0
+            // Start from next MIDI Beat?
+            // This is not what the MxB does...(?)
+            // Simply letting the clock count stay as it is matched the MxB on stop/continue cycles,
+            // after we have received one Start message which allows us to get the clock count in sync.
+            clock_count     = ( ((int32_t)(clock_count / 6) + 1) * 6 ) % 24;
+#endif
+            if( seq_has_started )
+              {
+                seq_running = 1;
+              }
+            else
+              {
+                // Treat the first Continue as a Start to ensure lock step!
+                DEBUGF(". => >");
+                seq_has_started = 1;
+                seq_running = 1;
+                on_sync_start();
+              }
+            DEBUGF(". c = %d", clock_count);
+          }
+      }
+
+      void on_sync_songpos( int32_t pos )
+      {
+        DEBUGF("p");
+        // Position is in sixteenths, or "MIDI Beats", each spanning 6 MIDI clocks!
+        seq_step_count = ((pos * 6) / uparam_clockdiv) % uparam_steps;
+#if 0
+        clock_count     = ( ((int32_t)(clock_count / 6) + 1) * 6 ) % 24;
+#endif
+      }
+
+    ]]></code.declaration>
+    <code.init><![CDATA[
+
+      initalized        = 0;
+
+      // User parameters
+      uparam_clockdiv   = 2;
+      uparam_swing      = 50;
+      uparam_gate       = 50;
+      uparam_steps      = 1;
+
+      // Input edge detectors
+      old_sync_clock    = 0;
+      old_sync_start    = 0;
+      old_sync_stop     = 0;
+      old_sync_continue = 0;
+      old_sync_songpos  = 0;
+
+      // K-rate time base
+      ktimer            = 0;
+
+      // Clock period and divider
+      clock_count       = 0;
+      clock_divpulse    = 0;
+      clock_last_time   = 0;
+      clock_period      = 0;
+
+      // BPM detector
+
+#if attr_bpmsmooth>0
+      for( avg.fifo_i = 0; avg.fifo_i < FIFO_LEN; avg.fifo_i++ )
+        {
+          avg.fifo[avg.fifo_i] = 0;
+        }
+      avg.fifo_i       = 0;
+      avg.acc          = 0;
+#endif
+      bpm_clock_count   = 0;
+      bpm_last_ktime   = 0;
+      bpm_int          = 0;
+      bpm_tenths       = 0;
+
+      // Sequencer working variables
+
+      // Swing and gate gate init to at 120bpm 8th notes 50% swing/gate
+      seq_has_started   = 0;
+      seq_swing_time    = 0;
+      seq_gate_time     = 0;
+      seq_running       = 0;
+      seq_step_count    = 0;
+      seq_step_start    = 0;
+      seq_step_started  = 0;
+      seq_step_delay    = 0;
+      seq_step_pending  = 0;
+      seq_gate          = 0;
+      seq_trig          = 0;
+      seq_step          = 0;
+
+
+    ]]></code.init>
+    <code.krate><![CDATA[
+
+      // Capture Axo UI parameters at K-rate for use in other scopes.
+
+      uparam_clockdiv = param_clockdiv;
+      uparam_swing    = param_swing;
+      uparam_gate     = param_gate;
+      uparam_steps    = param_steps;
+
+      // Initialization on first K-rate iteration
+
+      if( !initalized )
+        {
+          // Initialize variables that need Axo parameters
+          seq_swing_time = (uint32_t) (param_clockdiv * (0.5f/24) * 3000 * (param_swing - 50.0f) * 0.01f);
+          seq_gate_time  = (uint32_t) (param_clockdiv * (0.5f/24) * 3000 * param_gate * 0.01f);
+          initalized     = 1;
+        }
+
+      // Sync input edge detection
+
+      if( inlet_songpos && !old_sync_songpos )
+        {
+          on_sync_songpos( inlet_position );
+        }
+
+      if( inlet_stop && !old_sync_stop )
+        {
+          on_sync_stop();
+        }
+
+      if( inlet_continue && !old_sync_continue )
+        {
+          on_sync_continue();
+        }
+
+      if( inlet_start && !old_sync_start )
+        {
+          on_sync_start();
+        }
+
+      if( attr_clocksource == CLOCK_SOURCE_external && inlet_clock && !old_sync_clock )
+        {
+              on_sync_clock();
+        }
+
+      old_sync_clock    = inlet_clock;
+      old_sync_start    = inlet_start;
+      old_sync_stop     = inlet_stop;
+      old_sync_continue = inlet_continue;
+      old_sync_songpos  = inlet_songpos;
+
+      seq_trig = 0;
+
+      if( seq_running )
+        {
+          // Schedule sequencer step
+
+          if( clock_divpulse )
+            {
+              seq_step_start   = ktimer;
+              seq_step_delay   = (seq_step_count & 1) * seq_swing_time;
+              seq_step_pending = 1;
+
+              DEBUGF("sw = %d", seq_step_delay );
+              DEBUGF("gt = %d", seq_gate_time);
+            }
+
+          // Handle the gate and the step number
+
+          if( seq_gate )
+            {
+              if( seq_step_pending )
+                {
+                  // Cut off the gate and hold off the next gate for one tick to ensure retriggering.
+                  // This step could be avoided by computing an exact gate started time
+                  // that is guaranteed to cause one timer tick with gate off.
+                  seq_gate = 0;
+                }
+              else if( ktimer - seq_step_started >= seq_gate_time )
+                {
+                  // Normal gate hold time -> gate off
+                  seq_gate = 0;
+                }
+            }
+          else if( seq_step_pending && ktimer - seq_step_start >= seq_step_delay )
+            {
+              // OK - here goes the next step
+              seq_step_started  = ktimer;
+              seq_step_pending  = 0;
+              seq_gate          = 1;
+              seq_trig          = 1;
+              seq_step          = seq_step_count;
+              if( ++seq_step_count >= uparam_steps )
+                {
+                  seq_step_count = 0;
+                }
+            }
+        }
+
+      // Update outputs, displays and timer
+
+      outlet_beat     = clock_divpulse;
+      clock_divpulse  = 0;
+      outlet_run      = seq_running;
+      outlet_trig     = seq_trig;
+      outlet_gate     = seq_gate;
+      outlet_step     = seq_step;
+      disp_bpm        = bpm_int;
+      disp_tenths     = bpm_tenths;
+
+      ktimer++;
+
+    ]]></code.krate>
+    <code.midihandler><![CDATA[
+
+      // MIDI realtime spec:
+      // http://midi.teragonaudio.com/tech/midispec/seq.htm
+      // http://www.personal.kent.edu/~sbirch/Music_Production/MP-II/MIDI/midi_system_real.htm
+
+      DEBUGF("M: d = %d, p = %d", dev, port);
+
+      if(     attr_clocksource == CLOCK_SOURCE_midi
+          &&  attr_device      == midi_device_test( dev, port, attr_device ) == 1
+
+        )
+        {
+          switch( status )
+            {
+              case MIDI_RESET         : on_system_reset();                      break;
+              case MIDI_TIMING_CLOCK  : on_sync_clock();                        break;
+              case MIDI_START         : on_sync_start();                        break;
+              case MIDI_STOP          : on_sync_stop();                         break;
+              case MIDI_CONTINUE      : on_sync_continue();                     break;
+              case MIDI_SONG_POSITION : on_sync_songpos( (data2<<7) + data1 );  break;
+            }
+        }
+
+    ]]></code.midihandler>
+  </obj.normal>
+
+</objdefs>
