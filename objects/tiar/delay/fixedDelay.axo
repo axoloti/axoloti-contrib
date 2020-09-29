@@ -1,0 +1,33 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="fixedDelay" uuid="5a641b5f-ab39-405e-8361-39d576cd7b19">
+      <sDescription></sDescription>
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="wave input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="delay" MinValue="0" MaxValue="2000000" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[static const uint32_t LENGTH = attr_delay;
+
+int32_t *d;
+
+uint32_t ind;]]></code.declaration>
+      <code.init><![CDATA[static int32_t _d[attr_poly][attr_delay]  __attribute__ ((section (".sdram")));
+d = &_d[parent->polyIndex][0];
+
+for(int i=0;i<LENGTH;i++) d[i] = 0;
+ind = 0;]]></code.init>
+      <code.srate><![CDATA[outlet_out=d[ind];
+d[ind]=inlet_in;
+ind++;
+if(ind>=LENGTH) ind=0;]]></code.srate>
+   </obj.normal>
+</objdefs>
