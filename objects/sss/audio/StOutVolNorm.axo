@@ -1,0 +1,58 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="StOutVolNorm" uuid="a977f870-0357-4615-a372-2f00d57d46ce">
+      <sDescription>Audio output, stereo
+has inbuild volume control and normalisation option</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="left" description="Left channel"/>
+         <frac32buffer name="right" description="Right channel"/>
+      </inlets>
+      <outlets/>
+      <displays>
+         <frac32.vu name="vuLeft"/>
+         <frac32.vu name="vuRight"/>
+         <frac32.u.dial name="max" description="displays the maximum value of the output"/>
+      </displays>
+      <params>
+         <frac32.u.map name="volume" noLabel="true"/>
+         <bool32.mom name="clear" description="clears max display"/>
+         <bool32.mom name="normalise" description="normalises the output based on the value in the max display (to max=32)"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int clr,norm;]]></code.declaration>
+      <code.krate><![CDATA[int j;
+int32_t sabs=disp_max;
+for(j=0;j<BUFSIZE;j++){
+   int32_t tmp1,tmp2;
+   tmp1=AudioOutputLeft[j] = __SSAT(___SMMUL(inlet_left[j]<<3,param_volume<<2),28);
+   tmp1=tmp1>0?tmp1:-tmp1;
+   tmp2=AudioOutputRight[j] = __SSAT(___SMMUL(inlet_right[j]<<3,param_volume<<2),28);
+   tmp2=tmp2>0?tmp2:-tmp2;
+   tmp1=tmp1>tmp2?tmp1:tmp2;
+   sabs=tmp1>sabs?tmp1:sabs;
+}
+
+if(param_clear&&!clr)
+{
+	clr=1;
+	sabs=0;
+}
+else if(!param_clear)
+{
+	clr=0;
+}
+if(param_normalise&&!norm)
+{
+	norm=1;
+	float32_t ratio=(float32_t)(1<<26)/sabs;
+	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_volume],param_volume*ratio,0xFFFD);
+
+	sabs=0;
+}
+else if(!param_normalise){norm=0;}
+disp_max=sabs;
+disp_vuLeft=AudioOutputLeft[0];
+disp_vuRight=AudioOutputRight[0];]]></code.krate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,75 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="chordBuilder" uuid="623432b4-5c67-4930-a061-042da84429b8">
+      <sDescription>Uses 3 inputs to create a chord:
+-chord sets root note of the chord
+-spread sets the spreading of the chord eg. spread=2 for C in F scale would be C-E-G, 3 would be C-F-B
+-sets the amount of notes the chord will be build from (2 is for example only C and G with chord=0 and spreading=4)
+
+so normal chords will have a spreading of 2 and a harmonicity of 3, starting from any chord number (0-6 as there are just 7 chord roots in a scale)
+
+This module sends out midiCC starting from the midiCC you set, up to +6 above this midiCC. To use this with the scaleReceiver module, set the toggle switches to receive the right midiCC.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>logic.axh</helpPatch>
+      <inlets>
+         <int32 name="chord" description="chord root note"/>
+         <int32 name="spread" description="note spreading of the chord within scale"/>
+         <int32 name="harmonicity" description="how many notes a chord will consist of"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="CH" description="set midi channel on which the scaleReceive module will receive the toggle-controls" MinValue="1" MaxValue="16" DefaultValue="0"/>
+         <spinner name="CC" description="set first midiCC number it will send it&apos;s toggle data (so midiCC will be this value up to +6)" MinValue="1" MaxValue="128" DefaultValue="1"/>
+         <combo name="device" description="set device the chord info will be send to">
+            <MenuEntries>
+               <string>din</string>
+               <string>usb host port 1</string>
+               <string>usb host port 2</string>
+               <string>usb host port 3</string>
+               <string>usb host port 4</string>
+               <string>internal port 1</string>
+               <string>internal port 2</string>
+               <string>usb device port 1</string>
+            </MenuEntries>
+            <CEntries>
+               <string>MIDI_DEVICE_DIN, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 1</string>
+               <string>MIDI_DEVICE_USB_HOST, 2</string>
+               <string>MIDI_DEVICE_USB_HOST, 3</string>
+               <string>MIDI_DEVICE_USB_HOST, 4</string>
+               <string>MIDI_DEVICE_INTERNAL, 1</string>
+               <string>MIDI_DEVICE_INTERNAL, 2</string>
+               <string>MIDI_DEVICE_USB_DEVICE, 1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int prv;]]></code.declaration>
+      <code.krate><![CDATA[int sum=inlet_chord+(inlet_spread<<4)+(inlet_harmonicity<<8);
+int chord=(inlet_chord-1)%7;
+int spread=((inlet_spread-1)%6)+1;
+int hrm=(inlet_harmonicity>7?7:inlet_harmonicity);
+
+if(!(sum==prv))
+{
+	int note[7]={0,0,0,0,0,0,0};
+	for(int i=0;i<hrm;i++)
+	{
+		int k=(i*spread+chord)%7;
+		while(note[k]>0){k=(k+1)%7;}
+		note[k]=1;
+	}
+	
+     for(int i=0;i<7;i++)
+	{
+		MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_CH-1),attr_CC+i,__USAT(note[i]>0?127:0,7));
+	}
+		MidiSend3((midi_device_t) attr_device, MIDI_CONTROL_CHANGE + (attr_CH-1),attr_CC+7,__USAT(chord,7));
+}
+
+
+
+prv=sum;]]></code.krate>
+   </obj.normal>
+</objdefs>

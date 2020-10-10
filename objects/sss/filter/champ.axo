@@ -1,0 +1,279 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="champ" uuid="0e9cde3a-7720-437e-8de8-7343c300a067">
+      <sDescription>Multimode chamberlin filter with inbuild feedback compression to prevent clipping at high resonances</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="audio input"/>
+         <frac32.bipolar name="cut" description="center cutuff frequency"/>
+         <frac32 name="span" description="spreads the frequencies of the two poles"/>
+         <frac32.positive name="res" description="resonance amount"/>
+         <int32 name="mode" description="0-17 (18 different modes) *see K-rate code for the indices for all the modes"/>
+         <int32 name="resmode" description="0-2 (0=res to filter 1, 1=res to filter 2, 2=res to both filters)"/>
+         <bool32 name="OS" description="x2 oversampling *on is adviced for more clarity"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map name="tresh" description="internal compression treshold">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="ratio" description="internal compression ratio">
+            <DefaultValue v="44.5"/>
+         </frac32.u.map>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val[2][4];
+int32_t acc=0;
+int32_t gain=(1<<27);
+int32_t SOFT(int32_t in){
+	in=__SSAT(in,28);
+in-=___SMMUL(in<<2,___SMMUL(in<<2,in<<2));
+return in;
+}
+
+int32_t frac_log(int32_t a) {
+	Float_t f;
+	f.f = a;
+	int32_t r1 = ((f.parts.exponent&0x7F)-18) << 24;
+	int32_t r3 = logt[f.parts.mantissa>>15]<<10;
+	return r1 + r3;
+}
+
+int32_t frac_exp(int32_t a) {
+	int8_t s = (a>>24)+4;
+	uint8_t ei = a>>16;
+	if (s>=0)
+	     return expt[ei]<<s;
+	else return expt[ei]>>(-s);
+}
+
+int32_t FILTER(int32_t in,int32_t frq,int32_t res,int I){
+val[I][2]=in-val[I][0]+___SMMUL(val[I][1]<<1,-res);
+val[I][1]+=___SMMUL(val[I][2],frq)<<1;
+//val[I][1]=SOFT(val[I][1]);
+val[I][1]=__SSAT(val[I][1],30);
+val[I][0]+=___SMMUL(val[I][1],frq)<<1;
+//val[I][0]=SOFT(__SSAT(val[I][0],28));
+val[I][0]=__SSAT(val[I][0],30);
+val[I][3]=in-val[I][1];
+}]]></code.declaration>
+      <code.init><![CDATA[for(int i=0;i<4;i++){
+	for(int j=0;j<4;j++){
+		val[j][i]=0;
+	}
+}
+gain=(1<<27);]]></code.init>
+      <code.krate><![CDATA[int ser=1;
+   int dual=0;
+   int mode1=0,mode2=0;
+   int32_t span1=0,span2=0;
+   switch((inlet_mode>0?inlet_mode:-inlet_mode)%18)
+   {
+   	case 0: 	ser=1;
+   			dual=0;
+   			mode1=0;
+   			mode2=0;
+   			span1=0;
+   			span2=0;
+   	break;
+   	case 1: 	ser=1;
+   			dual=1;
+   			mode1=0;
+   			mode2=0;
+   			span1=0;
+   			span2=inlet_span;
+   	break;
+   	case 2: 	ser=1;
+   			dual=0;
+   			mode1=2;
+   			mode2=2;
+   			span1=0;
+   			span2=0;
+   	break;
+   	case 3: 	ser=1;
+   			dual=1;
+   			mode1=2;
+   			mode2=2;
+   			span1=0;
+   			span2=-inlet_span;
+   	break;
+   	case 4: 	ser=1;
+   			dual=0;
+   			mode1=1;
+   			mode2=1;
+   			span1=0;
+   			span2=0;
+   	break;
+   	case 5: 	ser=1;
+   			dual=1;
+   			mode1=1;
+   			mode2=1;
+   			span1=0;
+   			span2=0;
+   	break;
+   	case 6: 	ser=1;
+   			dual=1;
+   			mode1=2;
+   			mode2=0;
+   			span1=-inlet_span;
+   			span2=inlet_span;
+   	break;
+   	case 7: 	ser=1;
+   			dual=1;
+   			mode1=3;
+   			mode2=0;
+   			span1=inlet_span;
+   			span2=0;
+   	break;
+   	case 8: 	ser=1;
+   			dual=1;
+   			mode1=2;
+   			mode2=0;
+   			span1=inlet_span>>3;
+   			span2=-inlet_span>>3;
+   	break;
+   	case 9: 	ser=0;
+   			dual=1;
+   			mode1=1;
+   			mode2=1;
+   			span1=inlet_span;
+   			span2=-inlet_span;
+   	break;
+   	case 10: 	ser=0;
+   			dual=1;
+   			mode1=0;
+   			mode2=1;
+   			span1=0;
+   			span2=inlet_span;
+   	break;
+   	case 11: 	ser=1;
+   			dual=1;
+   			mode1=0;
+   			mode2=1;
+   			span1=0;
+   			span2=-inlet_span;
+   	break;
+   	case 12: 	ser=0;
+   			dual=1;
+   			mode1=2;
+   			mode2=1;
+   			span1=0;
+   			span2=-inlet_span;
+   	break;
+   	case 13: 	ser=1;
+   			dual=1;
+   			mode1=2;
+   			mode2=1;
+   			span1=0;
+   			span2=inlet_span;
+   	break;
+   	case 14: 	ser=1;
+   			dual=0;
+   			mode1=3;
+   			mode2=3;
+   			span1=0;
+   			span2=0;
+   	break;
+   	case 15: 	ser=1;
+   			dual=1;
+   			mode1=3;
+   			mode2=3;
+   			span1=-inlet_span;
+   			span2=inlet_span;
+   	break;
+   	case 16: 	ser=0;
+   			dual=1;
+   			mode1=2;
+   			mode2=0;
+   			span1=inlet_span;
+   			span2=-inlet_span;
+   	break;
+   	case 17: 	ser=0;
+   			dual=1;
+   			mode1=3;
+   			mode2=1;
+   			span1=inlet_span;
+   			span2=-inlet_span;
+   	break;
+   }
+   /*
+ * 0:  lp1
+ * 1:  lp2
+ * 2:  hp1
+ * 3:  hp2
+ * 4:  bp1
+ * 5:  bp2
+ * 6:  bp3 hp->lp widen
+ * 7:  bp4 notch->lp
+ * 8:  bp5 hp->lp narrow
+ * 9:  bp6 dual peak par
+ * 10: lp+bp par
+ * 11: lp+bp ser
+ * 12: hp+bp par
+ * 13: hp+bp ser
+ * 14: notch1
+ * 15: notch2
+ * 16: lp12+hp12 par
+ * 17: notch+bp par
+ */
+
+ int32_t f1,f2;
+   MTOF(__SSAT(inlet_cut+span1,28),f1);
+   MTOF(__SSAT(inlet_cut+span2,28),f2);
+
+   int32_t r1,r2;
+int32_t tr=0;
+int rs=inlet_resmode%3;
+if((!(rs==1))||(dual==0))
+{tr=inlet_res;}
+  r1=(1<<31)-1;
+  r1-=___SMMUL(__USAT(tr,27)<<4,r1)<<1;
+  r1-=(1<<31)-1;
+  r1-=r1>>2;
+  r1+=(1<<31)-1;
+
+
+tr=0;
+if(rs>0)
+{tr=inlet_res;}
+  r2=(1<<31)-1;
+  r2-=___SMMUL(__USAT(tr,27)<<4,r2)<<1;
+  r2-=(1<<31)-1;
+  r2-=r2>>2;
+  r2+=(1<<31)-1;]]></code.krate>
+      <code.srate><![CDATA[int32_t IN=___SMMUL(inlet_in,gain)<<5;
+
+for(int i=0;i<(1+inlet_OS);i++){
+FILTER(IN,f1,r1,0);
+int32_t in=SOFT(ser>0?val[0][mode1&3]:IN);
+if(dual>0)
+{FILTER(in,f2,r2,1);}
+
+}
+int32_t a,b;
+a=(val[0][mode1&3]<<1)>>1;
+b=(val[1][mode2&3]<<1)>>1;
+int32_t out=dual>0?(ser>0?b:a+b):a;
+
+int32_t sabs=out>0?out:-out;
+acc+=sabs>acc?sabs-acc>>1:sabs-acc>>9;
+
+
+int32_t inlog = frac_log(acc);
+int32_t treshlog = frac_log(param_tresh);
+int32_t over = inlog-treshlog;
+
+if (over<0){
+	gain = 0x80000;
+} else {
+	gain = frac_exp(-___SMMUL(over,param_ratio)<<5);
+}
+gain=gain<<8;
+
+outlet_out=___SMMUL(out,gain)<<5;]]></code.srate>
+   </obj.normal>
+</objdefs>

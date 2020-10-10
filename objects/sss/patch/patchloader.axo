@@ -1,0 +1,84 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="patchLoader" uuid="44e31dba-f827-4ca5-a81d-17d4129c4330">
+      <sDescription>Stops current patch, and loads a patch from sdcard, selected by index in the patch bank file.
+Commands are received over midi (set channel&amp;cc to the same settings as the &quot;sendpatch&quot; module, so you can make different boards respond to different midichannel/cc)
+The sendpatch module also sends the minimum and maximum patch index to wrap the patchindex to max/min when cycling through the set of patches or to jump to a certain patch straight away.
+Two timed pulse outputs send a gate high before and after load. This can be used to do something right before and/or right after the patch change.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets/>
+      <outlets>
+         <bool32 name="preload" description="sends out a pulse of &quot;timer&quot; duration before actually changing patch (eg. all midi notes off command)"/>
+         <bool32 name="loaded" description="sends out a pulse of &quot;timer&quot; duration when patch is loaded (eg. to randomise at patch start)"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <spinner name="channel" description="sets channel to receive your patchchange command" MinValue="1" MaxValue="16" DefaultValue="15"/>
+         <spinner name="minCC" description="sets controller CC to receive minimum patch-index" MinValue="0" MaxValue="127" DefaultValue="1"/>
+         <spinner name="maxCC" description="sets controller CC to receive maximum patch-index" MinValue="0" MaxValue="127" DefaultValue="2"/>
+         <spinner name="nextCC" description="sets controller CC to receive next patch command" MinValue="0" MaxValue="127" DefaultValue="3"/>
+         <spinner name="prevCC" description="sets controller CC to receive previous patch command" MinValue="0" MaxValue="127" DefaultValue="4"/>
+         <spinner name="timer" description="sets pulse duration (in samples) for preload/load outputs (patch updates after preload has ended)" MinValue="2" MaxValue="5000" DefaultValue="2"/>
+      </attribs>
+      <code.declaration><![CDATA[int nxt,prv,i,load,pre,go,timer,min,max;]]></code.declaration>
+      <code.init><![CDATA[nxt=0;
+prv=0;
+i = GetIndexOfCurrentPatch();
+load=1;
+pre=0;
+go=0;
+timer=attr_timer;]]></code.init>
+      <code.krate><![CDATA[if(go==1)
+{
+if (nxt)
+{
+       i+=1;
+       if(i>max){i=min;}
+       if(i<min){i=max;}
+        if (i<0) i=0;
+        LoadPatchIndexed(i);
+        nxt=0;
+}
+if (prv)
+{
+       i-=1;
+       if(i>max){i=min;}
+       if(i<min){i=max;}
+        if (i<0) i=0;
+        LoadPatchIndexed(i);
+        prv=0;
+}
+}
+outlet_preload=0;
+outlet_loaded=0;
+if(timer>0)
+{
+	timer-=1;
+	if(pre&&(timer==0))
+	{
+	go=pre;
+	pre=0;
+	outlet_preload=0;
+	}
+	else if(pre>0)
+	{
+		outlet_preload=1;
+	}
+	if(load&&(timer==0))
+	{
+		load=0;
+		outlet_loaded=0;
+	}
+	else if(load>0)
+	{
+		outlet_loaded=1;
+	}
+}]]></code.krate>
+      <code.midihandler><![CDATA[if ((status ==(attr_channel-1) + MIDI_CONTROL_CHANGE)&&(data1 == attr_maxCC)) { max=data2;}
+if ((status ==(attr_channel-1) + MIDI_CONTROL_CHANGE)&&(data1 == attr_minCC)) { min=data2;}
+
+if ((status ==(attr_channel-1) + MIDI_CONTROL_CHANGE)&&(data1 == attr_nextCC)) { nxt = 1;pre=1;timer=attr_timer;}
+if ((status ==(attr_channel-1) + MIDI_CONTROL_CHANGE)&&(data1 == attr_prevCC)) { prv = 1;pre=1;timer=attr_timer;}]]></code.midihandler>
+   </obj.normal>
+</objdefs>

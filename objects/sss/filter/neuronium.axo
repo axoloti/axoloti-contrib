@@ -1,0 +1,162 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="neuronium" uuid="b4030142-1b5e-4504-aad8-497e6a8a0027">
+      <sDescription>1st order lowpass filter... nope, not anymore. It now squeeks and purs..
+This module is based on the jomox neuronium, though I will not say it is build up the same way or will actually sound like it (though it does similar things)
+
+6 &quot;neurons&quot; respond to each other by summation and checking the summation against their treshold, sending the output of the neuron high or low. To ensure a sound (first try mostly gave static high/low outputs), the treshold uses an auto-callibration.
+As you can see there&apos;s not that much to control as this would add 60 more controls (10 for each neuron), so I added a randomisation option that creates 16 presets for each of the 60 parameters.
+Though you can control the volume output of the 6 neurons independently, set the center pitch, random-pitch-width, fm width and chance a parameter is updated when hitting &quot;randomise&quot;.
+3 neurons can be influenced by external outputs. For example, throw your drums and bass through this to create some nasty distortion (add to clean sound). Heavy on cpu, but nice for some sound design.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32 name="pitch" description="&quot;center&quot; pitch"/>
+         <bool32 name="rnd" description="randomise internal 60 parameters"/>
+         <int32 name="pst" description="select one of 16 presets"/>
+         <frac32buffer name="in1" description="influence neuron 1"/>
+         <frac32buffer name="in2" description="influence neuron 2"/>
+         <frac32buffer name="in3" description="influence neuron 3"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="summed audio output"/>
+      </outlets>
+      <displays>
+         <frac32.s.dial name="d1" noLabel="true"/>
+      </displays>
+      <params>
+         <frac32.u.map.gain name="g1" description="gain neuron 1"/>
+         <frac32.u.map.gain name="g2" description="gain neuron 2"/>
+         <frac32.u.map.gain name="g3" description="gain neuron 3"/>
+         <frac32.u.map.gain name="g4" description="gain neuron 4"/>
+         <frac32.u.map.gain name="g5" description="gain neuron 5"/>
+         <frac32.u.map.gain name="g6" description="gain neuron 6"/>
+         <int32 name="neurons" description="amount of neurons used">
+            <MinValue i="1"/>
+            <MaxValue i="6"/>
+         </int32>
+         <bool32.mom name="rnd" description="randomise internal 60 parameters"/>
+         <frac32.u.map name="pitchwidth" description="sets randomisation width of the pitch of all neurons"/>
+         <frac32.u.map name="chance" description="sets the chance that a parameter will change when hitting randomise"/>
+         <frac32.u.map.gain name="modwidth" description="maximum frequency modulation width of the neurons"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val[2][6];
+int32_t flvl[6][6];
+int32_t tres[6];
+int32_t freq[6];
+int32_t lvl[6];
+int32_t mix[6];
+int32_t fm[6];
+int32_t SUM;
+int32_t F[6];
+int32_t array[6][16][10];
+int rnd;]]></code.declaration>
+      <code.init><![CDATA[for(int k=0;k<6;k++)
+{
+for(int i=0;i<16;i++)
+{    //neuron-preset-control
+	array[k][i][0]=(int32_t)(GenerateRandomNumber())>>4;//cutoff
+	array[k][i][1]=(int32_t)(GenerateRandomNumber())>>18;//tres
+	array[k][i][2]=(int32_t)(GenerateRandomNumber());//fm
+	array[k][i][3]=(int32_t)(GenerateRandomNumber())/6;//feedback self
+	array[k][i][4]=(int32_t)(GenerateRandomNumber())/6;//feedback +1
+	array[k][i][5]=(int32_t)(GenerateRandomNumber())/6;//feedback +2
+	array[k][i][6]=(int32_t)(GenerateRandomNumber())/6;//feedback +3
+	array[k][i][7]=(int32_t)(GenerateRandomNumber())/6;//feedback +4
+	array[k][i][8]=(int32_t)(GenerateRandomNumber())/6;//feedback +5
+	array[k][i][9]=(int32_t)(GenerateRandomNumber())>>4;//level
+}
+}]]></code.init>
+      <code.krate><![CDATA[mix[0]=param_g1;
+mix[1]=param_g2;
+mix[2]=param_g3;
+mix[3]=param_g4;
+mix[4]=param_g5;
+mix[5]=param_g6;
+
+
+
+int pst=inlet_pst;
+int RND=inlet_rnd||param_rnd;
+if(RND&&!rnd)
+{
+	rnd=1;
+	
+for(int k=0;k<6;k++)
+{
+for(int i=0;i<16;i++)
+{    //neuron-preset-control
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][0]=___SMMUL((int32_t)(GenerateRandomNumber()),param_pitchwidth)<<1;//cutoff
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][1]=(int32_t)(GenerateRandomNumber())>>18;//tres
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][2]=(int32_t)(GenerateRandomNumber());//fm
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][3]=(int32_t)(GenerateRandomNumber())/6;//feedback self
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][4]=(int32_t)(GenerateRandomNumber())/6;//feedback +1
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][5]=(int32_t)(GenerateRandomNumber())/6;//feedback +2
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][6]=(int32_t)(GenerateRandomNumber())/6;//feedback +3
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][7]=(int32_t)(GenerateRandomNumber())/6;//feedback +4
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][8]=(int32_t)(GenerateRandomNumber())/6;//feedback +5
+	}
+	if((GenerateRandomNumber()>>5)<param_chance){
+	array[k][i][9]=(1<<27);//(int32_t)(GenerateRandomNumber())>>4;//level
+	}
+
+}
+}
+	
+}
+else if(rnd&&!RND){rnd=0;}]]></code.krate>
+      <code.srate><![CDATA[int32_t tval[param_neurons];
+//val[0][0]=__SSAT(val[0][0]+(inlet_in1<<1),28);
+//val[0][1]=__SSAT(val[0][1]+(inlet_in2<<1),28);
+//val[0][2]=__SSAT(val[0][2]+(inlet_in3<<1),28);
+int32_t in[3];
+in[0]=inlet_in1;
+in[1]=inlet_in2;
+in[2]=inlet_in3;
+for(int i=0;i<param_neurons;i++)
+{
+	tval[i]=val[0][i];
+}
+
+for(int i=0;i<param_neurons;i++)
+{
+	int32_t sum=i<3?in[i]:0;
+	for(int j=0;j<param_neurons;j++)
+	{
+		sum+=___SMMUL(tval[(i+j)%param_neurons]<<1,array[i][pst][j+3]);
+	}
+	MTOF(__SSAT((array[i][pst][0])+inlet_pitch+___SMMUL(__SSAT(___SMMUL(param_modwidth,sum<<1),27)<<3,array[i][pst][2]),28),F[i])
+	int32_t tmp=val[0][i];
+	
+	F[i]-=___SMMUL(F[i],tmp)<<4;
+	//F[i]-=___SMMUL(F[i],tmp)<<4;
+	val[0][i]=__SSAT((((sum-val[1][i])>(array[i][pst][1])?F[i]:-F[i]))+val[0][i],28);
+	val[1][i]=___SMMLA(sum-val[1][i]<<1,F[i]>>2,val[1][i]);
+}
+
+SUM=0;
+for(int i=0;i<param_neurons;i++)
+{
+	SUM+=___SMMUL(val[0][i]<<1,mix[i]);
+}
+outlet_out=SUM;]]></code.srate>
+   </obj.normal>
+</objdefs>

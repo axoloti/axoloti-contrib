@@ -1,0 +1,54 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="quadist" uuid="f1acfae0-493c-4c00-bdc4-c0ba1dee4e3c">
+      <sDescription>Quad distortion
+stage 1: wave folder
+stage 2: hard clipper
+stage 3: tube saturation
+stage 4: soft clip</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="phase" description="phase"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave" description="sine wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.u.map.squaregain name="gain"/>
+         <frac32.u.map.gain name="shape"/>
+         <frac32.u.map.gain name="tube"/>
+         <frac32.u.map.gain name="soft"/>
+         <frac32.u.map.gain name="attenuate"/>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int stack;
+int32_t mix=param_soft>>4;
+stack=(mix>>24)+1;
+mix=((uint32_t)mix<<8)>>1;]]></code.krate>
+      <code.srate><![CDATA[int32_t r,p2;
+p2=__SSAT(inlet_phase,28)+(1<<27);
+p2+=(___SMMUL((___SMMUL(p2,p2)<<4)-(p2>>1),param_tube)<<1)-(1<<27);
+p2= ___SMMUL(param_gain,p2<<2)<<1;
+p2+=1<<28;
+p2=((p2<<2)&((1<<29)-1))-(1<<28);
+p2=(__SSAT(p2,28)<<1)-p2;
+p2+=___SMMUL(param_shape,p2)<<1;
+
+int32_t ts = __SSAT(p2,28);
+int32_t tsq31 = ts<<3;
+int32_t tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+ts = ts + (ts>>1) - (tsq31p3);
+
+ts = __SSAT(ts,28);
+int32_t form;
+for(int i=0;i<stack;i++){
+form=ts;
+tsq31 = ts<<3;
+tsq31p3 = ___SMMUL(tsq31,___SMMUL(tsq31,tsq31));
+ts = ts + (ts>>1) - (tsq31p3);
+}
+outlet_wave = ___SMMUL(form+___SMMUL(ts-form<<1,mix),param_attenuate) ;]]></code.srate>
+   </obj.normal>
+</objdefs>

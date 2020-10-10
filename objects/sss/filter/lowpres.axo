@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="lowpres" uuid="9c3244d0-d45d-40dc-bcbf-b98e54724542">
+      <sDescription>Lowpass filter with besides resonance, extra controls for bottom (added low) and presence (added mid) of the filter response</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>filter.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in" description="input"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="out" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="freq" noLabel="true"/>
+         <frac32.u.map.filterq name="res"/>
+         <frac32.u.map name="presence"/>
+         <frac32.s.map name="bottom"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val;
+int32_t lp;
+int32_t sum;
+int32_t hp;]]></code.declaration>
+      <code.init><![CDATA[val = 0;]]></code.init>
+      <code.krate><![CDATA[int32_t f;
+   MTOF(param_freq,f);
+   f=f>>2;]]></code.krate>
+      <code.srate><![CDATA[for(int i=0;i<4;i++)
+{
+int32_t tin=__SSAT(___SMMUL(lp<<3,param_res<<4)-___SMMUL(hp<<1,param_bottom<<4),29);
+int32_t in=inlet_in+tin-___SMMUL(tin<<1,f);
+val = ___SMMLA((in-val)<<1,f,val);
+hp=inlet_in-val+___SMMUL(inlet_in-val<<1,param_presence<<4);
+lp=___SMMLA(inlet_in+hp-lp<<1,f,lp);
+hp=in-val;
+sum+=lp-sum>>1;
+}
+lp=sum;
+   outlet_out= sum;]]></code.srate>
+   </obj.normal>
+</objdefs>

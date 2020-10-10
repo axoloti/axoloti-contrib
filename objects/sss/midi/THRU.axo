@@ -1,5 +1,5 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="THRU" uuid="1ff09235-5516-4640-9979-2f39ecccb608">
+   <obj.normal id="THRU" uuid="24d3f6de-6649-4db2-bc5c-d1264d51b1c9">
       <sDescription>midi thru module for all channels and all data types</sDescription>
       <author>Remco van der Most</author>
       <license>BSD</license>
@@ -28,7 +28,13 @@
             </CEntries>
          </combo>
       </attribs>
-      <code.midihandler><![CDATA[if (status) {
+      <code.midihandler><![CDATA[if (status==MIDI_SONG_POSITION) {
+MidiSend3((midi_device_t) attr_device, status,data1,data2);
+}
+else if((status==MIDI_TIMING_CLOCK)||(status==MIDI_START)||(status==MIDI_CONTINUE)||(status==MIDI_STOP))
+{MidiSend1((midi_device_t) attr_device, status);}
+else if(status)
+{
 MidiSend3((midi_device_t) attr_device, status,data1,data2);
 }]]></code.midihandler>
    </obj.normal>

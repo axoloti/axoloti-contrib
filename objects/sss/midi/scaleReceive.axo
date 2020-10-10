@@ -1,0 +1,128 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="scaleReceive" uuid="aa3e8e09-6fa2-4e1f-b16b-8c6175a5f45d">
+      <sDescription>scale receiver module for the clkOUT module.
+Receives the midi notes from the clkOUT module that are in the used scale. Use the toggle switches to select which notes may actually be played.
+ONLY use a positive integer input to select the note and use &quot;octave&quot; to offset the lowest note.
+&quot;octaves&quot; sets how many octaves above may be played.
+Use &quot;chordbuilder&quot; to control it&apos;s switches from your &quot;control&quot; axoloti, so that all boards use the same chord and know the root of the chord being selected.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>mux.axh</helpPatch>
+      <inlets>
+         <int32.positive name="s" description="select"/>
+      </inlets>
+      <outlets>
+         <int32 name="note" description="output"/>
+      </outlets>
+      <displays/>
+      <params>
+         <bool32.tgl name="1"/>
+         <bool32.tgl name="3"/>
+         <bool32.tgl name="5"/>
+         <bool32.tgl name="7"/>
+         <bool32.tgl name="9"/>
+         <bool32.tgl name="11"/>
+         <bool32.tgl name="13"/>
+         <int32 name="octaves">
+            <MinValue i="1"/>
+            <MaxValue i="10"/>
+         </int32>
+         <int32 name="octave">
+            <MinValue i="-5"/>
+            <MaxValue i="5"/>
+         </int32>
+      </params>
+      <attribs>
+         <combo name="midichannel">
+            <MenuEntries>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+               <string>16</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+               <string>5</string>
+               <string>6</string>
+               <string>7</string>
+               <string>8</string>
+               <string>9</string>
+               <string>10</string>
+               <string>11</string>
+               <string>12</string>
+               <string>13</string>
+               <string>14</string>
+               <string>15</string>
+            </CEntries>
+         </combo>
+         <spinner name="cc" MinValue="0" MaxValue="127" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int16_t endscale[7]={0,2,4,5,7,9,11};
+
+int DO=1;
+int sum;
+int n[7];]]></code.declaration>
+      <code.krate><![CDATA[int cnt=0;
+	n[0]=param_1;
+	n[1]=param_3;
+	n[2]=param_5;
+	n[3]=param_7;
+	n[4]=param_9;
+	n[5]=param_11;
+	n[6]=param_13;
+	sum=0;
+     for(int i=0;i<7;i++)
+     {
+     	if(n[i]>0)
+     	{
+     		n[cnt]=i;
+     		cnt+=1;
+     		sum+=1;
+     	}
+     }
+     if(sum==0)
+     {
+     	PExParameterChange(&parent->PExch[PARAM_INDEX_attr_legal_name_1],1,0xFFFD);
+		sum=1;
+     }
+
+
+      
+      
+      int sel=inlet_s;
+      int oct=(sel>=0?sel/sum:(sel+1)/sum-1);
+      oct=oct%param_octaves;
+      oct-=oct<0?param_octaves:0;
+      oct*=12;
+      sel=sel%sum;
+      sel+=sel<0?sum:0;
+	switch(n[sel])
+	{
+		case 0: outlet_note= endscale[0]+oct;break;
+		case 1: outlet_note= endscale[1]+oct;break;
+		case 2: outlet_note= endscale[2]+oct;break;
+		case 3: outlet_note= endscale[3]+oct;break;
+		case 4: outlet_note= endscale[4]+oct;break;
+		case 5: outlet_note= endscale[5]+oct;break;
+		case 6: outlet_note= endscale[6]+oct;break;
+	}
+outlet_note+=param_octave*12;]]></code.krate>
+      <code.midihandler><![CDATA[if ((status == attr_midichannel + MIDI_CONTROL_CHANGE)&&(data1 >= (attr_cc+1))&&(data1 < (attr_cc+8))) { endscale[data1-attr_cc-1] = data2-64;}]]></code.midihandler>
+   </obj.normal>
+</objdefs>
