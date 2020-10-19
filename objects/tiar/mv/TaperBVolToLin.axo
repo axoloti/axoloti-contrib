@@ -1,0 +1,45 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="TaperBVolToLin" uuid="76c9dc1f-5f4d-495b-a5cf-034b690c2417">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="mv"/>
+         <spinner name="start" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <spinner name="nb" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <combo name="order">
+            <MenuEntries>
+               <string>normal</string>
+               <string>reverse</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t BVolToLin(int32_t v){
+	int32_t x1 = v*10;
+	if(x1>(32<<21)) x1 = 32<<21;
+
+	int32_t x2 = v-127506841;
+	if(x2<0) x2=0;
+	x2*=10;
+	
+	return (x1+x2+v)/2;
+}
+
+int32_t get(int i){
+
+	#if attr_order==0
+	  return BVolToLin(attr_mv.get(attr_start+i));
+	#else
+	  return BVolToLin(attr_mv.get(attr_start+attr_nb-i-1));
+	#endif
+}]]></code.declaration>
+   </obj.normal>
+</objdefs>
