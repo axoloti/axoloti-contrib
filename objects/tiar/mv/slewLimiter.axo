@@ -1,0 +1,27 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="slewLimiter" uuid="6a7527fa-0c2d-43d2-8f6b-dad4935c172d">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="mv"/>
+         <spinner name="start" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <spinner name="nb" MinValue="0" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t get(int i){
+	return F1[i];
+}
+
+int32_t F1[attr_nb];]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < attr_nb; i++) {
+	 F1[i] = 0;
+}]]></code.init>
+      <code.krate><![CDATA[for(int i = 0; i < attr_nb; i++){
+	F1[i] += __SSAT(attr_mv.get(attr_start+i) - F1[i], 18);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

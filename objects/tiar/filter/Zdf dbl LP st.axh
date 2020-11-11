@@ -1,0 +1,82 @@
+<patch-1.0 appVersion="1.0.12">
+   <obj type="tiar/midi/in/keyb zone lru" uuid="50ad41c5-e271-4f77-83a4-4f1cc8745b17" name="keyb_1" x="56" y="98">
+      <params/>
+      <attribs>
+         <spinner attributeName="startNote" value="0"/>
+         <spinner attributeName="endNote" value="127"/>
+      </attribs>
+   </obj>
+   <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_1" x="238" y="98">
+      <params>
+         <frac32.s.map name="pitch" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="osc/saw" uuid="739ecc36017ef3249479b8f01716b8bbfba9abc1" name="saw_2" x="350" y="98">
+      <params>
+         <frac32.s.map name="pitch" value="12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/filter/ZDF dbl LP" uuid="22f2d514-651f-4b4f-8ab7-d22c8c16ebff" name="ZDF_1" x="462" y="98">
+      <params>
+         <frac32.s.map name="pitch" value="28.0"/>
+         <frac32.u.map name="Q" value="21.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_1" x="252" y="252">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="osc/sine" uuid="6e094045cca76a9dbf7ebfa72e44e4700d2b3ba" name="sine_1" x="126" y="280">
+      <params>
+         <frac32.s.map name="pitch" value="-12.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="sss/disp/MIDscope" uuid="e22193bf-a8b3-4166-b583-f3bb50c1b0ee" name="MIDscope_2" x="252" y="462">
+      <params/>
+      <attribs/>
+   </obj>
+   <nets>
+      <net>
+         <source obj="keyb_1" outlet="note"/>
+         <dest obj="saw_1" inlet="pitch"/>
+         <dest obj="saw_2" inlet="pitch"/>
+         <dest obj="sine_1" inlet="pitch"/>
+         <dest obj="ZDF_1" inlet="pitch"/>
+      </net>
+      <net>
+         <source obj="saw_1" outlet="wave"/>
+         <dest obj="ZDF_1" inlet="Left"/>
+      </net>
+      <net>
+         <source obj="saw_2" outlet="wave"/>
+         <dest obj="ZDF_1" inlet="Right"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="MIDscope_1" inlet="syncIn"/>
+         <dest obj="MIDscope_2" inlet="syncIn"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="Leftlp24"/>
+         <dest obj="MIDscope_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="ZDF_1" outlet="Rightlp24"/>
+         <dest obj="MIDscope_2" inlet="in"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>611</x>
+      <y>13</y>
+      <width>1164</width>
+      <height>878</height>
+   </windowPos>
+</patch-1.0>

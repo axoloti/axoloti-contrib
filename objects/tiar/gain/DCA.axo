@@ -22,9 +22,10 @@
       <code.init><![CDATA[
 gain = _in = 0;
 ]]></code.init>
-
       <code.srate><![CDATA[if( (inlet_in > 0) != (_in > 0) ){
   gain = inlet_gain;
+}else{
+	gain=___SMMLA(inlet_gain - gain, 1<<23, gain);
 }
 outlet_out = ___SMMUL(_in, gain) << 5;
 _in = inlet_in;]]></code.srate>

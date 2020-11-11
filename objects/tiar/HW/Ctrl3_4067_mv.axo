@@ -1,6 +1,6 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="Ctrl3_4067_mv" uuid="340675bb-3f53-430e-a78e-d484a88f81e8">
-      <sDescription>control object for 3 4051
+      <sDescription>control object for 3 4067
 	  include &apos;smart&apos; filter
 	  
 		select GPIOs
@@ -12,8 +12,7 @@
 		Input GPIOs
 		Z0 from first 4067
 		Z1
-		Z2 from last 4067
-	  </sDescription>
+		Z2 from last 4067</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
       <helpPatch>Ctrl3_4067_mv.axh</helpPatch>
@@ -333,8 +332,7 @@ for(int i = 0; i < 48; i++) {
 palSetPadMode(attr_S0, PAL_MODE_OUTPUT_PUSHPULL);
 palSetPadMode(attr_S1, PAL_MODE_OUTPUT_PUSHPULL);
 palSetPadMode(attr_S2, PAL_MODE_OUTPUT_PUSHPULL);
-palSetPadMode(attr_S3, PAL_MODE_OUTPUT_PUSHPULL);
-]]></code.init>
+palSetPadMode(attr_S3, PAL_MODE_OUTPUT_PUSHPULL);]]></code.init>
       <code.krate><![CDATA[//the inputs are sampled 1/2 kcycle so that the multiplexed signals (4067) are stable 
 kcycle2_cpt++;
 if(kcycle2_cpt == 2){
@@ -367,11 +365,24 @@ palWritePad(attr_S3, (multiplex_cpt & 8) != 0);
 
 	//extends to  [0 64[ even if there is some noise
 	a_inF0[i]=__USAT(___SMMLA(a_inF0[i],0x40800000,-1<<17)<<2,27);
+
+     int32_t coef = a_inF0[i] - a_inF1[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00008000)<<8,25)<<6;
+     a_inF1[i] = ___SMMLA(coef,(a_inF0[i] - a_inF1[i])<<1,a_inF1[i]);
+
+	coef = a_inF1[i] - a_inF2[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00000800)<<8,24)<<7;
+     a_inF2[i] = ___SMMLA(coef,(a_inF1[i] - a_inF2[i])<<1,a_inF2[i]);
+     
+	coef = a_inF2[i] - a_inF3[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00000100)<<8,23)<<8;
+     a_inF3[i] = ___SMMLA(coef,(a_inF2[i] - a_inF3[i])<<1,a_inF3[i]);
 	
+	/*
 	if(abs(a_inF0[i] - a_inF1[i]) > (1<<21)){ //jump
 		 a_inF1[i] =  a_inF0[i];
 	} else { //smooth 0.5
-		a_inF1[i] = ___SMMLA(0x7F000000, a_inF0[i] - a_inF1[i], a_inF1[i]);
+		a_inF1[i] = (a_inF0[i] + a_inF1[i])>>1;
 	}
 
 	int32_t dist = abs(a_inF1[i] - a_inF2[i]);
@@ -380,7 +391,7 @@ palWritePad(attr_S3, (multiplex_cpt & 8) != 0);
 	} else {
 		//the closer, the smoother		
 		int32_t coef;
-		if(dist>(1<<19)) coef = 0x50000000;
+		if(dist>(1<<19)) coef = 0x40000000;
 		else coef = (dist<<11) +0x14000000;
 		
 		a_inF2[i] = ___SMMLA(coef, a_inF1[i] - a_inF2[i], a_inF2[i]);			 			 
@@ -392,12 +403,13 @@ palWritePad(attr_S3, (multiplex_cpt & 8) != 0);
 	} else {
 		//the closer, the smoother	 
 		int32_t coef;
-		if(dist>(1<<19)) coef = 0x20600000;
+		if(dist>(1<<19)) coef = 0x10600000;
 		else coef = (dist<<10) +0x00600000;
 		a_inF3[i] = ___SMMLA(coef, a_inF2[i] - a_inF3[i], a_inF3[i]);			 			 
 	}
-}
+	*/
 
-]]></code.krate>
+	
+}]]></code.krate>
    </obj.normal>
 </objdefs>
