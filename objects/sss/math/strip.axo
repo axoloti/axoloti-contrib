@@ -1,0 +1,36 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="strip" uuid="52739f5d-95e2-4348-a2c7-f8e03e3db344">
+      <sDescription>binary integer decoder
+Strips the incoming integer value of the least significant amount of bits set by the bits parameter and outputs this as an integer value at the vl output.
+The ch and bl outputs should be connected to further strip-modules for chaining and further decoding of the input value.
+Useful when you have lots of small-integer parameters that don&apos;t need lots of bits to save their setting. This allows to save these into a single 16/32bit value and decode them one by one.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>logic_decode.axh</helpPatch>
+      <inlets>
+         <int32.positive name="vl"/>
+         <int32 name="bl"/>
+      </inlets>
+      <outlets>
+         <int32.positive name="ch"/>
+         <int32 name="bl"/>
+         <int32 name="vl"/>
+      </outlets>
+      <displays>
+         <int32.label name="bitsleft" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="bits" noLabel="true">
+            <MinValue i="1"/>
+            <MaxValue i="16"/>
+         </int32>
+      </params>
+      <attribs/>
+      <code.krate><![CDATA[int left=inlet_bl==0?16:inlet_bl;
+outlet_vl=inlet_vl&((1<<param_bits)-1);
+outlet_ch = (inlet_vl >> param_bits);
+left-=param_bits;
+disp_bitsleft=left;
+outlet_bl=left;]]></code.krate>
+   </obj.normal>
+</objdefs>
