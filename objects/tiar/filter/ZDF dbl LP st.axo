@@ -1,0 +1,115 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ZDF dbl LP st" uuid="22f2d514-651f-4b4f-8ab7-d22c8c16ebff">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ZDF dbl LP st.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="Left" description="filter input"/>
+         <frac32buffer name="Right" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="Leftlp12"/>
+         <frac32buffer name="Leftlp24"/>
+         <frac32buffer name="Rightlp12"/>
+         <frac32buffer name="Rightlp24"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Q"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[
+	  int32_t lu1, lv1, lu2, lv2;
+	  int32_t ru1, rv1, ru2, rv2;
+int32_t A,B,C,D,E,F;
+int32_t oldpitch;]]></code.declaration>
+      <code.init><![CDATA[lu1 = lv1 = lu2 = lv2 = A = B = C = D = E = F = 0;	  
+ru1 = rv1 = ru2 = rv2 = 0;
+oldpitch=0;]]></code.init>
+      <code.krate><![CDATA[float dpitch = fabsf(arm::q_to_float(inlet_pitch - oldpitch, 23));
+oldpitch = inlet_pitch;
+float Q = arm::q_to_float(__USAT(param_Q + inlet_reso, 27), 27);
+
+Q /= 1.0f + dpitch;
+
+Q = 0.5f + Q*(0.5f + Q*(4.0f + Q *10));
+Q = 1.0f / Q;
+
+uint32_t alpha;
+MTOFEXTENDED(param_pitch + inlet_pitch - (545<<14), alpha);
+float Freq = arm::q_to_float(alpha, 32);
+Freq *= (1.0f/32);
+
+Q = 2.0f - Q;
+
+
+
+float b = 1 + Freq * (Q - 1);
+float c = Freq * Q;
+float e = -Freq;
+for(int i = 0; i < 8; i++){
+  float ce = c * e;
+  float bf = b + b - c;
+  c = c * bf;
+  e = e * bf;
+  b = b * b + ce;
+}
+float a = 1 - b;
+//float d = -e;    
+float f = b - c;
+
+A = arm::float_to_q(a, 27);
+B = arm::float_to_q(b, 27);
+C = arm::float_to_q(c, 27);
+//D = arm::float_to_q(d, 27);  -E
+E = arm::float_to_q(e, 27);
+F = arm::float_to_q(f, 27);  
+
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = inlet_Left[i]>>1;
+  lu1 = __SSAT((lu1 + __SSAT(lu1, 28))>>1, 28);  //lp
+  lv1 = __SSAT((lv1 + __SSAT(lv1, 28))>>1, 28);  //bp
+
+  int32_t nu1 = ___SMMLA(A, x, ___SMMLA(B, lu1, ___SMMUL(C, lv1))) << 5;
+ //         lv1 = ___SMMLA(D, x, ___SMMLA(E, lu1, ___SMMUL(F, lv1))) << 5;
+          lv1 = ___SMMLA(E, lu1 - x, ___SMMUL(F, lv1)) << 5;
+  lu1 = nu1;
+  outlet_Leftlp12[i] = lu1<<1;
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = outlet_Leftlp12[i]>>1;
+  lu2 = __SSAT((lu2 + __SSAT(lu2, 27))>>1, 28);  //lp
+  lv2 = __SSAT((lv2 + __SSAT(lv2, 27))>>1, 28);  //bp
+
+  int32_t nu2 = ___SMMLA(A, x, ___SMMLA(B, lu2, ___SMMUL(C, lv2))) << 5;
+          lv2 = ___SMMLA(E, lu2 - x, ___SMMUL(F, lv2)) << 5;
+
+  lu2 = nu2;
+  outlet_Leftlp24[i] = lu2<<1;
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = inlet_Right[i]>>1;
+  ru1 = __SSAT((ru1 + __SSAT(ru1, 28))>>1, 28);  //lp
+  rv1 = __SSAT((rv1 + __SSAT(rv1, 28))>>1, 28);  //bp
+
+  int32_t nu1 = ___SMMLA(A, x, ___SMMLA(B, ru1, ___SMMUL(C, rv1))) << 5;
+          rv1 = ___SMMLA(E, ru1 - x, ___SMMUL(F, rv1)) << 5;
+  ru1 = nu1;
+  outlet_Rightlp12[i] = ru1<<1;
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = outlet_Rightlp12[i]>>1;
+  ru2 = __SSAT((ru2 + __SSAT(ru2, 27))>>1, 28);  //lp
+  rv2 = __SSAT((rv2 + __SSAT(rv2, 27))>>1, 28);  //bp
+
+  int32_t nu2 = ___SMMLA(A, x, ___SMMLA(B, ru2, ___SMMUL(C, rv2))) << 5;
+          rv2 = ___SMMLA(E, ru2 - x, ___SMMUL(F, rv2)) << 5;
+
+  ru2 = nu2;
+  outlet_Rightlp24[i] = ru2<<1;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

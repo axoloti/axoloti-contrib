@@ -1,0 +1,40 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="smartSmooth" uuid="f3a2b084-bac6-4da9-bb82-4e963d1bad23">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="mv"/>
+         <spinner name="start" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <spinner name="nb" MinValue="0" MaxValue="64" DefaultValue="0"/>
+      </attribs>
+      <code.declaration><![CDATA[int32_t get(int i){
+	return F3[i];
+}
+
+int32_t F1[attr_nb], F2[attr_nb], F3[attr_nb];]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i < attr_nb; i++) {
+	F3[i] = F2[i] = F1[i] = 0;
+}]]></code.init>
+      <code.krate><![CDATA[for(int i=0;i<attr_nb;i++){
+
+	int32_t x = attr_mv.get(attr_start+i);
+	
+     int32_t coef = x - F1[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00008000)<<8,25)<<6;
+     F1[i] = ___SMMLA(coef,(x - F1[i])<<1,F1[i]);
+
+	coef = F1[i] - F2[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00000800)<<8,24)<<7;
+     F2[i] = ___SMMLA(coef,(F1[i] - F2[i])<<1,F2[i]);
+     
+	coef = F2[i] - F3[i];
+     coef = __USAT(___SMMLA(coef,coef,0x00000100)<<8,23)<<8;
+     F3[i] = ___SMMLA(coef,(F2[i] - F3[i])<<1,F3[i]);
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

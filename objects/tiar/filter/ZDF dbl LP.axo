@@ -1,0 +1,89 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="ZDF dbl LP" uuid="22f2d514-6eff-4b4f-8ab7-d22c8c16ebff">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>ZDF dbl LP.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="x" description="filter input"/>
+         <frac32 name="pitch" description="pitch"/>
+         <frac32 name="reso" description="filter resonance"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="lp12"/>
+         <frac32buffer name="lp24"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch"/>
+         <frac32.u.map name="Q"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t u1, v1;
+int32_t u2, v2;
+int32_t A1,B1,C1,D1,E1,F1;
+int32_t oldpitch;]]></code.declaration>
+      <code.init><![CDATA[u1 = v1 = A1 = B1 = C1 = D1 = E1 = F1 = 0;	  
+u2 = v2 = 0;
+oldpitch=0;]]></code.init>
+      <code.krate><![CDATA[float dpitch = fabsf(arm::q_to_float(inlet_pitch-oldpitch,23));
+oldpitch = inlet_pitch;
+float Q = arm::q_to_float(__USAT(param_Q + inlet_reso, 27), 27);
+
+Q /= 1.0f + dpitch;
+
+Q = 0.5f + Q*(0.5f + Q*(4.0f + Q *10));
+Q = 1.0f / Q;
+
+uint32_t alpha;
+MTOFEXTENDED(param_pitch + inlet_pitch - (545<<14), alpha);
+float Freq = arm::q_to_float(alpha, 32);
+Freq *= (1.0f/32);
+
+Q=2.0f-Q;
+
+
+
+float b = 1 + Freq * (Q - 1);
+float c = Freq * Q;
+float e = -Freq;
+for(int i = 0; i < 8; i++){
+  float ce = c * e;
+  float bf = b + b - c;
+  c = c * bf;
+  e = e * bf;
+  b = b * b + ce;
+}
+float a = 1 - b;
+float d = -e;
+float f = b - c;
+
+A1 = arm::float_to_q(a, 27);
+B1 = arm::float_to_q(b, 27);
+C1 = arm::float_to_q(c, 27);
+D1 = arm::float_to_q(d, 27);
+E1 = arm::float_to_q(e, 27);
+F1 = arm::float_to_q(f, 27);  
+
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = inlet_x[i]>>1;
+  u1 = __SSAT((u1 + __SSAT(u1, 28))>>1, 28);  //lp
+  v1 = __SSAT((v1 + __SSAT(v1, 28))>>1, 28);  //bp
+
+  int32_t nu1 = ___SMMLA(A1, x, ___SMMLA(B1, u1, ___SMMUL(C1, v1))) << 5;
+           v1 = ___SMMLA(D1, x, ___SMMLA(E1, u1, ___SMMUL(F1, v1))) << 5;
+  u1 = nu1;
+  outlet_lp12[i] = u1<<1;
+}
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x = outlet_lp12[i]>>1;
+  u2 = __SSAT((u2 + __SSAT(u2, 27))>>1, 28);  //lp
+  v2 = __SSAT((v2 + __SSAT(v2, 27))>>1, 28);  //bp
+
+  int32_t nu2 = ___SMMLA(A1, x, ___SMMLA(B1, u2, ___SMMUL(C1, v2))) << 5;
+           v2 = ___SMMLA(D1, x, ___SMMLA(E1, u2, ___SMMUL(F1, v2))) << 5;
+
+  u2 = nu2;
+  outlet_lp24[i] = u2<<1;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

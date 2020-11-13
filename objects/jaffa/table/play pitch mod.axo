@@ -1,0 +1,104 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="play pitch mod" uuid="e8eb1889-0651-436c-acd8-3d0fd514b739">
+      <sDescription>play audio sample from table with pitch control, starting from position</sDescription>
+      <author>Jaffasplaffa (Original by Johannes Taelman)</author>
+      <license>BSD</license>
+      <helpPatch></helpPatch>
+      <inlets>
+         <bool32.rising name="trigger" description="Start playback"/>
+         <bool32 name="reverse"/>
+         <bool32 name="loop" description="Turn loop on"/>
+         <frac32.bipolar name="pitch" description="Pitch modulation"/>
+         <int32.positive name="nrofslices" description="Set the number of slices. loop at display NOT parameter."/>
+         <int32.positive name="slicelength" description="Set slice length"/>
+         <int32.positive name="selectslice" description="Select slice"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="wave" description="wave"/>
+      </outlets>
+      <displays>
+         <int32.label name="NrOfSlices" noLabel="true"/>
+      </displays>
+      <params>
+         <int32 name="NrOfSlices" description="Set this value only ONCE. See the display to see how many slices. And then use the Looplength for repeater effects, to shorten the loop length.">
+            <MinValue i="0"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="Slicelength" description="Set the length of each slice. 0 is original length, 1 is half the size, 2 is quarter size, 3 is 16th of the oriingal size and so on.">
+            <MinValue i="0"/>
+            <MaxValue i="100"/>
+         </int32>
+         <int32 name="SelectSlice" description="Select which slice to playback.">
+            <MinValue i="1"/>
+            <MaxValue i="1024"/>
+         </int32>
+         <frac32.s.map.pitch name="Pitch" description="Set pitch of sample." noLabel="true"/>
+         <bool32.tgl name="Reverse" description="Reversed playback"/>
+         <bool32.tgl name="Loop" description="When loop is on, the slice will be retriggered. "/>
+      </params>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <code.declaration><![CDATA[int pstart;
+   int pstop;
+   uint64_t pos;
+   uint64_t pos2;
+   uint64_t pos3;
+
+   uint32_t asat;
+   uint64_t posretrig;]]></code.declaration>
+      <code.init><![CDATA[pos = 0;
+pstart = 0;
+pstop = 1;
+posretrig = 0;]]></code.init>
+      <code.krate><![CDATA[int NrOfSlicesParam = param_NrOfSlices + inlet_nrofslices;
+int NrOfSlices  	= attr_table.LENGTH >> NrOfSlicesParam + param_Slicelength + inlet_slicelength; 
+int32_t LoopOverThisValue = NrOfSlices <= posretrig >>28 ;
+bool LoopOn= (param_Loop || inlet_loop)?LoopOverThisValue :0;
+
+int SelectSlice = (param_SelectSlice-1 + inlet_selectslice) % (1 << NrOfSlicesParam) ;
+int SliceSize     = 1+(64<<21) >> (NrOfSlicesParam);
+int32_t SliceSelectFromSize = SelectSlice * SliceSize;
+
+if (((inlet_trigger || LoopOn>0)) && !pstart) {
+      pstart = 1;
+      pstop = 0;
+      asat = __USAT(  SliceSelectFromSize  ,27); 
+      pos = 0; 
+      posretrig = 0; 
+   } else if (!( (inlet_trigger || LoopOn>0) >0)) {
+      pstart = 0;
+   }
+
+   uint32_t f0;
+   MTOFEXTENDED(inlet_pitch + 0xFEC747D4 + param_Pitch,f0);
+
+   if (!pstop) {
+   if ((pos>>32)< NrOfSlices ) {
+   posretrig += (((uint64_t)f0)<<8);
+   }}
+   
+   disp_NrOfSlices = 1 << NrOfSlicesParam;]]></code.krate>
+      <code.srate><![CDATA[if (!pstop) {
+      
+      if ((pos>>32)< NrOfSlices ) { 
+      	
+         if(param_Reverse || inlet_reverse){
+         pos2 = -pos + (((uint64_t)(asat>>(27-attr_table.LENGTHPOW)))<<32); 
+         pos3 = (pos2>>32)  + NrOfSlices <<32; 
+         }
+         else{
+         pos3 = pos + (((uint64_t)(asat>>(27-attr_table.LENGTHPOW)))<<32);	
+         } 
+         
+         uint32_t r = ___SMMUL(attr_table.array[  pos3  >>32] <<attr_table.GAIN,INT32_MAX-(((uint32_t)  pos3  )>>1));
+         r = ___SMMLA(attr_table.array[(  pos3  >>32)+1] <<attr_table.GAIN,(((uint32_t)  pos3  )>>1),r);
+         outlet_wave = r;
+         pos += ((uint64_t)f0)<<8;
+
+
+ 
+      }  else outlet_wave = 0;
+      }  else outlet_wave = 0;]]></code.srate>
+   </obj.normal>
+</objdefs>

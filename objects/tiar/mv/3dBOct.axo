@@ -1,0 +1,51 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="3dBOct" uuid="f22e1206-1369-46cf-94c5-11fc4f4600ce">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <rotatedParams>true</rotatedParams>
+      <inlets>
+         <bool32 name="disable"/>
+      </inlets>
+      <outlets/>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="mv"/>
+         <spinner name="start" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <spinner name="nb" MinValue="0" MaxValue="64" DefaultValue="0"/>
+         <combo name="order">
+            <MenuEntries>
+               <string>normal</string>
+               <string>reverse</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+      </attribs>
+      <code.declaration><![CDATA[int32_t coefs[attr_nb];
+
+int32_t conv(int32_t v, int i){
+	return ___SMMUL(v, coefs[i])<<2;
+}
+bool disable;
+int32_t get(int i){
+
+	#if attr_order==0
+	  int32_t v = attr_mv.get(attr_start+i);
+	#else
+	  int32_t v = attr_mv.get(attr_start+attr_nb-i-1);
+	#endif
+	if(disable){
+		return v;
+	}else{
+		return conv(v, i);
+	}
+}]]></code.declaration>
+      <code.init><![CDATA[for(int i = 0; i <attr_nb; i++){
+	coefs[i] = arm::float_to_q( 1.0f /arm::vsqrtf(i + 1.0f), 30);
+}]]></code.init>
+      <code.krate><![CDATA[disable = inlet_disable;]]></code.krate>
+   </obj.normal>
+</objdefs>
