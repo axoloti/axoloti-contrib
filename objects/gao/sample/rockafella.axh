@@ -40,7 +40,7 @@
    </obj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_2" x="392" y="112">
       <params>
-         <frac32.u.map name="amp" value="22.0"/>
+         <frac32.u.map name="amp" value="8.0"/>
       </params>
       <attribs/>
    </obj>
@@ -55,13 +55,13 @@
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="frequency" x="70" y="238">
       <params>
-         <frac32.u.map name="value" value="1.5999994277954102"/>
+         <frac32.u.map name="value" value="2.09999942779541"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="chunk size" x="70" y="322">
       <params>
-         <frac32.u.map name="value" MidiCC="1" value="31.899999141693115"/>
+         <frac32.u.map name="value" MidiCC="1" value="24.899999141693115"/>
       </params>
       <attribs/>
    </obj>
@@ -81,13 +81,19 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="798" y="392">
+   <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="756" y="392">
+      <params>
+         <frac32.u.map name="gain1" value="32.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="audio/out stereo" uuid="a1ca7a567f535acc21055669829101d3ee7f0189" name="out_1" x="896" y="392">
       <params/>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="loop speed" x="70" y="406">
       <params>
-         <frac32.u.map name="value" MidiCC="2" value="12.749999523162842"/>
+         <frac32.u.map name="value" MidiCC="2" value="18.749999523162842"/>
       </params>
       <attribs/>
    </obj>
@@ -119,6 +125,7 @@
          <source obj="inv_1" outlet="o"/>
          <dest obj="record_1" inlet="stop"/>
          <dest obj="timeri_1" inlet="stop"/>
+         <dest obj="obj_1" inlet="start"/>
       </net>
       <net>
          <source obj="timeri_1" outlet="t"/>
@@ -179,6 +186,7 @@
       <net>
          <source obj="gain_2" outlet="out"/>
          <dest obj="record_1" inlet="wave"/>
+         <dest obj="mix_1" inlet="bus_in"/>
       </net>
       <net>
          <source obj="button1_1" outlet="out"/>
@@ -186,6 +194,10 @@
       </net>
       <net>
          <source obj="gain_1" outlet="out"/>
+         <dest obj="mix_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="mix_1" outlet="out"/>
          <dest obj="out_1" inlet="left"/>
          <dest obj="out_1" inlet="right"/>
       </net>
@@ -200,8 +212,8 @@
    </settings>
    <notes><![CDATA[]]></notes>
    <windowPos>
-      <x>64</x>
-      <y>27</y>
+      <x>75</x>
+      <y>210</y>
       <width>1317</width>
       <height>772</height>
    </windowPos>
