@@ -1,17 +1,19 @@
 <objdefs appVersion="1.0.12">
-   <obj.normal id="pink triphase u" uuid="4dfed175-00de-4b86-90ba-799f52910af0">
-      <sDescription>multi octave &apos;a la Perlin&apos; triphase lfo.
+   <obj.normal id="pink quintphase u" uuid="a13dc11e-1349-4152-ba7c-6a68a046ca0d">
+      <sDescription>multi octave &apos;a la Perlin&apos; quintphase lfo.
 Nice source of modulation for delay lines in choruses</sDescription>
       <author>Smashed Transistors</author>
       <license>LGPL</license>
-      <helpPatch>pink triphase u.axh</helpPatch>
+      <helpPatch>pink quintphase u.axh</helpPatch>
       <inlets>
          <frac32.bipolar name="pitch" description="pitch"/>
       </inlets>
       <outlets>
          <frac32.positive name="phi 0"/>
-         <frac32.positive name="phi 120"/>
-         <frac32.positive name="phi 240"/>
+         <frac32.positive name="phi 72"/>
+         <frac32.positive name="phi 144"/>
+         <frac32.positive name="phi 216"/>
+         <frac32.positive name="phi 288"/>
       </outlets>
       <displays/>
       <params>
@@ -64,14 +66,28 @@ outlet_phi_space_0 = a;
 
 a = 0;
 for(int i = 0; i < 5; i++){
-	a += fs(abs((p[i] + 1431655765)>>5))>>i;
+	                     
+	a += fs(abs((p[i] + 858993459)>>5))>>i;
 }
-outlet_phi_space_120 = a;
+outlet_phi_space_72 = a;
 
 a = 0;
 for(int i = 0; i < 5; i++){
-	a += fs(abs((p[i] - 1431655765)>>5))>>i;
+	a += fs(abs((p[i] +2*858993459)>>5))>>i;
 }
-outlet_phi_space_240 = a;]]></code.krate>
+outlet_phi_space_144 = a;
+
+a = 0;
+for(int i = 0; i < 5; i++){
+	a += fs(abs((p[i] -2*858993459)>>5))>>i;
+}
+outlet_phi_space_216 = a;
+
+
+a = 0;
+for(int i = 0; i < 5; i++){
+	a += fs(abs((p[i] -858993459)>>5))>>i;
+}
+outlet_phi_space_288 = a;]]></code.krate>
    </obj.normal>
 </objdefs>
