@@ -21,19 +21,19 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="pitch" x="588" y="154">
       <params>
-         <frac32.s.map name="value" value="-7.0"/>
+         <frac32.s.map name="value" value="0.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="loopspeed" x="658" y="154">
       <params>
-         <frac32.s.map name="value" value="-40.0"/>
+         <frac32.s.map name="value" value="-43.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="chunksize" x="728" y="154">
       <params>
-         <frac32.u.map name="value" value="20.5"/>
+         <frac32.u.map name="value" value="26.0"/>
       </params>
       <attribs/>
    </obj>
@@ -67,12 +67,6 @@
    </obj>
    <obj type="audio/in left" uuid="d40e60b7641fe75af4d7c91b45bb038aacafc52e" name="in_1" x="28" y="266">
       <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="112" y="266">
-      <params>
-         <frac32.u.map name="amp" value="14.5"/>
-      </params>
       <attribs/>
    </obj>
    <patchobj type="patch/object" uuid="fb05983a-7be6-460f-b266-9f88c8ba8930" name="record_1" x="224" y="266">
@@ -256,12 +250,6 @@ if(play){
 }]]></code.srate>
       </object>
    </patchobj>
-   <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_2" x="784" y="266">
-      <params>
-         <frac32.u.map name="amp" value="4.0"/>
-      </params>
-      <attribs/>
-   </obj>
    <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="896" y="266">
       <params>
          <frac32.u.map name="gain1" value="18.5"/>
@@ -291,11 +279,11 @@ if(play){
       </net>
       <net>
          <source obj="in_1" outlet="wave"/>
-         <dest obj="gain_1" inlet="in"/>
+         <dest obj="record_1" inlet="wave"/>
       </net>
       <net>
          <source obj="v1" outlet="o"/>
-         <dest obj="gain_2" inlet="in"/>
+         <dest obj="mix_1" inlet="bus_in"/>
       </net>
       <net>
          <source obj="chunksize" outlet="out"/>
@@ -314,10 +302,6 @@ if(play){
          <dest obj="toggle_1" inlet="trig"/>
       </net>
       <net>
-         <source obj="gain_1" outlet="out"/>
-         <dest obj="record_1" inlet="wave"/>
-      </net>
-      <net>
          <source obj="toggle_1" outlet="o"/>
          <dest obj="inv_1" inlet="i"/>
          <dest obj="record" inlet="in"/>
@@ -330,10 +314,6 @@ if(play){
       <net>
          <source obj="record_1" outlet="end"/>
          <dest obj="v1" inlet="end"/>
-      </net>
-      <net>
-         <source obj="gain_2" outlet="out"/>
-         <dest obj="mix_1" inlet="bus_in"/>
       </net>
       <net>
          <source obj="button_1" outlet="o"/>
