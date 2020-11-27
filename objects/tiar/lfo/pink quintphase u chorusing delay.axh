@@ -1,5 +1,5 @@
 <patch-1.0 appVersion="1.0.12">
-   <patcher type="patch/patcher" uuid="2c862802-b746-4f8f-8439-c001dd4c90ee" name="patcher_1" x="308" y="0">
+   <patcher type="patch/patcher" uuid="4a76ee56-24fb-4add-acf4-1d2ae203f242" name="patcher_1" x="308" y="0">
       <params>
          <frac32.s.map name="adsr_2:a" value="23.0"/>
          <frac32.u.map name="mix_3:gain1" value="64.0"/>
@@ -318,11 +318,21 @@
          <combo attributeName="Ctrl" selection="Delay"/>
       </attribs>
    </obj>
-   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="602" y="644">
+   <obj type="tiar/FDN/rot45" uuid="2b231f56-dc15-4a07-bfeb-f6fd6165d048" name="rot45_2" x="700" y="644">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/hp1" uuid="abea7276611b289bed35b80345a6bc4efd4d9a4e" name="hp1_1" x="602" y="700">
       <params>
          <frac32.s.map name="freq" value="14.0"/>
       </params>
       <attribs/>
+   </obj>
+   <obj type="tiar/delay/fixedDelay" uuid="5a641b5f-ab39-405e-8361-39d576cd7b19" name="fixedDelay_2" x="700" y="700">
+      <params/>
+      <attribs>
+         <spinner attributeName="delay" value="568"/>
+      </attribs>
    </obj>
    <obj type="tiar/mix/mix2cs" uuid="05c222a7-a7de-4c03-ad05-309f17493ecc" name="mix2cs_4" x="392" y="812">
       <params>
@@ -344,7 +354,7 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_1" x="728" y="812">
+   <obj type="filter/lp1" uuid="1b1fd7085e44d2b7b80b59b8d68796b909c1b2cc" name="lp1_1" x="826" y="812">
       <params>
          <frac32.s.map name="freq" value="49.0"/>
       </params>
@@ -372,11 +382,19 @@
          <combo attributeName="Ctrl" selection="Delay"/>
       </attribs>
    </obj>
-   <obj type="tiar/fx/pitchoct" uuid="888cd2ed-e44b-47fd-9738-565690bfb4df" name="pitchoct_1" x="602" y="980">
+   <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_1" x="602" y="980">
+      <params>
+         <frac32.s.map name="pitch" value="2.6432334463579537"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="conv/bipolar2unipolar" uuid="f6f63d71053d572d3c795f83c7ec11dfbbce82dd" name="bipolar2unipolar_1" x="700" y="980">
       <params/>
-      <attribs>
-         <combo attributeName="size" selection="4096"/>
-      </attribs>
+      <attribs/>
+   </obj>
+   <obj type="gain/vca" uuid="a9f2dcd18043e2f47364e45cb8814f63c2a37c0d" name="vca_1" x="826" y="980">
+      <params/>
+      <attribs/>
    </obj>
    <nets>
       <net>
@@ -445,7 +463,7 @@
       </net>
       <net>
          <source obj="over1tap_3" outlet="out1"/>
-         <dest obj="hp1_1" inlet="in"/>
+         <dest obj="rot45_2" inlet="r"/>
       </net>
       <net>
          <source obj="pink_1" outlet="phi 216"/>
@@ -471,15 +489,11 @@
       </net>
       <net>
          <source obj="over1tap_5" outlet="out1"/>
-         <dest obj="pitchoct_1" inlet="in"/>
+         <dest obj="vca_1" inlet="a"/>
       </net>
       <net>
          <source obj="AH6_1" outlet="out5"/>
          <dest obj="over1tap_5" inlet="in"/>
-      </net>
-      <net>
-         <source obj="pitchoct_1" outlet="out"/>
-         <dest obj="AH6_1" inlet="in5"/>
       </net>
       <net>
          <source obj="rot45_1" outlet="i"/>
@@ -507,7 +521,31 @@
       </net>
       <net>
          <source obj="hp1_1" outlet="out"/>
+         <dest obj="fixedDelay_2" inlet="in"/>
+      </net>
+      <net>
+         <source obj="rot45_2" outlet="i"/>
+         <dest obj="hp1_1" inlet="in"/>
+      </net>
+      <net>
+         <source obj="fixedDelay_2" outlet="out"/>
+         <dest obj="rot45_2" inlet="i"/>
+      </net>
+      <net>
+         <source obj="rot45_2" outlet="r"/>
          <dest obj="AH6_1" inlet="in3"/>
+      </net>
+      <net>
+         <source obj="vca_1" outlet="o"/>
+         <dest obj="AH6_1" inlet="in5"/>
+      </net>
+      <net>
+         <source obj="sine_1" outlet="wave"/>
+         <dest obj="bipolar2unipolar_1" inlet="i"/>
+      </net>
+      <net>
+         <source obj="bipolar2unipolar_1" outlet="o"/>
+         <dest obj="vca_1" inlet="v"/>
       </net>
    </nets>
    <settings>
@@ -518,6 +556,6 @@
       <x>347</x>
       <y>26</y>
       <width>1008</width>
-      <height>949</height>
+      <height>1008</height>
    </windowPos>
 </patch-1.0>
