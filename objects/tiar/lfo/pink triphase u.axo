@@ -17,7 +17,20 @@ Nice source of modulation for delay lines in choruses</sDescription>
       <params>
          <frac32.s.map.lfopitch name="pitch" noLabel="true"/>
       </params>
-      <attribs/>
+      <attribs>
+         <combo name="slope">
+            <MenuEntries>
+               <string>Normal</string>
+               <string>Smooth</string>
+               <string>Smoother</string>
+            </MenuEntries>
+            <CEntries>
+               <string>2</string>
+               <string>3</string>
+               <string>4</string>
+			</CEntries>
+         </combo>
+      </attribs>
       <code.declaration><![CDATA[//pink tri lfo p
 //3x2-2x3 0 1
 //x2(3-2x)
@@ -32,7 +45,18 @@ int32_t fs(int32_t x){
   return ___SMMUL(x,___SMMUL(x,((3<<26)-(x<<1)) ) )<<12;
 }
 
-int32_t p[5], c[5];]]></code.declaration>
+int32_t p[5], c[5];
+int32_t amp[5]={
+
+#if attr_slope == 4
+100761696,25190424,6297606,1574401,393600
+#elif attr_slope == 3
+89848231,29949410,9983136,3327712,1109237
+#else
+69273666,34636833,17318416,8659208,4329604
+#endif
+
+};]]></code.declaration>
       <code.init><![CDATA[for(int i = 0; i < 5; i++){
 	p[i] = GenerateRandomNumber();
 	c[i] = (2<<27) + (((int32_t)GenerateRandomNumber())>>7);
@@ -45,32 +69,23 @@ for(int i = 0; i < 5; i++){
 	p[i] += idp;
 	idp = ___SMMUL(idp, c[i])<<5;
 }
-/*p += dp>>2;
-int32_t r;
-SINE2TINTERP(p,r)
-outlet_phi_space_0 = (r>>5)+(1<<26);
-SINE2TINTERP(p+1431655765UL,r)
-outlet_phi_space_120 = (r>>5)+(1<<26);
-SINE2TINTERP(p+2*1431655765UL,r)
-outlet_phi_space_240 = (r>>5)+(1<<26);
 
-*/
 
 int32_t a = 0;
 for(int i = 0; i < 5; i++){
-	a += fs(abs(p[i]>>5))>>i;
+	a += ___SMMUL(fs(abs(p[i]>>5)), amp[i])<<6;
 }
 outlet_phi_space_0 = a;
 
 a = 0;
 for(int i = 0; i < 5; i++){
-	a += fs(abs((p[i] + 1431655765)>>5))>>i;
+	a += ___SMMUL(fs(abs((p[i] + 1431655765)>>5)), amp[i])<<6;
 }
 outlet_phi_space_120 = a;
 
 a = 0;
 for(int i = 0; i < 5; i++){
-	a += fs(abs((p[i] - 1431655765)>>5))>>i;
+	a += ___SMMUL(fs(abs((p[i] - 1431655765)>>5)), amp[i])<<6;
 }
 outlet_phi_space_240 = a;]]></code.krate>
    </obj.normal>
