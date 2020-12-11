@@ -21,25 +21,25 @@
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="pitch" x="588" y="154">
       <params>
-         <frac32.s.map name="value" value="64.0"/>
+         <frac32.s.map name="value" value="-41.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial b" uuid="862e7d7f29093cb1ce4aed72244d118ad4d46692" name="loopspeed" x="658" y="154">
       <params>
-         <frac32.s.map name="value" value="-64.0"/>
+         <frac32.s.map name="value" value="-41.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="chunksize" x="728" y="154">
       <params>
-         <frac32.u.map name="value" value="21.00000000000003"/>
+         <frac32.u.map name="value" value="0.0"/>
       </params>
       <attribs/>
    </obj>
    <obj type="ctrl/toggle" uuid="42b8134fa729d54bfc8d62d6ef3fa99498c1de99" name="retrig" x="798" y="154">
       <params>
-         <bool32.tgl name="b" value="1"/>
+         <bool32.tgl name="b" value="0"/>
       </params>
       <attribs/>
    </obj>
@@ -183,7 +183,7 @@ go = 0;]]></code.init>
 	beg = 0;
 	end = inlet_end;
 	pos1 = ((uint64_t)beg)<<32;
-	pos4 = ((inlet_chunksize>>20)*48)>>1;
+	pos4 = (inlet_chunksize>>16);
 	pos2 = 0;
 	pos3 = 0;
 	pos5 = 0;
@@ -227,13 +227,13 @@ if(play){
 	pos2 += ((int64_t)fch)<<4;
 	if(abs(pos2_32) > chunksize){
 		pos2 = 0;
-		chunksize = 48*(inlet_chunksize>>20);
+		chunksize = (inlet_chunksize>>16);
 		coef = INT32_MAX/chunksize;
 	}
 	pos4 += ((int64_t)fch)<<4;
 	if(abs(pos4_32) > chunksize2){
 		pos4 = 0;
-		chunksize2 = 48*(inlet_chunksize>>20);
+		chunksize2 = (inlet_chunksize>>16);
 		coef = INT32_MAX/chunksize2;
 	}
 
@@ -249,17 +249,11 @@ if(play){
    </patchobj>
    <obj type="math/gain" uuid="62b1c1a6337c7c8f6aec96408a432477b113cfa0" name="gain_1" x="770" y="280">
       <params>
-         <frac32.u.map name="amp" value="7.099999999999998"/>
+         <frac32.u.map name="amp" value="3.5"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="mix/mix 1 g" uuid="e6982841c1bf323ee2062a4b6cc2737adafbd668" name="mix_1" x="896" y="280">
-      <params>
-         <frac32.u.map name="gain1" value="7.5"/>
-      </params>
-      <attribs/>
-   </obj>
-   <patcher type="patch/patcher" uuid="d9cb6422-9dfe-4b01-a1b6-45473230e0af" name="patcher_1" x="1008" y="280">
+   <patcher type="patch/patcher" uuid="3cc7aa51-43eb-4a53-9f7a-f15842bc47b5" name="patcher_1" x="1008" y="280">
       <params>
          <frac32.u.map name="delay/dry" value="32.0"/>
       </params>
@@ -629,10 +623,6 @@ if(play){
          <dest obj="v1_" inlet="retrig"/>
       </net>
       <net>
-         <source obj="mix_1" outlet="out"/>
-         <dest obj="patcher_1" inlet="inlet_1"/>
-      </net>
-      <net>
          <source obj="loopspeed" outlet="out"/>
          <dest obj="v1_" inlet="loopspeed"/>
       </net>
@@ -646,7 +636,7 @@ if(play){
       </net>
       <net>
          <source obj="gain_1" outlet="out"/>
-         <dest obj="mix_1" inlet="bus_in"/>
+         <dest obj="patcher_1" inlet="inlet_1"/>
       </net>
    </nets>
    <settings>
