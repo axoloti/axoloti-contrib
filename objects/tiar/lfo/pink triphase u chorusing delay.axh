@@ -1,0 +1,347 @@
+<patch-1.0 appVersion="1.0.12">
+   <patcher type="patch/patcher" uuid="991aa2c8-df4e-4f69-924a-af60c03a4eee" name="patcher_1" x="308" y="0">
+      <params>
+         <frac32.u.map name="mix_4" value="44.5"/>
+         <frac32.u.map name="ZDF_1:Q" value="11.0"/>
+         <frac32.u.map name="*c_2" value="19.300000190734863"/>
+      </params>
+      <attribs>
+         <combo attributeName="poly" selection="8"/>
+      </attribs>
+      <subpatch appVersion="1.0.12">
+         <comment type="patch/comment" x="350" y="0" text="pseudo reverb"/>
+         <obj type="midi/in/keyb" uuid="53b04874696932f38aceaa168bd5d9efb743716d" name="keyb_1" x="112" y="14">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="env/adsr" uuid="d1dbcc5fa6f87b98a6a91c87fd44acee5e690bac" name="adsr_2" x="350" y="14">
+            <params>
+               <frac32.s.map name="a" value="31.0"/>
+               <frac32.s.map name="d" value="64.0"/>
+               <frac32.u.map name="s" value="50.0"/>
+               <frac32.s.map name="r" value="40.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_1" x="560" y="14">
+            <params>
+               <frac32.u.map name="gain1" value="16.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="lfo/sine" uuid="75f7330c26a13953215dccc3b7b9008545c9daa9" name="sine_2" x="0" y="168">
+            <params>
+               <frac32.s.map name="pitch" value="5.311942502395333"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="env/ad" uuid="255cb0cd67470c7498f9c33b820facd26aa629ce" name="ad_1" x="98" y="168">
+            <params>
+               <frac32.s.map name="a" value="36.0"/>
+               <frac32.s.map name="d" value="40.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/kfunc/u4u" uuid="bf123b5c-c14b-420b-901f-cd0cfaad394c" name="u4u_1" x="196" y="168">
+            <params>
+               <frac32.u.mapvsl name="p0" value="0.0"/>
+               <frac32.u.mapvsl name="p1" value="0.0"/>
+               <frac32.u.mapvsl name="p2" value="0.0"/>
+               <frac32.u.mapvsl name="p3" value="7.0"/>
+               <frac32.u.mapvsl name="p4" value="34.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="294" y="168">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_3" x="168" y="364">
+            <params>
+               <frac32.u.map name="gain1" value="0.20000000298023224"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/osc/saw80" uuid="1B2e1953-40d1-4480-aa27-c7e712752e53" name="saw80_1" x="252" y="364">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.s.map name="HP" value="0.0"/>
+               <frac32.u.map name="pulse" value="28.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="mix/mix 1" uuid="26fb1fe4ed25d8bc2ac4a3f91ab6b80ed6d9d4fa" name="mix_4" x="364" y="364">
+            <params>
+               <frac32.u.map name="gain1" onParent="true" value="32.0"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/filter/ZDF SK35" uuid="eff2de14-6eff-4b4f-88b7-dfdc8c16ebff" name="ZDF_1" x="462" y="364">
+            <params>
+               <frac32.s.map name="pitch" value="0.0"/>
+               <frac32.u.map name="Q" onParent="true" value="12.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="tiar/gain/DCA" uuid="37123bac-a14b-430b-901f-cdecf31d394c" name="DCA_1" x="588" y="364">
+            <params/>
+            <attribs/>
+         </obj>
+         <obj type="math/*c" uuid="7a66f52a9594e7e9eb31328ea725cb3641a80b55" name="*c_2" x="672" y="364">
+            <params>
+               <frac32.u.map name="amp" onParent="true" value="10.5"/>
+            </params>
+            <attribs/>
+         </obj>
+         <obj type="patch/outlet a" uuid="abd8c5fd3b0524a6630f65cad6dc27f6c58e2a3e" name="outlet_1" x="784" y="364">
+            <params/>
+            <attribs/>
+         </obj>
+         <nets>
+            <net>
+               <source obj="keyb_1" outlet="note"/>
+               <dest obj="mix_3" inlet="bus_in"/>
+               <dest obj="mix_4" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="keyb_1" outlet="gate"/>
+               <dest obj="adsr_2" inlet="gate"/>
+               <dest obj="ad_1" inlet="trig"/>
+               <dest obj="mix_1" inlet="bus_in"/>
+            </net>
+            <net>
+               <source obj="DCA_1" outlet="out"/>
+               <dest obj="*c_2" inlet="in"/>
+            </net>
+            <net>
+               <source obj="*c_2" outlet="out"/>
+               <dest obj="outlet_1" inlet="outlet"/>
+            </net>
+            <net>
+               <source obj="adsr_2" outlet="env"/>
+               <dest obj="mix_4" inlet="in1"/>
+               <dest obj="mix_1" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="mix_1" outlet="out"/>
+               <dest obj="DCA_1" inlet="gain"/>
+            </net>
+            <net>
+               <source obj="sine_2" outlet="wave"/>
+               <dest obj="*_1" inlet="b"/>
+            </net>
+            <net>
+               <source obj="ad_1" outlet="env"/>
+               <dest obj="u4u_1" inlet="in"/>
+            </net>
+            <net>
+               <source obj="u4u_1" outlet="out"/>
+               <dest obj="*_1" inlet="a"/>
+            </net>
+            <net>
+               <source obj="*_1" outlet="result"/>
+               <dest obj="mix_3" inlet="in1"/>
+            </net>
+            <net>
+               <source obj="mix_3" outlet="out"/>
+               <dest obj="saw80_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="saw80_1" outlet="out"/>
+               <dest obj="ZDF_1" inlet="x"/>
+            </net>
+            <net>
+               <source obj="mix_4" outlet="out"/>
+               <dest obj="ZDF_1" inlet="pitch"/>
+            </net>
+            <net>
+               <source obj="ZDF_1" outlet="lp12"/>
+               <dest obj="DCA_1" inlet="in"/>
+            </net>
+         </nets>
+         <settings>
+            <subpatchmode>polyphonic</subpatchmode>
+            <MidiChannel>1</MidiChannel>
+            <NPresets>8</NPresets>
+            <NPresetEntries>32</NPresetEntries>
+            <NModulationSources>8</NModulationSources>
+            <NModulationTargetsPerSource>8</NModulationTargetsPerSource>
+            <Saturate>false</Saturate>
+         </settings>
+         <notes><![CDATA[]]></notes>
+         <windowPos>
+            <x>0</x>
+            <y>0</y>
+            <width>916</width>
+            <height>670</height>
+         </windowPos>
+      </subpatch>
+   </patcher>
+   <comment type="patch/comment" x="616" y="28" text="Chorus dry/wet"/>
+   <obj type="ctrl/dial p" uuid="cc5d2846c3d50e425f450c4b9851371b54f4d674" name="dial_1" x="630" y="42">
+      <params>
+         <frac32.u.map name="value" value="64.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/lfo/pink triphase u" uuid="4dfed175-00de-4b86-90ba-799f52910af0" name="pink_1" x="14" y="140">
+      <params>
+         <frac32.s.map name="pitch" value="-51.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/disp/3 chart p" uuid="7fc27da5-a5b4-4dc7-8363-dac9ae92dd9a" name="3_1" x="154" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="tiar/FDN/D4" uuid="d4c8f8a7-a7de-4c03-ada5-137f1a497344" name="D4_1" x="434" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_1" x="630" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="mix/xfade" uuid="375dc91d218e96cdc9cbc7e92adb48f705ef701a" name="xfade_2" x="714" y="140">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="drj/audio/out_stereo_vol" uuid="awca1a567f535acc21055669829101d3ee7f0189" name="out_stereo_vol_1" x="798" y="140">
+      <params>
+         <frac32.u.map name="volume" value="12.5"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/mix/mix2cs" uuid="05c222a7-a7de-4c03-ad05-309f17493ecc" name="mix2cs_1" x="392" y="224">
+      <params>
+         <frac32.s.map name="const" value="39.0"/>
+         <frac32.s.map name="gain1" value="0.19999980926513672"/>
+         <frac32.s.map name="gain2" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/delay/over1tap" uuid="522cd2ed-e44b-47fd-9738-565690bfb4df" name="over1tap_1" x="490" y="224">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="65536 (682ms)"/>
+         <combo attributeName="Over" selection="Smooth"/>
+         <combo attributeName="Ctrl" selection="Delay"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/mix/mix2cs" uuid="05c222a7-a7de-4c03-ad05-309f17493ecc" name="mix2cs_2" x="392" y="392">
+      <params>
+         <frac32.s.map name="const" value="31.25"/>
+         <frac32.s.map name="gain1" value="0.19999980926513672"/>
+         <frac32.s.map name="gain2" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/delay/over1tap" uuid="522cd2ed-e44b-47fd-9738-565690bfb4df" name="over1tap_2" x="490" y="392">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="65536 (682ms)"/>
+         <combo attributeName="Over" selection="Smooth"/>
+         <combo attributeName="Ctrl" selection="Delay"/>
+      </attribs>
+   </obj>
+   <obj type="tiar/mix/mix2cs" uuid="05c222a7-a7de-4c03-ad05-309f17493ecc" name="mix2cs_3" x="392" y="560">
+      <params>
+         <frac32.s.map name="const" value="46.70000076293945"/>
+         <frac32.s.map name="gain1" value="0.19999980926513672"/>
+         <frac32.s.map name="gain2" value="0.0"/>
+      </params>
+      <attribs/>
+   </obj>
+   <obj type="tiar/delay/over1tap" uuid="522cd2ed-e44b-47fd-9738-565690bfb4df" name="over1tap_3" x="490" y="560">
+      <params/>
+      <attribs>
+         <combo attributeName="size" selection="65536 (682ms)"/>
+         <combo attributeName="Over" selection="Smooth"/>
+         <combo attributeName="Ctrl" selection="Delay"/>
+      </attribs>
+   </obj>
+   <nets>
+      <net>
+         <source obj="pink_1" outlet="phi 0"/>
+         <dest obj="3_1" inlet="in1"/>
+         <dest obj="mix2cs_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="pink_1" outlet="phi 120"/>
+         <dest obj="3_1" inlet="in2"/>
+         <dest obj="mix2cs_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="pink_1" outlet="phi 240"/>
+         <dest obj="3_1" inlet="in3"/>
+         <dest obj="mix2cs_3" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="patcher_1" outlet="outlet_1"/>
+         <dest obj="xfade_1" inlet="i1"/>
+         <dest obj="xfade_2" inlet="i1"/>
+         <dest obj="D4_1" inlet="in0"/>
+      </net>
+      <net>
+         <source obj="xfade_2" outlet="o"/>
+         <dest obj="out_stereo_vol_1" inlet="right"/>
+      </net>
+      <net>
+         <source obj="xfade_1" outlet="o"/>
+         <dest obj="out_stereo_vol_1" inlet="left"/>
+      </net>
+      <net>
+         <source obj="dial_1" outlet="out"/>
+         <dest obj="xfade_1" inlet="c"/>
+         <dest obj="xfade_2" inlet="c"/>
+      </net>
+      <net>
+         <source obj="mix2cs_1" outlet="out"/>
+         <dest obj="over1tap_1" inlet="d1"/>
+      </net>
+      <net>
+         <source obj="mix2cs_2" outlet="out"/>
+         <dest obj="over1tap_2" inlet="d1"/>
+      </net>
+      <net>
+         <source obj="mix2cs_3" outlet="out"/>
+         <dest obj="over1tap_3" inlet="d1"/>
+      </net>
+      <net>
+         <source obj="D4_1" outlet="out1"/>
+         <dest obj="over1tap_1" inlet="in"/>
+         <dest obj="xfade_1" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="D4_1" outlet="out2"/>
+         <dest obj="over1tap_2" inlet="in"/>
+         <dest obj="xfade_2" inlet="i2"/>
+      </net>
+      <net>
+         <source obj="D4_1" outlet="out3"/>
+         <dest obj="over1tap_3" inlet="in"/>
+      </net>
+      <net>
+         <source obj="over1tap_1" outlet="out1"/>
+         <dest obj="D4_1" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="over1tap_2" outlet="out1"/>
+         <dest obj="D4_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="over1tap_3" outlet="out1"/>
+         <dest obj="D4_1" inlet="in3"/>
+      </net>
+   </nets>
+   <settings>
+      <subpatchmode>no</subpatchmode>
+   </settings>
+   <notes><![CDATA[]]></notes>
+   <windowPos>
+      <x>29</x>
+      <y>87</y>
+      <width>1008</width>
+      <height>889</height>
+   </windowPos>
+</patch-1.0>
