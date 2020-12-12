@@ -1,0 +1,28 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="frqshiftQmix" uuid="597bd0a1-9047-4bcb-9c16-5559cbd93a20">
+      <sDescription>3 stereo input channels with dedicated names to mix the real&amp;imaginary signals of the fx/frqshiftQ module.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <inlets>
+         <frac32buffer name="upS" description="input 1"/>
+         <frac32buffer name="upC" description="input 3"/>
+         <frac32buffer name="downS" description="input 2"/>
+         <frac32buffer name="downC" description="input 4"/>
+         <frac32buffer name="originalS"/>
+         <frac32buffer name="originalC"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="s" description="mix out"/>
+         <frac32buffer name="c"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map name="up"/>
+         <frac32.s.map name="down"/>
+         <frac32.s.map name="original"/>
+      </params>
+      <attribs/>
+      <code.srate><![CDATA[outlet_s=___SMMUL(param_up,inlet_upS)+___SMMUL(param_down,inlet_downS)+___SMMUL(param_original,inlet_originalS)<<5;
+outlet_c=___SMMUL(param_up,inlet_upC)+___SMMUL(param_down,inlet_downC)+___SMMUL(param_original,inlet_originalC)<<5;]]></code.srate>
+   </obj.normal>
+</objdefs>

@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="frqshiftQ" uuid="8c97dae6-516d-4f5b-9b51-d50fbaaf8d71">
+      <sDescription>Frequency shifter with quadrature frequency shifted outputs to be able to keep on stacking frequency shifters without the  need of further 90-degrees phase offset filters.
+You can use sine&amp;cosine as inputs or any other signal that&apos;s split up into real and imaginary part (if you only have the real part (just a single audio source) use hilbert transform to generate the real&amp;imaginary parts-&gt; see contrib/jt/iq-split).
+You can further use the up-shifted, down-shifted and original real/imaginary pairs to further frequency shift these independently (parallel/serial) by mixing the the sine and cosine (real/imaginary) parts seperately like a stereo pair.
+
+The frq input can be used to connect to the frequency of the main oscillator to keep the shift related to it&apos;s root frequency and multiply or divide this value to set a certain ratio. Note that if the frequency is higher then twice the root frequency, the down-signal will not go down as the down-shifted version frequency inverts around 0hz and then goes over the root frequency again (but inversed). If you want to create sub-harmonics or harmonics based on a sub frequency, first lower the frequency in octaves and multiply with uneven harmonic numbers. This will create harmonic overtones that will reside in between the normal overtones of the root frequency.
+The &quot;beat&quot; input is just added to the &quot;frq&quot; input, this way you can combine a frequency based on the audio source (that won&apos;t beat with small ratio&apos;s) with a frequency of the host tempo (so to sync the beating of the generated frequencies to your song) or add another custom offset to the main audiosource frequency.</sDescription>
+      <author>Remco van der Most</author>
+      <license>GPL</license>
+      <helpPatch>iqsplit.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="s"/>
+         <frac32buffer name="c"/>
+         <frac32 name="frq"/>
+         <frac32 name="beat"/>
+         <frac32buffer name="ShifterC"/>
+         <frac32buffer name="ShifterS"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="upS"/>
+         <frac32buffer name="upC"/>
+         <frac32buffer name="downS"/>
+         <frac32buffer name="downC"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t s_mid_t1[9];
+int32_t s_mid_t2[9];
+
+int32_t *mid_t1;
+int32_t *mid_t2;
+int32_t phs;
+int32_t v30=1<<30;]]></code.declaration>
+      <code.init><![CDATA[mid_t1 = &s_mid_t1[0];
+mid_t2 = &s_mid_t2[0];]]></code.init>
+      <code.krate><![CDATA[int32_t shift=inlet_frq+inlet_beat;]]></code.krate>
+      <code.srate><![CDATA[phs+=shift;
+int32_t SIN,COS;
+SINE2TINTERP(phs,SIN)
+SINE2TINTERP(phs+v30,COS)
+SIN=(SIN>>4)+inlet_ShifterS;
+COS=(COS>>4)+inlet_ShifterC;
+int32_t t1,t2;
+t1=___SMMUL(inlet_s,SIN)<<5;
+t2=___SMMUL(inlet_c,COS)<<5;
+int32_t low=t1+t2;
+int32_t high=t1-t2;
+outlet_downS=low;
+outlet_upS=high;
+
+t1=___SMMUL(inlet_c,SIN)<<5;
+t2=___SMMUL(-inlet_s,COS)<<5;
+low=t1+t2;
+high=t1-t2;
+outlet_downC=low;
+outlet_upC=high;]]></code.srate>
+   </obj.normal>
+</objdefs>

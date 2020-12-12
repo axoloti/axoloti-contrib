@@ -1,0 +1,132 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="TZMMF" uuid="78d2ee17-c780-4a13-af02-9d7d7940ffcf">
+      <sDescription>-Audio-rate thru-zero! frequency-modulatable multi-mode filter
+-12 filter modes (see code for mode names)
+-resonance can oscillate eternally
+-pingable by a velocity sensitive gate as a percussive instrument
+
+-has build-in compression in the filter loop to prevent overflow and an output-limiter/distortion.
+-output distortion can be made asymmetrical (spread)
+-Use these to give a special character to your filter.</sDescription>
+      <author>Remco van der Most</author>
+      <license>BSD</license>
+      <helpPatch>osc.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+         <frac32.bipolar name="cut" description="pitch"/>
+         <frac32.bipolar name="resonance"/>
+         <frac32 name="ping"/>
+         <int32 name="mode"/>
+         <frac32buffer name="fm"/>
+      </inlets>
+      <outlets>
+         <frac32buffer name="o"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="cut">
+            <DefaultValue v="24.0"/>
+         </frac32.s.map.pitch>
+         <frac32.u.map name="resonance">
+            <DefaultValue v="25.5"/>
+         </frac32.u.map>
+         <int32 name="mode">
+            <MinValue i="0"/>
+            <MaxValue i="11"/>
+         </int32>
+         <frac32.u.map name="treshold">
+            <DefaultValue v="24.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="compression">
+            <DefaultValue v="32.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="tresOUT">
+            <DefaultValue v="16.0"/>
+         </frac32.u.map>
+         <frac32.u.map name="headroom">
+            <DefaultValue v="16.0"/>
+         </frac32.u.map>
+         <frac32.s.map name="tspread">
+            <DefaultValue v="-5.0"/>
+         </frac32.s.map>
+         <frac32.s.map name="hspread">
+            <DefaultValue v="3.0"/>
+         </frac32.s.map>
+         <bool32.tgl name="OS"/>
+      </params>
+      <attribs/>
+      <code.declaration><![CDATA[int32_t val[4];
+int trg;
+int32_t HP;
+int32_t ta,tb,ra,rb;
+int32_t SOFT(int32_t IN,int32_t tr,int32_t ra,int32_t ts,int32_t hs)
+{
+int32_t mix=__SSAT(IN,28)+(1<<27)<<3;
+int32_t in=(1<<27)-__USAT((IN>0?IN:-IN),27);
+in=(1<<27)-1-___SMMUL(in<<3,in<<2);
+int32_t a=(___SMMUL(IN-tr+ts,(1<<27)+___SMMUL(ra+hs-(1<<27)<<2,in<<3))<<5)+tr;
+int32_t b=(___SMMUL(IN+tr+ts,(1<<27)+___SMMUL(ra-hs-(1<<27)<<2,in<<3))<<5)-tr;
+//b=-a;
+return b+=(___SMMUL(a-b,mix)<<1)-(ts>>1);
+};]]></code.declaration>
+      <code.krate><![CDATA[int32_t Freq;
+   MTOFEXTENDED(param_cut + inlet_cut,Freq);
+int32_t damp;
+damp=__USAT((1<<27)-param_resonance-inlet_resonance,27)<<4;
+damp=___SMMUL(damp,damp)<<1;
+damp=___SMMUL(damp,damp)<<1;
+if(inlet_ping&&!trg)
+{
+	trg=1;
+	val[1]=inlet_ping;
+}
+else if(!inlet_ping){trg=0;}
+int mode=__USAT(inlet_mode+param_mode,27)%12;
+
+int32_t th=(1<<27)-param_treshold;
+th=(1<<27)-___SMMUL(th<<3,th<<2)>>0;
+
+int32_t hr=param_compression;
+hr=(___SMMUL(hr<<3,hr<<2)>>2)+(1<<17);
+
+int32_t to=(1<<27)-param_tresOUT;
+to=(1<<27)-___SMMUL(to<<3,to<<2);
+
+int32_t ho=(1<<27)-param_headroom;
+ho=(1<<27)-___SMMUL(ho<<3,ho<<2);]]></code.krate>
+      <code.srate><![CDATA[int64_t freq=(int64_t)Freq+((int64_t)___SMMUL(inlet_fm,Freq)<<10);
+int32_t vm31=(1<<31)-1;
+freq=freq>=vm31?vm31:(freq<=-vm31?-vm31:freq);
+for(int i=0;i<(param_OS?2:1);i++)
+{
+val[0]-=___SMMUL(val[1],freq)<<1;
+int32_t hp=inlet_in-___SMMUL(val[1]<<1,damp);
+val[1]+=___SMMUL(val[0]+hp,freq)<<1;
+
+int32_t tmp=val[1];
+tmp=tmp>0?tmp:-tmp;
+tmp=__USAT(tmp-th,31);
+tmp=__USAT(___SMMUL(tmp,hr),21)<<6;
+val[1]-=val[1]>0?tmp:-tmp;
+}
+int32_t out=0;
+switch(mode)
+{
+case 0:  out= val[0];					break;//low1
+case 1:  out= val[0]-val[1];				break;//low2
+case 2:  out= val[0]+val[1];				break;//low3
+case 3:  out= val[1];					break;//band1
+case 4:  out= inlet_in-val[1]+val[0];		break;//band&high
+case 5:  out= inlet_in+val[0];			break;//high
+case 6:  out= inlet_in-val[1];			break;//notch/allpass/peak
+case 7:  out= inlet_in-val[1]-val[0]>>1;	break;//peaknotch1
+case 8:  out= inlet_in-val[0]>>1;			break;//peaknotch2
+case 9:  out= inlet_in+val[1]>>1;			break;//peak1
+case 10: out= (inlet_in+val[1]>>1)+val[0];	break;//peak2
+case 11: out= (inlet_in+val[1])-val[0]>>1;	break;//peak3
+
+}
+out=SOFT(out,to,ho,param_tspread,param_hspread);
+outlet_o=out;]]></code.srate>
+   </obj.normal>
+</objdefs>
