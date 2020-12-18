@@ -163,19 +163,23 @@
       </params>
       <attribs/>
    </obj>
-   <comment type="patch/comment" x="532" y="630" text="Playback speed"/>
+   <comment type="patch/comment" x="420" y="630" text="Playback speed"/>
    <comment type="patch/comment" x="868" y="630" text="Two dephased channel to reduce artefacts"/>
-   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="392" y="658">
+   <obj type="math/+c" uuid="13eec32bd8ad57dd0bb18a02566cc0a117d320e3" name="+c_1" x="280" y="658">
       <params>
          <frac32.u.map name="c" value="64.0"/>
       </params>
       <attribs/>
    </obj>
-   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="462" y="658">
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_1" x="350" y="658">
       <params/>
       <attribs/>
    </obj>
-   <obj type="lfo/saw lin" uuid="79fb6a3a77fc9fe0273c271ddccca019ebee6955" name="saw_1" x="532" y="658">
+   <obj type="lfo/saw lin" uuid="79fb6a3a77fc9fe0273c271ddccca019ebee6955" name="saw_1" x="420" y="658">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/*" uuid="922423f2db9f222aa3e5ba095778288c446da47a" name="*_8" x="532" y="658">
       <params/>
       <attribs/>
    </obj>
@@ -217,10 +221,6 @@
       <params>
          <frac32.u.map name="volume" value="49.0"/>
       </params>
-      <attribs/>
-   </obj>
-   <obj type="math/&gt;" uuid="8112942c245dbc2edf7d7de122fe83b0dcd0a391" name="&gt;_1" x="532" y="728">
-      <params/>
       <attribs/>
    </obj>
    <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_5" x="840" y="742">
@@ -322,12 +322,7 @@
       </net>
       <net>
          <source obj="saw_1" outlet="wave"/>
-         <dest obj="interp_1" inlet="i"/>
-         <dest obj="&gt;_1" inlet="in1"/>
-      </net>
-      <net>
-         <source obj="&gt;_1" outlet="out"/>
-         <dest obj="saw_1" inlet="reset"/>
+         <dest obj="*_8" inlet="a"/>
       </net>
       <net>
          <source obj="*_1" outlet="result"/>
@@ -411,8 +406,8 @@
       <net>
          <source obj="obj_1" outlet="length"/>
          <dest obj="length %" inlet="in"/>
-         <dest obj="&gt;_1" inlet="in2"/>
          <dest obj="interp_4" inlet="i"/>
+         <dest obj="*_8" inlet="b"/>
       </net>
       <net>
          <source obj="min_1" outlet="out"/>
@@ -434,6 +429,10 @@
          <source obj="interp_4" outlet="o"/>
          <dest obj="min_1" inlet="in1"/>
          <dest obj="min_2" inlet="in1"/>
+      </net>
+      <net>
+         <source obj="*_8" outlet="result"/>
+         <dest obj="interp_1" inlet="i"/>
       </net>
    </nets>
    <settings>
