@@ -72,14 +72,33 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/reciprocal" uuid="4be823e668871835d067cbfe42407b06f927f91f" name="reciprocal_1" x="518" y="336">
+   <patchobj type="patch/object" uuid="9b4890bd-95a6-4f00-911a-1bdd67c38a82" name="divide" x="630" y="336">
       <params/>
       <attribs/>
-   </obj>
-   <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_2" x="644" y="336">
-      <params/>
-      <attribs/>
-   </obj>
+      <object id="patch/object" uuid="9b4890bd-95a6-4f00-911a-1bdd67c38a82">
+         <sDescription>reciprocal, y = 64/x</sDescription>
+         <author>Johannes Taelman</author>
+         <license>BSD</license>
+         <helpPatch>reciprocal.axh</helpPatch>
+         <inlets>
+            <frac32buffer name="a" description=""/>
+            <frac32buffer name="b" description=""/>
+         </inlets>
+         <outlets>
+            <frac32buffer name="out" description="out"/>
+         </outlets>
+         <displays/>
+         <params/>
+         <attribs/>
+         <includes/>
+         <code.srate><![CDATA[if (inlet_b != 0) {
+	float a = inlet_a*(float)(1.0f/(1<<27));
+	float b = inlet_b*(float)(1.0f/(1<<27));
+      outlet_out = (int)((a/(64*b))*(float)(1<<27));
+    } else
+        outlet_out = 1<<27;]]></code.srate>
+      </object>
+   </patchobj>
    <patchobj type="patch/object" uuid="54715b89-7bb9-4774-bf0c-d66189d3c670" name="phasor_1" x="714" y="336">
       <params/>
       <attribs/>
@@ -107,32 +126,27 @@
    outlet_phasor180 = (Phase+(1<<31))>>5;]]></code.srate>
       </object>
    </patchobj>
-   <comment type="patch/comment" x="868" y="350" text="Mandatory for samplehold"/>
-   <obj type="math/-1" uuid="e869edae3ba60b8ca33929e8a0a2b70a86074e11" name="-1_1" x="868" y="378">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="math/-1" uuid="e869edae3ba60b8ca33929e8a0a2b70a86074e11" name="-1_2" x="868" y="420">
-      <params/>
-      <attribs/>
-   </obj>
+   <comment type="patch/comment" x="406" y="448" text="To avoid doppler effect"/>
    <comment type="patch/comment" x="1064" y="448" text="Chunk envelope"/>
-   <comment type="patch/comment" x="672" y="462" text="To avoid doppler effect"/>
    <obj type="math/*c" uuid="7d5ef61c3bcd571ee6bbd8437ef3612125dfb225" name="chunk size" x="14" y="476">
       <params>
          <frac32.u.map name="amp" value="32.0"/>
       </params>
       <attribs/>
    </obj>
+   <obj type="conv/interp" uuid="d68c1a8709d8b55e3de8715d727ec0a2d8569d9a" name="interp_2" x="266" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="filter/delta" uuid="db2367936da470c91bc3888b0a6a9f6fbea1863a" name="delta_1" x="406" y="476">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/samplehold" uuid="354e2699eb9934cfdecc09f32e96284f3d10d78b" name="samplehold_1" x="490" y="476">
+      <params/>
+      <attribs/>
+   </obj>
    <obj type="math/window" uuid="5582d4d31acd67073be69df4d31d686304e17161" name="window_1" x="1064" y="476">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="conv/interp" uuid="d68c1a8709d8b55e3de8715d727ec0a2d8569d9a" name="interp_2" x="574" y="490">
-      <params/>
-      <attribs/>
-   </obj>
-   <obj type="logic/samplehold" uuid="354e2699eb9934cfdecc09f32e96284f3d10d78b" name="samplehold_1" x="672" y="490">
       <params/>
       <attribs/>
    </obj>
@@ -153,7 +167,11 @@
       </params>
       <attribs/>
    </obj>
-   <obj type="logic/samplehold" uuid="354e2699eb9934cfdecc09f32e96284f3d10d78b" name="samplehold_2" x="672" y="560">
+   <obj type="filter/delta" uuid="db2367936da470c91bc3888b0a6a9f6fbea1863a" name="delta_2" x="406" y="546">
+      <params/>
+      <attribs/>
+   </obj>
+   <obj type="logic/samplehold" uuid="354e2699eb9934cfdecc09f32e96284f3d10d78b" name="samplehold_2" x="490" y="546">
       <params/>
       <attribs/>
    </obj>
@@ -201,8 +219,14 @@
       <params/>
       <attribs/>
    </obj>
-   <obj type="math/&gt;" uuid="8112942c245dbc2edf7d7de122fe83b0dcd0a391" name="&gt;_1" x="420" y="728">
+   <obj type="filter/delta" uuid="58aa97f36fc7af885445a28604363a388a6b25f3" name="delta_3" x="378" y="728">
       <params/>
+      <attribs/>
+   </obj>
+   <obj type="math/&lt;c" uuid="852c84e7bd967ee4a44cc553fcf6e3fc9d8b92c4" name="&lt;c_1" x="448" y="728">
+      <params>
+         <frac32.u.map name="c" value="0.0"/>
+      </params>
       <attribs/>
    </obj>
    <obj type="math/*" uuid="dc7fbdd46e5e6d4b8de62ee63fd6321639b2f167" name="*_5" x="854" y="742">
@@ -255,10 +279,6 @@
          <dest obj="*_3" inlet="b"/>
       </net>
       <net>
-         <source obj="-1_1" outlet="result"/>
-         <dest obj="samplehold_1" inlet="s_h"/>
-      </net>
-      <net>
          <source obj="read_2" outlet="o"/>
          <dest obj="*_6" inlet="b"/>
       </net>
@@ -277,23 +297,19 @@
       </net>
       <net>
          <source obj="interp_3" outlet="o"/>
-         <dest obj="*_2" inlet="a"/>
+         <dest obj="divide" inlet="a"/>
       </net>
       <net>
          <source obj="phasor_1" outlet="phasor0"/>
-         <dest obj="-1_1" inlet="a"/>
          <dest obj="window_1" inlet="phase"/>
          <dest obj="*_4" inlet="a"/>
-      </net>
-      <net>
-         <source obj="-1_2" outlet="result"/>
-         <dest obj="samplehold_2" inlet="s_h"/>
+         <dest obj="delta_1" inlet="a"/>
       </net>
       <net>
          <source obj="phasor_1" outlet="phasor180"/>
-         <dest obj="-1_2" inlet="a"/>
          <dest obj="window_2" inlet="phase"/>
          <dest obj="*_5" inlet="a"/>
+         <dest obj="delta_2" inlet="a"/>
       </net>
       <net>
          <source obj="*_3" outlet="result"/>
@@ -305,8 +321,8 @@
       </net>
       <net>
          <source obj="samplehold_1" outlet="out"/>
-         <dest obj="reciprocal_1" inlet="in"/>
          <dest obj="*_4" inlet="b"/>
+         <dest obj="divide" inlet="b"/>
       </net>
       <net>
          <source obj="samplehold_2" outlet="out"/>
@@ -314,8 +330,8 @@
       </net>
       <net>
          <source obj="saw_1" outlet="wave"/>
-         <dest obj="&gt;_1" inlet="in1"/>
          <dest obj="interp_1" inlet="i"/>
+         <dest obj="delta_3" inlet="a"/>
       </net>
       <net>
          <source obj="*_1" outlet="result"/>
@@ -364,14 +380,6 @@
          <dest obj="+_2" inlet="in1"/>
       </net>
       <net>
-         <source obj="reciprocal_1" outlet="out"/>
-         <dest obj="*_2" inlet="b"/>
-      </net>
-      <net>
-         <source obj="*_2" outlet="result"/>
-         <dest obj="phasor_1" inlet="freq"/>
-      </net>
-      <net>
          <source obj="interp_1" outlet="o"/>
          <dest obj="read_3" inlet="a"/>
          <dest obj="+_1" inlet="in2"/>
@@ -410,13 +418,28 @@
          <dest obj="read_2" inlet="a"/>
       </net>
       <net>
-         <source obj="&gt;_1" outlet="out"/>
+         <source obj="&lt;c_1" outlet="out"/>
          <dest obj="saw_1" inlet="reset"/>
       </net>
       <net>
          <source obj="-_2" outlet="out"/>
          <dest obj="length %" inlet="in"/>
-         <dest obj="&gt;_1" inlet="in2"/>
+      </net>
+      <net>
+         <source obj="divide" outlet="out"/>
+         <dest obj="phasor_1" inlet="freq"/>
+      </net>
+      <net>
+         <source obj="delta_2" outlet="d"/>
+         <dest obj="samplehold_2" inlet="s_h"/>
+      </net>
+      <net>
+         <source obj="delta_1" outlet="d"/>
+         <dest obj="samplehold_1" inlet="s_h"/>
+      </net>
+      <net>
+         <source obj="delta_3" outlet="d"/>
+         <dest obj="&lt;c_1" inlet="in"/>
       </net>
    </nets>
    <settings>
