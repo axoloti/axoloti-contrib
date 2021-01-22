@@ -1,0 +1,98 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="load len" uuid="80ea6839-a4e5-462f-8216-4b6e17ba4c14">
+      <sDescription>load table from sdcard</sDescription>
+      <author>Johannes Taelman</author>
+      <license>BSD</license>
+      <helpPatch>table.axh</helpPatch>
+      <inlets>
+         <charptr32 name="filename" description="file name"/>
+         <bool32.rising name="trig" description="trigger"/>
+      </inlets>
+      <outlets>
+         <frac32.positive name="length"/>
+         <frac32.positive name="linear_freq"/>
+         <frac32.positive name="100ms"/>
+      </outlets>
+      <displays/>
+      <params/>
+      <attribs>
+         <objref name="table"/>
+      </attribs>
+      <includes>
+         <include>chibios/ext/fatfs/src/ff.h</include>
+      </includes>
+      <depends>
+         <depend>fatfs</depend>
+      </depends>
+      <code.declaration><![CDATA[int ntrig;
+uint32_t linear_freq;
+uint32_t length;
+uint32_t chunk_size;]]></code.declaration>
+      <code.init><![CDATA[ntrig = 0;
+linear_freq = 0;
+length = 0;
+chunk_size = 0;]]></code.init>
+      <code.krate><![CDATA[if ((inlet_trig>0) && !ntrig) {
+    ntrig=1;
+    FIL FileObject;
+    FRESULT err;
+    UINT bytes_read;
+    codec_clearbuffer();
+    err = f_open(&FileObject, inlet_filename, FA_READ | FA_OPEN_EXISTING);
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;}
+    int rem_sz = sizeof(*attr_table.array)*attr_table.LENGTH;
+    int offset = 0;
+    while (rem_sz>0) {
+      if (rem_sz>sizeof(fbuff)) {
+        err = f_read(&FileObject, fbuff, sizeof(fbuff),&bytes_read);
+        if (bytes_read == 0) break;
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz -= bytes_read;
+        offset += bytes_read;
+      } else {
+        err = f_read(&FileObject, fbuff, rem_sz,&bytes_read);
+        memcpy((char *)(&attr_table.array[0]) + offset,(char *)fbuff,bytes_read);
+        rem_sz = 0;
+      }
+    }    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+    err = f_close(&FileObject);
+    
+    length = (uint32_t)(((float)((offset + bytes_read)>>1))/((float)attr_table.LENGTH) * (float)(1<<27));
+    
+    /*
+     * sample duration in seconds : attr_table.LENGTH / 48kHz (s-rate)
+     * frequency (f) <=> phase increment (inc3k) each 3kHz
+     * period expressed in 3kHz-cycles = 2^32 / inc3k
+     * period expressed in secondes = 2^32 / (3000 * inc3k)
+     * 
+     * for a period = sample duration :
+     *      attr_table.LENGTH / 48000 = 2^32 / (3000 * inc3k)
+     * <=>  1 / inc3k = attr_table.LENGTH / 16 * 2^32
+     * <=> inc3k = 16 * 2^32 / attr_table.LENGTH
+     * 
+     * In "lfo/saw lin" object, inlet frequency (phase increment) is :
+     * inc = inlet_freq>>2
+     * then 
+     * inc3k = 16 * 2^32 / attr_table.LENGTH
+     * <=> inlet_freq>>2 = 16 * 2^32 / attr_table.LENGTH
+     * <=> inlet_freq = 4 * 16 * 2^32 / attr_table.LENGTH
+     * <=> inlet_freq = 274877906944 / attr_table.LENGTH
+     */
+    linear_freq = 274877906944 / attr_table.LENGTH;
+    /*
+     * percentage, expressed in frac32, of table length equal to 100ms :
+     * nb 100 ms in table length : attr_table.LENGTH / (48000 / 10)
+     * in frac 32 : (1<<27) / attr_table.LENGTH / 4800
+     * <=> 1<<27 * 4800 / attr_table.LENGTH
+     * <=> 644245094400 / attr_table.LENGTH
+     */
+    chunk_size = 644245094400 / attr_table.LENGTH;
+    if (err != FR_OK) { report_fatfs_error(err,inlet_filename); return;};
+  }
+  else if (!(inlet_trig>0)) ntrig=0;
+
+  outlet_linear__freq = linear_freq;
+  outlet_length = length;
+  outlet_100ms = chunk_size;]]></code.krate>
+   </obj.normal>
+</objdefs>
