@@ -1,0 +1,42 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="m0n1c multi osc" uuid="c0507533-35f6-4444-9636-7004932e4006">
+      <sDescription>m0n1C oscillator needs a m0n1C multi gen</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>m0n1c multi.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitch"/>
+         <frac32.bipolar name="freq offset"/>
+         <int32 name="gen nb"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitch" noLabel="true"/>
+      </params>
+      <attribs>
+         <objref name="gen"/>
+      </attribs>
+      <code.declaration><![CDATA[uint32_t p, dp;  // phase and delta phase aka freq
+int32_t I1_1;
+int32_t inv;]]></code.declaration>
+      <code.init><![CDATA[p = 0;
+dp = 1;]]></code.init>
+      <code.krate><![CDATA[int32_t nextDp;
+  MTOFEXTENDED(param_pitch + inlet_pitch, nextDp);
+  nextDp = ___SMMLA(0x01000000, inlet_freq_space_offset, nextDp);
+  // the float division execs in parallel with integer operations.
+  float nextInv = (((float)(1<<20)) / arm::q_to_float(nextDp, 32));
+  I1_1 = attr_gen.I1p32(inlet_gen_space_nb, p);
+  for(int j = 0; j < BUFSIZE; j++){
+    p += dp;
+    int32_t I1_0 = attr_gen.I1p32(inlet_gen_space_nb, p);
+    outlet_wave[j] = ___SMMUL(I1_0 - I1_1, inv)<<7 ;
+    I1_1 = I1_0;
+  }
+  dp = nextDp;
+  inv = (int32_t) nextInv;]]></code.krate>
+   </obj.normal>
+</objdefs>

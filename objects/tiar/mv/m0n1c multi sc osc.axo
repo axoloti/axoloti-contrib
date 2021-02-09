@@ -1,0 +1,61 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="m0n1c multi sc osc" uuid="f00f7533-35f6-49d3-9644-7004932e4006">
+      <sDescription>m0n1c sync oscillator needs a m0n1C multi gen</sDescription>
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>m0n1c multi.axh</helpPatch>
+      <inlets>
+         <frac32.bipolar name="pitchM"/>
+         <frac32.bipolar name="pitchS"/>
+		 <int32 name="gen nb"/>
+      </inlets>
+      <outlets>
+         <frac32buffer.bipolar name="wave"/>
+      </outlets>
+      <displays/>
+      <params>
+         <frac32.s.map.pitch name="pitchM"/>
+         <frac32.s.map.pitch name="pitchS"/>
+      </params>
+      <attribs>
+         <objref name="gen"/>
+      </attribs>
+
+      <code.declaration><![CDATA[
+	  int genNb;
+	  uint32_t pM, dpM;
+float _dpM;	  
+uint32_t pS, dpS;  
+float _dpS;
+int32_t Y1;]]></code.declaration>
+      <code.init><![CDATA[pM = pS = Y1 = 0;
+	  genNb = 0;]]></code.init>
+      <code.krate><![CDATA[MTOFEXTENDED(param_pitchM + inlet_pitchM, dpM);
+_dpM = 1.0f / dpM;
+MTOFEXTENDED(param_pitchS + inlet_pitchS, dpS);
+_dpS = (1/32.0f) / arm::q_to_float(dpS, 32);
+Y1 = attr_gen.I1p32(genNb,pS);]]></code.krate>
+      <code.srate><![CDATA[int32_t Y0;
+float y;
+pM += dpM;
+if(pM < dpM){
+	float a = pM * _dpM;
+	uint32_t p = pS + (uint32_t)((1.0f-a) * dpS);
+	y = (float)(attr_gen.I1p32(genNb,p) - Y1);
+	pS = (uint32_t)(a * dpS);
+	genNb = inlet_gen_space_nb;
+	Y0 = attr_gen.I1p32(genNb,pS);
+	y += (float)(Y0 - attr_gen.I1p32(genNb,0));
+	
+}else{
+	pS += dpS;
+	Y0 = attr_gen.I1p32(genNb,pS);
+	y = Y0 - Y1;
+}
+Y1 = Y0;
+y *= _dpS;
+
+float e = arm::q_to_float(abs(__SSAT((int32_t)pM,30)),29);
+outlet_wave = (int32_t)(e*y);]]></code.srate>
+   </obj.normal>
+</objdefs>
