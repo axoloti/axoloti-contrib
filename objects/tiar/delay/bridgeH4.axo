@@ -1,0 +1,60 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="bridgeH4" uuid="e1844135-5cea-4711-aedf-2e2af1a00733">
+      <author>Smashed Transistors</author>
+      <license>LGPL</license>
+      <helpPatch>bridgeH4.axh</helpPatch>
+      <inlets/>
+      <outlets/>
+      <displays/>
+      <params>
+         <int32 name="p0">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+         <int32 name="p1">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+         <int32 name="p2">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+         <int32 name="p3">
+            <MinValue i="0"/>
+            <MaxValue i="65536"/>
+         </int32>
+      </params>
+      <attribs>
+         <objref name="delayName"/>
+      </attribs>
+      <code.krate><![CDATA[// note: read/write indexes are set BUFSIZE samples back as we will process a batch of BUFSIZE samples
+// so beware of overlappings when param_delays defer by less than 16 samples 
+int32_t rw0 = (attr_delayName.writepos - (BUFSIZE - 1) - param_p0) & attr_delayName.LENGTHMASK;
+int32_t rw1 = (attr_delayName.writepos - (BUFSIZE - 1) - param_p1) & attr_delayName.LENGTHMASK;
+int32_t rw2 = (attr_delayName.writepos - (BUFSIZE - 1) - param_p2) & attr_delayName.LENGTHMASK;
+int32_t rw3 = (attr_delayName.writepos - (BUFSIZE - 1) - param_p3) & attr_delayName.LENGTHMASK;
+     
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+for(int i = 0; i < BUFSIZE; i++){
+  int32_t x0 = attr_delayName.array[rw0];
+  int32_t x1 = attr_delayName.array[rw1];
+  int32_t x2 = attr_delayName.array[rw2];
+  int32_t x3 = attr_delayName.array[rw3];
+  
+  int32_t x0mx1 = (x0 - x1)>>1;
+  int32_t x2mx3 = (x2 - x3)>>1;
+  int32_t x0px1 = x0mx1 + x1;
+  int32_t x2px3 = x2mx3 + x3;
+
+  attr_delayName.array[rw0] = x0px1 + x2px3;
+  attr_delayName.array[rw1] = x0mx1 + x2mx3;
+  attr_delayName.array[rw2] = x0px1 - x2px3;
+  attr_delayName.array[rw3] = x0mx1 - x2mx3;
+    
+  rw0 = (rw0 + 1) & attr_delayName.LENGTHMASK;
+  rw1 = (rw1 + 1) & attr_delayName.LENGTHMASK;
+  rw2 = (rw2 + 1) & attr_delayName.LENGTHMASK;
+  rw3 = (rw3 + 1) & attr_delayName.LENGTHMASK;
+}]]></code.krate>
+   </obj.normal>
+</objdefs>

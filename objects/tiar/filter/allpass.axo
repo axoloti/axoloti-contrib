@@ -1,9 +1,8 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="allpass" uuid="13facdde-0b20-4206-9910-a7d9abc54234">
       <sDescription>allpass reverb section (32 bit internal buffer)</sDescription>
-      <author>Smashed Transistor based on Johannes Taelman</author>
-      <license>BSD</license>
-      <helpPatch></helpPatch>
+      <author>Smashed Transistor</author>
+      <license>LGPL</license>
       <inlets>
          <frac32buffer name="in" description="in"/>
       </inlets>
@@ -16,17 +15,122 @@
       </params>
       <attribs>
          <spinner name="delay" MinValue="1" MaxValue="10000" DefaultValue="1000"/>
+         <combo name="noisy">
+            <MenuEntries>
+               <string>clean</string>
+               <string>noisy</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
+         <combo name="filter">
+            <MenuEntries>
+               <string>none</string>
+               <string>LP1</string>
+               <string>LP2</string>
+               <string>LP3</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+               <string>2</string>
+               <string>3</string>
+            </CEntries>
+         </combo>
+         <combo name="location">
+            <MenuEntries>
+               <string>IntRAM</string>
+               <string>ExtRAM</string>
+            </MenuEntries>
+            <CEntries>
+               <string>0</string>
+               <string>1</string>
+            </CEntries>
+         </combo>
       </attribs>
-      <code.declaration><![CDATA[int32_t d[attr_delay];
-int dpos;]]></code.declaration>
-      <code.init><![CDATA[for(int i = 0; i < attr_delay; i++)
+      <code.declaration><![CDATA[#if attr_location == 0
+	int32_t d[attr_delay]; 
+#else
+  int32_t *d;
+	#define LOCATION  __attribute__ ((section (".sdram")))
+#endif
+int dpos;
+
+#if attr_noisy==1
+int32_t rnd;
+int32_t adpos;
+#endif
+#if attr_filter>=1
+int32_t dout1;
+#endif]]></code.declaration>
+      <code.init><![CDATA[#if attr_location != 0
+	static int32_t d_[attr_poly][attr_delay] LOCATION;
+	d = &d_[parent->polyIndex][0]; 
+#endif      
+
+#if attr_noisy==1
+	adpos = 0;
+#endif
+#if attr_filter>=1
+	int32_t dout1;
+#endif
+      
+for(int i = 0; i < attr_delay; i++)
    d[i] = 0;
 dpos = 0;]]></code.init>
-      <code.krate><![CDATA[int32_t g2 = param_g<<4;]]></code.krate>
-      <code.srate><![CDATA[int32_t dout = d[dpos];
+      <code.krate><![CDATA[int32_t g = param_g<<4;
+#if attr_noisy==1
+	rnd = 69069 * rnd + 1;
+#endif]]></code.krate>
+      <code.srate><![CDATA[/*int32_t dout = d[dpos];
 int32_t din = ___SMMLA(g2, dout<<1, inlet_in);
 d[dpos++] = din;
 if(dpos >= attr_delay) dpos = 0;
-outlet_out = ___SMMLS(g2, din<<1, dout);]]></code.srate>
+outlet_out = ___SMMLS(g2, din<<1, dout);
+*/
+
+
+
+#if attr_noisy==1
+	rnd = 69069 * rnd + 1;
+	int32_t dout = rnd > 0 ? d[dpos] : adpos;
+	adpos = d[dpos];
+#else
+	int32_t dout = d[dpos];
+#endif
+
+#if attr_filter==3
+	int32_t df = dout+dout1;
+	int32_t din = ___SMMLA(g, df, inlet_in);
+	dout1=dout;
+	d[dpos] = din;
+	dpos++; if(dpos >= attr_delay) dpos = 0;
+
+	outlet_out = ___SMMLS(g, din<<1, df>>1);
+#elif attr_filter==2
+	int32_t df = ___SMMUL(1431655765, 2 * dout + dout1);  //(2*dout+dout1)/3
+	int32_t din = ___SMMLA(g, df<<1, inlet_in);
+	dout1=dout;
+	d[dpos] = din;
+	dpos++; if(dpos >= attr_delay) dpos = 0;
+
+	outlet_out = ___SMMLS(g, din<<1, df);
+#elif attr_filter==1
+	int32_t df = (3 * dout + dout1)>>2;  //(3*dout+dout1)/4
+	int32_t din = ___SMMLA(g, df<<1, inlet_in);
+	dout1=dout;
+	d[dpos] = din;
+	dpos++; if(dpos >= attr_delay) dpos = 0;
+
+	outlet_out = ___SMMLS(g, din<<1, df);
+#else
+	int32_t din = ___SMMLA(g, dout<<1, inlet_in);
+	d[dpos] = din;
+	dpos++; if(dpos >= attr_delay) dpos = 0;
+
+	outlet_out = ___SMMLS(g, din<<1, dout);
+#endif]]></code.srate>
    </obj.normal>
 </objdefs>
