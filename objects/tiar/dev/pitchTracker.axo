@@ -1,6 +1,5 @@
 <objdefs appVersion="1.0.12">
    <obj.normal id="pitchTracker" uuid="6d81c116-3190-40e5-baed-2eeaf7268caf">
-      <sDescription></sDescription>
       <author>SmashedTransistors</author>
       <license>LGPL</license>
       <helpPatch>pitchTracker.axh</helpPatch>
@@ -10,7 +9,11 @@
       <outlets>
          <frac32 name="pitch" description="out"/>
       </outlets>
-      <displays/>
+      <displays>
+         <frac32.u.dial name="noise"/>
+         <frac32.u.dial name="ampli"/>
+         <bool32 name="detect"/>
+      </displays>
       <params/>
       <attribs/>
       <code.declaration><![CDATA[static const int PEAK_HIST_LENGTH = 32;
@@ -19,6 +22,10 @@ static const int PEAK_HIST_LENGTH_MASK = PEAK_HIST_LENGTH - 1;
 static const int SELECT_REF_TIME_LIMIT=240;
 //on choisit la meilleure ref parmi les 5 premiers pics
 static const int SELECT_REF_NB_LIMIT=5;
+
+
+int32_t curPitch=0;
+
 
 //log2(x) en q21 sur l'intervalle [0,5 1]
 int32_t tiarLog2q21[65] = {
@@ -55,11 +62,6 @@ class Peak {
 	float v0,v1,v2;
 	float force;
 	
-	float delta(void){
-		float a = v2 + v0 - 2*v1;
-		if(a == 0) return 0;
-			return 0.5f * (v2 - v0) / a;
-	}
 	
 	void set(long _timeStamp, int _type, float _v0, float _v1, float _v2){
 		timeStamp = _timeStamp;
@@ -68,8 +70,13 @@ class Peak {
 		v1 = _v1;
 		v2 = _v2;
 		force = 0;
-		floatTime=timeStamp + delta();
-		v=v1+0.25f*(v2-v0)*-delta();
+
+		//interpolation quadratique de la position du pic (subsample)
+		float a = v2 + v0 - 2*v1;
+		float delta = (a == 0) ? 0 : 0.5f * (v2 - v0) / a;
+			
+		floatTime = timeStamp + delta;
+		v = v1 + 0.25f * (v0 - v2) * delta;
 	}
 	
 	// calcul fin du temps (avec v0 v1 v2)
@@ -96,16 +103,16 @@ class PeakHisto{
        peaks[peakIndex].set(_timeStamp,_type,_v0,_v1,_v2);
 
        //calcul de la force du précédent
-       Peak p0 = get(0);
-       Peak p1 = get(1);
-       Peak p2 = get(2);
-       float f01 = fabsf(p0.v - p1.v);
-       float f12 = fabsf(p1.v - p2.v);
+       Peak *p0 = get(0);
+       Peak *p1 = get(1);
+       Peak *p2 = get(2);
+       float f01 = fabsf(p0->v - p1->v);
+       float f12 = fabsf(p1->v - p2->v);
        float f = f01 < f12 ? f01 : f12;//min(f01, f12);
-       p1.force = f;
+       p1->force = f;
    }
-   Peak get(int i){
-       return peaks[(peakIndex+i) & PEAK_HIST_LENGTH_MASK];
+   Peak* get(int i){
+       return &peaks[((peakIndex+i) & PEAK_HIST_LENGTH_MASK)];
    }
 };
 
@@ -129,85 +136,93 @@ void proc(float v){
 		}
 	}
 
-
-	
 	vDC += 0.0001f*(v-vDC);
-	vFilt += 0.01f*(v-vDC-vFilt);
+	vFilt += 0.25f*(v-vDC-vFilt);
 	dv2 = dv1;
 	dv1 = dv0;
 	dv0 = vFilt;//<----------------------
 	if(dv1 > dv0 && dv1 >= dv2){
-		peaks.put(curTime,1,dv0,dv1,dv2);
+		peaks.put(curTime,  1, dv0,dv1,dv2);
 	}
 	if(dv1 < dv0 && dv1 <= dv2){
-		peaks.put(curTime,-1,dv0,dv1,dv2);
+		peaks.put(curTime, -1, dv0,dv1,dv2);
 	}
 }
+
+float bestDiffer;
+float bestError;
+float bestVMax;
 int32_t calc(void){
    // select ref
    int iRef=1;
-   float fMax= peaks.get(iRef).force;
-   float time1=peaks.get(iRef).floatTime;
+   float fMax= peaks.get(iRef)->force;
+   float time1=peaks.get(iRef)->floatTime;
    for (int i = 2; i <= SELECT_REF_NB_LIMIT; i++) {
 
-       Peak curP=peaks.get(i);
-       if(time1 - curP.floatTime > SELECT_REF_TIME_LIMIT){
+       Peak *curP=peaks.get(i);
+       if(time1 - curP->floatTime > SELECT_REF_TIME_LIMIT){
            break;
        }
-       if(curP.force>fMax){
-           fMax=curP.force;
+       if(curP->force>fMax){
+           fMax=curP->force;
            iRef=i;
        }
    }
-   Peak ref = peaks.get(iRef);
+   Peak *ref = peaks.get(iRef);
 
 
    //recherche parmi les prédécesseurs
    int bestCandidate=-1;
-   float bestDiffer=1e20;
+   bestDiffer=1e20;
    for (int iCandidat = iRef+2; iCandidat <= (PEAK_HIST_LENGTH-iRef)/2; iCandidat+=2) {
-      
-       float differ= diff(iRef, iCandidat);
+
+      float differ= diff(iRef, iCandidat);
       if(differ<bestDiffer){
       	bestDiffer=differ;
       	bestCandidate = iCandidat;
+      	bestError=error;
+      	bestVMax= vMax;
       }
    }
    if(bestCandidate<0) return -1<<27;
-   float periode = peaks.get(iRef).getFloatTime()-peaks.get(bestCandidate).getFloatTime();
+   float periode = peaks.get(iRef)->getFloatTime()-peaks.get(bestCandidate)->getFloatTime();
    if(periode<2)   return -1<<27;
    return 315060691 - (64<<21) - 12 * ln2Interp(arm::float_to_q(periode,14));
+   
 }
 
+// ça devient des valeurs de retour... détection du niveau et de l'erreur
+float error;
+float vMax;
 float diff(int iRef, int iCand){
         float acc = 0;
         float accTime=0;
         // on sautera les pics trop faibles
         int i0=0;
         int i1=0;
-        float forceMin = 0.5f * peaks.get(iRef).force;
-        Peak p0, p1;
-        float t0=peaks.get(iRef).floatTime;
-        float t1 = peaks.get(iCand).floatTime;
+        float forceMin = 0.5f * peaks.get(iRef)->force;
+        Peak *p0, *p1;
+        float t0 = peaks.get(iRef)->floatTime;
+        float t1 = peaks.get(iCand)->floatTime;
         // test sur 3 periodes
         int nbPeaks=0;
-        float vMax=0;
+        vMax=0;
         for (int i = 0; i < 2*(iCand-iRef); i++) {
             nbPeaks++;
             p0 = peaks.get(iRef  + i0);
             p1 = peaks.get(iCand + i1);
-            acc += fabsf(p0.v - p1.v);
-            if(fabsf(p0.v)>vMax)vMax=fabsf(p0.v);
-            if(fabsf(p1.v)>vMax)vMax=fabsf(p1.v);
+            acc += fabsf(p0->v - p1->v);
+            if(fabsf(p0->v1)>vMax)vMax=fabsf(p0->v1);
+            if(fabsf(p1->v1)>vMax)vMax=fabsf(p1->v1);
 
-            accTime += fabsf((t0-p0.floatTime)-(t1-p1.floatTime));
+            accTime += fabsf((t0-p0->floatTime)-(t1-p1->floatTime));
 
             i0++;
-            while(peaks.get(iRef  + i0).force < forceMin){
+            while(peaks.get(iRef  + i0)->force < forceMin && i0+iRef<PEAK_HIST_LENGTH){
                 i0 += 2;
             }
             i1++;
-            while(peaks.get(iCand + i1).force < forceMin){
+            while(peaks.get(iCand + i1)->force < forceMin && i1+iCand<PEAK_HIST_LENGTH){
                 i1 += 2;
             }
             if(i0+iRef>=PEAK_HIST_LENGTH){
@@ -220,12 +235,25 @@ float diff(int iRef, int iCand){
         float errTime=accTime/(t0-t1);
         float errAmp=acc/vMax;
 
-        return (0.05f*nbPeaks)+(errAmp+errTime)/nbPeaks;
+        error = (errAmp+errTime)/nbPeaks;
+
+        return (0.001f*(t0-t1))+error;
 
     }]]></code.declaration>
       <code.krate><![CDATA[//outlet_pitch = 315060691 - 12 * ln2Interp(inlet_period >> (21-14)) - (64<<21);
 
-outlet_pitch = calc();]]></code.krate>
-      <code.srate><![CDATA[proc(arm::q_to_float(inlet_in,27));]]></code.srate>
+//todo: normaliser tout ça...
+
+int32_t newPitch = calc();
+if(bestError<0.02f && bestVMax>2.0f){
+  curPitch=newPitch;
+  disp_detect=true;
+}else{
+	disp_detect=false;
+}
+outlet_pitch = curPitch;	
+disp_noise = arm::float_to_q(100*bestError,21);
+disp_ampli = arm::float_to_q(bestVMax,21);]]></code.krate>
+      <code.srate><![CDATA[proc(arm::q_to_float(inlet_in,21));]]></code.srate>
    </obj.normal>
 </objdefs>
