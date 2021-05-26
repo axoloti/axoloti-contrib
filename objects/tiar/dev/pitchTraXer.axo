@@ -14,12 +14,7 @@
       </displays>
       <params/>
       <attribs/>
-      <code.declaration><![CDATA[
-      
-
-
-
-//log2(x) en q21 sur l'intervalle [0,5 1]
+      <code.declaration><![CDATA[//log2(x) en q21 sur l'intervalle [0,5 1]
 int32_t tiarLog2q21[65] = {
    -2097152,  -2050243,  -2004050,  -1958552,  -1913729,  -1869559,  -1826025,  -1783109,
    -1740793,  -1699061,  -1657896,  -1617284,  -1577210,  -1537660,  -1498620,  -1460077,
@@ -102,24 +97,18 @@ XDetect xPos, xNeg;
 float x1;
 // the latest detected periods
 
-int32_t pitchPos[4], pitchNeg[4];
-int32_t aPitchPos[4], aPitchNeg[4];  // previous values (to enforce consistency)
+int32_t pitchPos[5], pitchNeg[5];
+int32_t aPitchPos[5], aPitchNeg[5];  // previous values (to enforce consistency)
 
-int32_t curPitch;
-
-
-
-
-    
-    ]]></code.declaration>
+int32_t curPitch;]]></code.declaration>
       <code.krate><![CDATA[// We look for a consistent cycle over one to four zero crossings
 // consistent means less than 1/8 semi tone between neg and pos zero crossings
 // and their former values.
 disp_detect = false;
-for(int j = 0; j < 4; j++){
-	if(abs( pitchPos[j] - pitchNeg[j]) < (1<<(21-5))
-	&& abs(aPitchPos[j] - pitchPos[j]) < (1<<(21-5))
-	&& abs(aPitchNeg[j] - pitchNeg[j]) < (1<<(21-5))){
+for(int j = 0; j < 5; j++){
+	if(abs( pitchPos[j] - pitchNeg[j]) < (1<<(21-4))
+	&& abs(aPitchPos[j] - pitchPos[j]) < (1<<(21-4))
+	&& abs(aPitchNeg[j] - pitchNeg[j]) < (1<<(21-4))){
 		curPitch = (pitchPos[j] + pitchNeg[j]) / 2;
 		disp_detect = true;
 		break;
@@ -135,7 +124,7 @@ outlet_pitch = curPitch;]]></code.krate>
 
 if(xPos.proc( x1,  x0)){
 	float p = 0;
-	for(int j = 0; j < 4; j++){
+	for(int j = 0; j < 5; j++){
 		aPitchPos[j] = pitchPos[j];
 		p += xPos.getP(j);
 		pitchPos[j] = period2pitch(p);
@@ -143,7 +132,7 @@ if(xPos.proc( x1,  x0)){
 }
 if(xNeg.proc(-x1, -x0)){
 	float p = 0;
-	for(int j = 0; j < 4; j++){
+	for(int j = 0; j < 5; j++){
 		aPitchNeg[j] = pitchNeg[j];
 		p += xNeg.getP(j);
 		pitchNeg[j] = period2pitch(p);
