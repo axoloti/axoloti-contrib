@@ -1,0 +1,154 @@
+<objdefs appVersion="1.0.12">
+   <obj.normal id="pitchTraXer" uuid="6d71c716-3170-40e5-baed-2eeaf7268caf">
+      <author>SmashedTransistors</author>
+      <license>LGPL</license>
+      <helpPatch>pitchTraXer.axh</helpPatch>
+      <inlets>
+         <frac32buffer name="in"/>
+      </inlets>
+      <outlets>
+         <frac32 name="pitch" description="out"/>
+      </outlets>
+      <displays>
+         <bool32 name="detect" noLabel="true"/>
+      </displays>
+      <params/>
+      <attribs/>
+      <code.declaration><![CDATA[
+      
+
+
+
+//log2(x) en q21 sur l'intervalle [0,5 1]
+int32_t tiarLog2q21[65] = {
+   -2097152,  -2050243,  -2004050,  -1958552,  -1913729,  -1869559,  -1826025,  -1783109,
+   -1740793,  -1699061,  -1657896,  -1617284,  -1577210,  -1537660,  -1498620,  -1460077,
+   -1422019,  -1384434,  -1347311,  -1310637,  -1274402,  -1238596,  -1203210,  -1168232,
+   -1133654,  -1099466,  -1065661,  -1032229,   -999162,   -966454,   -934094,   -902078,
+    -870396,   -839043,   -808012,   -777295,   -746887,   -716782,   -686973,   -657456,
+    -628223,   -599270,   -570592,   -542183,   -514038,   -486152,   -458521,   -431141,
+    -404006,   -377112,   -350455,   -324030,   -297835,   -271864,   -246115,   -220583,
+    -195264,   -170156,   -145254,   -120555,    -96057,    -71755,    -47647,    -23729,  0};
+
+// entrée q14 sortie q21
+int ln2Interp(int x) {
+   int intPart = 18 - __CLZ(x);  // partie entiere du log2
+
+   int scaledX = x >> intPart;   // mise à l'échelle [0,5 1] de l'entrée
+
+   // calcul de la partie décimale à partir de scaledX
+   // (interpolation de la table tiarLog2q21)
+   int i = (scaledX >> 7) - 64;   // le -64 est là car on vise l'intervalle [0,5 1] pas  [0 1]
+   int a = (scaledX & 127) << 24; //coef d'interpolation [0 1[ en q31
+   int fracPart = ___SMMLA(a,tiarLog2q21[i + 1] - tiarLog2q21[i],tiarLog2q21[i] >> 1) << 1;
+
+   return (intPart << 21) + fracPart;
+}
+int32_t period2pitch(float period){
+  return 315060691 - (64<<21) - 12 * ln2Interp(arm::float_to_q(period,14));
+}
+
+class XDetect{
+public:
+	float detP[8]; // last detected period
+	float detA[8];
+	float p;    //counting period
+	float ma,mi;    //max
+	
+	int i;
+	// x1 older, x0 newer
+	bool proc(float x1, float x0){
+		if(x0>ma) ma = x0;
+		if(x0<mi) mi = x0;
+		if(x0 > 0 && x1 <= 0){
+			float a = x1 / (x1 - x0);
+			i--;
+			i &= 7;
+			detP[i] = p + a;
+			detA[i] = ma - mi;     // p-p amplitude
+			ma = mi = 0;
+			p = 1 - a;
+			return true;   //new detection
+		} else {
+			p += 1;
+			return false;  //no new detection
+		}
+	}
+	float getP(void){
+		return detP[i];
+	}
+	float getP(int ind){
+		return detP[(i + ind) & 7];
+	}
+	float getA(void){
+		return detA[i];
+	}
+	float getA(int ind){
+		return detA[(i + ind) & 7];
+	}
+	void init(void){
+		for(int j = 0; j < 8; j++){
+			detP[j] = 1;
+			detA[j] = 0;
+		}
+		p = 0;
+		i = 0;
+		ma = mi = 0;
+	}
+};
+
+
+XDetect xPos, xNeg;
+float x1;
+// the latest detected periods
+
+int32_t pitchPos[4], pitchNeg[4];
+int32_t aPitchPos[4], aPitchNeg[4];  // previous values (to enforce consistency)
+
+int32_t curPitch;
+
+
+
+
+    
+    ]]></code.declaration>
+      <code.krate><![CDATA[// We look for a consistent cycle over one to four zero crossings
+// consistent means less than 1/8 semi tone between neg and pos zero crossings
+// and their former values.
+disp_detect = false;
+for(int j = 0; j < 4; j++){
+	if(abs( pitchPos[j] - pitchNeg[j]) < (1<<(21-5))
+	&& abs(aPitchPos[j] - pitchPos[j]) < (1<<(21-5))
+	&& abs(aPitchNeg[j] - pitchNeg[j]) < (1<<(21-5))){
+		curPitch = (pitchPos[j] + pitchNeg[j]) / 2;
+		disp_detect = true;
+		break;
+	}
+}
+outlet_pitch = curPitch;]]></code.krate>
+      <code.srate><![CDATA[float x0 = arm::q_to_float(inlet_in, 27);
+
+//when we zero cross (ascending or descending) we calculate
+// the pitches corresponding to one to four zero crossings
+// the consistency of the ascending (pos) and descending (neg)
+// detectors is used at krate to detect the correct pitch.
+
+if(xPos.proc( x1,  x0)){
+	float p = 0;
+	for(int j = 0; j < 4; j++){
+		aPitchPos[j] = pitchPos[j];
+		p += xPos.getP(j);
+		pitchPos[j] = period2pitch(p);
+	}
+}
+if(xNeg.proc(-x1, -x0)){
+	float p = 0;
+	for(int j = 0; j < 4; j++){
+		aPitchNeg[j] = pitchNeg[j];
+		p += xNeg.getP(j);
+		pitchNeg[j] = period2pitch(p);
+	}
+}
+x1 = x0;]]></code.srate>
+   </obj.normal>
+</objdefs>
