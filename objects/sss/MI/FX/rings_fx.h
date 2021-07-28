@@ -179,12 +179,12 @@ class FxEngine {
     
     inline void Lp(float& state, float coefficient) {
       state += coefficient * (accumulator_ - state);
-      accumulator_ = state;
+      accumulator_ = (state);//+accumulator_)*0.5;
     }
 
     inline void Hp(float& state, float coefficient) {
       state += coefficient * (accumulator_ - state);
-      accumulator_ -= state;
+      accumulator_ = (accumulator_-state);//*0.25);
     }
     
     template<typename D>
@@ -202,9 +202,9 @@ class FxEngine {
     
     template<typename D>
     inline void Interpolate(
-        D& d, float offset, LFOIndex index, float amplitude, float scale) {
+        D& d, float offset, LFOIndex index,float addmod, float amplitude, float scale) {
       STATIC_ASSERT(D::base + D::length <= size, delay_memory_full);
-      offset += amplitude * lfo_value_[index];
+      offset += amplitude * lfo_value_[index]+addmod;
       MAKE_INTEGRAL_FRACTIONAL(offset);
       float a = DataType<format>::Decompress(
           buffer_[(write_ptr_ + offset_integral + D::base) & MASK]);
@@ -347,6 +347,8 @@ class Reverb {
     engine_.SetLFOFrequency(LFO_1, 0.5f / 48000.0f);
     engine_.SetLFOFrequency(LFO_2, 0.3f / 48000.0f);
     lp_ = 0.7f;
+	hp_ = 0.1f;
+	width_ = 0.1;
     diffusion_ = 0.625f;
   }
   
@@ -378,19 +380,25 @@ class Reverb {
     E::Context c;
 
     const float kap = diffusion_;
-    const float klp = lp_;
+    const float klpl = lp_;
+	const float klph = hp_;
     const float krt = reverb_time_;
     const float amount = amount_;
+	const float width = width_;
+	const float addmod = addmod_;
     const float gain = input_gain_;
-
     float lp_1 = lp_decay_1_;
     float lp_2 = lp_decay_2_;
-
+	float hp_1 = hp_decay_1_;
+    float hp_2 = hp_decay_2_;
+	
     while (size--) {
       float wet;
       float apout = 0.0f;
+	 
+	  
       engine_.Start(&c);
-      
+	  
       // Smear AP1 inside the loop.
       //c.Interpolate(ap1, 10.0f, LFO_1, 80.0f, 1.0f);
       //c.Write(ap1, 100, 0.0f);
@@ -410,8 +418,12 @@ class Reverb {
       
       // Main reverb loop.
       c.Load(apout);
-      c.Interpolate(del2, 6261.0f, LFO_2, 50.0f, krt);
-      c.Lp(lp_1, klp);
+      c.Interpolate(del2, 6261.0f, LFO_2,addmod*50.0f, 50.0f*width, krt);
+
+		c.Hp(hp_1, klph);											
+
+		c.Lp(lp_1, klpl);
+
       c.Read(dap1a TAIL, -kap);
       c.WriteAllPass(dap1a, kap);
       c.Read(dap1b TAIL, kap);
@@ -422,8 +434,12 @@ class Reverb {
       *left += (wet - *left) * amount;
 
       c.Load(apout);
-      c.Interpolate(del1, 4460.0f, LFO_1, 40.0f, krt);
-      c.Lp(lp_2, klp);
+      c.Interpolate(del1, 4460.0f, LFO_1,addmod, 40.0f*width, krt);
+
+		c.Hp(hp_2, klph);											
+
+		c.Lp(lp_2, klpl);
+
       c.Read(dap2a TAIL, kap);
       c.WriteAllPass(dap2a, -kap);
       c.Read(dap2b TAIL, -kap);
@@ -436,15 +452,22 @@ class Reverb {
       ++left;
       ++right;
     }
-    
-    lp_decay_1_ = lp_1;
-    lp_decay_2_ = lp_2;
+
+		hp_decay_1_ = hp_1;
+		hp_decay_2_ = hp_2;
+
+		lp_decay_1_ = lp_1;
+		lp_decay_2_ = lp_2;
+
   }
-  
   inline void set_amount(float amount) {
     amount_ = amount;
   }
-  
+
+  inline void set_modwidth(float width) {
+    width_ = width;
+  }
+
   inline void set_input_gain(float input_gain) {
     input_gain_ = input_gain;
   }
@@ -452,15 +475,20 @@ class Reverb {
   inline void set_time(float reverb_time) {
     reverb_time_ = reverb_time;
   }
-  
+  inline void set_addmod(float addmod) {
+    addmod_ = addmod;
+  }
   inline void set_diffusion(float diffusion) {
     diffusion_ = diffusion;
   }
-  
+
   inline void set_lp(float lp) {
     lp_ = lp;
   }
   
+  inline void set_hp(float hp) {
+    hp_ = hp;
+  }
   inline void Clear() {
     engine_.Clear();
   }
@@ -470,14 +498,18 @@ class Reverb {
   E engine_;
   
   float amount_;
+  float width_;
   float input_gain_;
   float reverb_time_;
   float diffusion_;
+  float addmod_;
   float lp_;
-  
+  float hp_;
   float lp_decay_1_;
   float lp_decay_2_;
-  
+  float hp_decay_1_;
+  float hp_decay_2_;
+
   DISALLOW_COPY_AND_ASSIGN(Reverb);
 };
 
